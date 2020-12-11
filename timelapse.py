@@ -4,10 +4,12 @@ import sys
 import time
 import logging
 import PyIndi
+import PythonMagick
 
 #CCD_NAME       = "CCD Simulator"
 CCD_NAME       = "ZWO CCD ASI290MM"
-CCD_EXPOSURE   = 5
+CCD_EXPOSURE   = 1
+CCD_BINNING    = 1
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -49,6 +51,11 @@ class IndiClient(PyIndi.BaseClient):
         elif pName == "CCD_TEMPERATURE":
             temp = self.device.getNumber("CCD_TEMPERATURE")
             self.logger.info("Temperature: %d", temp[0].value)
+        elif pName == "CCD_BINNING":
+            binmode = self.device.getNumber("CCD_BINNING")
+            binmode[0].value = CCD_BINNING
+            self.sendNewNumber(binmode)
+
 
 
     def removeProperty(self, p):
@@ -57,15 +64,21 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         self.logger.info("new BLOB %s", bp.name)
-        # get image data
+        ### get image data
         img = bp.getblobdata()
-        # write image data to BytesIO buffer
+        ### write image data to BytesIO buffer
         import io
-        blobfile = io.BytesIO(img)
-        # open a file and save buffer to disk
+        blob = io.BytesIO(img)
+
         with open("frame.fit", "wb") as f:
-            f.write(blobfile.getvalue())
-        # start new exposure
+            f.write(blob.getvalue())
+
+        i = PythonMagick.Image("frame.fit")
+        i.magick('TIF')
+        i.write('frame.tif')
+
+        ### open a file and save buffer to disk
+        ### start new exposure
         self.takeExposure()
 
 
@@ -106,7 +119,7 @@ class IndiClient(PyIndi.BaseClient):
         exp[0].value = CCD_EXPOSURE
         # send new exposure time to server/device
         self.sendNewNumber(exp)
-  
+
 
 if __name__ == "__main__":
     # instantiate the client
