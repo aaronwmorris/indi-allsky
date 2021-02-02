@@ -3,12 +3,17 @@
 import sys
 import time
 import logging
-import PyIndi
-import PythonMagick
+from datetime import datetime
 
-#CCD_NAME       = "CCD Simulator"
-CCD_NAME       = "ZWO CCD ASI290MM"
-CCD_EXPOSURE   = 1
+import PyIndi
+import pyfits
+import cv2
+
+#import PythonMagick
+
+CCD_NAME       = "CCD Simulator"
+#CCD_NAME       = "ZWO CCD ASI290MM"
+CCD_EXPOSURE   = 5
 CCD_BINNING    = 1
 
 
@@ -34,16 +39,21 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newProperty(self, p):
-        self.logger.info("new property %s for device %s", p.getName(), p.getDeviceName())
-        if self.device is not None and p.getName() == "CONNECTION" and p.getDeviceName() == self.device.getDeviceName():
+        pName = p.getName()
+        pDeviceName = p.getDeviceName()
+
+        self.logger.info("new property %s for device %s", pName, pDeviceName)
+        if self.device is not None and pName == "CONNECTION" and pDeviceName == self.device.getDeviceName():
             self.logger.info("Got property CONNECTION for %s!", CCD_NAME)
             # connect to device
+            self.logger.info('Connect to device')
             self.connectDevice(self.device.getDeviceName())
+
             # set BLOB mode to BLOB_ALSO
+            self.logger.info('Set BLOB mode')
             self.setBLOBMode(1, self.device.getDeviceName(), None)
 
 
-        pName = p.getName()
 
         if pName == "CCD_EXPOSURE":
             # take first exposure
@@ -65,19 +75,36 @@ class IndiClient(PyIndi.BaseClient):
     def newBLOB(self, bp):
         self.logger.info("new BLOB %s", bp.name)
         ### get image data
-        img = bp.getblobdata()
-        ### write image data to BytesIO buffer
+        imgdata = bp.getblobdata()
+
         import io
-        blob = io.BytesIO(img)
 
-        with open("frame.fit", "wb") as f:
-            f.write(blob.getvalue())
+        ### OpenCV ###
+        blobfile = io.BytesIO(imgdata)
+        hdulist = pyfits.open(blobfile)
+        scidata = hdulist[0].data
+        #if self.roi is not None:
+        #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
+        #hdulist[0].data = scidata
+        hdulist.writeto("{0}.fit".format(datetime.now()))
 
-        i = PythonMagick.Image("frame.fit")
-        i.magick('TIF')
-        i.write('frame.tif')
+        #cv2.imwrite("{0}.png".format(datetime.now()), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite("{0}.jpg".format(datetime.now()), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}.tif".format(datetime.now()), scidata)
 
-        ### open a file and save buffer to disk
+
+        ### ImageMagick ###
+        ### write image data to BytesIO buffer
+        #blobfile = io.BytesIO(imgdata)
+
+        #with open("frame.fit", "wb") as f:
+        #    f.write(blobfile.getvalue())
+
+        #i = PythonMagick.Image("frame.fit")
+        #i.magick('TIF')
+        #i.write('frame.tif')
+
+
         ### start new exposure
         self.takeExposure()
 
@@ -112,7 +139,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        self.logger.info(">>>>>>>>")
+        self.logger.info("Taking exposure")
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
@@ -123,9 +150,14 @@ class IndiClient(PyIndi.BaseClient):
 
 if __name__ == "__main__":
     # instantiate the client
-    indiclient=IndiClient()
+    indiclient = IndiClient()
+
+    # set roi
+    #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
+
     # set indi server localhost and port 7624
-    indiclient.setServer("localhost",7624)
+    indiclient.setServer("localhost", 7624)
+
     # connect to indi server
     print("Connecting to indiserver")
     if (not(indiclient.connectServer())):

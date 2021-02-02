@@ -1,0 +1,3 @@
+pyindi-client
+pyfits
+opencv-python
