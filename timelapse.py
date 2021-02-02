@@ -81,7 +81,7 @@ class IndiClient(PyIndi.BaseClient):
         imgdata = bp.getblobdata()
 
         ### process data in new Thread
-        Thread(target=self.process_image, args=(imgdata,)).start()
+        ImageProcessorThread(imgdata).start()
 
         sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
         self.logger.info('...Sleeping for %0.2f seconds...', sleeptime)
@@ -89,35 +89,6 @@ class IndiClient(PyIndi.BaseClient):
 
         ### start new exposure
         self.takeExposure()
-
-
-    def process_image(self, imgdata):
-        import io
-
-        ### OpenCV ###
-        blobfile = io.BytesIO(imgdata)
-        hdulist = pyfits.open(blobfile)
-        scidata = hdulist[0].data
-        #if self.roi is not None:
-        #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
-        #hdulist[0].data = scidata
-        hdulist.writeto("{0}.fit".format(datetime.now()))
-
-        #cv2.imwrite("{0}.png".format(datetime.now()), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite("{0}.jpg".format(datetime.now()), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}.tif".format(datetime.now()), scidata)
-
-
-        ### ImageMagick ###
-        ### write image data to BytesIO buffer
-        #blobfile = io.BytesIO(imgdata)
-
-        #with open("frame.fit", "wb") as f:
-        #    f.write(blobfile.getvalue())
-
-        #i = PythonMagick.Image("frame.fit")
-        #i.magick('TIF')
-        #i.write('frame.tif')
 
 
     def newSwitch(self, svp):
@@ -158,6 +129,45 @@ class IndiClient(PyIndi.BaseClient):
         exp[0].value = float(CCD_EXPOSURE)
         # send new exposure time to server/device
         self.sendNewNumber(exp)
+
+
+class ImageProcessorThread(Thread):
+    def __init__(self, imgdata):
+        # Call the Thread class's init function
+        super(ImageProcessorThread, self).__init__()
+
+        self.imgdata = imgdata
+
+
+    def run(self):
+        import io
+
+        ### OpenCV ###
+        blobfile = io.BytesIO(self.imgdata)
+        hdulist = pyfits.open(blobfile)
+        scidata = hdulist[0].data
+        #if self.roi is not None:
+        #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
+        #hdulist[0].data = scidata
+        hdulist.writeto("{0}.fit".format(datetime.now()))
+
+        #cv2.imwrite("{0}.png".format(datetime.now()), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite("{0}.jpg".format(datetime.now()), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}.tif".format(datetime.now()), scidata)
+
+
+        ### ImageMagick ###
+        ### write image data to BytesIO buffer
+        #blobfile = io.BytesIO(self.imgdata)
+
+        #with open("frame.fit", "wb") as f:
+        #    f.write(blobfile.getvalue())
+
+        #i = PythonMagick.Image("frame.fit")
+        #i.magick('TIF')
+        #i.write('frame.tif')
+
+
 
 
 if __name__ == "__main__":
