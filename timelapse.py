@@ -7,7 +7,7 @@ from datetime import datetime
 from threading import Thread
 
 import PyIndi
-import pyfits
+from astropy.io import fits
 import cv2
 
 #import PythonMagick
@@ -144,7 +144,7 @@ class ImageProcessorThread(Thread):
 
         ### OpenCV ###
         blobfile = io.BytesIO(self.imgdata)
-        hdulist = pyfits.open(blobfile)
+        hdulist = fits.open(blobfile)
         scidata = hdulist[0].data
         #if self.roi is not None:
         #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
