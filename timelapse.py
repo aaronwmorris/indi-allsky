@@ -13,8 +13,10 @@ import cv2
 
 CCD_NAME       = "CCD Simulator"
 #CCD_NAME       = "ZWO CCD ASI290MM"
-CCD_EXPOSURE   = 5
-CCD_BINNING    = 1
+
+EXPOSURE_PERIOD     = 7.5    # time between beginning of each frame
+CCD_EXPOSURE        = 5.0    # length of exposure
+CCD_BINNING         = 1      # binning
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -104,6 +106,9 @@ class IndiClient(PyIndi.BaseClient):
         #i.magick('TIF')
         #i.write('frame.tif')
 
+        sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
+        self.logger.info('...Sleeping for %0.2f seconds...', sleeptime)
+        time.sleep(sleeptime)
 
         ### start new exposure
         self.takeExposure()
@@ -114,7 +119,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newNumber(self, nvp):
-        self.logger.info("new Number %s for device %s", nvp.name, nvp.device)
+        #self.logger.info("new Number %s for device %s", nvp.name, nvp.device)
+        pass
 
 
     def newText(self, tvp):
@@ -139,11 +145,11 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        self.logger.info("Taking exposure")
+        self.logger.info("Taking %0.2f second exposure", float(CCD_EXPOSURE))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
-        exp[0].value = CCD_EXPOSURE
+        exp[0].value = float(CCD_EXPOSURE)
         # send new exposure time to server/device
         self.sendNewNumber(exp)
 
