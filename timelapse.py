@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 from datetime import datetime
+from threading import Thread
 
 import PyIndi
 import pyfits
@@ -79,6 +80,18 @@ class IndiClient(PyIndi.BaseClient):
         ### get image data
         imgdata = bp.getblobdata()
 
+        ### process data in new Thread
+        Thread(target=self.process_image, args=(imgdata,)).start()
+
+        sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
+        self.logger.info('...Sleeping for %0.2f seconds...', sleeptime)
+        time.sleep(sleeptime)
+
+        ### start new exposure
+        self.takeExposure()
+
+
+    def process_image(self, imgdata):
         import io
 
         ### OpenCV ###
@@ -105,13 +118,6 @@ class IndiClient(PyIndi.BaseClient):
         #i = PythonMagick.Image("frame.fit")
         #i.magick('TIF')
         #i.write('frame.tif')
-
-        sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
-        self.logger.info('...Sleeping for %0.2f seconds...', sleeptime)
-        time.sleep(sleeptime)
-
-        ### start new exposure
-        self.takeExposure()
 
 
     def newSwitch(self, svp):
