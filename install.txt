@@ -1,0 +1,7 @@
+The following packages are required:
+
+swig
+libatlas-base-dev
+libilmbase-dev
+libopenexr-dev
+libgtk-3-0

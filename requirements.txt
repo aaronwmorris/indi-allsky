@@ -1,3 +1,4 @@
 pyindi-client
 astropy
+#astropy[all]
 opencv-python
