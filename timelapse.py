@@ -186,8 +186,8 @@ class ImageProcessorWorker(Process):
             hdulist = fits.open(blobfile)
             scidata_uncalibrated = hdulist[0].data
 
-            scidata_raw = self.calibrate(scidata_uncalibrated)
-            scidata_color = self.calibrate(scidata_raw)
+            scidata_calibrated = self.calibrate(scidata_uncalibrated)
+            scidata_color = self.colorize(scidata_calibrated)
             self.write_jpg(scidata_color)
 
 
@@ -244,8 +244,8 @@ class ImageProcessorWorker(Process):
         ###
 
         ### seems to work best for GRBG
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
-        scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
+        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
+        #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
         scidata_wb = self.white_balance2(scidata_rgb)
