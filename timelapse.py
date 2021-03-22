@@ -9,20 +9,26 @@ from threading import Thread
 import PyIndi
 from astropy.io import fits
 import cv2
+import numpy
+from enum import Enum
 
 #import PythonMagick
 
-CCD_NAME       = "CCD Simulator"
+#CCD_NAME       = "CCD Simulator"
 #CCD_NAME       = "ZWO CCD ASI290MM"
+CCD_NAME       = "SVBONY SV305 0"
 
-EXPOSURE_PERIOD     = 7.5    # time between beginning of each frame
-CCD_EXPOSURE        = 5.0    # length of exposure
-CCD_BINNING         = 1      # binning
+CCD_BINNING         = 1          # binning
+EXPOSURE_PERIOD     = 10.00000   # time between beginning of each frame
+CCD_GAIN            = 100        # gain
+CCD_EXPOSURE        = 7.00000    # length of exposure
+#CCD_EXPOSURE        = 0.00003    # length of exposure
+#CCD_EXPOSURE        = 1.25000    # length of exposure
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
- 
-  
+
+
 class IndiClient(PyIndi.BaseClient):
  
     device = None
@@ -68,6 +74,10 @@ class IndiClient(PyIndi.BaseClient):
             binmode = self.device.getNumber("CCD_BINNING")
             binmode[0].value = CCD_BINNING
             self.sendNewNumber(binmode)
+        elif pName == "CCD_GAIN":
+            ccdgain = self.device.getNumber("CCD_GAIN")
+            ccdgain[0].value = CCD_GAIN
+            self.sendNewNumber(ccdgain)
 
 
 
@@ -84,7 +94,7 @@ class IndiClient(PyIndi.BaseClient):
         ImageProcessorThread(imgdata).start()
 
         sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
-        self.logger.info('...Sleeping for %0.2f seconds...', sleeptime)
+        self.logger.info('...Sleeping for %0.6f seconds...', sleeptime)
         time.sleep(sleeptime)
 
         ### start new exposure
@@ -122,7 +132,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        self.logger.info("Taking %0.2f second exposure", float(CCD_EXPOSURE))
+        self.logger.info("Taking %0.6f second exposure", float(CCD_EXPOSURE))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
@@ -146,14 +156,39 @@ class ImageProcessorThread(Thread):
         blobfile = io.BytesIO(self.imgdata)
         hdulist = fits.open(blobfile)
         scidata = hdulist[0].data
+
+        ###
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2BGR)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GB2BGR)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2RGB)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_RG2RGB)
+        ###
+
+        ###
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
+        #scidata_rgb = self._convert_GRGB_to_RGB_8bit(scidata)
+        ###
+
+        ### seems to work best for GRBG
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
+        scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
+
+        #scidata_wb = self.white_balance(scidata_rgb)
+        scidata_wb = self.white_balance2(scidata_rgb)
+
         #if self.roi is not None:
         #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
         #hdulist[0].data = scidata
-        hdulist.writeto("{0}.fit".format(datetime.now()))
 
-        #cv2.imwrite("{0}.png".format(datetime.now()), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite("{0}.jpg".format(datetime.now()), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}.tif".format(datetime.now()), scidata)
+        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
+
+        hdulist.writeto("{0}.fit".format(now_str))
+
+        #cv2.imwrite("{0}_rgb.png".format(now_str), scidata_rgb, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite("{0}_rgb.jpg".format(now_str), scidata_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite("{0}_wb.jpg".format(now_str), scidata_wb, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}_rgb.tif".format(now_str), scidata_rgb)
 
 
         ### ImageMagick ###
@@ -167,6 +202,59 @@ class ImageProcessorThread(Thread):
         #i.magick('TIF')
         #i.write('frame.tif')
 
+
+    def white_balance2(self, data_bytes):
+        ### This seems to work
+        r, g, b = cv2.split(data_bytes)
+        r_avg = cv2.mean(r)[0]
+        g_avg = cv2.mean(g)[0]
+        b_avg = cv2.mean(b)[0]
+
+         # Find the gain of each channel
+        k = (r_avg + g_avg + b_avg) / 3
+        kr = k / r_avg
+        kg = k / g_avg
+        kb = k / b_avg
+
+        r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
+        g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
+        b = cv2.addWeighted(src1=b, alpha=kb, src2=0, beta=0, gamma=0)
+
+        balance_img = cv2.merge([b, g, r])
+        return balance_img
+
+
+    def white_balance(self, data_bytes):
+        ### This method does not work very well
+        result = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
+        avg_a = numpy.average(result[:, :, 1])
+        avg_b = numpy.average(result[:, :, 2])
+        result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
+        result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
+        data = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
+        return data
+
+
+    def _convert_GRGB_to_RGB_8bit(self, data_bytes):
+        data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
+        even = data_bytes[0::2]
+        odd = data_bytes[1::2]
+        # Convert bayer16 to bayer8
+        bayer8_image = (even >> 4) | (odd << 4)
+        bayer8_image = bayer8_image.reshape((1080, 1920))
+        # Use OpenCV to convert Bayer GRGB to RGB
+        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
+
+
+    def _convert_GRBG_to_RGB_8bit(self, data_bytes):
+        data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
+        even = data_bytes[0::2]
+        odd = data_bytes[1::2]
+        # Convert bayer16 to bayer8
+        bayer8_image = (even >> 4) | (odd << 4)
+        bayer8_image = bayer8_image.reshape((1080, 1920))
+        # Use OpenCV to convert Bayer GRBG to RGB
+        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2BGR)
 
 
 
@@ -190,3 +278,6 @@ if __name__ == "__main__":
     # start endless loop, client works asynchron in background
     while True:
         time.sleep(1)
+
+
+
