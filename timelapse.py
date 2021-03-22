@@ -19,9 +19,9 @@ from enum import Enum
 CCD_NAME       = "SVBONY SV305 0"
 
 CCD_BINNING         = 1          # binning
-EXPOSURE_PERIOD     = 15.00000   # time between beginning of each frame
+EXPOSURE_PERIOD     = 60.00000   # time between beginning of each frame
 CCD_GAIN            = 100        # gain
-CCD_EXPOSURE        = 10.00000   # length of exposure
+CCD_EXPOSURE        = 15.00000    # length of exposure
 #CCD_EXPOSURE        = 0.00003    # length of exposure
 #CCD_EXPOSURE        = 1.25000    # length of exposure
 
@@ -205,6 +205,8 @@ class ImageProcessorThread(Thread):
         #i = PythonMagick.Image("frame.fit")
         #i.magick('TIF')
         #i.write('frame.tif')
+
+        logger.info('Finished writing files')
 
 
     def white_balance2(self, data_bytes):
