@@ -19,11 +19,13 @@ from enum import Enum
 CCD_NAME       = "SVBONY SV305 0"
 
 CCD_BINNING         = 1          # binning
-EXPOSURE_PERIOD     = 10.00000   # time between beginning of each frame
+EXPOSURE_PERIOD     = 15.00000   # time between beginning of each frame
 CCD_GAIN            = 100        # gain
-CCD_EXPOSURE        = 7.00000    # length of exposure
+CCD_EXPOSURE        = 10.00000   # length of exposure
 #CCD_EXPOSURE        = 0.00003    # length of exposure
 #CCD_EXPOSURE        = 1.25000    # length of exposure
+
+DARK = fits.open('dark_7s.fit')
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -155,7 +157,9 @@ class ImageProcessorThread(Thread):
         ### OpenCV ###
         blobfile = io.BytesIO(self.imgdata)
         hdulist = fits.open(blobfile)
-        scidata = hdulist[0].data
+        scidata_uncalibrated = hdulist[0].data
+
+        scidata = cv2.subtract(scidata_uncalibrated, DARK[0].data)
 
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2BGR)
