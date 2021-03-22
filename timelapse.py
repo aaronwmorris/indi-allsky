@@ -4,13 +4,18 @@ import sys
 import time
 import logging
 from datetime import datetime
-from threading import Thread
+import copy
+
+from multiprocessing import Process
+from multiprocessing import Queue
+from multiprocessing import Value
+from multiprocessing import current_process
+from multiprocessing import log_to_stderr
 
 import PyIndi
 from astropy.io import fits
 import cv2
 import numpy
-from enum import Enum
 
 #import PythonMagick
 
@@ -21,24 +26,31 @@ CCD_NAME       = "SVBONY SV305 0"
 CCD_BINNING         = 1          # binning
 EXPOSURE_PERIOD     = 60.00000   # time between beginning of each frame
 CCD_GAIN            = 100        # gain
-CCD_EXPOSURE        = 15.00000    # length of exposure
-#CCD_EXPOSURE        = 0.00003    # length of exposure
-#CCD_EXPOSURE        = 1.25000    # length of exposure
-
-DARK = fits.open('dark_7s.fit')
+CCD_EXPOSURE_MAX    = 15.00000
+CCD_EXPOSURE_MIN    =  0.00003
+CCD_EXPOSURE_DEF    =  1.00000
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
+logger = log_to_stderr()
+logger.setLevel(logging.INFO)
+
 
 class IndiClient(PyIndi.BaseClient):
  
-    device = None
- 
     def __init__(self):
         super(IndiClient, self).__init__()
+        self.device = None
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
         self.logger.info('creating an instance of PyQtIndi.IndiClient')
+
+        self.img_q = Queue()
+        self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
+
+        self.logger.info('Starting ImageProcessorWorker process')
+        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v)
+        self.img_process.start()
 
 
     def newDevice(self, d):
@@ -92,10 +104,10 @@ class IndiClient(PyIndi.BaseClient):
         ### get image data
         imgdata = bp.getblobdata()
 
-        ### process data in new Thread
-        ImageProcessorThread(imgdata).start()
+        ### process data in worker
+        self.img_q.put(imgdata)
 
-        sleeptime = float(EXPOSURE_PERIOD) - float(CCD_EXPOSURE)
+        sleeptime = float(EXPOSURE_PERIOD) - float(self.exposure_v.value)
         self.logger.info('...Sleeping for %0.6f seconds...', sleeptime)
         time.sleep(sleeptime)
 
@@ -134,32 +146,89 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        self.logger.info("Taking %0.6f second exposure", float(CCD_EXPOSURE))
+        self.logger.info("Taking %0.6f second exposure", float(self.exposure_v.value))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
-        exp[0].value = float(CCD_EXPOSURE)
+        exp[0].value = float(self.exposure_v.value)
         # send new exposure time to server/device
         self.sendNewNumber(exp)
 
 
-class ImageProcessorThread(Thread):
-    def __init__(self, imgdata):
-        # Call the Thread class's init function
-        super(ImageProcessorThread, self).__init__()
 
-        self.imgdata = imgdata
+
+class ImageProcessorWorker(Process):
+    def __init__(self, img_q, exposure_v):
+        super(ImageProcessorWorker, self).__init__()
+
+        self.img_q = img_q
+        self.exposure_v = exposure_v
+
+
+        self.dark = fits.open('dark_7s.fit')
+
+
+        self.name = current_process().name
 
 
     def run(self):
-        import io
+        while True:
+            imgdata = self.img_q.get()
 
-        ### OpenCV ###
-        blobfile = io.BytesIO(self.imgdata)
-        hdulist = fits.open(blobfile)
-        scidata_uncalibrated = hdulist[0].data
+            if not imgdata:
+                return
 
-        scidata = cv2.subtract(scidata_uncalibrated, DARK[0].data)
+
+            import io
+
+            ### OpenCV ###
+            blobfile = io.BytesIO(imgdata)
+            hdulist = fits.open(blobfile)
+            scidata_uncalibrated = hdulist[0].data
+
+            scidata_raw = self.calibrate(scidata_uncalibrated)
+            scidata_color = self.calibrate(scidata_raw)
+            self.write_jpg(scidata_color)
+
+
+    def write_fit(self, hdulist):
+        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
+
+        hdulist.writeto("{0}.fit".format(now_str))
+
+        logger.info('Finished writing fit file')
+
+
+    def write_jpg(self, scidata):
+        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
+
+        cv2.imwrite("{0}_wb.jpg".format(now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite("{0}_rgb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}_wb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}_rgb.tif".format(now_str), scidata)
+
+
+        ### ImageMagick ###
+        ### write image data to BytesIO buffer
+        #blobfile = io.BytesIO(self.imgdata)
+
+        #with open("frame.fit", "wb") as f:
+        #    f.write(blobfile.getvalue())
+
+        #i = PythonMagick.Image("frame.fit")
+        #i.magick('TIF')
+        #i.write('frame.tif')
+
+        logger.info('Finished writing files')
+
+
+    def calibrate(self, scidata_uncalibrated):
+
+        scidata = cv2.subtract(scidata_uncalibrated, self.dark[0].data)
+        return scidata
+
+
+    def colorize(self, scidata):
 
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2BGR)
@@ -185,28 +254,7 @@ class ImageProcessorThread(Thread):
         #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
         #hdulist[0].data = scidata
 
-        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
-
-        hdulist.writeto("{0}.fit".format(now_str))
-
-        #cv2.imwrite("{0}_rgb.png".format(now_str), scidata_rgb, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        cv2.imwrite("{0}_rgb.jpg".format(now_str), scidata_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        cv2.imwrite("{0}_wb.jpg".format(now_str), scidata_wb, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}_rgb.tif".format(now_str), scidata_rgb)
-
-
-        ### ImageMagick ###
-        ### write image data to BytesIO buffer
-        #blobfile = io.BytesIO(self.imgdata)
-
-        #with open("frame.fit", "wb") as f:
-        #    f.write(blobfile.getvalue())
-
-        #i = PythonMagick.Image("frame.fit")
-        #i.magick('TIF')
-        #i.write('frame.tif')
-
-        logger.info('Finished writing files')
+        return scidata_wb
 
 
     def white_balance2(self, data_bytes):
