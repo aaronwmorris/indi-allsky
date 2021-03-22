@@ -24,11 +24,16 @@ import numpy
 CCD_NAME       = "SVBONY SV305 0"
 
 CCD_BINNING         = 1          # binning
-EXPOSURE_PERIOD     = 60.00000   # time between beginning of each frame
+EXPOSURE_PERIOD     =  5.00000   # time between beginning of each frame
 CCD_GAIN            = 100        # gain
+
 CCD_EXPOSURE_MAX    = 15.00000
 CCD_EXPOSURE_MIN    =  0.00003
 CCD_EXPOSURE_DEF    =  1.00000
+
+TARGET_MEAN         = 40
+TARGET_MEAN_MAX     = TARGET_MEAN + 10
+TARGET_MEAN_MIN     = TARGET_MEAN - 10
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -190,6 +195,8 @@ class ImageProcessorWorker(Process):
             scidata_color = self.colorize(scidata_calibrated)
             self.write_jpg(scidata_color)
 
+            self.calculate_exposure(scidata_color)
+
 
     def write_fit(self, hdulist):
         now_str = datetime.now().strftime('%y%m%d_%H%M%S')
@@ -244,8 +251,8 @@ class ImageProcessorWorker(Process):
         ###
 
         ### seems to work best for GRBG
-        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
-        #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
+        scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
         scidata_wb = self.white_balance2(scidata_rgb)
@@ -255,6 +262,41 @@ class ImageProcessorWorker(Process):
         #hdulist[0].data = scidata
 
         return scidata_wb
+
+
+    def calculate_exposure(self, data_bytes):
+        r, g, b = cv2.split(data_bytes)
+        r_avg = cv2.mean(r)[0]
+        g_avg = cv2.mean(g)[0]
+        b_avg = cv2.mean(b)[0]
+
+        logger.info('R mean: %0.2f', r_avg)
+        logger.info('G mean: %0.2f', g_avg)
+        logger.info('B mean: %0.2f', b_avg)
+
+         # Find the gain of each channel
+        k = (r_avg + g_avg + b_avg) / 3
+
+        logger.info('Current average: %0.2f', k)
+
+        current_exposure = self.exposure_v.value
+        if g_avg > TARGET_MEAN_MAX:
+            #new_exposure = current_exposure / 2.0
+            new_exposure = current_exposure / ( g_avg / float(TARGET_MEAN) )
+        else:
+            #new_exposure = current_exposure + 1
+            new_exposure = current_exposure * ( float(TARGET_MEAN) / g_avg )
+
+
+        if new_exposure < CCD_EXPOSURE_MIN:
+            new_exposure = CCD_EXPOSURE_MIN
+        elif new_exposure > CCD_EXPOSURE_MAX:
+            new_exposure = CCD_EXPOSURE_MAX
+
+
+        logger.warning('New exposure: %0.6f', new_exposure)
+        self.exposure_v.value = new_exposure
+
 
 
     def white_balance2(self, data_bytes):
