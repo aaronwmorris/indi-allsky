@@ -108,6 +108,10 @@ class IndiClient(PyIndi.BaseClient):
             ccdgain = self.device.getNumber("CCD_GAIN")
             ccdgain[0].value = CCD_GAIN
             self.sendNewNumber(ccdgain)
+        #elif pName == "FRAME_FORMAT":
+        #    frameformat = self.device.getNumber("FRAME_FORMAT")
+        #    frameformat[0].value = 8
+        #    self.sendNewNumber(frameformat)
 
 
 
