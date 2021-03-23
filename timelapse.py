@@ -24,7 +24,7 @@ import numpy
 CCD_NAME       = "SVBONY SV305 0"
 
 CCD_BINNING         = 1          # binning
-EXPOSURE_PERIOD     =  5.00000   # time between beginning of each frame
+EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
 CCD_GAIN            = 100        # gain
 
 CCD_EXPOSURE_MAX    = 15.00000
@@ -40,7 +40,7 @@ FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
 FONT_HEIGHT = 30
 FONT_X = 15
 FONT_Y = 30
-FONT_COLOR = (0, 0, 128)
+FONT_COLOR = (200, 200, 200)
 FONT_AA = cv2.LINE_AA
 FONT_SCALE = 1
 FONT_THICKNESS= 1
@@ -62,6 +62,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.img_q = Queue()
         self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
+        #self.sensortemp_v = Value('f', 0)
 
         self.logger.info('Starting ImageProcessorWorker process')
         self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v)
@@ -161,6 +162,10 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
+        #temp = self.device.getNumber("CCD_TEMPERATURE")
+        #self.logger.info("Sensor temperature: %d", temp[0].value)
+        #self.sensortemp_v.value = temp[0].value
+
         self.logger.info("Taking %0.6f second exposure", float(self.exposure_v.value))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
@@ -276,19 +281,17 @@ class ImageProcessorWorker(Process):
 
 
     def image_text(self, data_bytes):
-        cv2.rectangle(
-            img=data_bytes,
-            pt1=(0, 0),
-            pt2=(350, 200),
-            color=(0, 0, 0),
-            thickness=cv2.FILLED,
-        )
-
-        now_str = datetime.now().strftime('%Y%m%d %H:%M:%S')
+        #cv2.rectangle(
+        #    img=data_bytes,
+        #    pt1=(0, 0),
+        #    pt2=(350, 125),
+        #    color=(0, 0, 0),
+        #    thickness=cv2.FILLED,
+        #)
 
         cv2.putText(
             img=data_bytes,
-            text=now_str,
+            text=datetime.now().strftime('%Y%m%d %H:%M:%S'),
             org=(FONT_X, FONT_Y),
             fontFace=FONT_FACE,
             color=FONT_COLOR,
@@ -297,6 +300,27 @@ class ImageProcessorWorker(Process):
             thickness=FONT_THICKNESS,
         )
 
+        cv2.putText(
+            img=data_bytes,
+            text='Exposure {0:0.5f}'.format(self.exposure_v.value),
+            org=(FONT_X, FONT_Y + (FONT_HEIGHT * 1)),
+            fontFace=FONT_FACE,
+            color=FONT_COLOR,
+            lineType=FONT_AA,
+            fontScale=FONT_SCALE,
+            thickness=FONT_THICKNESS,
+        )
+
+        cv2.putText(
+            img=data_bytes,
+            text='Gain {0:d}'.format(CCD_GAIN),
+            org=(FONT_X, FONT_Y + (FONT_HEIGHT * 2)),
+            fontFace=FONT_FACE,
+            color=FONT_COLOR,
+            lineType=FONT_AA,
+            fontScale=FONT_SCALE,
+            thickness=FONT_THICKNESS,
+        )
 
     def calculate_exposure(self, data_bytes):
         r, g, b = cv2.split(data_bytes)
