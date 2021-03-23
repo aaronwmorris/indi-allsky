@@ -36,6 +36,16 @@ TARGET_MEAN_MAX     = TARGET_MEAN + 10
 TARGET_MEAN_MIN     = TARGET_MEAN - 10
 
 
+FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
+FONT_HEIGHT = 30
+FONT_X = 15
+FONT_Y = 30
+FONT_COLOR = (0, 0, 128)
+FONT_AA = cv2.LINE_AA
+FONT_SCALE = 1
+FONT_THICKNESS= 1
+
+
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 logger = log_to_stderr()
@@ -193,6 +203,7 @@ class ImageProcessorWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
+            self.image_text(scidata_color)
             self.write_jpg(scidata_color)
 
             self.calculate_exposure(scidata_color)
@@ -262,6 +273,29 @@ class ImageProcessorWorker(Process):
         #hdulist[0].data = scidata
 
         return scidata_wb
+
+
+    def image_text(self, data_bytes):
+        cv2.rectangle(
+            img=data_bytes,
+            pt1=(0, 0),
+            pt2=(350, 200),
+            color=(0, 0, 0),
+            thickness=cv2.FILLED,
+        )
+
+        now_str = datetime.now().strftime('%Y%m%d %H:%M:%S')
+
+        cv2.putText(
+            img=data_bytes,
+            text=now_str,
+            org=(FONT_X, FONT_Y),
+            fontFace=FONT_FACE,
+            color=FONT_COLOR,
+            lineType=FONT_AA,
+            fontScale=FONT_SCALE,
+            thickness=FONT_THICKNESS,
+        )
 
 
     def calculate_exposure(self, data_bytes):
