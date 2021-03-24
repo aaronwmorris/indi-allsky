@@ -442,7 +442,7 @@ class IndiTimelapse(object):
         #self.sendNewNumber(frameformat)
 
         while True:
-            temp = self.device.getNumber("CCD_TEMPERATURE")
+            temp = device.getNumber("CCD_TEMPERATURE")
             if temp:
                 logger.info("Sensor temperature: %d", temp[0].value)
                 self.sensortemp_v.value = temp[0].value
