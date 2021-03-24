@@ -62,7 +62,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.img_q = Queue()
         self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
-        #self.sensortemp_v = Value('f', 0)
+        self.sensortemp_v = Value('f', 0)
 
         self.logger.info('Starting ImageProcessorWorker process')
         self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v)
@@ -94,24 +94,10 @@ class IndiClient(PyIndi.BaseClient):
 
 
 
-        if pName == "CCD_EXPOSURE":
-            # take first exposure
-            self.takeExposure()
-        elif pName == "CCD_TEMPERATURE":
+        if pName == "CCD_TEMPERATURE":
             temp = self.device.getNumber("CCD_TEMPERATURE")
             self.logger.info("Temperature: %d", temp[0].value)
-        elif pName == "CCD_BINNING":
-            binmode = self.device.getNumber("CCD_BINNING")
-            binmode[0].value = CCD_BINNING
-            self.sendNewNumber(binmode)
-        elif pName == "CCD_GAIN":
-            ccdgain = self.device.getNumber("CCD_GAIN")
-            ccdgain[0].value = CCD_GAIN
-            self.sendNewNumber(ccdgain)
-        #elif pName == "FRAME_FORMAT":
-        #    frameformat = self.device.getNumber("FRAME_FORMAT")
-        #    frameformat[0].value = 8
-        #    self.sendNewNumber(frameformat)
+            self.sensortemp_v.value = temp[0].value
 
 
 
@@ -127,12 +113,10 @@ class IndiClient(PyIndi.BaseClient):
         ### process data in worker
         self.img_q.put(imgdata)
 
-        sleeptime = float(EXPOSURE_PERIOD) - float(self.exposure_v.value)
-        self.logger.info('...Sleeping for %0.6f seconds...', sleeptime)
-        time.sleep(sleeptime)
+        #sleeptime = float(EXPOSURE_PERIOD) - float(self.exposure_v.value)
+        #self.logger.info('...Sleeping for %0.6f s...', sleeptime)
+        #time.sleep(sleeptime)
 
-        ### start new exposure
-        self.takeExposure()
 
 
     def newSwitch(self, svp):
@@ -166,11 +150,12 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        #temp = self.device.getNumber("CCD_TEMPERATURE")
-        #self.logger.info("Sensor temperature: %d", temp[0].value)
-        #self.sensortemp_v.value = temp[0].value
+        temp = self.device.getNumber("CCD_TEMPERATURE")
+        if temp:
+            self.logger.info("Sensor temperature: %d", temp[0].value)
+            self.sensortemp_v.value = temp[0].value
 
-        self.logger.info("Taking %0.6f second exposure", float(self.exposure_v.value))
+        self.logger.info("Taking %0.6f s exposure", float(self.exposure_v.value))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
@@ -433,9 +418,31 @@ if __name__ == "__main__":
          print("  indiserver indi_simulator_telescope indi_simulator_ccd")
          sys.exit(1)
       
-    # start endless loop, client works asynchron in background
+
+    device = None
+    while not device:
+        device = indiclient.getDevice(CCD_NAME)
+        time.sleep(0.5)
+
+    logger.info('Setting BIN mode: %d', CCD_BINNING)
+    binmode = device.getNumber("CCD_BINNING")
+    binmode[0].value = CCD_BINNING
+    indiclient.sendNewNumber(binmode)
+
+
+    logger.info('Setting gain: %d', CCD_GAIN)
+    ccdgain = device.getNumber("CCD_GAIN")
+    ccdgain[0].value = CCD_GAIN
+    indiclient.sendNewNumber(ccdgain)
+
+
+    #frameformat = device.getSwitch("FRAME_FORMAT")
+    #frameformat[0].value = 8
+    #self.sendNewNumber(frameformat)
+
     while True:
-        time.sleep(1)
+        indiclient.takeExposure()
+        time.sleep(EXPOSURE_PERIOD)
 
 
 
