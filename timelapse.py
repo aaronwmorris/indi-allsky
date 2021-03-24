@@ -25,15 +25,15 @@ CCD_NAME       = "SVBONY SV305 0"
 
 CCD_BINNING         = 1          # binning
 EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
-CCD_GAIN            = 100        # gain
+CCD_GAIN            = 250        # gain
 
 CCD_EXPOSURE_MAX    = 15.00000
 CCD_EXPOSURE_MIN    =  0.00003
 CCD_EXPOSURE_DEF    =  1.00000
 
-TARGET_MEAN         = 40
-TARGET_MEAN_MAX     = TARGET_MEAN + 10
-TARGET_MEAN_MIN     = TARGET_MEAN - 10
+TARGET_MEAN         = 35
+TARGET_MEAN_MAX     = TARGET_MEAN + 5
+TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
 
 FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
