@@ -54,19 +54,16 @@ logger.setLevel(logging.INFO)
 
 class IndiClient(PyIndi.BaseClient):
  
-    def __init__(self):
+    def __init__(self, img_q, exposure_v, sensortemp_v):
         super(IndiClient, self).__init__()
+
+        self.img_q = img_q
+        self.exposure_v = exposure_v
+        self.sensortemp_v = sensortemp_v
+
         self.device = None
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
         self.logger.info('creating an instance of PyQtIndi.IndiClient')
-
-        self.img_q = Queue()
-        self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
-        self.sensortemp_v = Value('f', 0)
-
-        self.logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v)
-        self.img_process.start()
 
 
     def newDevice(self, d):
@@ -91,13 +88,6 @@ class IndiClient(PyIndi.BaseClient):
             # set BLOB mode to BLOB_ALSO
             self.logger.info('Set BLOB mode')
             self.setBLOBMode(1, self.device.getDeviceName(), None)
-
-
-
-        if pName == "CCD_TEMPERATURE":
-            temp = self.device.getNumber("CCD_TEMPERATURE")
-            self.logger.info("Temperature: %d", temp[0].value)
-            self.sensortemp_v.value = temp[0].value
 
 
 
@@ -150,11 +140,6 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        temp = self.device.getNumber("CCD_TEMPERATURE")
-        if temp:
-            self.logger.info("Sensor temperature: %d", temp[0].value)
-            self.sensortemp_v.value = temp[0].value
-
         self.logger.info("Taking %0.6f s exposure", float(self.exposure_v.value))
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
@@ -167,11 +152,12 @@ class IndiClient(PyIndi.BaseClient):
 
 
 class ImageProcessorWorker(Process):
-    def __init__(self, img_q, exposure_v):
+    def __init__(self, img_q, exposure_v, sensortemp_v):
         super(ImageProcessorWorker, self).__init__()
 
         self.img_q = img_q
         self.exposure_v = exposure_v
+        self.sensortemp_v = sensortemp_v
 
 
         self.dark = fits.open('dark_7s.fit')
@@ -401,48 +387,72 @@ class ImageProcessorWorker(Process):
 
 
 
+class IndiTimelapse(object):
+
+    def __init__(self):
+        self.img_q = Queue()
+        self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
+        self.sensortemp_v = Value('f', 0)
+
+        logger.info('Starting ImageProcessorWorker process')
+        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.sensortemp_v)
+        self.img_process.start()
+
+
+
+    def main(self):
+        # instantiate the client
+        indiclient = IndiClient(self.img_q, self.exposure_v, self.sensortemp_v)
+
+        # set roi
+        #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
+
+        # set indi server localhost and port 7624
+        indiclient.setServer("localhost", 7624)
+
+        # connect to indi server
+        print("Connecting to indiserver")
+        if (not(indiclient.connectServer())):
+             print("No indiserver running on {0}:{1} - Try to run".format(indiclient.getHost(), indiclient.getPort()))
+             print("  indiserver indi_simulator_telescope indi_simulator_ccd")
+             sys.exit(1)
+
+
+        device = None
+        while not device:
+            device = indiclient.getDevice(CCD_NAME)
+            time.sleep(0.5)
+
+        logger.info('Connected to device')
+
+        logger.info('Setting BIN mode: %d', CCD_BINNING)
+        binmode = device.getNumber("CCD_BINNING")
+        binmode[0].value = CCD_BINNING
+        indiclient.sendNewNumber(binmode)
+
+
+        logger.info('Setting gain: %d', CCD_GAIN)
+        ccdgain = device.getNumber("CCD_GAIN")
+        ccdgain[0].value = CCD_GAIN
+        indiclient.sendNewNumber(ccdgain)
+
+
+        #frameformat = device.getSwitch("FRAME_FORMAT")
+        #frameformat[0].value = 8
+        #self.sendNewNumber(frameformat)
+
+        while True:
+            temp = self.device.getNumber("CCD_TEMPERATURE")
+            if temp:
+                logger.info("Sensor temperature: %d", temp[0].value)
+                self.sensortemp_v.value = temp[0].value
+
+
+            indiclient.takeExposure()
+            time.sleep(EXPOSURE_PERIOD)
+
+
 if __name__ == "__main__":
-    # instantiate the client
-    indiclient = IndiClient()
-
-    # set roi
-    #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
-
-    # set indi server localhost and port 7624
-    indiclient.setServer("localhost", 7624)
-
-    # connect to indi server
-    print("Connecting to indiserver")
-    if (not(indiclient.connectServer())):
-         print("No indiserver running on {0}:{1} - Try to run".format(indiclient.getHost(), indiclient.getPort()))
-         print("  indiserver indi_simulator_telescope indi_simulator_ccd")
-         sys.exit(1)
-      
-
-    device = None
-    while not device:
-        device = indiclient.getDevice(CCD_NAME)
-        time.sleep(0.5)
-
-    logger.info('Setting BIN mode: %d', CCD_BINNING)
-    binmode = device.getNumber("CCD_BINNING")
-    binmode[0].value = CCD_BINNING
-    indiclient.sendNewNumber(binmode)
-
-
-    logger.info('Setting gain: %d', CCD_GAIN)
-    ccdgain = device.getNumber("CCD_GAIN")
-    ccdgain[0].value = CCD_GAIN
-    indiclient.sendNewNumber(ccdgain)
-
-
-    #frameformat = device.getSwitch("FRAME_FORMAT")
-    #frameformat[0].value = 8
-    #self.sendNewNumber(frameformat)
-
-    while True:
-        indiclient.takeExposure()
-        time.sleep(EXPOSURE_PERIOD)
-
+    IndiTimelapse().main()
 
 
