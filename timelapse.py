@@ -160,7 +160,8 @@ class ImageProcessorWorker(Process):
         self.sensortemp_v = sensortemp_v
 
 
-        self.dark = fits.open('dark_7s.fit')
+        #self.dark = fits.open('dark_7s.fit')
+        self.dark = None
 
 
         self.name = current_process().name
@@ -222,8 +223,12 @@ class ImageProcessorWorker(Process):
 
     def calibrate(self, scidata_uncalibrated):
 
+        if not self.dark:
+            return scidata_uncalibrated
+
         scidata = cv2.subtract(scidata_uncalibrated, self.dark[0].data)
         return scidata
+
 
 
     def colorize(self, scidata):
@@ -242,8 +247,8 @@ class ImageProcessorWorker(Process):
         ###
 
         ### seems to work best for GRBG
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
-        scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
+        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
+        #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
         scidata_wb = self.white_balance2(scidata_rgb)
@@ -425,6 +430,13 @@ class IndiTimelapse(object):
 
         logger.info('Connected to device')
 
+        # loop until the exposure is populated
+        e = None
+        while not e:
+            e = device.getNumber("CCD_EXPOSURE")
+            time.sleep(0.5)
+
+
         logger.info('Setting BIN mode: %d', CCD_BINNING)
         binmode = device.getNumber("CCD_BINNING")
         binmode[0].value = CCD_BINNING
@@ -437,9 +449,11 @@ class IndiTimelapse(object):
         indiclient.sendNewNumber(ccdgain)
 
 
-        #frameformat = device.getSwitch("FRAME_FORMAT")
-        #frameformat[0].value = 8
-        #self.sendNewNumber(frameformat)
+        logger.info('Setting 8bit mode')
+        frameformat = device.getSwitch("FRAME_FORMAT")
+        frameformat[0].s = PyIndi.ISS_OFF  # RAW12
+        frameformat[1].s = PyIndi.ISS_ON   # RAW8
+        indiclient.sendNewSwitch(frameformat)
 
         while True:
             temp = device.getNumber("CCD_TEMPERATURE")
