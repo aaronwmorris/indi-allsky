@@ -128,11 +128,6 @@ class IndiClient(PyIndi.BaseClient):
         ### process data in worker
         self.img_q.put(imgdata)
 
-        #sleeptime = float(EXPOSURE_PERIOD) - float(self.exposure_v.value)
-        #self.logger.info('...Sleeping for %0.6f s...', sleeptime)
-        #time.sleep(sleeptime)
-
-
 
     def newSwitch(self, svp):
         self.logger.info ("new Switch %s for device %s", svp.name, svp.device)
@@ -165,11 +160,11 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def takeExposure(self):
-        self.logger.info("Taking %0.6f s exposure", float(self.exposure_v.value))
+        self.logger.info("Taking %0.6f s exposure", self.exposure_v.value)
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
-        exp[0].value = float(self.exposure_v.value)
+        exp[0].value = self.exposure_v.value
         # send new exposure time to server/device
         self.sendNewNumber(exp)
 
@@ -260,12 +255,6 @@ class ImageProcessorWorker(Process):
 
 
     def colorize(self, scidata):
-
-        ###
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2RGB)
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_RG2RGB)
-        ###
-
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
         scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
