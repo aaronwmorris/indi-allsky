@@ -255,8 +255,6 @@ class ImageProcessorWorker(Process):
     def colorize(self, scidata):
 
         ###
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2BGR)
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GB2BGR)
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_BG2RGB)
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_RG2RGB)
         ###
@@ -264,18 +262,16 @@ class ImageProcessorWorker(Process):
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
         scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
-        #scidata_rgb = self._convert_GRGB_to_RGB_8bit(scidata)
         ###
 
         ### seems to work best for GRBG
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
         #scidata_wb = self.white_balance2(scidata_rgb)
-        #scidata_wb = self.equalize_hist(scidata_rgb)
+        scidata_wb = self.white_balance3(scidata_rgb)
         #scidata_wb = self.histogram_equalization(scidata_rgb)
-        scidata_wb = scidata_rgb
+        #scidata_wb = scidata_rgb
 
 
         #if self.roi is not None:
@@ -377,10 +373,19 @@ class ImageProcessorWorker(Process):
         self.exposure_v.value = new_exposure
 
 
-    def equalize_hist(self, data_bytes):
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        stretched = clahe.apply(data_bytes)
-        return stretched
+    def white_balance3(self, data_bytes):
+        ### ohhhh, contrasty
+        lab = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
+
+        l, a, b = cv2.split(lab)
+
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+
+        new_lab = cv2.merge((cl, a, b))
+
+        new_data = cv2.cvtColor(new_lab, cv2.COLOR_LAB2RGB)
+        return new_data
 
 
     def white_balance2(self, data_bytes):
@@ -453,17 +458,6 @@ class ImageProcessorWorker(Process):
         return img_out
 
 
-    def _convert_GRGB_to_RGB_8bit(self, data_bytes):
-        data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
-        even = data_bytes[0::2]
-        odd = data_bytes[1::2]
-        # Convert bayer16 to bayer8
-        bayer8_image = (even >> 4) | (odd << 4)
-        bayer8_image = bayer8_image.reshape((1080, 1920))
-        # Use OpenCV to convert Bayer GRGB to RGB
-        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
-
-
     def _convert_GRBG_to_RGB_8bit(self, data_bytes):
         data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
         even = data_bytes[0::2]
@@ -472,7 +466,7 @@ class ImageProcessorWorker(Process):
         bayer8_image = (even >> 4) | (odd << 4)
         bayer8_image = bayer8_image.reshape((1080, 1920))
         # Use OpenCV to convert Bayer GRBG to RGB
-        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2BGR)
+        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
 
 
 
