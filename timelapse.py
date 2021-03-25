@@ -7,6 +7,8 @@ from datetime import datetime
 import copy
 import functools
 
+import ephem
+
 from multiprocessing import Process
 from multiprocessing import Queue
 from multiprocessing import Value
@@ -26,10 +28,12 @@ CCD_NAME       = "SVBONY SV305 0"
 
 EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
 
+CCD_GAIN_DAY    = 0
+CCD_GAIN_NIGHT  = 250
+
 CCD_PROPERTIES = {
     'CCD_BINNING' : 1,
-    #'CCD_GAIN'    : 250,
-    'CCD_GAIN'    : 0,
+    'CCD_GAIN'    : CCD_GAIN_NIGHT,
     'CCD_WBR'     : 95,
     'CCD_WBG'     : 65,
     'CCD_WBB'     : 110,
@@ -44,15 +48,18 @@ CCD_SWITCHES = {
 }
 
 
-CCD_EXPOSURE_MAX    = 15.00000
-CCD_EXPOSURE_MIN    =  0.00003
-#CCD_EXPOSURE_DEF    =  1.00000
-CCD_EXPOSURE_DEF    =  0.00010
+CCD_EXPOSURE_MAX    = 15.000000
+CCD_EXPOSURE_MIN    =  0.000029
+#CCD_EXPOSURE_DEF    =  1.000000
+CCD_EXPOSURE_DEF    =  0.000100
 
-TARGET_MEAN         = 70
+TARGET_MEAN         = 50
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
+LOCATION_LATITUDE  = '33'
+LOCATION_LONGITUDE = '-84'
+NIGHT_SUN_ALT = -15
 
 FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
 FONT_HEIGHT = 30
@@ -170,18 +177,18 @@ class IndiClient(PyIndi.BaseClient):
 
 
 class ImageProcessorWorker(Process):
-    def __init__(self, img_q, exposure_v, sensortemp_v):
+    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v):
         super(ImageProcessorWorker, self).__init__()
 
         self.img_q = img_q
         self.exposure_v = exposure_v
+        self.gain_v = gain_v
         self.sensortemp_v = sensortemp_v
 
         self.hist_mean = []
 
         #self.dark = fits.open('dark_7s.fit')
         self.dark = None
-
 
         self.name = current_process().name
 
@@ -264,14 +271,13 @@ class ImageProcessorWorker(Process):
         scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
         ###
 
-        ### seems to work best for GRBG
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
         #scidata_wb = self.white_balance2(scidata_rgb)
-        scidata_wb = self.white_balance3(scidata_rgb)
+        #scidata_wb = self.white_balance3(scidata_rgb)
         #scidata_wb = self.histogram_equalization(scidata_rgb)
-        #scidata_wb = scidata_rgb
+        scidata_wb = scidata_rgb
 
 
         #if self.roi is not None:
@@ -314,7 +320,7 @@ class ImageProcessorWorker(Process):
 
         cv2.putText(
             img=data_bytes,
-            text='Gain {0:d}'.format(CCD_PROPERTIES['CCD_GAIN']),
+            text='Gain {0:d}'.format(self.gain_v.value),
             org=(FONT_X, FONT_Y + (FONT_HEIGHT * 2)),
             fontFace=FONT_FACE,
             color=FONT_COLOR,
@@ -369,7 +375,7 @@ class ImageProcessorWorker(Process):
             new_exposure = CCD_EXPOSURE_MAX
 
 
-        logger.warning('New exposure: %0.6f', new_exposure)
+        logger.warning('New calculated exposure: %0.6f', new_exposure)
         self.exposure_v.value = new_exposure
 
 
@@ -475,10 +481,13 @@ class IndiTimelapse(object):
     def __init__(self):
         self.img_q = Queue()
         self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
+        self.gain_v = Value('i', copy.copy(CCD_GAIN_NIGHT))
         self.sensortemp_v = Value('f', 0)
 
+        self.night = True
+
         logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.sensortemp_v)
+        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v)
         self.img_process.start()
 
 
@@ -540,6 +549,9 @@ class IndiTimelapse(object):
             indiclient.sendNewSwitch(indiswitch)
 
 
+        # Sleep after configuration
+        time.sleep(1.0)
+
 
         while True:
             temp = device.getNumber("CCD_TEMPERATURE")
@@ -548,8 +560,51 @@ class IndiTimelapse(object):
                 self.sensortemp_v.value = temp[0].value
 
 
+            is_night = self.is_night()
+            #logger.info('self.night: %r', self.night)
+            #logger.info('is night: %r', is_night)
+
+            ### Change gain when we change between day and night
+            if self.night != is_night:
+                logger.warning('Change between night and day')
+                self.night = is_night
+
+                if is_night:
+                    self.gain_v.value = CCD_GAIN_NIGHT
+                else:
+                    self.gain_v.value = CCD_GAIN_DAY
+
+
+                prop_gain = None
+                while not prop_gain:
+                    prop_gain = device.getNumber('CCD_GAIN')
+                    time.sleep(0.5)
+
+                logger.info('Setting camera gain to %d', self.gain_v.value)
+                prop_gain[0].value = self.gain_v.value
+                indiclient.sendNewNumber(prop_gain)
+
+                # Sleep after configuration
+                time.sleep(1.0)
+
+
             indiclient.takeExposure()
             time.sleep(EXPOSURE_PERIOD)
+
+
+
+    def is_night(self):
+        obs = ephem.Observer()
+        obs.lon = LOCATION_LONGITUDE
+        obs.lat = LOCATION_LATITUDE
+        obs.date = datetime.now()
+
+        sun = ephem.Sun()
+        sun.compute(obs)
+
+        logger.info('Sun altitude: %0.2f', sun.alt)
+        return sun.alt < 0
+
 
 
 if __name__ == "__main__":
