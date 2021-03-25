@@ -54,14 +54,13 @@ CCD_EXPOSURE_MIN    =  0.000029
 #CCD_EXPOSURE_DEF    =  1.000000
 CCD_EXPOSURE_DEF    =  0.000100
 
-TARGET_MEAN         = 70
+TARGET_MEAN         = 50
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
 LOCATION_LATITUDE  = '33'
 LOCATION_LONGITUDE = '-84'
-NIGHT_SUN_ALT_DEG = -15
-NIGHT_SUN_ALT = math.sin(NIGHT_SUN_ALT_DEG)
+NIGHT_SUN_ALT_DEG  = -15
 
 FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
 FONT_HEIGHT = 30
@@ -606,7 +605,7 @@ class IndiTimelapse(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < NIGHT_SUN_ALT
+        return sun.alt < math.sin(NIGHT_SUN_ALT_DEG)
 
 
 
