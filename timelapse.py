@@ -23,15 +23,32 @@ import numpy
 #CCD_NAME       = "ZWO CCD ASI290MM"
 CCD_NAME       = "SVBONY SV305 0"
 
-CCD_BINNING         = 1          # binning
 EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
-CCD_GAIN            = 250        # gain
+
+CCD_PROPERTIES = {
+    'CCD_BINNING' : 1,
+    #'CCD_GAIN'    : 250,
+    'CCD_GAIN'    : 0,
+    'CCD_WBR'     : 95,
+    'CCD_WBG'     : 65,
+    'CCD_WBB'     : 110,
+    'CCD_GAMMA'   : 65,
+}
+
+CCD_SWITCHES = {
+    'FRAME_FORMAT' : [
+        PyIndi.ISS_OFF,  # RAW12
+        PyIndi.ISS_ON,   # RAW8
+    ]
+}
+
 
 CCD_EXPOSURE_MAX    = 15.00000
 CCD_EXPOSURE_MIN    =  0.00003
-CCD_EXPOSURE_DEF    =  1.00000
+#CCD_EXPOSURE_DEF    =  1.00000
+CCD_EXPOSURE_DEF    =  0.00010
 
-TARGET_MEAN         = 35
+TARGET_MEAN         = 80
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
@@ -251,7 +268,11 @@ class ImageProcessorWorker(Process):
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
-        scidata_wb = self.white_balance2(scidata_rgb)
+        #scidata_wb = self.white_balance2(scidata_rgb)
+        #scidata_wb = self.equalize_hist(scidata_rgb)
+        #scidata_wb = self.histogram_equalization(scidata_rgb)
+        scidata_wb = scidata_rgb
+
 
         #if self.roi is not None:
         #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
@@ -293,7 +314,7 @@ class ImageProcessorWorker(Process):
 
         cv2.putText(
             img=data_bytes,
-            text='Gain {0:d}'.format(CCD_GAIN),
+            text='Gain {0:d}'.format(CCD_PROPERTIES['CCD_GAIN']),
             org=(FONT_X, FONT_Y + (FONT_HEIGHT * 2)),
             fontFace=FONT_FACE,
             color=FONT_COLOR,
@@ -301,6 +322,7 @@ class ImageProcessorWorker(Process):
             fontScale=FONT_SCALE,
             thickness=FONT_THICKNESS,
         )
+
 
     def calculate_exposure(self, data_bytes):
         r, g, b = cv2.split(data_bytes)
@@ -318,12 +340,12 @@ class ImageProcessorWorker(Process):
         logger.info('Current average: %0.2f', k)
 
         current_exposure = self.exposure_v.value
-        if g_avg > TARGET_MEAN_MAX:
+        if k > TARGET_MEAN_MAX:
             #new_exposure = current_exposure / 2.0
-            new_exposure = current_exposure / ( g_avg / float(TARGET_MEAN) )
+            new_exposure = current_exposure / ( k / float(TARGET_MEAN) )
         else:
             #new_exposure = current_exposure + 1
-            new_exposure = current_exposure * ( float(TARGET_MEAN) / g_avg )
+            new_exposure = current_exposure * ( float(TARGET_MEAN) / k )
 
 
         if new_exposure < CCD_EXPOSURE_MIN:
@@ -335,6 +357,11 @@ class ImageProcessorWorker(Process):
         logger.warning('New exposure: %0.6f', new_exposure)
         self.exposure_v.value = new_exposure
 
+
+    def equalize_hist(self, data_bytes):
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        stretched = clahe.apply(data_bytes)
+        return stretched
 
 
     def white_balance2(self, data_bytes):
@@ -367,6 +394,43 @@ class ImageProcessorWorker(Process):
         result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
         data = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
         return data
+
+    def histogram_equalization(self, img_in):
+        # segregate color streams
+        b,g,r = cv2.split(img_in)
+        h_b, bin_b = numpy.histogram(b.flatten(), 256, [0, 256])
+        h_g, bin_g = numpy.histogram(g.flatten(), 256, [0, 256])
+        h_r, bin_r = numpy.histogram(r.flatten(), 256, [0, 256])# calculate cdf
+        cdf_b = numpy.cumsum(h_b)
+        cdf_g = numpy.cumsum(h_g)
+        cdf_r = numpy.cumsum(h_r)
+
+        # mask all pixels with value=0 and replace it with mean of the pixel values
+        cdf_m_b = numpy.ma.masked_equal(cdf_b,0)
+        cdf_m_b = (cdf_m_b - cdf_m_b.min())*255/(cdf_m_b.max()-cdf_m_b.min())
+        cdf_final_b = numpy.ma.filled(cdf_m_b,0).astype('uint8')
+
+        cdf_m_g = numpy.ma.masked_equal(cdf_g,0)
+        cdf_m_g = (cdf_m_g - cdf_m_g.min())*255/(cdf_m_g.max()-cdf_m_g.min())
+        cdf_final_g = numpy.ma.filled(cdf_m_g,0).astype('uint8')
+        cdf_m_r = numpy.ma.masked_equal(cdf_r,0)
+        cdf_m_r = (cdf_m_r - cdf_m_r.min())*255/(cdf_m_r.max()-cdf_m_r.min())
+        cdf_final_r = numpy.ma.filled(cdf_m_r,0).astype('uint8')
+
+        # merge the images in the three channels
+        img_b = cdf_final_b[b]
+        img_g = cdf_final_g[g]
+        img_r = cdf_final_r[r]
+
+        img_out = cv2.merge((img_b, img_g, img_r))# validation
+        equ_b = cv2.equalizeHist(b)
+        equ_g = cv2.equalizeHist(g)
+        equ_r = cv2.equalizeHist(r)
+        equ = cv2.merge((equ_b, equ_g, equ_r))
+        #print(equ)
+        #cv2.imwrite('output_name.png', equ)return img_out
+
+        return img_out
 
 
     def _convert_GRGB_to_RGB_8bit(self, data_bytes):
@@ -430,30 +494,38 @@ class IndiTimelapse(object):
 
         logger.info('Connected to device')
 
-        # loop until the exposure is populated
-        e = None
-        while not e:
-            e = device.getNumber("CCD_EXPOSURE")
-            time.sleep(0.5)
+
+        ### Configure CCD Properties
+        for key in CCD_PROPERTIES.keys():
+
+            # loop until the property is populated
+            indiprop = None
+            while not indiprop:
+                indiprop = device.getNumber(key)
+                time.sleep(0.5)
+
+            logger.info('Setting property %s: %s', key, str(CCD_PROPERTIES[key]))
+            indiprop[0].value = CCD_PROPERTIES[key]
+            indiclient.sendNewNumber(indiprop)
 
 
-        logger.info('Setting BIN mode: %d', CCD_BINNING)
-        binmode = device.getNumber("CCD_BINNING")
-        binmode[0].value = CCD_BINNING
-        indiclient.sendNewNumber(binmode)
+
+        ### Configure CCD Switches
+        for key in CCD_SWITCHES:
+
+            # loop until the property is populated
+            indiswitch = None
+            while not indiswitch:
+                indiswitch = device.getSwitch(key)
+                time.sleep(0.5)
 
 
-        logger.info('Setting gain: %d', CCD_GAIN)
-        ccdgain = device.getNumber("CCD_GAIN")
-        ccdgain[0].value = CCD_GAIN
-        indiclient.sendNewNumber(ccdgain)
+            logger.info('Setting switch %s', key)
+            for i, value in enumerate(CCD_SWITCHES[key]):
+                indiswitch[i].s = value
+            indiclient.sendNewSwitch(indiswitch)
 
 
-        logger.info('Setting 8bit mode')
-        frameformat = device.getSwitch("FRAME_FORMAT")
-        frameformat[0].s = PyIndi.ISS_OFF  # RAW12
-        frameformat[1].s = PyIndi.ISS_ON   # RAW8
-        indiclient.sendNewSwitch(frameformat)
 
         while True:
             temp = device.getNumber("CCD_TEMPERATURE")
