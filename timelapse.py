@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 import copy
 import functools
+import math
 
 import ephem
 
@@ -29,7 +30,7 @@ CCD_NAME       = "SVBONY SV305 0"
 EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
 
 CCD_GAIN_NIGHT  = 250
-CCD_GAIN_DAY    = 10
+CCD_GAIN_DAY    = 10   # minimum gain is 10 for SV305
 
 CCD_PROPERTIES = {
     'CCD_BINNING' : [1],
@@ -59,7 +60,8 @@ TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
 LOCATION_LATITUDE  = '33'
 LOCATION_LONGITUDE = '-84'
-NIGHT_SUN_ALT = -15
+NIGHT_SUN_ALT_DEG = -15
+NIGHT_SUN_ALT = math.sin(NIGHT_SUN_ALT_DEG)
 
 FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
 FONT_HEIGHT = 30
@@ -598,13 +600,13 @@ class IndiTimelapse(object):
         obs = ephem.Observer()
         obs.lon = LOCATION_LONGITUDE
         obs.lat = LOCATION_LATITUDE
-        obs.date = datetime.now()
+        obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < 0
+        return sun.alt < NIGHT_SUN_ALT
 
 
 
