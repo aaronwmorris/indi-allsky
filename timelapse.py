@@ -23,14 +23,14 @@ import numpy
 
 #import PythonMagick
 
-#CCD_NAME       = "CCD Simulator"
-#CCD_NAME       = "ZWO CCD ASI290MM"
-CCD_NAME       = "SVBONY SV305 0"
+#CCD_NAME         = "CCD Simulator"
+#CCD_NAME         = "ZWO CCD ASI290MM"
+CCD_NAME         = "SVBONY SV305 0"
 
-EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
+EXPOSURE_PERIOD  = 15.10000   # time between beginning of each frame
 
-CCD_GAIN_NIGHT  = 250
-CCD_GAIN_DAY    = 10   # minimum gain is 10 for SV305
+CCD_GAIN_NIGHT   = 250
+CCD_GAIN_DAY     = 10   # minimum gain is 10 for SV305
 
 CCD_PROPERTIES = {
     'CCD_BINNING' : [1],
@@ -58,18 +58,18 @@ TARGET_MEAN         = 50
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
-LOCATION_LATITUDE  = '33'
-LOCATION_LONGITUDE = '-84'
-NIGHT_SUN_ALT_DEG  = -15
+LOCATION_LATITUDE   = '33'
+LOCATION_LONGITUDE  = '-84'
+NIGHT_SUN_ALT_DEG   = -15
 
-FONT_FACE = cv2.FONT_HERSHEY_SIMPLEX
-FONT_HEIGHT = 30
-FONT_X = 15
-FONT_Y = 30
-FONT_COLOR = (200, 200, 200)
-FONT_AA = cv2.LINE_AA
-FONT_SCALE = 1 * 0.80
-FONT_THICKNESS= 1
+FONT_FACE       = cv2.FONT_HERSHEY_SIMPLEX
+FONT_HEIGHT     = 30
+FONT_X          = 15
+FONT_Y          = 30
+FONT_COLOR      = (200, 200, 200)
+FONT_AA         = cv2.LINE_AA
+FONT_SCALE      = 1 * 0.80
+FONT_THICKNESS  = 1
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -544,7 +544,7 @@ class IndiTimelapse(object):
                 prop_gain[0].value = self.gain_v.value
                 indiclient.sendNewNumber(prop_gain)
 
-                # Sleep after configuration
+                # Sleep after reconfiguration
                 time.sleep(1.0)
 
 
