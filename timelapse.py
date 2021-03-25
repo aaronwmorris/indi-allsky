@@ -32,12 +32,12 @@ CCD_GAIN_DAY    = 0
 CCD_GAIN_NIGHT  = 250
 
 CCD_PROPERTIES = {
-    'CCD_BINNING' : 1,
-    'CCD_GAIN'    : CCD_GAIN_NIGHT,
-    'CCD_WBR'     : 95,
-    'CCD_WBG'     : 65,
-    'CCD_WBB'     : 110,
-    'CCD_GAMMA'   : 65,
+    'CCD_BINNING' : [1],
+    'CCD_GAIN'    : [CCD_GAIN_NIGHT],
+    'CCD_WBR'     : [95],
+    'CCD_WBG'     : [65],
+    'CCD_WBB'     : [110],
+    'CCD_GAMMA'   : [65],
 }
 
 CCD_SWITCHES = {
@@ -517,42 +517,11 @@ class IndiTimelapse(object):
 
         logger.info('Connected to device')
 
-
-        ### Configure CCD Properties
-        for key in CCD_PROPERTIES.keys():
-
-            # loop until the property is populated
-            indiprop = None
-            while not indiprop:
-                indiprop = device.getNumber(key)
-                time.sleep(0.5)
-
-            logger.info('Setting property %s: %s', key, str(CCD_PROPERTIES[key]))
-            indiprop[0].value = CCD_PROPERTIES[key]
-            indiclient.sendNewNumber(indiprop)
+        ### Perform device config
+        self.configureCcd(indiclient, device)
 
 
-
-        ### Configure CCD Switches
-        for key in CCD_SWITCHES:
-
-            # loop until the property is populated
-            indiswitch = None
-            while not indiswitch:
-                indiswitch = device.getSwitch(key)
-                time.sleep(0.5)
-
-
-            logger.info('Setting switch %s', key)
-            for i, value in enumerate(CCD_SWITCHES[key]):
-                indiswitch[i].s = value
-            indiclient.sendNewSwitch(indiswitch)
-
-
-        # Sleep after configuration
-        time.sleep(1.0)
-
-
+        ### main loop starts
         while True:
             temp = device.getNumber("CCD_TEMPERATURE")
             if temp:
@@ -591,6 +560,46 @@ class IndiTimelapse(object):
             indiclient.takeExposure()
             time.sleep(EXPOSURE_PERIOD)
 
+
+
+
+    def configureCcd(self, indiclient, device):
+        ### Configure CCD Properties
+        for key in CCD_PROPERTIES.keys():
+
+            # loop until the property is populated
+            indiprop = None
+            while not indiprop:
+                indiprop = device.getNumber(key)
+                time.sleep(0.5)
+
+            logger.info('Setting property %s', key)
+            for i, value in enumerate(CCD_PROPERTIES[key]):
+                logger.info(' %d: %s', i, str(value))
+                indiprop[i].value = value
+            indiclient.sendNewNumber(indiprop)
+
+
+
+        ### Configure CCD Switches
+        for key in CCD_SWITCHES:
+
+            # loop until the property is populated
+            indiswitch = None
+            while not indiswitch:
+                indiswitch = device.getSwitch(key)
+                time.sleep(0.5)
+
+
+            logger.info('Setting switch %s', key)
+            for i, value in enumerate(CCD_SWITCHES[key]):
+                logger.info(' %d: %s', i, str(value))
+                indiswitch[i].s = value
+            indiclient.sendNewSwitch(indiswitch)
+
+
+        # Sleep after configuration
+        time.sleep(1.0)
 
 
     def is_night(self):
