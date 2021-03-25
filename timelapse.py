@@ -80,12 +80,10 @@ logger.setLevel(logging.INFO)
 
 class IndiClient(PyIndi.BaseClient):
  
-    def __init__(self, img_q, exposure_v, sensortemp_v):
+    def __init__(self, img_q):
         super(IndiClient, self).__init__()
 
         self.img_q = img_q
-        self.exposure_v = exposure_v
-        self.sensortemp_v = sensortemp_v
 
         self.device = None
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
@@ -160,12 +158,12 @@ class IndiClient(PyIndi.BaseClient):
         self.logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
-    def takeExposure(self):
-        self.logger.info("Taking %0.6f s exposure", self.exposure_v.value)
+    def takeExposure(self, exposure):
+        self.logger.info("Taking %0.6f s exposure", exposure)
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
-        exp[0].value = self.exposure_v.value
+        exp[0].value = exposure
         # send new exposure time to server/device
         self.sendNewNumber(exp)
 
@@ -485,7 +483,7 @@ class IndiTimelapse(object):
 
     def main(self):
         # instantiate the client
-        indiclient = IndiClient(self.img_q, self.exposure_v, self.sensortemp_v)
+        indiclient = IndiClient(self.img_q)
 
         # set roi
         #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
@@ -550,7 +548,7 @@ class IndiTimelapse(object):
                 time.sleep(1.0)
 
 
-            indiclient.takeExposure()
+            indiclient.takeExposure(self.exposure_v.value)
             time.sleep(EXPOSURE_PERIOD)
 
 
