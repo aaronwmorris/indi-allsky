@@ -5,6 +5,7 @@ import time
 import logging
 from datetime import datetime
 import copy
+import functools
 
 from multiprocessing import Process
 from multiprocessing import Queue
@@ -48,7 +49,7 @@ CCD_EXPOSURE_MIN    =  0.00003
 #CCD_EXPOSURE_DEF    =  1.00000
 CCD_EXPOSURE_DEF    =  0.00010
 
-TARGET_MEAN         = 80
+TARGET_MEAN         = 70
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
@@ -176,6 +177,7 @@ class ImageProcessorWorker(Process):
         self.exposure_v = exposure_v
         self.sensortemp_v = sensortemp_v
 
+        self.hist_mean = []
 
         #self.dark = fits.open('dark_7s.fit')
         self.dark = None
@@ -198,6 +200,8 @@ class ImageProcessorWorker(Process):
             blobfile = io.BytesIO(imgdata)
             hdulist = fits.open(blobfile)
             scidata_uncalibrated = hdulist[0].data
+
+            #self.write_fit(hdulist)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
@@ -259,12 +263,12 @@ class ImageProcessorWorker(Process):
 
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
+        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
         #scidata_rgb = self._convert_GRGB_to_RGB_8bit(scidata)
         ###
 
         ### seems to work best for GRBG
-        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
+        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2BGR)
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance(scidata_rgb)
@@ -303,7 +307,7 @@ class ImageProcessorWorker(Process):
 
         cv2.putText(
             img=data_bytes,
-            text='Exposure {0:0.5f}'.format(self.exposure_v.value),
+            text='Exposure {0:0.6f}'.format(self.exposure_v.value),
             org=(FONT_X, FONT_Y + (FONT_HEIGHT * 1)),
             fontFace=FONT_FACE,
             color=FONT_COLOR,
@@ -337,17 +341,32 @@ class ImageProcessorWorker(Process):
          # Find the gain of each channel
         k = (r_avg + g_avg + b_avg) / 3
 
-        logger.info('Current average: %0.2f', k)
+        logger.info('RGB average: %0.2f', k)
+
+
+        self.hist_mean.insert(0, k)
+        self.hist_mean = self.hist_mean[:3]  # only need last 3 values
+
+        k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
+        logger.info('Moving average: %0.2f', k_moving_average)
+
 
         current_exposure = self.exposure_v.value
-        if k > TARGET_MEAN_MAX:
+
+        # Scale the exposure up and down based on targets
+        if k_moving_average > TARGET_MEAN_MAX:
             #new_exposure = current_exposure / 2.0
-            new_exposure = current_exposure / ( k / float(TARGET_MEAN) )
-        else:
+            new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.75)
+
+        elif k_moving_average < TARGET_MEAN_MIN:
             #new_exposure = current_exposure + 1
-            new_exposure = current_exposure * ( float(TARGET_MEAN) / k )
+            new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.75)
+        else:
+            new_exposure = current_exposure
 
 
+
+        # Do not exceed the limits
         if new_exposure < CCD_EXPOSURE_MIN:
             new_exposure = CCD_EXPOSURE_MIN
         elif new_exposure > CCD_EXPOSURE_MAX:
@@ -387,13 +406,14 @@ class ImageProcessorWorker(Process):
 
     def white_balance(self, data_bytes):
         ### This method does not work very well
-        result = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
+        result = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
         avg_a = numpy.average(result[:, :, 1])
         avg_b = numpy.average(result[:, :, 2])
         result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
         result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
-        data = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
+        data = cv2.cvtColor(result, cv2.COLOR_LAB2RGB)
         return data
+
 
     def histogram_equalization(self, img_in):
         # segregate color streams
