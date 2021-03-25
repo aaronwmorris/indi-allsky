@@ -28,8 +28,8 @@ CCD_NAME       = "SVBONY SV305 0"
 
 EXPOSURE_PERIOD     = 15.10000   # time between beginning of each frame
 
-CCD_GAIN_DAY    = 0
 CCD_GAIN_NIGHT  = 250
+CCD_GAIN_DAY    = 10
 
 CCD_PROPERTIES = {
     'CCD_BINNING' : [1],
@@ -53,7 +53,7 @@ CCD_EXPOSURE_MIN    =  0.000029
 #CCD_EXPOSURE_DEF    =  1.000000
 CCD_EXPOSURE_DEF    =  0.000100
 
-TARGET_MEAN         = 50
+TARGET_MEAN         = 70
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
@@ -229,9 +229,9 @@ class ImageProcessorWorker(Process):
     def write_jpg(self, scidata):
         now_str = datetime.now().strftime('%y%m%d_%H%M%S')
 
-        #cv2.imwrite("{0}_wb.jpg".format(now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite("{0}_wb.jpg".format(now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
         #cv2.imwrite("{0}_rgb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        cv2.imwrite("{0}_wb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}_wb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
         #cv2.imwrite("{0}_rgb.tif".format(now_str), scidata)
 
 
@@ -375,8 +375,9 @@ class ImageProcessorWorker(Process):
             new_exposure = CCD_EXPOSURE_MAX
 
 
-        logger.warning('New calculated exposure: %0.6f', new_exposure)
-        self.exposure_v.value = new_exposure
+        with self.exposure_v.get_lock():
+            logger.warning('New calculated exposure: %0.6f', new_exposure)
+            self.exposure_v.value = new_exposure
 
 
     def white_balance3(self, data_bytes):
@@ -525,8 +526,9 @@ class IndiTimelapse(object):
         while True:
             temp = device.getNumber("CCD_TEMPERATURE")
             if temp:
-                logger.info("Sensor temperature: %d", temp[0].value)
-                self.sensortemp_v.value = temp[0].value
+                with self.sensortemp_v.get_lock():
+                    logger.info("Sensor temperature: %d", temp[0].value)
+                    self.sensortemp_v.value = temp[0].value
 
 
             is_night = self.is_night()
@@ -538,10 +540,11 @@ class IndiTimelapse(object):
                 logger.warning('Change between night and day')
                 self.night = is_night
 
-                if is_night:
-                    self.gain_v.value = CCD_GAIN_NIGHT
-                else:
-                    self.gain_v.value = CCD_GAIN_DAY
+                with self.gain_v.get_lock():
+                    if is_night:
+                        self.gain_v.value = CCD_GAIN_NIGHT
+                    else:
+                        self.gain_v.value = CCD_GAIN_DAY
 
 
                 prop_gain = None
@@ -611,7 +614,7 @@ class IndiTimelapse(object):
         sun = ephem.Sun()
         sun.compute(obs)
 
-        logger.info('Sun altitude: %0.2f', sun.alt)
+        logger.info('Sun altitude: %s', sun.alt)
         return sun.alt < 0
 
 
