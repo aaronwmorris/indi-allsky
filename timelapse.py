@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import time
 import logging
 from datetime import datetime
+from datetime import timedelta
 import copy
 import functools
 import math
@@ -38,7 +40,7 @@ CCD_PROPERTIES = {
     'CCD_WBR'     : [95],
     'CCD_WBG'     : [65],
     'CCD_WBB'     : [110],
-    'CCD_GAMMA'   : [65],
+    'CCD_GAMMA'   : [100],
 }
 
 CCD_SWITCHES = {
@@ -54,13 +56,13 @@ CCD_EXPOSURE_MIN    =  0.000029
 #CCD_EXPOSURE_DEF    =  1.000000
 CCD_EXPOSURE_DEF    =  0.000100
 
-TARGET_MEAN         = 50
+TARGET_MEAN         = 60
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
 LOCATION_LATITUDE   = '33'
 LOCATION_LONGITUDE  = '-84'
-NIGHT_SUN_ALT_DEG   = -15
+NIGHT_SUN_ALT_DEG   = 15
 
 FONT_FACE       = cv2.FONT_HERSHEY_SIMPLEX
 FONT_HEIGHT     = 30
@@ -181,6 +183,8 @@ class ImageProcessorWorker(Process):
 
         self.hist_mean = []
 
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+
         #self.dark = fits.open('dark_7s.fit')
         self.dark = None
 
@@ -223,10 +227,11 @@ class ImageProcessorWorker(Process):
     def write_jpg(self, scidata):
         now_str = datetime.now().strftime('%y%m%d_%H%M%S')
 
-        cv2.imwrite("{0}_wb.jpg".format(now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite("{0}_rgb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}_wb.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}_rgb.tif".format(now_str), scidata)
+        folder = self.getImageFolder()
+
+        cv2.imwrite("{0:s}/{1:s}.jpg".format(folder, now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite("{0}.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0}.tif".format(now_str), scidata)
 
 
         ### ImageMagick ###
@@ -241,6 +246,22 @@ class ImageProcessorWorker(Process):
         #i.write('frame.tif')
 
         logger.info('Finished writing files')
+
+
+    def getImageFolder(self):
+        now = datetime.now()
+
+        if now.hour < 12:
+            day_ref = now - timedelta(hours=12)
+        else:
+            day_ref = now
+
+        folder = '{0:s}/images/{1:s}'.format(self.base_dir, day_ref.strftime('%Y%m%d'))
+
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+
+        return folder
 
 
     def calibrate(self, scidata_uncalibrated):
@@ -346,11 +367,15 @@ class ImageProcessorWorker(Process):
         # Scale the exposure up and down based on targets
         if k_moving_average > TARGET_MEAN_MAX:
             #new_exposure = current_exposure / 2.0
-            new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.75)
+            #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.75)
+            #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.5)
+            new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 1.0)
 
         elif k_moving_average < TARGET_MEAN_MIN:
             #new_exposure = current_exposure + 1
-            new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.75)
+            #new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.75)
+            #new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.50)
+            new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 1.0)
         else:
             new_exposure = current_exposure
 
@@ -603,7 +628,7 @@ class IndiTimelapse(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < math.sin(NIGHT_SUN_ALT_DEG)
+        return sun.alt > math.sin(NIGHT_SUN_ALT_DEG)
 
 
 
