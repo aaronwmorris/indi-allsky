@@ -182,6 +182,7 @@ class ImageProcessorWorker(Process):
         self.sensortemp_v = sensortemp_v
 
         self.stable_mean = False
+        self.scale_factor = 1.0
         self.hist_mean = []
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -361,12 +362,13 @@ class ImageProcessorWorker(Process):
             if k <= TARGET_MEAN_MAX and k >= TARGET_MEAN_MIN:
                 logger.warning('Found stable mean for exposure')
                 self.stable_mean = True
-                self.hist_mean.insert(0, k)
+                self.scale_factor = 0.25
+                [self.hist_mean.insert(0, k) for x in range(30)]  # populate 30 entries
 
             k_moving_average = k
         else:
             self.hist_mean.insert(0, k)
-            self.hist_mean = self.hist_mean[:10]  # only need last 10 values
+            self.hist_mean = self.hist_mean[:30]  # only need last 30 values
 
             k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
             logger.info('Moving average: %0.2f', k_moving_average)
@@ -377,15 +379,17 @@ class ImageProcessorWorker(Process):
         # Scale the exposure up and down based on targets
         if k_moving_average > TARGET_MEAN_MAX:
             #new_exposure = current_exposure / 2.0
+            #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 1.0)
             #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.75)
-            #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.5)
-            new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 1.0)
+            #new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * 0.50)
+            new_exposure = current_exposure / (( k_moving_average / float(TARGET_MEAN) ) * self.scale_factor)
 
         elif k_moving_average < TARGET_MEAN_MIN:
             #new_exposure = current_exposure + 1
+            #new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 1.0)
             #new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.75)
             #new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 0.50)
-            new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * 1.0)
+            new_exposure = current_exposure * (( float(TARGET_MEAN) / k_moving_average ) * self.scale_factor)
         else:
             new_exposure = current_exposure
 
