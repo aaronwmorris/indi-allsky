@@ -37,9 +37,9 @@ CCD_GAIN_DAY     = 10   # minimum gain is 10 for SV305
 CCD_PROPERTIES = {
     'CCD_BINNING' : [1],
     'CCD_GAIN'    : [CCD_GAIN_NIGHT],
-    'CCD_WBR'     : [95],
-    'CCD_WBG'     : [65],
-    'CCD_WBB'     : [110],
+    'CCD_WBR'     : [120],
+    'CCD_WBG'     : [75],
+    'CCD_WBB'     : [140],
     'CCD_GAMMA'   : [100],
 }
 
@@ -56,7 +56,7 @@ CCD_EXPOSURE_MIN    =  0.000029
 #CCD_EXPOSURE_DEF    =  1.000000
 CCD_EXPOSURE_DEF    =  0.000100
 
-TARGET_MEAN         = 60
+TARGET_MEAN         = 45
 TARGET_MEAN_MAX     = TARGET_MEAN + 5
 TARGET_MEAN_MIN     = TARGET_MEAN - 5
 
@@ -181,6 +181,7 @@ class ImageProcessorWorker(Process):
         self.gain_v = gain_v
         self.sensortemp_v = sensortemp_v
 
+        self.stable_mean = False
         self.hist_mean = []
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -355,11 +356,20 @@ class ImageProcessorWorker(Process):
         logger.info('RGB average: %0.2f', k)
 
 
-        self.hist_mean.insert(0, k)
-        self.hist_mean = self.hist_mean[:3]  # only need last 3 values
+        if not self.stable_mean:
+            # Until we reach a good starting point, do not calculate a moving average
+            if k <= TARGET_MEAN_MAX and k >= TARGET_MEAN_MIN:
+                logger.warning('Found stable mean for exposure')
+                self.stable_mean = True
+                self.hist_mean.insert(0, k)
 
-        k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
-        logger.info('Moving average: %0.2f', k_moving_average)
+            k_moving_average = k
+        else:
+            self.hist_mean.insert(0, k)
+            self.hist_mean = self.hist_mean[:10]  # only need last 10 values
+
+            k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
+            logger.info('Moving average: %0.2f', k_moving_average)
 
 
         current_exposure = self.exposure_v.value
@@ -628,7 +638,7 @@ class IndiTimelapse(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt > math.sin(NIGHT_SUN_ALT_DEG)
+        return sun.alt < math.sin(NIGHT_SUN_ALT_DEG)
 
 
 
