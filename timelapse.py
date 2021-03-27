@@ -723,10 +723,23 @@ class IndiTimelapse(object):
             symlink_name = '{0:s}/{1:04d}.jpg'.format(seqfolder, i)
             os.symlink(f, symlink_name)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
-        process = subprocess.Popen(cmd)
-        #for line in iter(process.stdout.readline, b''):
-        #    sys.stdout.write(line)
+        #cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
+        #process = subprocess.run(cmd)
+
+
+        # delete all existing symlinks in seqfolder
+        rmlinks = list(filter(os.path.islink, Path(seqfolder).iterdir()))
+        if rmlinks:
+            logger.warning('Removing existing symlinks in %s', seqfolder)
+            for f in rmlinks:
+                os.unlink(f)
+
+
+        # remove sequence folder
+        try:
+            os.rmdir(seqfolder)
+        except OSError as e:
+            logger.error('Cannote remove sequence folder: %s', str(e))
 
 
 if __name__ == "__main__":
