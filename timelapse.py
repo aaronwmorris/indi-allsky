@@ -334,10 +334,10 @@ class ImageProcessorWorker(Process):
         logger.info('Moving average: %0.2f', k_moving_average)
 
         if k_moving_average > self.target_mean_max:
-            logger.warning('Moving average exceeded target by 10%, recalculating next exposure')
+            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
             self.stable_mean = False
         elif k_moving_average < self.target_mean_min:
-            logger.warning('Moving average exceeded target by 10%, recalculating next exposure')
+            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
             self.stable_mean = False
 
 
