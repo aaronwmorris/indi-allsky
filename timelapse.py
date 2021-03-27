@@ -301,10 +301,8 @@ class ImageProcessorWorker(Process):
 
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
-        #scidata_wb = self.white_balance(scidata_rgb)
         #scidata_wb = self.white_balance2(scidata_rgb)
         #scidata_wb = self.white_balance3(scidata_rgb)
-        #scidata_wb = self.histogram_equalization(scidata_rgb)
         scidata_wb = scidata_rgb
 
 
@@ -461,55 +459,6 @@ class ImageProcessorWorker(Process):
 
         balance_img = cv2.merge([b, g, r])
         return balance_img
-
-
-    def white_balance(self, data_bytes):
-        ### This method does not work very well
-        result = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
-        avg_a = numpy.average(result[:, :, 1])
-        avg_b = numpy.average(result[:, :, 2])
-        result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
-        result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
-        data = cv2.cvtColor(result, cv2.COLOR_LAB2RGB)
-        return data
-
-
-    def histogram_equalization(self, img_in):
-        # segregate color streams
-        b,g,r = cv2.split(img_in)
-        h_b, bin_b = numpy.histogram(b.flatten(), 256, [0, 256])
-        h_g, bin_g = numpy.histogram(g.flatten(), 256, [0, 256])
-        h_r, bin_r = numpy.histogram(r.flatten(), 256, [0, 256])# calculate cdf
-        cdf_b = numpy.cumsum(h_b)
-        cdf_g = numpy.cumsum(h_g)
-        cdf_r = numpy.cumsum(h_r)
-
-        # mask all pixels with value=0 and replace it with mean of the pixel values
-        cdf_m_b = numpy.ma.masked_equal(cdf_b,0)
-        cdf_m_b = (cdf_m_b - cdf_m_b.min())*255/(cdf_m_b.max()-cdf_m_b.min())
-        cdf_final_b = numpy.ma.filled(cdf_m_b,0).astype('uint8')
-
-        cdf_m_g = numpy.ma.masked_equal(cdf_g,0)
-        cdf_m_g = (cdf_m_g - cdf_m_g.min())*255/(cdf_m_g.max()-cdf_m_g.min())
-        cdf_final_g = numpy.ma.filled(cdf_m_g,0).astype('uint8')
-        cdf_m_r = numpy.ma.masked_equal(cdf_r,0)
-        cdf_m_r = (cdf_m_r - cdf_m_r.min())*255/(cdf_m_r.max()-cdf_m_r.min())
-        cdf_final_r = numpy.ma.filled(cdf_m_r,0).astype('uint8')
-
-        # merge the images in the three channels
-        img_b = cdf_final_b[b]
-        img_g = cdf_final_g[g]
-        img_r = cdf_final_r[r]
-
-        img_out = cv2.merge((img_b, img_g, img_r))# validation
-        equ_b = cv2.equalizeHist(b)
-        equ_g = cv2.equalizeHist(g)
-        equ_r = cv2.equalizeHist(r)
-        equ = cv2.merge((equ_b, equ_g, equ_r))
-        #print(equ)
-        #cv2.imwrite('output_name.png', equ)return img_out
-
-        return img_out
 
 
     def _convert_GRBG_to_RGB_8bit(self, data_bytes):
