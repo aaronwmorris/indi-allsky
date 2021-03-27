@@ -26,8 +26,6 @@ from astropy.io import fits
 import cv2
 import numpy
 
-#import PythonMagick
-
 #CCD_NAME         = "CCD Simulator"
 #CCD_NAME         = "ZWO CCD ASI290MM"
 CCD_NAME         = "SVBONY SV305 0"
@@ -251,18 +249,6 @@ class ImageProcessorWorker(Process):
         cv2.imwrite("{0:s}/{1:s}.jpg".format(folder, now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
         #cv2.imwrite("{0}.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
         #cv2.imwrite("{0}.tif".format(now_str), scidata)
-
-
-        ### ImageMagick ###
-        ### write image data to BytesIO buffer
-        #blobfile = io.BytesIO(self.imgdata)
-
-        #with open("frame.fit", "wb") as f:
-        #    f.write(blobfile.getvalue())
-
-        #i = PythonMagick.Image("frame.fit")
-        #i.magick('TIF')
-        #i.write('frame.tif')
 
         logger.info('Finished writing files')
 
