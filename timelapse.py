@@ -198,7 +198,7 @@ class ImageProcessorWorker(Process):
             #)
 
             self.image_text(scidata_color)
-            self.write_jpg(scidata_color)
+            self.write_img(scidata_color)
 
 
     def write_fit(self, hdulist):
@@ -216,7 +216,7 @@ class ImageProcessorWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def write_jpg(self, scidata):
+    def write_img(self, scidata):
         ### Do not write image files if fits are enabled
         if self.writefits:
             return
@@ -225,16 +225,21 @@ class ImageProcessorWorker(Process):
 
         folder = self.getImageFolder()
 
-        imgname = '{0:s}/{1:s}.jpg'.format(folder, self.filename)
+        imgname = '{0:s}/{1:s}.{2:s}'.format(folder, self.filename, self.config['IMAGE_FILE_TYPE'])
         filename = imgname.format(now_str)
 
         if os.path.exists(filename):
             logger.error('File exists: %s (skipping)', filename)
             return
 
-        cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite(filename, scidata)
+        if self.config['IMAGE_FILE_TYPE'] == 'jpg':
+            cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']])
+        elif self.config['IMAGE_FILE_TYPE'] == 'png':
+            cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']])
+        elif self.config['IMAGE_FILE_TYPE'] == 'tif':
+            cv2.imwrite(filename, scidata)
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
         logger.info('Finished writing files')
 
