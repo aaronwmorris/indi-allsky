@@ -253,12 +253,8 @@ class ImageProcessorWorker(Process):
 
 
     def getImageFolder(self):
-        now = datetime.now()
-
-        if now.hour < 12:
-            day_ref = now - timedelta(hours=12)
-        else:
-            day_ref = now
+        # images should be written to previous day's folder until noon
+        day_ref = datetime.now() - timedelta(hours=12)
 
         folder = '{0:s}/images/{1:s}'.format(self.base_dir, day_ref.strftime('%Y%m%d'))
 
