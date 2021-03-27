@@ -469,13 +469,17 @@ class IndiTimelapse(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
+        self.img_worker = None
+        self.writefits = False
+
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
 
 
     def _initialize(self, writefits=False):
-        logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.config, self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=writefits)
-        self.img_process.start()
+        if writefits:
+            self.writefits = True
+
+        self._startImageProcessWorker()
 
         # instantiate the client
         self.indiclient = IndiClient(self.config, self.img_q)
@@ -502,6 +506,13 @@ class IndiTimelapse(object):
 
         ### Perform device config
         self.configureCcd()
+
+
+    def _startImageProcessWorker(self):
+        logger.info('Starting ImageProcessorWorker process')
+        self.img_worker = ImageProcessorWorker(self.config, self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=self.writefits)
+        self.img_worker.start()
+
 
 
     def configureCcd(self):
@@ -632,16 +643,22 @@ class IndiTimelapse(object):
             time.sleep(float(exp) + 5.0)  # give each exposure at least 5 extra seconds to process
 
 
-        ### stop worker
+        ### stop image processing worker
         self.img_q.put((None, ''))
-        self.img_process.join()
+        self.img_worker.join()
 
 
         ### INDI disconnect
         self.indiclient.disconnectServer()
 
 
-    def avconv(self, timespec):
+    def avconv(self, timespec, restart_worker=False):
+        if self.img_worker:
+            logger.warning('Stopping image process worker to save memory')
+            self.img_q.put((None, ''))
+            self.img_worker.join()
+
+
         imgfolder = '{0:s}/images/{1:s}'.format(self.base_dir, timespec)
 
         if not os.path.exists(imgfolder):
@@ -670,8 +687,8 @@ class IndiTimelapse(object):
             symlink_name = '{0:s}/{1:04d}.jpg'.format(seqfolder, i)
             os.symlink(f, symlink_name)
 
-        #cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
-        #process = subprocess.run(cmd)
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
+        process = subprocess.run(cmd)
 
 
         # delete all existing symlinks in seqfolder
@@ -687,6 +704,10 @@ class IndiTimelapse(object):
             os.rmdir(seqfolder)
         except OSError as e:
             logger.error('Cannote remove sequence folder: %s', str(e))
+
+
+        if restart_worker:
+            self._startImageProcessWorker()
 
 
 if __name__ == "__main__":
