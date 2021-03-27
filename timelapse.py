@@ -687,7 +687,7 @@ class IndiTimelapse(object):
             symlink_name = '{0:s}/{1:04d}.jpg'.format(seqfolder, i)
             os.symlink(f, symlink_name)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v {2:s} -pix_fmt yuv420p -movflags +faststart {3:s}/allsky-{4:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['FFMPEG_BITRATE'], imgfolder, timespec).split()
         process = subprocess.run(cmd)
 
 
