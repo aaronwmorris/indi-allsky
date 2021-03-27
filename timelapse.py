@@ -4,12 +4,14 @@ import os
 import sys
 import time
 import logging
+from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 import copy
 import functools
 import math
 import argparse
+import subprocess
 
 import ephem
 
@@ -531,6 +533,8 @@ class IndiTimelapse(object):
         self.gain_v = Value('i', copy.copy(CCD_GAIN_NIGHT))
         self.sensortemp_v = Value('f', 0)
 
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+
         self.night = True
 
 
@@ -690,18 +694,63 @@ class IndiTimelapse(object):
         self.img_process.join()
 
 
+    def avconv(self, timespec):
+        imgfolder = '{0:s}/images/{1:s}'.format(self.base_dir, timespec)
+
+        if not os.path.exists(imgfolder):
+            logger.error('Image folder does not exist: %s', imgfolder)
+            sys.exit(1)
+
+
+        seqfolder = '{0:s}/sequence'.format(imgfolder)
+
+        if not os.path.exists(seqfolder):
+            logger.info('Creating sequence folder %s', seqfolder)
+            os.mkdir(seqfolder)
+
+
+        # delete all existing symlinks in seqfolder
+        rmlinks = list(filter(os.path.islink, Path(seqfolder).iterdir()))
+        if rmlinks:
+            logger.warning('Removing existing symlinks in %s', seqfolder)
+            for f in rmlinks:
+                os.unlink(f)
+
+
+        logger.info('Creating symlinked files for timelapse')
+        timelapse_files = sorted(Path(imgfolder).glob('*.jpg'), key=os.path.getmtime)
+        for i, f in enumerate(timelapse_files):
+            symlink_name = '{0:s}/{1:04d}.jpg'.format(seqfolder, i)
+            os.symlink(f, symlink_name)
+
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v 2000k -pix_fmt yuv420p -movflags +faststart {2:s}/allsky-{3:s}.mp4'.format(25, seqfolder, imgfolder, timespec).split()
+        process = subprocess.Popen(cmd)
+        #for line in iter(process.stdout.readline, b''):
+        #    sys.stdout.write(line)
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
         help='action',
-        choices=('run', 'darks'),
+        choices=('run', 'darks', 'avconv'),
+    )
+    argparser.add_argument(
+        '--timespec',
+        '-t',
+        help='time spec',
+        type=str,
     )
 
     args = argparser.parse_args()
     it = IndiTimelapse()
 
+    args_list = list()
+    if args.timespec:
+        args_list.append(args.timespec)
+
     action_func = getattr(it, args.action)
-    action_func()
+    action_func(*args_list)
 
 
