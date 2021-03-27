@@ -243,15 +243,20 @@ class ImageProcessorWorker(Process):
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
         #scidata_wb = self.white_balance2(scidata_rgb)
-        #scidata_wb = self.white_balance3(scidata_rgb)
         scidata_wb = scidata_rgb
+
+        if not self.night_v.value:
+            # Contrast enhancement during the day
+            scidata_contrast = self.contrast_clahe(scidata_wb)
+        else:
+            scidata_contrast = scidata_wb
 
 
         #if self.roi is not None:
         #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
         #hdulist[0].data = scidata
 
-        return scidata_wb
+        return scidata_contrast
 
 
     def image_text(self, data_bytes):
@@ -370,7 +375,7 @@ class ImageProcessorWorker(Process):
             self.exposure_v.value = new_exposure
 
 
-    def white_balance3(self, data_bytes):
+    def contrast_clahe(self, data_bytes):
         ### ohhhh, contrasty
         lab = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
 
