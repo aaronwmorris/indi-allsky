@@ -174,7 +174,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
 class ImageProcessorWorker(Process):
-    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v):
+    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v, writefits=False):
         super(ImageProcessorWorker, self).__init__()
 
         self.img_q = img_q
@@ -182,14 +182,16 @@ class ImageProcessorWorker(Process):
         self.gain_v = gain_v
         self.sensortemp_v = sensortemp_v
 
+        self.writefits = writefits
+
         self.stable_mean = False
         self.scale_factor = 1.0
         self.hist_mean = []
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        #self.dark = fits.open('dark_7s.fit')
-        self.dark = None
+        self.dark = fits.open('dark_7s_gain250.fit')
+        #self.dark = None
 
         self.name = current_process().name
 
@@ -209,7 +211,8 @@ class ImageProcessorWorker(Process):
             hdulist = fits.open(blobfile)
             scidata_uncalibrated = hdulist[0].data
 
-            #self.write_fit(hdulist)
+            if self.writefits:
+                self.write_fit(hdulist)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
@@ -520,12 +523,12 @@ class IndiTimelapse(object):
 
         self.night = True
 
+
+    def _initialize(self, writefits=False):
         logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v)
+        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, writefits=writefits)
         self.img_process.start()
 
-
-    def _initialize(self):
         # instantiate the client
         self.indiclient = IndiClient(self.img_q)
 
@@ -652,12 +655,37 @@ class IndiTimelapse(object):
 
 
 
+    def darks(self):
+
+        self._initialize(writefits=True)
+
+        prop_gain = None
+        while not prop_gain:
+            prop_gain = self.device.getNumber('CCD_GAIN')
+            time.sleep(0.5)
+
+        logger.info('Setting camera gain to %d', CCD_GAIN_NIGHT)
+        prop_gain[0].value = CCD_GAIN_NIGHT
+        self.indiclient.sendNewNumber(prop_gain)
+
+
+        ### take 3 darks
+        for x in range(3):
+            self.indiclient.takeExposure(7.0)
+            time.sleep(8)
+
+
+        ### stop worker
+        self.img_q.put(None)
+        self.img_process.join()
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
         help='action',
-        choices=('run',),
+        choices=('run', 'darks'),
     )
 
     args = argparser.parse_args()
