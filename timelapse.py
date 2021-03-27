@@ -42,6 +42,8 @@ class IndiClient(PyIndi.BaseClient):
         self.config = config
         self.img_q = img_q
 
+        self.filename_append = ''
+
         self.device = None
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
         self.logger.info('creating an instance of PyQtIndi.IndiClient')
@@ -82,7 +84,7 @@ class IndiClient(PyIndi.BaseClient):
         imgdata = bp.getblobdata()
 
         ### process data in worker
-        self.img_q.put(imgdata)
+        self.img_q.put((imgdata, self.filename_append))
 
 
     def newSwitch(self, svp):
@@ -115,7 +117,9 @@ class IndiClient(PyIndi.BaseClient):
         self.logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
-    def takeExposure(self, exposure):
+    def takeExposure(self, exposure, filename_append=''):
+        self.filename_append = filename_append
+
         self.logger.info("Taking %0.6f s exposure", exposure)
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
@@ -138,6 +142,7 @@ class ImageProcessorWorker(Process):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
 
+        self.filename_append = ''
         self.writefits = writefits
 
         self.stable_mean = False
@@ -158,7 +163,7 @@ class ImageProcessorWorker(Process):
 
     def run(self):
         while True:
-            imgdata = self.img_q.get()
+            imgdata, self.filename_append = self.img_q.get()
 
             if not imgdata:
                 return
@@ -195,7 +200,7 @@ class ImageProcessorWorker(Process):
     def write_fit(self, hdulist):
         now_str = datetime.now().strftime('%y%m%d_%H%M%S')
 
-        hdulist.writeto("{0}.fit".format(now_str))
+        hdulist.writeto("{0}{1}.fit".format(now_str, self.filename_append))
 
         logger.info('Finished writing fit file')
 
@@ -205,9 +210,9 @@ class ImageProcessorWorker(Process):
 
         folder = self.getImageFolder()
 
-        cv2.imwrite("{0:s}/{1:s}.jpg".format(folder, now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite("{0}.png".format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite("{0}.tif".format(now_str), scidata)
+        cv2.imwrite("{0:s}/{1:s}{2:s}.jpg".format(folder, now_str, self.filename_append), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite("{0:s}/{1:s}{2:s}.png".format(now_str, self.filename_append), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite("{0:s}/{1:s}{2:s}.tif".format(now_str, self.filename_append), scidata)
 
         logger.info('Finished writing files')
 
@@ -590,15 +595,20 @@ class IndiTimelapse(object):
         self.indiclient.sendNewNumber(prop_gain)
 
 
-        ### take 3 darks
-        for x in range(3):
-            self.indiclient.takeExposure(7.0)
-            time.sleep(8)
+        ### take darks
+        dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+        for exp in dark_exposures:
+            self.indiclient.takeExposure(float(exp), filename_append='_{0:d}s'.format(int(exp)))
+            time.sleep(float(exp) + 5.0)  # give each exposure at least 5 extra seconds to process
 
 
         ### stop worker
-        self.img_q.put(None)
+        self.img_q.put((None, ''))
         self.img_process.join()
+
+
+        ### INDI disconnect
+        self.indiclient.disconnectServer()
 
 
     def avconv(self, timespec):
