@@ -30,6 +30,7 @@ import numpy
 #CCD_NAME         = "ZWO CCD ASI290MM"
 CCD_NAME         = "SVBONY SV305 0"
 
+DAYTIME_CAPTURE  = True
 EXPOSURE_PERIOD  = 15.10000   # time between beginning of each frame
 
 CCD_GAIN_NIGHT   = 250
@@ -545,16 +546,20 @@ class IndiTimelapse(object):
 
         ### main loop starts
         while True:
+            is_night = self.is_night()
+            #logger.info('self.night_v.value: %r', self.night_v.value)
+            #logger.info('is night: %r', is_night)
+
+            if not DAYTIME_CAPTURE:
+                logger.warning('Daytime capture is disabled')
+                time.sleep(300)
+
             temp = self.device.getNumber("CCD_TEMPERATURE")
             if temp:
                 with self.sensortemp_v.get_lock():
                     logger.info("Sensor temperature: %d", temp[0].value)
                     self.sensortemp_v.value = temp[0].value
 
-
-            is_night = self.is_night()
-            #logger.info('self.night_v.value: %r', self.night_v.value)
-            #logger.info('is night: %r', is_night)
 
             ### Change gain when we change between day and night
             if self.night_v.value != int(is_night):
