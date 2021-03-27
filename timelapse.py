@@ -205,7 +205,13 @@ class ImageProcessorWorker(Process):
         now_str = datetime.now().strftime('%y%m%d_%H%M%S')
 
         fitname = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename)
-        hdulist.writeto(fitname.format(now_str))
+        filename = fitname.format(now_str)
+
+        if os.path.exists(filename):
+            logger.error('File exists: %s (skipping)', filename)
+            return
+
+        hdulist.writeto(filename)
 
         logger.info('Finished writing fit file')
 
@@ -220,10 +226,15 @@ class ImageProcessorWorker(Process):
         folder = self.getImageFolder()
 
         imgname = '{0:s}/{1:s}.jpg'.format(folder, self.filename)
+        filename = imgname.format(now_str)
 
-        cv2.imwrite(imgname.format(now_str), scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #cv2.imwrite(imgname.format(now_str), scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite(imgname.format(now_str), scidata)
+        if os.path.exists(filename):
+            logger.error('File exists: %s (skipping)', filename)
+            return
+
+        cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #cv2.imwrite(filename, scidata)
 
         logger.info('Finished writing files')
 
