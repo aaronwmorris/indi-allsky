@@ -1,3 +1,4 @@
+*.swp
 *.fit
 *.jpg
 *.jpeg
@@ -5,3 +6,4 @@
 *.tif
 *.py[oc]
 *.bin
+config.json

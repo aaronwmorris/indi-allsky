@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import logging
+import json
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -26,54 +27,6 @@ from astropy.io import fits
 import cv2
 import numpy
 
-#CCD_NAME         = "CCD Simulator"
-#CCD_NAME         = "ZWO CCD ASI290MM"
-CCD_NAME         = "SVBONY SV305 0"
-
-DAYTIME_CAPTURE  = True
-EXPOSURE_PERIOD  = 15.10000   # time between beginning of each frame
-
-CCD_GAIN_NIGHT   = 250
-CCD_GAIN_DAY     = 10   # minimum gain is 10 for SV305
-
-CCD_PROPERTIES = {
-    'CCD_BINNING' : [1],
-    'CCD_GAIN'    : [CCD_GAIN_NIGHT],
-    'CCD_WBR'     : [120],
-    'CCD_WBG'     : [75],
-    'CCD_WBB'     : [140],
-    'CCD_GAMMA'   : [100],
-}
-
-CCD_SWITCHES = {
-    'FRAME_FORMAT' : [
-        PyIndi.ISS_OFF,  # RAW12
-        PyIndi.ISS_ON,   # RAW8
-    ]
-}
-
-
-CCD_EXPOSURE_MAX    = 15.000000
-CCD_EXPOSURE_MIN    =  0.000029
-CCD_EXPOSURE_DEF    =  0.000100
-
-TARGET_MEAN         = 45.0
-TARGET_MEAN_MAX     = TARGET_MEAN + (TARGET_MEAN * 0.1)
-TARGET_MEAN_MIN     = TARGET_MEAN - (TARGET_MEAN * 0.1)
-
-LOCATION_LATITUDE   = '33'
-LOCATION_LONGITUDE  = '-84'
-NIGHT_SUN_ALT_DEG   = -15
-
-FONT_FACE       = cv2.FONT_HERSHEY_SIMPLEX
-FONT_HEIGHT     = 30
-FONT_X          = 15
-FONT_Y          = 30
-FONT_COLOR      = (200, 200, 200)
-FONT_AA         = cv2.LINE_AA
-FONT_SCALE      = 1 * 0.80
-FONT_THICKNESS  = 1
-
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
@@ -83,9 +36,10 @@ logger.setLevel(logging.INFO)
 
 class IndiClient(PyIndi.BaseClient):
  
-    def __init__(self, img_q):
+    def __init__(self, config, img_q):
         super(IndiClient, self).__init__()
 
+        self.config = config
         self.img_q = img_q
 
         self.device = None
@@ -95,8 +49,8 @@ class IndiClient(PyIndi.BaseClient):
 
     def newDevice(self, d):
         self.logger.info("new device %s", d.getDeviceName())
-        if d.getDeviceName() == CCD_NAME:
-            self.logger.info("Set new device %s!", CCD_NAME)
+        if d.getDeviceName() == self.config['CCD_NAME']:
+            self.logger.info("Set new device %s!", self.config['CCD_NAME'])
             # save reference to the device in member variable
             self.device = d
 
@@ -107,7 +61,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.logger.info("new property %s for device %s", pName, pDeviceName)
         if self.device is not None and pName == "CONNECTION" and pDeviceName == self.device.getDeviceName():
-            self.logger.info("Got property CONNECTION for %s!", CCD_NAME)
+            self.logger.info("Got property CONNECTION for %s!", self.config['CCD_NAME'])
             # connect to device
             self.logger.info('Connect to device')
             self.connectDevice(self.device.getDeviceName())
@@ -174,9 +128,10 @@ class IndiClient(PyIndi.BaseClient):
 
 
 class ImageProcessorWorker(Process):
-    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
+    def __init__(self, config, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
         super(ImageProcessorWorker, self).__init__()
 
+        self.config = config
         self.img_q = img_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
@@ -188,6 +143,10 @@ class ImageProcessorWorker(Process):
         self.stable_mean = False
         self.scale_factor = 1.0
         self.hist_mean = []
+        self.target_mean = float(self.config['TARGET_MEAN'])
+        self.target_mean_dev = float(self.config['TARGET_MEAN_DEV'])
+        self.target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
+        self.target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -296,6 +255,10 @@ class ImageProcessorWorker(Process):
 
 
     def image_text(self, data_bytes):
+        # not sure why these are returned as tuples
+        fontFace=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
+        lineType=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
+
         #cv2.rectangle(
         #    img=data_bytes,
         #    pt1=(0, 0),
@@ -307,34 +270,34 @@ class ImageProcessorWorker(Process):
         cv2.putText(
             img=data_bytes,
             text=datetime.now().strftime('%Y%m%d %H:%M:%S'),
-            org=(FONT_X, FONT_Y),
-            fontFace=FONT_FACE,
-            color=FONT_COLOR,
-            lineType=FONT_AA,
-            fontScale=FONT_SCALE,
-            thickness=FONT_THICKNESS,
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
+            fontFace=fontFace[0],
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
         cv2.putText(
             img=data_bytes,
             text='Exposure {0:0.6f}'.format(self.exposure_v.value),
-            org=(FONT_X, FONT_Y + (FONT_HEIGHT * 1)),
-            fontFace=FONT_FACE,
-            color=FONT_COLOR,
-            lineType=FONT_AA,
-            fontScale=FONT_SCALE,
-            thickness=FONT_THICKNESS,
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 1)),
+            fontFace=fontFace[0],
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
         cv2.putText(
             img=data_bytes,
             text='Gain {0:d}'.format(self.gain_v.value),
-            org=(FONT_X, FONT_Y + (FONT_HEIGHT * 2)),
-            fontFace=FONT_FACE,
-            color=FONT_COLOR,
-            lineType=FONT_AA,
-            fontScale=FONT_SCALE,
-            thickness=FONT_THICKNESS,
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
+            fontFace=fontFace[0],
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
 
@@ -365,10 +328,10 @@ class ImageProcessorWorker(Process):
         k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
         logger.info('Moving average: %0.2f', k_moving_average)
 
-        if k_moving_average > TARGET_MEAN_MAX:
+        if k_moving_average > self.target_mean_max:
             logger.warning('Moving average exceeded target by 10%, recalculating next exposure')
             self.stable_mean = False
-        elif k_moving_average < TARGET_MEAN_MIN:
+        elif k_moving_average < self.target_mean_min:
             logger.warning('Moving average exceeded target by 10%, recalculating next exposure')
             self.stable_mean = False
 
@@ -376,7 +339,7 @@ class ImageProcessorWorker(Process):
     def recalculate_exposure(self, k):
 
         # Until we reach a good starting point, do not calculate a moving average
-        if k <= TARGET_MEAN_MAX and k >= TARGET_MEAN_MIN:
+        if k <= self.target_mean_max and k >= self.target_mean_min:
             logger.warning('Found stable mean for exposure')
             self.stable_mean = True
             [self.hist_mean.insert(0, k) for x in range(10)]  # populate 10 entries
@@ -386,20 +349,20 @@ class ImageProcessorWorker(Process):
         current_exposure = self.exposure_v.value
 
         # Scale the exposure up and down based on targets
-        if k > TARGET_MEAN_MAX:
-            new_exposure = current_exposure / (( k / float(TARGET_MEAN) ) * self.scale_factor)
-        elif k < TARGET_MEAN_MIN:
-            new_exposure = current_exposure * (( float(TARGET_MEAN) / k ) * self.scale_factor)
+        if k > self.target_mean_max:
+            new_exposure = current_exposure / (( k / self.target_mean ) * self.scale_factor)
+        elif k < self.target_mean_min:
+            new_exposure = current_exposure * (( self.target_mean / k ) * self.scale_factor)
         else:
             new_exposure = current_exposure
 
 
 
         # Do not exceed the limits
-        if new_exposure < CCD_EXPOSURE_MIN:
-            new_exposure = CCD_EXPOSURE_MIN
-        elif new_exposure > CCD_EXPOSURE_MAX:
-            new_exposure = CCD_EXPOSURE_MAX
+        if new_exposure < self.config['CCD_EXPOSURE_MIN']:
+            new_exposure = self.config['CCD_EXPOSURE_MIN']
+        elif new_exposure > self.config['CCD_EXPOSURE_MAX']:
+            new_exposure = self.config['CCD_EXPOSURE_MAX']
 
 
         with self.exposure_v.get_lock():
@@ -457,12 +420,13 @@ class ImageProcessorWorker(Process):
 
 class IndiTimelapse(object):
 
-    def __init__(self):
+    def __init__(self, config_file):
+        self.config = json.loads(config_file.read())
         self.img_q = Queue()
         self.indiclient = None
         self.device = None
-        self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
-        self.gain_v = Value('i', copy.copy(CCD_GAIN_NIGHT))
+        self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
+        self.gain_v = Value('i', copy.copy(self.config['CCD_GAIN_NIGHT']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -471,11 +435,11 @@ class IndiTimelapse(object):
 
     def _initialize(self, writefits=False):
         logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=writefits)
+        self.img_process = ImageProcessorWorker(self.config, self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=writefits)
         self.img_process.start()
 
         # instantiate the client
-        self.indiclient = IndiClient(self.img_q)
+        self.indiclient = IndiClient(self.config, self.img_q)
 
         # set roi
         #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
@@ -492,7 +456,7 @@ class IndiTimelapse(object):
 
 
         while not self.device:
-            self.device = self.indiclient.getDevice(CCD_NAME)
+            self.device = self.indiclient.getDevice(self.config['CCD_NAME'])
             time.sleep(0.5)
 
         logger.info('Connected to device')
@@ -503,7 +467,7 @@ class IndiTimelapse(object):
 
     def configureCcd(self):
         ### Configure CCD Properties
-        for key in CCD_PROPERTIES.keys():
+        for key in self.config['INDI_CONFIG']['PROPERTIES'].keys():
 
             # loop until the property is populated
             indiprop = None
@@ -512,7 +476,7 @@ class IndiTimelapse(object):
                 time.sleep(0.5)
 
             logger.info('Setting property %s', key)
-            for i, value in enumerate(CCD_PROPERTIES[key]):
+            for i, value in enumerate(self.config['INDI_CONFIG']['PROPERTIES'][key]):
                 logger.info(' %d: %s', i, str(value))
                 indiprop[i].value = value
             self.indiclient.sendNewNumber(indiprop)
@@ -520,7 +484,7 @@ class IndiTimelapse(object):
 
 
         ### Configure CCD Switches
-        for key in CCD_SWITCHES:
+        for key in self.config['INDI_CONFIG']['SWITCHES']:
 
             # loop until the property is populated
             indiswitch = None
@@ -530,9 +494,9 @@ class IndiTimelapse(object):
 
 
             logger.info('Setting switch %s', key)
-            for i, value in enumerate(CCD_SWITCHES[key]):
+            for i, value in enumerate(self.config['INDI_CONFIG']['SWITCHES'][key]):
                 logger.info(' %d: %s', i, str(value))
-                indiswitch[i].s = value
+                indiswitch[i].s = getattr(PyIndi, value)
             self.indiclient.sendNewSwitch(indiswitch)
 
 
@@ -550,7 +514,7 @@ class IndiTimelapse(object):
             #logger.info('self.night_v.value: %r', self.night_v.value)
             #logger.info('is night: %r', is_night)
 
-            if not DAYTIME_CAPTURE:
+            if not self.config['DAYTIME_CAPTURE']:
                 logger.warning('Daytime capture is disabled')
                 time.sleep(300)
 
@@ -569,9 +533,9 @@ class IndiTimelapse(object):
 
                 with self.gain_v.get_lock():
                     if is_night:
-                        self.gain_v.value = CCD_GAIN_NIGHT
+                        self.gain_v.value = self.config['CCD_GAIN_NIGHT']
                     else:
-                        self.gain_v.value = CCD_GAIN_DAY
+                        self.gain_v.value = self.config['CCD_GAIN_DAY']
 
 
                 prop_gain = None
@@ -588,20 +552,20 @@ class IndiTimelapse(object):
 
 
             self.indiclient.takeExposure(self.exposure_v.value)
-            time.sleep(EXPOSURE_PERIOD)
+            time.sleep(self.config['EXPOSURE_PERIOD'])
 
 
     def is_night(self):
         obs = ephem.Observer()
-        obs.lon = LOCATION_LONGITUDE
-        obs.lat = LOCATION_LATITUDE
+        obs.lon = str(self.config['LOCATION_LONGITUDE'])
+        obs.lat = str(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < math.sin(NIGHT_SUN_ALT_DEG)
+        return sun.alt < math.sin(self.config['NIGHT_SUN_ALT_DEG'])
 
 
 
@@ -614,8 +578,8 @@ class IndiTimelapse(object):
             prop_gain = self.device.getNumber('CCD_GAIN')
             time.sleep(0.5)
 
-        logger.info('Setting camera gain to %d', CCD_GAIN_NIGHT)
-        prop_gain[0].value = CCD_GAIN_NIGHT
+        logger.info('Setting camera gain to %d', self.config['CCD_GAIN_NIGHT'])
+        prop_gain[0].value = self.config['CCD_GAIN_NIGHT']
         self.indiclient.sendNewNumber(prop_gain)
 
 
@@ -686,6 +650,13 @@ if __name__ == "__main__":
         choices=('run', 'darks', 'avconv'),
     )
     argparser.add_argument(
+        '--config',
+        '-c',
+        help='config file',
+        type=argparse.FileType('r'),
+        required=True,
+    )
+    argparser.add_argument(
         '--timespec',
         '-t',
         help='time spec',
@@ -693,11 +664,14 @@ if __name__ == "__main__":
     )
 
     args = argparser.parse_args()
-    it = IndiTimelapse()
+
 
     args_list = list()
     if args.timespec:
         args_list.append(args.timespec)
+
+
+    it = IndiTimelapse(args.config)
 
     action_func = getattr(it, args.action)
     action_func(*args_list)
