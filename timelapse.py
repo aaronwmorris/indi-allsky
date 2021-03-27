@@ -216,10 +216,20 @@ class ImageProcessorWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
-            self.image_text(scidata_color)
-            self.write_jpg(scidata_color)
 
             self.calculate_histogram(scidata_color)
+
+            #scidata_denoise = cv2.fastNlMeansDenoisingColored(
+            #    scidata_color,
+            #    None,
+            #    h=3,
+            #    hColor=3,
+            #    templateWindowSize=7,
+            #    searchWindowSize=21,
+            #)
+
+            self.image_text(scidata_color)
+            self.write_jpg(scidata_color)
 
 
     def write_fit(self, hdulist):
