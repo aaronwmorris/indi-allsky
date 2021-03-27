@@ -9,6 +9,7 @@ from datetime import timedelta
 import copy
 import functools
 import math
+import argparse
 
 import ephem
 
@@ -511,6 +512,8 @@ class IndiTimelapse(object):
 
     def __init__(self):
         self.img_q = Queue()
+        self.indiclient = None
+        self.device = None
         self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
         self.gain_v = Value('i', copy.copy(CCD_GAIN_NIGHT))
         self.sensortemp_v = Value('f', 0)
@@ -522,39 +525,80 @@ class IndiTimelapse(object):
         self.img_process.start()
 
 
-
-    def main(self):
+    def _initialize(self):
         # instantiate the client
-        indiclient = IndiClient(self.img_q)
+        self.indiclient = IndiClient(self.img_q)
 
         # set roi
         #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
 
         # set indi server localhost and port 7624
-        indiclient.setServer("localhost", 7624)
+        self.indiclient.setServer("localhost", 7624)
 
         # connect to indi server
         print("Connecting to indiserver")
-        if (not(indiclient.connectServer())):
-             print("No indiserver running on {0}:{1} - Try to run".format(indiclient.getHost(), indiclient.getPort()))
+        if (not(self.indiclient.connectServer())):
+             print("No indiserver running on {0}:{1} - Try to run".format(self.indiclient.getHost(), self.indiclient.getPort()))
              print("  indiserver indi_simulator_telescope indi_simulator_ccd")
              sys.exit(1)
 
 
-        device = None
-        while not device:
-            device = indiclient.getDevice(CCD_NAME)
+        while not self.device:
+            self.device = self.indiclient.getDevice(CCD_NAME)
             time.sleep(0.5)
 
         logger.info('Connected to device')
 
         ### Perform device config
-        self.configureCcd(indiclient, device)
+        self.configureCcd()
 
+
+    def configureCcd(self):
+        ### Configure CCD Properties
+        for key in CCD_PROPERTIES.keys():
+
+            # loop until the property is populated
+            indiprop = None
+            while not indiprop:
+                indiprop = self.device.getNumber(key)
+                time.sleep(0.5)
+
+            logger.info('Setting property %s', key)
+            for i, value in enumerate(CCD_PROPERTIES[key]):
+                logger.info(' %d: %s', i, str(value))
+                indiprop[i].value = value
+            self.indiclient.sendNewNumber(indiprop)
+
+
+
+        ### Configure CCD Switches
+        for key in CCD_SWITCHES:
+
+            # loop until the property is populated
+            indiswitch = None
+            while not indiswitch:
+                indiswitch = self.device.getSwitch(key)
+                time.sleep(0.5)
+
+
+            logger.info('Setting switch %s', key)
+            for i, value in enumerate(CCD_SWITCHES[key]):
+                logger.info(' %d: %s', i, str(value))
+                indiswitch[i].s = value
+            self.indiclient.sendNewSwitch(indiswitch)
+
+
+        # Sleep after configuration
+        time.sleep(1.0)
+
+
+    def run(self):
+
+        self._initialize()
 
         ### main loop starts
         while True:
-            temp = device.getNumber("CCD_TEMPERATURE")
+            temp = self.device.getNumber("CCD_TEMPERATURE")
             if temp:
                 with self.sensortemp_v.get_lock():
                     logger.info("Sensor temperature: %d", temp[0].value)
@@ -579,60 +623,19 @@ class IndiTimelapse(object):
 
                 prop_gain = None
                 while not prop_gain:
-                    prop_gain = device.getNumber('CCD_GAIN')
+                    prop_gain = self.device.getNumber('CCD_GAIN')
                     time.sleep(0.5)
 
                 logger.info('Setting camera gain to %d', self.gain_v.value)
                 prop_gain[0].value = self.gain_v.value
-                indiclient.sendNewNumber(prop_gain)
+                self.indiclient.sendNewNumber(prop_gain)
 
                 # Sleep after reconfiguration
                 time.sleep(1.0)
 
 
-            indiclient.takeExposure(self.exposure_v.value)
+            self.indiclient.takeExposure(self.exposure_v.value)
             time.sleep(EXPOSURE_PERIOD)
-
-
-
-
-    def configureCcd(self, indiclient, device):
-        ### Configure CCD Properties
-        for key in CCD_PROPERTIES.keys():
-
-            # loop until the property is populated
-            indiprop = None
-            while not indiprop:
-                indiprop = device.getNumber(key)
-                time.sleep(0.5)
-
-            logger.info('Setting property %s', key)
-            for i, value in enumerate(CCD_PROPERTIES[key]):
-                logger.info(' %d: %s', i, str(value))
-                indiprop[i].value = value
-            indiclient.sendNewNumber(indiprop)
-
-
-
-        ### Configure CCD Switches
-        for key in CCD_SWITCHES:
-
-            # loop until the property is populated
-            indiswitch = None
-            while not indiswitch:
-                indiswitch = device.getSwitch(key)
-                time.sleep(0.5)
-
-
-            logger.info('Setting switch %s', key)
-            for i, value in enumerate(CCD_SWITCHES[key]):
-                logger.info(' %d: %s', i, str(value))
-                indiswitch[i].s = value
-            indiclient.sendNewSwitch(indiswitch)
-
-
-        # Sleep after configuration
-        time.sleep(1.0)
 
 
     def is_night(self):
@@ -650,6 +653,17 @@ class IndiTimelapse(object):
 
 
 if __name__ == "__main__":
-    IndiTimelapse().main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        'action',
+        help='action',
+        choices=('run',),
+    )
+
+    args = argparser.parse_args()
+    it = IndiTimelapse()
+
+    action_func = getattr(it, args.action)
+    action_func()
 
 
