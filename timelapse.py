@@ -422,6 +422,8 @@ class IndiTimelapse(object):
 
     def __init__(self, config_file):
         self.config = json.loads(config_file.read())
+        config_file.close()
+
         self.img_q = Queue()
         self.indiclient = None
         self.device = None
