@@ -1,17 +1,24 @@
 {
     "CCD_NAME" : "SVBONY SV305 0",
+
     "CCD_GAIN_NIGHT" : 250,
+    "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "CCD_GAIN_DAY" : 10,
+
     "CCD_EXPOSURE_MAX" : 15.000000,
     "CCD_EXPOSURE_MIN" : 0.000029,
     "CCD_EXPOSURE_DEF" : 0.000100,
-
-    "DAYTIME_CAPTURE" : true,
     "EXPOSURE_PERIOD" : 15.10000,
-    "TARGET_MEAN" : 45.0,
+
+    "comment_TARGET_MEAN" : "Average channel brightness target",
+    "TARGET_MEAN" : 45,
+    "comment_TARGET_MEAN_DEV" : "Allowed percentage deviation from the mean before recalculating",
     "TARGET_MEAN_DEV" : 10,
+
     "LOCATION_LATITUDE" : 33,
     "LOCATION_LONGITUDE" : -84,
+
+    "DAYTIME_CAPTURE" : true,
     "NIGHT_SUN_ALT_DEG" : -15,
 
     "INDI_CONFIG" : {
