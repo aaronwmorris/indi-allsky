@@ -176,13 +176,14 @@ class IndiClient(PyIndi.BaseClient):
 
 
 class ImageProcessorWorker(Process):
-    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v, writefits=False):
+    def __init__(self, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
         super(ImageProcessorWorker, self).__init__()
 
         self.img_q = img_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.sensortemp_v = sensortemp_v
+        self.night_v = night_v
 
         self.writefits = writefits
 
@@ -192,8 +193,8 @@ class ImageProcessorWorker(Process):
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        self.dark = fits.open('dark_7s_gain250.fit')
-        #self.dark = None
+        #self.dark = fits.open('dark_7s_gain250.fit')
+        self.dark = None
 
         self.name = current_process().name
 
@@ -532,15 +533,14 @@ class IndiTimelapse(object):
         self.exposure_v = Value('f', copy.copy(CCD_EXPOSURE_DEF))
         self.gain_v = Value('i', copy.copy(CCD_GAIN_NIGHT))
         self.sensortemp_v = Value('f', 0)
+        self.night_v = Value('i', 1)
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
-
-        self.night = True
 
 
     def _initialize(self, writefits=False):
         logger.info('Starting ImageProcessorWorker process')
-        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, writefits=writefits)
+        self.img_process = ImageProcessorWorker(self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=writefits)
         self.img_process.start()
 
         # instantiate the client
@@ -623,13 +623,14 @@ class IndiTimelapse(object):
 
 
             is_night = self.is_night()
-            #logger.info('self.night: %r', self.night)
+            #logger.info('self.night_v.value: %r', self.night_v.value)
             #logger.info('is night: %r', is_night)
 
             ### Change gain when we change between day and night
-            if self.night != is_night:
+            if self.night_v.value != int(is_night):
                 logger.warning('Change between night and day')
-                self.night = is_night
+                with self.night_v.get_lock():
+                    self.night_v.value = int(is_night)
 
                 with self.gain_v.get_lock():
                     if is_night:
