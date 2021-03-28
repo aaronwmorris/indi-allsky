@@ -232,11 +232,11 @@ class ImageProcessorWorker(Process):
             logger.error('File exists: %s (skipping)', filename)
             return
 
-        if self.config['IMAGE_FILE_TYPE'] == 'jpg':
-            cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']])
-        elif self.config['IMAGE_FILE_TYPE'] == 'png':
-            cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']])
-        elif self.config['IMAGE_FILE_TYPE'] == 'tif':
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             cv2.imwrite(filename, scidata)
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
@@ -687,12 +687,12 @@ class IndiTimelapse(object):
 
 
         logger.info('Creating symlinked files for timelapse')
-        timelapse_files = sorted(Path(imgfolder).glob('*.jpg'), key=os.path.getmtime)
+        timelapse_files = sorted(Path(imgfolder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])), key=os.path.getmtime)
         for i, f in enumerate(timelapse_files):
-            symlink_name = '{0:s}/{1:04d}.jpg'.format(seqfolder, i)
+            symlink_name = '{0:s}/{1:04d}.{2:s}'.format(seqfolder, i, self.config['IMAGE_FILE_TYPE'])
             os.symlink(f, symlink_name)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.jpg -vcodec libx264 -b:v {2:s} -pix_fmt yuv420p -movflags +faststart {3:s}/allsky-{4:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['FFMPEG_BITRATE'], imgfolder, timespec).split()
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], imgfolder, timespec).split()
         process = subprocess.run(cmd)
 
 
