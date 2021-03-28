@@ -117,9 +117,9 @@ class IndiClient(PyIndi.BaseClient):
         self.logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
-    def takeExposure(self, exposure, filename=''):
-        if filename:
-            self.filename = filename
+    def takeExposure(self, exposure, filename_override=''):
+        if filename_override:
+            self.filename = filename_override
 
         self.logger.info("Taking %0.6f s exposure", exposure)
         #get current exposure time
@@ -164,13 +164,13 @@ class ImageProcessorWorker(Process):
 
     def run(self):
         while True:
-            imgdata, filename = self.img_q.get()
+            imgdata, filename_override = self.img_q.get()
 
             if not imgdata:
                 return
 
-            if filename:
-                self.filename = filename
+            if filename_override:
+                self.filename = filename_override
 
 
             import io
