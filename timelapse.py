@@ -671,14 +671,14 @@ class IndiTimelapse(object):
             self.img_worker.join()
 
 
-        imgfolder = '{0:s}/images/{1:s}'.format(self.base_dir, timespec)
+        img_day_folder = '{0:s}/images/{1:s}'.format(self.base_dir, timespec)
 
-        if not os.path.exists(imgfolder):
-            logger.error('Image folder does not exist: %s', imgfolder)
+        if not os.path.exists(img_day_folder):
+            logger.error('Image folder does not exist: %s', img_day_folder)
             sys.exit(1)
 
 
-        seqfolder = '{0:s}/sequence'.format(imgfolder)
+        seqfolder = '{0:s}/.sequence'.format(img_day_folder)
 
         if not os.path.exists(seqfolder):
             logger.info('Creating sequence folder %s', seqfolder)
@@ -693,13 +693,18 @@ class IndiTimelapse(object):
                 os.unlink(f)
 
 
+        # find all files
+        timelapse_files = list()
+        self.getFolderImgFiles(img_day_folder, timelapse_files)
+
+
         logger.info('Creating symlinked files for timelapse')
-        timelapse_files = sorted(Path(imgfolder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])), key=os.path.getmtime)
-        for i, f in enumerate(timelapse_files):
+        timelapse_files_sorted = sorted(timelapse_files, key=os.path.getmtime)
+        for i, f in enumerate(timelapse_files_sorted):
             symlink_name = '{0:s}/{1:04d}.{2:s}'.format(seqfolder, i, self.config['IMAGE_FILE_TYPE'])
             os.symlink(f, symlink_name)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], imgfolder, timespec).split()
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], img_day_folder, timespec).split()
         process = subprocess.run(cmd)
 
 
@@ -720,6 +725,19 @@ class IndiTimelapse(object):
 
         if restart_worker:
             self._startImageProcessWorker()
+
+
+    def getFolderImgFiles(self, folder, file_list):
+        logger.info('Searching for image files in %s', folder)
+
+        # Add all files in current folder
+        img_files = filter(Path.is_file, Path(folder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])))
+        file_list.extend(img_files)
+
+        # Recurse through all sub folders
+        folders = filter(Path.is_dir, Path(folder).iterdir())
+        for f in folders:
+            self.getFolderImgFiles(f, file_list)  # recursion
 
 
 if __name__ == "__main__":
