@@ -19,6 +19,7 @@
     "LOCATION_LONGITUDE" : -84,
 
     "DAYTIME_CAPTURE" : true,
+    "DAYTIME_CONTRAST_ENHANCE" : false,
     "NIGHT_SUN_ALT_DEG" : -15,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
@@ -32,6 +33,7 @@
     "INDI_CONFIG" : {
         "PROPERTIES" : {
             "CCD_BINNING" : [1],
+            "CCD_GAIN"    : [250],
             "CCD_WBR"     : [120],
             "CCD_WBG"     : [75],
             "CCD_WBB"     : [140],

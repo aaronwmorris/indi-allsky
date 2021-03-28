@@ -277,7 +277,7 @@ class ImageProcessorWorker(Process):
         #scidata_wb = self.white_balance2(scidata_rgb)
         scidata_wb = scidata_rgb
 
-        if not self.night_v.value:
+        if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
             # Contrast enhancement during the day
             scidata_contrast = self.contrast_clahe(scidata_wb)
         else:
@@ -350,6 +350,11 @@ class ImageProcessorWorker(Process):
 
          # Find the gain of each channel
         k = (r_avg + g_avg + b_avg) / 3
+        if k <= 0.0:
+            # ensure we do not divide by zero
+            logger.warning('Zero average, setting a default of 0.1')
+            k = 0.1
+
 
         logger.info('RGB average: %0.2f', k)
 
