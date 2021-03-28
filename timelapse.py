@@ -202,7 +202,7 @@ class ImageProcessorWorker(Process):
 
 
     def write_fit(self, hdulist):
-        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
+        now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
 
         fitname = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename)
         filename = fitname.format(now_str)
@@ -221,7 +221,8 @@ class ImageProcessorWorker(Process):
         if self.writefits:
             return
 
-        now_str = datetime.now().strftime('%y%m%d_%H%M%S')
+        now = datetime.now()
+        now_str = now.strftime('%Y%m%d_%H%M%S')
 
         folder = self.getImageFolder()
 
@@ -246,14 +247,20 @@ class ImageProcessorWorker(Process):
 
     def getImageFolder(self):
         # images should be written to previous day's folder until noon
-        day_ref = datetime.now() - timedelta(hours=12)
+        now = datetime.now()
+        day_ref = now - timedelta(hours=12)
+        hour_str = now.strftime('%H')
 
-        folder = '{0:s}/images/{1:s}'.format(self.base_dir, day_ref.strftime('%Y%m%d'))
+        day_folder = '{0:s}/images/{1:s}'.format(self.base_dir, day_ref.strftime('%Y%m%d'))
+        hour_folder = '{0:s}/{1:s}'.format(day_folder, hour_str)
 
-        if not os.path.exists(folder):
-            os.mkdir(folder)
+        if not os.path.exists(day_folder):
+            os.mkdir(day_folder)
 
-        return folder
+        if not os.path.exists(hour_folder):
+            os.mkdir(hour_folder)
+
+        return hour_folder
 
 
     def calibrate(self, scidata_uncalibrated):
