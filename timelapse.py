@@ -370,7 +370,7 @@ class ImageProcessorWorker(Process):
 
 
         self.hist_mean.insert(0, k)
-        self.hist_mean = self.hist_mean[:10]  # only need last 10 values
+        self.hist_mean = self.hist_mean[:5]  # only need last 5 values
 
         k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
         logger.info('Moving average: %0.2f', k_moving_average)
@@ -389,7 +389,7 @@ class ImageProcessorWorker(Process):
         if k <= self.target_mean_max and k >= self.target_mean_min:
             logger.warning('Found stable mean for exposure')
             self.stable_mean = True
-            [self.hist_mean.insert(0, k) for x in range(10)]  # populate 10 entries
+            [self.hist_mean.insert(0, k) for x in range(50)]  # populate 50 entries, reduced later
             return
 
 
