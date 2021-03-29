@@ -7,3 +7,4 @@
 *.py[oc]
 *.bin
 config.json
+images/*/
