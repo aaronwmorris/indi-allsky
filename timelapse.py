@@ -33,7 +33,6 @@ logger.setLevel(logging.INFO)
 
 
 class IndiClient(PyIndi.BaseClient):
- 
     def __init__(self, config, img_q):
         super(IndiClient, self).__init__()
 
@@ -86,7 +85,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newSwitch(self, svp):
-        self.logger.info ("new Switch %s for device %s", svp.name, svp.device)
+        self.logger.info("new Switch %s for device %s", svp.name, svp.device)
 
 
     def newNumber(self, nvp):
@@ -99,7 +98,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newLight(self, lvp):
-        self.logger.info("new Light "+ lvp.name + " for device "+ lvp.device)
+        self.logger.info("new Light %s for device %s", lvp.name, lvp.device)
 
 
     def newMessage(self, d, m):
@@ -296,8 +295,8 @@ class ImageProcessorWorker(Process):
 
     def image_text(self, data_bytes, exp_date):
         # not sure why these are returned as tuples
-        fontFace=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
-        lineType=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
 
         #cv2.rectangle(
         #    img=data_bytes,
@@ -351,7 +350,7 @@ class ImageProcessorWorker(Process):
         logger.info('G mean: %0.2f', g_avg)
         logger.info('B mean: %0.2f', b_avg)
 
-         # Find the gain of each channel
+        # Find the gain of each channel
         k = (r_avg + g_avg + b_avg) / 3
         if k <= 0.0:
             # ensure we do not divide by zero
@@ -437,7 +436,7 @@ class ImageProcessorWorker(Process):
         g_avg = cv2.mean(g)[0]
         b_avg = cv2.mean(b)[0]
 
-         # Find the gain of each channel
+        # Find the gain of each channel
         k = (r_avg + g_avg + b_avg) / 3
         kr = k / r_avg
         kg = k / g_avg
@@ -501,9 +500,9 @@ class IndiTimelapse(object):
         # connect to indi server
         print("Connecting to indiserver")
         if (not(self.indiclient.connectServer())):
-             print("No indiserver running on {0}:{1} - Try to run".format(self.indiclient.getHost(), self.indiclient.getPort()))
-             print("  indiserver indi_simulator_telescope indi_simulator_ccd")
-             sys.exit(1)
+            print("No indiserver running on {0}:{1} - Try to run".format(self.indiclient.getHost(), self.indiclient.getPort()))
+            print("  indiserver indi_simulator_telescope indi_simulator_ccd")
+            sys.exit(1)
 
 
         while not self.device:
@@ -685,8 +684,8 @@ class IndiTimelapse(object):
         rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
         if rmlinks:
             logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l in rmlinks:
-                l.unlink()
+            for l_p in rmlinks:
+                l_p.unlink()
 
 
         # find all files
@@ -701,15 +700,15 @@ class IndiTimelapse(object):
             symlink_p.symlink_to(f)
 
         cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(img_day_folder), timespec).split()
-        process = subprocess.run(cmd)
+        subprocess.run(cmd)
 
 
         # delete all existing symlinks in seqfolder
         rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
         if rmlinks:
             logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l in rmlinks:
-                l.unlink()
+            for l_p in rmlinks:
+                l_p.unlink()
 
 
         # remove sequence folder
