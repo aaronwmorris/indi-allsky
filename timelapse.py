@@ -80,8 +80,10 @@ class IndiClient(PyIndi.BaseClient):
         ### get image data
         imgdata = bp.getblobdata()
 
+        exp_date = datetime.now()
+
         ### process data in worker
-        self.img_q.put((imgdata, self.filename_t))
+        self.img_q.put((imgdata, exp_date, self.filename_t))
 
 
     def newSwitch(self, svp):
@@ -161,15 +163,13 @@ class ImageProcessorWorker(Process):
 
     def run(self):
         while True:
-            imgdata, filename_override = self.img_q.get()
+            imgdata, exp_date, filename_override = self.img_q.get()
 
             if not imgdata:
                 return
 
             if filename_override:
                 self.filename_t = filename_override
-
-            exp_date = datetime.now()
 
             import io
 
@@ -651,7 +651,7 @@ class IndiTimelapse(object):
 
 
         ### stop image processing worker
-        self.img_q.put((False, ''))
+        self.img_q.put((False, False, ''))
         self.img_worker.join()
 
 
@@ -662,7 +662,7 @@ class IndiTimelapse(object):
     def avconv(self, timespec, restart_worker=False):
         if self.img_worker:
             logger.warning('Stopping image process worker to save memory')
-            self.img_q.put((False, ''))
+            self.img_q.put((False, False, ''))
             self.img_worker.join()
 
 
@@ -770,3 +770,5 @@ if __name__ == "__main__":
     action_func(*args_list)
 
 
+# vim let=g:syntastic_python_flake8_args='--ignore="E303,E501,E265,E266,E201,E202,W391"'
+# vim: set tabstop=4 shiftwidth=4 expandtab
