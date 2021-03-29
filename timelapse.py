@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import sys
 import time
 import logging
@@ -42,7 +41,7 @@ class IndiClient(PyIndi.BaseClient):
         self.config = config
         self.img_q = img_q
 
-        self.filename = '{0:s}'
+        self.filename_t = '{0:s}'
 
         self.device = None
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
@@ -84,7 +83,7 @@ class IndiClient(PyIndi.BaseClient):
         imgdata = bp.getblobdata()
 
         ### process data in worker
-        self.img_q.put((imgdata, self.filename))
+        self.img_q.put((imgdata, self.filename_t))
 
 
     def newSwitch(self, svp):
@@ -119,7 +118,7 @@ class IndiClient(PyIndi.BaseClient):
 
     def takeExposure(self, exposure, filename_override=''):
         if filename_override:
-            self.filename = filename_override
+            self.filename_t = filename_override
 
         self.logger.info("Taking %0.6f s exposure", exposure)
         #get current exposure time
@@ -143,7 +142,7 @@ class ImageProcessorWorker(Process):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
 
-        self.filename = '{0:s}'
+        self.filename_t = '{0:s}'
         self.writefits = writefits
 
         self.stable_mean = False
@@ -154,7 +153,7 @@ class ImageProcessorWorker(Process):
         self.target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
         self.target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
 
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.base_dir = Path(__file__).parent.absolute()
 
         #self.dark = fits.open('dark_7s_gain250.fit')
         self.dark = None
@@ -170,7 +169,7 @@ class ImageProcessorWorker(Process):
                 return
 
             if filename_override:
-                self.filename = filename_override
+                self.filename_t = filename_override
 
 
             import io
@@ -204,14 +203,14 @@ class ImageProcessorWorker(Process):
     def write_fit(self, hdulist):
         now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        fitname = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename)
-        filename = fitname.format(now_str)
+        fitname_t = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename_t)
+        filename = Path(fitname_t.format(now_str))
 
-        if os.path.exists(filename):
+        if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
             return
 
-        hdulist.writeto(filename)
+        hdulist.writeto(str(filename))
 
         logger.info('Finished writing fit file')
 
@@ -226,19 +225,19 @@ class ImageProcessorWorker(Process):
 
         folder = self.getImageFolder()
 
-        imgname = '{0:s}/{1:s}.{2:s}'.format(folder, self.filename, self.config['IMAGE_FILE_TYPE'])
-        filename = imgname.format(now_str)
+        imgname_t = '{0:s}/{1:s}.{2:s}'.format(str(folder), self.filename_t, self.config['IMAGE_FILE_TYPE'])
+        filename = Path(imgname_t.format(now_str))
 
-        if os.path.exists(filename):
+        if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
             return
 
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(filename, scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+            cv2.imwrite(str(filename), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(filename, scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+            cv2.imwrite(str(filename), scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(filename, scidata)
+            cv2.imwrite(str(filename), scidata)
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
@@ -251,14 +250,13 @@ class ImageProcessorWorker(Process):
         day_ref = now - timedelta(hours=12)
         hour_str = now.strftime('%H')
 
-        day_folder = '{0:s}/images/{1:s}'.format(self.base_dir, day_ref.strftime('%Y%m%d'))
-        hour_folder = '{0:s}/{1:s}'.format(day_folder, hour_str)
+        day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), day_ref.strftime('%Y%m%d')))
+        if not day_folder.exists():
+            day_folder.mkdir()
 
-        if not os.path.exists(day_folder):
-            os.mkdir(day_folder)
-
-        if not os.path.exists(hour_folder):
-            os.mkdir(hour_folder)
+        hour_folder = Path('{0:s}/{1:s}'.format(str(day_folder), hour_str))
+        if not hour_folder.exists():
+            hour_folder.mkdir()
 
         return hour_folder
 
@@ -484,7 +482,7 @@ class IndiTimelapse(object):
         self.img_worker = None
         self.writefits = False
 
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.base_dir = Path(__file__).parent.absolute()
 
 
     def _initialize(self, writefits=False):
@@ -671,26 +669,26 @@ class IndiTimelapse(object):
             self.img_worker.join()
 
 
-        img_day_folder = '{0:s}/images/{1:s}'.format(self.base_dir, timespec)
+        img_day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), timespec))
 
-        if not os.path.exists(img_day_folder):
+        if not img_day_folder.exists():
             logger.error('Image folder does not exist: %s', img_day_folder)
             sys.exit(1)
 
 
-        seqfolder = '{0:s}/.sequence'.format(img_day_folder)
+        seqfolder = Path('{0:s}/.sequence'.format(str(img_day_folder)))
 
-        if not os.path.exists(seqfolder):
+        if not seqfolder.exists():
             logger.info('Creating sequence folder %s', seqfolder)
-            os.mkdir(seqfolder)
+            seqfolder.mkdir()
 
 
         # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(os.path.islink, Path(seqfolder).iterdir()))
+        rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
         if rmlinks:
             logger.warning('Removing existing symlinks in %s', seqfolder)
-            for f in rmlinks:
-                os.unlink(f)
+            for l in rmlinks:
+                l.unlink()
 
 
         # find all files
@@ -699,26 +697,26 @@ class IndiTimelapse(object):
 
 
         logger.info('Creating symlinked files for timelapse')
-        timelapse_files_sorted = sorted(timelapse_files, key=os.path.getmtime)
+        timelapse_files_sorted = sorted(timelapse_files, key=lambda p: p.stat().st_mtime)
         for i, f in enumerate(timelapse_files_sorted):
-            symlink_name = '{0:s}/{1:04d}.{2:s}'.format(seqfolder, i, self.config['IMAGE_FILE_TYPE'])
-            os.symlink(f, symlink_name)
+            symlink_p = Path('{0:s}/{1:04d}.{2:s}'.format(str(seqfolder), i, self.config['IMAGE_FILE_TYPE']))
+            symlink_p.symlink_to(f)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], seqfolder, self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], img_day_folder, timespec).split()
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(img_day_folder), timespec).split()
         process = subprocess.run(cmd)
 
 
         # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(os.path.islink, Path(seqfolder).iterdir()))
+        rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
         if rmlinks:
             logger.warning('Removing existing symlinks in %s', seqfolder)
-            for f in rmlinks:
-                os.unlink(f)
+            for l in rmlinks:
+                l.unlink()
 
 
         # remove sequence folder
         try:
-            os.rmdir(seqfolder)
+            seqfolder.rmdir()
         except OSError as e:
             logger.error('Cannote remove sequence folder: %s', str(e))
 
@@ -731,11 +729,11 @@ class IndiTimelapse(object):
         logger.info('Searching for image files in %s', folder)
 
         # Add all files in current folder
-        img_files = filter(Path.is_file, Path(folder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])))
+        img_files = filter(lambda p: p.is_file(), Path(folder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])))
         file_list.extend(img_files)
 
         # Recurse through all sub folders
-        folders = filter(Path.is_dir, Path(folder).iterdir())
+        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
         for f in folders:
             self.getFolderImgFiles(f, file_list)  # recursion
 
