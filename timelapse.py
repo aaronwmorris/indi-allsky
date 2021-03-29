@@ -26,7 +26,6 @@ from astropy.io import fits
 import cv2
 import numpy
 
-
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 logger = log_to_stderr()
@@ -171,6 +170,7 @@ class ImageProcessorWorker(Process):
             if filename_override:
                 self.filename_t = filename_override
 
+            exp_date = datetime.now()
 
             import io
 
@@ -180,7 +180,7 @@ class ImageProcessorWorker(Process):
             scidata_uncalibrated = hdulist[0].data
 
             if self.writefits:
-                self.write_fit(hdulist)
+                self.write_fit(hdulist, exp_date)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
@@ -196,15 +196,15 @@ class ImageProcessorWorker(Process):
             #    searchWindowSize=21,
             #)
 
-            self.image_text(scidata_color)
-            self.write_img(scidata_color)
+            self.image_text(scidata_color, exp_date)
+            self.write_img(scidata_color, exp_date)
 
 
-    def write_fit(self, hdulist):
-        now_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    def write_fit(self, hdulist, exp_date):
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
         fitname_t = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename_t)
-        filename = Path(fitname_t.format(now_str))
+        filename = Path(fitname_t.format(date_str))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
@@ -215,18 +215,17 @@ class ImageProcessorWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def write_img(self, scidata):
+    def write_img(self, scidata, exp_date):
         ### Do not write image files if fits are enabled
         if self.writefits:
             return
 
-        now = datetime.now()
-        now_str = now.strftime('%Y%m%d_%H%M%S')
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
-        folder = self.getImageFolder()
+        folder = self.getImageFolder(exp_date)
 
         imgname_t = '{0:s}/{1:s}.{2:s}'.format(str(folder), self.filename_t, self.config['IMAGE_FILE_TYPE'])
-        filename = Path(imgname_t.format(now_str))
+        filename = Path(imgname_t.format(date_str))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
@@ -244,11 +243,10 @@ class ImageProcessorWorker(Process):
         logger.info('Finished writing files')
 
 
-    def getImageFolder(self):
+    def getImageFolder(self, exp_date):
         # images should be written to previous day's folder until noon
-        now = datetime.now()
-        day_ref = now - timedelta(hours=12)
-        hour_str = now.strftime('%d_%H')
+        day_ref = exp_date - timedelta(hours=12)
+        hour_str = exp_date.strftime('%d_%H')
 
         day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), day_ref.strftime('%Y%m%d')))
         if not day_folder.exists():
@@ -296,7 +294,7 @@ class ImageProcessorWorker(Process):
         return scidata_contrast
 
 
-    def image_text(self, data_bytes):
+    def image_text(self, data_bytes, exp_date):
         # not sure why these are returned as tuples
         fontFace=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
         lineType=getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
@@ -311,7 +309,7 @@ class ImageProcessorWorker(Process):
 
         cv2.putText(
             img=data_bytes,
-            text=datetime.now().strftime('%Y%m%d %H:%M:%S'),
+            text=exp_date.strftime('%Y%m%d %H:%M:%S'),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
@@ -654,7 +652,7 @@ class IndiTimelapse(object):
 
 
         ### stop image processing worker
-        self.img_q.put((None, ''))
+        self.img_q.put((False, ''))
         self.img_worker.join()
 
 
@@ -665,7 +663,7 @@ class IndiTimelapse(object):
     def avconv(self, timespec, restart_worker=False):
         if self.img_worker:
             logger.warning('Stopping image process worker to save memory')
-            self.img_q.put((None, ''))
+            self.img_q.put((False, ''))
             self.img_worker.join()
 
 
