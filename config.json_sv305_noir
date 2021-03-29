@@ -1,0 +1,64 @@
+{
+    "CCD_NAME" : "SVBONY SV305 0",
+
+    "CCD_GAIN_NIGHT" : 250,
+    "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
+    "CCD_GAIN_DAY" : 10,
+
+    "CCD_EXPOSURE_MAX" : 15.000000,
+    "CCD_EXPOSURE_MIN" : 0.000029,
+    "CCD_EXPOSURE_DEF" : 0.000100,
+    "EXPOSURE_PERIOD" : 15.10000,
+
+    "comment_TARGET_MEAN" : "Average channel brightness target",
+    "TARGET_MEAN" : 45,
+    "comment_TARGET_MEAN_DEV" : "Allowed percentage deviation from the mean before recalculating",
+    "TARGET_MEAN_DEV" : 10,
+
+    "LOCATION_LATITUDE" : 33,
+    "LOCATION_LONGITUDE" : -84,
+
+    "DAYTIME_CAPTURE" : true,
+    "DAYTIME_CONTRAST_ENHANCE" : false,
+    "NIGHT_SUN_ALT_DEG" : -6,
+
+    "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
+    "IMAGE_FILE_TYPE" : "jpg",
+    "comment_IMAGE_FILE_COMPRESSION" : "0-100 for jpg, 0-9 for png",
+    "IMAGE_FILE_COMPRESSION" : {
+        "jpg"   : 90,
+        "jpeg"  : 90,
+        "png"   : 9
+    },
+
+
+    "FFMPEG_FRAMERATE" : 25,
+    "FFMPEG_BITRATE" : "3000k",
+
+    "INDI_CONFIG" : {
+        "PROPERTIES" : {
+            "CCD_BINNING" : [1],
+            "CCD_GAIN"    : [250],
+            "CCD_WBR"     : [100],
+            "CCD_WBG"     : [100],
+            "CCD_WBB"     : [100],
+            "CCD_GAMMA"   : [100]
+        },
+        "SWITCHES" : {
+            "FRAME_FORMAT" : [
+                "ISS_OFF",
+                "ISS_ON"
+            ]
+        }
+    },
+    "TEXT_PROPERTIES" : {
+        "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
+        "FONT_HEIGHT"    : 30,
+        "FONT_X"         : 15,
+        "FONT_Y"         : 30,
+        "FONT_COLOR"     : [200, 200, 200],
+        "FONT_AA"        : "LINE_AA",
+        "FONT_SCALE"     : 0.80,
+        "FONT_THICKNESS" : 1
+    }
+}
