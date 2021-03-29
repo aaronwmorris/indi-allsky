@@ -248,7 +248,7 @@ class ImageProcessorWorker(Process):
         # images should be written to previous day's folder until noon
         now = datetime.now()
         day_ref = now - timedelta(hours=12)
-        hour_str = now.strftime('%H')
+        hour_str = now.strftime('%d_%H')
 
         day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), day_ref.strftime('%Y%m%d')))
         if not day_folder.exists():
