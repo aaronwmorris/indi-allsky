@@ -239,6 +239,14 @@ class ImageProcessorWorker(Process):
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
+        # Create hard link to latest file
+        latest_file = Path('{0:s}/images/latest.{1:s}'.format(str(self.base_dir), self.config['IMAGE_FILE_TYPE']))
+
+        if latest_file.exists():
+            latest_file.unlink()
+
+        latest_file.symlink_to(filename)
+
         logger.info('Finished writing files')
 
 
