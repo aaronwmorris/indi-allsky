@@ -11,7 +11,7 @@
     "EXPOSURE_PERIOD" : 15.10000,
 
     "comment_TARGET_MEAN" : "Average channel brightness target",
-    "TARGET_MEAN" : 45,
+    "TARGET_MEAN" : 100,
     "comment_TARGET_MEAN_DEV" : "Allowed percentage deviation from the mean before recalculating",
     "TARGET_MEAN_DEV" : 10,
 
@@ -39,9 +39,9 @@
         "PROPERTIES" : {
             "CCD_BINNING" : [1],
             "CCD_GAIN"    : [250],
-            "CCD_WBR"     : [100],
+            "CCD_WBR"     : [120],
             "CCD_WBG"     : [100],
-            "CCD_WBB"     : [100],
+            "CCD_WBB"     : [175],
             "CCD_GAMMA"   : [100]
         },
         "SWITCHES" : {
