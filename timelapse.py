@@ -240,7 +240,7 @@ class ImageProcessorWorker(Process):
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
         # Create hard link to latest file
-        latest_file = Path('{0:s}/images/latest.{1:s}'.format(str(self.base_dir), self.config['IMAGE_FILE_TYPE']))
+        latest_file = self.base_dir.joinpath('images', 'latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
         if latest_file.exists():
             latest_file.unlink()
@@ -255,11 +255,11 @@ class ImageProcessorWorker(Process):
         day_ref = exp_date - timedelta(hours=12)
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), day_ref.strftime('%Y%m%d')))
+        day_folder = self.base_dir.joinpath('images', '{0:s}'.format(day_ref.strftime('%Y%m%d')))
         if not day_folder.exists():
             day_folder.mkdir()
 
-        hour_folder = Path('{0:s}/{1:s}'.format(str(day_folder), hour_str))
+        hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
             hour_folder.mkdir()
 
@@ -707,14 +707,14 @@ class IndiTimelapse(object):
             self.img_worker.join()
 
 
-        img_day_folder = Path('{0:s}/images/{1:s}'.format(str(self.base_dir), timespec))
+        img_day_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
         if not img_day_folder.exists():
             logger.error('Image folder does not exist: %s', img_day_folder)
             sys.exit(1)
 
 
-        seqfolder = Path('{0:s}/.sequence'.format(str(img_day_folder)))
+        seqfolder = img_day_folder.joinpath('.sequence')
 
         if not seqfolder.exists():
             logger.info('Creating sequence folder %s', seqfolder)
@@ -737,7 +737,7 @@ class IndiTimelapse(object):
         logger.info('Creating symlinked files for timelapse')
         timelapse_files_sorted = sorted(timelapse_files, key=lambda p: p.stat().st_mtime)
         for i, f in enumerate(timelapse_files_sorted):
-            symlink_p = Path('{0:s}/{1:04d}.{2:s}'.format(str(seqfolder), i, self.config['IMAGE_FILE_TYPE']))
+            symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             symlink_p.symlink_to(f)
 
         cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(img_day_folder), timespec).split()
