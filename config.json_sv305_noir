@@ -60,5 +60,6 @@
         "FONT_AA"        : "LINE_AA",
         "FONT_SCALE"     : 0.80,
         "FONT_THICKNESS" : 1
+        "FONT_OUTLINE"   : true
     }
 }

@@ -318,21 +318,23 @@ class ImageProcessorWorker(Process):
         #    thickness=cv2.FILLED,
         #)
 
+        line_offset = 0
 
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.putText(
+                img=data_bytes,
+                text=exp_date.strftime('%Y%m%d %H:%M:%S'),
+                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                fontFace=fontFace[0],
+                color=(0, 0, 0),
+                lineType=lineType[0],
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+            )  # black outline
         cv2.putText(
             img=data_bytes,
             text=exp_date.strftime('%Y%m%d %H:%M:%S'),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
-            fontFace=fontFace[0],
-            color=(0, 0, 0),
-            lineType=lineType[0],
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-        )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text=exp_date.strftime('%Y%m%d %H:%M:%S'),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             lineType=lineType[0],
@@ -341,20 +343,23 @@ class ImageProcessorWorker(Process):
         )
 
 
+        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.putText(
+                img=data_bytes,
+                text='Exposure {0:0.6f}'.format(self.exposure_v.value),
+                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                fontFace=fontFace[0],
+                color=(0, 0, 0),
+                lineType=lineType[0],
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+            )  # black outline
         cv2.putText(
             img=data_bytes,
             text='Exposure {0:0.6f}'.format(self.exposure_v.value),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 1)),
-            fontFace=fontFace[0],
-            color=(0, 0, 0),
-            lineType=lineType[0],
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-        )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text='Exposure {0:0.6f}'.format(self.exposure_v.value),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 1)),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             lineType=lineType[0],
@@ -363,20 +368,23 @@ class ImageProcessorWorker(Process):
         )
 
 
+        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.putText(
+                img=data_bytes,
+                text='Gain {0:d}'.format(self.gain_v.value),
+                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                fontFace=fontFace[0],
+                color=(0, 0, 0),
+                lineType=lineType[0],
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+            )  # black outline
         cv2.putText(
             img=data_bytes,
             text='Gain {0:d}'.format(self.gain_v.value),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
-            fontFace=fontFace[0],
-            color=(0, 0, 0),
-            lineType=lineType[0],
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-        )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text='Gain {0:d}'.format(self.gain_v.value),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             lineType=lineType[0],
