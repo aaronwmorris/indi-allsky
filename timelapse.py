@@ -242,8 +242,12 @@ class ImageProcessorWorker(Process):
         # Create hard link to latest file
         latest_file = self.base_dir.joinpath('images', 'latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
-        if latest_file.exists():
+
+        try:
             latest_file.unlink()
+        except FileNotFoundError:
+            pass
+
 
         latest_file.symlink_to(filename)
 
