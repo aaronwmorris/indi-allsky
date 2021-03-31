@@ -314,6 +314,17 @@ class ImageProcessorWorker(Process):
         #    thickness=cv2.FILLED,
         #)
 
+
+        cv2.putText(
+            img=data_bytes,
+            text=exp_date.strftime('%Y%m%d %H:%M:%S'),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
+            fontFace=fontFace[0],
+            color=(0, 0, 0),
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+        )  # black outline
         cv2.putText(
             img=data_bytes,
             text=exp_date.strftime('%Y%m%d %H:%M:%S'),
@@ -325,6 +336,17 @@ class ImageProcessorWorker(Process):
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
+
+        cv2.putText(
+            img=data_bytes,
+            text='Exposure {0:0.6f}'.format(self.exposure_v.value),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 1)),
+            fontFace=fontFace[0],
+            color=(0, 0, 0),
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+        )  # black outline
         cv2.putText(
             img=data_bytes,
             text='Exposure {0:0.6f}'.format(self.exposure_v.value),
@@ -336,6 +358,17 @@ class ImageProcessorWorker(Process):
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
+
+        cv2.putText(
+            img=data_bytes,
+            text='Gain {0:d}'.format(self.gain_v.value),
+            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
+            fontFace=fontFace[0],
+            color=(0, 0, 0),
+            lineType=lineType[0],
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+        )  # black outline
         cv2.putText(
             img=data_bytes,
             text='Gain {0:d}'.format(self.gain_v.value),
