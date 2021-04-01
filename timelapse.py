@@ -60,7 +60,7 @@ class IndiClient(PyIndi.BaseClient):
         pName = p.getName()
         pDeviceName = p.getDeviceName()
 
-        self.logger.info("new property %s for device %s", pName, pDeviceName)
+        #self.logger.info("new property %s for device %s", pName, pDeviceName)
         if self.device is not None and pName == "CONNECTION" and pDeviceName == self.device.getDeviceName():
             self.logger.info("Got property CONNECTION for %s!", self.config['CCD_NAME'])
             # connect to device
