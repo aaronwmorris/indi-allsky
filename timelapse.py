@@ -233,6 +233,7 @@ class ImageProcessorWorker(Process):
             return
 
         shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+        filename.chmod(0o644)
 
         Path(f_tmpfile.name).unlink()  # delete temp file
 
@@ -272,6 +273,7 @@ class ImageProcessorWorker(Process):
             pass
 
         shutil.copy2(str(tmpfile_name), str(latest_file))
+        latest_file.chmod(0o644)
 
 
         ### Do not write daytime image files if daytime timelapse is disabled
@@ -294,6 +296,7 @@ class ImageProcessorWorker(Process):
             return
 
         shutil.copy2(str(tmpfile_name), str(filename))
+        filename.chmod(0o644)
 
 
         ### Cleanup
@@ -310,10 +313,12 @@ class ImageProcessorWorker(Process):
         day_folder = self.base_dir.joinpath('images', '{0:s}'.format(day_ref.strftime('%Y%m%d')))
         if not day_folder.exists():
             day_folder.mkdir()
+            day_folder.chmod(0o755)
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
             hour_folder.mkdir()
+            hour_folder.chmod(0o755)
 
         return hour_folder
 
