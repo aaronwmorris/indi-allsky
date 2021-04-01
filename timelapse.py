@@ -142,6 +142,8 @@ class ImageProcessorWorker(Process):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
 
+        self.last_exposure = None
+
         self.filename_t = '{0:s}'
         self.writefits = writefits
 
@@ -170,6 +172,9 @@ class ImageProcessorWorker(Process):
 
             if filename_override:
                 self.filename_t = filename_override
+
+            # Save last exposure value for picture
+            self.last_exposure = self.exposure_v.value
 
             import io
 
@@ -348,7 +353,7 @@ class ImageProcessorWorker(Process):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
                 img=data_bytes,
-                text='Exposure {0:0.6f}'.format(self.exposure_v.value),
+                text='Exposure {0:0.6f}'.format(self.last_exposure),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 fontFace=fontFace[0],
                 color=(0, 0, 0),
@@ -358,7 +363,7 @@ class ImageProcessorWorker(Process):
             )  # black outline
         cv2.putText(
             img=data_bytes,
-            text='Exposure {0:0.6f}'.format(self.exposure_v.value),
+            text='Exposure {0:0.6f}'.format(self.last_exposure),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
@@ -462,8 +467,8 @@ class ImageProcessorWorker(Process):
             new_exposure = self.config['CCD_EXPOSURE_MAX']
 
 
+        logger.warning('New calculated exposure: %0.6f', new_exposure)
         with self.exposure_v.get_lock():
-            logger.warning('New calculated exposure: %0.6f', new_exposure)
             self.exposure_v.value = new_exposure
 
 
