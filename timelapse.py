@@ -12,6 +12,8 @@ import functools
 import math
 import argparse
 import subprocess
+import tempfile
+import shutil
 
 import ephem
 
@@ -208,16 +210,31 @@ class ImageProcessorWorker(Process):
 
 
     def write_fit(self, hdulist, exp_date):
+        ### Do not write image files if fits are enabled
+        if not self.writefits:
+            return
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+
+        hdulist.writeto(f_tmpfile)
+
+        f_tmpfile.flush()
+        f_tmpfile.close()
+
+
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
-        fitname_t = '{0:s}/{1:s}.fit'.format(self.base_dir, self.filename_t)
+        fitname_t = '{0:s}/{1:s}.fit'.format(str(self.base_dir), self.filename_t)
         filename = Path(fitname_t.format(date_str))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
             return
 
-        hdulist.writeto(str(filename))
+        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+
+        Path(f_tmpfile.name).unlink()  # delete temp file
 
         logger.info('Finished writing fit file')
 
@@ -227,9 +244,47 @@ class ImageProcessorWorker(Process):
         if self.writefits:
             return
 
-        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+        tmpfile_name.unlink()  # remove tempfile, will be reused below
+
+
+        # write to temporary file
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            cv2.imwrite(str(tmpfile_name), scidata)
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+
+        ### Always write the latest file for web access
+        latest_file = self.base_dir.joinpath('images', 'latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+
+        try:
+            latest_file.unlink()
+        except FileNotFoundError:
+            pass
+
+        shutil.copy2(str(tmpfile_name), str(latest_file))
+
+
+        ### Do not write daytime image files if daytime timelapse is disabled
+        if not self.night_v and not self.config['DAYTIME_TIMELAPSE']:
+            logger.info('Daytime timelapse is disabled')
+            tmpfile_name.unlink()  # cleanup temp file
+            return
+
+
+        ### Write the timelapse file
         folder = self.getImageFolder(exp_date)
+
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
         imgname_t = '{0:s}/{1:s}.{2:s}'.format(str(folder), self.filename_t, self.config['IMAGE_FILE_TYPE'])
         filename = Path(imgname_t.format(date_str))
@@ -238,26 +293,11 @@ class ImageProcessorWorker(Process):
             logger.error('File exists: %s (skipping)', filename)
             return
 
-        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(filename), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
-        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(filename), scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
-        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(filename), scidata)
-        else:
-            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
-
-        # Create hard link to latest file
-        latest_file = self.base_dir.joinpath('images', 'latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+        shutil.copy2(str(tmpfile_name), str(filename))
 
 
-        try:
-            latest_file.unlink()
-        except FileNotFoundError:
-            pass
-
-
-        latest_file.symlink_to(filename)
+        ### Cleanup
+        tmpfile_name.unlink()
 
         logger.info('Finished writing files')
 
@@ -639,7 +679,7 @@ class IndiTimelapse(object):
 
             if not self.config['DAYTIME_CAPTURE']:
                 logger.warning('Daytime capture is disabled')
-                time.sleep(300)
+                time.sleep(180)
 
             temp = self.device.getNumber("CCD_TEMPERATURE")
             if temp:
@@ -712,7 +752,7 @@ class IndiTimelapse(object):
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
         for exp in dark_exposures:
             filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
-            self.indiclient.takeExposure(float(exp), filename=filename)
+            self.indiclient.takeExposure(float(exp), filename_override=filename)
             time.sleep(float(exp) + 5.0)  # give each exposure at least 5 extra seconds to process
 
 
