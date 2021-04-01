@@ -34,7 +34,7 @@
 
 
     "FFMPEG_FRAMERATE" : 25,
-    "FFMPEG_BITRATE" : "3000k",
+    "FFMPEG_BITRATE" : "2000k",
 
     "INDI_CONFIG" : {
         "PROPERTIES" : {
@@ -60,7 +60,7 @@
         "FONT_COLOR"     : [200, 200, 200],
         "FONT_AA"        : "LINE_AA",
         "FONT_SCALE"     : 0.80,
-        "FONT_THICKNESS" : 1
+        "FONT_THICKNESS" : 1,
         "FONT_OUTLINE"   : true
     }
 }
