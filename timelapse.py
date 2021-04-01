@@ -189,7 +189,10 @@ class ImageProcessorWorker(Process):
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
             scidata_color = self.colorize(scidata_calibrated)
 
-            self.calculate_histogram(scidata_color)
+            #scidata_blur = self.median_blur(scidata_color)
+            scidata_blur = scidata_color
+
+            self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
             #    scidata_color,
@@ -200,8 +203,8 @@ class ImageProcessorWorker(Process):
             #    searchWindowSize=21,
             #)
 
-            self.image_text(scidata_color, exp_date)
-            self.write_img(scidata_color, exp_date)
+            self.image_text(scidata_blur, exp_date)
+            self.write_img(scidata_blur, exp_date)
 
 
     def write_fit(self, hdulist, exp_date):
@@ -506,6 +509,11 @@ class ImageProcessorWorker(Process):
 
         balance_img = cv2.merge([b, g, r])
         return balance_img
+
+
+    def median_blur(self, data_bytes):
+        data_blur = cv2.medianBlur(data_bytes, ksize=3)
+        return data_blur
 
 
     def _convert_GRBG_to_RGB_8bit(self, data_bytes):
