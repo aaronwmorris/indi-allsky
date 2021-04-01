@@ -11,7 +11,7 @@
     "EXPOSURE_PERIOD" : 15.10000,
 
     "comment_TARGET_MEAN" : "Average channel brightness target",
-    "TARGET_MEAN" : 100,
+    "TARGET_MEAN" : 55,
     "comment_TARGET_MEAN_DEV" : "Allowed percentage deviation from the mean before recalculating",
     "TARGET_MEAN_DEV" : 10,
 
@@ -34,15 +34,15 @@
 
 
     "FFMPEG_FRAMERATE" : 25,
-    "FFMPEG_BITRATE" : "3000k",
+    "FFMPEG_BITRATE" : "2000k",
 
     "INDI_CONFIG" : {
         "PROPERTIES" : {
             "CCD_BINNING" : [1],
             "CCD_GAIN"    : [250],
             "CCD_WBR"     : [120],
-            "CCD_WBG"     : [100],
-            "CCD_WBB"     : [175],
+            "CCD_WBG"     : [90],
+            "CCD_WBB"     : [165],
             "CCD_GAMMA"   : [100]
         },
         "SWITCHES" : {
@@ -60,7 +60,7 @@
         "FONT_COLOR"     : [200, 200, 200],
         "FONT_AA"        : "LINE_AA",
         "FONT_SCALE"     : 0.80,
-        "FONT_THICKNESS" : 1
+        "FONT_THICKNESS" : 1,
         "FONT_OUTLINE"   : true
     }
 }
