@@ -733,7 +733,8 @@ class IndiTimelapse(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < math.sin(self.config['NIGHT_SUN_ALT_DEG'])
+        night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
+        return sun.alt < night_sun_radians
 
 
 
