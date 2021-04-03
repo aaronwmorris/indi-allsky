@@ -18,6 +18,7 @@ import shutil
 import ephem
 
 from multiprocessing import Process
+from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
 from multiprocessing import current_process
@@ -35,10 +36,11 @@ logger.setLevel(logging.INFO)
 
 
 class IndiClient(PyIndi.BaseClient):
-    def __init__(self, config, img_q):
+    def __init__(self, config, indiblob_status_send, img_q):
         super(IndiClient, self).__init__()
 
         self.config = config
+        self.indiblob_status_send = indiblob_status_send
         self.img_q = img_q
 
         self.filename_t = '{0:s}'
@@ -81,6 +83,8 @@ class IndiClient(PyIndi.BaseClient):
         self.logger.info("new BLOB %s", bp.name)
         ### get image data
         imgdata = bp.getblobdata()
+
+        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
         exp_date = datetime.now()
 
@@ -207,6 +211,7 @@ class ImageProcessorWorker(Process):
 
             self.image_text(scidata_blur, exp_date)
             self.write_img(scidata_blur, exp_date)
+
 
 
     def write_fit(self, hdulist, exp_date):
@@ -581,6 +586,7 @@ class IndiTimelapse(object):
         config_file.close()
 
         self.img_q = Queue()
+        self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
@@ -589,6 +595,7 @@ class IndiTimelapse(object):
         self.night_v = Value('i', 1)
 
         self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
+
         self.img_worker = None
         self.writefits = False
 
@@ -602,7 +609,11 @@ class IndiTimelapse(object):
         self._startImageProcessWorker()
 
         # instantiate the client
-        self.indiclient = IndiClient(self.config, self.img_q)
+        self.indiclient = IndiClient(
+            self.config,
+            self.indiblob_status_send,
+            self.img_q,
+        )
 
         # set roi
         #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
@@ -630,7 +641,15 @@ class IndiTimelapse(object):
 
     def _startImageProcessWorker(self):
         logger.info('Starting ImageProcessorWorker process')
-        self.img_worker = ImageProcessorWorker(self.config, self.img_q, self.exposure_v, self.gain_v, self.sensortemp_v, self.night_v, writefits=self.writefits)
+        self.img_worker = ImageProcessorWorker(
+            self.config,
+            self.img_q,
+            self.exposure_v,
+            self.gain_v,
+            self.sensortemp_v,
+            self.night_v,
+            writefits=self.writefits,
+        )
         self.img_worker.start()
 
 
@@ -725,8 +744,20 @@ class IndiTimelapse(object):
                 time.sleep(1.0)
 
 
+            now = time.time()
+
             self.indiclient.takeExposure(self.exposure_v.value)
-            time.sleep(self.config['EXPOSURE_PERIOD'])
+            self.indiblob_status_receive.recv()  # wait until image is received
+
+            elapsed_s = time.time() - now
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+            # sleep for the remaining eposure period
+            remaining_s = float(self.config['EXPOSURE_PERIOD']) - elapsed_s
+            if remaining_s > 0:
+                logger.info('Sleeping for additional %0.4f s', remaining_s)
+                time.sleep(remaining_s)
 
 
     def is_night(self):
