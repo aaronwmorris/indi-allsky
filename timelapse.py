@@ -587,6 +587,7 @@ class IndiTimelapse(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
+        self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
         self.img_worker = None
         self.writefits = False
 
@@ -641,7 +642,8 @@ class IndiTimelapse(object):
             indiprop = None
             while not indiprop:
                 indiprop = self.device.getNumber(key)
-                time.sleep(0.5)
+                if not indiprop:
+                    time.sleep(0.5)
 
             logger.info('Setting property %s', key)
             for i, value in enumerate(self.config['INDI_CONFIG']['PROPERTIES'][key]):
@@ -658,7 +660,8 @@ class IndiTimelapse(object):
             indiswitch = None
             while not indiswitch:
                 indiswitch = self.device.getSwitch(key)
-                time.sleep(0.5)
+                if not indiswitch:
+                    time.sleep(0.5)
 
 
             logger.info('Setting switch %s', key)
@@ -685,6 +688,7 @@ class IndiTimelapse(object):
             if not self.config['DAYTIME_CAPTURE']:
                 logger.warning('Daytime capture is disabled')
                 time.sleep(180)
+                continue
 
             temp = self.device.getNumber("CCD_TEMPERATURE")
             if temp:
@@ -709,7 +713,8 @@ class IndiTimelapse(object):
                 prop_gain = None
                 while not prop_gain:
                     prop_gain = self.device.getNumber('CCD_GAIN')
-                    time.sleep(0.5)
+                    if not prop_gain:
+                        time.sleep(0.5)
 
                 logger.info('Setting camera gain to %d', self.gain_v.value)
                 prop_gain[0].value = self.gain_v.value
@@ -733,8 +738,7 @@ class IndiTimelapse(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
-        return sun.alt < night_sun_radians
+        return sun.alt < self.night_sun_radians
 
 
 
@@ -745,7 +749,8 @@ class IndiTimelapse(object):
         prop_gain = None
         while not prop_gain:
             prop_gain = self.device.getNumber('CCD_GAIN')
-            time.sleep(0.5)
+            if not prop_gain:
+                time.sleep(0.5)
 
         logger.info('Setting camera gain to %d', self.config['CCD_GAIN_NIGHT'])
         prop_gain[0].value = self.config['CCD_GAIN_NIGHT']
