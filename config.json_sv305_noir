@@ -34,7 +34,7 @@
 
 
     "FFMPEG_FRAMERATE" : 25,
-    "FFMPEG_BITRATE" : "2000k",
+    "FFMPEG_BITRATE" : "2500k",
 
     "INDI_CONFIG" : {
         "PROPERTIES" : {
