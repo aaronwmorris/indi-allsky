@@ -277,9 +277,10 @@ class ImageProcessorWorker(Process):
 
 
         ### Do not write daytime image files if daytime timelapse is disabled
-        if not self.night_v and not self.config['DAYTIME_TIMELAPSE']:
+        if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
             logger.info('Daytime timelapse is disabled')
             tmpfile_name.unlink()  # cleanup temp file
+            logger.info('Finished writing files')
             return
 
 
