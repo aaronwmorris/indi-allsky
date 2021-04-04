@@ -333,7 +333,7 @@ class ImageProcessWorker(Process):
         dark_file = self.base_dir.joinpath('dark_{0:d}s_gain{1:d}.fit'.format(int(self.last_exposure), self.gain_v.value))
 
         if not dark_file.exists():
-            logger.warn('Dark not found: %s', dark_file)
+            logger.warning('Dark not found: %s', dark_file)
             return scidata_uncalibrated
 
         with fits.open(str(dark_file)) as dark:
@@ -702,6 +702,13 @@ class IndiTimelapse(object):
             self.indiclient.sendNewSwitch(indiswitch)
 
 
+        # Update shared gain value
+        gain = indi_config['PROPERTIES'].get('CCD_GAIN', [])
+        if gain:
+            with self.gain_v.get_lock():
+                self.gain_v.value = gain[0]
+
+
         # Sleep after configuration
         time.sleep(1.0)
 
@@ -734,15 +741,14 @@ class IndiTimelapse(object):
                 with self.night_v.get_lock():
                     self.night_v.value = int(is_night)
 
-                with self.gain_v.get_lock():
-                    if is_night:
-                        self._configureCcd(
-                            self.config['INDI_CONFIG_NIGHT'],
-                        )
-                    else:
-                        self._configureCcd(
-                            self.config['INDI_CONFIG_DAY'],
-                        )
+                if is_night:
+                    self._configureCcd(
+                        self.config['INDI_CONFIG_NIGHT'],
+                    )
+                else:
+                    self._configureCcd(
+                        self.config['INDI_CONFIG_DAY'],
+                    )
 
                 # Sleep after reconfiguration
                 time.sleep(1.0)
@@ -798,9 +804,6 @@ class IndiTimelapse(object):
             self.config['INDI_CONFIG_NIGHT'],
         )
 
-        with self.gain_v.get_lock():
-            self.gain_v.value = self.config['INDI_CONFIG_NIGHT']['PROPERTIES']['CCD_GAIN'][0]
-
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
         for exp in dark_exposures:
@@ -824,9 +827,6 @@ class IndiTimelapse(object):
             self.config['INDI_CONFIG_DAY'],
         )
 
-
-        with self.gain_v.get_lock():
-            self.gain_v.value = self.config['INDI_CONFIG_DAY']['PROPERTIES']['CCD_GAIN'][0]
 
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'],)  # day will rarely exceed the minimum exposure
