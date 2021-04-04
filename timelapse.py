@@ -163,9 +163,6 @@ class ImageProcessorWorker(Process):
 
         self.base_dir = Path(__file__).parent.absolute()
 
-        #self.dark = fits.open('dark_7s_gain250.fit')
-        self.dark = None
-
         self.name = current_process().name
 
 
@@ -331,10 +328,15 @@ class ImageProcessorWorker(Process):
 
     def calibrate(self, scidata_uncalibrated):
 
-        if not self.dark:
+        dark_file = self.base_dir.joinpath('dark_{0:d}s_gain{1:d}.fit'.format(int(self.last_exposure), self.gain_v.value))
+
+        if not dark_file.exists():
+            logger.warn('Dark not found: %s', dark_file)
             return scidata_uncalibrated
 
-        scidata = cv2.subtract(scidata_uncalibrated, self.dark[0].data)
+        with fits.open(str(dark_file)) as dark:
+            scidata = cv2.subtract(scidata_uncalibrated, dark[0].data)
+
         return scidata
 
 
@@ -590,7 +592,7 @@ class IndiTimelapse(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['CCD_GAIN_NIGHT']))
+        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['PROPERTIES']['CCD_GAIN'][0]))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -636,7 +638,10 @@ class IndiTimelapse(object):
         logger.info('Connected to device')
 
         ### Perform device config
-        self.configureCcd()
+        self._configureCcd(
+            self.config['INDI_CONFIG_DEFAULTS'],
+        )
+
 
 
     def _startImageProcessWorker(self):
@@ -654,9 +659,9 @@ class IndiTimelapse(object):
 
 
 
-    def configureCcd(self):
+    def _configureCcd(self, indi_config):
         ### Configure CCD Properties
-        for key in self.config['INDI_CONFIG']['PROPERTIES'].keys():
+        for key in indi_config['PROPERTIES'].keys():
 
             # loop until the property is populated
             indiprop = None
@@ -666,7 +671,7 @@ class IndiTimelapse(object):
                     time.sleep(0.5)
 
             logger.info('Setting property %s', key)
-            for i, value in enumerate(self.config['INDI_CONFIG']['PROPERTIES'][key]):
+            for i, value in enumerate(indi_config['PROPERTIES'][key]):
                 logger.info(' %d: %s', i, str(value))
                 indiprop[i].value = value
             self.indiclient.sendNewNumber(indiprop)
@@ -674,7 +679,7 @@ class IndiTimelapse(object):
 
 
         ### Configure CCD Switches
-        for key in self.config['INDI_CONFIG']['SWITCHES']:
+        for key in indi_config['SWITCHES'].keys():
 
             # loop until the property is populated
             indiswitch = None
@@ -685,7 +690,7 @@ class IndiTimelapse(object):
 
 
             logger.info('Setting switch %s', key)
-            for i, value in enumerate(self.config['INDI_CONFIG']['SWITCHES'][key]):
+            for i, value in enumerate(indi_config['SWITCHES'][key]):
                 logger.info(' %d: %s', i, str(value))
                 indiswitch[i].s = getattr(PyIndi, value)
             self.indiclient.sendNewSwitch(indiswitch)
@@ -725,20 +730,13 @@ class IndiTimelapse(object):
 
                 with self.gain_v.get_lock():
                     if is_night:
-                        self.gain_v.value = self.config['CCD_GAIN_NIGHT']
+                        self._configureCcd(
+                            self.config['INDI_CONFIG_NIGHT'],
+                        )
                     else:
-                        self.gain_v.value = self.config['CCD_GAIN_DAY']
-
-
-                prop_gain = None
-                while not prop_gain:
-                    prop_gain = self.device.getNumber('CCD_GAIN')
-                    if not prop_gain:
-                        time.sleep(0.5)
-
-                logger.info('Setting camera gain to %d', self.gain_v.value)
-                prop_gain[0].value = self.gain_v.value
-                self.indiclient.sendNewNumber(prop_gain)
+                        self._configureCcd(
+                            self.config['INDI_CONFIG_DAY'],
+                        )
 
                 # Sleep after reconfiguration
                 time.sleep(1.0)
@@ -778,25 +776,58 @@ class IndiTimelapse(object):
 
         self._initialize(writefits=True)
 
-        prop_gain = None
-        while not prop_gain:
-            prop_gain = self.device.getNumber('CCD_GAIN')
-            if not prop_gain:
-                time.sleep(0.5)
-
-        logger.info('Setting camera gain to %d', self.config['CCD_GAIN_NIGHT'])
-        prop_gain[0].value = self.config['CCD_GAIN_NIGHT']
-        self.indiclient.sendNewNumber(prop_gain)
+        ### NIGHT DARKS ###
+        self._configureCcd(
+            self.config['INDI_CONFIG_NIGHT'],
+        )
 
         with self.gain_v.get_lock():
-            self.gain_v.value = self.config['CCD_GAIN_NIGHT']
+            self.gain_v.value = self.config['INDI_CONFIG_NIGHT']['PROPERTIES']['CCD_GAIN'][0]
 
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
         for exp in dark_exposures:
             filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
+
+            now = time.time()
+
             self.indiclient.takeExposure(float(exp), filename_override=filename)
-            time.sleep(float(exp) + 5.0)  # give each exposure at least 5 extra seconds to process
+            self.indiblob_status_receive.recv()  # wait until image is received
+
+            elapsed_s = time.time() - now
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+            logger.info('Sleeping for additional %0.4f s', 1.0)
+            time.sleep(1.0)
+
+
+        ### DAY DARKS ###
+        self._configureCcd(
+            self.config['INDI_CONFIG_DAY'],
+        )
+
+
+        with self.gain_v.get_lock():
+            self.gain_v.value = self.config['INDI_CONFIG_DAY']['PROPERTIES']['CCD_GAIN'][0]
+
+        ### take darks
+        dark_exposures = (self.config['CCD_EXPOSURE_MIN'],)  # day will rarely exceed the minimum exposure
+        for exp in dark_exposures:
+            filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
+
+            now = time.time()
+
+            self.indiclient.takeExposure(float(exp), filename_override=filename)
+            self.indiblob_status_receive.recv()  # wait until image is received
+
+            elapsed_s = time.time() - now
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+            logger.info('Sleeping for additional %0.4f s', 1.0)
+            time.sleep(1.0)
+
 
 
         ### stop image processing worker

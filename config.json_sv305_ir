@@ -1,14 +1,24 @@
 {
     "CCD_NAME" : "SVBONY SV305 0",
 
-    "CCD_GAIN_NIGHT" : 250,
+    "INDI_CONFIG_NIGHT" : {
+        "PROPERTIES" : {
+            "CCD_GAIN" : [250]
+        },
+        "SWITCHES" : {}
+    },
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
-    "CCD_GAIN_DAY" : 10,
+    "INDI_CONFIG_DAY" : {
+        "PROPERTIES" : {
+            "CCD_GAIN" : [10]
+        },
+        "SWITCHES" : {}
+    },
 
     "CCD_EXPOSURE_MAX" : 15.000000,
     "CCD_EXPOSURE_MIN" : 0.000029,
     "CCD_EXPOSURE_DEF" : 0.000100,
-    "EXPOSURE_PERIOD" : 15.00000,
+    "EXPOSURE_PERIOD"  : 15.00000,
 
     "comment_TARGET_MEAN" : "Average channel brightness target",
     "TARGET_MEAN" : 60,
@@ -32,11 +42,10 @@
         "png"   : 9
     },
 
-
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE" : "2500k",
 
-    "INDI_CONFIG" : {
+    "INDI_CONFIG_DEFAULTS" : {
         "PROPERTIES" : {
             "CCD_BINNING" : [1],
             "CCD_GAIN"    : [250],
@@ -52,6 +61,7 @@
             ]
         }
     },
+
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
         "FONT_HEIGHT"    : 30,
