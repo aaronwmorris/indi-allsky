@@ -21,7 +21,6 @@ from multiprocessing import Process
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
-from multiprocessing import current_process
 from multiprocessing import log_to_stderr
 
 import PyIndi
@@ -29,9 +28,11 @@ from astropy.io import fits
 import cv2
 import numpy
 
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+logging.basicConfig(format='[%(levelname)s/%(processName)s %(asctime)s] %(message)s', level=logging.INFO)
 
 logger = log_to_stderr()
+#mp_log_format = logging.Formatter('[%(levelname)s/%(processName)s %(asctime)s] %(message)s')
+#logger.setFormatter(mp_log_format)
 logger.setLevel(logging.INFO)
 
 
@@ -137,9 +138,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
 
-class ImageProcessorWorker(Process):
-    def __init__(self, config, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
-        super(ImageProcessorWorker, self).__init__()
+class ImageProcessWorker(Process):
+    def __init__(self, idx, config, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
+        super(ImageProcessWorker, self).__init__()
 
         self.config = config
         self.img_q = img_q
@@ -163,7 +164,7 @@ class ImageProcessorWorker(Process):
 
         self.base_dir = Path(__file__).parent.absolute()
 
-        self.name = current_process().name
+        self.name = 'ImageProcessWorker{0:d}'.format(idx)
 
 
     def run(self):
@@ -646,7 +647,8 @@ class IndiTimelapse(object):
 
     def _startImageProcessWorker(self):
         logger.info('Starting ImageProcessorWorker process')
-        self.img_worker = ImageProcessorWorker(
+        self.img_worker = ImageProcessWorker(
+            1,  # we only start one process
             self.config,
             self.img_q,
             self.exposure_v,
