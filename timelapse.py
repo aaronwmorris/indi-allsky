@@ -14,6 +14,7 @@ import argparse
 import subprocess
 import tempfile
 import shutil
+import signal
 
 import ephem
 
@@ -605,6 +606,8 @@ class IndiTimelapse(object):
 
         self.base_dir = Path(__file__).parent.absolute()
 
+        signal.signal(signal.SIGALRM, self.alarm_handler)
+
 
     def _initialize(self, writefits=False):
         if writefits:
@@ -748,7 +751,17 @@ class IndiTimelapse(object):
             now = time.time()
 
             self.indiclient.takeExposure(self.exposure_v.value)
-            self.indiblob_status_receive.recv()  # wait until image is received
+
+            # Setup timeout for 3 times the exposure period
+            signal.alarm(int(self.config['EXPOSURE_PERIOD'] * 3.0))
+
+            try:
+                self.indiblob_status_receive.recv()  # wait until image is received
+            except TimeOutException:
+                logger.error('Timeout waiting on exposure, continuing')
+
+            signal.alarm(0)  # reset timeout
+
 
             elapsed_s = time.time() - now
 
@@ -916,6 +929,16 @@ class IndiTimelapse(object):
         folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
         for f in folders:
             self.getFolderImgFiles(f, file_list)  # recursion
+
+
+    def alarm_handler(signum, frame):
+        raise TimeOutException()
+
+
+class TimeOutException(Exception):
+    pass
+
+
 
 
 if __name__ == "__main__":
