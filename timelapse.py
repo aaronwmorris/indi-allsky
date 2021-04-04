@@ -337,6 +337,7 @@ class ImageProcessWorker(Process):
 
         with fits.open(str(dark_file)) as dark:
             scidata = cv2.subtract(scidata_uncalibrated, dark[0].data)
+            del dark[0].data   # make sure memory is freed
 
         return scidata
 
