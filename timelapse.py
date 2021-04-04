@@ -759,6 +759,7 @@ class IndiTimelapse(object):
                 self.indiblob_status_receive.recv()  # wait until image is received
             except TimeOutException:
                 logger.error('Timeout waiting on exposure, continuing')
+                continue
 
             signal.alarm(0)  # reset timeout
 
@@ -931,7 +932,7 @@ class IndiTimelapse(object):
             self.getFolderImgFiles(f, file_list)  # recursion
 
 
-    def alarm_handler(signum, frame):
+    def alarm_handler(self, signum, frame):
         raise TimeOutException()
 
 
