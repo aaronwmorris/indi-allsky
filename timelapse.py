@@ -724,8 +724,8 @@ class IndiTimelapse(object):
             #logger.info('is night: %r', is_night)
 
             if not self.config['DAYTIME_CAPTURE']:
-                logger.warning('Daytime capture is disabled')
-                time.sleep(180)
+                logger.info('Daytime capture is disabled')
+                time.sleep(60)
                 continue
 
             temp = self.device.getNumber("CCD_TEMPERATURE")
