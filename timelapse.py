@@ -83,8 +83,13 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         self.logger.info("new BLOB %s", bp.name)
+        now = time.time()
+
         ### get image data
         imgdata = bp.getblobdata()
+
+        elapsed_s = time.time() - now
+        logger.info('Blob downloaded in %0.4f s', elapsed_s)
 
         self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
