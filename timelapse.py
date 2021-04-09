@@ -3,6 +3,7 @@
 import sys
 import time
 import logging
+import io
 import json
 from pathlib import Path
 from datetime import datetime
@@ -170,7 +171,7 @@ class ImageProcessWorker(Process):
 
         self.base_dir = Path(__file__).parent.absolute()
 
-        self.name = 'ImageProcessWorker{0:d}'.format(idx)
+        self.name = 'ImageProcessWorker{0:03d}'.format(idx)
 
 
     def run(self):
@@ -185,8 +186,6 @@ class ImageProcessWorker(Process):
 
             # Save last exposure value for picture
             self.last_exposure = self.exposure_v.value
-
-            import io
 
             ### OpenCV ###
             blobfile = io.BytesIO(imgdata)
@@ -591,9 +590,11 @@ class ImageProcessWorker(Process):
 
 class IndiTimelapse(object):
 
-    def __init__(self, config_file):
-        self.config = json.loads(config_file.read())
-        config_file.close()
+    def __init__(self, f_config_file):
+        self.config = json.loads(f_config_file.read())
+        f_config_file.close()
+
+        self.config_file = f_config_file.name
 
         self.img_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
@@ -607,11 +608,40 @@ class IndiTimelapse(object):
         self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
 
         self.img_worker = None
+        self.img_worker_idx = 0
         self.writefits = False
 
         self.base_dir = Path(__file__).parent.absolute()
 
         signal.signal(signal.SIGALRM, self.alarm_handler)
+        signal.signal(signal.SIGHUP, self.hup_handler)
+
+
+    def hup_handler(self, signum, frame):
+        logger.warning('Caught HUP signal, reconfiguring')
+
+        with io.open(self.config_file, 'r') as f_config_file:
+            try:
+                c = json.loads(f_config_file.read())
+                f_config_file.close()
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                f_config_file.close()
+                return
+
+        # overwrite config
+        self.config = c
+
+        logger.warning('Stopping image process worker')
+        self.img_q.put((False, False, ''))
+        self.img_worker.join()
+
+        # Restart worker with new config
+        self._startImageProcessWorker()
+
+
+    def alarm_handler(self, signum, frame):
+        raise TimeOutException()
 
 
     def _initialize(self, writefits=False):
@@ -655,9 +685,11 @@ class IndiTimelapse(object):
 
 
     def _startImageProcessWorker(self):
+        self.img_worker_idx += 1
+
         logger.info('Starting ImageProcessorWorker process')
         self.img_worker = ImageProcessWorker(
-            1,  # we only start one process
+            self.img_worker_idx,
             self.config,
             self.img_q,
             self.exposure_v,
@@ -936,9 +968,6 @@ class IndiTimelapse(object):
         for f in folders:
             self.getFolderImgFiles(f, file_list)  # recursion
 
-
-    def alarm_handler(self, signum, frame):
-        raise TimeOutException()
 
 
 class TimeOutException(Exception):
