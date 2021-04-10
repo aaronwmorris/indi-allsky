@@ -577,7 +577,7 @@ class IndiTimelapse(object):
         self.img_worker_idx = 0
         self.writefits = False
 
-        self.indi_timeout = 2.0
+        self.indi_timeout = 10.0
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
         self.__type_to_str = { PyIndi.INDI_NUMBER: 'number', PyIndi.INDI_SWITCH: 'switch', PyIndi.INDI_TEXT: 'text', PyIndi.INDI_LIGHT: 'light', PyIndi.INDI_BLOB: 'blob', PyIndi.INDI_UNKNOWN: 'unknown' }
@@ -950,6 +950,7 @@ class IndiTimelapse(object):
     def shoot(self, exposure, sync=True, timeout=None):
         if not timeout:
             timeout = (exposure * 2.0) + 5.0
+        logger.info('Taking %0.6f s exposure', exposure)
         self.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
 
@@ -968,7 +969,7 @@ class IndiTimelapse(object):
         while not(ctl):
             ctl = getattr(self.device, attr)(name)
             if not ctl and 0 < timeout < time.time() - started:
-                raise RuntimeError('Timeout finding control {}'.format(name))
+                raise TimeOutException('Timeout finding control {0}'.format(name))
             time.sleep(0.01)
         return ctl
 
@@ -1049,7 +1050,7 @@ class IndiTimelapse(object):
             elapsed = time.time() - started
             if 0 < timeout < elapsed:
                 raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.s] ))
-            time.sleep(0.01)
+            time.sleep(0.05)
 
 
     def __map_indexes(self, ctl, values):
