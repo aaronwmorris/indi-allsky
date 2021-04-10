@@ -23,19 +23,21 @@ from multiprocessing import Process
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
-from multiprocessing import log_to_stderr
+import multiprocessing
 
 import PyIndi
 from astropy.io import fits
 import cv2
 import numpy
 
-logging.basicConfig(format='[%(levelname)s/%(processName)s %(asctime)s] %(message)s', level=logging.INFO)
 
-logger = log_to_stderr()
-#mp_log_format = logging.Formatter('[%(levelname)s/%(processName)s %(asctime)s] %(message)s')
-#logger.setFormatter(mp_log_format)
-logger.setLevel(logging.INFO)
+logger = multiprocessing.get_logger()
+LOG_FORMATTER = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
+LOG_HANDLER = logging.StreamHandler()
+LOG_HANDLER.setFormatter(LOG_FORMATTER)
+LOG_LEVEL = logging.INFO
+logger.addHandler(LOG_HANDLER)
+logger.setLevel(LOG_LEVEL)
 
 
 class IndiClient(PyIndi.BaseClient):
@@ -49,14 +51,14 @@ class IndiClient(PyIndi.BaseClient):
         self.filename_t = '{0:s}'
 
         self.device = None
-        self.logger = logging.getLogger('PyQtIndi.IndiClient')
-        self.logger.info('creating an instance of PyQtIndi.IndiClient')
+
+        logger.info('creating an instance of PyQtIndi.IndiClient')
 
 
     def newDevice(self, d):
-        self.logger.info("new device %s", d.getDeviceName())
+        logger.info("new device %s", d.getDeviceName())
         if d.getDeviceName() == self.config['CCD_NAME']:
-            self.logger.info("Set new device %s!", self.config['CCD_NAME'])
+            logger.info("Set new device %s!", self.config['CCD_NAME'])
             # save reference to the device in member variable
             self.device = d
 
@@ -65,25 +67,25 @@ class IndiClient(PyIndi.BaseClient):
         pName = p.getName()
         pDeviceName = p.getDeviceName()
 
-        #self.logger.info("new property %s for device %s", pName, pDeviceName)
+        #logger.info("new property %s for device %s", pName, pDeviceName)
         if self.device is not None and pName == "CONNECTION" and pDeviceName == self.device.getDeviceName():
-            self.logger.info("Got property CONNECTION for %s!", self.config['CCD_NAME'])
+            logger.info("Got property CONNECTION for %s!", self.config['CCD_NAME'])
             # connect to device
-            self.logger.info('Connect to device')
+            logger.info('Connect to device')
             self.connectDevice(self.device.getDeviceName())
 
             # set BLOB mode to BLOB_ALSO
-            self.logger.info('Set BLOB mode')
+            logger.info('Set BLOB mode')
             self.setBLOBMode(1, self.device.getDeviceName(), None)
 
 
 
     def removeProperty(self, p):
-        self.logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
+        logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
 
 
     def newBLOB(self, bp):
-        self.logger.info("new BLOB %s", bp.name)
+        logger.info("new BLOB %s", bp.name)
         now = time.time()
 
         ### get image data
@@ -101,40 +103,40 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newSwitch(self, svp):
-        self.logger.info("new Switch %s for device %s", svp.name, svp.device)
+        logger.info("new Switch %s for device %s", svp.name, svp.device)
 
 
     def newNumber(self, nvp):
-        #self.logger.info("new Number %s for device %s", nvp.name, nvp.device)
+        #logger.info("new Number %s for device %s", nvp.name, nvp.device)
         pass
 
 
     def newText(self, tvp):
-        self.logger.info("new Text %s for device %s", tvp.name, tvp.device)
+        logger.info("new Text %s for device %s", tvp.name, tvp.device)
 
 
     def newLight(self, lvp):
-        self.logger.info("new Light %s for device %s", lvp.name, lvp.device)
+        logger.info("new Light %s for device %s", lvp.name, lvp.device)
 
 
     def newMessage(self, d, m):
-        #self.logger.info("new Message %s", d.messageQueue(m))
+        #logger.info("new Message %s", d.messageQueue(m))
         pass
 
 
     def serverConnected(self):
-        print("Server connected ({0}:{1})".format(self.getHost(), self.getPort()))
+        logger.warning("Server connected (%s:%d)", self.getHost(), self.getPort())
 
 
     def serverDisconnected(self, code):
-        self.logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+        logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
     def takeExposure(self, exposure, filename_override=''):
         if filename_override:
             self.filename_t = filename_override
 
-        self.logger.info("Taking %0.6f s exposure", exposure)
+        logger.info("Taking %0.6f s exposure", exposure)
         #get current exposure time
         exp = self.device.getNumber("CCD_EXPOSURE")
         # set exposure time to 5 seconds
@@ -664,10 +666,10 @@ class IndiTimelapse(object):
         self.indiclient.setServer("localhost", 7624)
 
         # connect to indi server
-        print("Connecting to indiserver")
+        logger.info("Connecting to indiserver")
         if (not(self.indiclient.connectServer())):
-            print("No indiserver running on {0}:{1} - Try to run".format(self.indiclient.getHost(), self.indiclient.getPort()))
-            print("  indiserver indi_simulator_telescope indi_simulator_ccd")
+            logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
+            logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
 
 
@@ -1011,5 +1013,5 @@ if __name__ == "__main__":
     action_func(*args_list)
 
 
-# vim let=g:syntastic_python_flake8_args='--ignore="E303,E501,E265,E266,E201,E202,W391"'
+# vim let=g:syntastic_python_flake8_args='--ignore="E203,E303,E501,E265,E266,E201,E202,W391"'
 # vim: set tabstop=4 shiftwidth=4 expandtab
