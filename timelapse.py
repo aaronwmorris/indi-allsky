@@ -50,35 +50,13 @@ class IndiClient(PyIndi.BaseClient):
 
         self.filename_t = '{0:s}'
 
-        self.device = None
-
-        logger.info('creating an instance of PyQtIndi.IndiClient')
-
+        logger.info('creating an instance of IndiClient')
 
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
-        if d.getDeviceName() == self.config['CCD_NAME']:
-            logger.info("Set new device %s!", self.config['CCD_NAME'])
-            # save reference to the device in member variable
-            self.device = d
-
 
     def newProperty(self, p):
-        pName = p.getName()
-        pDeviceName = p.getDeviceName()
-
-        #logger.info("new property %s for device %s", pName, pDeviceName)
-        if self.device is not None and pName == "CONNECTION" and pDeviceName == self.device.getDeviceName():
-            logger.info("Got property CONNECTION for %s!", self.config['CCD_NAME'])
-            # connect to device
-            logger.info('Connect to device')
-            self.connectDevice(self.device.getDeviceName())
-
-            # set BLOB mode to BLOB_ALSO
-            logger.info('Set BLOB mode')
-            self.setBLOBMode(1, self.device.getDeviceName(), None)
-
-
+        logger.info("new property %s for device %s", p.getName(), p.getDeviceName())
 
     def removeProperty(self, p):
         logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
@@ -105,45 +83,33 @@ class IndiClient(PyIndi.BaseClient):
     def newSwitch(self, svp):
         logger.info("new Switch %s for device %s", svp.name, svp.device)
 
-
     def newNumber(self, nvp):
         #logger.info("new Number %s for device %s", nvp.name, nvp.device)
         pass
 
-
     def newText(self, tvp):
         logger.info("new Text %s for device %s", tvp.name, tvp.device)
-
 
     def newLight(self, lvp):
         logger.info("new Light %s for device %s", lvp.name, lvp.device)
 
-
     def newMessage(self, d, m):
-        #logger.info("new Message %s", d.messageQueue(m))
-        pass
-
+        logger.info("new Message %s", d.messageQueue(m))
 
     def serverConnected(self):
-        logger.warning("Server connected (%s:%d)", self.getHost(), self.getPort())
-
+        logger.info("Server connected (%s:%d)", self.getHost(), self.getPort())
 
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
-
-    def takeExposure(self, exposure, filename_override=''):
+    def takeExposure(self, device, exposure, filename_override=''):
         if filename_override:
             self.filename_t = filename_override
 
         logger.info("Taking %0.6f s exposure", exposure)
-        #get current exposure time
-        exp = self.device.getNumber("CCD_EXPOSURE")
-        # set exposure time to 5 seconds
+        exp = device.getNumber("CCD_EXPOSURE")
         exp[0].value = exposure
-        # send new exposure time to server/device
         self.sendNewNumber(exp)
-
 
 
 
@@ -679,12 +645,23 @@ class IndiTimelapse(object):
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
 
+        # give devices a chance to register
+        time.sleep(8)
 
-        while not self.device:
-            self.device = self.indiclient.getDevice(self.config['CCD_NAME'])
-            time.sleep(0.5)
+        # connect to all devices
+        for d in self.indiclient.getDevices():
+            logger.info('Found device %s', d.getDeviceName())
 
-        logger.info('Connected to device')
+            if d.getDeviceName() == self.config['CCD_NAME']:
+                logger.info('Connecting to device %s', d.getDeviceName())
+                self.indiclient.connectDevice(d.getDeviceName())
+                self.device = d
+
+
+        # set BLOB mode to BLOB_ALSO
+        logger.info('Set BLOB mode')
+        self.indiclient.setBLOBMode(1, self.device.getDeviceName(), None)
+
 
         ### Perform device config
         self._configureCcd(
@@ -787,7 +764,7 @@ class IndiTimelapse(object):
 
             now = time.time()
 
-            self.indiclient.takeExposure(self.exposure_v.value)
+            self.indiclient.takeExposure(self.device, self.exposure_v.value)
 
             # Setup timeout for 3 times the exposure period
             signal.alarm(int(self.config['EXPOSURE_PERIOD'] * 3.0))
@@ -860,7 +837,7 @@ class IndiTimelapse(object):
 
             now = time.time()
 
-            self.indiclient.takeExposure(float(exp), filename_override=filename)
+            self.indiclient.takeExposure(self.device, float(exp), filename_override=filename)
             self.indiblob_status_receive.recv()  # wait until image is received
 
             elapsed_s = time.time() - now
@@ -884,7 +861,7 @@ class IndiTimelapse(object):
 
             now = time.time()
 
-            self.indiclient.takeExposure(float(exp), filename_override=filename)
+            self.indiclient.takeExposure(self.device, float(exp), filename_override=filename)
             self.indiblob_status_receive.recv()  # wait until image is received
 
             elapsed_s = time.time() - now
