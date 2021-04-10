@@ -743,7 +743,12 @@ class IndiTimelapse(object):
 
             start = time.time()
 
-            self.shoot(self.exposure_v.value)
+            try:
+                self.shoot(self.exposure_v.value)
+            except TimeOutException as e:
+                logger.error('Timeout: %s', str(e))
+                time.sleep(5.0)
+                continue
 
             shoot_elapsed_s = time.time() - start
             logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
@@ -755,6 +760,7 @@ class IndiTimelapse(object):
                 self.indiblob_status_receive.recv()  # wait until image is received
             except TimeOutException:
                 logger.error('Timeout waiting on exposure, continuing')
+                time.sleep(5.0)
                 continue
 
             signal.alarm(0)  # reset timeout
@@ -1042,7 +1048,7 @@ class IndiTimelapse(object):
                 raise RuntimeError('Error while changing property {0}'.format(ctl.name))
             elapsed = time.time() - started
             if 0 < timeout < elapsed:
-                raise RuntimeError('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.s] ))
+                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.s] ))
             time.sleep(0.01)
 
 
