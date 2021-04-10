@@ -635,6 +635,12 @@ class IndiTimelapse(object):
         self.config = c
         self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
 
+        nighttime = self.is_night()
+
+        # reconfigure if needed
+        if self.night_v.value != int(nighttime):
+            self.dayNightReconfigure(nighttime)
+
         logger.warning('Stopping image process worker')
         self.img_q.put((False, False, ''))
         self.img_worker.join()
@@ -759,11 +765,11 @@ class IndiTimelapse(object):
 
         ### main loop starts
         while True:
-            is_night = self.is_night()
+            nighttime = self.is_night()
             #logger.info('self.night_v.value: %r', self.night_v.value)
-            #logger.info('is night: %r', is_night)
+            #logger.info('is night: %r', nighttime)
 
-            if not is_night and not self.config['DAYTIME_CAPTURE']:
+            if not nighttime and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
                 time.sleep(60)
                 continue
@@ -776,23 +782,8 @@ class IndiTimelapse(object):
 
 
             ### Change gain when we change between day and night
-            if self.night_v.value != int(is_night):
-                logger.warning('Change between night and day')
-                with self.night_v.get_lock():
-                    self.night_v.value = int(is_night)
-
-                if is_night:
-                    self._configureCcd(
-                        self.config['INDI_CONFIG_NIGHT'],
-                    )
-                else:
-                    self._configureCcd(
-                        self.config['INDI_CONFIG_DAY'],
-                    )
-
-                # Sleep after reconfiguration
-                time.sleep(1.0)
-
+            if self.night_v.value != int(nighttime):
+                self.dayNightReconfigure(nighttime)
 
             now = time.time()
 
@@ -819,6 +810,24 @@ class IndiTimelapse(object):
             if remaining_s > 0:
                 logger.info('Sleeping for additional %0.4f s', remaining_s)
                 time.sleep(remaining_s)
+
+
+    def dayNightReconfigure(self, nighttime):
+        logger.warning('Change between night and day')
+        with self.night_v.get_lock():
+            self.night_v.value = int(nighttime)
+
+        if nighttime:
+            self._configureCcd(
+                self.config['INDI_CONFIG_NIGHT'],
+            )
+        else:
+            self._configureCcd(
+                self.config['INDI_CONFIG_DAY'],
+            )
+
+        # Sleep after reconfiguration
+        time.sleep(1.0)
 
 
     def is_night(self):
