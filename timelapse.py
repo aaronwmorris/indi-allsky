@@ -633,6 +633,7 @@ class IndiTimelapse(object):
 
         # overwrite config
         self.config = c
+        self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
 
         logger.warning('Stopping image process worker')
         self.img_q.put((False, False, ''))
@@ -762,7 +763,7 @@ class IndiTimelapse(object):
             #logger.info('self.night_v.value: %r', self.night_v.value)
             #logger.info('is night: %r', is_night)
 
-            if not self.config['DAYTIME_CAPTURE']:
+            if not is_night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
                 time.sleep(60)
                 continue
