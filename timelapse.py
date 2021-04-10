@@ -72,12 +72,12 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         logger.info("new BLOB %s", bp.name)
-        now = time.time()
+        start = time.time()
 
         ### get image data
         imgdata = bp.getblobdata()
 
-        elapsed_s = time.time() - now
+        elapsed_s = time.time() - start
         logger.info('Blob downloaded in %0.4f s', elapsed_s)
 
         self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
@@ -741,9 +741,12 @@ class IndiTimelapse(object):
             if self.night_v.value != int(nighttime):
                 self.dayNightReconfigure(nighttime)
 
-            now = time.time()
+            start = time.time()
 
             self.shoot(self.exposure_v.value)
+
+            shoot_elapsed_s = time.time() - start
+            logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
 
             # Setup timeout for 3 times the exposure period
             signal.alarm(int(self.config['EXPOSURE_PERIOD'] * 3.0))
@@ -757,12 +760,11 @@ class IndiTimelapse(object):
             signal.alarm(0)  # reset timeout
 
 
-            elapsed_s = time.time() - now
-
-            logger.info('Exposure received in %0.4f s', elapsed_s)
+            full_elapsed_s = time.time() - start
+            logger.info('Exposure received in %0.4f s', full_elapsed_s)
 
             # sleep for the remaining eposure period
-            remaining_s = float(self.config['EXPOSURE_PERIOD']) - elapsed_s
+            remaining_s = float(self.config['EXPOSURE_PERIOD']) - full_elapsed_s
             if remaining_s > 0:
                 logger.info('Sleeping for additional %0.4f s', remaining_s)
                 time.sleep(remaining_s)
@@ -814,13 +816,13 @@ class IndiTimelapse(object):
         for exp in dark_exposures:
             filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
 
-            now = time.time()
+            start = time.time()
 
             self.indiclient.filename_t = filename
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
-            elapsed_s = time.time() - now
+            elapsed_s = time.time() - start
 
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
@@ -839,13 +841,13 @@ class IndiTimelapse(object):
         for exp in dark_exposures:
             filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
 
-            now = time.time()
+            start = time.time()
 
             self.indiclient.filename_t = filename
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
-            elapsed_s = time.time() - now
+            elapsed_s = time.time() - start
 
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
