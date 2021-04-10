@@ -3,14 +3,14 @@
 
     "INDI_CONFIG_NIGHT" : {
         "PROPERTIES" : {
-            "CCD_GAIN" : [250]
+            "CCD_GAIN" : {"GAIN" : 250}
         },
         "SWITCHES" : {}
     },
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "INDI_CONFIG_DAY" : {
         "PROPERTIES" : {
-            "CCD_GAIN" : [10]
+            "CCD_GAIN" : {"GAIN" : 10}
         },
         "SWITCHES" : {}
     },
@@ -47,18 +47,18 @@
 
     "INDI_CONFIG_DEFAULTS" : {
         "PROPERTIES" : {
-            "CCD_BINNING" : [1],
-            "CCD_GAIN"    : [250],
-            "CCD_WBR"     : [110],
-            "CCD_WBG"     : [95],
-            "CCD_WBB"     : [175],
-            "CCD_GAMMA"   : [100]
+            "CCD_BINNING" : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_GAIN"    : {"GAIN" : 250},
+            "CCD_WBR"     : {"WBR" : 110},
+            "CCD_WBG"     : {"WBG" : 95},
+            "CCD_WBB"     : {"WBB" : 175},
+            "CCD_GAMMA"   : {"GAMMA" : 100}
         },
         "SWITCHES" : {
-            "FRAME_FORMAT" : [
-                "ISS_OFF",
-                "ISS_ON"
-            ]
+            "FRAME_FORMAT" : {
+                "on"  : ["FORMAT_RAW8"],
+                "off" : ["FORMAT_RAW12"]
+            }
         }
     },
 
