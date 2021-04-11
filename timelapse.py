@@ -606,7 +606,7 @@ class IndiTimelapse(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['CCD_GAIN']))
+        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['GAIN_TEXT']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -746,7 +746,7 @@ class IndiTimelapse(object):
         #self.set_controls(indi_config.get('CONTROLS', {}))
 
         # Update shared gain value
-        gain = indi_config.get('CCD_GAIN')
+        gain = indi_config.get('GAIN_TEXT')
         if gain:
             with self.gain_v.get_lock():
                 self.gain_v.value = gain

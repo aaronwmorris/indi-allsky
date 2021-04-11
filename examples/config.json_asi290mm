@@ -2,7 +2,7 @@
     "CCD_NAME" : "ZWO CCD ASI290MM",
 
     "INDI_CONFIG_NIGHT" : {
-        "CCD_GAIN" : 250,
+        "GAIN_TEXT" : 250,
         "PROPERTIES" : {
             "CCD_CONTROLS" : {
                 "Gain" : 250
@@ -11,7 +11,7 @@
         "SWITCHES" : {}
     },
     "INDI_CONFIG_DAY" : {
-        "CCD_GAIN" : 0,
+        "GAIN_TEXT" : 0,
         "PROPERTIES" : {
             "CCD_CONTROLS" : {
                 "Gain" : 0
@@ -52,7 +52,7 @@
     "FFMPEG_BITRATE" : "2500k",
 
     "INDI_CONFIG_DEFAULTS" : {
-        "CCD_GAIN" : 250,
+        "GAIN_TEXT" : 250,
         "PROPERTIES" : {
             "CCD_BINNING" : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_CONTROLS" : {
