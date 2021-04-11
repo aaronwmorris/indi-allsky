@@ -162,7 +162,7 @@ class ImageProcessWorker(Process):
                 self.write_fit(hdulist, exp_date)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
-            scidata_color = self.colorize(scidata_calibrated)
+            scidata_color = self.debayer(scidata_calibrated)
 
             #scidata_blur = self.median_blur(scidata_color)
             scidata_blur = scidata_color
@@ -314,10 +314,14 @@ class ImageProcessWorker(Process):
 
 
 
-    def colorize(self, scidata):
+    def debayer(self, scidata):
+        if not self.config['IMAGE_DEBAYER']:
+            return scidata
+
+        bayer_pattern = getattr(cv2, self.config['IMAGE_DEBAYER'])
         ###
         #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
-        scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BAYER_GR2RGB)
+        scidata_rgb = cv2.cvtColor(scidata, bayer_pattern)
         ###
 
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
@@ -428,24 +432,32 @@ class ImageProcessWorker(Process):
 
 
     def calculate_histogram(self, data_bytes):
-        r, g, b = cv2.split(data_bytes)
-        r_avg = cv2.mean(r)[0]
-        g_avg = cv2.mean(g)[0]
-        b_avg = cv2.mean(b)[0]
+        if not self.config['IMAGE_DEBAYER']:
+            m_avg = cv2.mean(data_bytes)[0]
 
-        logger.info('R mean: %0.2f', r_avg)
-        logger.info('G mean: %0.2f', g_avg)
-        logger.info('B mean: %0.2f', b_avg)
+            logger.info('Greyscale mean: %0.2f', m_avg)
 
-        # Find the gain of each channel
-        k = (r_avg + g_avg + b_avg) / 3
+            k = m_avg
+        else:
+            r, g, b = cv2.split(data_bytes)
+            r_avg = cv2.mean(r)[0]
+            g_avg = cv2.mean(g)[0]
+            b_avg = cv2.mean(b)[0]
+
+            logger.info('R mean: %0.2f', r_avg)
+            logger.info('G mean: %0.2f', g_avg)
+            logger.info('B mean: %0.2f', b_avg)
+
+            # Find the gain of each channel
+            k = (r_avg + g_avg + b_avg) / 3
+
         if k <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
             k = 0.1
 
 
-        logger.info('RGB average: %0.2f', k)
+        logger.info('Brightness average: %0.2f', k)
 
 
         if not self.stable_mean:
@@ -567,7 +579,7 @@ class IndiTimelapse(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['PROPERTIES']['CCD_GAIN']['GAIN']))
+        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['CCD_GAIN']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -703,12 +715,14 @@ class IndiTimelapse(object):
             logger.info('Setting switch %s', k)
             self.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
 
+        ### Configure controls
+        #self.set_controls(indi_config.get('CONTROLS', {}))
 
         # Update shared gain value
-        gain = indi_config['PROPERTIES'].get('CCD_GAIN', {})
+        gain = indi_config.get('CCD_GAIN')
         if gain:
             with self.gain_v.get_lock():
-                self.gain_v.value = gain['GAIN']
+                self.gain_v.value = gain
 
 
         # Sleep after configuration
@@ -733,7 +747,7 @@ class IndiTimelapse(object):
             temp = self.device.getNumber("CCD_TEMPERATURE")
             if temp:
                 with self.sensortemp_v.get_lock():
-                    logger.info("Sensor temperature: %d", temp[0].value)
+                    logger.info("Sensor temperature: %0.1f", temp[0].value)
                     self.sensortemp_v.value = temp[0].value
 
 
@@ -1056,7 +1070,7 @@ class IndiTimelapse(object):
     def __map_indexes(self, ctl, values):
         result = {}
         for i, c in enumerate(ctl):
-            #logger.info('Value name: %s', c.name)  # useful to find value names
+            logger.info('Value name: %s', c.name)  # useful to find value names
             if c.name in values:
                 result[c.name] = i
         return result

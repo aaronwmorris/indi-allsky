@@ -2,6 +2,7 @@
     "CCD_NAME" : "SVBONY SV305 0",
 
     "INDI_CONFIG_NIGHT" : {
+        "CCD_GAIN" : 250,
         "PROPERTIES" : {
             "CCD_GAIN" : {"GAIN" : 250}
         },
@@ -9,6 +10,7 @@
     },
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "INDI_CONFIG_DAY" : {
+        "CCD_GAIN" : 10,
         "PROPERTIES" : {
             "CCD_GAIN" : {"GAIN" : 10}
         },
@@ -41,11 +43,13 @@
         "jpeg"  : 90,
         "png"   : 9
     },
+    "IMAGE_DEBAYER" : "COLOR_BAYER_GR2RGB",
 
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE" : "2500k",
 
     "INDI_CONFIG_DEFAULTS" : {
+        "CCD_GAIN" : 250,
         "PROPERTIES" : {
             "CCD_BINNING" : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_GAIN"    : {"GAIN" : 250},
