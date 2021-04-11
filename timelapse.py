@@ -431,6 +431,33 @@ class ImageProcessWorker(Process):
         )
 
 
+        # Add temp if value is set, will be skipped if the temp is exactly 0
+        if self.sensortemp_v.value:
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=data_bytes,
+                    text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
+                    org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                    fontFace=fontFace[0],
+                    color=(0, 0, 0),
+                    lineType=lineType[0],
+                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+            cv2.putText(
+                img=data_bytes,
+                text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
+                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                fontFace=fontFace[0],
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                lineType=lineType[0],
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
+
+
     def calculate_histogram(self, data_bytes):
         if not self.config['IMAGE_DEBAYER']:
             m_avg = cv2.mean(data_bytes)[0]
@@ -1070,7 +1097,7 @@ class IndiTimelapse(object):
     def __map_indexes(self, ctl, values):
         result = {}
         for i, c in enumerate(ctl):
-            logger.info('Value name: %s', c.name)  # useful to find value names
+            #logger.info('Value name: %s', c.name)  # useful to find value names
             if c.name in values:
                 result[c.name] = i
         return result
