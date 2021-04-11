@@ -794,8 +794,8 @@ class IndiTimelapse(object):
             shoot_elapsed_s = time.time() - start
             logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
 
-            # Setup timeout for 3 times the exposure period
-            signal.alarm(int(self.config['EXPOSURE_PERIOD'] * 3.0))
+            # should take far less than 5 seconds here
+            signal.alarm(5)
 
             try:
                 self.indiblob_status_receive.recv()  # wait until image is received
