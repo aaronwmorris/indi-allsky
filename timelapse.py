@@ -782,6 +782,13 @@ class IndiTimelapse(object):
             if self.night_v.value != int(nighttime):
                 self.dayNightReconfigure(nighttime)
 
+                if not nighttime:
+                    ### Generate timelapse at end of night
+                    yesterday_ref = datetime.now() - timedelta(days=1)
+                    timespec = yesterday_ref.strftime('%Y%m%d')))
+                    self.avconv(timespec, restart_worker=True)
+
+
             start = time.time()
 
             try:
