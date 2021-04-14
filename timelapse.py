@@ -624,6 +624,8 @@ class IndiTimelapse(object):
 
         self.base_dir = Path(__file__).parent.absolute()
 
+        self.generate_timelapse_flag = False   # This is updated once images have been generated
+
         signal.signal(signal.SIGALRM, self.alarm_handler)
         signal.signal(signal.SIGHUP, self.hup_handler)
 
@@ -783,7 +785,7 @@ class IndiTimelapse(object):
             if self.night_v.value != int(nighttime):
                 self.dayNightReconfigure(nighttime)
 
-                if not nighttime:
+                if not nighttime and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
@@ -804,6 +806,14 @@ class IndiTimelapse(object):
 
             # should take far less than 5 seconds here
             signal.alarm(5)
+
+
+            if nighttime:
+                # always indicate timelapse generation at night
+                self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+            elif self.config['DAYTIME_TIMELAPSE']:
+                # must be day time
+                self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
             try:
                 self.indiblob_status_receive.recv()  # wait until image is received
@@ -933,6 +943,16 @@ class IndiTimelapse(object):
             logger.error('Image folder does not exist: %s', img_day_folder)
             sys.exit(1)
 
+        video_file = img_day_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
+
+        if video_file.exists():
+            logger.warning('Video is already generated: %s', video_file)
+
+            if restart_worker:
+                self._startImageProcessWorker()
+
+            return
+
 
         seqfolder = img_day_folder.joinpath('.sequence')
 
@@ -960,7 +980,7 @@ class IndiTimelapse(object):
             symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             symlink_p.symlink_to(f)
 
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}/allsky-{5:s}.mp4'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(img_day_folder), timespec).split()
+        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(video_file)).split()
         subprocess.run(cmd)
 
 
