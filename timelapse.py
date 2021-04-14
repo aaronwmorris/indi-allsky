@@ -64,7 +64,8 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("new device %s", d.getDeviceName())
 
     def newProperty(self, p):
-        logger.info("new property %s for device %s", p.getName(), p.getDeviceName())
+        #logger.info("new property %s for device %s", p.getName(), p.getDeviceName())
+        pass
 
     def removeProperty(self, p):
         logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
