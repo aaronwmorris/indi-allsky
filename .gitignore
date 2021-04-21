@@ -8,3 +8,4 @@
 *.bin
 config.json
 images/*/
+__pycache__/

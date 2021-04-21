@@ -3,3 +3,4 @@ astropy
 #astropy[all]
 opencv-python
 ephem
+parimiko
