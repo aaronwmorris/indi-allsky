@@ -30,6 +30,8 @@ class sftp(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
+        except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
 
         self.sftp = client.open_sftp()
 
