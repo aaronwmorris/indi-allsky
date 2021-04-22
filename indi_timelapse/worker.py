@@ -13,6 +13,8 @@ from astropy.io import fits
 import cv2
 import numpy
 
+from . import filetransfer
+
 logger = multiprocessing.get_logger()
 
 
@@ -84,7 +86,38 @@ class ImageProcessWorker(Process):
             #)
 
             self.image_text(scidata_blur, exp_date)
-            self.write_img(scidata_blur, exp_date)
+            latest_file = self.write_img(scidata_blur, exp_date)
+
+
+            if latest_file:
+                self.upload_image(latest_file)
+
+
+    def upload_image(self, upload_file):
+        if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
+            logger.warning('Image uploading disabled')
+            return
+
+        try:
+            client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
+        except AttributeError:
+            logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
+            return
+
+        client = client_class()
+        client.connect(
+            self.config['FILETRANSFER']['HOST'],
+            self.config['FILETRANSFER']['USERNAME'],
+            self.config['FILETRANSFER']['PASSWORD'],
+            port=self.config['FILETRANSFER']['PORT'],
+        )
+
+        local_filename = upload_file.name
+
+        remote_path = Path(self.config['FILETRANSFER']['IMAGE_FOLDER'])
+        remote_file = remote_path.joinpath(local_filename)
+
+        client.put(upload_file, remote_file)
 
 
 
@@ -160,7 +193,7 @@ class ImageProcessWorker(Process):
             logger.info('Daytime timelapse is disabled')
             tmpfile_name.unlink()  # cleanup temp file
             logger.info('Finished writing files')
-            return
+            return latest_file
 
 
         ### Write the timelapse file
@@ -183,6 +216,8 @@ class ImageProcessWorker(Process):
         tmpfile_name.unlink()
 
         logger.info('Finished writing files')
+
+        return latest_file
 
 
     def getImageFolder(self, exp_date):

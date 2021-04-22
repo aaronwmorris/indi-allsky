@@ -8,7 +8,7 @@ class sftp(GenericFileTransfer):
         super(sftp, self).__init__(*args, **kwargs)
 
         self.port = 22
-        self.transport = None
+        self.sftp = None
 
 
     def __del__(self):
@@ -17,27 +17,27 @@ class sftp(GenericFileTransfer):
 
     def _connect(self, hostname, username, password):
 
-        self.transport = paramiko.Transport((hostname, self.port))
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            self.transport.connect(None, username, password)
+            client.connect(hostname, port=self.port, username=username, password=password, timeout=self.timeout)
         except paramiko.ssh_exception.AuthenticationException as e:
             raise AuthenticationFailure(str(e)) from e
 
-        client = paramiko.SFTPClient.from_transport(self.transport)
-        #client.setTimeout(self.timeout)
+        self.sftp = client.open_sftp()
 
         return client
 
 
     def _close(self):
-        if self.transport:
-            self.transport.close()
+        if self.sftp:
+            self.sftp.close()
 
         if self.client:
             self.client.close()
 
 
     def _put(self, localfile, remotefile):
-        self.client.put(localfile, remotefile)
+        self.sftp.put(str(localfile), str(remotefile))
 
