@@ -122,13 +122,18 @@ class ImageProcessWorker(Process):
             )
         except filetransfer.exceptions.ConnectionFailure as e:
             logger.error('Connection failure: %s', e)
+            client.close()
             return
         except filetransfer.exceptions.AuthenticationFailure as e:
             logger.error('Authentication failure: %s', e)
+            client.close()
             return
 
-
+        # Upload file
         client.put(upload_file, remote_file)
+
+        # close file transfer client
+        client.close()
 
 
 
