@@ -1,6 +1,8 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
+from .exceptions import ConnectionFailure
 import paramiko
+import socket
 
 
 class sftp(GenericFileTransfer):
@@ -24,6 +26,8 @@ class sftp(GenericFileTransfer):
             client.connect(hostname, port=self.port, username=username, password=password, timeout=self.timeout)
         except paramiko.ssh_exception.AuthenticationException as e:
             raise AuthenticationFailure(str(e)) from e
+        except socket.gaierror as e:
+            raise ConnectionFailure(str(e)) from e
 
         self.sftp = client.open_sftp()
 

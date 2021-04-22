@@ -104,18 +104,29 @@ class ImageProcessWorker(Process):
             logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
             return
 
-        client = client_class()
-        client.connect(
-            self.config['FILETRANSFER']['HOST'],
-            self.config['FILETRANSFER']['USERNAME'],
-            self.config['FILETRANSFER']['PASSWORD'],
-            port=self.config['FILETRANSFER']['PORT'],
-        )
 
         local_filename = upload_file.name
 
         remote_path = Path(self.config['FILETRANSFER']['IMAGE_FOLDER'])
         remote_file = remote_path.joinpath(local_filename)
+
+
+        client = client_class()
+
+        try:
+            client.connect(
+                self.config['FILETRANSFER']['HOST'],
+                self.config['FILETRANSFER']['USERNAME'],
+                self.config['FILETRANSFER']['PASSWORD'],
+                port=self.config['FILETRANSFER']['PORT'],
+            )
+        except filetransfer.exceptions.ConnectionFailure as e:
+            logger.error('Connection failure: %s', e)
+            return
+        except filetransfer.exceptions.AuthenticationFailure as e:
+            logger.error('Authentication failure: %s', e)
+            return
+
 
         client.put(upload_file, remote_file)
 
