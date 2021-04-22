@@ -5,7 +5,7 @@ logger = multiprocessing.get_logger()
 
 class GenericFileTransfer(object):
     def __init__(self, timeout=5.0):
-        self.timeout = timeout
+        self.timeout = float(timeout)
 
         self.port = 0
         self.client = None

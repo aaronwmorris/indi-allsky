@@ -111,7 +111,7 @@ class ImageProcessWorker(Process):
         remote_file = remote_path.joinpath(local_filename)
 
 
-        client = client_class()
+        client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
 
         try:
             client.connect(
