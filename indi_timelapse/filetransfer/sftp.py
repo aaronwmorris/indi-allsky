@@ -1,6 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import TransferFailure
 import paramiko
 import socket
 
@@ -47,5 +48,9 @@ class sftp(GenericFileTransfer):
 
 
     def _put(self, localfile, remotefile):
-        self.sftp.put(str(localfile), str(remotefile))
+        try:
+            self.sftp.put(str(localfile), str(remotefile))
+        except PermissionError as e:
+            raise TransferFailure(str(e)) from e
+
 

@@ -130,7 +130,12 @@ class ImageProcessWorker(Process):
             return
 
         # Upload file
-        client.put(upload_file, remote_file)
+        try:
+            client.put(upload_file, remote_file)
+        except filetransfer.exceptions.TransferFailure as e:
+            logger.error('Tranfer failure: %s', e)
+            client.close()
+            return
 
         # close file transfer client
         client.close()

@@ -3,3 +3,6 @@ class AuthenticationFailure(Exception):
 
 class ConnectionFailure(Exception):
     pass
+
+class TransferFailure(Exception):
+    pass

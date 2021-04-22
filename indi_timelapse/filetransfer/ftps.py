@@ -1,6 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import TransferFailure
 
 import ftplib
 import io
@@ -48,6 +49,12 @@ class ftps(GenericFileTransfer):
 
     def _put(self, localfile, remotefile):
         with io.open(str(localfile), 'rb') as f_localfile:
-            self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile)
+
+            try:
+                self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile)
+            except ftplib.error_perm as e:
+                f_localfile.close()
+                raise TransferFailure(str(e)) from e
+
             f_localfile.close()
 
