@@ -26,6 +26,8 @@ class ftp(GenericFileTransfer):
             client.connect(host=hostname, port=self.port, timeout=self.timeout)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
+        except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
 
         try:
             client.login(user=username, passwd=password)

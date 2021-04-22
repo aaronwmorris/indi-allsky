@@ -26,6 +26,8 @@ class sftp(GenericFileTransfer):
             client.connect(hostname, port=self.port, username=username, password=password, timeout=self.timeout)
         except paramiko.ssh_exception.AuthenticationException as e:
             raise AuthenticationFailure(str(e)) from e
+        except paramiko.ssh_exception.NoValidConnectionsError as e:
+            raise ConnectionFailure(str(e)) from e
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
 
