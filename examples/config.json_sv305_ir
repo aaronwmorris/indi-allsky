@@ -4,17 +4,38 @@
     "INDI_CONFIG_NIGHT" : {
         "GAIN_TEXT" : 250,
         "PROPERTIES" : {
-            "CCD_GAIN" : {"GAIN" : 250}
+            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_GAIN"     : {"GAIN" : 250},
+            "CCD_WBR"      : {"WBR" : 110},
+            "CCD_WBG"      : {"WBG" : 95},
+            "CCD_WBB"      : {"WBB" : 175},
+            "CCD_GAMMA"    : {"GAMMA" : 100}
         },
-        "SWITCHES" : {}
+        "SWITCHES" : {
+            "FRAME_FORMAT" : {
+                "on"  : ["FORMAT_RAW8"],
+                "off" : ["FORMAT_RAW12"]
+            }
+        }
     },
+
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "INDI_CONFIG_DAY" : {
         "GAIN_TEXT" : 10,
         "PROPERTIES" : {
-            "CCD_GAIN" : {"GAIN" : 10}
+            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_GAIN"     : {"GAIN" : 10},
+            "CCD_WBR"      : {"WBR" : 110},
+            "CCD_WBG"      : {"WBG" : 95},
+            "CCD_WBB"      : {"WBB" : 175},
+            "CCD_GAMMA"    : {"GAMMA" : 100}
         },
-        "SWITCHES" : {}
+        "SWITCHES" : {
+            "FRAME_FORMAT" : {
+                "on"  : ["FORMAT_RAW8"],
+                "off" : ["FORMAT_RAW12"]
+            }
+        }
     },
 
     "comment_CCD_EXPOSURE_MIN" : "SV305 minimum exposure is 0.000029"
@@ -48,24 +69,6 @@
 
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE" : "2500k",
-
-    "INDI_CONFIG_DEFAULTS" : {
-        "GAIN_TEXT" : 250,
-        "PROPERTIES" : {
-            "CCD_BINNING" : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_GAIN"    : {"GAIN" : 250},
-            "CCD_WBR"     : {"WBR" : 110},
-            "CCD_WBG"     : {"WBG" : 95},
-            "CCD_WBB"     : {"WBB" : 175},
-            "CCD_GAMMA"   : {"GAMMA" : 100}
-        },
-        "SWITCHES" : {
-            "FRAME_FORMAT" : {
-                "on"  : ["FORMAT_RAW8"],
-                "off" : ["FORMAT_RAW12"]
-            }
-        }
-    },
 
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",

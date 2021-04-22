@@ -2,22 +2,34 @@
     "CCD_NAME" : "ZWO CCD ASI290MM",
 
     "INDI_CONFIG_NIGHT" : {
-        "GAIN_TEXT" : 250,
+        "GAIN_TEXT" : 300,
         "PROPERTIES" : {
-            "CCD_CONTROLS" : {
-                "Gain" : 250
+            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_CONTROLS"  : {
+                "Gain" : 300
             }
         },
-        "SWITCHES" : {}
+        "SWITCHES" : {
+            "CCD_VIDEO_FORMAT" : {
+                "on"  : ["ASI_IMG_RAW8"],
+                "off" : ["ASI_IMG_RAW16"]
+            }
+        }
     },
     "INDI_CONFIG_DAY" : {
         "GAIN_TEXT" : 0,
         "PROPERTIES" : {
-            "CCD_CONTROLS" : {
+            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_CONTROLS"  : {
                 "Gain" : 0
             }
         },
-        "SWITCHES" : {}
+        "SWITCHES" : {
+            "CCD_VIDEO_FORMAT" : {
+                "on"  : ["ASI_IMG_RAW8"],
+                "off" : ["ASI_IMG_RAW16"]
+            }
+        }
     },
 
     "comment_CCD_EXPOSURE_MIN" : "ASI290MM minimum exposure is 0.000032"
@@ -51,22 +63,6 @@
 
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE" : "2500k",
-
-    "INDI_CONFIG_DEFAULTS" : {
-        "GAIN_TEXT" : 250,
-        "PROPERTIES" : {
-            "CCD_BINNING" : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_CONTROLS" : {
-                "Gain" : 250
-            }
-        },
-        "SWITCHES" : {
-            "CCD_VIDEO_FORMAT" : {
-                "on"  : ["ASI_IMG_RAW8"],
-                "off" : ["ASI_IMG_RAW16"]
-            }
-        }
-    },
 
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",

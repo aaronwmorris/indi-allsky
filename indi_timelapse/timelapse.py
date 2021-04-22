@@ -39,7 +39,7 @@ class IndiTimelapse(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_DEFAULTS']['GAIN_TEXT']))
+        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_TEXT']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -142,7 +142,7 @@ class IndiTimelapse(object):
 
         ### Perform device config
         self._configureCcd(
-            self.config['INDI_CONFIG_DEFAULTS'],
+            self.config['INDI_CONFIG_NIGHT'],
         )
 
 
