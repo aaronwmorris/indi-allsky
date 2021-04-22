@@ -182,10 +182,11 @@ class IndiTimelapse(object):
 
         # Update shared gain value
         gain = indi_config.get('GAIN_TEXT')
-        if gain:
-            with self.gain_v.get_lock():
-                self.gain_v.value = gain
 
+        with self.gain_v.get_lock():
+            self.gain_v.value = gain
+
+        logger.info('Gain set to %d', self.gain_v.value)
 
         # Sleep after configuration
         time.sleep(1.0)
@@ -451,7 +452,7 @@ class IndiTimelapse(object):
     def shoot(self, exposure, sync=True, timeout=None):
         if not timeout:
             timeout = (exposure * 2.0) + 5.0
-        logger.info('Taking %0.6f s exposure', exposure)
+        logger.info('Taking %0.6f s exposure (gain %d)', exposure, self.gain_v.value)
         self.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
 
