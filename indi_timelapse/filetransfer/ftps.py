@@ -32,6 +32,9 @@ class ftps(GenericFileTransfer):
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
 
+        client.auth()
+        client.prot_p()  # setup encypted channel
+
         try:
             client.login(user=username, passwd=password)
         except ftplib.error_perm as e:
