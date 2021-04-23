@@ -74,7 +74,7 @@
         "FONT_SCALE"     : 0.80,
         "FONT_THICKNESS" : 1,
         "FONT_OUTLINE"   : true
-    }
+    },
 
     "FILETRANSFER" : {
         "comment_CLASSNAME" : "sftp, ftp, ftps",
