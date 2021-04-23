@@ -42,6 +42,8 @@ class ImageProcessWorker(Process):
         self.target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
         self.target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
 
+        self.image_count = 0
+
         self.base_dir = Path(__file__).parent.parent.absolute()
 
         self.name = 'ImageProcessWorker{0:03d}'.format(idx)
@@ -56,6 +58,8 @@ class ImageProcessWorker(Process):
 
             if filename_override:
                 self.filename_t = filename_override
+
+            self.image_count += 1
 
             # Save last exposure value for picture
             self.last_exposure = self.exposure_v.value
@@ -98,6 +102,10 @@ class ImageProcessWorker(Process):
             logger.warning('Image uploading disabled')
             return
 
+        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+            # upload every X image
+            return
+
         try:
             client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
         except AttributeError:
@@ -105,10 +113,10 @@ class ImageProcessWorker(Process):
             return
 
 
-        local_filename = upload_file.name
+        #local_filename = upload_file.name
 
-        remote_path = Path(self.config['FILETRANSFER']['IMAGE_FOLDER'])
-        remote_file = remote_path.joinpath(local_filename)
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_FOLDER'])
+        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
 
         client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])

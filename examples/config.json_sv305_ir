@@ -81,4 +81,19 @@
         "FONT_THICKNESS" : 1,
         "FONT_OUTLINE"   : true
     }
+
+    "FILETRANSFER" : {
+        "comment_CLASSNAME" : "sftp, ftp, ftps",
+        "CLASSNAME"         : "ftp",
+        "HOST"              : "",
+        "comment_PORT"      : "use null for protocol default",
+        "PORT"              : null,
+        "USERNAME"          : "",
+        "PASSWORD"          : "",
+        "TIMEOUT"           : 5.0,
+        "REMOTE_FOLDER"     : "/tmp",
+        "REMOTE_IMAGE_NAME" : "image-resize.{0}",
+        "UPLOAD_IMAGE"      : false,
+        "UPLOAD_TIMELAPSE"  : false
+    }
 }
