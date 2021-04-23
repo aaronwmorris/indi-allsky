@@ -1,4 +1,5 @@
 import io
+import time
 from pathlib import Path
 from datetime import timedelta
 import functools
@@ -121,6 +122,9 @@ class ImageProcessWorker(Process):
 
         client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
 
+
+        start = time.time()
+
         try:
             client.connect(
                 self.config['FILETRANSFER']['HOST'],
@@ -137,6 +141,7 @@ class ImageProcessWorker(Process):
             client.close()
             return
 
+
         # Upload file
         try:
             client.put(upload_file, remote_file)
@@ -147,6 +152,9 @@ class ImageProcessWorker(Process):
 
         # close file transfer client
         client.close()
+
+        upload_elapsed_s = time.time() - start
+        logger.info('Upload completed in %0.4f s', upload_elapsed_s)
 
 
 
