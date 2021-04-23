@@ -4,3 +4,4 @@ astropy
 opencv-python
 ephem
 paramiko
+pycurl
