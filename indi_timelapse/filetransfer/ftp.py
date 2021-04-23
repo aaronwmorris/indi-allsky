@@ -44,7 +44,7 @@ class ftp(GenericFileTransfer):
 
     def _close(self):
         if self.client:
-            self.client.close()
+            self.client.quit()
 
 
     def _put(self, localfile, remotefile):
