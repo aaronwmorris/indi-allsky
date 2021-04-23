@@ -20,7 +20,7 @@ class GenericFileTransfer(object):
             logger.info('Port override to %d', port)
             self.port = port
 
-        logger.info('Connecting to %s as %s', hostname, username)
+        logger.info('Connecting to %s as %s with %s', hostname, username, self.__class__.__name__)
         self.client = self._connect(hostname, username, password)
 
 
