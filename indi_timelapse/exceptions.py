@@ -1,0 +1,4 @@
+
+class TimeOutException(Exception):
+    pass
+

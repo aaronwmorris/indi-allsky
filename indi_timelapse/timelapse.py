@@ -21,6 +21,7 @@ import PyIndi
 
 from .indi import IndiClient
 from .worker import ImageProcessWorker
+from .exceptions import TimeOutException
 
 logger = multiprocessing.get_logger()
 
@@ -49,7 +50,6 @@ class IndiTimelapse(object):
         self.img_worker_idx = 0
         self.writefits = False
 
-        self.indi_timeout = 10.0
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
         self.__type_to_str = { PyIndi.INDI_NUMBER: 'number', PyIndi.INDI_SWITCH: 'switch', PyIndi.INDI_TEXT: 'text', PyIndi.INDI_LIGHT: 'light', PyIndi.INDI_BLOB: 'blob', PyIndi.INDI_UNKNOWN: 'unknown' }
@@ -134,6 +134,8 @@ class IndiTimelapse(object):
                 self.indiclient.connectDevice(d.getDeviceName())
                 self.device = d
 
+        # set default device in indiclient
+        self.indiclient.device = self.device
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
@@ -169,16 +171,16 @@ class IndiTimelapse(object):
         ### Configure CCD Properties
         for k, v in indi_config['PROPERTIES'].items():
             logger.info('Setting property %s', k)
-            self.set_number(k, v)
+            self.indiclient.set_number(k, v)
 
 
         ### Configure CCD Switches
         for k, v in indi_config['SWITCHES'].items():
             logger.info('Setting switch %s', k)
-            self.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
+            self.indiclient.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
 
         ### Configure controls
-        #self.set_controls(indi_config.get('CONTROLS', {}))
+        #self.indiclient.set_controls(indi_config.get('CONTROLS', {}))
 
         # Update shared gain value
         gain = indi_config.get('GAIN_TEXT')
@@ -453,128 +455,7 @@ class IndiTimelapse(object):
         if not timeout:
             timeout = (exposure * 2.0) + 5.0
         logger.info('Taking %0.6f s exposure (gain %d)', exposure, self.gain_v.value)
-        self.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        self.indiclient.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
-
-    def get_control(self, name, ctl_type, timeout=None):
-        ctl = None
-        attr = {
-            'number'  : 'getNumber',
-            'switch'  : 'getSwitch',
-            'text'    : 'getText',
-            'light'   : 'getLight',
-            'blob'    : 'getBLOB'
-        }[ctl_type]
-        if timeout is None:
-            timeout = self.indi_timeout
-        started = time.time()
-        while not(ctl):
-            ctl = getattr(self.device, attr)(name)
-            if not ctl and 0 < timeout < time.time() - started:
-                raise TimeOutException('Timeout finding control {0}'.format(name))
-            time.sleep(0.01)
-        return ctl
-
-
-    def set_controls(self, controls):
-        self.set_number('CCD_CONTROLS', controls)
-
-
-    def set_number(self, name, values, sync=True, timeout=None):
-        #logger.info('Name: %s, values: %s', name, str(values))
-        c = self.get_control(name, 'number')
-        for control_name, index in self.__map_indexes(c, values.keys()).items():
-            c[index].value = values[control_name]
-        self.indiclient.sendNewNumber(c)
-
-        if sync:
-            self.__wait_for_ctl_statuses(c, timeout=timeout)
-        return c
-
-
-    def set_switch(self, name, on_switches=[], off_switches=[], sync=True, timeout=None):
-        c = self.get_control(name, 'switch')
-        is_exclusive = c.r == PyIndi.ISR_ATMOST1 or c.r == PyIndi.ISR_1OFMANY
-        if is_exclusive :
-            on_switches = on_switches[0:1]
-            off_switches = [s.name for s in c if s.name not in on_switches]
-        for index in range(0, len(c)):
-            current_state = c[index].s
-            new_state = current_state
-            if c[index].name in on_switches:
-                new_state = PyIndi.ISS_ON
-            elif is_exclusive or c[index].name in off_switches:
-                new_state = PyIndi.ISS_OFF
-            c[index].s = new_state
-        self.indiclient.sendNewSwitch(c)
-
-
-    def set_text(self, control_name, values, sync=True, timeout=None):
-        c = self.get_control(control_name, 'text')
-        for control_name, index in self.__map_indexes(c, values.keys()).items():
-            c[index].text = values[control_name]
-        self.indi_client.sendNewText(c)
-
-        if sync:
-            self.__wait_for_ctl_statuses(c, timeout=timeout)
-
-        return c
-
-
-    def values(self, ctl_name, ctl_type):
-        return dict(map(lambda c: (c.name, c.value), self.get_control(ctl_name, ctl_type)))
-
-
-    def switch_values(self, name, ctl=None):
-        return self.__control2dict(name, 'switch', lambda c: {'value': c.s == PyIndi.ISS_ON}, ctl)
-
-
-    def text_values(self, name, ctl=None):
-        return self.__control2dict(name, 'text', lambda c: {'value': c.text}, ctl)
-
-
-    def number_values(self, name, ctl=None):
-        return self.__control2dict(name, 'text', lambda c: {'value': c.value, 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
-
-
-    def light_values(self, name, ctl=None):
-        return self.__control2dict(name, 'light', lambda c: {'value': self.__state_to_str[c.s]}, ctl)
-
-
-    def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
-        started = time.time()
-        if timeout is None:
-            timeout = self.indi_timeout
-        while ctl.s not in statuses:
-            #logger.info('%s/%s/%s: %s', ctl.device, ctl.group, ctl.name, self.__state_to_str[ctl.s])
-            if ctl.s == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
-                raise RuntimeError('Error while changing property {0}'.format(ctl.name))
-            elapsed = time.time() - started
-            if 0 < timeout < elapsed:
-                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.s] ))
-            time.sleep(0.05)
-
-
-    def __map_indexes(self, ctl, values):
-        result = {}
-        for i, c in enumerate(ctl):
-            #logger.info('Value name: %s', c.name)  # useful to find value names
-            if c.name in values:
-                result[c.name] = i
-        return result
-
-
-    def __control2dict(self, control_name, control_type, transform, control=None):
-        def get_dict(element):
-            dest = {'name': element.name, 'label': element.label}
-            dest.update(transform(element))
-            return dest
-
-        control = control if control else self.get_control(control_name, control_type)
-        return [get_dict(c) for c in control]
-
-
-class TimeOutException(Exception):
-    pass
 
 
