@@ -174,8 +174,7 @@ class ImageProcessWorker(Process):
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
 
-        fitname_t = '{0:s}/{1:s}.fit'.format(str(self.base_dir), self.filename_t)
-        filename = Path(fitname_t.format(date_str))
+        filename = self.base_dir.joinpath(self.filename_t.format(date_str))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
