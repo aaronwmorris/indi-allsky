@@ -4,8 +4,8 @@
 *.jpeg
 *.png
 *.tif
-*.py[oc]
 *.bin
+*.mp4
 config.json
-images/*/
+*.py[oc]
 __pycache__/
