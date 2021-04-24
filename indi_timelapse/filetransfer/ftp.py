@@ -51,7 +51,7 @@ class ftp(GenericFileTransfer):
         with io.open(str(localfile), 'rb') as f_localfile:
 
             try:
-                self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile)
+                self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile, blocksize=262144)
             except ftplib.error_perm as e:
                 f_localfile.close()
                 raise TransferFailure(str(e)) from e
