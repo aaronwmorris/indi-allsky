@@ -32,7 +32,7 @@ class ImageProcessWorker(Process):
 
         self.last_exposure = None
 
-        self.filename_t = '{0:s}'
+        self.filename_t = '{0:s}.{1:s}'
         self.writefits = writefits
 
         self.stable_mean = False
@@ -52,13 +52,13 @@ class ImageProcessWorker(Process):
 
     def run(self):
         while True:
-            imgdata, exp_date, filename_override = self.img_q.get()
+            imgdata, exp_date, filename_t_override = self.img_q.get()
 
             if not imgdata:
                 return
 
-            if filename_override:
-                self.filename_t = filename_override
+            if filename_t_override:
+                self.filename_t = filename_t_override
 
             self.image_count += 1
 
@@ -173,8 +173,7 @@ class ImageProcessWorker(Process):
 
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-
-        filename = self.base_dir.joinpath(self.filename_t.format(date_str))
+        filename = self.base_dir.joinpath(self.filename_t.format(date_str, 'fit'))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
@@ -236,9 +235,7 @@ class ImageProcessWorker(Process):
         folder = self.getImageFolder(exp_date)
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-
-        imgname_t = '{0:s}/{1:s}.{2:s}'.format(str(folder), self.filename_t, self.config['IMAGE_FILE_TYPE'])
-        filename = Path(imgname_t.format(date_str))
+        filename = folder.joinpath(self.filename_t.format(date_str, self.config['IMAGE_FILE_TYPE']))
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)

@@ -314,11 +314,11 @@ class IndiTimelapse(object):
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
         for exp in dark_exposures:
-            filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
+            filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
 
             start = time.time()
 
-            self.indiclient.filename_t = filename
+            self.indiclient.filename_t = filename_t
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
@@ -339,11 +339,11 @@ class IndiTimelapse(object):
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'],)  # day will rarely exceed the minimum exposure
         for exp in dark_exposures:
-            filename = 'dark_{0:d}s_gain{1:d}'.format(int(exp), self.gain_v.value)
+            filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
 
             start = time.time()
 
-            self.indiclient.filename_t = filename
+            self.indiclient.filename_t = filename_t
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
