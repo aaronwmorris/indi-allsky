@@ -476,9 +476,14 @@ class IndiTimelapse(object):
             symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             symlink_p.symlink_to(f)
 
+
+        start = time.time()
+
         cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(video_file)).split()
         subprocess.run(cmd)
 
+        elapsed_s = time.time() - start
+        logger.info('Timelapse generated in %0.4f s', elapsed_s)
 
         # delete all existing symlinks in seqfolder
         rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
