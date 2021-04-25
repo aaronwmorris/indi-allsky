@@ -18,11 +18,11 @@ logger = multiprocessing.get_logger()
 
 
 class ImageProcessWorker(Process):
-    def __init__(self, idx, config, img_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
+    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
         super(ImageProcessWorker, self).__init__()
 
         self.config = config
-        self.img_q = img_q
+        self.image_q = image_q
         self.upload_q = upload_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
@@ -51,7 +51,7 @@ class ImageProcessWorker(Process):
 
     def run(self):
         while True:
-            imgdata, exp_date, filename_t_override = self.img_q.get()
+            imgdata, exp_date, filename_t_override = self.image_q.get()
 
             if not imgdata:
                 return
@@ -129,6 +129,8 @@ class ImageProcessWorker(Process):
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         filename = self.base_dir.joinpath(self.filename_t.format(date_str, 'fit'))
 
+        logger.info('fit filename: %s', filename)
+
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
             return
@@ -190,6 +192,8 @@ class ImageProcessWorker(Process):
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(date_str, self.config['IMAGE_FILE_TYPE']))
+
+        logger.info('Image filename: %s', filename)
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)

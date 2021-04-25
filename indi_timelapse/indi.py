@@ -12,15 +12,15 @@ logger = multiprocessing.get_logger()
 
 
 class IndiClient(PyIndi.BaseClient):
-    def __init__(self, config, indiblob_status_send, img_q):
+    def __init__(self, config, indiblob_status_send, image_q):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.indiblob_status_send = indiblob_status_send
-        self.img_q = img_q
+        self.image_q = image_q
 
         self._device = None
-        self._filename_t = '{0:s}'
+        self._filename_t = '{0:s}.{1:s}'
 
         self._timeout = 10.0
 
@@ -77,7 +77,7 @@ class IndiClient(PyIndi.BaseClient):
         exp_date = datetime.now()
 
         ### process data in worker
-        self.img_q.put((imgdata, exp_date, self._filename_t))
+        self.image_q.put((imgdata, exp_date, self._filename_t))
 
 
     def newSwitch(self, svp):

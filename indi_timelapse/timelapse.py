@@ -36,7 +36,7 @@ class IndiTimelapse(object):
 
         self.config_file = f_config_file.name
 
-        self.img_q = Queue()
+        self.image_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
         self.device = None
@@ -47,8 +47,8 @@ class IndiTimelapse(object):
 
         self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
 
-        self.img_worker = None
-        self.img_worker_idx = 0
+        self.image_worker = None
+        self.image_worker_idx = 0
         self.writefits = False
 
         self.upload_worker = None
@@ -91,8 +91,8 @@ class IndiTimelapse(object):
             self.dayNightReconfigure(nighttime)
 
         logger.warning('Stopping image process worker')
-        self.img_q.put((False, False, ''))
-        self.img_worker.join()
+        self.image_q.put((False, False, False))
+        self.image_worker.join()
 
         logger.warning('Stopping upload process worker')
         self.upload_q.put((False, False))
@@ -118,7 +118,7 @@ class IndiTimelapse(object):
         self.indiclient = IndiClient(
             self.config,
             self.indiblob_status_send,
-            self.img_q,
+            self.image_q,
         )
 
         # set roi
@@ -162,13 +162,13 @@ class IndiTimelapse(object):
 
 
     def _startImageProcessWorker(self):
-        self.img_worker_idx += 1
+        self.image_worker_idx += 1
 
         logger.info('Starting ImageProcessorWorker process')
-        self.img_worker = ImageProcessWorker(
-            self.img_worker_idx,
+        self.image_worker = ImageProcessWorker(
+            self.image_worker_idx,
             self.config,
-            self.img_q,
+            self.image_q,
             self.upload_q,
             self.exposure_v,
             self.gain_v,
@@ -176,7 +176,7 @@ class IndiTimelapse(object):
             self.night_v,
             writefits=self.writefits,
         )
-        self.img_worker.start()
+        self.image_worker.start()
 
 
     def _startImageUploadWorker(self):
@@ -389,8 +389,8 @@ class IndiTimelapse(object):
 
         ### stop image processing worker
         logger.warning('Stopping image process worker')
-        self.img_q.put((False, False, ''))
-        self.img_worker.join()
+        self.image_q.put((False, False, False))
+        self.image_worker.join()
 
         logger.warning('Stopping upload process worker')
         self.uplaod_q.put((False, False))
@@ -401,10 +401,10 @@ class IndiTimelapse(object):
 
 
     def avconv(self, timespec, restart_worker=False):
-        if self.img_worker:
+        if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
-            self.img_q.put((False, False, ''))
-            self.img_worker.join()
+            self.image_q.put((False, False, False))
+            self.image_worker.join()
 
         if self.upload_worker:
             logger.warning('Stopping upload process worker to save memory')
