@@ -259,7 +259,14 @@ class IndiTimelapse(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self.avconv(timespec)
+                    self.avconv(timespec, day=False)
+
+                if nighttime and self.generate_timelapse_flag:
+                    ### Generate timelapse at end of day
+                    today_ref = datetime.now()
+                    timespec = today_ref.strftime('%Y%m%d')
+                    self.avconv(timespec, night=False)
+
 
 
             start = time.time()
@@ -404,7 +411,7 @@ class IndiTimelapse(object):
         self.indiclient.disconnectServer()
 
 
-    def avconv(self, timespec):
+    def avconv(self, timespec, day=True, night=True):
         if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
             self.image_q.put((False, False, False))
@@ -416,21 +423,34 @@ class IndiTimelapse(object):
             self.upload_worker.join()
 
 
-        img_day_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
+        img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
-        if not img_day_folder.exists():
-            logger.error('Image folder does not exist: %s', img_day_folder)
+        if day:
+            logger.warning('Generating day time timelapse for %s', timespec)
+            img_day_folder = img_base_folder.joinpath('day')
+            self.avconv_timeofday(timespec, img_day_folder)
+
+
+        if night:
+            logger.warning('Generating night time timelapse for %s', timespec)
+            img_night_folder = img_base_folder.joinpath('night')
+            self.avconv_timeofday(timespec, img_night_folder)
+
+
+    def avconv_timeofday(self, timespec, img_folder):
+        if not img_folder.exists():
+            logger.error('Image folder does not exist: %s', img_folder)
             return
 
 
-        video_file = img_day_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
+        video_file = img_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
             return
 
 
-        seqfolder = img_day_folder.joinpath('.sequence')
+        seqfolder = img_folder.joinpath('.sequence')
 
         if not seqfolder.exists():
             logger.info('Creating sequence folder %s', seqfolder)
@@ -447,7 +467,7 @@ class IndiTimelapse(object):
 
         # find all files
         timelapse_files = list()
-        self.getFolderImgFiles(img_day_folder, timelapse_files)
+        self.getFolderImgFiles(img_folder, timelapse_files)
 
 
         logger.info('Creating symlinked files for timelapse')
