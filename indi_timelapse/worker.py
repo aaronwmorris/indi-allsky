@@ -1,5 +1,4 @@
 import io
-import time
 from pathlib import Path
 from datetime import timedelta
 import functools
@@ -14,17 +13,17 @@ from astropy.io import fits
 import cv2
 import numpy
 
-from . import filetransfer
 
 logger = multiprocessing.get_logger()
 
 
 class ImageProcessWorker(Process):
-    def __init__(self, idx, config, img_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
+    def __init__(self, idx, config, img_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
         super(ImageProcessWorker, self).__init__()
 
         self.config = config
         self.img_q = img_q
+        self.upload_q = upload_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.sensortemp_v = sensortemp_v
@@ -95,66 +94,21 @@ class ImageProcessWorker(Process):
 
 
             if latest_file:
-                self.upload_image(latest_file)
+                if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
+                    logger.warning('Image uploading disabled')
+                    continue
+
+                if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+                    # upload every X image
+                    continue
 
 
-    def upload_image(self, upload_file):
-        if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
-            logger.warning('Image uploading disabled')
-            return
+                remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
+                remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
-        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-            # upload every X image
-            return
+                # tell worker to upload file
+                self.upload_q.put((latest_file, remote_file))
 
-        try:
-            client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
-        except AttributeError:
-            logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
-            return
-
-
-        #local_filename = upload_file.name
-
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
-        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
-
-
-        client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
-
-
-        start = time.time()
-
-        try:
-            client.connect(
-                self.config['FILETRANSFER']['HOST'],
-                self.config['FILETRANSFER']['USERNAME'],
-                self.config['FILETRANSFER']['PASSWORD'],
-                port=self.config['FILETRANSFER']['PORT'],
-            )
-        except filetransfer.exceptions.ConnectionFailure as e:
-            logger.error('Connection failure: %s', e)
-            client.close()
-            return
-        except filetransfer.exceptions.AuthenticationFailure as e:
-            logger.error('Authentication failure: %s', e)
-            client.close()
-            return
-
-
-        # Upload file
-        try:
-            client.put(upload_file, remote_file)
-        except filetransfer.exceptions.TransferFailure as e:
-            logger.error('Tranfer failure: %s', e)
-            client.close()
-            return
-
-        # close file transfer client
-        client.close()
-
-        upload_elapsed_s = time.time() - start
-        logger.info('Upload completed in %0.4f s', upload_elapsed_s)
 
 
 

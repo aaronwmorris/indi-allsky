@@ -21,6 +21,7 @@ import PyIndi
 
 from .indi import IndiClient
 from .worker import ImageProcessWorker
+from .uploader import FileUploader
 from .exceptions import TimeOutException
 
 logger = multiprocessing.get_logger()
@@ -49,6 +50,11 @@ class IndiTimelapse(object):
         self.img_worker = None
         self.img_worker_idx = 0
         self.writefits = False
+
+        self.upload_worker = None
+        self.upload_q = Queue()
+        self.upload_worker_idx = 0
+
 
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
@@ -88,8 +94,13 @@ class IndiTimelapse(object):
         self.img_q.put((False, False, ''))
         self.img_worker.join()
 
+        logger.warning('Stopping upload process worker')
+        self.upload_q.put((False, False))
+        self.upload_worker.join()
+
         # Restart worker with new config
         self._startImageProcessWorker()
+        self._startImageUploadWorker()
 
 
     def alarm_handler(self, signum, frame):
@@ -101,6 +112,7 @@ class IndiTimelapse(object):
             self.writefits = True
 
         self._startImageProcessWorker()
+        self._startImageUploadWorker()
 
         # instantiate the client
         self.indiclient = IndiClient(
@@ -157,6 +169,7 @@ class IndiTimelapse(object):
             self.img_worker_idx,
             self.config,
             self.img_q,
+            self.upload_q,
             self.exposure_v,
             self.gain_v,
             self.sensortemp_v,
@@ -165,6 +178,18 @@ class IndiTimelapse(object):
         )
         self.img_worker.start()
 
+
+    def _startImageUploadWorker(self):
+        self.upload_worker_idx += 1
+
+        logger.info('Starting FileUploader process %d', self.upload_worker_idx)
+        self.upload_worker = FileUploader(
+            self.upload_worker_idx,
+            self.config,
+            self.upload_q,
+        )
+
+        self.upload_worker.start()
 
 
     def _configureCcd(self, indi_config):
@@ -200,6 +225,12 @@ class IndiTimelapse(object):
 
         ### main loop starts
         while True:
+            # restart worker if it has failed
+            if not self.upload_worker.is_alive():
+                del self.upload_worker  # try to free up some memory
+                self._startImageUploadWorker()
+
+
             nighttime = self.is_night()
             #logger.info('self.night_v.value: %r', self.night_v.value)
             #logger.info('is night: %r', nighttime)
@@ -357,9 +388,13 @@ class IndiTimelapse(object):
 
 
         ### stop image processing worker
+        logger.warning('Stopping image process worker')
         self.img_q.put((False, False, ''))
         self.img_worker.join()
 
+        logger.warning('Stopping upload process worker')
+        self.uplaod_q.put((False, False))
+        self.upload_worker.join()
 
         ### INDI disconnect
         self.indiclient.disconnectServer()
@@ -370,6 +405,11 @@ class IndiTimelapse(object):
             logger.warning('Stopping image process worker to save memory')
             self.img_q.put((False, False, ''))
             self.img_worker.join()
+
+        if self.upload_worker:
+            logger.warning('Stopping upload process worker to save memory')
+            self.upload_q.put((False, False))
+            self.upload_worker.join()
 
 
         img_day_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))

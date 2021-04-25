@@ -1,0 +1,76 @@
+import time
+from multiprocessing import Process
+#from threading import Thread
+
+import multiprocessing
+
+from . import filetransfer
+
+logger = multiprocessing.get_logger()
+
+
+class FileUploader(Process):
+    def __init__(self, idx, config, upload_q):
+        super(FileUploader, self).__init__()
+
+        #self.threadID = idx
+        self.name = 'FileUploader{0:03d}'.format(idx)
+
+        self.config = config
+
+        self.upload_q = upload_q
+
+
+    def run(self):
+        while True:
+            local_file, remote_file = self.upload_q.get()
+
+            if not local_file:
+                return
+
+            try:
+                client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
+            except AttributeError:
+                logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
+                return
+
+
+            client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
+
+
+            start = time.time()
+
+            try:
+                client.connect(
+                    self.config['FILETRANSFER']['HOST'],
+                    self.config['FILETRANSFER']['USERNAME'],
+                    self.config['FILETRANSFER']['PASSWORD'],
+                    port=self.config['FILETRANSFER']['PORT'],
+                )
+            except filetransfer.exceptions.ConnectionFailure as e:
+                logger.error('Connection failure: %s', e)
+                client.close()
+                return
+            except filetransfer.exceptions.AuthenticationFailure as e:
+                logger.error('Authentication failure: %s', e)
+                client.close()
+                return
+
+
+            # Upload file
+            try:
+                client.put(local_file, remote_file)
+            except filetransfer.exceptions.TransferFailure as e:
+                logger.error('Tranfer failure: %s', e)
+                client.close()
+                return
+
+            # close file transfer client
+            client.close()
+
+            upload_elapsed_s = time.time() - start
+            logger.info('Upload completed in %0.4f s', upload_elapsed_s)
+
+
+            #raise Exception('Testing uncaught exception')
+
