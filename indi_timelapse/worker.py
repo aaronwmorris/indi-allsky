@@ -7,6 +7,7 @@ import shutil
 
 
 from multiprocessing import Process
+#from threading import Thread
 import multiprocessing
 
 from astropy.io import fits
@@ -20,6 +21,9 @@ logger = multiprocessing.get_logger()
 class ImageProcessWorker(Process):
     def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
         super(ImageProcessWorker, self).__init__()
+
+        #self.threadID = idx
+        self.name = 'ImageProcessWorker{0:03d}'.format(idx)
 
         self.config = config
         self.image_q = image_q
@@ -45,8 +49,6 @@ class ImageProcessWorker(Process):
         self.image_count = 0
 
         self.base_dir = Path(__file__).parent.parent.absolute()
-
-        self.name = 'ImageProcessWorker{0:03d}'.format(idx)
 
 
     def run(self):
