@@ -416,7 +416,13 @@ class IndiTimelapse(object):
 
         if not img_day_folder.exists():
             logger.error('Image folder does not exist: %s', img_day_folder)
-            sys.exit(1)
+
+            if restart_worker:
+                self._startImageProcessWorker()
+                self._startImageUploadWorker()
+
+            return
+
 
         video_file = img_day_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
 
@@ -425,6 +431,7 @@ class IndiTimelapse(object):
 
             if restart_worker:
                 self._startImageProcessWorker()
+                self._startImageUploadWorker()
 
             return
 
@@ -476,6 +483,7 @@ class IndiTimelapse(object):
 
         if restart_worker:
             self._startImageProcessWorker()
+            self._startImageUploadWorker()
 
 
     def getFolderImgFiles(self, folder, file_list):
