@@ -214,13 +214,21 @@ class ImageProcessWorker(Process):
 
 
     def getImageFolder(self, exp_date):
-        # images should be written to previous day's folder until noon
-        day_ref = exp_date - timedelta(hours=12)
+        if self.night_v.value:
+            # images should be written to previous day's folder until noon
+            day_ref = exp_date - timedelta(hours=12)
+            timeofday_str = 'night'
+        else:
+            # daytime
+            # images should be written to current day's folder
+            day_ref = exp_date
+            timeofday_str = 'day'
+
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.base_dir.joinpath('images', '{0:s}'.format(day_ref.strftime('%Y%m%d')))
+        day_folder = self.base_dir.joinpath('images', '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
-            day_folder.mkdir()
+            day_folder.mkdir(parents=True)
             day_folder.chmod(0o755)
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
