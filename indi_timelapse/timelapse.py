@@ -226,6 +226,10 @@ class IndiTimelapse(object):
         ### main loop starts
         while True:
             # restart worker if it has failed
+            if not self.image_worker.is_alive():
+                del self.image_worker  # try to free up some memory
+                self._startImageProcessWorker()
+
             if not self.upload_worker.is_alive():
                 del self.upload_worker  # try to free up some memory
                 self._startImageUploadWorker()
