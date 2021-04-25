@@ -259,7 +259,7 @@ class IndiTimelapse(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self.avconv(timespec, restart_worker=True)
+                    self.avconv(timespec)
 
 
             start = time.time()
@@ -404,7 +404,7 @@ class IndiTimelapse(object):
         self.indiclient.disconnectServer()
 
 
-    def avconv(self, timespec, restart_worker=False):
+    def avconv(self, timespec):
         if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
             self.image_q.put((False, False, False))
@@ -420,11 +420,6 @@ class IndiTimelapse(object):
 
         if not img_day_folder.exists():
             logger.error('Image folder does not exist: %s', img_day_folder)
-
-            if restart_worker:
-                self._startImageProcessWorker()
-                self._startImageUploadWorker()
-
             return
 
 
@@ -432,11 +427,6 @@ class IndiTimelapse(object):
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
-
-            if restart_worker:
-                self._startImageProcessWorker()
-                self._startImageUploadWorker()
-
             return
 
 
@@ -483,11 +473,6 @@ class IndiTimelapse(object):
             seqfolder.rmdir()
         except OSError as e:
             logger.error('Cannote remove sequence folder: %s', str(e))
-
-
-        if restart_worker:
-            self._startImageProcessWorker()
-            self._startImageUploadWorker()
 
 
     def getFolderImgFiles(self, folder, file_list):
