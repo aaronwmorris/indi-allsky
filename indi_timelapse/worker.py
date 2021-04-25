@@ -116,7 +116,7 @@ class ImageProcessWorker(Process):
 
         #local_filename = upload_file.name
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_FOLDER'])
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
         remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
 

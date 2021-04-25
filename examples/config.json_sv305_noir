@@ -83,17 +83,18 @@
     },
 
     "FILETRANSFER" : {
-        "comment_CLASSNAME" : "sftp, ftp, ftps",
-        "CLASSNAME"         : "ftp",
-        "HOST"              : "",
-        "comment_PORT"      : "use null for protocol default",
-        "PORT"              : null,
-        "USERNAME"          : "",
-        "PASSWORD"          : "",
-        "TIMEOUT"           : 5.0,
-        "REMOTE_FOLDER"     : "/tmp",
-        "REMOTE_IMAGE_NAME" : "image-resize.{0}",
-        "UPLOAD_IMAGE"      : false,
-        "UPLOAD_TIMELAPSE"  : false
+        "comment_CLASSNAME"      : "sftp, ftp, ftps",
+        "CLASSNAME"              : "ftp",
+        "HOST"                   : "",
+        "comment_PORT"           : "use null for protocol default",
+        "PORT"                   : null,
+        "USERNAME"               : "",
+        "PASSWORD"               : "",
+        "TIMEOUT"                : 5.0,
+        "REMOTE_IMAGE_NAME"      : "image-resize.{0}",
+        "REMOTE_IMAGE_FOLDER"    : "/tmp",
+        "REMOTE_VIDEO_FOLDER"    : "/tmp",
+        "UPLOAD_IMAGE"           : false,
+        "UPLOAD_VIDEO"           : false
     }
 }
