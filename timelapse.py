@@ -23,7 +23,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         'action',
         help='action',
-        choices=('run', 'darks', 'avconv'),
+        choices=('run', 'darks', 'generateDayTimelapse', 'generateNightTimelapse', 'generateAllTimelapse'),
     )
     argparser.add_argument(
         '--config',
@@ -43,6 +43,7 @@ if __name__ == "__main__":
 
 
     args_list = list()
+
     if args.timespec:
         args_list.append(args.timespec)
 

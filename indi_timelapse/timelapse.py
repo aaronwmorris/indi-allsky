@@ -259,13 +259,13 @@ class IndiTimelapse(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self.avconv(timespec, day=False)
+                    self.generateNightTimelapse(timespec)
 
                 if nighttime and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self.avconv(timespec, night=False)
+                    self.generateDayTimelapse(timespec)
 
 
 
@@ -411,7 +411,15 @@ class IndiTimelapse(object):
         self.indiclient.disconnectServer()
 
 
-    def avconv(self, timespec, day=True, night=True):
+    def generateAllTimelapse(self, timespec, day=True, night=True):
+        if day:
+            self.generateDayTimelapse(timespec)
+
+        if night:
+            self.generateNightTimelapse(timespec)
+
+
+    def generateDayTimelapse(self, timespec):
         if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
             self.image_q.put((False, False, False))
@@ -422,22 +430,33 @@ class IndiTimelapse(object):
             self.upload_q.put((False, False))
             self.upload_worker.join()
 
+        img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
+
+        logger.warning('Generating day time timelapse for %s', timespec)
+        img_day_folder = img_base_folder.joinpath('day')
+        self.generateTimelapse_timeofday(timespec, img_day_folder)
+
+
+    def generateNightTimelapse(self, timespec):
+        if self.image_worker:
+            logger.warning('Stopping image process worker to save memory')
+            self.image_q.put((False, False, False))
+            self.image_worker.join()
+
+        if self.upload_worker:
+            logger.warning('Stopping upload process worker to save memory')
+            self.upload_q.put((False, False))
+            self.upload_worker.join()
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
-        if day:
-            logger.warning('Generating day time timelapse for %s', timespec)
-            img_day_folder = img_base_folder.joinpath('day')
-            self.avconv_timeofday(timespec, img_day_folder)
+        logger.warning('Generating day time timelapse for %s', timespec)
+        img_day_folder = img_base_folder.joinpath('night')
+        self.generateTimelapse_timeofday(timespec, img_day_folder)
 
 
-        if night:
-            logger.warning('Generating night time timelapse for %s', timespec)
-            img_night_folder = img_base_folder.joinpath('night')
-            self.avconv_timeofday(timespec, img_night_folder)
 
-
-    def avconv_timeofday(self, timespec, img_folder):
+    def generateTimelapse_timeofday(self, timespec, img_folder):
         if not img_folder.exists():
             logger.error('Image folder does not exist: %s', img_folder)
             return
