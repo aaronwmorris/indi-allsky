@@ -43,8 +43,6 @@ class ImageProcessWorker(Process):
         self.hist_mean = []
         self.target_mean = float(self.config['TARGET_MEAN'])
         self.target_mean_dev = float(self.config['TARGET_MEAN_DEV'])
-        self.target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
-        self.target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
 
         self.image_count = 0
 
@@ -428,8 +426,17 @@ class ImageProcessWorker(Process):
         logger.info('Brightness average: %0.2f', k)
 
 
+        if self.exposure_v.value < 0.005:
+            # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
+            target_mean_min = self.target_mean - (self.target_mean * ((self.target_mean_dev * 2.0) / 100.0))
+            target_mean_max = self.target_mean + (self.target_mean * ((self.target_mean_dev * 2.0) / 100.0))
+        else:
+            target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
+            target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
+
+
         if not self.stable_mean:
-            self.recalculate_exposure(k)
+            self.recalculate_exposure(k, target_mean_min, target_mean_max)
             return
 
 
@@ -439,18 +446,18 @@ class ImageProcessWorker(Process):
         k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
         logger.info('Moving average: %0.2f', k_moving_average)
 
-        if k_moving_average > self.target_mean_max:
+        if k_moving_average > target_mean_max:
             logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
             self.stable_mean = False
-        elif k_moving_average < self.target_mean_min:
+        elif k_moving_average < target_mean_min:
             logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
             self.stable_mean = False
 
 
-    def recalculate_exposure(self, k):
+    def recalculate_exposure(self, k, target_mean_min, target_mean_max):
 
         # Until we reach a good starting point, do not calculate a moving average
-        if k <= self.target_mean_max and k >= self.target_mean_min:
+        if k <= target_mean_max and k >= target_mean_min:
             logger.warning('Found stable mean for exposure')
             self.stable_mean = True
             [self.hist_mean.insert(0, k) for x in range(50)]  # populate 50 entries, reduced later
@@ -460,9 +467,9 @@ class ImageProcessWorker(Process):
         current_exposure = self.exposure_v.value
 
         # Scale the exposure up and down based on targets
-        if k > self.target_mean_max:
+        if k > target_mean_max:
             new_exposure = current_exposure / (( k / self.target_mean ) * self.scale_factor)
-        elif k < self.target_mean_min:
+        elif k < target_mean_min:
             new_exposure = current_exposure * (( self.target_mean / k ) * self.scale_factor)
         else:
             new_exposure = current_exposure
