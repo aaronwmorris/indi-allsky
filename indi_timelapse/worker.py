@@ -428,11 +428,13 @@ class ImageProcessWorker(Process):
 
         if self.exposure_v.value < 0.005:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_mean_min = self.target_mean - (self.target_mean * ((self.target_mean_dev * 2.0) / 100.0))
-            target_mean_max = self.target_mean + (self.target_mean * ((self.target_mean_dev * 2.0) / 100.0))
+            target_mean_min = self.target_mean - (self.target_mean * ((self.target_mean_dev * 1.5) / 100.0))
+            target_mean_max = self.target_mean + (self.target_mean * ((self.target_mean_dev * 1.5) / 100.0))
+            average_history = 16  # number of entries to use to calculate average
         else:
             target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
             target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
+            average_history = 8  # number of entries to use to calculate average
 
 
         if not self.stable_mean:
@@ -441,7 +443,7 @@ class ImageProcessWorker(Process):
 
 
         self.hist_mean.insert(0, k)
-        self.hist_mean = self.hist_mean[:5]  # only need last 5 values
+        self.hist_mean = self.hist_mean[:average_history]
 
         k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
         logger.info('Moving average: %0.2f', k_moving_average)
