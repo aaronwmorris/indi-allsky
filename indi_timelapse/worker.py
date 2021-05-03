@@ -1,7 +1,7 @@
 import io
 from pathlib import Path
 from datetime import timedelta
-import functools
+#import functools
 import tempfile
 import shutil
 
@@ -38,11 +38,12 @@ class ImageProcessWorker(Process):
         self.filename_t = '{0:s}.{1:s}'
         self.writefits = writefits
 
-        self.stable_mean = False
+        self.target_adu_found = False
+        self.current_adu_target = 0
         self.scale_factor = 1.0
-        self.hist_mean = []
-        self.target_mean = float(self.config['TARGET_MEAN'])
-        self.target_mean_dev = float(self.config['TARGET_MEAN_DEV'])
+        self.hist_adu = []
+        self.target_adu = float(self.config['TARGET_ADU'])
+        self.target_adu_dev = float(self.config['TARGET_ADU_DEV'])
 
         self.image_count = 0
 
@@ -428,51 +429,65 @@ class ImageProcessWorker(Process):
 
         if self.exposure_v.value < 0.005:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_mean_min = self.target_mean - (self.target_mean * ((self.target_mean_dev * 1.5) / 100.0))
-            target_mean_max = self.target_mean + (self.target_mean * ((self.target_mean_dev * 1.5) / 100.0))
-            average_history = 16  # number of entries to use to calculate average
+            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 2.0) / 100.0))
+            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 2.0) / 100.0))
+            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
+            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
+            history_max_vals = 10  # number of entries to use to calculate average
         else:
-            target_mean_min = self.target_mean - (self.target_mean * (self.target_mean_dev / 100.0))
-            target_mean_max = self.target_mean + (self.target_mean * (self.target_mean_dev / 100.0))
-            average_history = 8  # number of entries to use to calculate average
+            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
+            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
+            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 1.0) / 100.0))
+            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 1.0) / 100.0))
+            history_max_vals = 10  # number of entries to use to calculate average
 
 
-        if not self.stable_mean:
-            self.recalculate_exposure(k, target_mean_min, target_mean_max)
+        if not self.target_adu_found:
+            self.recalculate_exposure(k, target_adu_min, target_adu_max)
             return
 
 
-        self.hist_mean.insert(0, k)
-        self.hist_mean = self.hist_mean[:average_history]
+        self.hist_adu.insert(0, k)
+        self.hist_adu = self.hist_adu[:history_max_vals]  # remove oldest values
 
-        k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_mean) / len(self.hist_mean)
-        logger.info('Moving average: %0.2f', k_moving_average)
+        #k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_adu) / len(self.hist_adu)
+        #logger.info('Moving average: %0.2f', k_moving_average)
 
-        if k_moving_average > target_mean_max:
-            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
-            self.stable_mean = False
-        elif k_moving_average < target_mean_min:
-            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_mean_dev))
-            self.stable_mean = False
+        logger.info('Current target ADU: %0.2f', self.current_adu_target)
+        logger.info('Current ADU history: (%s)', ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
+
+        over_list = list(filter(lambda x: x > current_adu_target_max, self.hist_adu))  # values over max
+        under_list = list(filter(lambda x: x < current_adu_target_min, self.hist_adu))  # values under min
+
+        logger.info('%d values above, %d below allowed deviation', len(over_list), len(under_list))
+
+        ### only change exposure when 75% of the values exceed the max or minimum
+        if len(over_list) >= (history_max_vals * 0.7):
+            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_adu_dev))
+            self.target_adu_found = False
+        elif len(under_list) >= (history_max_vals * 0.7):
+            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_adu_dev))
+            self.target_adu_found = False
 
 
-    def recalculate_exposure(self, k, target_mean_min, target_mean_max):
+    def recalculate_exposure(self, k, target_adu_min, target_adu_max):
 
         # Until we reach a good starting point, do not calculate a moving average
-        if k <= target_mean_max and k >= target_mean_min:
-            logger.warning('Found stable mean for exposure')
-            self.stable_mean = True
-            [self.hist_mean.insert(0, k) for x in range(50)]  # populate 50 entries, reduced later
+        if k <= target_adu_max and k >= target_adu_min:
+            logger.warning('Found target value for exposure')
+            self.current_adu_target = k
+            self.target_adu_found = True
+            self.hist_adu = []
             return
 
 
         current_exposure = self.exposure_v.value
 
         # Scale the exposure up and down based on targets
-        if k > target_mean_max:
-            new_exposure = current_exposure / (( k / self.target_mean ) * self.scale_factor)
-        elif k < target_mean_min:
-            new_exposure = current_exposure * (( self.target_mean / k ) * self.scale_factor)
+        if k > target_adu_max:
+            new_exposure = current_exposure / (( k / self.target_adu ) * self.scale_factor)
+        elif k < target_adu_min:
+            new_exposure = current_exposure * (( self.target_adu / k ) * self.scale_factor)
         else:
             new_exposure = current_exposure
 
