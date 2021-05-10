@@ -429,17 +429,17 @@ class ImageProcessWorker(Process):
 
         if self.exposure_v.value < 0.005:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 2.0) / 100.0))
-            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 2.0) / 100.0))
+            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
+            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
             current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
             current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
-            history_max_vals = 10  # number of entries to use to calculate average
+            history_max_vals = 5  # number of entries to use to calculate average
         else:
             target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
             target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
-            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 1.0) / 100.0))
-            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 1.0) / 100.0))
-            history_max_vals = 10  # number of entries to use to calculate average
+            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
+            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
+            history_max_vals = 5  # number of entries to use to calculate average
 
 
         if not self.target_adu_found:
@@ -447,26 +447,40 @@ class ImageProcessWorker(Process):
             return
 
 
-        self.hist_adu.insert(0, k)
-        self.hist_adu = self.hist_adu[:history_max_vals]  # remove oldest values
+        self.hist_adu.append(k)
+        self.hist_adu = self.hist_adu[(history_max_vals * -1):]  # remove oldest values, up to history_max_vals
 
-        #k_moving_average = functools.reduce(lambda a, b: a + b, self.hist_adu) / len(self.hist_adu)
-        #logger.info('Moving average: %0.2f', k_moving_average)
+        logger.info('Current target ADU: %0.2f (%0.2f/%0.2f)', self.current_adu_target, current_adu_target_min, current_adu_target_max)
+        logger.info('Current ADU history: (%d) [%s]', len(self.hist_adu), ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
 
-        logger.info('Current target ADU: %0.2f', self.current_adu_target)
-        logger.info('Current ADU history: (%s)', ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
 
-        over_list = list(filter(lambda x: x > current_adu_target_max, self.hist_adu))  # values over max
-        under_list = list(filter(lambda x: x < current_adu_target_min, self.hist_adu))  # values under min
+        ### cannot calculate until there are at least 2 values
+        if len(self.hist_adu) > 1:
+            x = numpy.arange(0, len(self.hist_adu))
+            n_data = numpy.array(self.hist_adu)
 
-        logger.info('%d values above, %d below allowed deviation', len(over_list), len(under_list))
+            # Calculate linear regression to detect slope for changes in brightness
+            z = numpy.polyfit(x, n_data, 1)
 
-        ### only change exposure when 75% of the values exceed the max or minimum
-        if len(over_list) >= (history_max_vals * 0.7):
-            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_adu_dev))
+            logger.info('Slope: %0.3fx + %0.3f', *z)
+
+            slope = z[0]
+
+        ### Need at least x values to continue
+        if len(self.hist_adu) < history_max_vals:
+            return
+
+
+        ### only change exposure when 70% of the values exceed the max or minimum
+        if slope > 2.0:
+            logger.warning('ADU increasing beyond limits, recalculating next exposure')
             self.target_adu_found = False
-        elif len(under_list) >= (history_max_vals * 0.7):
-            logger.warning('Moving average exceeded target by %d%%, recalculating next exposure', int(self.target_adu_dev))
+        elif slope < -2.0:
+            logger.warning('ADU decreasing beyond limits, recalculating next exposure')
+            self.target_adu_found = False
+        elif abs(slope) < 1.0 and (k < current_adu_target_min or k > current_adu_target_max):
+            ### if the slope is relatively flat and we go beyond the min/max
+            logger.warning('ADU hit absolute limits, recalculating next exposure')
             self.target_adu_found = False
 
 
