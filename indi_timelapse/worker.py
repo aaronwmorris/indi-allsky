@@ -1,4 +1,5 @@
 import io
+import json
 from pathlib import Path
 from datetime import timedelta
 #import functools
@@ -92,6 +93,7 @@ class ImageProcessWorker(Process):
 
             self.image_text(scidata_blur, exp_date)
             latest_file = self.write_img(scidata_blur, exp_date)
+            self.write_status_json(exp_date)  # write json status file
 
 
             if latest_file:
@@ -210,6 +212,28 @@ class ImageProcessWorker(Process):
         logger.info('Finished writing files')
 
         return latest_file
+
+
+    def write_status_json(self, exp_date):
+        status = {
+            'name'                : 'indi_json',
+            'class'               : 'ccd',
+            'device'              : self.config['CCD_NAME'],
+            'night'               : self.night_v.value,
+            'temp'                : self.sensortemp_v.value,
+            'gain'                : self.gain_v.value,
+            'exposure'            : self.last_exposure,
+            'stable_exposure'     : int(self.target_adu_found),
+            'target_adu'          : self.target_adu,
+            'current_adu_target'  : self.current_adu_target,
+            'time'                : exp_date.strftime('%s'),
+        }
+
+
+        with io.open('/tmp/indi_status.json', 'w') as f_indi_status:
+            json.dump(status, f_indi_status, indent=4)
+            f_indi_status.flush()
+            f_indi_status.close()
 
 
     def getImageFolder(self, exp_date):
