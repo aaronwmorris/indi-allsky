@@ -80,7 +80,7 @@ class ImageProcessWorker(Process):
             #scidata_blur = self.median_blur(scidata_color)
             scidata_blur = scidata_color
 
-            adu = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
+            adu, adu_slope = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
             #    scidata_color,
@@ -93,7 +93,7 @@ class ImageProcessWorker(Process):
 
             self.image_text(scidata_blur, exp_date)
             latest_file = self.write_img(scidata_blur, exp_date)
-            self.write_status_json(exp_date, adu)  # write json status file
+            self.write_status_json(exp_date, adu, adu_slope)  # write json status file
 
 
             if latest_file:
@@ -214,7 +214,7 @@ class ImageProcessWorker(Process):
         return latest_file
 
 
-    def write_status_json(self, exp_date, adu):
+    def write_status_json(self, exp_date, adu, adu_slope):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -227,6 +227,7 @@ class ImageProcessWorker(Process):
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
+            'adu_slope'           : adu_slope,
             'time'                : exp_date.strftime('%s'),
         }
 
@@ -469,7 +470,7 @@ class ImageProcessWorker(Process):
 
         if not self.target_adu_found:
             self.recalculate_exposure(adu, target_adu_min, target_adu_max)
-            return adu
+            return adu, 0.0
 
 
         self.hist_adu.append(adu)
@@ -493,7 +494,7 @@ class ImageProcessWorker(Process):
 
         ### Need at least x values to continue
         if len(self.hist_adu) < history_max_vals:
-            return adu
+            return adu, 0.0
 
 
         ### only change exposure when 70% of the values exceed the max or minimum
@@ -509,7 +510,7 @@ class ImageProcessWorker(Process):
             self.target_adu_found = False
 
 
-        return adu
+        return adu, slope
 
 
     def recalculate_exposure(self, k, target_adu_min, target_adu_max):
