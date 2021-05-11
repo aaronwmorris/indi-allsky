@@ -80,7 +80,7 @@ class ImageProcessWorker(Process):
             #scidata_blur = self.median_blur(scidata_color)
             scidata_blur = scidata_color
 
-            self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
+            adu = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
             #    scidata_color,
@@ -93,7 +93,7 @@ class ImageProcessWorker(Process):
 
             self.image_text(scidata_blur, exp_date)
             latest_file = self.write_img(scidata_blur, exp_date)
-            self.write_status_json(exp_date)  # write json status file
+            self.write_status_json(exp_date, adu)  # write json status file
 
 
             if latest_file:
@@ -214,7 +214,7 @@ class ImageProcessWorker(Process):
         return latest_file
 
 
-    def write_status_json(self, exp_date):
+    def write_status_json(self, exp_date, adu):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -226,6 +226,7 @@ class ImageProcessWorker(Process):
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
+            'current_adu'         : adu,
             'time'                : exp_date.strftime('%s'),
         }
 
@@ -428,7 +429,7 @@ class ImageProcessWorker(Process):
 
             logger.info('Greyscale mean: %0.2f', m_avg)
 
-            k = m_avg
+            adu = m_avg
         else:
             r, g, b = cv2.split(data_bytes)
             r_avg = cv2.mean(r)[0]
@@ -440,15 +441,15 @@ class ImageProcessWorker(Process):
             logger.info('B mean: %0.2f', b_avg)
 
             # Find the gain of each channel
-            k = (r_avg + g_avg + b_avg) / 3
+            adu = (r_avg + g_avg + b_avg) / 3
 
-        if k <= 0.0:
+        if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
-            k = 0.1
+            adu = 0.1
 
 
-        logger.info('Brightness average: %0.2f', k)
+        logger.info('Brightness average: %0.2f', adu)
 
 
         if self.exposure_v.value < 0.005:
@@ -467,11 +468,11 @@ class ImageProcessWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(k, target_adu_min, target_adu_max)
-            return
+            self.recalculate_exposure(adu, target_adu_min, target_adu_max)
+            return adu
 
 
-        self.hist_adu.append(k)
+        self.hist_adu.append(adu)
         self.hist_adu = self.hist_adu[(history_max_vals * -1):]  # remove oldest values, up to history_max_vals
 
         logger.info('Current target ADU: %0.2f (%0.2f/%0.2f)', self.current_adu_target, current_adu_target_min, current_adu_target_max)
@@ -492,7 +493,7 @@ class ImageProcessWorker(Process):
 
         ### Need at least x values to continue
         if len(self.hist_adu) < history_max_vals:
-            return
+            return adu
 
 
         ### only change exposure when 70% of the values exceed the max or minimum
@@ -502,10 +503,13 @@ class ImageProcessWorker(Process):
         elif slope < -2.0:
             logger.warning('ADU decreasing beyond limits, recalculating next exposure')
             self.target_adu_found = False
-        elif abs(slope) < 1.0 and (k < current_adu_target_min or k > current_adu_target_max):
+        elif abs(slope) < 1.0 and (adu < current_adu_target_min or adu > current_adu_target_max):
             ### if the slope is relatively flat and we go beyond the min/max
             logger.warning('ADU hit absolute limits, recalculating next exposure')
             self.target_adu_found = False
+
+
+        return adu
 
 
     def recalculate_exposure(self, k, target_adu_min, target_adu_max):
