@@ -2,9 +2,10 @@ import io
 import json
 from pathlib import Path
 from datetime import timedelta
-#import functools
+import functools
 import tempfile
 import shutil
+import copy
 
 
 from multiprocessing import Process
@@ -41,7 +42,6 @@ class ImageProcessWorker(Process):
 
         self.target_adu_found = False
         self.current_adu_target = 0
-        self.scale_factor = 1.0
         self.hist_adu = []
         self.target_adu = float(self.config['TARGET_ADU'])
         self.target_adu_dev = float(self.config['TARGET_ADU_DEV'])
@@ -80,7 +80,7 @@ class ImageProcessWorker(Process):
             #scidata_blur = self.median_blur(scidata_color)
             scidata_blur = scidata_color
 
-            adu, adu_slope = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
+            adu, adu_average = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
             #    scidata_color,
@@ -93,7 +93,7 @@ class ImageProcessWorker(Process):
 
             self.image_text(scidata_blur, exp_date)
             latest_file = self.write_img(scidata_blur, exp_date)
-            self.write_status_json(exp_date, adu, adu_slope)  # write json status file
+            self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
 
             if latest_file:
@@ -214,7 +214,7 @@ class ImageProcessWorker(Process):
         return latest_file
 
 
-    def write_status_json(self, exp_date, adu, adu_slope):
+    def write_status_json(self, exp_date, adu, adu_average):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -227,7 +227,7 @@ class ImageProcessWorker(Process):
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
-            'adu_slope'           : adu_slope,
+            'adu_average'         : adu_average,
             'time'                : exp_date.strftime('%s'),
         }
 
@@ -455,21 +455,23 @@ class ImageProcessWorker(Process):
 
         if self.exposure_v.value < 0.005:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
-            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
-            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
-            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
-            history_max_vals = 5  # number of entries to use to calculate average
+            target_adu_min = self.target_adu - (self.target_adu_dev * 1.0)
+            target_adu_max = self.target_adu + (self.target_adu_dev * 1.0)
+            current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 1.0)
+            current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 1.0)
+            exp_scale_factor = 1.0  # scale exposure calculation
+            history_max_vals = 6  # number of entries to use to calculate average
         else:
-            target_adu_min = self.target_adu - (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
-            target_adu_max = self.target_adu + (self.target_adu * ((self.target_adu_dev * 1.0) / 100.0))
-            current_adu_target_min = self.current_adu_target - (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
-            current_adu_target_max = self.current_adu_target + (self.current_adu_target * ((self.target_adu_dev * 2.0) / 100.0))
-            history_max_vals = 5  # number of entries to use to calculate average
+            target_adu_min = self.target_adu - (self.target_adu_dev * 1.0)
+            target_adu_max = self.target_adu + (self.target_adu_dev * 1.0)
+            current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 1.0)
+            current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 1.0)
+            exp_scale_factor = 1.0  # scale exposure calculation
+            history_max_vals = 6  # number of entries to use to calculate average
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(adu, target_adu_min, target_adu_max)
+            self.recalculate_exposure(adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -480,17 +482,9 @@ class ImageProcessWorker(Process):
         logger.info('Current ADU history: (%d) [%s]', len(self.hist_adu), ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
 
 
-        ### cannot calculate until there are at least 2 values
-        if len(self.hist_adu) > 1:
-            x = numpy.arange(0, len(self.hist_adu))
-            n_data = numpy.array(self.hist_adu)
+        adu_average = functools.reduce(lambda a, b: a + b, self.hist_adu) / len(self.hist_adu)
+        logger.info('ADU average: %0.2f', adu_average)
 
-            # Calculate linear regression to detect slope for changes in brightness
-            z = numpy.polyfit(x, n_data, 1)
-
-            logger.info('Slope: %0.3fx + %0.3f', *z)
-
-            slope = z[0]
 
         ### Need at least x values to continue
         if len(self.hist_adu) < history_max_vals:
@@ -498,27 +492,22 @@ class ImageProcessWorker(Process):
 
 
         ### only change exposure when 70% of the values exceed the max or minimum
-        if slope > 2.0:
+        if adu_average > current_adu_target_max:
             logger.warning('ADU increasing beyond limits, recalculating next exposure')
             self.target_adu_found = False
-        elif slope < -2.0:
+        elif adu_average < current_adu_target_min:
             logger.warning('ADU decreasing beyond limits, recalculating next exposure')
             self.target_adu_found = False
-        elif abs(slope) < 1.0 and (adu < current_adu_target_min or adu > current_adu_target_max):
-            ### if the slope is relatively flat and we go beyond the min/max
-            logger.warning('ADU hit absolute limits, recalculating next exposure')
-            self.target_adu_found = False
+
+        return adu, adu_average
 
 
-        return adu, slope
-
-
-    def recalculate_exposure(self, k, target_adu_min, target_adu_max):
+    def recalculate_exposure(self, adu, target_adu_min, target_adu_max, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
-        if k <= target_adu_max and k >= target_adu_min:
+        if adu <= target_adu_max and adu >= target_adu_min:
             logger.warning('Found target value for exposure')
-            self.current_adu_target = k
+            self.current_adu_target = copy.copy(adu)
             self.target_adu_found = True
             self.hist_adu = []
             return
@@ -527,10 +516,10 @@ class ImageProcessWorker(Process):
         current_exposure = self.exposure_v.value
 
         # Scale the exposure up and down based on targets
-        if k > target_adu_max:
-            new_exposure = current_exposure / (( k / self.target_adu ) * self.scale_factor)
-        elif k < target_adu_min:
-            new_exposure = current_exposure * (( self.target_adu / k ) * self.scale_factor)
+        if adu > target_adu_max:
+            new_exposure = current_exposure / (( adu / self.target_adu ) * exp_scale_factor)
+        elif adu < target_adu_min:
+            new_exposure = current_exposure * (( self.target_adu / adu ) * exp_scale_factor)
         else:
             new_exposure = current_exposure
 
