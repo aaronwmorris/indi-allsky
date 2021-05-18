@@ -91,11 +91,11 @@ class IndiTimelapse(object):
             self.dayNightReconfigure(nighttime)
 
         logger.warning('Stopping image process worker')
-        self.image_q.put((False, False, False))
+        self.image_q.put({ 'stop' : True })
         self.image_worker.join()
 
         logger.warning('Stopping upload process worker')
-        self.upload_q.put((False, False))
+        self.upload_q.put({ 'stop' : True })
         self.upload_worker.join()
 
         # Restart worker with new config
@@ -400,11 +400,11 @@ class IndiTimelapse(object):
 
         ### stop image processing worker
         logger.warning('Stopping image process worker')
-        self.image_q.put((False, False, False))
+        self.image_q.put({ 'stop' : True })
         self.image_worker.join()
 
         logger.warning('Stopping upload process worker')
-        self.uplaod_q.put((False, False))
+        self.uplaod_q.put({ 'stop' : True })
         self.upload_worker.join()
 
         ### INDI disconnect
@@ -422,12 +422,12 @@ class IndiTimelapse(object):
     def generateDayTimelapse(self, timespec):
         if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
-            self.image_q.put((False, False, False))
+            self.image_q.put({ 'stop' : True })
             self.image_worker.join()
 
         if self.upload_worker:
             logger.warning('Stopping upload process worker to save memory')
-            self.upload_q.put((False, False))
+            self.upload_q.put({ 'stop' : True })
             self.upload_worker.join()
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
@@ -440,12 +440,12 @@ class IndiTimelapse(object):
     def generateNightTimelapse(self, timespec):
         if self.image_worker:
             logger.warning('Stopping image process worker to save memory')
-            self.image_q.put((False, False, False))
+            self.image_q.put({ 'stop' : True })
             self.image_worker.join()
 
         if self.upload_worker:
             logger.warning('Stopping upload process worker to save memory')
-            self.upload_q.put((False, False))
+            self.upload_q.put({ 'stop' : True })
             self.upload_worker.join()
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))

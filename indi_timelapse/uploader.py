@@ -23,10 +23,13 @@ class FileUploader(Process):
 
     def run(self):
         while True:
-            local_file, remote_file = self.upload_q.get()
+            u_dict = self.upload_q.get()
 
-            if not local_file:
+            if u_dict.get('stop'):
                 return
+
+            local_file = u_dict['local_file']
+            remote_file = u_dict['remote_file']
 
             try:
                 client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])

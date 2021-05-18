@@ -53,13 +53,17 @@ class ImageProcessWorker(Process):
 
     def run(self):
         while True:
-            imgdata, exp_date, filename_t_override = self.image_q.get()
+            i_dict = self.image_q.get()
 
-            if not imgdata:
+            if i_dict.get('stop'):
                 return
 
-            if filename_t_override:
-                self.filename_t = filename_t_override
+            imgdata = i_dict['imgdata']
+            exp_date = i_dict['exp_date']
+            filename_t = i_dict.get('filename_t')
+
+            if filename_t:
+                self.filename_t = filename_t
 
             self.image_count += 1
 
@@ -110,7 +114,7 @@ class ImageProcessWorker(Process):
                 remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
                 # tell worker to upload file
-                self.upload_q.put((latest_file, remote_file))
+                self.upload_q.put({ 'local_file' : latest_file, 'remote_file' : remote_file })
 
 
 

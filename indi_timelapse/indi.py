@@ -77,7 +77,7 @@ class IndiClient(PyIndi.BaseClient):
         exp_date = datetime.now()
 
         ### process data in worker
-        self.image_q.put((imgdata, exp_date, self._filename_t))
+        self.image_q.put({ 'imgdata' : imgdata, 'exp_date' : exp_date, 'filename_t' : self._filename_t })
 
 
     def newSwitch(self, svp):
