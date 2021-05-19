@@ -21,7 +21,7 @@ logger = multiprocessing.get_logger()
 
 
 class ImageProcessWorker(Process):
-    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, writefits=False):
+    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, sensortemp_v, night_v, save_fits=False, save_images=True):
         super(ImageProcessWorker, self).__init__()
 
         #self.threadID = idx
@@ -38,7 +38,8 @@ class ImageProcessWorker(Process):
         self.last_exposure = None
 
         self.filename_t = '{0:s}.{1:s}'
-        self.writefits = writefits
+        self.save_fits = save_fits
+        self.save_images = save_images
 
         self.target_adu_found = False
         self.current_adu_target = 0
@@ -75,7 +76,7 @@ class ImageProcessWorker(Process):
             hdulist = fits.open(blobfile)
             scidata_uncalibrated = hdulist[0].data
 
-            if self.writefits:
+            if self.save_fits:
                 self.write_fit(hdulist, exp_date)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
@@ -96,11 +97,12 @@ class ImageProcessWorker(Process):
             #)
 
             self.image_text(scidata_blur, exp_date)
-            latest_file = self.write_img(scidata_blur, exp_date)
+
             self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
+            if self.save_images:
+                latest_file = self.write_img(scidata_blur, exp_date)
 
-            if latest_file:
                 if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
                     logger.warning('Image uploading disabled')
                     continue
@@ -121,7 +123,7 @@ class ImageProcessWorker(Process):
 
     def write_fit(self, hdulist, exp_date):
         ### Do not write image files if fits are enabled
-        if not self.writefits:
+        if not self.save_fits:
             return
 
 
@@ -152,7 +154,7 @@ class ImageProcessWorker(Process):
 
     def write_img(self, scidata, exp_date):
         ### Do not write image files if fits are enabled
-        if self.writefits:
+        if not self.save_images:
             return
 
 

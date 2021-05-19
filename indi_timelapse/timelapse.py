@@ -49,7 +49,9 @@ class IndiTimelapse(object):
 
         self.image_worker = None
         self.image_worker_idx = 0
-        self.writefits = False
+
+        self.save_fits = False
+        self.save_images = True
 
         self.upload_worker = None
         self.upload_q = Queue()
@@ -66,6 +68,7 @@ class IndiTimelapse(object):
 
         signal.signal(signal.SIGALRM, self.alarm_handler)
         signal.signal(signal.SIGHUP, self.hup_handler)
+
 
 
     def hup_handler(self, signum, frame):
@@ -107,10 +110,7 @@ class IndiTimelapse(object):
         raise TimeOutException()
 
 
-    def _initialize(self, writefits=False):
-        if writefits:
-            self.writefits = True
-
+    def _initialize(self):
         self._startImageProcessWorker()
         self._startImageUploadWorker()
 
@@ -174,7 +174,8 @@ class IndiTimelapse(object):
             self.gain_v,
             self.sensortemp_v,
             self.night_v,
-            writefits=self.writefits,
+            save_fits=self.save_fits,
+            save_images=self.save_images,
         )
         self.image_worker.start()
 
@@ -346,7 +347,10 @@ class IndiTimelapse(object):
 
     def darks(self):
 
-        self._initialize(writefits=True)
+        self.save_fits = True
+        self.save_images = False
+
+        self._initialize()
 
         ### NIGHT DARKS ###
         self._configureCcd(
