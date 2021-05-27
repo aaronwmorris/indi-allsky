@@ -1,12 +1,15 @@
 import io
 import json
 from pathlib import Path
+from datetime import datetime
 from datetime import timedelta
 import functools
 import tempfile
 import shutil
 import copy
+#import math
 
+import ephem
 
 from multiprocessing import Process
 #from threading import Thread
@@ -48,6 +51,8 @@ class ImageProcessWorker(Process):
         self.target_adu_dev = float(self.config['TARGET_ADU_DEV'])
 
         self.image_count = 0
+        self.image_width = 0
+        self.image_height = 0
 
         self.base_dir = Path(__file__).parent.parent.absolute()
 
@@ -75,6 +80,8 @@ class ImageProcessWorker(Process):
             blobfile = io.BytesIO(imgdata)
             hdulist = fits.open(blobfile)
             scidata_uncalibrated = hdulist[0].data
+
+            self.image_height, self.image_width = scidata_uncalibrated.shape
 
             if self.save_fits:
                 self.write_fit(hdulist, exp_date)
@@ -594,5 +601,17 @@ class ImageProcessWorker(Process):
         # Use OpenCV to convert Bayer GRBG to RGB
         return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
 
+
+    def calculateSkyObject(self, so):
+        obs = ephem.Observer()
+        obs.lon = str(self.config['LOCATION_LONGITUDE'])
+        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.date = datetime.utcnow()  # ephem expects UTC dates
+
+        so.compute(obs)
+
+
+    def getBoxXY(self, so):
+        pass
 
 
