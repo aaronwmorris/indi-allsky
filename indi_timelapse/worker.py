@@ -669,31 +669,33 @@ class ImageProcessWorker(Process):
 
         abs_hourangle = abs(hourangle)
         perimeter_half = self.image_width + self.image_height
+
         mapped_hourangle = int(self.remap(abs_hourangle, 0, 180, 0, perimeter_half))
+        #logger.info('Mapped hour angle: %d', mapped_hourangle)
 
         ### The image perimeter is mapped to the hour angle for the X,Y coordinates
         if mapped_hourangle < (self.image_width / 2) and hourangle < 0:
-            # top right
+            #logger.info('Top right')
             x = (self.image_width / 2) + mapped_hourangle
             y = 0
         elif mapped_hourangle < (self.image_width / 2) and hourangle > 0:
-            # top left
+            #logger.info('Top left')
             x = (self.image_width / 2) - mapped_hourangle
             y = 0
         elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle < 0:
-            # bottom right
-            x = (self.image_width / 2) + mapped_hourangle
+            #logger.info('Bottom right')
+            x = (self.image_width / 2) + (mapped_hourangle - (self.image_height + (self.image_width / 2)))
             y = self.image_height
         elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle > 0:
-            # bottom left
-            x = (self.image_width / 2) - mapped_hourangle
+            #logger.info('Bottom left')
+            x = mapped_hourangle - (self.image_height + (self.image_width / 2))
             y = self.image_height
         elif hourangle < 0:
-            # right
+            #logger.info('Right')
             x = self.image_width
             y = mapped_hourangle - (self.image_width / 2)
         elif hourangle > 0:
-            # left
+            #logger.info('Left')
             x = 0
             y = mapped_hourangle - (self.image_width / 2)
         else:
