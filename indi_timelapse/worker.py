@@ -54,7 +54,7 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
-        self.orb_radius = 7  # default, recalculated based on image size
+        self.orb_radius = 0  # recalculated later based on image size
 
         self.base_dir = Path(__file__).parent.parent.absolute()
 
@@ -86,7 +86,7 @@ class ImageProcessWorker(Process):
             self.image_height, self.image_width = scidata_uncalibrated.shape
             logger.info('Image: %d x %d', self.image_width, self.image_height)
 
-            self.orb_radius = int(self.image_width * 0.004)  # calculate orb size relative to image width
+            self.orb_radius = int(self.image_width * 0.005)  # calculate orb size relative to image width
             #logger.info('Orb radius: %d', self.orb_radius)
 
             if self.save_fits:
@@ -668,45 +668,42 @@ class ImageProcessWorker(Process):
         logger.info('Hour angle: %0.2f', hourangle)
 
         abs_hourangle = abs(hourangle)
+        perimeter_half = self.image_width + self.image_height
+        mapped_hourangle = int(self.remap(abs_hourangle, 0, 180, 0, perimeter_half))
 
-        ### Assume image is basically a square for the purpose of calculating the X,Y coordinates
-        ### The corners are assumed to be 45 degree increments of a circle
-        if hourangle < 0 and hourangle > -45:
-            opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
-            y = 0 + self.orb_radius
-            x = (self.image_width / 2) + opp - self.orb_radius
-        elif hourangle > 0 and hourangle < 45:
-            opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
-            y = 0 + self.orb_radius
-            x = (self.image_width / 2) - opp - self.orb_radius
-        elif hourangle < -45 and hourangle > -90:
-            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
-            x = self.image_width - self.orb_radius
-            y = (self.image_height / 2) - opp - self.orb_radius
-        elif hourangle > 45 and hourangle < 90:
-            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
-            x = 0 + self.orb_radius
-            y = (self.image_height / 2) - opp - self.orb_radius
-        elif hourangle < -90 and hourangle > -135:
-            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
-            x = self.image_width - self.orb_radius
-            y = (self.image_height / 2) + opp - self.orb_radius
-        elif hourangle > 90 and hourangle < 135:
-            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
-            x = 0 + self.orb_radius
-            y = (self.image_height / 2) + opp - self.orb_radius
-        elif hourangle < -135 and hourangle > -180:
-            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
-            y = self.image_height - self.orb_radius
-            x = (self.image_width / 2) + opp - self.orb_radius
-        elif hourangle > 135 and hourangle < 180:
-            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
-            y = self.image_height - self.orb_radius
-            x = (self.image_width / 2) - opp - self.orb_radius
+        ### The image perimeter is mapped to the hour angle for the X,Y coordinates
+        if mapped_hourangle < (self.image_width / 2) and hourangle < 0:
+            # top right
+            x = (self.image_width / 2) + mapped_hourangle
+            y = 0
+        elif mapped_hourangle < (self.image_width / 2) and hourangle > 0:
+            # top left
+            x = (self.image_width / 2) - mapped_hourangle
+            y = 0
+        elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle < 0:
+            # bottom right
+            x = (self.image_width / 2) + mapped_hourangle
+            y = self.image_height
+        elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle > 0:
+            # bottom left
+            x = (self.image_width / 2) - mapped_hourangle
+            y = self.image_height
+        elif hourangle < 0:
+            # right
+            x = self.image_width
+            y = mapped_hourangle - (self.image_width / 2)
+        elif hourangle > 0:
+            # left
+            x = 0
+            y = mapped_hourangle - (self.image_width / 2)
         else:
             raise Exception('This cannot happen')
 
-        #logger.info('Found line: %0.2f', opp)
+
         #logger.info('Orb: %0.2f x %0.2f', x, y)
 
         return int(x), int(y)
+
+
+    def remap(self, x, in_min, in_max, out_min, out_max):
+        return (float(x) - float(in_min)) * (float(out_max) - float(out_min)) / (float(in_max) - float(in_min)) + float(out_min)
