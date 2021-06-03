@@ -54,7 +54,7 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
-        self.box_size = 8
+        self.box_size = 10
 
         self.base_dir = Path(__file__).parent.parent.absolute()
 
@@ -338,9 +338,18 @@ class ImageProcessWorker(Process):
             img=data_bytes,
             pt1=(sunBoxX, sunBoxY),
             pt2=(sunBoxX + self.box_size, sunBoxY + self.box_size),
-            color=(255, 255, 0),
+            color=(0, 255, 255),
             thickness=cv2.FILLED,
         )
+        # Sun outline
+        cv2.rectangle(
+            img=data_bytes,
+            pt1=(sunBoxX, sunBoxY),
+            pt2=(sunBoxX + self.box_size, sunBoxY + self.box_size),
+            color=(0, 0, 0),
+            thickness=1,
+        )
+
 
         # Draw moon
         cv2.rectangle(
@@ -349,6 +358,14 @@ class ImageProcessWorker(Process):
             pt2=(moonBoxX + self.box_size, moonBoxY + self.box_size),
             color=(255, 255, 255),
             thickness=cv2.FILLED,
+        )
+        # Moon outline
+        cv2.rectangle(
+            img=data_bytes,
+            pt1=(moonBoxX, moonBoxY),
+            pt2=(moonBoxX + self.box_size, moonBoxY + self.box_size),
+            color=(0, 0, 0),
+            thickness=1,
         )
 
         #cv2.rectangle(
@@ -649,36 +666,37 @@ class ImageProcessWorker(Process):
 
         abs_hourangle = abs(hourangle)
 
+        ### Assume image is basically a square for the purpose of calculating the X,Y coordinates
         if hourangle < 0 and hourangle > -45:
-            opp = math.atan(math.radians(abs_hourangle)) * (self.image_height / 2)
+            opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
             y = 0
             x = (self.image_width / 2) + opp - self.box_size
         elif hourangle > 0 and hourangle < 45:
-            opp = math.atan(math.radians(abs_hourangle)) * (self.image_height / 2)
+            opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
             y = 0
             x = (self.image_width / 2) - opp - self.box_size
         elif hourangle < -45 and hourangle > -90:
-            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_width / 2)
+            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
             x = self.image_width - self.box_size
             y = (self.image_height / 2) - opp - self.box_size
         elif hourangle > 45 and hourangle < 90:
-            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_width / 2)
+            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
             x = 0
             y = (self.image_height / 2) - opp - self.box_size
         elif hourangle < -90 and hourangle > -135:
-            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_width / 2)
+            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
             x = self.image_width - self.box_size
             y = (self.image_height / 2) + opp - self.box_size
         elif hourangle > 90 and hourangle < 135:
-            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_width / 2)
+            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
             x = 0
             y = (self.image_height / 2) + opp - self.box_size
         elif hourangle < -135 and hourangle > -180:
-            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_height / 2)
+            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
             y = self.image_height - self.box_size
             x = (self.image_width / 2) + opp - self.box_size
         elif hourangle > 135 and hourangle < 180:
-            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_height / 2)
+            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
             y = self.image_height - self.box_size
             x = (self.image_width / 2) - opp - self.box_size
         else:
