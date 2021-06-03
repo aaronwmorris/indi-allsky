@@ -662,6 +662,9 @@ class ImageProcessWorker(Process):
         obs = self.calculateSkyObject(skyObj)
         hourangle = (obs.sidereal_time() - skyObj.ra) / math.pi * 180.0
 
+        if hourangle < -180:
+            hourangle = 360 + hourangle
+
         logger.info('Hour angle: %0.2f', hourangle)
 
         abs_hourangle = abs(hourangle)
@@ -670,11 +673,11 @@ class ImageProcessWorker(Process):
         ### The corners are assumed to be 45 degree increments of a circle
         if hourangle < 0 and hourangle > -45:
             opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
-            y = 0
+            y = 0 + self.orb_radius
             x = (self.image_width / 2) + opp - self.orb_radius
         elif hourangle > 0 and hourangle < 45:
             opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
-            y = 0
+            y = 0 + self.orb_radius
             x = (self.image_width / 2) - opp - self.orb_radius
         elif hourangle < -45 and hourangle > -90:
             opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
@@ -682,7 +685,7 @@ class ImageProcessWorker(Process):
             y = (self.image_height / 2) - opp - self.orb_radius
         elif hourangle > 45 and hourangle < 90:
             opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
-            x = 0
+            x = 0 + self.orb_radius
             y = (self.image_height / 2) - opp - self.orb_radius
         elif hourangle < -90 and hourangle > -135:
             opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
@@ -690,7 +693,7 @@ class ImageProcessWorker(Process):
             y = (self.image_height / 2) + opp - self.orb_radius
         elif hourangle > 90 and hourangle < 135:
             opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
-            x = 0
+            x = 0 + self.orb_radius
             y = (self.image_height / 2) + opp - self.orb_radius
         elif hourangle < -135 and hourangle > -180:
             opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
