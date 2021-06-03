@@ -7,7 +7,7 @@ import functools
 import tempfile
 import shutil
 import copy
-#import math
+import math
 
 import ephem
 
@@ -54,6 +54,8 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
+        self.box_size = 8
+
         self.base_dir = Path(__file__).parent.parent.absolute()
 
 
@@ -82,6 +84,7 @@ class ImageProcessWorker(Process):
             scidata_uncalibrated = hdulist[0].data
 
             self.image_height, self.image_width = scidata_uncalibrated.shape
+            logger.info('Image: %d x %d', self.image_width, self.image_height)
 
             if self.save_fits:
                 self.write_fit(hdulist, exp_date)
@@ -326,6 +329,27 @@ class ImageProcessWorker(Process):
         # not sure why these are returned as tuples
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
+
+        sunBoxX, sunBoxY = self.getBoxXY(ephem.Sun())
+        moonBoxX, moonBoxY = self.getBoxXY(ephem.Moon())
+
+        # Draw sun
+        cv2.rectangle(
+            img=data_bytes,
+            pt1=(sunBoxX, sunBoxY),
+            pt2=(sunBoxX + self.box_size, sunBoxY + self.box_size),
+            color=(255, 255, 0),
+            thickness=cv2.FILLED,
+        )
+
+        # Draw moon
+        cv2.rectangle(
+            img=data_bytes,
+            pt1=(moonBoxX, moonBoxY),
+            pt2=(moonBoxX + self.box_size, moonBoxY + self.box_size),
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
 
         #cv2.rectangle(
         #    img=data_bytes,
@@ -602,16 +626,65 @@ class ImageProcessWorker(Process):
         return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
 
 
-    def calculateSkyObject(self, so):
+    def calculateSkyObject(self, skyObj):
         obs = ephem.Observer()
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
-        so.compute(obs)
+        skyObj.compute(obs)
+
+        return obs
 
 
-    def getBoxXY(self, so):
-        pass
+    def getBoxXY(self, skyObj):
+        obs = self.calculateSkyObject(skyObj)
+        hourangle = (obs.sidereal_time() - skyObj.ra) / math.pi * 180.0
 
+        logger.info('Hour angle: %0.2f', hourangle)
 
+        #angle = ha % 90
+        #abs_angle = abs(angle)
+        #logger.info('Angle: %f', angle)
+
+        abs_hourangle = abs(hourangle)
+
+        if hourangle < 0 and hourangle > -45:
+            opp = math.atan(math.radians(abs_hourangle)) * (self.image_height / 2)
+            y = 0
+            x = (self.image_width / 2) + opp - self.box_size
+        elif hourangle > 0 and hourangle < 45:
+            opp = math.atan(math.radians(abs_hourangle)) * (self.image_height / 2)
+            y = 0
+            x = (self.image_width / 2) - opp - self.box_size
+        elif hourangle < -45 and hourangle > -90:
+            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_width / 2)
+            x = self.image_width - self.box_size
+            y = (self.image_height / 2) - opp - self.box_size
+        elif hourangle > 45 and hourangle < 90:
+            opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_width / 2)
+            x = 0
+            y = (self.image_height / 2) - opp - self.box_size
+        elif hourangle < -90 and hourangle > -135:
+            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_width / 2)
+            x = self.image_width - self.box_size
+            y = (self.image_height / 2) + opp - self.box_size
+        elif hourangle > 90 and hourangle < 135:
+            opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_width / 2)
+            x = 0
+            y = (self.image_height / 2) + opp - self.box_size
+        elif hourangle < -135 and hourangle > -180:
+            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_height / 2)
+            y = self.image_height - self.box_size
+            x = (self.image_width / 2) + opp - self.box_size
+        elif hourangle > 135 and hourangle < 180:
+            opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_height / 2)
+            y = self.image_height - self.box_size
+            x = (self.image_width / 2) - opp - self.box_size
+        else:
+            raise Exception('This cannot happen')
+
+        logger.info('Found line: %0.2f', opp)
+        logger.info('Box: %0.2f x %0.2f', x, y)
+
+        return int(x), int(y)
