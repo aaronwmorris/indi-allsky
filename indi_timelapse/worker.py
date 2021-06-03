@@ -660,7 +660,7 @@ class ImageProcessWorker(Process):
 
     def getOrbXY(self, skyObj):
         obs = self.calculateSkyObject(skyObj)
-        hourangle = (obs.sidereal_time() - skyObj.ra) / math.pi * 180.0
+        hourangle = math.degrees(obs.sidereal_time() - skyObj.ra)
 
         if hourangle < -180:
             hourangle = 360 + hourangle

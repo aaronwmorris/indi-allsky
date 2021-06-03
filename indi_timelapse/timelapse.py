@@ -45,7 +45,7 @@ class IndiTimelapse(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
-        self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
+        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
 
         self.image_worker = None
         self.image_worker_idx = 0
@@ -85,7 +85,7 @@ class IndiTimelapse(object):
 
         # overwrite config
         self.config = c
-        self.night_sun_radians = (float(self.config['NIGHT_SUN_ALT_DEG']) / 180.0) * math.pi
+        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
 
         nighttime = self.is_night()
 
