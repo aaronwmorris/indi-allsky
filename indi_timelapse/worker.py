@@ -54,7 +54,7 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
-        self.box_size = 10
+        self.orb_radius = 7  # default, recalculated based on image size
 
         self.base_dir = Path(__file__).parent.parent.absolute()
 
@@ -85,6 +85,9 @@ class ImageProcessWorker(Process):
 
             self.image_height, self.image_width = scidata_uncalibrated.shape
             logger.info('Image: %d x %d', self.image_width, self.image_height)
+
+            self.orb_radius = int(self.image_width * 0.004)  # calculate orb size relative to image width
+            #logger.info('Orb radius: %d', self.orb_radius)
 
             if self.save_fits:
                 self.write_fit(hdulist, exp_date)
@@ -330,42 +333,43 @@ class ImageProcessWorker(Process):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
 
-        sunBoxX, sunBoxY = self.getBoxXY(ephem.Sun())
-        moonBoxX, moonBoxY = self.getBoxXY(ephem.Moon())
+        sunOrbX, sunOrbY = self.getOrbXY(ephem.Sun())
 
-        # Draw sun
-        cv2.rectangle(
+        # Sun outline
+        cv2.circle(
             img=data_bytes,
-            pt1=(sunBoxX, sunBoxY),
-            pt2=(sunBoxX + self.box_size, sunBoxY + self.box_size),
+            center=(sunOrbX, sunOrbY),
+            radius=self.orb_radius,
+            color=(0, 0, 0),
+            thickness=cv2.FILLED,
+        )
+        # Draw sun
+        cv2.circle(
+            img=data_bytes,
+            center=(sunOrbX, sunOrbY),
+            radius=self.orb_radius - 1,
             color=(0, 255, 255),
             thickness=cv2.FILLED,
         )
-        # Sun outline
-        cv2.rectangle(
+
+
+        moonOrbX, moonOrbY = self.getOrbXY(ephem.Moon())
+
+        # Moon outline
+        cv2.circle(
             img=data_bytes,
-            pt1=(sunBoxX, sunBoxY),
-            pt2=(sunBoxX + self.box_size, sunBoxY + self.box_size),
+            center=(moonOrbX, moonOrbY),
+            radius=self.orb_radius,
             color=(0, 0, 0),
-            thickness=1,
-        )
-
-
-        # Draw moon
-        cv2.rectangle(
-            img=data_bytes,
-            pt1=(moonBoxX, moonBoxY),
-            pt2=(moonBoxX + self.box_size, moonBoxY + self.box_size),
-            color=(255, 255, 255),
             thickness=cv2.FILLED,
         )
-        # Moon outline
-        cv2.rectangle(
+        # Draw moon
+        cv2.circle(
             img=data_bytes,
-            pt1=(moonBoxX, moonBoxY),
-            pt2=(moonBoxX + self.box_size, moonBoxY + self.box_size),
-            color=(0, 0, 0),
-            thickness=1,
+            center=(moonOrbX, moonOrbY),
+            radius=self.orb_radius - 1,
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
         )
 
         #cv2.rectangle(
@@ -654,55 +658,52 @@ class ImageProcessWorker(Process):
         return obs
 
 
-    def getBoxXY(self, skyObj):
+    def getOrbXY(self, skyObj):
         obs = self.calculateSkyObject(skyObj)
         hourangle = (obs.sidereal_time() - skyObj.ra) / math.pi * 180.0
 
         logger.info('Hour angle: %0.2f', hourangle)
 
-        #angle = ha % 90
-        #abs_angle = abs(angle)
-        #logger.info('Angle: %f', angle)
-
         abs_hourangle = abs(hourangle)
 
         ### Assume image is basically a square for the purpose of calculating the X,Y coordinates
+        ### The corners are assumed to be 45 degree increments of a circle
         if hourangle < 0 and hourangle > -45:
             opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
             y = 0
-            x = (self.image_width / 2) + opp - self.box_size
+            x = (self.image_width / 2) + opp - self.orb_radius
         elif hourangle > 0 and hourangle < 45:
             opp = math.atan(math.radians(abs_hourangle)) * (self.image_width / 2)
             y = 0
-            x = (self.image_width / 2) - opp - self.box_size
+            x = (self.image_width / 2) - opp - self.orb_radius
         elif hourangle < -45 and hourangle > -90:
             opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
-            x = self.image_width - self.box_size
-            y = (self.image_height / 2) - opp - self.box_size
+            x = self.image_width - self.orb_radius
+            y = (self.image_height / 2) - opp - self.orb_radius
         elif hourangle > 45 and hourangle < 90:
             opp = math.atan(math.radians(90 - abs_hourangle)) * (self.image_height / 2)
             x = 0
-            y = (self.image_height / 2) - opp - self.box_size
+            y = (self.image_height / 2) - opp - self.orb_radius
         elif hourangle < -90 and hourangle > -135:
             opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
-            x = self.image_width - self.box_size
-            y = (self.image_height / 2) + opp - self.box_size
+            x = self.image_width - self.orb_radius
+            y = (self.image_height / 2) + opp - self.orb_radius
         elif hourangle > 90 and hourangle < 135:
             opp = math.atan(math.radians(abs_hourangle - 90)) * (self.image_height / 2)
             x = 0
-            y = (self.image_height / 2) + opp - self.box_size
+            y = (self.image_height / 2) + opp - self.orb_radius
         elif hourangle < -135 and hourangle > -180:
             opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
-            y = self.image_height - self.box_size
-            x = (self.image_width / 2) + opp - self.box_size
+            y = self.image_height - self.orb_radius
+            x = (self.image_width / 2) + opp - self.orb_radius
         elif hourangle > 135 and hourangle < 180:
             opp = math.atan(math.radians(180 - abs_hourangle)) * (self.image_width / 2)
-            y = self.image_height - self.box_size
-            x = (self.image_width / 2) - opp - self.box_size
+            y = self.image_height - self.orb_radius
+            x = (self.image_width / 2) - opp - self.orb_radius
         else:
             raise Exception('This cannot happen')
 
-        logger.info('Found line: %0.2f', opp)
-        logger.info('Box: %0.2f x %0.2f', x, y)
+        #logger.info('Found line: %0.2f', opp)
+        #logger.info('Orb: %0.2f x %0.2f', x, y)
 
         return int(x), int(y)
