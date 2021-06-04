@@ -82,6 +82,12 @@
         "FONT_OUTLINE"   : true
     },
 
+    "ORB_PROPERTIES" : {
+        "RADIUS"      : 9,
+        "SUN_COLOR"   : [0, 255, 255],
+        "MOON_COLOR"  : [255, 255, 255]
+    },
+
     "FILETRANSFER" : {
         "comment_CLASSNAME"      : "sftp, ftp, ftps",
         "CLASSNAME"              : "ftp",

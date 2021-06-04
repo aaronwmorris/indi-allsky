@@ -54,8 +54,6 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
-        self.orb_radius = 0  # recalculated later based on image size
-
         self.base_dir = Path(__file__).parent.parent.absolute()
 
 
@@ -85,9 +83,6 @@ class ImageProcessWorker(Process):
 
             self.image_height, self.image_width = scidata_uncalibrated.shape
             logger.info('Image: %d x %d', self.image_width, self.image_height)
-
-            self.orb_radius = int(self.image_width * 0.005)  # calculate orb size relative to image width
-            #logger.info('Orb radius: %d', self.orb_radius)
 
             if self.save_fits:
                 self.write_fit(hdulist, exp_date)
@@ -339,7 +334,7 @@ class ImageProcessWorker(Process):
         cv2.circle(
             img=data_bytes,
             center=(sunOrbX, sunOrbY),
-            radius=self.orb_radius,
+            radius=self.config['ORB_PROPERTIES']['RADIUS'],
             color=(0, 0, 0),
             thickness=cv2.FILLED,
         )
@@ -347,8 +342,8 @@ class ImageProcessWorker(Process):
         cv2.circle(
             img=data_bytes,
             center=(sunOrbX, sunOrbY),
-            radius=self.orb_radius - 1,
-            color=(0, 255, 255),
+            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
+            color=self.config['ORB_PROPERTIES']['SUN_COLOR'],
             thickness=cv2.FILLED,
         )
 
@@ -359,7 +354,7 @@ class ImageProcessWorker(Process):
         cv2.circle(
             img=data_bytes,
             center=(moonOrbX, moonOrbY),
-            radius=self.orb_radius,
+            radius=self.config['ORB_PROPERTIES']['RADIUS'],
             color=(0, 0, 0),
             thickness=cv2.FILLED,
         )
@@ -367,8 +362,8 @@ class ImageProcessWorker(Process):
         cv2.circle(
             img=data_bytes,
             center=(moonOrbX, moonOrbY),
-            radius=self.orb_radius - 1,
-            color=(255, 255, 255),
+            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
+            color=self.config['ORB_PROPERTIES']['MOON_COLOR'],
             thickness=cv2.FILLED,
         )
 
