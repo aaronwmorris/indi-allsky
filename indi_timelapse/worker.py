@@ -659,6 +659,10 @@ class ImageProcessWorker(Process):
 
         if hourangle < -180:
             hourangle = 360 + hourangle
+        elif hourangle > 180:
+            hourangle = -360 + hourangle
+        else:
+            pass
 
         logger.info('Hour angle: %0.2f', hourangle)
 
