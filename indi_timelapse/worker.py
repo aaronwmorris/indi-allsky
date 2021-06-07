@@ -647,6 +647,7 @@ class ImageProcessWorker(Process):
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
+        #obs.date = datetime.utcnow() - timedelta(hours=13)  # testing
 
         skyObj.compute(obs)
 
@@ -683,7 +684,7 @@ class ImageProcessWorker(Process):
             y = 0
         elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle < 0:
             #logger.info('Bottom right')
-            x = (self.image_width / 2) + (mapped_hourangle - (self.image_height + (self.image_width / 2)))
+            x = self.image_width - (mapped_hourangle - (self.image_height + (self.image_width / 2)))
             y = self.image_height
         elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle > 0:
             #logger.info('Bottom left')
