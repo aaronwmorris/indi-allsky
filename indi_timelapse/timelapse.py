@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import io
 import json
@@ -25,7 +26,6 @@ from .uploader import FileUploader
 from .exceptions import TimeOutException
 
 logger = multiprocessing.get_logger()
-
 
 
 class IndiTimelapse(object):
@@ -503,7 +503,8 @@ class IndiTimelapse(object):
         start = time.time()
 
         cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(video_file)).split()
-        subprocess.run(cmd)
+
+        subprocess.run(cmd, preexec_fn=lambda: os.nice(19))
 
         elapsed_s = time.time() - start
         logger.info('Timelapse generated in %0.4f s', elapsed_s)
