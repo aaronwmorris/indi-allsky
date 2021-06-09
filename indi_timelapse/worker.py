@@ -656,48 +656,50 @@ class ImageProcessWorker(Process):
 
     def getOrbXY(self, skyObj):
         obs = self.calculateSkyObject(skyObj)
-        hourangle = math.degrees(obs.sidereal_time() - skyObj.ra)
 
-        if hourangle < -180:
-            hourangle = 360 + hourangle
-        elif hourangle > 180:
-            hourangle = -360 + hourangle
+        ha_rad = obs.sidereal_time() - skyObj.ra
+        ha_deg = math.degrees(ha_rad)
+
+        if ha_deg < -180:
+            ha_deg = 360 + ha_deg
+        elif ha_deg > 180:
+            ha_deg = -360 + ha_deg
         else:
             pass
 
-        logger.info('Hour angle: %0.2f', hourangle)
+        logger.info('%s hour angle: %0.2f', skyObj.name, ha_deg)
 
-        abs_hourangle = abs(hourangle)
+        abs_ha_deg = abs(ha_deg)
         perimeter_half = self.image_width + self.image_height
 
-        mapped_hourangle = int(self.remap(abs_hourangle, 0, 180, 0, perimeter_half))
-        #logger.info('Mapped hour angle: %d', mapped_hourangle)
+        mapped_ha_deg = int(self.remap(abs_ha_deg, 0, 180, 0, perimeter_half))
+        #logger.info('Mapped hour angle: %d', mapped_ha_deg)
 
         ### The image perimeter is mapped to the hour angle for the X,Y coordinates
-        if mapped_hourangle < (self.image_width / 2) and hourangle < 0:
+        if mapped_ha_deg < (self.image_width / 2) and ha_deg < 0:
             #logger.info('Top right')
-            x = (self.image_width / 2) + mapped_hourangle
+            x = (self.image_width / 2) + mapped_ha_deg
             y = 0
-        elif mapped_hourangle < (self.image_width / 2) and hourangle > 0:
+        elif mapped_ha_deg < (self.image_width / 2) and ha_deg > 0:
             #logger.info('Top left')
-            x = (self.image_width / 2) - mapped_hourangle
+            x = (self.image_width / 2) - mapped_ha_deg
             y = 0
-        elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle < 0:
+        elif mapped_ha_deg > ((self.image_width / 2) + self.image_height) and ha_deg < 0:
             #logger.info('Bottom right')
-            x = self.image_width - (mapped_hourangle - (self.image_height + (self.image_width / 2)))
+            x = self.image_width - (mapped_ha_deg - (self.image_height + (self.image_width / 2)))
             y = self.image_height
-        elif mapped_hourangle > ((self.image_width / 2) + self.image_height) and hourangle > 0:
+        elif mapped_ha_deg > ((self.image_width / 2) + self.image_height) and ha_deg > 0:
             #logger.info('Bottom left')
-            x = mapped_hourangle - (self.image_height + (self.image_width / 2))
+            x = mapped_ha_deg - (self.image_height + (self.image_width / 2))
             y = self.image_height
-        elif hourangle < 0:
+        elif ha_deg < 0:
             #logger.info('Right')
             x = self.image_width
-            y = mapped_hourangle - (self.image_width / 2)
-        elif hourangle > 0:
+            y = mapped_ha_deg - (self.image_width / 2)
+        elif ha_deg > 0:
             #logger.info('Left')
             x = 0
-            y = mapped_hourangle - (self.image_width / 2)
+            y = mapped_ha_deg - (self.image_width / 2)
         else:
             raise Exception('This cannot happen')
 
