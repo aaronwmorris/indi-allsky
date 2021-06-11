@@ -1,5 +1,4 @@
 import sys
-import os
 import time
 import io
 import json
@@ -8,7 +7,6 @@ from datetime import datetime
 from datetime import timedelta
 import copy
 import math
-import subprocess
 import signal
 
 import ephem
@@ -22,6 +20,7 @@ import PyIndi
 
 from .indi import IndiClient
 from .worker import ImageProcessWorker
+from .video import VideoProcessWorker
 from .uploader import FileUploader
 from .exceptions import TimeOutException
 
@@ -49,6 +48,10 @@ class IndiTimelapse(object):
 
         self.image_worker = None
         self.image_worker_idx = 0
+
+        self.video_worker = None
+        self.video_q = Queue()
+        self.video_worker_idx = 0
 
         self.save_fits = False
         self.save_images = True
@@ -93,16 +96,13 @@ class IndiTimelapse(object):
         if self.night_v.value != int(nighttime):
             self.dayNightReconfigure(nighttime)
 
-        logger.warning('Stopping image process worker')
-        self.image_q.put({ 'stop' : True })
-        self.image_worker.join()
-
-        logger.warning('Stopping upload process worker')
-        self.upload_q.put({ 'stop' : True })
-        self.upload_worker.join()
+        self._stopImageProcessWorker()
+        self._stopVideoProcessWorker()
+        self._stopImageUploadWorker()
 
         # Restart worker with new config
         self._startImageProcessWorker()
+        self._startVideoProcessWorker()
         self._startImageUploadWorker()
 
 
@@ -112,6 +112,7 @@ class IndiTimelapse(object):
 
     def _initialize(self):
         self._startImageProcessWorker()
+        self._startVideoProcessWorker()
         self._startImageUploadWorker()
 
         # instantiate the client
@@ -162,6 +163,10 @@ class IndiTimelapse(object):
 
 
     def _startImageProcessWorker(self):
+        if self.image_worker:
+            if self.image_worker.is_alive():
+                return
+
         self.image_worker_idx += 1
 
         logger.info('Starting ImageProcessorWorker process')
@@ -180,7 +185,47 @@ class IndiTimelapse(object):
         self.image_worker.start()
 
 
+    def _stopImageProcessWorker(self):
+        if self.image_worker:
+            if not self.image_worker.is_alive():
+                return
+
+        logger.info('Stopping ImageProcessorWorker process')
+        self.image_q.put({ 'stop' : True })
+        self.image_worker.join()
+
+
+    def _startVideoProcessWorker(self):
+        if self.video_worker:
+            if self.video_worker.is_alive():
+                return
+
+        self.video_worker_idx += 1
+
+        logger.info('Starting VideoProcessorWorker process')
+        self.video_worker = VideoProcessWorker(
+            self.video_worker_idx,
+            self.config,
+            self.video_q,
+        )
+        self.video_worker.start()
+
+
+    def _stopVideoProcessWorker(self):
+        if self.video_worker:
+            if not self.video_worker.is_alive():
+                return
+
+        logger.info('Stopping VideoProcessorWorker process')
+        self.video_q.put({ 'stop' : True })
+        self.video_worker.join()
+
+
     def _startImageUploadWorker(self):
+        if self.upload_worker:
+            if self.upload_worker.is_alive():
+                return
+
         self.upload_worker_idx += 1
 
         logger.info('Starting FileUploader process %d', self.upload_worker_idx)
@@ -191,6 +236,16 @@ class IndiTimelapse(object):
         )
 
         self.upload_worker.start()
+
+
+    def _stopImageUploadWorker(self):
+        if self.upload_worker:
+            if not self.upload_worker.is_alive():
+                return
+
+        logger.info('Stopping ImageUploadWorker process')
+        self.upload_q.put({ 'stop' : True })
+        self.upload_worker.join()
 
 
     def _configureCcd(self, indi_config):
@@ -228,11 +283,12 @@ class IndiTimelapse(object):
         while True:
             # restart worker if it has failed
             if not self.image_worker.is_alive():
-                del self.image_worker  # try to free up some memory
                 self._startImageProcessWorker()
 
+            if not self.video_worker.is_alive():
+                self._startVideoProcessWorker()
+
             if not self.upload_worker.is_alive():
-                del self.upload_worker  # try to free up some memory
                 self._startImageUploadWorker()
 
 
@@ -403,13 +459,10 @@ class IndiTimelapse(object):
 
 
         ### stop image processing worker
-        logger.warning('Stopping image process worker')
-        self.image_q.put({ 'stop' : True })
-        self.image_worker.join()
+        self._stopImageProcessWorker()
+        self._stopVideoProcessWorker()
+        self._stopImageUploadWorker()
 
-        logger.warning('Stopping upload process worker')
-        self.uplaod_q.put({ 'stop' : True })
-        self.upload_worker.join()
 
         ### INDI disconnect
         self.indiclient.disconnectServer()
@@ -425,20 +478,21 @@ class IndiTimelapse(object):
 
     def generateDayTimelapse(self, timespec):
         if self.image_worker:
-            logger.warning('Stopping image process worker to save memory')
-            self.image_q.put({ 'stop' : True })
-            self.image_worker.join()
+            self._stopImageProcessWorker()
 
         if self.upload_worker:
-            logger.warning('Stopping upload process worker to save memory')
-            self.upload_q.put({ 'stop' : True })
-            self.upload_worker.join()
+            self._stopImageUploadWorker()
+
+        self._startVideoProcessWorker()
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
         logger.warning('Generating day time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('day')
-        self.generateTimelapse_timeofday(timespec, img_day_folder)
+
+        self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
+
+        self._stopVideoProcessWorker()
 
 
     def generateNightTimelapse(self, timespec):
@@ -452,89 +506,16 @@ class IndiTimelapse(object):
             self.upload_q.put({ 'stop' : True })
             self.upload_worker.join()
 
+        self._startVideoProcessWorker()
+
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
         logger.warning('Generating day time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('night')
-        self.generateTimelapse_timeofday(timespec, img_day_folder)
 
+        self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
 
-
-    def generateTimelapse_timeofday(self, timespec, img_folder):
-        if not img_folder.exists():
-            logger.error('Image folder does not exist: %s', img_folder)
-            return
-
-
-        video_file = img_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
-
-        if video_file.exists():
-            logger.warning('Video is already generated: %s', video_file)
-            return
-
-
-        seqfolder = img_folder.joinpath('.sequence')
-
-        if not seqfolder.exists():
-            logger.info('Creating sequence folder %s', seqfolder)
-            seqfolder.mkdir()
-
-
-        # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
-        if rmlinks:
-            logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l_p in rmlinks:
-                l_p.unlink()
-
-
-        # find all files
-        timelapse_files = list()
-        self.getFolderImgFiles(img_folder, timelapse_files)
-
-
-        logger.info('Creating symlinked files for timelapse')
-        timelapse_files_sorted = sorted(timelapse_files, key=lambda p: p.stat().st_mtime)
-        for i, f in enumerate(timelapse_files_sorted):
-            symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
-            symlink_p.symlink_to(f)
-
-
-        start = time.time()
-
-        cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(video_file)).split()
-
-        subprocess.run(cmd, preexec_fn=lambda: os.nice(19))
-
-        elapsed_s = time.time() - start
-        logger.info('Timelapse generated in %0.4f s', elapsed_s)
-
-        # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
-        if rmlinks:
-            logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l_p in rmlinks:
-                l_p.unlink()
-
-
-        # remove sequence folder
-        try:
-            seqfolder.rmdir()
-        except OSError as e:
-            logger.error('Cannote remove sequence folder: %s', str(e))
-
-
-    def getFolderImgFiles(self, folder, file_list):
-        logger.info('Searching for image files in %s', folder)
-
-        # Add all files in current folder
-        img_files = filter(lambda p: p.is_file(), Path(folder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])))
-        file_list.extend(img_files)
-
-        # Recurse through all sub folders
-        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
-        for f in folders:
-            self.getFolderImgFiles(f, file_list)  # recursion
+        self._stopVideoProcessWorker()
 
 
     def shoot(self, exposure, sync=True, timeout=None):
