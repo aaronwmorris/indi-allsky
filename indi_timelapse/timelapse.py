@@ -19,7 +19,7 @@ import multiprocessing
 import PyIndi
 
 from .indi import IndiClient
-from .worker import ImageProcessWorker
+from .image import ImageProcessWorker
 from .video import VideoProcessWorker
 from .uploader import FileUploader
 from .exceptions import TimeOutException
