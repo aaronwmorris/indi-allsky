@@ -316,13 +316,13 @@ class IndiTimelapse(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self.generateNightTimelapse(timespec)
+                    self._generateNightTimelapse(timespec)
 
                 if nighttime and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self.generateDayTimelapse(timespec)
+                    self._generateDayTimelapse(timespec)
 
 
 
@@ -470,13 +470,19 @@ class IndiTimelapse(object):
 
     def generateAllTimelapse(self, timespec, day=True, night=True):
         if day:
-            self.generateDayTimelapse(timespec)
+            self._generateDayTimelapse(timespec)
 
         if night:
-            self.generateNightTimelapse(timespec)
+            self._generateNightTimelapse(timespec)
 
 
     def generateDayTimelapse(self, timespec):
+        self._startVideoProcessWorker()
+        self._generateDayTimelapse(timespec)
+        self._stopVideoProcessWorker()
+
+
+    def _generateDayTimelapse(self, timespec):
         if self.image_worker:
             self._stopImageProcessWorker()
 
@@ -492,21 +498,19 @@ class IndiTimelapse(object):
 
         self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
 
+
+    def generateNightTimelapse(self, timespec):
+        self._startVideoProcessWorker()
+        self._generateNightTimelapse(timespec)
         self._stopVideoProcessWorker()
 
 
-    def generateNightTimelapse(self, timespec):
+    def _generateNightTimelapse(self, timespec):
         if self.image_worker:
-            logger.warning('Stopping image process worker to save memory')
-            self.image_q.put({ 'stop' : True })
-            self.image_worker.join()
+            self._stopImageProcessWorker()
 
         if self.upload_worker:
-            logger.warning('Stopping upload process worker to save memory')
-            self.upload_q.put({ 'stop' : True })
-            self.upload_worker.join()
-
-        self._startVideoProcessWorker()
+            self._stopImageUploadWorker()
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
@@ -514,8 +518,6 @@ class IndiTimelapse(object):
         img_day_folder = img_base_folder.joinpath('night')
 
         self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
-
-        self._stopVideoProcessWorker()
 
 
     def shoot(self, exposure, sync=True, timeout=None):
