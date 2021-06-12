@@ -73,12 +73,30 @@ class VideoProcessWorker(Process):
 
             start = time.time()
 
-            cmd = 'ffmpeg -y -f image2 -r {0:d} -i {1:s}/%04d.{2:s} -vcodec libx264 -b:v {3:s} -pix_fmt yuv420p -movflags +faststart {4:s}'.format(self.config['FFMPEG_FRAMERATE'], str(seqfolder), self.config['IMAGE_FILE_TYPE'], self.config['FFMPEG_BITRATE'], str(video_file)).split()
+            cmd = [
+                'ffmpeg',
+                '-y',
+                '-f', 'image2',
+                '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
+                '-i', '{0:s}/%04d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
+                '-vcodec', 'libx264',
+                '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
+                '-pix_fmt', 'yuv420p',
+                '-movflags', '+faststart',
+                '{0:s}'.format(str(video_file)),
+            ]
 
-            subprocess.run(cmd, preexec_fn=lambda: os.nice(19))
+            ffmpeg_subproc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.nice(19),
+            )
 
             elapsed_s = time.time() - start
             logger.info('Timelapse generated in %0.4f s', elapsed_s)
+
+            logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
             # delete all existing symlinks in seqfolder
             rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
