@@ -61,7 +61,7 @@ class VideoProcessWorker(Process):
 
             # find all files
             timelapse_files = list()
-            self.getFolderImgFiles(img_folder, timelapse_files)
+            self.getFolderFilesByExt(img_folder, timelapse_files)
 
 
             logger.info('Creating symlinked files for timelapse')
@@ -113,16 +113,21 @@ class VideoProcessWorker(Process):
                 logger.error('Cannote remove sequence folder: %s', str(e))
 
 
-    def getFolderImgFiles(self, folder, file_list):
+    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
+        if not extension_list:
+            extension_list = [self.config['IMAGE_FILE_TYPE']]
+
         logger.info('Searching for image files in %s', folder)
 
+        dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
+
         # Add all files in current folder
-        img_files = filter(lambda p: p.is_file(), Path(folder).glob('*.{0:s}'.format(self.config['IMAGE_FILE_TYPE'])))
+        img_files = filter(lambda p: p.is_file() and p.suffix in dot_extension_list, Path(folder).iterdir())
         file_list.extend(img_files)
 
         # Recurse through all sub folders
         folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
         for f in folders:
-            self.getFolderImgFiles(f, file_list)  # recursion
+            self.getFolderFilesByExt(f, file_list, extension_list=extension_list)  # recursion
 
 

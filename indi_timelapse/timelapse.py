@@ -528,3 +528,51 @@ class IndiTimelapse(object):
 
 
 
+    def cleanupOldImages(self, days=14):
+        img_root_folder = self.base_dir.joinpath('images')
+
+        file_list = list()
+        self.getFolderFilesByExt(img_root_folder, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+
+        cutoff_age = datetime.now() - timedelta(days=days)
+
+        old_files = filter(lambda p: p.stat().st_mtime < cutoff_age.timestamp(), file_list)
+        for f in old_files:
+            logger.info('Removing old image: %s', f)
+            #f.unlink()
+
+        dir_list = list()
+        self.getFolderFolders(img_root_folder, dir_list)
+
+        empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
+        for e in empty_dirs:
+            logger.info('Removing empty directory: %s', e)
+            #e.rmdir()
+
+
+    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
+        if not extension_list:
+            extension_list = [self.config['IMAGE_FILE_TYPE']]
+
+        logger.info('Searching for image files in %s', folder)
+
+        dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
+
+        # Add all files in current folder
+        img_files = filter(lambda p: p.is_file() and p.suffix in dot_extension_list, Path(folder).iterdir())
+        file_list.extend(img_files)
+
+        # Recurse through all sub folders
+        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
+        for f in folders:
+            self.getFolderFilesByExt(f, file_list, extension_list=extension_list)  # recursion
+
+
+    def getFolderFolders(self, folder, dir_list):
+        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
+
+        dir_list.extend(folders)
+
+        for f in folders:
+            self.getFolderFolders(f, dir_list)  # recursion
+
