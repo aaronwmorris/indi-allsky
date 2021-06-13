@@ -121,13 +121,9 @@ class VideoProcessWorker(Process):
 
         dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
 
-        # Add all files in current folder
-        img_files = filter(lambda p: p.is_file() and p.suffix in dot_extension_list, Path(folder).iterdir())
-        file_list.extend(img_files)
-
-        # Recurse through all sub folders
-        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
-        for f in folders:
-            self.getFolderFilesByExt(f, file_list, extension_list=extension_list)  # recursion
-
+        for item in Path(folder).iterdir():
+            if item.is_file() and item.suffix in dot_extension_list:
+                file_list.append(item)
+            elif item.is_dir():
+                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 

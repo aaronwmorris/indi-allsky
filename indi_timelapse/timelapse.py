@@ -308,8 +308,10 @@ class IndiTimelapse(object):
                     self.sensortemp_v.value = temp[0].value
 
 
-            ### Change gain when we change between day and night
+            ### Change between day and night
             if self.night_v.value != int(nighttime):
+                self.expireImages()  # cleanup old images and folders
+
                 self.dayNightReconfigure(nighttime)
 
                 if not nighttime and self.generate_timelapse_flag:
@@ -529,11 +531,25 @@ class IndiTimelapse(object):
 
 
     def expireImages(self, days=None):
+        ### This needs to be run before generating a timelapse
+
         if not days:
             days = self.config['IMAGE_EXPIRE_DAYS']
 
         img_root_folder = self.base_dir.joinpath('images')
 
+        # Orphaned symlinks need to be removed
+        symlink_list = list()
+        self.getFolderSymlinks(img_root_folder, symlink_list)
+        for f in symlink_list:
+            logger.info('Removing orphaned symlink: %s', f)
+
+            try:
+                f.unlink()
+            except OSError as e:
+                logger.error('Cannot remove symlink: %s', str(e))
+
+        # Old image files need to be pruned
         file_list = list()
         self.getFolderFilesByExt(img_root_folder, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
@@ -542,15 +558,33 @@ class IndiTimelapse(object):
         old_files = filter(lambda p: p.stat().st_mtime < cutoff_age.timestamp(), file_list)
         for f in old_files:
             logger.info('Removing old image: %s', f)
-            f.unlink()
 
+            try:
+                f.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+
+
+        # Remove empty folders
         dir_list = list()
         self.getFolderFolders(img_root_folder, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
             logger.info('Removing empty directory: %s', d)
-            d.rmdir()
+
+            try:
+                d.rmdir()
+            except OSError as e:
+                logger.error('Cannot remove folder: %s', str(e))
+
+
+    def getFolderSymlinks(self, folder, symlink_list):
+        for item in Path(folder).iterdir():
+            if item.is_symlink():
+                symlink_list.append(item)
+            elif item.is_dir():
+                self.getFolderSymlinks(item, symlink_list)  # recursion
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
@@ -561,21 +595,16 @@ class IndiTimelapse(object):
 
         dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
 
-        # Add all files in current folder
-        img_files = filter(lambda p: p.is_file() and p.suffix in dot_extension_list, Path(folder).iterdir())
-        file_list.extend(img_files)
-
-        # Recurse through all sub folders
-        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
-        for f in folders:
-            self.getFolderFilesByExt(f, file_list, extension_list=extension_list)  # recursion
+        for item in Path(folder).iterdir():
+            if item.is_file() and item.suffix in dot_extension_list:
+                file_list.append(item)
+            elif item.is_dir():
+                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
     def getFolderFolders(self, folder, dir_list):
-        folders = filter(lambda p: p.is_dir(), Path(folder).iterdir())
-
-        dir_list.extend(folders)
-
-        for f in folders:
-            self.getFolderFolders(f, dir_list)  # recursion
+        for item in Path(folder).iterdir():
+            if item.is_dir():
+                dir_list.append(item)
+                self.getFolderFolders(item, dir_list)  # recursion
 
