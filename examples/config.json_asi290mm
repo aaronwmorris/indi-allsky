@@ -61,6 +61,8 @@
     },
     "IMAGE_DEBAYER" : false,
 
+    "IMAGE_EXPIRE_DAYS" : 30,
+
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE" : "2500k",
 

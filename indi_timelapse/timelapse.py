@@ -528,7 +528,10 @@ class IndiTimelapse(object):
 
 
 
-    def cleanupOldImages(self, days=14):
+    def expireImages(self, days=None):
+        if not days:
+            days = self.config['IMAGE_EXPIRE_DAYS']
+
         img_root_folder = self.base_dir.joinpath('images')
 
         file_list = list()
@@ -539,15 +542,15 @@ class IndiTimelapse(object):
         old_files = filter(lambda p: p.stat().st_mtime < cutoff_age.timestamp(), file_list)
         for f in old_files:
             logger.info('Removing old image: %s', f)
-            #f.unlink()
+            f.unlink()
 
         dir_list = list()
         self.getFolderFolders(img_root_folder, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
-        for e in empty_dirs:
-            logger.info('Removing empty directory: %s', e)
-            #e.rmdir()
+        for d in empty_dirs:
+            logger.info('Removing empty directory: %s', d)
+            d.rmdir()
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
