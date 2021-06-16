@@ -6,6 +6,7 @@
 *.tif
 *.bin
 *.mp4
+*.gif
 config.json
 *.py[oc]
 __pycache__/
