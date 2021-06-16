@@ -5,3 +5,4 @@ opencv-python
 ephem
 paramiko
 pycurl
+imageio
