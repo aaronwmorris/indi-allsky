@@ -1,4 +1,4 @@
-pyindi-client
+pyindi-client==0.2.6
 astropy
 #astropy[all]
 opencv-python
