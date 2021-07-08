@@ -162,13 +162,13 @@ class IndiClient(PyIndi.BaseClient):
 
         c = self.get_control(name, 'switch', device=device)
 
-        is_exclusive = c.r == PyIndi.ISR_ATMOST1 or c.r == PyIndi.ISR_1OFMANY
+        is_exclusive = c.getRule() == PyIndi.ISR_ATMOST1 or c.getRule() == PyIndi.ISR_1OFMANY
         if is_exclusive :
             on_switches = on_switches[0:1]
             off_switches = [s.name for s in c if s.name not in on_switches]
 
         for index in range(0, len(c)):
-            current_state = c[index].s
+            current_state = c[index].getState()
             new_state = current_state
 
             if c[index].name in on_switches:
@@ -176,7 +176,7 @@ class IndiClient(PyIndi.BaseClient):
             elif is_exclusive or c[index].name in off_switches:
                 new_state = PyIndi.ISS_OFF
 
-            c[index].s = new_state
+            c[index].setState(new_state)
 
         self.sendNewSwitch(c)
 
@@ -202,7 +202,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def switch_values(self, name, ctl=None):
-        return self.__control2dict(name, 'switch', lambda c: {'value': c.s == PyIndi.ISS_ON}, ctl)
+        return self.__control2dict(name, 'switch', lambda c: {'value': c.getState() == PyIndi.ISS_ON}, ctl)
 
 
     def text_values(self, name, ctl=None):
@@ -214,7 +214,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def light_values(self, name, ctl=None):
-        return self.__control2dict(name, 'light', lambda c: {'value': self.__state_to_str[c.s]}, ctl)
+        return self.__control2dict(name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
 
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
@@ -222,15 +222,15 @@ class IndiClient(PyIndi.BaseClient):
         if timeout is None:
             timeout = self._timeout
 
-        while ctl.s not in statuses:
-            #logger.info('%s/%s/%s: %s', ctl.device, ctl.group, ctl.name, self.__state_to_str[ctl.s])
-            if ctl.s == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
+        while ctl.getState() not in statuses:
+            #logger.info('%s/%s/%s: %s', ctl.device, ctl.group, ctl.name, self.__state_to_str[ctl.getState()])
+            if ctl.getState() == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
                 raise RuntimeError('Error while changing property {0}'.format(ctl.name))
 
             elapsed = time.time() - started
 
             if 0 < timeout < elapsed:
-                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.s] ))
+                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.getState()] ))
 
             time.sleep(0.05)
 

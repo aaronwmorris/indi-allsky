@@ -1,4 +1,5 @@
-pyindi-client==0.2.6
+#pyindi-client
+git+https://github.com/geehalel/pyindi-client@28ebab0#egg=pyindi-client
 astropy
 #astropy[all]
 opencv-python
