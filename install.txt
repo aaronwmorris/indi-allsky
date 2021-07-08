@@ -1,4 +1,4 @@
-The following packages are required:
+### The following packages are required:
 
 swig
 libatlas-base-dev
@@ -6,5 +6,9 @@ libilmbase-dev
 libopenexr-dev
 libgtk-3-0
 libcurl4-gnutls-dev
+libcfitsio-dev
+libnova-dev
 
 ffmpeg
+
+libindi-dev
