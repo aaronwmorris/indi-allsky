@@ -478,14 +478,23 @@ class ImageProcessWorker(Process):
 
 
     def calculate_histogram(self, data_bytes):
+        if self.config['ADU_ROI']:
+            logger.warn('Calculating ADU from RoI')
+            scidata = data_bytes[
+                self.config['ADU_ROI'][1]:(self.config['ADU_ROI'][1] + self.config['ADU_ROI'][3]),
+                self.config['ADU_ROI'][0]:(self.config['ADU_ROI'][0] + self.config['ADU_ROI'][2]),
+            ]
+        else:
+            scidata = data_bytes
+
         if not self.config['IMAGE_DEBAYER']:
-            m_avg = cv2.mean(data_bytes)[0]
+            m_avg = cv2.mean(scidata)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
 
             adu = m_avg
         else:
-            r, g, b = cv2.split(data_bytes)
+            r, g, b = cv2.split(scidata)
             r_avg = cv2.mean(r)[0]
             g_avg = cv2.mean(g)[0]
             b_avg = cv2.mean(b)[0]

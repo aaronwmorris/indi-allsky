@@ -42,6 +42,8 @@
     "TARGET_ADU" : 50,
     "comment_TARGET_ADU_DEV" : "Allowed deviation from the mean before recalculating",
     "TARGET_ADU_DEV" : 10,
+    "comment_ADU_ROI" : "Region of Interest for ADU calculations",
+    "ADU_ROI" : [],
 
     "LOCATION_LATITUDE" : 33,
     "LOCATION_LONGITUDE" : -84,
