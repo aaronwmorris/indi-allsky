@@ -33,8 +33,9 @@
     },
 
     "comment_CCD_EXPOSURE_MIN" : "ASI290MM minimum exposure is 0.000032",
+    "comment_CCD_EXPOSURE_MIN2" : "0.000032 has problems with indi 1.9.1",
     "CCD_EXPOSURE_MAX" : 15.000000,
-    "CCD_EXPOSURE_MIN" : 0.000032,
+    "CCD_EXPOSURE_MIN" : 0.000033,
     "CCD_EXPOSURE_DEF" : 0.000100,
     "EXPOSURE_PERIOD"  : 15.00000,
 
