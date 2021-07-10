@@ -223,14 +223,14 @@ class IndiClient(PyIndi.BaseClient):
             timeout = self._timeout
 
         while ctl.getState() not in statuses:
-            #logger.info('%s/%s/%s: %s', ctl.device, ctl.group, ctl.name, self.__state_to_str[ctl.getState()])
+            #logger.info('%s/%s/%s: %s', ctl.getDeviceName(), ctl.getGroupName(), ctl.getName(), self.__state_to_str[ctl.getState()])
             if ctl.getState() == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
-                raise RuntimeError('Error while changing property {0}'.format(ctl.name))
+                raise RuntimeError('Error while changing property {0}'.format(ctl.getName()))
 
             elapsed = time.time() - started
 
             if 0 < timeout < elapsed:
-                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.name, elapsed, timeout, self.__state_to_str[ctl.getState()] ))
+                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.getName(), elapsed, timeout, self.__state_to_str[ctl.getState()] ))
 
             time.sleep(0.05)
 
