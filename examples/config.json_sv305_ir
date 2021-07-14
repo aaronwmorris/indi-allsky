@@ -2,7 +2,8 @@
     "CCD_NAME" : "SVBONY SV305 0",
 
     "INDI_CONFIG_NIGHT" : {
-        "GAIN_TEXT" : 250,
+        "GAIN_VALUE" : 250,
+        "BIN_VALUE"  : 1,
         "PROPERTIES" : {
             "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_GAIN"     : {"GAIN" : 250},
@@ -21,7 +22,8 @@
 
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "INDI_CONFIG_DAY" : {
-        "GAIN_TEXT" : 10,
+        "GAIN_VALUE" : 10,
+        "BIN_VALUE"  : 1,
         "PROPERTIES" : {
             "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_GAIN"     : {"GAIN" : 10},

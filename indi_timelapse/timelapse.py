@@ -40,7 +40,8 @@ class IndiTimelapse(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_TEXT']))
+        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE']))
+        self.bin_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['BIN_VALUE']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
 
@@ -177,6 +178,7 @@ class IndiTimelapse(object):
             self.upload_q,
             self.exposure_v,
             self.gain_v,
+            self.bin_v,
             self.sensortemp_v,
             self.night_v,
             save_fits=self.save_fits,
@@ -264,12 +266,16 @@ class IndiTimelapse(object):
         #self.indiclient.set_controls(indi_config.get('CONTROLS', {}))
 
         # Update shared gain value
-        gain = indi_config.get('GAIN_TEXT')
-
+        gain_value = indi_config.get('GAIN_VALUE')
         with self.gain_v.get_lock():
-            self.gain_v.value = gain
+            self.gain_v.value = int(gain_value)
+
+        bin_value = indi_config.get('BIN_VALUE')
+        with self.bin_v.get_lock():
+            self.bin_v.value = int(bin_value)
 
         logger.info('Gain set to %d', self.gain_v.value)
+        logger.info('Binning set to %d', self.bin_v.value)
 
         # Sleep after configuration
         time.sleep(1.0)
@@ -418,7 +424,7 @@ class IndiTimelapse(object):
         ### take darks
         dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
         for exp in dark_exposures:
-            filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
+            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
 
             start = time.time()
 

@@ -2,7 +2,8 @@
     "CCD_NAME" : "ZWO CCD ASI290MM",
 
     "INDI_CONFIG_NIGHT" : {
-        "GAIN_TEXT" : 300,
+        "GAIN_VALUE" : 300,
+        "BIN_VALUE"  : 1,
         "PROPERTIES" : {
             "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_CONTROLS"  : {
@@ -17,7 +18,8 @@
         }
     },
     "INDI_CONFIG_DAY" : {
-        "GAIN_TEXT" : 0,
+        "GAIN_VALUE" : 0,
+        "BIN_VALUE"  : 1,
         "PROPERTIES" : {
             "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
             "CCD_CONTROLS"  : {
