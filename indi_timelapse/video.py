@@ -2,12 +2,17 @@ import os
 import time
 from pathlib import Path
 import subprocess
+import fcntl
+import errno
 
 from multiprocessing import Process
 #from threading import Thread
 import multiprocessing
 
 logger = multiprocessing.get_logger()
+
+
+VIDEO_LOCKFILE = '/tmp/timelapse_video.lock'
 
 
 class VideoProcessWorker(Process):
@@ -20,6 +25,8 @@ class VideoProcessWorker(Process):
         self.config = config
         self.video_q = video_q
 
+        self.f_lock = None
+
 
     def run(self):
         while True:
@@ -27,6 +34,13 @@ class VideoProcessWorker(Process):
 
             if v_dict.get('stop'):
                 return
+
+            try:
+                self._getLock()  # get lock to prevent multiple videos from being concurrently generated
+            except BlockingIOError as e:
+                if e.errno == errno.EAGAIN:
+                    logger.error('Failed to get exclusive lock: %s', str(e))
+                    return
 
             timespec = v_dict['timespec']
             img_folder = v_dict['img_folder']
@@ -115,6 +129,9 @@ class VideoProcessWorker(Process):
                 logger.error('Cannote remove sequence folder: %s', str(e))
 
 
+            self._releaseLock()
+
+
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
@@ -128,4 +145,23 @@ class VideoProcessWorker(Process):
                 file_list.append(item)
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+
+
+    def _getLock(self):
+        logger.info('Get exclusive lock to generate video')
+        lock_p = Path(VIDEO_LOCKFILE)
+
+        if not Path.is_file():
+            f_lock = io.open(str(lock_p), 'w+')
+            f_lock.close()
+            lock_p.chmod(0o644)
+
+        self.f_lock = io.open(str(lock_p), 'w+')
+        fcntl.flock(self.f_lock, fcntl.LOCK_EXT | fnctl.LOCK_NB)  # Exclusive, non-blocking lock
+
+
+    def _releaseLock(self):
+        logger.info('Release exclusive lock')
+        fcntl.flock(self.f_lock, fcntl.LOCK_UN)
+        self.f_lock.close()
 
