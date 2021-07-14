@@ -63,9 +63,11 @@ class VideoProcessWorker(Process):
             timelapse_files = list()
             self.getFolderFilesByExt(img_folder, timelapse_files)
 
+            # Exclude empty files
+            timelapse_files_nonzero= filter(lambda p: p.stat().st_size != 0, timelapse_files)
 
             logger.info('Creating symlinked files for timelapse')
-            timelapse_files_sorted = sorted(timelapse_files, key=lambda p: p.stat().st_mtime)
+            timelapse_files_sorted = sorted(timelapse_files_nonzero, key=lambda p: p.stat().st_mtime)
             for i, f in enumerate(timelapse_files_sorted):
                 symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
                 symlink_p.symlink_to(f)
