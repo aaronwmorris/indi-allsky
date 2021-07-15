@@ -1,4 +1,5 @@
 import os
+import io
 import time
 from pathlib import Path
 import subprocess
@@ -151,13 +152,13 @@ class VideoProcessWorker(Process):
         logger.info('Get exclusive lock to generate video')
         lock_p = Path(VIDEO_LOCKFILE)
 
-        if not Path.is_file():
+        if not lock_p.is_file():
             f_lock = io.open(str(lock_p), 'w+')
             f_lock.close()
             lock_p.chmod(0o644)
 
         self.f_lock = io.open(str(lock_p), 'w+')
-        fcntl.flock(self.f_lock, fcntl.LOCK_EXT | fnctl.LOCK_NB)  # Exclusive, non-blocking lock
+        fcntl.flock(self.f_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)  # Exclusive, non-blocking lock
 
 
     def _releaseLock(self):
