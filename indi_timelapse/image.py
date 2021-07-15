@@ -481,9 +481,15 @@ class ImageProcessWorker(Process):
     def calculate_histogram(self, data_bytes):
         if self.config['ADU_ROI']:
             logger.warn('Calculating ADU from RoI')
+            # divide the coordinates by binning value
+            x1 = int(self.config['ADU_ROI'][0] / self.bin_v.value)
+            y1 = int(self.config['ADU_ROI'][1] / self.bin_v.value)
+            x2 = int(self.config['ADU_ROI'][2] / self.bin_v.value)
+            y2 = int(self.config['ADU_ROI'][3] / self.bin_v.value)
+
             scidata = data_bytes[
-                self.config['ADU_ROI'][1]:(self.config['ADU_ROI'][1] + self.config['ADU_ROI'][3]),
-                self.config['ADU_ROI'][0]:(self.config['ADU_ROI'][0] + self.config['ADU_ROI'][2]),
+                y1:(y1 + y2),
+                x1:(x1 + x2),
             ]
         else:
             scidata = data_bytes
