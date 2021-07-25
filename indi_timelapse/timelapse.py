@@ -97,13 +97,13 @@ class IndiTimelapse(object):
         if self.night_v.value != int(nighttime):
             self.dayNightReconfigure(nighttime)
 
-        self._stopImageProcessWorker()
         self._stopVideoProcessWorker()
+        self._stopImageProcessWorker()
         self._stopImageUploadWorker()
 
         # Restart worker with new config
-        self._startImageProcessWorker()
         self._startVideoProcessWorker()
+        self._startImageProcessWorker()
         self._startImageUploadWorker()
 
 
