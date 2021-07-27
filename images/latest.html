@@ -20,10 +20,11 @@ var img;
 function init() {
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
+
     img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth)
-        canvas.setAttribute("height", window.innerHeight)
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
 
 	var hRatio = canvas.width  / this.width;
         var vRatio =  canvas.height / this.height;
