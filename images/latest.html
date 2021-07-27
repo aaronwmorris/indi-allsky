@@ -54,7 +54,7 @@ function init() {
 
 function refresh() {
     img.src = url + "?t=" + new Date().getTime();
-    setTimeout("refresh()",refreshInterval);
+    setTimeout(refresh, refreshInterval);
 }
 
 function setResizeHandler(callback, timeout) {
