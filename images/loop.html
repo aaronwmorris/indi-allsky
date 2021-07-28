@@ -1,5 +1,6 @@
 <html>
 <head>
+<meta charset="UTF-8"/>
 <style>
 html, body {
  width: 100%;
@@ -14,16 +15,11 @@ html, body {
 <script type="text/javascript">
 var url = "latest.jpg"; //url to load image from
 var refreshInterval = 15000; //in ms
-var maxFrames = 40;
-var frameTime = 50; // in ms
-var drawDate = false; //draw date string
+var maxFrames = 10;
+var frameTime = 100; // in ms
 var image_list = [];
 
 function init() {
-    var canvas = document.getElementById("canvas");
-    canvas.setAttribute("width", window.innerWidth);
-    canvas.setAttribute("height", window.innerHeight);
-
     loadNextImage();
     loop();
 }
@@ -40,6 +36,9 @@ async function loop() {
         var img = new Image();
         img.src = image_list[i];
         img.onload = function() {
+            canvas.setAttribute("width", window.innerWidth);
+            canvas.setAttribute("height", window.innerHeight);
+
             var hRatio = canvas.width  / this.width;
             var vRatio = canvas.height / this.height;
             var ratio  = Math.min ( hRatio, vRatio ); 
