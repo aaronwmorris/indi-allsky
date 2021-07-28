@@ -1,0 +1,98 @@
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+html, body {
+ width: 100%;
+ height: 100%;
+ margin: 0px;
+ border: 0;
+ overflow: hidden; /*  Disable scrollbars */
+ display: block;  /* No floating content on sides */
+ background-color: #000000;
+}
+</style>
+<script type="text/javascript" src="js_latest.php"></script>
+<script type="text/javascript">
+//var image_list = [];
+var url = "latest.jpg"; //url to load image from
+var refreshInterval = 15000; //in ms
+var maxFrames = 20;
+var image_list = getImages(maxFrames);
+var frameTime = 100; // in ms
+var rock = false;
+
+function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    // prevent concurrent updates to list
+    var image_list_copy = JSON.parse(JSON.stringify(image_list))
+
+    for (var i = 0; i < image_list_copy.length; i++) {
+        showImage(image_list_copy[i]);
+        await sleep(frameTime);
+    };
+
+    if (rock) {
+        for (var i = image_list_copy.length - 1; i >= 0; i--) {
+            showImage(image_list_copy[i]);
+            await sleep(frameTime);
+        };
+    };
+
+    setTimeout(loop, (image_list.length + 3) * frameTime);
+}
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = url;
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+    };
+}
+
+
+function loadNextImage() {
+    console.log('Loading next image');
+    image_list.push(url + "?t=" + new Date().getTime());
+
+    while (image_list.length > maxFrames) {
+        image_list.splice(0, 1);  // remove first image
+    };
+
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+</script>
+<title>Timelapse Loop</title>
+</head>
+
+<body onload="JavaScript:init();">
+<canvas id="canvas"/>
+</body>
+</html>
