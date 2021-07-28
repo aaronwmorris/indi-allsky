@@ -30,7 +30,10 @@ async function loop() {
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    for (var i = 0; i < image_list.length; i++) {
+    // prevent concurrent updates to list
+    var image_list_copy = JSON.parse(JSON.stringify(image_list))
+
+    for (var i = 0; i < image_list_copy.length; i++) {
         console.log('Showing image ' + i);
 
         var img = new Image();
