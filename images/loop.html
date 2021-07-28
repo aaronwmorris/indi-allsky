@@ -1,0 +1,81 @@
+<html>
+<head>
+<style>
+html, body {
+ width: 100%;
+ height: 100%;
+ margin: 0px;
+ border: 0;
+ overflow: hidden; /*  Disable scrollbars */
+ display: block;  /* No floating content on sides */
+ background-color: #000000;
+}
+</style>
+<script type="text/javascript">
+var url = "latest.jpg"; //url to load image from
+var refreshInterval = 15000; //in ms
+var maxFrames = 40;
+var frameTime = 50; // in ms
+var drawDate = false; //draw date string
+var image_list = [];
+
+function init() {
+    var canvas = document.getElementById("canvas");
+    canvas.setAttribute("width", window.innerWidth);
+    canvas.setAttribute("height", window.innerHeight);
+
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    for (var i = 0; i < image_list.length; i++) {
+	console.log('Showing image ' + i);
+
+	var img = new Image();
+	img.src = image_list[i];
+	img.onload = function() {
+            var hRatio = canvas.width  / this.width;
+            var vRatio = canvas.height / this.height;
+            var ratio  = Math.min ( hRatio, vRatio ); 
+            var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+            var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+            context.drawImage(this, 0, 0, this.width, this.height,
+                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+	};
+
+	await sleep(frameTime);
+    };
+
+    setTimeout(loop, (image_list.length + 3) * frameTime);
+}
+
+function loadNextImage() {
+    console.log('Loading next image');
+    image_list.push(url + "?t=" + new Date().getTime());
+
+    while (image_list.length > maxFrames) {
+        image_list.splice(0, 1);  // remove first image
+    };
+
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+</script>
+<title>Timelapse Loop</title>
+</head>
+
+<body onload="JavaScript:init();">
+<canvas id="canvas"/>
+</body>
+</html>
