@@ -35,11 +35,11 @@ async function loop() {
     var context = canvas.getContext("2d");
 
     for (var i = 0; i < image_list.length; i++) {
-	console.log('Showing image ' + i);
+        console.log('Showing image ' + i);
 
-	var img = new Image();
-	img.src = image_list[i];
-	img.onload = function() {
+        var img = new Image();
+        img.src = image_list[i];
+        img.onload = function() {
             var hRatio = canvas.width  / this.width;
             var vRatio = canvas.height / this.height;
             var ratio  = Math.min ( hRatio, vRatio ); 
@@ -48,9 +48,9 @@ async function loop() {
 
             context.drawImage(this, 0, 0, this.width, this.height,
                 centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-	};
+        };
 
-	await sleep(frameTime);
+        await sleep(frameTime);
     };
 
     setTimeout(loop, (image_list.length + 3) * frameTime);
@@ -68,7 +68,7 @@ function loadNextImage() {
 }
 
 function sleep(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
+    return new Promise(resolve => setTimeout(resolve, time));
 }
 
 </script>
