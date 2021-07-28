@@ -18,6 +18,7 @@ var refreshInterval = 15000; //in ms
 var maxFrames = 10;
 var frameTime = 100; // in ms
 var image_list = [];
+var rock = false;
 
 function init() {
     loadNextImage();
@@ -33,6 +34,13 @@ async function loop() {
     for (var i = 0; i < image_list_copy.length; i++) {
         showImage(image_list_copy[i]);
         await sleep(frameTime);
+    };
+
+    if (rock) {
+        for (var i = image_list_copy.length - 1; i >= 0; i--) {
+            showImage(image_list_copy[i]);
+            await sleep(frameTime);
+        };
     };
 
     setTimeout(loop, (image_list.length + 3) * frameTime);
