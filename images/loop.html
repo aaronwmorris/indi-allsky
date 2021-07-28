@@ -27,36 +27,41 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(image_list))
 
     for (var i = 0; i < image_list_copy.length; i++) {
-        console.log('Showing image ' + i);
-
-        var img = new Image();
-        img.src = image_list[i];
-        img.onload = function() {
-            canvas.setAttribute("width", window.innerWidth);
-            canvas.setAttribute("height", window.innerHeight);
-
-            var hRatio = canvas.width  / this.width;
-            var vRatio = canvas.height / this.height;
-            var ratio  = Math.min ( hRatio, vRatio ); 
-            var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-            var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-            context.drawImage(this, 0, 0, this.width, this.height,
-                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-        };
-
+        showImage(image_list_copy[i]);
         await sleep(frameTime);
     };
 
     setTimeout(loop, (image_list.length + 3) * frameTime);
 }
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = url;
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+    };
+}
+
 
 function loadNextImage() {
     console.log('Loading next image');
