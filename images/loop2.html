@@ -14,13 +14,12 @@ html, body {
 </style>
 <script type="text/javascript" src="js_latest.php"></script>
 <script type="text/javascript">
-//var image_list = [];
 var url = "latest.jpg"; //url to load image from
 var refreshInterval = 15000; //in ms
 var maxFrames = 20;
 var image_list = getImages(maxFrames);
 var frameTime = 100; // in ms
-var rock = false;
+var rock = true;
 
 function init() {
     loadNextImage();
