@@ -68,7 +68,7 @@ class GetLatestImages {
         # sort oldest to newest
         usort($image_list, function($x, $y) { return filemtime($x) > filemtime($y); });
 
-        #array_splice($image_list, 0, -50);  # get last 50 images
+        array_splice($image_list, 0, -100);  # get last 100 images
 
         return($image_list);
     }
@@ -114,11 +114,5 @@ class GetLatestImages {
 $x = new GetLatestImages();
 $image_list = $x->main();
 
-print('function getImages(maxImages) {');
-print(' var image_list = ' . json_encode($image_list) . ';');
-print('  while (image_list.length > maxImages) {');
-print('   image_list.splice(0, 1);');
-print('  };');
-print(' return(image_list);');
-print('}');
+print('image_list = ' . json_encode($image_list) . ';');
 ?>

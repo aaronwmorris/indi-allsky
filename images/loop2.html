@@ -12,12 +12,11 @@ html, body {
  background-color: #000000;
 }
 </style>
-<script type="text/javascript" src="js_latest.php"></script>
 <script type="text/javascript">
+var image_list = [];
 var url = "latest.jpg"; //url to load image from
 var refreshInterval = 15000; //in ms
 var maxFrames = 20;
-var image_list = getImages(maxFrames);
 var frameTime = 100; // in ms
 var rock = true;
 
@@ -74,17 +73,43 @@ function showImage(url) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    image_list.push(url + "?t=" + new Date().getTime());
-
-    while (image_list.length > maxFrames) {
-        image_list.splice(0, 1);  // remove first image
-    };
-
+    loadJS('js_latest.php', function() {
+        while (image_list.length > maxFrames) {
+            image_list.splice(0, 1);  // remove first image
+        };
+    });
     setTimeout(loadNextImage, refreshInterval);
 }
 
 function sleep(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+    var xhr=new XMLHttpRequest();
+    xhr.onreadystatechange=function() {
+        if(xhr.readyState==4){
+            if(xhr.status==200 || xhr.status==0) {
+            try {
+                eval(xhr.responseText);
+            } catch(e) {
+                onError(e);
+                return;
+            }
+            onDone();
+            } else {
+                onError(xhr.status);
+            }
+        }
+    }.bind(this);
+    try {
+        xhr.open("GET", url, true);
+        xhr.send();
+    } catch(e) {
+        onError(e);
+    }
 }
 
 </script>
