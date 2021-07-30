@@ -96,6 +96,8 @@ function openFullscreen(elem) {
     } else if (elem.msRequestFullscreen) { /* IE11 */
         elem.msRequestFullscreen();
     }
+
+    fullscreen = true;
 }
 
 function closeFullscreen() {
@@ -106,6 +108,8 @@ function closeFullscreen() {
     } else if (document.msExitFullscreen) { /* IE11 */
         document.msExitFullscreen();
     }
+
+    fullscreen = false;
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
