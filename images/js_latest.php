@@ -25,32 +25,33 @@ class GetLatestImages {
     public function main() {
         $image_list = array();
 
-        # current hour
+        ### Night starts when the sun is below the horizon (normally -6 degrees)
+        ### Trying to keep this script simple, so I look for both day and night files
+        ### If it is night, no files should be found for the day (same for day/night respectively)
+
+
+        ### current hour
         $now = strtotime('now');
 
         # day
-        $day_now = strtotime('now');
-        $day_current_Ymd = date('Ymd', $day_now);
+        $day_current_Ymd = date('Ymd', $now);  // no offset during day
         $day_current_d_H = date('d_H', $now);  // hour is not offset
         $day_current_hour_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $day_current_Ymd, 'day', $day_current_d_H));
         $this->_getFolderFilesByExt($day_current_hour_dir, $image_list);
 
         # night
-        $night_now = strtotime('-12 hours');
-        $night_current_Ymd = date('Ymd', $night_now);
+        $night_current_Ymd = date('Ymd', strtotime('-12 hours'));  // night folders are offset by 12 hours
         $night_current_d_H = date('d_H', $now);  // hour is not offset
         $night_current_hour_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $night_current_Ymd, 'night', $night_current_d_H));
 
         $this->_getFolderFilesByExt($night_current_hour_dir, $image_list);
 
 
-
-        # last hour
+        ### last hour
         $minus_1h = strtotime('-1 hours');
 
         # day
-        $day_minus_1h = strtotime('-1 hours');
-        $day_minus_1h_Ymd = date('Ymd', $day_minus_1h);
+        $day_minus_1h_Ymd = date('Ymd', $minus_1h);  // no offset during day
         $day_minus_1h_d_H = date('d_H', $minus_1h);  // hour is not offset
         $day_minus_1h_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $day_minus_1h_Ymd, 'day', $day_minus_1h_d_H));
 
@@ -58,8 +59,7 @@ class GetLatestImages {
 
 
         # night
-        $night_minus_1h = strtotime('-12 hours');
-        $night_minus_1h_Ymd = date('Ymd', $night_minus_1h);
+        $night_minus_1h_Ymd = date('Ymd', strtotime('-12 hours'));  // night folders are offset by 12 hours
         $night_minus_1h_d_H = date('d_H', $minus_1h);  // hour is not offset
         $night_minus_1h_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $night_minus_1h_Ymd, 'night', $night_minus_1h_d_H));
         $this->_getFolderFilesByExt($night_minus_1h_dir, $image_list);
