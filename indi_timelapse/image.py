@@ -91,17 +91,16 @@ class ImageProcessWorker(Process):
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
             # debayer
-            scidata_color = self.debayer(scidata_calibrated)
+            scidata_debayered = self.debayer(scidata_calibrated)
 
             # adu calculate
-            adu, adu_average = self.calculate_histogram(scidata_calibrated)  # calculate based on pre_blur data
-
+            adu, adu_average = self.calculate_histogram(scidata_debayered)
 
             # verticle flip
             if self.config['IMAGE_FLIP_V']:
-                scidata_cal_flip_v = cv2.flip(scidata_calibrated, 0)
+                scidata_cal_flip_v = cv2.flip(scidata_debayered, 0)
             else:
-                scidata_cal_flip_v = scidata_calibrated
+                scidata_cal_flip_v = scidata_debayered
 
             # horizontal flip
             if self.config['IMAGE_FLIP_H']:
