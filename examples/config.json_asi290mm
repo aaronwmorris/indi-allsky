@@ -48,13 +48,13 @@
     "comment_ADU_ROI" : "Region of Interest for ADU calculations",
     "ADU_ROI" : [],
 
-    "LOCATION_LATITUDE" : 33,
+    "LOCATION_LATITUDE"  : 33,
     "LOCATION_LONGITUDE" : -84,
 
-    "DAYTIME_CAPTURE" : true,
-    "DAYTIME_TIMELAPSE" : false,
+    "DAYTIME_CAPTURE"          : true,
+    "DAYTIME_TIMELAPSE"        : false,
     "DAYTIME_CONTRAST_ENHANCE" : false,
-    "NIGHT_SUN_ALT_DEG" : -6,
+    "NIGHT_SUN_ALT_DEG"        : -6,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",
@@ -64,12 +64,14 @@
         "jpeg"  : 90,
         "png"   : 9
     },
-    "IMAGE_DEBAYER" : false,
+    "IMAGE_DEBAYER"  : false,
+    "IMAGE_FLIP_V"   : false,
+    "IMAGE_FLIP_H"   : false,
 
     "IMAGE_EXPIRE_DAYS" : 30,
 
     "FFMPEG_FRAMERATE" : 25,
-    "FFMPEG_BITRATE" : "2500k",
+    "FFMPEG_BITRATE"   : "2500k",
 
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",

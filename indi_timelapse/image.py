@@ -89,15 +89,33 @@ class ImageProcessWorker(Process):
                 self.write_fit(hdulist, exp_date)
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
+
+            # debayer
             scidata_color = self.debayer(scidata_calibrated)
 
-            #scidata_blur = self.median_blur(scidata_color)
-            scidata_blur = scidata_color
+            # adu calculate
+            adu, adu_average = self.calculate_histogram(scidata_calibrated)  # calculate based on pre_blur data
 
-            adu, adu_average = self.calculate_histogram(scidata_color)  # calculate based on pre_blur data
+
+            # verticle flip
+            if self.config['IMAGE_FLIP_V']:
+                scidata_cal_flip_v = cv2.flip(scidata_calibrated, 0)
+            else:
+                scidata_cal_flip_v = scidata_calibrated
+
+            # horizontal flip
+            if self.config['IMAGE_FLIP_H']:
+                scidata_cal_flip = cv2.flip(scidata_cal_flip_v, 1)
+            else:
+                scidata_cal_flip = scidata_cal_flip_v
+
+
+            # blur
+            #scidata_blur = self.median_blur(scidata_cal_flip)
+            scidata_blur = scidata_cal_flip
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
-            #    scidata_color,
+            #    scidata_sci_cal_flip,
             #    None,
             #    h=3,
             #    hColor=3,
