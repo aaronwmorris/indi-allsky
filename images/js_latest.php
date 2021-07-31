@@ -96,7 +96,7 @@ class GetLatestImages {
 
             if (is_file($entry_path)) {
                 foreach ($this->image_ext as $ext) {
-                    $re = sprintf('/.%s$/', $ext);
+                    $re = sprintf('/\.%s$/', $ext);
                     if (preg_match($re, $entry)) {
                         array_push($r_image_list, $entry_path);
                         break;
