@@ -65,6 +65,12 @@ class ftps(GenericFileTransfer):
             pass
 
 
+        try:
+            self.client.sendcmd('SITE CHMOD 755 {0:s}'.format(str(remotefile.parent)))
+        except ftplib.error_perm as e:
+            logger.warning('FTP unable to chmod dir: %s', str(e))
+
+
         start = time.time()
 
         with io.open(str(localfile), 'rb') as f_localfile:

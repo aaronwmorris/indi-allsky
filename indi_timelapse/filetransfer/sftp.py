@@ -62,6 +62,12 @@ class sftp(GenericFileTransfer):
             pass
 
 
+        try:
+            self.sftp.chmod(str(remotefile.parent), 0o755)
+        except OSError as e:
+            logger.warning('SFTP unable to chmod dir: %s', str(e))
+
+
         start = time.time()
 
         try:
