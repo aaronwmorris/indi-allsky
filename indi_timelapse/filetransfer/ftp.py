@@ -6,6 +6,9 @@ from .exceptions import PermissionFailure
 import ftplib
 import io
 import socket
+import multiprocessing
+
+logger = multiprocessing.get_logger()
 
 
 class ftp(GenericFileTransfer):
@@ -65,4 +68,10 @@ class ftp(GenericFileTransfer):
                 raise TransferFailure(str(e)) from e
 
             f_localfile.close()
+
+
+        try:
+            self.client.sendcmd('SITE CHMOD 644 {0:s}'.format(str(remotefile)))
+        except ftplib.error_perm as e:
+            logger.warning('FTP unable to chmod file: %s', str(e))
 

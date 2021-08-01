@@ -2,8 +2,12 @@ from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 from .exceptions import TransferFailure
+
 import paramiko
 import socket
+import multiprocessing
+
+logger = multiprocessing.get_logger()
 
 
 class sftp(GenericFileTransfer):
@@ -61,5 +65,11 @@ class sftp(GenericFileTransfer):
             self.sftp.put(str(localfile), str(remotefile))
         except PermissionError as e:
             raise TransferFailure(str(e)) from e
+
+
+        try:
+            self.sftp.chmod(str(remotefile), 0o644)
+        except OSError as e:
+            logger.warning('SFTP unable to chmod file: %s', str(e))
 
 
