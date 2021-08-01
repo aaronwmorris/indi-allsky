@@ -97,14 +97,22 @@ class ImageProcessWorker(Process):
             # debayer
             scidata_debayered = self.debayer(scidata_calibrated)
 
-            # adu calculate
+            # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
+
+
+            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                scidata_contrast = self.contrast_clahe(scidata_debayered)
+            else:
+                scidata_contrast = scidata_debayered
+
 
             # verticle flip
             if self.config['IMAGE_FLIP_V']:
-                scidata_cal_flip_v = cv2.flip(scidata_debayered, 0)
+                scidata_cal_flip_v = cv2.flip(scidata_contrast, 0)
             else:
-                scidata_cal_flip_v = scidata_debayered
+                scidata_cal_flip_v = scidata_contrast
 
             # horizontal flip
             if self.config['IMAGE_FLIP_H']:
@@ -341,18 +349,7 @@ class ImageProcessWorker(Process):
         #scidata_wb = self.white_balance2(scidata_rgb)
         scidata_wb = scidata_rgb
 
-        if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
-            # Contrast enhancement during the day
-            scidata_contrast = self.contrast_clahe(scidata_wb)
-        else:
-            scidata_contrast = scidata_wb
-
-
-        #if self.roi is not None:
-        #    scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
-        #hdulist[0].data = scidata
-
-        return scidata_contrast
+        return scidata_wb
 
 
     def image_text(self, data_bytes, exp_date):
@@ -639,6 +636,13 @@ class ImageProcessWorker(Process):
 
     def contrast_clahe(self, data_bytes):
         ### ohhhh, contrasty
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+
+        if not self.config['IMAGE_DEBAYER']:
+            # mono
+            return clahe.apply(data_bytes)
+
+        # color
         lab = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
 
         l, a, b = cv2.split(lab)
@@ -648,8 +652,7 @@ class ImageProcessWorker(Process):
 
         new_lab = cv2.merge((cl, a, b))
 
-        new_data = cv2.cvtColor(new_lab, cv2.COLOR_LAB2RGB)
-        return new_data
+        return cv2.cvtColor(new_lab, cv2.COLOR_LAB2RGB)
 
 
     def white_balance2(self, data_bytes):
