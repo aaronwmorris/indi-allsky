@@ -135,7 +135,8 @@ class ImageProcessWorker(Process):
                     continue
 
                 if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-                    # upload every X image
+                    next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+                    logger.info('Next image upload in %d images', next_image)
                     continue
 
 
