@@ -6,6 +6,7 @@ from .exceptions import PermissionFailure
 import ftplib
 import io
 import socket
+import time
 import multiprocessing
 
 logger = multiprocessing.get_logger()
@@ -60,6 +61,8 @@ class ftp(GenericFileTransfer):
             pass
 
 
+        start = time.time()
+
         with io.open(str(localfile), 'rb') as f_localfile:
             try:
                 self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile, blocksize=262144)
@@ -69,6 +72,9 @@ class ftp(GenericFileTransfer):
 
             f_localfile.close()
 
+        upload_elapsed_s = time.time() - start
+        local_file_size = localfile.stat().st_size
+        logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
         try:
             self.client.sendcmd('SITE CHMOD 644 {0:s}'.format(str(remotefile)))

@@ -5,6 +5,7 @@ from .exceptions import TransferFailure
 
 import paramiko
 import socket
+import time
 import multiprocessing
 
 logger = multiprocessing.get_logger()
@@ -61,11 +62,16 @@ class sftp(GenericFileTransfer):
             pass
 
 
+        start = time.time()
+
         try:
             self.sftp.put(str(localfile), str(remotefile))
         except PermissionError as e:
             raise TransferFailure(str(e)) from e
 
+        upload_elapsed_s = time.time() - start
+        local_file_size = localfile.stat().st_size
+        logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
         try:
             self.sftp.chmod(str(remotefile), 0o644)

@@ -77,7 +77,8 @@ class FileUploader(Process):
             client.close()
 
             upload_elapsed_s = time.time() - start
-            logger.info('Upload completed in %0.4f s', upload_elapsed_s)
+            logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
+
 
 
             #raise Exception('Testing uncaught exception')
