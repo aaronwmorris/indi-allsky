@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+import time
 import functools
 import tempfile
 import shutil
@@ -88,6 +89,9 @@ class ImageProcessWorker(Process):
             if self.save_fits:
                 self.write_fit(hdulist, exp_date)
 
+
+            processing_start = time.time()
+
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
             # debayer
@@ -123,6 +127,11 @@ class ImageProcessWorker(Process):
             #)
 
             self.image_text(scidata_blur, exp_date)
+
+
+            processing_elapsed_s = time.time() - processing_start
+            logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
 
             self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
