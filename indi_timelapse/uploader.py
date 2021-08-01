@@ -67,6 +67,11 @@ class FileUploader(Process):
                 logger.error('Tranfer failure: %s', e)
                 client.close()
                 return
+            except filetransfer.exceptions.PermissionFailure as e:
+                logger.error('Permission failure: %s', e)
+                client.close()
+                return
+
 
             # close file transfer client
             client.close()

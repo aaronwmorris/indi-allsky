@@ -48,6 +48,15 @@ class sftp(GenericFileTransfer):
 
 
     def _put(self, localfile, remotefile):
+        # Try to create remote folder
+        try:
+            self.sftp.mkdir(str(remotefile.parent))
+        except OSError as e:
+            # will return an error if the directory already exists
+            #logger.warning('SFTP error creating directory: %s', str(e))
+            pass
+
+
         try:
             self.sftp.put(str(localfile), str(remotefile))
         except PermissionError as e:

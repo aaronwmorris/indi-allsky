@@ -2,6 +2,7 @@ from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 from .exceptions import TransferFailure
+from .exceptions import PermissionFailure
 
 import ftplib
 import io
@@ -51,8 +52,16 @@ class ftps(GenericFileTransfer):
 
 
     def _put(self, localfile, remotefile):
-        with io.open(str(localfile), 'rb') as f_localfile:
+        # Try to create remote folder
+        try:
+            self.client.mkd(str(remotefile.parent))
+        except ftplib.error_perm as e:
+            # will return an error if the directory already exists
+            #logger.warning('FTPS error creating directory: %s', str(e))
+            pass
 
+
+        with io.open(str(localfile), 'rb') as f_localfile:
             try:
                 self.client.storbinary('STOR {0}'.format(str(remotefile)), f_localfile, blocksize=262144)
             except ftplib.error_perm as e:

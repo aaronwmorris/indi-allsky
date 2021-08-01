@@ -6,3 +6,6 @@ class ConnectionFailure(Exception):
 
 class TransferFailure(Exception):
     pass
+
+class PermissionFailure(Exception):
+    pass
