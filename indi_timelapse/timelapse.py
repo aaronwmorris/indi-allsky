@@ -209,6 +209,7 @@ class IndiTimelapse(object):
             self.video_worker_idx,
             self.config,
             self.video_q,
+            self.upload_q,
         )
         self.video_worker.start()
 

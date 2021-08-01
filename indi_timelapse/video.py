@@ -17,7 +17,7 @@ VIDEO_LOCKFILE = '/tmp/timelapse_video.lock'
 
 
 class VideoProcessWorker(Process):
-    def __init__(self, idx, config, video_q):
+    def __init__(self, idx, config, video_q, upload_q):
         super(VideoProcessWorker, self).__init__()
 
         #self.threadID = idx
@@ -25,6 +25,7 @@ class VideoProcessWorker(Process):
 
         self.config = config
         self.video_q = video_q
+        self.upload_q = upload_q
 
         self.f_lock = None
 
@@ -131,6 +132,22 @@ class VideoProcessWorker(Process):
 
 
             self._releaseLock()
+
+
+            ### Upload video
+            if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
+                logger.warning('Video uploading disabled')
+                continue
+
+            remote_path = Path(self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'])
+            remote_file = remote_path.joinpath(video_file.name)
+
+            # tell worker to upload file
+            self.upload_q.put({
+                'local_file' : video_file,
+                'remote_file' : remote_file,
+            })
+
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):

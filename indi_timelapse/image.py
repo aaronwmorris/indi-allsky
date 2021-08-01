@@ -129,6 +129,7 @@ class ImageProcessWorker(Process):
             if self.save_images:
                 latest_file = self.write_img(scidata_blur, exp_date)
 
+                ### upload images
                 if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
                     logger.warning('Image uploading disabled')
                     continue
@@ -142,7 +143,10 @@ class ImageProcessWorker(Process):
                 remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
                 # tell worker to upload file
-                self.upload_q.put({ 'local_file' : latest_file, 'remote_file' : remote_file })
+                self.upload_q.put({
+                    'local_file' : latest_file,
+                    'remote_file' : remote_file,
+                })
 
 
 
