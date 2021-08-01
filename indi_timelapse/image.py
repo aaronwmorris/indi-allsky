@@ -136,7 +136,7 @@ class ImageProcessWorker(Process):
 
                 if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
                     next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
-                    logger.info('Next image upload in %d images', next_image)
+                    logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
                     continue
 
 
