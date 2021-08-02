@@ -11,27 +11,33 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class curl_sftp(GenericFileTransfer):
+class curl_ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(curl_sftp, self).__init__(*args, **kwargs)
+        super(curl_ftpes, self).__init__(*args, **kwargs)
 
-        self.port = 22
+        self.port = 21
         self.url = None
 
 
     def __del__(self):
-        super(curl_sftp, self).__del__()
+        super(curl_ftpes, self).__del__()
 
 
     def _connect(self, hostname, username, password):
         ### The full connect and transfer happens under the _put() function
         ### The curl instance is just setup here
-        self.url = 'sftp://{0:s}:{1:d}'.format(hostname, self.port)
+        self.url = 'ftp://{0:s}:{1:d}'.format(hostname, self.port)  # ftp:// is correct for FTPES
 
         client = pycurl.Curl()
         #client.setopt(pycurl.VERBOSE, 1)
         client.setopt(pycurl.CONNECTTIMEOUT, int(self.timeout))
         client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+        client.setopt(pycurl.FTP_SSL, pycurl.FTPSSL_ALL)
+        client.setopt(pycurl.FTPSSLAUTH, pycurl.FTPAUTH_DEFAULT) 
+
+        #client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
+        client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
+        client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
         return client
 
@@ -43,12 +49,12 @@ class curl_sftp(GenericFileTransfer):
 
     def _put(self, localfile, remotefile):
         pre_commands = [
-            #'mkdir {0:s}'.format(str(remotefile.parent)),
-            'chmod 755 {0:s}'.format(str(remotefile.parent)),
+            #'SITE MKDIR {0:s}'.format(str(remotefile.parent)),
+            'SITE CHMOD 755 {0:s}'.format(str(remotefile.parent)),
         ]
 
         post_commands = [
-            'chmod 644 {0:s}'.format(str(remotefile)),
+            'SITE CHMOD 644 {0:s}'.format(str(remotefile)),
         ]
 
         url = '{0:s}/{1:s}'.format(self.url, str(remotefile))
@@ -63,6 +69,10 @@ class curl_sftp(GenericFileTransfer):
         self.client.setopt(pycurl.POSTQUOTE, post_commands)
         self.client.setopt(pycurl.UPLOAD, 1)
         self.client.setopt(pycurl.READDATA, f_localfile)
+        self.client.setopt(
+            pycurl.INFILESIZE_LARGE,
+            localfile.stat().st_size,
+        )
 
         try:
             self.client.perform()
