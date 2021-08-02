@@ -63,6 +63,14 @@ class FileUploader(Process):
             # Upload file
             try:
                 client.put(local_file, remote_file)
+            except filetransfer.exceptions.ConnectionFailure as e:
+                logger.error('Connection failure: %s', e)
+                client.close()
+                return
+            except filetransfer.exceptions.AuthenticationFailure as e:
+                logger.error('Authentication failure: %s', e)
+                client.close()
+                return
             except filetransfer.exceptions.TransferFailure as e:
                 logger.error('Tranfer failure: %s', e)
                 client.close()
