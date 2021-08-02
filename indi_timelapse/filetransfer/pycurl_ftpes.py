@@ -11,16 +11,16 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class curl_ftpes(GenericFileTransfer):
+class pycurl_ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(curl_ftpes, self).__init__(*args, **kwargs)
+        super(pycurl_ftpes, self).__init__(*args, **kwargs)
 
         self.port = 21
         self.url = None
 
 
     def __del__(self):
-        super(curl_ftpes, self).__del__()
+        super(pycurl_ftpes, self).__del__()
 
 
     def _connect(self, hostname, username, password):

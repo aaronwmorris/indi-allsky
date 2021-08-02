@@ -11,16 +11,16 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class curl_sftp(GenericFileTransfer):
+class pycurl_sftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(curl_sftp, self).__init__(*args, **kwargs)
+        super(pycurl_sftp, self).__init__(*args, **kwargs)
 
         self.port = 22
         self.url = None
 
 
     def __del__(self):
-        super(curl_sftp, self).__del__()
+        super(pycurl_sftp, self).__del__()
 
 
     def _connect(self, hostname, username, password):
