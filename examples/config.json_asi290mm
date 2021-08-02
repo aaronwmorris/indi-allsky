@@ -92,7 +92,7 @@
     },
 
     "FILETRANSFER" : {
-        "comment_CLASSNAME"      : "sftp, ftp, ftps",
+        "comment_CLASSNAME"      : "sftp, ftp, ftpes",
         "CLASSNAME"              : "ftp",
         "HOST"                   : "",
         "comment_PORT"           : "use null for protocol default",

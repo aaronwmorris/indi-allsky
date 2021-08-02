@@ -13,15 +13,15 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class ftps(GenericFileTransfer):
+class ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(ftps, self).__init__(*args, **kwargs)
+        super(ftpes, self).__init__(*args, **kwargs)
 
         self.port = 21
 
 
     def __del__(self):
-        super(ftps, self).__del__()
+        super(ftpes, self).__del__()
 
 
     def _connect(self, hostname, username, password):
@@ -61,7 +61,7 @@ class ftps(GenericFileTransfer):
             self.client.mkd(str(remotefile.parent))
         except ftplib.error_perm as e:
             # will return an error if the directory already exists
-            #logger.warning('FTPS error creating directory: %s', str(e))
+            #logger.warning('FTPES error creating directory: %s', str(e))
             pass
 
 
@@ -89,5 +89,5 @@ class ftps(GenericFileTransfer):
         try:
             self.client.sendcmd('SITE CHMOD 644 {0:s}'.format(str(remotefile)))
         except ftplib.error_perm as e:
-            logger.warning('FTPS unable to chmod file: %s', str(e))
+            logger.warning('FTPES unable to chmod file: %s', str(e))
 
