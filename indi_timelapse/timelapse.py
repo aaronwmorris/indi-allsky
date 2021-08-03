@@ -505,7 +505,11 @@ class IndiTimelapse(object):
         logger.warning('Generating day time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('day')
 
-        self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
+        self.video_q.put({
+            'timespec'    : timespec,
+            'img_folder'  : img_day_folder,
+            'timeofday'   : 'day',
+        })
 
 
     def generateNightTimelapse(self, timespec):
@@ -523,10 +527,14 @@ class IndiTimelapse(object):
 
         img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
 
-        logger.warning('Generating day time timelapse for %s', timespec)
+        logger.warning('Generating night time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('night')
 
-        self.video_q.put({ 'timespec' : timespec, 'img_folder' : img_day_folder })
+        self.video_q.put({
+            'timespec'    : timespec,
+            'img_folder'  : img_day_folder,
+            'timeofday'   : 'night',
+        })
 
 
     def shoot(self, exposure, sync=True, timeout=None):

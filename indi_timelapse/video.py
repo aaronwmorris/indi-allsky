@@ -44,8 +44,10 @@ class VideoProcessWorker(Process):
                     logger.error('Failed to get exclusive lock: %s', str(e))
                     return
 
+
             timespec = v_dict['timespec']
             img_folder = v_dict['img_folder']
+            timeofday = v_dict['timeofday']
 
 
             if not img_folder.exists():
@@ -53,7 +55,7 @@ class VideoProcessWorker(Process):
                 return
 
 
-            video_file = img_folder.joinpath('allsky-{0:s}.mp4'.format(timespec))
+            video_file = img_folder.joinpath('allsky-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
 
             if video_file.exists():
                 logger.warning('Video is already generated: %s', video_file)
