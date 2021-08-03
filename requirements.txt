@@ -1,5 +1,5 @@
 #pyindi-client
-git+https://github.com/geehalel/pyindi-client@28ebab0#egg=pyindi-client
+git+https://github.com/indilib/pyindi-client.git@68803a1#egg=pyindi-client
 astropy
 #astropy[all]
 opencv-python
