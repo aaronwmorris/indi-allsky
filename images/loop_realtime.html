@@ -29,13 +29,13 @@ async function loop() {
     var image_list_copy = JSON.parse(JSON.stringify(image_list))
 
     for (var i = 0; i < image_list_copy.length; i++) {
-        showImage(image_list_copy[i]);
+        showImage(image_list_copy[i], i);
         await sleep(frameTime);
     };
 
     if (rock) {
         for (var i = image_list_copy.length - 1; i >= 0; i--) {
-            showImage(image_list_copy[i]);
+            showImage(image_list_copy[i], i);
             await sleep(frameTime);
         };
     };
@@ -44,7 +44,7 @@ async function loop() {
 }
 
 
-function showImage(url) {
+function showImage(url, idx) {
     console.log('Showing image ' + url);
 
     var canvas = document.getElementById("canvas");
@@ -64,6 +64,20 @@ function showImage(url) {
 
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        if(drawIndex) {
+            var text = idx;
+            var maxWidth = 10;
+            var x = canvas.width-10-maxWidth;
+            var y = canvas.height-10;
+
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
+            context.strokeText(idx, x, y, maxWidth);
+            context.fillStyle = 'lightgrey';
+            context.fillText(idx, x, y, maxWidth);
+        }
+
     };
 }
 
