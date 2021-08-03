@@ -31,6 +31,7 @@ class pycurl_ftpes(GenericFileTransfer):
         client = pycurl.Curl()
         #client.setopt(pycurl.VERBOSE, 1)
         client.setopt(pycurl.CONNECTTIMEOUT, int(self.timeout))
+
         client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
         client.setopt(pycurl.FTP_SSL, pycurl.FTPSSL_ALL)
         client.setopt(pycurl.FTPSSLAUTH, pycurl.FTPAUTH_DEFAULT) 
@@ -49,7 +50,6 @@ class pycurl_ftpes(GenericFileTransfer):
 
     def _put(self, localfile, remotefile):
         pre_commands = [
-            #'SITE MKDIR {0:s}'.format(str(remotefile.parent)),
             'SITE CHMOD 755 {0:s}'.format(str(remotefile.parent)),
         ]
 
@@ -65,6 +65,7 @@ class pycurl_ftpes(GenericFileTransfer):
         f_localfile = io.open(str(localfile), 'rb')
 
         self.client.setopt(pycurl.URL, url)
+        self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
         self.client.setopt(pycurl.PREQUOTE, pre_commands)
         self.client.setopt(pycurl.POSTQUOTE, post_commands)
         self.client.setopt(pycurl.UPLOAD, 1)
