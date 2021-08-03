@@ -12,15 +12,15 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class ftp(GenericFileTransfer):
+class python_ftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(ftp, self).__init__(*args, **kwargs)
+        super(python_ftp, self).__init__(*args, **kwargs)
 
         self.port = 21
 
 
     def __del__(self):
-        super(ftp, self).__del__()
+        super(python_ftp, self).__del__()
 
 
     def _connect(self, hostname, username, password):

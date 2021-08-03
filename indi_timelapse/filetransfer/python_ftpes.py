@@ -13,15 +13,15 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class ftpes(GenericFileTransfer):
+class python_ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(ftpes, self).__init__(*args, **kwargs)
+        super(python_ftpes, self).__init__(*args, **kwargs)
 
         self.port = 21
 
 
     def __del__(self):
-        super(ftpes, self).__del__()
+        super(python_ftpes, self).__del__()
 
 
     def _connect(self, hostname, username, password):

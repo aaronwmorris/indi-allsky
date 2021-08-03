@@ -11,16 +11,16 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class sftp(GenericFileTransfer):
+class paramiko_sftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(sftp, self).__init__(*args, **kwargs)
+        super(paramiko_sftp, self).__init__(*args, **kwargs)
 
         self.port = 22
         self.sftp = None
 
 
     def __del__(self):
-        super(sftp, self).__del__()
+        super(paramiko_sftp, self).__del__()
 
 
     def _connect(self, hostname, username, password):
