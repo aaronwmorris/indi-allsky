@@ -95,3 +95,7 @@ class pycurl_ftps(GenericFileTransfer):
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
         
 
+# alias
+class ftps(pycurl_ftps):
+    pass
+
