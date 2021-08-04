@@ -104,6 +104,9 @@ class ImageProcessWorker(Process):
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
                 scidata_contrast = self.contrast_clahe(scidata_debayered)
+            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+                # Contrast enhancement during night
+                scidata_contrast = self.contrast_clahe(scidata_debayered)
             else:
                 scidata_contrast = scidata_debayered
 

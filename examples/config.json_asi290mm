@@ -54,6 +54,7 @@
     "DAYTIME_CAPTURE"          : true,
     "DAYTIME_TIMELAPSE"        : false,
     "DAYTIME_CONTRAST_ENHANCE" : false,
+    "NIGHT_CONTRAST_ENHANCE"   : false,
     "NIGHT_SUN_ALT_DEG"        : -6,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
