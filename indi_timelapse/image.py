@@ -124,9 +124,13 @@ class ImageProcessWorker(Process):
                 scidata_cal_flip = scidata_cal_flip_v
 
 
+            if self.config['IMAGE_SCALE_PERCENT']:
+                scidata_scaled = self.scale_image(scidata_cal_flip)
+            else:
+                scidata_scaled = scidata_cal_flip
+
             # blur
             #scidata_blur = self.median_blur(scidata_cal_flip)
-            scidata_blur = scidata_cal_flip
 
             #scidata_denoise = cv2.fastNlMeansDenoisingColored(
             #    scidata_sci_cal_flip,
@@ -137,7 +141,7 @@ class ImageProcessWorker(Process):
             #    searchWindowSize=21,
             #)
 
-            self.image_text(scidata_blur, exp_date)
+            self.image_text(scidata_scaled, exp_date)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -147,7 +151,7 @@ class ImageProcessWorker(Process):
             self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
             if self.save_images:
-                latest_file = self.write_img(scidata_blur, exp_date)
+                latest_file = self.write_img(scidata_scaled, exp_date)
 
                 ### upload images
                 if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
@@ -682,6 +686,18 @@ class ImageProcessWorker(Process):
     def median_blur(self, data_bytes):
         data_blur = cv2.medianBlur(data_bytes, ksize=3)
         return data_blur
+
+
+    def scale_image(self, data_bytes):
+        logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE_PERCENT'])
+        new_width = int(self.image_width * self.config['IMAGE_SCALE_PERCENT'] / 100.0)
+        new_height = int(self.image_height * self.config['IMAGE_SCALE_PERCENT'] / 100.0)
+
+        logger.info('New size: %d x %d', new_width, new_height)
+        self.image_width = new_width
+        self.image_height = new_height
+
+        return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
     def _convert_GRBG_to_RGB_8bit(self, data_bytes):
