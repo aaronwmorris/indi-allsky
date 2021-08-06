@@ -423,8 +423,8 @@ class IndiTimelapse(object):
         )
 
         ### take darks
-        dark_exposures = (self.config['CCD_EXPOSURE_MIN'], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
-        for exp in dark_exposures:
+        night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round exposure
+        for exp in night_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
 
             start = time.time()
@@ -448,8 +448,8 @@ class IndiTimelapse(object):
 
 
         ### take darks
-        dark_exposures = (self.config['CCD_EXPOSURE_MIN'],)  # day will rarely exceed the minimum exposure
-        for exp in dark_exposures:
+        day_dark_exposures = [1]  # day will rarely exceed the minimum exposure
+        for exp in day_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
 
             start = time.time()
