@@ -68,6 +68,7 @@
     "IMAGE_DEBAYER"  : false,
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,
+    "IMAGE_SCALE_PERCENT" : false,
 
     "IMAGE_EXPIRE_DAYS" : 30,
 
