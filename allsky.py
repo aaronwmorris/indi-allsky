@@ -3,6 +3,7 @@
 import indi_allsky
 
 import logging
+import logging.handlers
 import argparse
 
 import multiprocessing
@@ -10,10 +11,13 @@ import multiprocessing
 
 logger = multiprocessing.get_logger()
 LOG_FORMATTER = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
-LOG_HANDLER = logging.StreamHandler()
-LOG_HANDLER.setFormatter(LOG_FORMATTER)
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_FILE = logging.handlers.RotatingFileHandler('./log/indi-allsky.log', maxBytes=10485760, backupCount=5)
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER)
+LOG_HANDLER_FILE.setFormatter(LOG_FORMATTER)
 LOG_LEVEL = logging.INFO
-logger.addHandler(LOG_HANDLER)
+#logger.addHandler(LOG_HANDLER_STREAM)
+logger.addHandler(LOG_HANDLER_FILE)
 logger.setLevel(LOG_LEVEL)
 
 

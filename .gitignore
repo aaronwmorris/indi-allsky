@@ -10,3 +10,6 @@
 config.json
 *.py[oc]
 __pycache__/
+log/*.log
+log/*.log.?
+log/*.log.??
