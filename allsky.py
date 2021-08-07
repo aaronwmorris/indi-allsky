@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 
 import indi_allsky
-
 import logging
 import logging.handlers
 import argparse
-
 import multiprocessing
 
 
 logger = multiprocessing.get_logger()
+
 LOG_FORMATTER = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
-LOG_HANDLER_STREAM = logging.StreamHandler()
-LOG_HANDLER_FILE = logging.handlers.RotatingFileHandler('./log/indi-allsky.log', maxBytes=10485760, backupCount=5)
-LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER)
-LOG_HANDLER_FILE.setFormatter(LOG_FORMATTER)
-LOG_LEVEL = logging.INFO
+
+#LOG_HANDLER_STREAM = logging.StreamHandler()
+#LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER)
 #logger.addHandler(LOG_HANDLER_STREAM)
-logger.addHandler(LOG_HANDLER_FILE)
-logger.setLevel(LOG_LEVEL)
+
+#LOG_HANDLER_FILE = logging.handlers.RotatingFileHandler('./log/indi-allsky.log', maxBytes=10485760, backupCount=5)
+#LOG_HANDLER_FILE.setFormatter(LOG_FORMATTER)
+#logger.addHandler(LOG_HANDLER_FILE)
+
+LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
+LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER)
+logger.addHandler(LOG_HANDLER_SYSLOG)
+
+logger.setLevel(logging.INFO)
 
 
 
