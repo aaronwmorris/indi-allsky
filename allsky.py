@@ -48,9 +48,9 @@ if __name__ == "__main__":
         args_list.append(args.timespec)
 
 
-    ia = indi_allsky.IndiTimelapse(args.config)
+    ia = indi_allsky.IndiAllSky(args.config)
 
-    acrion_func = getattr(ia, args.action)
+    action_func = getattr(ia, args.action)
     action_func(*args_list)
 
 
