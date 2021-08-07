@@ -1,0 +1,12 @@
+[Unit]
+Description=Indi AllSky Service
+After=network.target indiserver.service
+ 
+[Service]
+User=changeme
+PAMName=login
+WorkingDirectory=/home/changeme/git/indi-allsky
+ExecStart=/home/changeme/virtualenv/indi-allsky/bin/python allsky.py -c config.json run
+ 
+[Install]
+WantedBy=multi-user.target

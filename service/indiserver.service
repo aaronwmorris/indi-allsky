@@ -1,0 +1,10 @@
+[Unit]
+Description=Indi Server
+ 
+[Service]
+User=changeme
+PAMName=login
+ExecStart=indiserver indi_simulator_telescope indi_changeme_ccd
+ 
+[Install]
+WantedBy=multi-user.target
