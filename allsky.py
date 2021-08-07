@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import indi_timelapse
+import indi_allsky
 
 import logging
 import argparse
@@ -48,9 +48,9 @@ if __name__ == "__main__":
         args_list.append(args.timespec)
 
 
-    it = indi_timelapse.IndiTimelapse(args.config)
+    ia = indi_allsky.IndiTimelapse(args.config)
 
-    action_func = getattr(it, args.action)
+    acrion_func = getattr(ia, args.action)
     action_func(*args_list)
 
 

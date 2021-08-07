@@ -27,7 +27,7 @@ from .exceptions import TimeOutException
 logger = multiprocessing.get_logger()
 
 
-class IndiTimelapse(object):
+class IndiAllSky(object):
 
     def __init__(self, f_config_file):
         self.config = json.loads(f_config_file.read())
