@@ -5,6 +5,8 @@ Description=Indi Server
 User=changeme
 PAMName=login
 ExecStart=indiserver indi_simulator_telescope indi_changeme_ccd
+ExecStop=/bin/kill -TERM $MAINPID
+RestartSec=5
  
 [Install]
 WantedBy=multi-user.target

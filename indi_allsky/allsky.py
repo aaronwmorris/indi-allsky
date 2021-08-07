@@ -70,12 +70,14 @@ class IndiAllSky(object):
 
         self.generate_timelapse_flag = False   # This is updated once images have been generated
 
-        signal.signal(signal.SIGALRM, self.alarm_handler)
-        signal.signal(signal.SIGHUP, self.hup_handler)
+        signal.signal(signal.SIGALRM, self.sigalarm_handler)
+        signal.signal(signal.SIGHUP, self.sighup_handler)
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+        signal.signal(signal.SIGINT, self.sigint_handler)
 
 
 
-    def hup_handler(self, signum, frame):
+    def sighup_handler(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
         with io.open(self.config_file, 'r') as f_config_file:
@@ -107,7 +109,27 @@ class IndiAllSky(object):
         self._startImageUploadWorker()
 
 
-    def alarm_handler(self, signum, frame):
+    def sigterm_handler(self, signum, frame):
+        logger.warning('Caught TERM signal, shutting down')
+
+        self._stopVideoProcessWorker()
+        self._stopImageProcessWorker()
+        self._stopImageUploadWorker()
+
+        sys.exit()
+
+
+    def sigint_handler(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        self._stopVideoProcessWorker()
+        self._stopImageProcessWorker()
+        self._stopImageUploadWorker()
+
+        sys.exit()
+
+
+    def sigalarm_handler(self, signum, frame):
         raise TimeOutException()
 
 
@@ -215,9 +237,11 @@ class IndiAllSky(object):
 
 
     def _stopVideoProcessWorker(self):
-        if self.video_worker:
-            if not self.video_worker.is_alive():
-                return
+        if not self.video_worker:
+            return
+
+        if not self.video_worker.is_alive():
+            return
 
         logger.info('Stopping VideoProcessorWorker process')
         self.video_q.put({ 'stop' : True })
@@ -225,9 +249,11 @@ class IndiAllSky(object):
 
 
     def _startImageUploadWorker(self):
-        if self.upload_worker:
-            if self.upload_worker.is_alive():
-                return
+        if not self.upload_worker:
+            return
+
+        if self.upload_worker.is_alive():
+            return
 
         self.upload_worker_idx += 1
 
@@ -242,9 +268,11 @@ class IndiAllSky(object):
 
 
     def _stopImageUploadWorker(self):
-        if self.upload_worker:
-            if not self.upload_worker.is_alive():
-                return
+        if not self.upload_worker:
+            return
+
+        if not self.upload_worker.is_alive():
+            return
 
         logger.info('Stopping ImageUploadWorker process')
         self.upload_q.put({ 'stop' : True })
@@ -289,14 +317,9 @@ class IndiAllSky(object):
         ### main loop starts
         while True:
             # restart worker if it has failed
-            if not self.image_worker.is_alive():
-                self._startImageProcessWorker()
-
-            if not self.video_worker.is_alive():
-                self._startVideoProcessWorker()
-
-            if not self.upload_worker.is_alive():
-                self._startImageUploadWorker()
+            self._startImageProcessWorker()
+            self._startVideoProcessWorker()
+            self._startImageUploadWorker()
 
 
             nighttime = self.is_night()
