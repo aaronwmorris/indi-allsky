@@ -112,9 +112,9 @@ class IndiAllSky(object):
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
-        self._stopVideoProcessWorker()
-        self._stopImageProcessWorker()
-        self._stopImageUploadWorker()
+        self._stopVideoProcessWorker(terminate=True)
+        self._stopImageProcessWorker(terminate=True)
+        self._stopImageUploadWorker(terminate=True)
 
         sys.exit()
 
@@ -209,10 +209,16 @@ class IndiAllSky(object):
         self.image_worker.start()
 
 
-    def _stopImageProcessWorker(self):
-        if self.image_worker:
-            if not self.image_worker.is_alive():
-                return
+    def _stopImageProcessWorker(self, terminate=False):
+        if not self.image_worker:
+            return
+
+        if not self.image_worker.is_alive():
+            return
+
+        if terminate:
+            logger.info('Terminating ImageProcessorWorker process')
+            self.image_worker.terminate()
 
         logger.info('Stopping ImageProcessorWorker process')
         self.image_q.put({ 'stop' : True })
@@ -236,12 +242,16 @@ class IndiAllSky(object):
         self.video_worker.start()
 
 
-    def _stopVideoProcessWorker(self):
+    def _stopVideoProcessWorker(self, terminate=False):
         if not self.video_worker:
             return
 
         if not self.video_worker.is_alive():
             return
+
+        if terminate:
+            logger.info('Terminating VideoProcessorWorker process')
+            self.video_worker.terminate()
 
         logger.info('Stopping VideoProcessorWorker process')
         self.video_q.put({ 'stop' : True })
@@ -249,11 +259,9 @@ class IndiAllSky(object):
 
 
     def _startImageUploadWorker(self):
-        if not self.upload_worker:
-            return
-
-        if self.upload_worker.is_alive():
-            return
+        if self.upload_worker:
+            if self.upload_worker.is_alive():
+                return
 
         self.upload_worker_idx += 1
 
@@ -267,12 +275,16 @@ class IndiAllSky(object):
         self.upload_worker.start()
 
 
-    def _stopImageUploadWorker(self):
+    def _stopImageUploadWorker(self, terminate=False):
         if not self.upload_worker:
             return
 
         if not self.upload_worker.is_alive():
             return
+
+        if terminate:
+            logger.info('Terminating ImageUploadWorker process')
+            self.upload_worker.terminate()
 
         logger.info('Stopping ImageUploadWorker process')
         self.upload_q.put({ 'stop' : True })
