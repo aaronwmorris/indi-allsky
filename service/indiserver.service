@@ -2,9 +2,9 @@
 Description=Indi Server
  
 [Service]
-User=changeme
+User=%INDISERVER_USER%
 PAMName=login
-ExecStart=indiserver indi_simulator_telescope indi_changeme_ccd
+ExecStart=indiserver indi_simulator_telescope %INDI_CCD_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
  
