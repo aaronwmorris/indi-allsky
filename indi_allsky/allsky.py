@@ -30,7 +30,7 @@ logger = multiprocessing.get_logger()
 class IndiAllSky(object):
 
     def __init__(self, f_config_file):
-        self.config = json.loads(f_config_file.read())
+        self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
 
         self.config_file = f_config_file.name
@@ -87,7 +87,7 @@ class IndiAllSky(object):
 
         with io.open(self.config_file, 'r') as f_config_file:
             try:
-                c = json.loads(f_config_file.read())
+                c = self._parseConfig(f_config_file.read())
                 f_config_file.close()
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
@@ -136,6 +136,14 @@ class IndiAllSky(object):
 
     def sigalarm_handler(self, signum, frame):
         raise TimeOutException()
+
+
+    def _parseConfig(self, json_config):
+        c = json.loads(json_config)
+
+        # set any new config defaults which might not be in the config
+
+        return c
 
 
     def _initialize(self):
