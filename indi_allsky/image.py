@@ -136,14 +136,8 @@ class ImageProcessWorker(Process):
             # blur
             #scidata_blur = self.median_blur(scidata_cal_flip)
 
-            #scidata_denoise = cv2.fastNlMeansDenoisingColored(
-            #    scidata_sci_cal_flip,
-            #    None,
-            #    h=3,
-            #    hColor=3,
-            #    templateWindowSize=7,
-            #    searchWindowSize=21,
-            #)
+            # denoise
+            #scidata_denoise = self.fastDenoise(scidata_sci_cal_flip)
 
             self.image_text(scidata_scaled, exp_date)
 
@@ -350,10 +344,7 @@ class ImageProcessWorker(Process):
             return scidata
 
         bayer_pattern = getattr(cv2, self.config['IMAGE_DEBAYER'])
-        ###
-        #scidata_rgb = cv2.cvtColor(scidata, cv2.COLOR_BayerGR2RGB)
         scidata_rgb = cv2.cvtColor(scidata, bayer_pattern)
-        ###
 
         #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
 
@@ -690,6 +681,19 @@ class ImageProcessWorker(Process):
     def median_blur(self, data_bytes):
         data_blur = cv2.medianBlur(data_bytes, ksize=3)
         return data_blur
+
+
+    def fastDenoise(self, data_bytes):
+        scidata_denoise = cv2.fastNlMeansDenoisingColored(
+            data_bytes,
+            None,
+            h=3,
+            hColor=3,
+            templateWindowSize=7,
+            searchWindowSize=21,
+        )
+
+        return scidata_denoise
 
 
     def scale_image(self, data_bytes):
