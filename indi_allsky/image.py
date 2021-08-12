@@ -56,7 +56,11 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
-        self.base_dir = Path(__file__).parent.parent.absolute()
+
+        if self.config['IMAGE_FOLDER']:
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('images').absolute()
 
 
     def run(self):
@@ -191,7 +195,7 @@ class ImageProcessWorker(Process):
 
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = self.base_dir.joinpath(self.filename_t.format(date_str, 'fit'))
+        filename = self.image_dir.joinpath(self.filename_t.format(date_str, 'fit'))
 
         logger.info('fit filename: %s', filename)
 
@@ -232,7 +236,7 @@ class ImageProcessWorker(Process):
 
 
         ### Always write the latest file for web access
-        latest_file = self.base_dir.joinpath('images', 'latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+        latest_file = self.image_dir.joinpath('latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
         try:
             latest_file.unlink()
@@ -312,7 +316,7 @@ class ImageProcessWorker(Process):
 
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.base_dir.joinpath('images', '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
             day_folder.mkdir(parents=True)
             day_folder.chmod(0o755)
@@ -327,7 +331,7 @@ class ImageProcessWorker(Process):
 
     def calibrate(self, scidata_uncalibrated):
 
-        dark_file = self.base_dir.joinpath('darks', 'dark_{0:d}s_gain{1:d}_bin{2:d}.fit'.format(int(self.last_exposure) + 1, self.gain_v.value, self.bin_v.value))  # round up exposure for dark frame
+        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_gain{1:d}_bin{2:d}.fit'.format(int(self.last_exposure) + 1, self.gain_v.value, self.bin_v.value))  # round up exposure for dark frame
 
         if not dark_file.exists():
             logger.warning('Dark not found: %s', dark_file)

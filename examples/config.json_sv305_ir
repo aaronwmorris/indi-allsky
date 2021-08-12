@@ -70,6 +70,8 @@
         "jpeg"  : 90,
         "png"   : 9
     },
+    "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
+    "IMAGE_FOLDER"   : "",
     "IMAGE_DEBAYER"  : "COLOR_BAYER_GR2RGB",
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,

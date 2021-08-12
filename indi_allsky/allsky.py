@@ -66,7 +66,12 @@ class IndiAllSky(object):
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
         self.__type_to_str = { PyIndi.INDI_NUMBER: 'number', PyIndi.INDI_SWITCH: 'switch', PyIndi.INDI_TEXT: 'text', PyIndi.INDI_LIGHT: 'light', PyIndi.INDI_BLOB: 'blob', PyIndi.INDI_UNKNOWN: 'unknown' }
 
-        self.base_dir = Path(__file__).parent.parent.absolute()
+
+        if self.config['IMAGE_FOLDER']:
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('images').absolute()
+
 
         self.generate_timelapse_flag = False   # This is updated once images have been generated
 
@@ -535,7 +540,7 @@ class IndiAllSky(object):
 
         self._startVideoProcessWorker()
 
-        img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
+        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating day time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('day')
@@ -560,7 +565,7 @@ class IndiAllSky(object):
         if self.upload_worker:
             self._stopImageUploadWorker()
 
-        img_base_folder = self.base_dir.joinpath('images', '{0:s}'.format(timespec))
+        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating night time timelapse for %s', timespec)
         img_day_folder = img_base_folder.joinpath('night')
@@ -586,11 +591,9 @@ class IndiAllSky(object):
         if not days:
             days = self.config['IMAGE_EXPIRE_DAYS']
 
-        img_root_folder = self.base_dir.joinpath('images')
-
         # Orphaned symlinks need to be removed
         symlink_list = list()
-        self.getFolderSymlinks(img_root_folder, symlink_list)
+        self.getFolderSymlinks(self.image_dir, symlink_list)
         for f in symlink_list:
             logger.info('Removing orphaned symlink: %s', f)
 
@@ -601,7 +604,7 @@ class IndiAllSky(object):
 
         # Old image files need to be pruned
         file_list = list()
-        self.getFolderFilesByExt(img_root_folder, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        self.getFolderFilesByExt(self.image_dir, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
         cutoff_age = datetime.now() - timedelta(days=days)
 
@@ -617,7 +620,7 @@ class IndiAllSky(object):
 
         # Remove empty folders
         dir_list = list()
-        self.getFolderFolders(img_root_folder, dir_list)
+        self.getFolderFolders(self.image_dir, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
