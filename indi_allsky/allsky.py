@@ -462,14 +462,18 @@ class IndiAllSky(object):
             self.config['INDI_CONFIG_NIGHT'],
         )
 
+
+        self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
+
+
         ### take darks
         night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round exposure
         for exp in night_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
+            self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()
 
-            self.indiclient.filename_t = filename_t
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
@@ -491,10 +495,10 @@ class IndiAllSky(object):
         day_dark_exposures = [1]  # day will rarely exceed the minimum exposure
         for exp in day_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
+            self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()
 
-            self.indiclient.filename_t = filename_t
             self.shoot(float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 

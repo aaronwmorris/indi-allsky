@@ -21,6 +21,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self._device = None
         self._filename_t = '{0:s}.{1:s}'
+        self._img_subdirs = []
 
         self._timeout = 10.0
 
@@ -51,6 +52,15 @@ class IndiClient(PyIndi.BaseClient):
     def filename_t(self, new_filename_t):
         self._filename_t = new_filename_t
 
+    @property
+    def img_subdirs(self):
+        return self._img_subdirs
+
+    @img_subdirs.setter
+    def img_subdirs(self, new_img_subdirs):
+        self._img_subdirs = new_img_subdirs
+
+
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
 
@@ -77,7 +87,12 @@ class IndiClient(PyIndi.BaseClient):
         exp_date = datetime.now()
 
         ### process data in worker
-        self.image_q.put({ 'imgdata' : imgdata, 'exp_date' : exp_date, 'filename_t' : self._filename_t })
+        self.image_q.put({
+            'imgdata'     : imgdata,
+            'exp_date'    : exp_date,
+            'filename_t'  : self._filename_t,
+            'img_subdirs' : self._img_subdirs,
+        })
 
 
     def newSwitch(self, svp):

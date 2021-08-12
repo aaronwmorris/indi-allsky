@@ -73,6 +73,7 @@ class ImageProcessWorker(Process):
             imgdata = i_dict['imgdata']
             exp_date = i_dict['exp_date']
             filename_t = i_dict.get('filename_t')
+            img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
 
             if filename_t:
                 self.filename_t = filename_t
@@ -91,7 +92,7 @@ class ImageProcessWorker(Process):
             logger.info('Image: %d x %d', self.image_width, self.image_height)
 
             if self.save_fits:
-                self.write_fit(hdulist, exp_date)
+                self.write_fit(hdulist, exp_date, img_subdirs)
 
 
             processing_start = time.time()
@@ -149,7 +150,7 @@ class ImageProcessWorker(Process):
             self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
             if self.save_images:
-                latest_file = self.write_img(scidata_scaled, exp_date)
+                latest_file = self.write_img(scidata_scaled, exp_date, img_subdirs)
 
                 ### upload images
                 if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
@@ -174,7 +175,7 @@ class ImageProcessWorker(Process):
 
 
 
-    def write_fit(self, hdulist, exp_date):
+    def write_fit(self, hdulist, exp_date, img_subdirs):
         ### Do not write image files if fits are enabled
         if not self.save_fits:
             return
@@ -189,7 +190,7 @@ class ImageProcessWorker(Process):
 
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = self.image_dir.joinpath(self.filename_t.format(date_str, 'fit'))
+        filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
 
         logger.info('fit filename: %s', filename)
 
@@ -205,7 +206,7 @@ class ImageProcessWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def write_img(self, scidata, exp_date):
+    def write_img(self, scidata, exp_date, img_subdirs):
         ### Do not write image files if fits are enabled
         if not self.save_images:
             return
@@ -253,7 +254,7 @@ class ImageProcessWorker(Process):
         folder = self.getImageFolder(exp_date)
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(self.filename_t.format(date_str, self.config['IMAGE_FILE_TYPE']))
+        filename = folder.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, self.config['IMAGE_FILE_TYPE']))
 
         logger.info('Image filename: %s', filename)
 
