@@ -27,6 +27,8 @@ cd $OLDPWD
 
 echo "Installing packages..."
 if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
     sudo apt-get -y install \
         build-essential \
         python3 \
@@ -80,7 +82,7 @@ echo "Setting up indiserver service"
 TMP1=$(tempfile)
 sed \
  -e "s|%INDISERVER_USER%|$USER|" \
- -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|" service/indiserver.service > $TMP1
+ -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
 sudo cp -f $TMP1 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
@@ -93,7 +95,7 @@ echo "Setting up indi-allsky service"
 TMP2=$(tempfile)
 sed \
  -e "s|%ALLSKY_USER%|$USER|" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|" service/indi-allsky.service > $TMP2
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
 sudo cp -f $TMP2 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
@@ -107,4 +109,11 @@ sudo systemctl enable $INDISEVER_SERVICE_NAME
 sudo systemctl enable $ALLSKY_SERVICE_NAME
 
 
-# cleanup
+echo "Setup rsyslog logging"
+sudo touch /var/log/indi-allsky.log
+sudo chmod 644 /var/log/indi-allsky.log
+sudo chown $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky.log
+sudo cp ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d
+sudo systemctl restart rsyslog
+
+
