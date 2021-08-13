@@ -5,8 +5,8 @@ After=network.target indiserver.service
 [Service]
 User=%ALLSKY_USER%
 PAMName=login
-WorkingDirectory=/home/%ALLSKY_USER%/git/indi-allsky
-ExecStart=/home/%ALLSKY_USER%/virtualenv/indi-allsky/bin/python3 allsky.py -c config.json run
+WorkingDirectory=%ALLSKY_DIRECTORY%
+ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/python3 allsky.py -c config.json run
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5

@@ -13,3 +13,4 @@ __pycache__/
 log/*.log
 log/*.log.?
 log/*.log.??
+virtualenv/*
