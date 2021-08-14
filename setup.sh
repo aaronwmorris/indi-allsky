@@ -30,6 +30,17 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 
 
+if [ -f "/usr/local/bin/indiserver" ]; then
+    echo
+    echo
+    echo "Detected a custom installation of INDI in /usr/local/bin"
+    echo "The setup script is probably going to fail"
+    echo
+    echo
+    sleep 10
+fi
+
+
 # Run sudo to ask for initial password
 sudo true
 
@@ -39,7 +50,7 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
     RSYSLOG_GROUP=adm
 
     # Astroberry repository
-    if [ ! -f /etc/apt/sources.list.d/astroberry.list ]; then
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
         echo "Installing INDI via Astroberry repository"
         wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
         sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
