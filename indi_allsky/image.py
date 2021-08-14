@@ -99,6 +99,8 @@ class ImageProcessWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
+            #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+
             # debayer
             scidata_debayered = self.debayer(scidata_calibrated)
 
@@ -346,8 +348,6 @@ class ImageProcessWorker(Process):
 
         bayer_pattern = getattr(cv2, self.config['IMAGE_DEBAYER'])
         scidata_bgr = cv2.cvtColor(scidata, bayer_pattern)
-
-        #scidata_bgr = self._convert_GRBG_to_BGR_8bit(scidata)
 
         #scidata_wb = self.white_balance2(scidata_bgr)
         scidata_wb = scidata_bgr
@@ -709,15 +709,14 @@ class ImageProcessWorker(Process):
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _convert_GRBG_to_BGR_8bit(self, data_bytes):
-        data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
-        even = data_bytes[0::2]
-        odd = data_bytes[1::2]
+    def _convert_16bit_to_8bit(self, data_bytes_16):
+        data_bytes_8 = numpy.frombuffer(data_bytes_16, dtype=numpy.uint8)
+        even = data_bytes_8[0::2]
+        odd = data_bytes_8[1::2]
         # Convert bayer16 to bayer8
         bayer8_image = (even >> 4) | (odd << 4)
-        bayer8_image = bayer8_image.reshape((1080, 1920))
-        # Use OpenCV to convert Bayer GRBG to BGR
-        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2BGR)
+        bayer8_image = bayer8_image.reshape((self.image_height, self.image_width))
+        return bayer8_image
 
 
     def calculateSkyObject(self, skyObj):
