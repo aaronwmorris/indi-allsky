@@ -18,12 +18,12 @@ IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
 
 
 HTDOCS_FILES="
-    images/js_latest.php
-    images/latest.html
-    images/loop.html
-    images/loop_realtime.html
-    images/settings_latest.js
-    images/settings_loop.js
+    js_latest.php
+    latest.html
+    loop.html
+    loop_realtime.html
+    settings_latest.js
+    settings_loop.js
 "
 
 DISTRO_NAME=$(lsb_release -s -i)
@@ -159,7 +159,7 @@ sudo chown $USER "$IMAGE_FOLDER"
 
 for F in $HTDOCS_FILES; do
     # ask to overwrite if they already exist
-    cp -i $F "${HTDOCS_FOLDER}/$F"
+    sudo cp -i "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
 done
 
 

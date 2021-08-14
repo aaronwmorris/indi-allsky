@@ -60,7 +60,7 @@ class ImageProcessWorker(Process):
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
-            self.image_dir = Path(__file__).parent.parent.joinpath('images').absolute()
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
     def run(self):

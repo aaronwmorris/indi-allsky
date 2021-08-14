@@ -19,7 +19,7 @@ function errHandle($errNo, $errStr, $errFile, $errLine) {
 header("content-type: application/x-javascript");
 
 class GetLatestImages {
-    public $image_dir_base = '.';
+    public $image_dir_base = 'images';
     public $image_ext = array('jpg', 'jpeg', 'png');
 
     public function main() {
