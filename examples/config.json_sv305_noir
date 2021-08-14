@@ -71,7 +71,7 @@
         "png"   : 9
     },
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
-    "IMAGE_FOLDER"   : "/var/www/html/images",
+    "IMAGE_FOLDER"   : "/var/www/html/allsky/images",
     "IMAGE_DEBAYER"  : "COLOR_BAYER_GR2RGB",
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,

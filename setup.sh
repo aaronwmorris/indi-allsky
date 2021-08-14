@@ -12,8 +12,7 @@ export PATH
 INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
-HTDOCS_FOLDER="/var/www/html"
-IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
+HTDOCS_FOLDER="/var/www/html/allsky"
 #### end config ####
 
 
@@ -24,6 +23,9 @@ HTDOCS_FILES="
     loop_realtime.html
     settings_latest.js
     settings_loop.js
+    .htaccess
+    images/.htaccess
+    images/darks/.htaccess
 "
 
 DISTRO_NAME=$(lsb_release -s -i)
@@ -154,12 +156,16 @@ sudo systemctl restart rsyslog
 
 
 echo "Setup image folder"
-[[ ! -d "$IMAGE_FOLDER" ]] && sudo mkdir -m 755 "$IMAGE_FOLDER"
-sudo chown $USER "$IMAGE_FOLDER"
+[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -m 755 "$HTDOCS_FOLDER"
+sudo chown -R "$USER" "$HTDOCS_FOLDER"
+
+[[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images"
+[[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images/darks"
 
 for F in $HTDOCS_FILES; do
     # ask to overwrite if they already exist
-    sudo cp -i "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
+    cp -i "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
+    chmod 644 "${HTDOCS_FOLDER}/${F}"
 done
 
 
