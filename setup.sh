@@ -12,9 +12,19 @@ export PATH
 INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
+HTDOCS_FOLDER="/var/www/html"
+IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
 #### end config ####
 
 
+HTDOCS_FILES="
+    images/js_latest.php
+    images/latest.html
+    images/loop.html
+    images/loop_realtime.html
+    images/settings_latest.js
+    images/settings_loop.js
+"
 
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
@@ -35,6 +45,7 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
 
     # Astroberry repository
     if [ ! -f /etc/apt/sources.list.d/astroberry.list ]; then
+        echo "Installing INDI via Astroberry repository"
         wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
         sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
     fi
@@ -46,6 +57,8 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        apache2 \
+        libapache2-mod-php \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -128,3 +141,24 @@ sudo cp ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d
 sudo systemctl restart rsyslog
 
 
+echo "Setup image folder"
+[[ ! -d "$IMAGE_FOLDER" ]] && sudo mkdir -m 755 "$IMAGE_FOLDER"
+sudo chown $USER "$IMAGE_FOLDER"
+
+for F in $HTDOCS_FILES; do
+    # ask to overwrite if they already exist
+    cp -i $F "${HTDOCS_FOLDER}/$F"
+done
+
+
+echo
+echo
+echo
+echo
+echo "Now copy a config file from the examples/ folder to config.json"
+echo "Customize config.json and start the software"
+echo
+echo "    sudo systemctl start indiserver"
+echo "    sudo systemctl start indi-allsky"
+echo
+echo "Enjoy!"
