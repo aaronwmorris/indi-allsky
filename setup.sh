@@ -29,11 +29,6 @@ HTDOCS_FILES="
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 
-# get list of drivers
-cd $INDI_DRIVER_PATH
-INDI_DRIVERS=$(ls indi_*_ccd)
-cd $OLDPWD
-
 
 # Run sudo to ask for initial password
 sudo true
@@ -73,6 +68,12 @@ else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE"
     exit 1
 fi
+
+
+# get list of drivers
+cd $INDI_DRIVER_PATH
+INDI_DRIVERS=$(ls indi_*_ccd)
+cd $OLDPWD
 
 
 # find script directory for service setup
