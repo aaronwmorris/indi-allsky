@@ -25,6 +25,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self._timeout = 10.0
 
+        self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
+
         logger.info('creating an instance of IndiClient')
 
 
@@ -118,6 +120,7 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
+    # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
 
     def get_control(self, name, ctl_type, timeout=None, device=None):
         if not device:
