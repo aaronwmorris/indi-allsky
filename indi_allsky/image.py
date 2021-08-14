@@ -345,12 +345,12 @@ class ImageProcessWorker(Process):
             return scidata
 
         bayer_pattern = getattr(cv2, self.config['IMAGE_DEBAYER'])
-        scidata_rgb = cv2.cvtColor(scidata, bayer_pattern)
+        scidata_bgr = cv2.cvtColor(scidata, bayer_pattern)
 
-        #scidata_rgb = self._convert_GRBG_to_RGB_8bit(scidata)
+        #scidata_bgr = self._convert_GRBG_to_BGR_8bit(scidata)
 
-        #scidata_wb = self.white_balance2(scidata_rgb)
-        scidata_wb = scidata_rgb
+        #scidata_wb = self.white_balance2(scidata_bgr)
+        scidata_wb = scidata_bgr
 
         return scidata_wb
 
@@ -532,17 +532,17 @@ class ImageProcessWorker(Process):
 
             adu = m_avg
         else:
-            r, g, b = cv2.split(scidata)
-            r_avg = cv2.mean(r)[0]
-            g_avg = cv2.mean(g)[0]
+            b, g, r = cv2.split(scidata)
             b_avg = cv2.mean(b)[0]
+            g_avg = cv2.mean(g)[0]
+            r_avg = cv2.mean(r)[0]
 
-            logger.info('R mean: %0.2f', r_avg)
-            logger.info('G mean: %0.2f', g_avg)
             logger.info('B mean: %0.2f', b_avg)
+            logger.info('G mean: %0.2f', g_avg)
+            logger.info('R mean: %0.2f', r_avg)
 
             # Find the gain of each channel
-            adu = (r_avg + g_avg + b_avg) / 3
+            adu = (b_avg + g_avg + r_avg) / 3
 
         if adu <= 0.0:
             # ensure we do not divide by zero
@@ -646,7 +646,7 @@ class ImageProcessWorker(Process):
             return clahe.apply(data_bytes)
 
         # color
-        lab = cv2.cvtColor(data_bytes, cv2.COLOR_RGB2LAB)
+        lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
 
         l, a, b = cv2.split(lab)
 
@@ -655,7 +655,7 @@ class ImageProcessWorker(Process):
 
         new_lab = cv2.merge((cl, a, b))
 
-        return cv2.cvtColor(new_lab, cv2.COLOR_LAB2RGB)
+        return cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
 
 
     def white_balance2(self, data_bytes):
@@ -709,15 +709,15 @@ class ImageProcessWorker(Process):
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _convert_GRBG_to_RGB_8bit(self, data_bytes):
+    def _convert_GRBG_to_BGR_8bit(self, data_bytes):
         data_bytes = numpy.frombuffer(data_bytes, dtype=numpy.uint8)
         even = data_bytes[0::2]
         odd = data_bytes[1::2]
         # Convert bayer16 to bayer8
         bayer8_image = (even >> 4) | (odd << 4)
         bayer8_image = bayer8_image.reshape((1080, 1920))
-        # Use OpenCV to convert Bayer GRBG to RGB
-        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2RGB)
+        # Use OpenCV to convert Bayer GRBG to BGR
+        return cv2.cvtColor(bayer8_image, cv2.COLOR_BayerGR2BGR)
 
 
     def calculateSkyObject(self, skyObj):
