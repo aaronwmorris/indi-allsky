@@ -4,7 +4,7 @@
 set -o errexit
 #set -o nounset
 
-PATH=/bin:/usr/bin:/usr/local/bin
+PATH=/bin:/usr/bin
 export PATH
 
 
@@ -25,10 +25,21 @@ INDI_DRIVERS=$(ls indi_*_ccd)
 cd $OLDPWD
 
 
+# Run sudo to ask for initial password
+sudo true
+
 echo "Installing packages..."
 if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    # Astroberry repository
+    if [ ! -f /etc/apt/sources.list.d/astroberry.list ]; then
+        wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+        sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+    fi
+
+    sudo apt-get update
     sudo apt-get -y install \
         build-essential \
         python3 \
