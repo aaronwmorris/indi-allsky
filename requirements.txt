@@ -7,4 +7,5 @@ ephem
 paramiko
 pycurl
 imageio
+imageio-ffmpeg
 pygifsicle
