@@ -76,6 +76,7 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
         libcfitsio-dev \
         libnova-dev \
         ffmpeg \
+        gifsicle \
         libindi-dev
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE"

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import sys
-import imageio
 import argparse
 import logging
+import imageio
+import pygifsicle
 #from pprint import pformat
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +23,7 @@ class GifBuilder(object):
             sys.exit(1)
 
 
-    def main(self, outfile, inputfiles):
+    def main(self, outfile, inputfiles, optimize=False):
         logger.warning('Creating %s', outfile)
         with imageio.get_writer(outfile, mode='I', duration=self.duration) as writer:
             for filename in inputfiles:
@@ -40,6 +41,11 @@ class GifBuilder(object):
 
                 writer.append_data(data)
 
+        if optimize:
+            logger.info('Optimizing gif')
+            pygifsicle.optimize(
+                outfile,
+            )
 
 
 if __name__ == "__main__":
@@ -75,9 +81,22 @@ if __name__ == "__main__":
         nargs='*',
         required=False,
     )
+    argparser.add_argument(
+        '--optimize',
+        '-O',
+        dest='optimize',
+        action='store_true',
+        help='optimize gif',
+    )
+    argparser.add_argument(
+        '--no-optimize',
+        dest='optimize',
+        action='store_true',
+    )
+    argparser.set_defaults(optimize=False)
 
     args = argparser.parse_args()
 
     gb = GifBuilder(duration=args.duration, roi=args.roi)
-    gb.main(args.output, args.inputfiles)
+    gb.main(args.output, args.inputfiles, optimize=args.optimize)
 

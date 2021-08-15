@@ -7,3 +7,4 @@ ephem
 paramiko
 pycurl
 imageio
+pygifsicle

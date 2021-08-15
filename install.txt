@@ -10,5 +10,6 @@ libcfitsio-dev
 libnova-dev
 
 ffmpeg
+gifsicle
 
 libindi-dev
