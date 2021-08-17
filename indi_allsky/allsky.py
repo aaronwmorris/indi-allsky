@@ -116,9 +116,9 @@ class IndiAllSky(object):
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
-        self._stopVideoProcessWorker(terminate=False)
-        self._stopImageProcessWorker(terminate=False)
-        self._stopImageUploadWorker(terminate=False)
+        self._stopVideoProcessWorker(terminate=True)
+        self._stopImageProcessWorker(terminate=True)
+        self._stopImageUploadWorker(terminate=True)
 
         sys.exit()
 
