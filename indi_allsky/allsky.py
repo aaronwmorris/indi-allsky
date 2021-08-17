@@ -98,7 +98,12 @@ class IndiAllSky(object):
 
         # overwrite config
         self.config = c
+
+        # Update shared values
+        self.gain_v = copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE'])
+        self.bin_v = copy.copy(self.config['INDI_CONFIG_NIGHT']['BIN_VALUE'])
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
+        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
 
         # reconfigure if needed
         self.reconfigureCcd()
