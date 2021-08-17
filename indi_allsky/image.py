@@ -25,7 +25,7 @@ logger = multiprocessing.get_logger()
 
 
 class ImageProcessWorker(Process):
-    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, save_fits=False, save_images=True):
+    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_fits=False, save_images=True):
         super(ImageProcessWorker, self).__init__()
 
         #self.threadID = idx
@@ -39,6 +39,7 @@ class ImageProcessWorker(Process):
         self.bin_v = bin_v
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
+        self.moonmode_v = moonmode_v
 
         self.last_exposure = None
 
@@ -500,6 +501,32 @@ class ImageProcessWorker(Process):
             cv2.putText(
                 img=data_bytes,
                 text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
+                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                fontFace=fontFace[0],
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                lineType=lineType[0],
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
+
+        # Add moon mode indicator
+        if self.moonmode_v.value:
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=data_bytes,
+                    text='Moon Mode',
+                    org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                    fontFace=fontFace[0],
+                    color=(0, 0, 0),
+                    lineType=lineType[0],
+                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+            cv2.putText(
+                img=data_bytes,
+                text='Moon Mode',
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 fontFace=fontFace[0],
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],

@@ -213,6 +213,7 @@ class IndiAllSky(object):
             self.bin_v,
             self.sensortemp_v,
             self.night_v,
+            self.moonmode_v,
             save_fits=self.save_fits,
             save_images=self.save_images,
         )
