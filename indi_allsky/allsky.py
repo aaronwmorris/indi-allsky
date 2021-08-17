@@ -588,18 +588,11 @@ class IndiAllSky(object):
 
 
     def generateDayTimelapse(self, timespec):
-        self._startVideoProcessWorker()
         self._generateDayTimelapse(timespec)
         self._stopVideoProcessWorker()
 
 
     def _generateDayTimelapse(self, timespec):
-        if self.image_worker:
-            self._stopImageProcessWorker()
-
-        if self.upload_worker:
-            self._stopImageUploadWorker()
-
         self._startVideoProcessWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -615,17 +608,12 @@ class IndiAllSky(object):
 
 
     def generateNightTimelapse(self, timespec):
-        self._startVideoProcessWorker()
         self._generateNightTimelapse(timespec)
         self._stopVideoProcessWorker()
 
 
     def _generateNightTimelapse(self, timespec):
-        if self.image_worker:
-            self._stopImageProcessWorker()
-
-        if self.upload_worker:
-            self._stopImageUploadWorker()
+        self._startVideoProcessWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
