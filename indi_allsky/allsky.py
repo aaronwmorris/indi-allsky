@@ -100,8 +100,6 @@ class IndiAllSky(object):
         self.config = c
 
         # Update shared values
-        self.gain_v = copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE'])
-        self.bin_v = copy.copy(self.config['INDI_CONFIG_NIGHT']['BIN_VALUE'])
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
         self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
 
@@ -448,16 +446,35 @@ class IndiAllSky(object):
                 self._configureCcd(
                     self.config['INDI_CONFIG_NIGHT_MOONMODE'],
                 )
+
+                with self.gain_v.get_lock():
+                    self.gain_v.value = self.config['INDI_CONFIG_NIGHT_MOONMODE']['GAIN_VALUE']
+
+                with self.bin_v.get_lock():
+                    self.bin_v.value = self.config['INDI_CONFIG_NIGHT_MOONMODE']['BIN_VALUE']
             else:
                 logger.warning('Change to night (normal mode)')
                 self._configureCcd(
                     self.config['INDI_CONFIG_NIGHT'],
                 )
+
+                with self.gain_v.get_lock():
+                    self.gain_v.value = self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE']
+
+                with self.bin_v.get_lock():
+                    self.bin_v.value = self.config['INDI_CONFIG_NIGHT']['BIN_VALUE']
         else:
             logger.warning('Change to day')
             self._configureCcd(
                 self.config['INDI_CONFIG_DAY'],
             )
+
+            with self.gain_v.get_lock():
+                self.gain_v.value = self.config['INDI_CONFIG_DAY']['GAIN_VALUE']
+
+            with self.bin_v.get_lock():
+                self.bin_v.value = self.config['INDI_CONFIG_DAY']['BIN_VALUE']
+
 
         # Update shared values
         with self.night_v.get_lock():
