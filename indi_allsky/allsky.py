@@ -147,19 +147,12 @@ class IndiAllSky(object):
 
 
     def _initialize(self):
-        self._startImageProcessWorker()
-        self._startVideoProcessWorker()
-        self._startImageUploadWorker()
-
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
             self.indiblob_status_send,
             self.image_q,
         )
-
-        # set roi
-        #indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
 
         # set indi server localhost and port 7624
         self.indiclient.setServer("localhost", 7624)
@@ -175,13 +168,19 @@ class IndiAllSky(object):
         time.sleep(8)
 
         # connect to all devices
-        for d in self.indiclient.getDevices():
-            logger.info('Found device %s', d.getDeviceName())
+        ccd_list = self.indiclient.findCcds()
 
-            if d.getDeviceName() == self.config['CCD_NAME']:
-                logger.info('Connecting to device %s', d.getDeviceName())
-                self.indiclient.connectDevice(d.getDeviceName())
-                self.device = d
+        if len(ccd_list) == 0:
+            logger.error('No CCDs detected')
+            time.sleep(1)
+            sys.exit(1)
+
+        logger.info('Found %d CCDs', len(ccd_list))
+        device = ccd_list[0]
+
+        logger.warning('Connecting to device %s', device.getDeviceName())
+        self.indiclient.connectDevice(device.getDeviceName())
+        self.device = device
 
         # set default device in indiclient
         self.indiclient.device = self.device
@@ -195,7 +194,6 @@ class IndiAllSky(object):
         self._configureCcd(
             self.config['INDI_CONFIG_NIGHT'],
         )
-
 
 
     def _startImageProcessWorker(self):

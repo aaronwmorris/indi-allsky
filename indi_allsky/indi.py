@@ -27,6 +27,24 @@ class IndiClient(PyIndi.BaseClient):
 
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
 
+        self.__indi_interfaces = {
+            PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
+            PyIndi.BaseDevice.TELESCOPE_INTERFACE : 'telescope',
+            PyIndi.BaseDevice.CCD_INTERFACE       : 'ccd',
+            PyIndi.BaseDevice.GUIDER_INTERFACE    : 'guider',
+            PyIndi.BaseDevice.FOCUSER_INTERFACE   : 'focuser',
+            PyIndi.BaseDevice.FILTER_INTERFACE    : 'filter',
+            PyIndi.BaseDevice.DOME_INTERFACE      : 'dome',
+            PyIndi.BaseDevice.GPS_INTERFACE       : 'gps',
+            PyIndi.BaseDevice.WEATHER_INTERFACE   : 'weather',
+            PyIndi.BaseDevice.AO_INTERFACE        : 'ao',
+            PyIndi.BaseDevice.DUSTCAP_INTERFACE   : 'dustcap',
+            PyIndi.BaseDevice.LIGHTBOX_INTERFACE  : 'lightbox',
+            PyIndi.BaseDevice.DETECTOR_INTERFACE  : 'detector',
+            PyIndi.BaseDevice.ROTATOR_INTERFACE   : 'rotator',
+            PyIndi.BaseDevice.AUX_INTERFACE       : 'aux',
+        }
+
         logger.info('creating an instance of IndiClient')
 
 
@@ -118,6 +136,28 @@ class IndiClient(PyIndi.BaseClient):
 
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+
+
+    def findCcds(self):
+        for device in self.getDevices():
+            logger.info('Found device %s', device.getDeviceName())
+
+            interface = device.getDriverInterface()
+            if type(interface) is int:
+                device_interfaces = interface
+            else:
+                interface.acquire()
+                device_interfaces = int(ctypes.cast(interface.__int__(), ctypes.POINTER(ctypes.c_uint16)).contents.value)
+                interface.disown()
+
+            ccd_list = list()
+            for k, v in self.__indi_interfaces.items():
+                if device_interfaces & k:
+                    logger.info(' Detected %s', v)
+                    if k == PyIndi.BaseDevice.CCD_INTERFACE:
+                        ccd_list.append(device)
+
+            return ccd_list
 
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
