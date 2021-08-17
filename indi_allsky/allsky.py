@@ -430,9 +430,9 @@ class IndiAllSky(object):
         moonmode = self.detectMoonMode()
 
         if self.night_v.value != int(nighttime):
-            continue
+            pass
         elif nighttime and self.moonmode_v.value != int(moonmode):
-            continue
+            pass
         else:
             # No need to reconfigure
             return
