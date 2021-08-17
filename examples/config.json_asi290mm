@@ -17,6 +17,24 @@
             }
         }
     },
+
+    "INDI_CONFIG_NIGHT_MOONMODE" : {
+        "GAIN_VALUE" : 50,
+        "BIN_VALUE"  : 1,
+        "PROPERTIES" : {
+            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_CONTROLS"  : {
+                "Gain" : 50
+            }
+        },
+        "SWITCHES" : {
+            "CCD_VIDEO_FORMAT" : {
+                "on"  : ["ASI_IMG_RAW8"],
+                "off" : ["ASI_IMG_RAW16"]
+            }
+        }
+    },
+
     "INDI_CONFIG_DAY" : {
         "GAIN_VALUE" : 0,
         "BIN_VALUE"  : 1,
@@ -56,6 +74,8 @@
     "DAYTIME_CONTRAST_ENHANCE" : false,
     "NIGHT_CONTRAST_ENHANCE"   : false,
     "NIGHT_SUN_ALT_DEG"        : -6,
+    "NIGHT_MOONMODE_ALT_DEG"   : 0,
+    "NIGHT_MOONMODE_PHASE"     : 33,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",

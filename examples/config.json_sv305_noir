@@ -20,6 +20,25 @@
         }
     },
 
+    "INDI_CONFIG_NIGHT" : {
+        "GAIN_VALUE" : 50,
+        "BIN_VALUE"  : 1,
+        "PROPERTIES" : {
+            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
+            "CCD_GAIN"     : {"GAIN" : 50},
+            "CCD_WBR"      : {"WBR" : 110},
+            "CCD_WBG"      : {"WBG" : 95},
+            "CCD_WBB"      : {"WBB" : 175},
+            "CCD_GAMMA"    : {"GAMMA" : 100}
+        },
+        "SWITCHES" : {
+            "FRAME_FORMAT" : {
+                "on"  : ["FORMAT_RAW8"],
+                "off" : ["FORMAT_RAW12"]
+            }
+        }
+    },
+
     "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
     "INDI_CONFIG_DAY" : {
         "GAIN_VALUE" : 10,
@@ -61,6 +80,8 @@
     "DAYTIME_CONTRAST_ENHANCE" : false,
     "NIGHT_CONTRAST_ENHANCE"   : false,
     "NIGHT_SUN_ALT_DEG"        : -6,
+    "NIGHT_MOONMODE_ALT_DEG"   : 0,
+    "NIGHT_MOONMODE_PHASE"     : 33,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",

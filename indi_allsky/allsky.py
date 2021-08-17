@@ -44,8 +44,10 @@ class IndiAllSky(object):
         self.bin_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['BIN_VALUE']))
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', 1)
+        self.moonmode_v = Value('i', 0)
 
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
+        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
 
         self.image_worker = None
         self.image_worker_idx = 0
@@ -455,6 +457,24 @@ class IndiAllSky(object):
         return sun.alt < self.night_sun_radians
 
 
+    def detectMoonMode(self):
+        obs = ephem.Observer()
+        obs.lon = str(self.config['LOCATION_LONGITUDE'])
+        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.date = datetime.utcnow()  # ephem expects UTC dates
+
+        moon = ephem.Moon()
+        moon.compute(obs)
+
+        moon_phase = moon.moon_phase * 100.0
+
+        logger.info('Moon altitide: %s, phase %0.1f%%', moon.alt, moon_phase)
+        if moon.alt_deg >= self.night_moonmode_radians and moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
+            logger.info('Moon Mode conditions detected')
+            return True
+
+        return False
+
 
     def darks(self):
 
@@ -462,6 +482,8 @@ class IndiAllSky(object):
         self.save_images = False
 
         self._initialize()
+
+        self._startImageProcessWorker()
 
         ### NIGHT DARKS ###
         self._configureCcd(
@@ -473,7 +495,7 @@ class IndiAllSky(object):
 
 
         ### take darks
-        night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round exposure
+        night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
         for exp in night_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
@@ -491,6 +513,35 @@ class IndiAllSky(object):
             time.sleep(1.0)
 
 
+        ### NIGHT MOON MODE DARKS ###
+        self._configureCcd(
+            self.config['INDI_CONFIG_NIGHT_MOONMODE'],
+        )
+
+
+        self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
+
+
+        ### take darks
+        night_moonmode_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
+        for exp in night_moonmode_dark_exposures:
+            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
+            self.indiclient.filename_t = filename_t  # override file name for darks
+
+            start = time.time()
+
+            self.shoot(float(exp))
+            self.indiblob_status_receive.recv()  # wait until image is received
+
+            elapsed_s = time.time() - start
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+            logger.info('Sleeping for additional %0.4f s', 1.0)
+            time.sleep(1.0)
+
+
+
         ### DAY DARKS ###
         self._configureCcd(
             self.config['INDI_CONFIG_DAY'],
@@ -498,7 +549,8 @@ class IndiAllSky(object):
 
 
         ### take darks
-        day_dark_exposures = [1]  # day will rarely exceed the minimum exposure
+        # day will rarely exceed the minimum exposure, but some people live above the arctic circle
+        day_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
         for exp in day_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
