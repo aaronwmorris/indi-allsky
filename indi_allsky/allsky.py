@@ -100,11 +100,8 @@ class IndiAllSky(object):
         self.config = c
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
 
-        nighttime = self.is_night()
-
         # reconfigure if needed
-        if self.night_v.value != int(nighttime):
-            self.dayNightReconfigure(nighttime)
+        self.reconfigureCcd()
 
         self._stopVideoProcessWorker()
         self._stopImageProcessWorker()
@@ -367,20 +364,21 @@ class IndiAllSky(object):
             if self.night_v.value != int(nighttime):
                 self.expireImages()  # cleanup old images and folders
 
-                self.dayNightReconfigure(nighttime)
-
                 if not nighttime and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
                     self._generateNightTimelapse(timespec)
 
-                if nighttime and self.generate_timelapse_flag:
+                elif nighttime and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
                     self._generateDayTimelapse(timespec)
 
+
+            # reconfigure if needed
+            self.reconfigureCcd()
 
 
             start = time.time()
@@ -426,19 +424,42 @@ class IndiAllSky(object):
                 time.sleep(remaining_s)
 
 
-    def dayNightReconfigure(self, nighttime):
-        logger.warning('Change between night and day')
-        with self.night_v.get_lock():
-            self.night_v.value = int(nighttime)
+    def reconfigureCcd(self):
+        nighttime = self.is_night()
+        moonmode = self.detectMoonMode()
+
+        if self.night_v.value != int(nighttime):
+            continue
+        elif nighttime and self.moonmode_v.value != int(moonmode):
+            continue
+        else:
+            # No need to reconfigure
+            return
 
         if nighttime:
-            self._configureCcd(
-                self.config['INDI_CONFIG_NIGHT'],
-            )
+            if moonmode:
+                logger.warning('Change to night (moon mode)')
+                self._configureCcd(
+                    self.config['INDI_CONFIG_NIGHT_MOONMODE'],
+                )
+            else:
+                logger.warning('Change to night (normal mode)')
+                self._configureCcd(
+                    self.config['INDI_CONFIG_NIGHT'],
+                )
         else:
+            logger.warning('Change to day')
             self._configureCcd(
                 self.config['INDI_CONFIG_DAY'],
             )
+
+        # Update shared values
+        with self.night_v.get_lock():
+            self.night_v.value = int(nighttime)
+
+        with self.moonmode_v.get_lock():
+            self.moonmode_v = int(moonmode)
+
 
         # Sleep after reconfiguration
         time.sleep(1.0)
@@ -469,9 +490,11 @@ class IndiAllSky(object):
         moon_phase = moon.moon_phase * 100.0
 
         logger.info('Moon altitide: %s, phase %0.1f%%', moon.alt, moon_phase)
-        if moon.alt_deg >= self.night_moonmode_radians and moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
-            logger.info('Moon Mode conditions detected')
-            return True
+        if self.night_v.value:
+            if moon.alt_deg >= self.night_moonmode_radians :
+                if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
+                    logger.info('Moon Mode conditions detected')
+                    return True
 
         return False
 
