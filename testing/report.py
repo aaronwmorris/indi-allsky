@@ -6,6 +6,7 @@ import time
 import logging
 import PyIndi
 from pprint import pformat
+from pprint import pprint
 
 # Fancy printing of INDI states
 # Note that all INDI constants are accessible from the module as PyIndi.CONSTANTNAME
@@ -35,7 +36,14 @@ class IndiClient(PyIndi.BaseClient):
         self.logger.info("new device " + d.getDeviceName())
     def newProperty(self, p):
         self.logger.info("new property "+ p.getName() + " for device "+ p.getDeviceName())
-        self.logger.info(' Value %s', str(self.getDeviceByName(p.getDeviceName()).getNumber(p.getName())))  # useful to find value names
+        v = self.getDeviceByName(p.getDeviceName()).getNumber(p.getName())
+        if type(v) is PyIndi.PropertyViewNumber:
+            ctl = self.get_control(v.getName(), 'number', p.getDeviceName())
+            for i, c in enumerate(ctl):
+                self.logger.info(' Index %d: %s', i, c.name)  # useful to find value names
+                self.logger.info('  current %d, min %d, max %d, step %d, format: %s', c.value, c.min, c.max, c.step, c.format)
+        else:
+            self.logger.info(' Value %s', str(self.getDeviceByName(p.getDeviceName()).getNumber(p.getName())))  # useful to find value names
     def removeProperty(self, p):
         self.logger.info("remove property "+ p.getName() + " for device "+ p.getDeviceName())
     def newBLOB(self, bp):
@@ -135,7 +143,9 @@ time.sleep(1)
 print("List of devices")
 dl=indiclient.getDevices()
 for dev in dl:
-    print(dev.getDeviceName())
+    dev_name = dev.getDeviceName()
+    print(dev_name)
+
 
 # Disconnect from the indiserver
 print("Disconnecting")
