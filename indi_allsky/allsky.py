@@ -40,11 +40,13 @@ class IndiAllSky(object):
         self.indiclient = None
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
-        self.gain_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE']))
-        self.bin_v = Value('i', copy.copy(self.config['INDI_CONFIG_NIGHT']['BIN_VALUE']))
+        self.gain_v = Value('i', -1)  # value set in CCD config
+        self.bin_v = Value('i', -1)
         self.sensortemp_v = Value('f', 0)
-        self.night_v = Value('i', 1)
-        self.moonmode_v = Value('i', 0)
+        self.night_v = Value('i', -1)  # bogus initial value
+        self.night = None
+        self.moonmode_v = Value('i', -1)
+        self.moonmode = None
 
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
         self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
@@ -190,12 +192,6 @@ class IndiAllSky(object):
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
         self.indiclient.setBLOBMode(1, self.device.getDeviceName(), None)
-
-
-        ### Perform device config
-        self._configureCcd(
-            self.config['INDI_CONFIG_NIGHT'],
-        )
 
 
     def _startImageProcessWorker(self):
@@ -348,11 +344,12 @@ class IndiAllSky(object):
             self._startImageUploadWorker()
 
 
-            nighttime = self.is_night()
+            self.night = self.detectNight()
+            self.moonmode = self.detectMoonMode()
             #logger.info('self.night_v.value: %r', self.night_v.value)
-            #logger.info('is night: %r', nighttime)
+            #logger.info('is night: %r', self.night)
 
-            if not nighttime and not self.config['DAYTIME_CAPTURE']:
+            if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
                 time.sleep(60)
                 continue
@@ -365,16 +362,16 @@ class IndiAllSky(object):
 
 
             ### Change between day and night
-            if self.night_v.value != int(nighttime):
+            if self.night_v.value != int(self.night):
                 self.expireImages()  # cleanup old images and folders
 
-                if not nighttime and self.generate_timelapse_flag:
+                if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
                     self._generateNightTimelapse(timespec)
 
-                elif nighttime and self.generate_timelapse_flag:
+                elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
@@ -401,7 +398,7 @@ class IndiAllSky(object):
             signal.alarm(5)
 
 
-            if nighttime:
+            if self.night:
                 # always indicate timelapse generation at night
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
             elif self.config['DAYTIME_TIMELAPSE']:
@@ -429,19 +426,17 @@ class IndiAllSky(object):
 
 
     def reconfigureCcd(self):
-        nighttime = self.is_night()
-        moonmode = self.detectMoonMode()
 
-        if self.night_v.value != int(nighttime):
+        if self.night_v.value != int(self.night):
             pass
-        elif nighttime and self.moonmode_v.value != int(moonmode):
+        elif self.night and self.moonmode_v.value != int(self.moonmode):
             pass
         else:
             # No need to reconfigure
             return
 
-        if nighttime:
-            if moonmode:
+        if self.night:
+            if self.moonmode:
                 logger.warning('Change to night (moon mode)')
                 self._configureCcd(
                     self.config['INDI_CONFIG_NIGHT_MOONMODE'],
@@ -478,17 +473,17 @@ class IndiAllSky(object):
 
         # Update shared values
         with self.night_v.get_lock():
-            self.night_v.value = int(nighttime)
+            self.night_v.value = int(self.night)
 
         with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(moonmode)
+            self.moonmode_v.value = int(self.moonmode)
 
 
         # Sleep after reconfiguration
         time.sleep(1.0)
 
 
-    def is_night(self):
+    def detectNight(self):
         obs = ephem.Observer()
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
@@ -502,6 +497,9 @@ class IndiAllSky(object):
 
 
     def detectMoonMode(self):
+        if not type(self.night) is bool:
+            self.night = self.detectNight()
+
         obs = ephem.Observer()
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
@@ -513,7 +511,7 @@ class IndiAllSky(object):
         moon_phase = moon.moon_phase * 100.0
 
         logger.info('Moon altitide: %s, phase %0.1f%%', moon.alt, moon_phase)
-        if self.night_v.value:
+        if self.night:
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
                     logger.info('Moon Mode conditions detected')
@@ -539,6 +537,11 @@ class IndiAllSky(object):
 
         self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
 
+
+        ### NIGHT MODE DARKS ###
+        self._configureCcd(
+            self.config['INDI_CONFIG_NIGHT'],
+        )
 
         ### take darks
         night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
