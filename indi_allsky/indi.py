@@ -139,26 +139,33 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
+
+    def findDeviceInterfaces(self, device):
+        interface = device.getDriverInterface()
+        if type(interface) is int:
+            device_interfaces = interface
+        else:
+            interface.acquire()
+            device_interfaces = int(ctypes.cast(interface.__int__(), ctypes.POINTER(ctypes.c_uint16)).contents.value)
+            interface.disown()
+
+        return device_interfaces
+
+
     def findCcds(self):
+        ccd_list = list()
+
         for device in self.getDevices():
             logger.info('Found device %s', device.getDeviceName())
+            device_interfaces = self.findDeviceInterfaces(device)
 
-            interface = device.getDriverInterface()
-            if type(interface) is int:
-                device_interfaces = interface
-            else:
-                interface.acquire()
-                device_interfaces = int(ctypes.cast(interface.__int__(), ctypes.POINTER(ctypes.c_uint16)).contents.value)
-                interface.disown()
-
-            ccd_list = list()
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
                     logger.info(' Detected %s', v)
                     if k == PyIndi.BaseDevice.CCD_INTERFACE:
                         ccd_list.append(device)
 
-            return ccd_list
+        return ccd_list
 
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
