@@ -57,7 +57,7 @@ indi-allsky itself is written in python, but python is just the glue between the
 
 ## Architecture
 
-indi-all utilizes python's multiprocessing library to enable parallelizing tasks so that image processes does not interfere with image aquisition, etc.
+indi-allsky utilizes python's multiprocessing library to enable parallelizing tasks so that image processes does not interfere with image aquisition, etc.
 
 ![](./content/indi-allsky-arch.svg)
 
