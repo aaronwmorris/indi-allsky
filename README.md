@@ -45,6 +45,12 @@ indi-allsky itself is written in python, but python is just the glue between the
 | File transfer     | pycurl        | http://pycurl.io/ |
 |                   | paramiko      | http://www.paramiko.org/ |
 
+## Architecture
+
+indi-all utilizes python's multiprocessing library to enable parallelizing tasks so that image processes does not interfere with image aquisition, etc.
+
+![](./content/indi-allsky-arch.svg)
+
 ## Configuration
 
 All configuration is read from config.json.  You can find configuration examples in the examples/ folder.
