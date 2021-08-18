@@ -516,7 +516,7 @@ class ImageProcessWorker(Process):
             if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
                 cv2.putText(
                     img=data_bytes,
-                    text='Moon Mode',
+                    text='* Moon Mode *',
                     org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                     fontFace=fontFace[0],
                     color=(0, 0, 0),
@@ -526,7 +526,7 @@ class ImageProcessWorker(Process):
                 )  # black outline
             cv2.putText(
                 img=data_bytes,
-                text='Moon Mode',
+                text='* Moon Mode *',
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 fontFace=fontFace[0],
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
