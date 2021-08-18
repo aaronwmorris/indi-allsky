@@ -481,7 +481,7 @@ class IndiAllSky(object):
             self.night_v.value = int(nighttime)
 
         with self.moonmode_v.get_lock():
-            self.moonmode_v = int(moonmode)
+            self.moonmode_v.value = int(moonmode)
 
 
         # Sleep after reconfiguration
