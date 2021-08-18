@@ -30,6 +30,16 @@ sudo systemctl start indiserver
 sudo systemctl start indi-allsky
 ```
 
+### Manual operation
+1. Activate the indi-allsky python virtual environment
+```
+source virtualenv/indi-allsky/bin/activate
+```
+1. Start indi-allsky
+```
+./allsky.py -c config.json run
+```
+
 ## Software Dependencies
 indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C code which makes indi-allsky extremely fast.
 
