@@ -6,7 +6,6 @@ from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 #from pprint import pformat
-import copy
 import math
 import signal
 
@@ -31,6 +30,7 @@ logger = multiprocessing.get_logger()
 class IndiAllSky(object):
 
     CCD_EXPOSURE_DEF = 0.000100
+
 
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
@@ -126,6 +126,10 @@ class IndiAllSky(object):
             self.config['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
         # no need to update shared value on HUP
 
+
+        # CFA/Debayer setting
+        if not self.config.get('CFA_PATTERN'):
+            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
 
         self._stopVideoProcessWorker()
@@ -240,6 +244,13 @@ class IndiAllSky(object):
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
 
         logger.info('Default CCD exposure: {0:0.6f}'.format(self.config['CCD_EXPOSURE_DEF']))
+
+
+        # CFA/Debayer setting
+        if not self.config.get('CFA_PATTERN'):
+            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
+
+        logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
 
 
     def _startImageProcessWorker(self):

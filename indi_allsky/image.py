@@ -350,10 +350,10 @@ class ImageProcessWorker(Process):
 
 
     def debayer(self, scidata):
-        if not self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
+        if not self.config['CFA_PATTERN']:
             return scidata
 
-        debayer_algorithm = self.__cfa_bgr_map[self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']]
+        debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
         scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 
         #scidata_wb = self.white_balance2(scidata_bgr)
@@ -558,7 +558,7 @@ class ImageProcessWorker(Process):
         else:
             scidata = data_bytes
 
-        if not self.config['IMAGE_DEBAYER']:
+        if not self.config['CFA_PATTERN']:
             m_avg = cv2.mean(scidata)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
@@ -674,7 +674,7 @@ class ImageProcessWorker(Process):
         ### ohhhh, contrasty
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
 
-        if not self.config['IMAGE_DEBAYER']:
+        if not self.config['CFA_PATTERN']:
             # mono
             return clahe.apply(data_bytes)
 
