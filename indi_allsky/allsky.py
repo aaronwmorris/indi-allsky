@@ -30,6 +30,8 @@ logger = multiprocessing.get_logger()
 
 class IndiAllSky(object):
 
+    CCD_EXPOSURE_DEF = 0.000100
+
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
@@ -40,7 +42,7 @@ class IndiAllSky(object):
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
         self.device = None
-        self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
+        self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
@@ -112,6 +114,19 @@ class IndiAllSky(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
+
+
+        # set minimum exposure
+        if not self.config.get('CCD_EXPOSURE_MIN'):
+            self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
+
+        # set default exposure
+        if not self.config.get('CCD_EXPOSURE_DEF'):
+            self.config['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
+        # no need to update shared value on HUP
+
+
 
         self._stopVideoProcessWorker()
         self._stopImageProcessWorker()
@@ -208,6 +223,23 @@ class IndiAllSky(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
+
+
+        # set minimum exposure
+        if not self.config.get('CCD_EXPOSURE_MIN'):
+            self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
+        logger.info('Minimum CCD exposure: {0:0.7f}'.format(self.config['CCD_EXPOSURE_MIN']))
+
+
+        # set default exposure
+        if not self.config.get('CCD_EXPOSURE_DEF'):
+            self.config['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
+
+        with self.exposure_v.get_lock():
+            self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
+
+        logger.info('Default CCD exposure: {0:0.6f}'.format(self.config['CCD_EXPOSURE_DEF']))
 
 
     def _startImageProcessWorker(self):

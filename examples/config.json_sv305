@@ -30,10 +30,7 @@
         }
     },
 
-    "comment_CCD_EXPOSURE_MIN" : "SV305 minimum exposure is 0.000029",
     "CCD_EXPOSURE_MAX" : 15.000000,
-    "CCD_EXPOSURE_MIN" : 0.000029,
-    "CCD_EXPOSURE_DEF" : 0.000100,
     "EXPOSURE_PERIOD"  : 15.00000,
 
     "comment_TARGET_ADU" : "Average channel brightness target",
