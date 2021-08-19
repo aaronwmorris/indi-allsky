@@ -586,13 +586,13 @@ class ImageProcessWorker(Process):
         logger.info('Brightness average: %0.2f', adu)
 
 
-        if self.exposure_v.value < 0.000250:
+        if self.exposure_v.value < 0.001000:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
             target_adu_min = self.target_adu - (self.target_adu_dev * 2.0)
             target_adu_max = self.target_adu + (self.target_adu_dev * 2.0)
             current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 2.0)
             current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 2.0)
-            exp_scale_factor = 1.25  # scale exposure calculation
+            exp_scale_factor = 0.75  # scale exposure calculation
             history_max_vals = 6  # number of entries to use to calculate average
         else:
             target_adu_min = self.target_adu - (self.target_adu_dev * 1.0)
@@ -650,9 +650,9 @@ class ImageProcessWorker(Process):
 
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = current_exposure / (( adu / self.target_adu ) * exp_scale_factor)
+            new_exposure = current_exposure - (current_exposure * (( self.target_adu / adu ) * exp_scale_factor))
         elif adu < target_adu_min:
-            new_exposure = current_exposure * (( self.target_adu / adu ) * exp_scale_factor)
+            new_exposure = current_exposure + (current_exposure * (( self.target_adu / adu ) * exp_scale_factor))
         else:
             new_exposure = current_exposure
 
