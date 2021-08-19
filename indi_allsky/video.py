@@ -13,10 +13,11 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-VIDEO_LOCKFILE = '/tmp/timelapse_video.lock'
-
-
 class VideoProcessWorker(Process):
+
+    video_lockfile = '/tmp/timelapse_video.lock'
+
+
     def __init__(self, idx, config, video_q, upload_q):
         super(VideoProcessWorker, self).__init__()
 
@@ -169,7 +170,7 @@ class VideoProcessWorker(Process):
 
     def _getLock(self):
         logger.info('Get exclusive lock to generate video')
-        lock_p = Path(VIDEO_LOCKFILE)
+        lock_p = Path(self.video_lockfile)
 
         if not lock_p.is_file():
             f_lock = io.open(str(lock_p), 'w+')

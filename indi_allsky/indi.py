@@ -14,6 +14,28 @@ logger = multiprocessing.get_logger()
 
 
 class IndiClient(PyIndi.BaseClient):
+
+    __state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
+
+    __indi_interfaces = {
+        PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
+        PyIndi.BaseDevice.TELESCOPE_INTERFACE : 'telescope',
+        PyIndi.BaseDevice.CCD_INTERFACE       : 'ccd',
+        PyIndi.BaseDevice.GUIDER_INTERFACE    : 'guider',
+        PyIndi.BaseDevice.FOCUSER_INTERFACE   : 'focuser',
+        PyIndi.BaseDevice.FILTER_INTERFACE    : 'filter',
+        PyIndi.BaseDevice.DOME_INTERFACE      : 'dome',
+        PyIndi.BaseDevice.GPS_INTERFACE       : 'gps',
+        PyIndi.BaseDevice.WEATHER_INTERFACE   : 'weather',
+        PyIndi.BaseDevice.AO_INTERFACE        : 'ao',
+        PyIndi.BaseDevice.DUSTCAP_INTERFACE   : 'dustcap',
+        PyIndi.BaseDevice.LIGHTBOX_INTERFACE  : 'lightbox',
+        PyIndi.BaseDevice.DETECTOR_INTERFACE  : 'detector',
+        PyIndi.BaseDevice.ROTATOR_INTERFACE   : 'rotator',
+        PyIndi.BaseDevice.AUX_INTERFACE       : 'aux',
+    }
+
+
     def __init__(self, config, indiblob_status_send, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
@@ -28,26 +50,6 @@ class IndiClient(PyIndi.BaseClient):
         self._img_subdirs = []
 
         self._timeout = 10.0
-
-        self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
-
-        self.__indi_interfaces = {
-            PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
-            PyIndi.BaseDevice.TELESCOPE_INTERFACE : 'telescope',
-            PyIndi.BaseDevice.CCD_INTERFACE       : 'ccd',
-            PyIndi.BaseDevice.GUIDER_INTERFACE    : 'guider',
-            PyIndi.BaseDevice.FOCUSER_INTERFACE   : 'focuser',
-            PyIndi.BaseDevice.FILTER_INTERFACE    : 'filter',
-            PyIndi.BaseDevice.DOME_INTERFACE      : 'dome',
-            PyIndi.BaseDevice.GPS_INTERFACE       : 'gps',
-            PyIndi.BaseDevice.WEATHER_INTERFACE   : 'weather',
-            PyIndi.BaseDevice.AO_INTERFACE        : 'ao',
-            PyIndi.BaseDevice.DUSTCAP_INTERFACE   : 'dustcap',
-            PyIndi.BaseDevice.LIGHTBOX_INTERFACE  : 'lightbox',
-            PyIndi.BaseDevice.DETECTOR_INTERFACE  : 'detector',
-            PyIndi.BaseDevice.ROTATOR_INTERFACE   : 'rotator',
-            PyIndi.BaseDevice.AUX_INTERFACE       : 'aux',
-        }
 
         logger.info('creating an instance of IndiClient')
 
