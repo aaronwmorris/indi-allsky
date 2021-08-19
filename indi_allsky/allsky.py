@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+#from pprint import pformat
 import copy
 import math
 import signal
@@ -108,6 +109,10 @@ class IndiAllSky(object):
         # reconfigure if needed
         self.reconfigureCcd()
 
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo()
+        self.config['CCD_INFO'] = ccd_info
+
         self._stopVideoProcessWorker()
         self._stopImageProcessWorker()
         self._stopImageUploadWorker()
@@ -199,6 +204,11 @@ class IndiAllSky(object):
         self.indiclient.setBLOBMode(1, self.device.getDeviceName(), None)
 
         self.indiclient.configureCcd(self.config['INDI_CONFIG_DEFAULTS'])
+
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo()
+        self.config['CCD_INFO'] = ccd_info
+        #logger.info('CCD Info: %s', pformat(ccd_info))
 
 
     def _startImageProcessWorker(self):

@@ -1,6 +1,7 @@
 import time
 import ctypes
 from datetime import datetime
+#from pprint import pformat
 
 import multiprocessing
 
@@ -140,6 +141,33 @@ class IndiClient(PyIndi.BaseClient):
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
+
+    def getCcdInfo(self):
+        ccdinfo = dict()
+
+
+        ctl_CCD_INFO = self.get_control('CCD_INFO', 'number')
+
+        ccdinfo['CCD_INFO'] = dict()
+        for i in ctl_CCD_INFO:
+            ccdinfo['CCD_INFO'][i.getName()] = i.getValue()
+
+
+        ctl_CCD_CFA = self.get_control('CCD_CFA', 'text')
+
+        ccdinfo['CCD_CFA'] = dict()
+        for i in ctl_CCD_CFA:
+            ccdinfo['CCD_CFA'][i.getName()] = i.getText()
+
+
+        ctl_CCD_FRAME = self.get_control('CCD_FRAME', 'number')
+
+        ccdinfo['CCD_FRAME'] = dict()
+        for i in ctl_CCD_FRAME:
+            ccdinfo['CCD_FRAME'][i.getName()] = i.getValue()
+
+
+        return ccdinfo
 
 
     def findDeviceInterfaces(self, device):
