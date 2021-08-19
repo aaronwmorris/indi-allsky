@@ -28,6 +28,9 @@ class ImageProcessWorker(Process):
 
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
+        'RGGB' : cv2.COLOR_BAYER_RG2BGR,  # untested
+        'BGGR' : cv2.COLOR_BAYER_BG2BGR,  # untested
+        'RGBG' : cv2.COLOR_BAYER_RB2BGR,  # untested
     }
 
 
