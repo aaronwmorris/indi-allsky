@@ -41,7 +41,7 @@ class IndiAllSky(object):
         self.device = None
         self.exposure_v = Value('f', copy.copy(self.config['CCD_EXPOSURE_DEF']))
         self.gain_v = Value('i', -1)  # value set in CCD config
-        self.bin_v = Value('i', -1)
+        self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
         self.night = None
@@ -156,6 +156,8 @@ class IndiAllSky(object):
             self.config,
             self.indiblob_status_send,
             self.image_q,
+            self.gain_v,
+            self.bin_v,
         )
 
         # set indi server localhost and port 7624
@@ -186,12 +188,17 @@ class IndiAllSky(object):
         self.indiclient.connectDevice(device.getDeviceName())
         self.device = device
 
+        # add driver name to config
+        self.config['CCD_NAME'] = device.getDeviceName()
+
         # set default device in indiclient
         self.indiclient.device = self.device
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
         self.indiclient.setBLOBMode(1, self.device.getDeviceName(), None)
+
+        self.indiclient.configureCcd(self.config['INDI_CONFIG_DEFAULTS'])
 
 
     def _startImageProcessWorker(self):
@@ -301,37 +308,6 @@ class IndiAllSky(object):
         self.upload_worker.join()
 
 
-    def _configureCcd(self, indi_config):
-        ### Configure CCD Properties
-        for k, v in indi_config['PROPERTIES'].items():
-            logger.info('Setting property %s', k)
-            self.indiclient.set_number(k, v)
-
-
-        ### Configure CCD Switches
-        for k, v in indi_config['SWITCHES'].items():
-            logger.info('Setting switch %s', k)
-            self.indiclient.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
-
-        ### Configure controls
-        #self.indiclient.set_controls(indi_config.get('CONTROLS', {}))
-
-        # Update shared gain value
-        gain_value = indi_config.get('GAIN_VALUE')
-        with self.gain_v.get_lock():
-            self.gain_v.value = int(gain_value)
-
-        bin_value = indi_config.get('BIN_VALUE')
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
-
-        logger.info('Gain set to %d', self.gain_v.value)
-        logger.info('Binning set to %d', self.bin_v.value)
-
-        # Sleep after configuration
-        time.sleep(1.0)
-
-
     def run(self):
 
         self._initialize()
@@ -438,37 +414,16 @@ class IndiAllSky(object):
         if self.night:
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self._configureCcd(
-                    self.config['INDI_CONFIG_NIGHT_MOONMODE'],
-                )
-
-                with self.gain_v.get_lock():
-                    self.gain_v.value = self.config['INDI_CONFIG_NIGHT_MOONMODE']['GAIN_VALUE']
-
-                with self.bin_v.get_lock():
-                    self.bin_v.value = self.config['INDI_CONFIG_NIGHT_MOONMODE']['BIN_VALUE']
+                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self._configureCcd(
-                    self.config['INDI_CONFIG_NIGHT'],
-                )
-
-                with self.gain_v.get_lock():
-                    self.gain_v.value = self.config['INDI_CONFIG_NIGHT']['GAIN_VALUE']
-
-                with self.bin_v.get_lock():
-                    self.bin_v.value = self.config['INDI_CONFIG_NIGHT']['BIN_VALUE']
+                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
-            self._configureCcd(
-                self.config['INDI_CONFIG_DAY'],
-            )
-
-            with self.gain_v.get_lock():
-                self.gain_v.value = self.config['INDI_CONFIG_DAY']['GAIN_VALUE']
-
-            with self.bin_v.get_lock():
-                self.bin_v.value = self.config['INDI_CONFIG_DAY']['BIN_VALUE']
+            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         # Update shared values
@@ -529,19 +484,12 @@ class IndiAllSky(object):
 
         self._startImageProcessWorker()
 
-        ### NIGHT DARKS ###
-        self._configureCcd(
-            self.config['INDI_CONFIG_NIGHT'],
-        )
-
-
         self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
 
 
         ### NIGHT MODE DARKS ###
-        self._configureCcd(
-            self.config['INDI_CONFIG_NIGHT'],
-        )
+        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
         ### take darks
         night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
@@ -563,12 +511,8 @@ class IndiAllSky(object):
 
 
         ### NIGHT MOON MODE DARKS ###
-        self._configureCcd(
-            self.config['INDI_CONFIG_NIGHT_MOONMODE'],
-        )
-
-
-        self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
+        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
 
 
         ### take darks
@@ -592,16 +536,15 @@ class IndiAllSky(object):
 
 
         ### DAY DARKS ###
-        self._configureCcd(
-            self.config['INDI_CONFIG_DAY'],
-        )
+        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         ### take darks
         # day will rarely exceed the minimum exposure, but some people live above the arctic circle
         day_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 1)  # dark frames round up
         for exp in day_dark_exposures:
-            filename_t = 'dark_{0:d}s_gain{1:d}.{2:s}'.format(int(exp), self.gain_v.value, '{1}')
+            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()

@@ -13,12 +13,14 @@ logger = multiprocessing.get_logger()
 
 
 class IndiClient(PyIndi.BaseClient):
-    def __init__(self, config, indiblob_status_send, image_q):
+    def __init__(self, config, indiblob_status_send, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.indiblob_status_send = indiblob_status_send
         self.image_q = image_q
+        self.gain_v = gain_v
+        self.bin_v = bin_v
 
         self._device = None
         self._filename_t = '{0:s}.{1:s}'
@@ -166,6 +168,84 @@ class IndiClient(PyIndi.BaseClient):
                         ccd_list.append(device)
 
         return ccd_list
+
+
+    def configureCcd(self, indi_config):
+        ### Configure CCD Properties
+        for k, v in indi_config.get('PROPERTIES', {}).items():
+            logger.info('Setting property %s', k)
+            self.set_number(k, v)
+
+        ### Configure CCD Switches
+        for k, v in indi_config.get('SWITCHES', {}).items():
+            logger.info('Setting switch %s', k)
+            self.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
+
+        ### Configure controls
+        #self.indiclient.set_controls(indi_config.get('CONTROLS', {}))
+
+        # Sleep after configuration
+        time.sleep(1.0)
+
+
+    def setCcdGain(self, gain_value):
+        logger.warning('Setting CCD gain to %d', gain_value)
+        indi_exec = self.device.getDriverExec()
+
+        if indi_exec in ['indi_asi_ccd']:
+            gain_config = {
+                "CCD_CONTROLS" : {
+                    "Gain" : gain_value,
+                },
+            }
+        elif indi_exec in ['indi_sv305_ccd']:
+            gain_config = {
+                "PROPERTIES" : {
+                    "CCD_GAIN" : {
+                        "GAIN" : gain_value,
+                    },
+                },
+            }
+        else:
+            raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
+
+
+        self.configureCcd(gain_config)
+
+
+        # Update shared gain value
+        with self.gain_v.get_lock():
+            self.gain_v.value = int(gain_value)
+
+
+    def setCcdBinning(self, bin_value):
+        if type(bin_value) is int:
+            bin_value = [bin_value, bin_value]
+        elif not bin_value:
+            # Assume default
+            return
+
+        logger.warning('Setting CCD binning to (%d, %d)', bin_value[0], bin_value[1])
+
+        indi_exec = self.device.getDriverExec()
+
+        if indi_exec in ['indi_asi_ccd', 'indi_sv305_ccd']:
+            binning_config = {
+                "PROPERTIES" : {
+                    "CCD_BINNING" : {
+                        "HOR_BIN" : bin_value[0],
+                        "VER_BIN" : bin_value[1],
+                    },
+                },
+            }
+        else:
+            raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
+
+        self.configureCcd(binning_config)
+
+        # Update shared gain value
+        with self.bin_v.get_lock():
+            self.bin_v.value = int(bin_value)
 
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py

@@ -1,49 +1,21 @@
 {
-    "CCD_NAME" : "ZWO CCD ASI290MM",
-
-    "INDI_CONFIG_NIGHT" : {
-        "GAIN_VALUE" : 300,
-        "BIN_VALUE"  : 1,
-        "PROPERTIES" : {
-            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_CONTROLS"  : {
-                "Gain" : 300
-            }
+    "CCD_CONFIG" : {
+        "NIGHT" : {
+            "GAIN"    : 250,
+            "BINNING" : 1
         },
-        "SWITCHES" : {
-            "CCD_VIDEO_FORMAT" : {
-                "on"  : ["ASI_IMG_RAW8"],
-                "off" : ["ASI_IMG_RAW16"]
-            }
+        "MOONMODE" : {
+            "GAIN"    : 75,
+            "BINNING" : 1
+        },
+        "DAY" : {
+            "GAIN"    : 0,
+            "BINNING" : 1
         }
     },
 
-    "INDI_CONFIG_NIGHT_MOONMODE" : {
-        "GAIN_VALUE" : 50,
-        "BIN_VALUE"  : 1,
-        "PROPERTIES" : {
-            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_CONTROLS"  : {
-                "Gain" : 50
-            }
-        },
-        "SWITCHES" : {
-            "CCD_VIDEO_FORMAT" : {
-                "on"  : ["ASI_IMG_RAW8"],
-                "off" : ["ASI_IMG_RAW16"]
-            }
-        }
-    },
-
-    "INDI_CONFIG_DAY" : {
-        "GAIN_VALUE" : 0,
-        "BIN_VALUE"  : 1,
-        "PROPERTIES" : {
-            "CCD_BINNING"   : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_CONTROLS"  : {
-                "Gain" : 0
-            }
-        },
+    "INDI_CONFIG_DEFAULTS" : {
+        "PROPERTIES" : {},
         "SWITCHES" : {
             "CCD_VIDEO_FORMAT" : {
                 "on"  : ["ASI_IMG_RAW8"],

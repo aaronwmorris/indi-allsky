@@ -1,51 +1,22 @@
 {
-    "CCD_NAME" : "SVBONY SV305 0",
-
-    "INDI_CONFIG_NIGHT" : {
-        "GAIN_VALUE" : 250,
-        "BIN_VALUE"  : 1,
-        "PROPERTIES" : {
-            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_GAIN"     : {"GAIN" : 250},
-            "CCD_WBR"      : {"WBR" : 110},
-            "CCD_WBG"      : {"WBG" : 95},
-            "CCD_WBB"      : {"WBB" : 175},
-            "CCD_GAMMA"    : {"GAMMA" : 100}
+    "CCD_CONFIG" : {
+        "NIGHT" : {
+            "GAIN"    : 250,
+            "BINNING" : 1
         },
-        "SWITCHES" : {
-            "FRAME_FORMAT" : {
-                "on"  : ["FORMAT_RAW8"],
-                "off" : ["FORMAT_RAW12"]
-            }
+        "MOONMODE" : {
+            "GAIN"    : 50,
+            "BINNING" : 1
+        },
+        "DAY" : {
+            "comment_CCD_DAY_GAIN" : "SV305 minimum gain is 10",
+            "GAIN"    : 10,
+            "BINNING" : 1
         }
     },
 
-    "INDI_CONFIG_NIGHT" : {
-        "GAIN_VALUE" : 50,
-        "BIN_VALUE"  : 1,
+    "INDI_CONFIG_DEFAULTS" : {
         "PROPERTIES" : {
-            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_GAIN"     : {"GAIN" : 50},
-            "CCD_WBR"      : {"WBR" : 110},
-            "CCD_WBG"      : {"WBG" : 95},
-            "CCD_WBB"      : {"WBB" : 175},
-            "CCD_GAMMA"    : {"GAMMA" : 100}
-        },
-        "SWITCHES" : {
-            "FRAME_FORMAT" : {
-                "on"  : ["FORMAT_RAW8"],
-                "off" : ["FORMAT_RAW12"]
-            }
-        }
-    },
-
-    "comment_CCD_GAIN_DAY" : "SV305 minimum gain is 10",
-    "INDI_CONFIG_DAY" : {
-        "GAIN_VALUE" : 10,
-        "BIN_VALUE"  : 1,
-        "PROPERTIES" : {
-            "CCD_BINNING"  : {"HOR_BIN" : 1, "VER_BIN": 1},
-            "CCD_GAIN"     : {"GAIN" : 10},
             "CCD_WBR"      : {"WBR" : 110},
             "CCD_WBG"      : {"WBG" : 95},
             "CCD_WBB"      : {"WBB" : 175},
