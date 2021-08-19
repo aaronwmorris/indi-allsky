@@ -194,8 +194,10 @@ class IndiClient(PyIndi.BaseClient):
 
         if indi_exec in ['indi_asi_ccd']:
             gain_config = {
-                "CCD_CONTROLS" : {
-                    "Gain" : gain_value,
+                "PROPERTIES" : {
+                    "CCD_CONTROLS" : {
+                        "Gain" : gain_value,
+                    },
                 },
             }
         elif indi_exec in ['indi_sv305_ccd']:
