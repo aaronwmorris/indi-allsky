@@ -391,7 +391,8 @@ class IndiAllSky(object):
 
             ### Change between day and night
             if self.night_v.value != int(self.night):
-                self.expireImages()  # cleanup old images and folders
+                if self.generate_timelapse_flag:
+                    self.expireImages()  # cleanup old images and folders
 
                 if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
