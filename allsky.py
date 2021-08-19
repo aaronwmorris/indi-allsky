@@ -11,17 +11,11 @@ logger = multiprocessing.get_logger()
 
 LOG_FORMATTER = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
 
-#LOG_HANDLER_STREAM = logging.StreamHandler()
-#LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER)
-#logger.addHandler(LOG_HANDLER_STREAM)
-
-#LOG_HANDLER_FILE = logging.handlers.RotatingFileHandler('./log/indi-allsky.log', maxBytes=10485760, backupCount=5)
-#LOG_HANDLER_FILE.setFormatter(LOG_FORMATTER)
-#logger.addHandler(LOG_HANDLER_FILE)
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER)
 
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER)
-logger.addHandler(LOG_HANDLER_SYSLOG)
 
 logger.setLevel(logging.INFO)
 
@@ -47,8 +41,24 @@ if __name__ == "__main__":
         help='time spec',
         type=str,
     )
+    argparser.add_argument(
+        '--log',
+        '-l',
+        help='log output',
+        choices=('syslog', 'stderr'),
+        default='stderr',
+    )
 
     args = argparser.parse_args()
+
+
+    # log setup
+    if args.log == 'syslog':
+        logger.addHandler(LOG_HANDLER_SYSLOG)
+    elif args.log == 'stderr':
+        logger.addHandler(LOG_HANDLER_STREAM)
+    else:
+        raise Exception('Invalid log output')
 
 
     args_list = list()
