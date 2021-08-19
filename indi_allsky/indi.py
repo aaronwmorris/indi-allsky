@@ -221,6 +221,8 @@ class IndiClient(PyIndi.BaseClient):
     def setCcdBinning(self, bin_value):
         if type(bin_value) is int:
             bin_value = [bin_value, bin_value]
+        elif type(bin_value) is str:
+            bin_value = [int(bin_value), int(bin_value)]
         elif not bin_value:
             # Assume default
             return
@@ -245,7 +247,7 @@ class IndiClient(PyIndi.BaseClient):
 
         # Update shared gain value
         with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
+            self.bin_v.value = bin_value[0]
 
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
