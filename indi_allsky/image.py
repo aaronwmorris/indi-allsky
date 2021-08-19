@@ -350,10 +350,10 @@ class ImageProcessWorker(Process):
 
 
     def debayer(self, scidata):
-        if not self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']:
+        if not self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
             return scidata
 
-        debayer_algorithm = self.__cfa_bgr_map[self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']]
+        debayer_algorithm = self.__cfa_bgr_map[self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']]
         scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 
         #scidata_wb = self.white_balance2(scidata_bgr)

@@ -147,12 +147,29 @@ class IndiClient(PyIndi.BaseClient):
     def getCcdInfo(self):
         ccdinfo = dict()
 
+        ctl_CCD_EXPOSURE = self.get_control('CCD_EXPOSURE', 'number')
+        ccdinfo['CCD_EXPOSURE'] = dict()
+        for i in ctl_CCD_EXPOSURE:
+            ccdinfo['CCD_EXPOSURE'][i.getName()] = {
+                'current' : i.getValue(),
+                'min'     : i.min,
+                'max'     : i.max,
+                'step'    : i.step,
+                'format'  : i.format,
+            }
+
 
         ctl_CCD_INFO = self.get_control('CCD_INFO', 'number')
 
         ccdinfo['CCD_INFO'] = dict()
         for i in ctl_CCD_INFO:
-            ccdinfo['CCD_INFO'][i.getName()] = i.getValue()
+            ccdinfo['CCD_INFO'][i.getName()] = {
+                'current' : i.getValue(),
+                'min'     : i.min,
+                'max'     : i.max,
+                'step'    : i.step,
+                'format'  : i.format,
+            }
 
 
         try:
@@ -160,11 +177,13 @@ class IndiClient(PyIndi.BaseClient):
 
             ccdinfo['CCD_CFA'] = dict()
             for i in ctl_CCD_CFA:
-                ccdinfo['CCD_CFA'][i.getName()] = i.getText()
+                ccdinfo['CCD_CFA'][i.getName()] = {
+                    'text' : i.getText(),
+                }
         except TimeOutException:
             logger.warning('CCD_CFA fetch timeout, assuming monochrome camera')
             ccdinfo['CCD_CFA'] = {
-                'CFA_TYPE' : None,
+                'CFA_TYPE' : {},
             }
 
 
@@ -172,7 +191,13 @@ class IndiClient(PyIndi.BaseClient):
 
         ccdinfo['CCD_FRAME'] = dict()
         for i in ctl_CCD_FRAME:
-            ccdinfo['CCD_FRAME'][i.getName()] = i.getValue()
+            ccdinfo['CCD_FRAME'][i.getName()] = {
+                'current' : i.getValue(),
+                'min'     : i.min,
+                'max'     : i.max,
+                'step'    : i.step,
+                'format'  : i.format,
+            }
 
 
         #logger.info('CCD Info: %s', pformat(ccdinfo))
