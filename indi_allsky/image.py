@@ -350,7 +350,7 @@ class ImageProcessWorker(Process):
 
 
     def debayer(self, scidata):
-        if not self.config['IMAGE_DEBAYER']:
+        if not self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']:
             return scidata
 
         debayer_algorithm = self.__cfa_bgr_map[self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']]

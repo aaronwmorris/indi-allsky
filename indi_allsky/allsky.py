@@ -208,7 +208,6 @@ class IndiAllSky(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
-        #logger.info('CCD Info: %s', pformat(ccd_info))
 
 
     def _startImageProcessWorker(self):

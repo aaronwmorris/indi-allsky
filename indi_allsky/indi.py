@@ -155,11 +155,17 @@ class IndiClient(PyIndi.BaseClient):
             ccdinfo['CCD_INFO'][i.getName()] = i.getValue()
 
 
-        ctl_CCD_CFA = self.get_control('CCD_CFA', 'text')
+        try:
+            ctl_CCD_CFA = self.get_control('CCD_CFA', 'text')
 
-        ccdinfo['CCD_CFA'] = dict()
-        for i in ctl_CCD_CFA:
-            ccdinfo['CCD_CFA'][i.getName()] = i.getText()
+            ccdinfo['CCD_CFA'] = dict()
+            for i in ctl_CCD_CFA:
+                ccdinfo['CCD_CFA'][i.getName()] = i.getText()
+        except TimeOutException:
+            logger.warning('CCD_CFA fetch timeout, assuming monochrome camera')
+            ccdinfo['CCD_CFA'] = {
+                'CFA_TYPE' : None,
+            }
 
 
         ctl_CCD_FRAME = self.get_control('CCD_FRAME', 'number')
@@ -169,6 +175,7 @@ class IndiClient(PyIndi.BaseClient):
             ccdinfo['CCD_FRAME'][i.getName()] = i.getValue()
 
 
+        #logger.info('CCD Info: %s', pformat(ccdinfo))
         return ccdinfo
 
 
