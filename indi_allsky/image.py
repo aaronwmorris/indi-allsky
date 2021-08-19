@@ -25,6 +25,12 @@ logger = multiprocessing.get_logger()
 
 
 class ImageProcessWorker(Process):
+
+    __cfa_bgr_map = {
+        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
+    }
+
+
     def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_fits=False, save_images=True):
         super(ImageProcessWorker, self).__init__()
 
@@ -347,8 +353,8 @@ class ImageProcessWorker(Process):
         if not self.config['IMAGE_DEBAYER']:
             return scidata
 
-        bayer_pattern = getattr(cv2, self.config['IMAGE_DEBAYER'])
-        scidata_bgr = cv2.cvtColor(scidata, bayer_pattern)
+        debayer_algorithm = self.__cfa_bgr_map[self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']]
+        scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 
         #scidata_wb = self.white_balance2(scidata_bgr)
         scidata_wb = scidata_bgr
