@@ -109,10 +109,11 @@ class ImageProcessWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
-            #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+            scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+            #scidata_calibrated_8 = self._convert_to_8bit(scidata_calibrated)
 
             # debayer
-            scidata_debayered = self.debayer(scidata_calibrated)
+            scidata_debayered = self.debayer(scidata_calibrated_8)
 
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
@@ -745,13 +746,31 @@ class ImageProcessWorker(Process):
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
+    def _convert_to_8bit(self, data_bytes):
+        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+
+        if ccd_bits == 8:
+            return data_bytes
+
+        logger.info('Downsampling image from %d to 8 bits', ccd_bits)
+
+        return cv2.convertScaleAbs(data_bytes)
+
+
     def _convert_16bit_to_8bit(self, data_bytes_16):
+        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+
+        if ccd_bits == 8:
+            return data_bytes_16
+
         data_bytes_8 = numpy.frombuffer(data_bytes_16, dtype=numpy.uint8)
         even = data_bytes_8[0::2]
         odd = data_bytes_8[1::2]
+
         # Convert bayer16 to bayer8
         bayer8_image = (even >> 4) | (odd << 4)
         bayer8_image = bayer8_image.reshape((self.image_height, self.image_width))
+
         return bayer8_image
 
 
