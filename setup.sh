@@ -78,6 +78,34 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
         ffmpeg \
         gifsicle \
         libindi-dev
+elif [[ $DISTRO_NAME == "Ubuntu" && $DISTRO_RELEASE == "20.04" ]]; then
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    # need to find an indi repo
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        libgnutls28-dev \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        ffmpeg \
+        gifsicle \
+        libindi-dev
+
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE"
     exit 1
