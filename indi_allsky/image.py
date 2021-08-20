@@ -655,9 +655,9 @@ class ImageProcessWorker(Process):
 
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = current_exposure - (current_exposure * (( self.target_adu / adu ) * exp_scale_factor))
+            new_exposure = current_exposure - ((current_exposure - (current_exposure * (self.target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            new_exposure = current_exposure + (current_exposure * (( self.target_adu / adu ) * exp_scale_factor))
+            new_exposure = current_exposure - ((current_exposure - (current_exposure * (self.target_adu / adu))) * exp_scale_factor)
         else:
             new_exposure = current_exposure
 
