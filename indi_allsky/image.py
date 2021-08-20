@@ -108,8 +108,9 @@ class ImageProcessWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
-            scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+            #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
             #scidata_calibrated_8 = self._convert_to_8bit(scidata_calibrated)
+            scidata_calibrated_8 = self._convert_to_8bit_cast(scidata_calibrated)
 
             # debayer
             scidata_debayered = self.debayer(scidata_calibrated_8)
@@ -743,6 +744,15 @@ class ImageProcessWorker(Process):
         self.image_height = new_height
 
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+    def _convert_to_8bit_cast(self, data_bytes):
+        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+
+        if ccd_bits == 8:
+            return data_bytes
+
+        return (data_bytes / 256).astype('uint8')
 
 
     def _convert_to_8bit(self, data_bytes):
