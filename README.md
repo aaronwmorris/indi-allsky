@@ -81,9 +81,9 @@ All configuration is read from config.json.  You can find configuration examples
 | CCD_EXPOSURE_MIN    | Auto detected | (seconds) Minimum exposure time |
 | CCD_EXPOSURE_DEF    | 0.0001      | (seconds) Default/starting exposure |
 | EXPOSURE_PERIOD     | 15          | (seconds) Time between beginning of each exposure |
-| TARGET_ADU          | varies      | Target image brightness to calculate exposure time |
-| TARGET_ADU_DEV      | varies      | Deviation +/- from target ADU to recalculate exposure time |
-| ADU_ROI             | []          | Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates |
+| TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
+| TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time |
+| ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | LOCATION_LATITUDE   |             | (string) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (string) Your longitude for astrometric calculations |
 | DAYTIME_CAPTURE     | false       | (bool) Perform day time image capture |
@@ -93,10 +93,10 @@ All configuration is read from config.json.  You can find configuration examples
 | NIGHT_SUN_ALT_DEG   | -6          | (degrees) Altitude of Sun to calculate beginning and end of night |
 | NIGHT_MOONMODE_ALT_DEG   | 0      | (degrees) Altitude of Moon to enable night time "moon mode" |
 | NIGHT_MOONMODE_PHASE     | 33     | (percent) Minimum illumination of Moon to enable night time "moon mode" |
-| IMAGE_FILE_TYPE     | jpg         | (jpg|png) Default image type |
+| IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
-| IMAGE_FOLDER        |             | Base folder to save images |
-| IMAGE_DEBAYER       | null        | OpenCV debayering algorithm |
+| IMAGE_FOLDER        |             | (string) Base folder to save images |
+| IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
 | IMAGE_SCALE_PERCENT | null        | (percent) Image scaling factor |
