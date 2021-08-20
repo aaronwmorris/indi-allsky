@@ -30,6 +30,7 @@ HTDOCS_FILES="
 
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
+CPU_ARCH=$(uname -m)
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
@@ -47,15 +48,17 @@ fi
 sudo true
 
 echo "Installing packages..."
-if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
-    # Astroberry repository
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-        echo "Installing INDI via Astroberry repository"
-        wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-        sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+    if [[ "$CPU_ARCH" == "armv7l" ]]; then
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+        fi
     fi
 
     sudo apt-get update
@@ -78,8 +81,64 @@ if [[ $DISTRO_NAME == "Raspbian" && $DISTRO_RELEASE == "10" ]]; then
         ffmpeg \
         gifsicle \
         libindi-dev
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+    # need to find an indi repo
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        ffmpeg \
+        gifsicle \
+        libindi-dev
+
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    # need to find an indi repo
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        libgnutls28-dev \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        ffmpeg \
+        gifsicle \
+        libindi-dev
+
 else
-    echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE"
+    echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
     exit 1
 fi
 
