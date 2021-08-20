@@ -40,8 +40,13 @@ source virtualenv/indi-allsky/bin/activate
 ./allsky.py -c config.json run
 ```
 
+## Performance
+
+indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C based which makes indi-allsky extremely fast.  A 1920 x 1080 image can be dark frame calibrated, debayered, histogram processed, text applied, and compressed to a JPG in less than 0.5 seconds on Raspberry Pi 3 class hardware.  PNG processing is a little more taxing, but usually only takes a few seconds.
+
+ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded video compiled from 3,000 frames requires ~20 minutes on Raspberry Pi 3 (4 core) hardware.  Encoding takes place in a separate process from image aqcuisition and image processing and is run at the lowest CPU priority so image acquision is never impacted.
+
 ## Software Dependencies
-indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C code which makes indi-allsky extremely fast.
 
 | Function          | Software      | URL |
 | ----------------- | ------------- | --- |
@@ -50,6 +55,7 @@ indi-allsky itself is written in python, but python is just the glue between the
 | Image processing  | OpenCV        | https://opencv.org/ |
 |                   | opencv-python | https://github.com/opencv/opencv-python |
 |                   | astropy       | https://www.astropy.org/ |
+|                   | numpy         | https://numpy.org/ |
 | Video processing  | ffmpeg        | https://www.ffmpeg.org/ |
 | Astrometry        | pyephem       | https://rhodesmill.org/pyephem/ |
 | File transfer     | pycurl        | http://pycurl.io/ |
@@ -57,7 +63,7 @@ indi-allsky itself is written in python, but python is just the glue between the
 
 ## Architecture
 
-indi-allsky utilizes python's multiprocessing library to enable parallelizing tasks so that image processes does not interfere with image aquisition, etc.
+indi-allsky utilizes python's multiprocessing library to enable parallelizing tasks so that image processing does not interfere with image aquisition, etc.
 
 ![](./content/indi-allsky-arch.svg)
 
