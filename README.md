@@ -67,20 +67,23 @@ All configuration is read from config.json.  You can find configuration examples
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |
-| INDI_CONFIG_NIGHT   |             | (dict) Indi configuration parameters for night time |
-| > GAIN_VALUE        |             | (int) Gain value (mainly for image text) |
-| > BIN_VALUE         |             | (int) Binning value (for calculation |
+| CCD_CONFIG          |             | (dict) Indi configuration parameters for CCD |
+| > NIGHT > GAIN      |             | (int) Gain for night time |
+| > NIGHT > BINNING   |             | (int) Bin mode for night time |
+| > MOONMODE > GAIN    |            | (int) Gain for moon mode|
+| > MOONMODE > BINNING |            | (int) Bin mode for moon mode|
+| > DAY > GAIN        |             | (int) Gain for day time |
+| > DAY > BINNING     |             | (int) Bin mode for day time |
+| INDI_CONFIG_DEFAULTS |            | (dict) Indi default configuration parameters |
 | > PROPERTIES        |             | (dict) Indi properties |
 | > SWITCHES          |             | (dict) Indi switches |
-| INDI_CONFIG_NIGHT_MOONMODE |      | (dict) Indi configuration parameters for "moon mode" |
-| INDI_CONFIG_DAY     |             | (dict) Indi configuration parameters for day time |
 | CCD_EXPOSURE_MAX    | 15          | (seconds) Maximum exposure time |
-| CCD_EXPOSURE_MIN    | Camera dependent | (seconds) Minimum exposure time |
+| CCD_EXPOSURE_MIN    | Auto detected | (seconds) Minimum exposure time |
 | CCD_EXPOSURE_DEF    | 0.0001      | (seconds) Default/starting exposure |
 | EXPOSURE_PERIOD     | 15          | (seconds) Time between beginning of each exposure |
 | TARGET_ADU          | varies      | Target image brightness to calculate exposure time |
 | TARGET_ADU_DEV      | varies      | Deviation +/- from target ADU to recalculate exposure time |
-| ADU_ROI             | []          | Region of interest to calculate ADU (x1, y1, x2, y2) |
+| ADU_ROI             | []          | Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates |
 | LOCATION_LATITUDE   |             | (string) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (string) Your longitude for astrometric calculations |
 | DAYTIME_CAPTURE     | false       | (bool) Perform day time image capture |
