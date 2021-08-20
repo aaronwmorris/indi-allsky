@@ -133,3 +133,21 @@ All configuration is read from config.json.  You can find configuration examples
 ### Moon mode
 
 This is a special night time operating mode intended to reduce gain when the moon is more illuminated and above the horizon
+
+
+## Tested Hardware
+
+I have extensively tested the ZWO ASI290MM and the Svbony SV305.  3-4 weeks of steady runtime with no intervention are common.  The only reason I restart my cameras are code updates (or power failures).
+
+The hardware below has at least been plugged in and tested for correct detection and CFA decoding.
+
+| Vendor   | Model           | Notes |
+| -------- | --------------- | ----- |
+| Svbony   | SV305           | 40% of frames take double the exposure time to complete |
+| ZWO      | ASI290MM        |       |
+| ZWO      | ASI178MM        |       |
+| ZWO      | ASI178MC        |       |
+| ZWO      | ASI071MC Pro    |       |
+| ZWO      | ASI183MM Pro    |       |
+| ZWO      | ASI183MC Pro    |       |
+
