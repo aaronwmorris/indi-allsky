@@ -111,7 +111,7 @@ class ImageProcessWorker(Process):
             #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
             #scidata_calibrated_8 = self._convert_to_8bit(scidata_calibrated)
             #scidata_calibrated_8 = self._convert_to_8bit_cast(scidata_calibrated)
-            scidata_calibrated_8 = sci_calibrated
+            scidata_calibrated_8 = scidata_calibrated
 
             # debayer
             scidata_debayered = self.debayer(scidata_calibrated_8)
