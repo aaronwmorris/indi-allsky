@@ -541,6 +541,7 @@ class IndiAllSky(object):
 
         ######
         # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
+        # Note the weird +2 in the ranges below are necessary for range to return the max value in the series
         ######
 
         ### NIGHT MODE DARKS ###
@@ -548,7 +549,7 @@ class IndiAllSky(object):
         self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
         ### take darks
-        night_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 2, 5)  # dark frames round up
+        night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
@@ -572,7 +573,7 @@ class IndiAllSky(object):
 
 
         ### take darks
-        night_moonmode_dark_exposures = range(1, int(self.config['CCD_EXPOSURE_MAX']) + 2, 5)  # dark frames round up
+        night_moonmode_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_moonmode_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
@@ -598,7 +599,7 @@ class IndiAllSky(object):
 
         ### take darks
         # day will rarely exceed 1 second
-        day_dark_exposures = range(1, 7, 5)  # 1 and 6, don't ask
+        day_dark_exposures = range(1, (5 + 2), 5)  # 1 and 6, don't ask
         for exp in day_dark_exposures:
             filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
