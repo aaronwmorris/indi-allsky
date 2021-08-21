@@ -40,6 +40,10 @@ sudo systemctl start indi-allsky
 ```
 
 ### Manual operation
+1. Stop indi-allsky service
+```
+sudo systemctl stop indi-allsky
+```
 1. Activate the indi-allsky python virtual environment
 ```
 source virtualenv/indi-allsky/bin/activate
@@ -48,6 +52,18 @@ source virtualenv/indi-allsky/bin/activate
 ```
 ./allsky.py -c config.json run
 ```
+
+### Dark frames
+1. Stop indi-allsky service (above)
+1. Activate the indi-allsky python virtual environment (above)
+1. Start indi-allsky with darks option
+```
+./allsky.py -c config.json darks
+```
+    * Darks will be generated in 1 second increments for the configured gain and binmode for night, moonmode, and day frames.
+    * This operation can take a while depending on your maximum exposure.
+        * 15 second maximum exposure:  ~10 minutes
+        * 60 second maximum exposure:  a really long time
 
 ### Web Interfaces
 
