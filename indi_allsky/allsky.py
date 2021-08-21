@@ -111,10 +111,12 @@ class IndiAllSky(object):
         # reconfigure if needed
         self.reconfigureCcd()
 
+        # add driver name to config
+        self.config['CCD_NAME'] = self.device.getDeviceName()
+
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
-
 
         # set minimum exposure
         if not self.config.get('CCD_EXPOSURE_MIN'):
@@ -212,11 +214,11 @@ class IndiAllSky(object):
         self.indiclient.connectDevice(device.getDeviceName())
         self.device = device
 
-        # add driver name to config
-        self.config['CCD_NAME'] = device.getDeviceName()
-
         # set default device in indiclient
         self.indiclient.device = self.device
+
+        # add driver name to config
+        self.config['CCD_NAME'] = self.device.getDeviceName()
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
