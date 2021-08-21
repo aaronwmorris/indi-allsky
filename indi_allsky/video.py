@@ -6,6 +6,8 @@ import subprocess
 import fcntl
 import errno
 
+from .keogram import KeogramGenerator
+
 from multiprocessing import Process
 #from threading import Thread
 import multiprocessing
@@ -53,14 +55,14 @@ class VideoProcessWorker(Process):
 
             if not img_folder.exists():
                 logger.error('Image folder does not exist: %s', img_folder)
-                return
+                continue
 
 
             video_file = img_folder.joinpath('allsky-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
 
             if video_file.exists():
                 logger.warning('Video is already generated: %s', video_file)
-                return
+                continue
 
 
             seqfolder = img_folder.joinpath('.sequence')
@@ -83,7 +85,7 @@ class VideoProcessWorker(Process):
             self.getFolderFilesByExt(img_folder, timelapse_files)
 
             # Exclude empty files
-            timelapse_files_nonzero= filter(lambda p: p.stat().st_size != 0, timelapse_files)
+            timelapse_files_nonzero = filter(lambda p: p.stat().st_size != 0, timelapse_files)
 
             logger.info('Creating symlinked files for timelapse')
             timelapse_files_sorted = sorted(timelapse_files_nonzero, key=lambda p: p.stat().st_mtime)
@@ -137,10 +139,20 @@ class VideoProcessWorker(Process):
             self._releaseLock()
 
 
+            ### Upload ###
+            self.uploadVideo(video_file)
+
+
+            ### Keogram ###
+            keogram_file = img_folder.joinpath('keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+            self.generateKeogram(keogram_file, timelapse_files_sorted)
+
+
+    def uploadVideo(self, video_file):
             ### Upload video
             if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
                 logger.warning('Video uploading disabled')
-                continue
+                return
 
             remote_path = Path(self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'])
             remote_file = remote_path.joinpath(video_file.name)
@@ -150,6 +162,16 @@ class VideoProcessWorker(Process):
                 'local_file' : video_file,
                 'remote_file' : remote_file,
             })
+
+
+    def generateKeogram(self, keogram_file, timelapse_files):
+            if keogram_file.exists():
+                logger.warning('Keogram is already generated: %s', keogram_file)
+                return
+
+            kg = KeogramGenerator(self.config, timelapse_files)
+            kg.angle = self.config['KEOGRAM_ANGLE']
+            kg.generate(keogram_file)
 
 
 
