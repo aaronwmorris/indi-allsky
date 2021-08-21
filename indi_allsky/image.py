@@ -340,8 +340,10 @@ class ImageProcessWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated):
+        # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
+        dark_exposure = int(self.last_exposure) + (5 - (int(self.last_exposure) % 5)) + 1  # round up exposure for dark frame
 
-        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_gain{1:d}_bin{2:d}.fit'.format(int(self.last_exposure) + 1, self.gain_v.value, self.bin_v.value))  # round up exposure for dark frame
+        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_gain{1:d}_bin{2:d}.fit'.format(dark_exposure, self.gain_v.value, self.bin_v.value))
 
         if not dark_file.exists():
             logger.warning('Dark not found: %s', dark_file)

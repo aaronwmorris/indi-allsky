@@ -61,10 +61,10 @@ source virtualenv/indi-allsky/bin/activate
 ./allsky.py -c config.json darks
 ```
 
-* Darks will be generated in 1 second increments for the configured gain and binmode for night, moonmode, and day frames.
+* Darks will be generated in 5 second increments (offset +1) for the configured gain and binmode for night, moonmode, and day frames.
 * This operation can take a while depending on your maximum exposure.
-    * 15 second maximum exposure:  ~10 minutes
-    * 60 second maximum exposure:  a really long time
+    * 15 second maximum exposure:  ~2 minutes
+    * 60 second maximum exposure:  ~15 minutes
 
 ### Web Interfaces
 
