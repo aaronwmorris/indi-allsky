@@ -66,7 +66,14 @@ source virtualenv/indi-allsky/bin/activate
     * 15 second maximum exposure:  ~2 minutes
     * 60 second maximum exposure:  ~15 minutes
 
-### Web Interfaces
+## Keograms
+Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns north/south and then the center-vertical column is extraced from each frame and compiled into the keogram.
+
+If you look closely enough, you can see the Andromeda galaxy in this example keogram.
+
+![](./content/keogram_example.jpg)
+
+## Web Interfaces
 
 Some very simple web pages are included to view images.  HTML5 canvas and javascript are utilized for some simple interactivity.
 
@@ -215,7 +222,6 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 
 ## To Do
 
-* Keogram generation
 * 16bit image handling
 
 ## Acknowledgements
