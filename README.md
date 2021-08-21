@@ -1,5 +1,5 @@
 # Indi Allsky
-indi-allsky is software used to manage a Linux-based All Sky Camera.
+indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera should be usable.
 
 ## Requirements
 * A computer running a modern Linux distribution, such as a Raspberry Pi
@@ -7,7 +7,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera.
         * ARM
         * x86_64
     * 1GB RAM  (512MB might work, but may require additional swap space)
-    * 64GB of storage minimum to store a couple months of videos and 30 days of JPEG images.
+    * 64GB of storage minimum to store 2 months of videos and 30 days of JPEG images.
     * (Optional) Internet connectivity for image uploading
 * An INDI supported camera
     * CPU architecture support varies between camera manufacturers
@@ -48,6 +48,17 @@ source virtualenv/indi-allsky/bin/activate
 ```
 ./allsky.py -c config.json run
 ```
+
+### Web Interfaces
+
+Some very simple web pages are included to view images.  HTML5 canvas and javascript are utilized for some simple interactivity.
+
+| File                | Description |
+| ------------------- | ----------- |
+| latest.html         | The latest image is loaded every 15 seconds and displayed.  Setting configured in settings_latest.js |
+| loop.html           | A set of the latest images are loaded and displayed in a loop (like a GIF).  Settings configured in settings_loop.js |
+| loop_realtime.html  | A loop is slowly built dynamically with the latest images loaded at regular intervals.  Settings configured in settings_loop.js |
+
 
 ## Performance
 
@@ -180,4 +191,14 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 | ftps     | pycurl_ftps   | 990  | FTPS (implicit) via pycurl |
 | sftp     | pycurl_sftp   | 22   | SFTP via pycurl |
 |          | paramiko_sftp | 22   | SFTP via paramiko |
+
+## To Do
+
+* Keogram generation
+* 16bit image handling
+
+## Acknowledgements
+
+* [Thomas Jacquin](https://github.com/thomasjacquin) - indi-allsky is heavily inspired by his [allsky](https://github.com/thomasjacquin/allsky) software.
+* [Marco Gulino](https://github.com/GuLinux) - His examples from [indi-lite-tools](https://github.com/GuLinux/indi-lite-tools) were key to understanding how to work with pyindi-client
 
