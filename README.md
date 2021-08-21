@@ -2,8 +2,17 @@
 indi-allsky is software used to manage a Linux-based All Sky Camera.
 
 ## Requirements
-* A computer, such as a Raspberry Pi
+* A computer running a modern Linux distribution, such as a Raspberry Pi
+    * Multicore is recommended
+        * ARM
+        * x86_64
+    * 1GB RAM  (512MB might work, but may require additional swap space)
+    * 64GB of storage minimum to store a couple months of videos and 30 days of JPEG images.
+    * (Optional) Internet connectivity for image uploading
 * An INDI supported camera
+    * CPU architecture support varies between camera manufacturers
+
+MacOS support is theoretically possible, but not tested.  Not all INDI cameras have Mac firmwares available.
 
 ## Installation
 1. Install git
@@ -149,11 +158,26 @@ The hardware below has at least been plugged in and tested for correct detection
 
 | Vendor   | Model           | Notes |
 | -------- | --------------- | ----- |
-| Svbony   | SV305           | 40% of frames take double the exposure time to complete |
+| Svbony   | SV305           | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug. |
 | ZWO      | ASI290MM        |       |
 | ZWO      | ASI178MM        |       |
 | ZWO      | ASI178MC        |       |
 | ZWO      | ASI071MC Pro    |       |
 | ZWO      | ASI183MM Pro    |       |
 | ZWO      | ASI183MC Pro    |       |
+
+
+## File Transfer
+
+indi-allsky supports several file transfer methods.  Additional file transfer methods are planned such as direct to YouTube uploads.
+
+| Protocol | Class Name    | Port | Description |
+| -------- | ------------- | ---- | ----------- |
+| ftp      | pycurl_ftp    | 21   | FTP via pycurl |
+|          | python_ftp    | 21   | FTP via ftplib |
+| ftpes    | pycurl_ftpes  | 21   | FTPS (explicit) via pycurl |
+|          | python_ftpes  | 21   | FTPS (explicit) via ftplib |
+| ftps     | pycurl_ftps   | 990  | FTPS (implicit) via pycurl |
+| sftp     | pycurl_sftp   | 22   | SFTP via pycurl |
+|          | paramiko_sftp | 22   | SFTP via paramiko |
 
