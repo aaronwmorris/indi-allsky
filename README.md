@@ -137,6 +137,7 @@ All configuration is read from config.json.  You can find configuration examples
 | NIGHT_SUN_ALT_DEG   | -6          | (degrees) Altitude of Sun to calculate beginning and end of night |
 | NIGHT_MOONMODE_ALT_DEG   | 0      | (degrees) Altitude of Moon to enable night time "moon mode" |
 | NIGHT_MOONMODE_PHASE     | 33     | (percent) Minimum illumination of Moon to enable night time "moon mode" |
+| KEOGRAM_ANGLE       | 0           | (int) Angle of image rotation for Keogram generation |
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
