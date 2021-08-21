@@ -32,7 +32,7 @@ cd indi-allsky.git
 ./setup.sh
 ```
  * Note:  You may be prompted for a password for sudo
-1. Edit the config.json file to customize your settings
+1. Copy a configuration from the examples/ folder to config.json .  Edit the config.json file to customize your settings
 1. Start the software
 ```
 sudo systemctl start indiserver
