@@ -16,12 +16,6 @@
     },
 
     "INDI_CONFIG_DEFAULTS" : {
-        "PROPERTIES" : {
-            "CCD_WBR"      : {"WBR" : 110},
-            "CCD_WBG"      : {"WBG" : 95},
-            "CCD_WBB"      : {"WBB" : 175},
-            "CCD_GAMMA"    : {"GAMMA" : 100}
-        },
         "SWITCHES" : {
             "FRAME_FORMAT" : {
                 "on"  : ["FORMAT_RAW8"],
@@ -32,9 +26,10 @@
 
     "CCD_EXPOSURE_MAX" : 15.000000,
     "EXPOSURE_PERIOD"  : 15.00000,
+    "AUTO_WB"          : true,
 
     "comment_TARGET_ADU" : "Average channel brightness target",
-    "TARGET_ADU" : 60,
+    "TARGET_ADU" : 90,
     "comment_TARGET_ADU_DEV" : "Allowed deviation from the mean before recalculating",
     "TARGET_ADU_DEV" : 10,
     "comment_ADU_ROI" : "Region of Interest for ADU calculations",

@@ -120,15 +120,21 @@ class ImageProcessWorker(Process):
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
 
+            # white balance
+            #scidata_balanced = self.equalizeHistogram(scidata_debayered)
+            scidata_balanced = self.white_balance_bgr(scidata_debayered)
+            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered)
+            #scidata_balanced = scidata_debayered
+
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
-                scidata_contrast = self.contrast_clahe(scidata_debayered)
+                scidata_contrast = self.contrast_clahe(scidata_balanced)
             elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
                 # Contrast enhancement during night
-                scidata_contrast = self.contrast_clahe(scidata_debayered)
+                scidata_contrast = self.contrast_clahe(scidata_balanced)
             else:
-                scidata_contrast = scidata_debayered
+                scidata_contrast = scidata_balanced
 
 
             # verticle flip
@@ -364,7 +370,6 @@ class ImageProcessWorker(Process):
         debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
         scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 
-        #scidata_wb = self.white_balance2(scidata_bgr)
         scidata_wb = scidata_bgr
 
         return scidata_wb
@@ -699,25 +704,51 @@ class ImageProcessWorker(Process):
         return cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
 
 
-    def white_balance2(self, data_bytes):
+    def equalizeHistogram(self, data_bytes):
+        if not self.config['CFA_PATTERN']:
+            return data_bytes
+
+        ycrcb_img = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2YCrCb)
+        ycrcb_img[:, :, 0] = cv2.equalizeHist(ycrcb_img[:, :, 0])
+        return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
+
+
+    def white_balance_bgr(self, data_bytes):
+        if not self.config['CFA_PATTERN']:
+            return data_bytes
+
+        if not self.config['AUTO_WB']:
+            return data_bytes
+
         ### This seems to work
-        r, g, b = cv2.split(data_bytes)
-        r_avg = cv2.mean(r)[0]
-        g_avg = cv2.mean(g)[0]
+        b, g, r = cv2.split(data_bytes)
         b_avg = cv2.mean(b)[0]
+        g_avg = cv2.mean(g)[0]
+        r_avg = cv2.mean(r)[0]
 
         # Find the gain of each channel
-        k = (r_avg + g_avg + b_avg) / 3
-        kr = k / r_avg
-        kg = k / g_avg
+        k = (b_avg + g_avg + r_avg) / 3
         kb = k / b_avg
+        kg = k / g_avg
+        kr = k / r_avg
 
-        r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
-        g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
         b = cv2.addWeighted(src1=b, alpha=kb, src2=0, beta=0, gamma=0)
+        g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
+        r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
 
-        balance_img = cv2.merge([b, g, r])
-        return balance_img
+        return cv2.merge([b, g, r])
+
+
+    def white_balance_bgr_2(self, data_bytes):
+        if not self.config['CFA_PATTERN']:
+            return data_bytes
+
+        lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
+        avg_a = numpy.average(lab[:, :, 1])
+        avg_b = numpy.average(lab[:, :, 2])
+        lab[:, :, 1] = lab[:, :, 1] - ((avg_a - 128) * (lab[:, :, 0] / 255.0) * 1.1)
+        lab[:, :, 2] = lab[:, :, 2] - ((avg_b - 128) * (lab[:, :, 0] / 255.0) * 1.1)
+        return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
 
     def median_blur(self, data_bytes):
