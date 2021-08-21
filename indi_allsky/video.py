@@ -136,9 +136,6 @@ class VideoProcessWorker(Process):
                 logger.error('Cannote remove sequence folder: %s', str(e))
 
 
-            self._releaseLock()
-
-
             ### Upload ###
             self.uploadVideo(video_file)
 
@@ -146,6 +143,9 @@ class VideoProcessWorker(Process):
             ### Keogram ###
             keogram_file = img_folder.joinpath('keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
             self.generateKeogram(keogram_file, timelapse_files_sorted)
+            self.uploadKeogram(keogram_file)
+
+            self._releaseLock()
 
 
     def uploadVideo(self, video_file):
@@ -173,6 +173,21 @@ class VideoProcessWorker(Process):
             kg.angle = self.config['KEOGRAM_ANGLE']
             kg.generate(keogram_file)
 
+
+    def uploadKeogram(self, keogram_file):
+            ### Upload video
+            if not self.config['FILETRANSFER']['UPLOAD_KEOGRAM']:
+                logger.warning('Keogram uploading disabled')
+                return
+
+            remote_path = Path(self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'])
+            remote_file = remote_path.joinpath(keogram_file.name)
+
+            # tell worker to upload file
+            self.upload_q.put({
+                'local_file' : keogram_file,
+                'remote_file' : remote_file,
+            })
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
