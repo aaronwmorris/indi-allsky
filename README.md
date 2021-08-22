@@ -69,7 +69,7 @@ source virtualenv/indi-allsky/bin/activate
 ## Keograms
 Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.
 
-If you look closely enough, you can see the Andromeda galaxy as it passed through the meridian in this example keogram.
+Below you can see it was cloudy the first half of the night and then clear.  If you look closely enough, you can see the Andromeda galaxy as it passed through the meridian in this example keogram.  Jupter is at the bottom.
 
 ![](./content/keogram_example.jpg)
 
