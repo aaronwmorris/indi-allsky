@@ -29,9 +29,8 @@ if __name__ == "__main__":
         choices=(
             'run',
             'darks',
-            'generateDayTimelapse',
             'generateNightTimelapse',
-            'generateAllTimelapse',
+            'generateDayTimelapse',
             'generateNightKeogram',
             'generateDayKeogram',
             'expireImages',

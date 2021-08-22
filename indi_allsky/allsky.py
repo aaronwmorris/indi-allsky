@@ -650,14 +650,6 @@ class IndiAllSky(object):
         self.indiclient.disconnectServer()
 
 
-    def generateAllTimelapse(self, timespec, day=True, night=True):
-        if day:
-            self._generateDayTimelapse(timespec)
-
-        if night:
-            self._generateNightTimelapse(timespec)
-
-
     def generateDayTimelapse(self, timespec):
         self._generateDayTimelapse(timespec)
         self._stopVideoProcessWorker()
