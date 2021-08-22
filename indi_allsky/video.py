@@ -51,6 +51,8 @@ class VideoProcessWorker(Process):
             timespec = v_dict['timespec']
             img_folder = v_dict['img_folder']
             timeofday = v_dict['timeofday']
+            video = v_dict.get('video', True)
+            keogram = v_dict.get('keogram', True)
 
 
             if not img_folder.exists():
@@ -58,94 +60,100 @@ class VideoProcessWorker(Process):
                 continue
 
 
-            video_file = img_folder.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
-
-            if video_file.exists():
-                logger.warning('Video is already generated: %s', video_file)
-                continue
+            if video:
+                self.generateVideo(timespec, img_folder, timeofday)
 
 
-            seqfolder = img_folder.joinpath('.sequence')
+            if keogram:
+                self.generateKeogram(timespec, img_folder, timeofday)
 
-            if not seqfolder.exists():
-                logger.info('Creating sequence folder %s', seqfolder)
-                seqfolder.mkdir()
-
-
-            # delete all existing symlinks in seqfolder
-            rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
-            if rmlinks:
-                logger.warning('Removing existing symlinks in %s', seqfolder)
-                for l_p in rmlinks:
-                    l_p.unlink()
-
-
-            # find all files
-            timelapse_files = list()
-            self.getFolderFilesByExt(img_folder, timelapse_files)
-
-            # Exclude empty files
-            timelapse_files_nonzero = filter(lambda p: p.stat().st_size != 0, timelapse_files)
-
-            logger.info('Creating symlinked files for timelapse')
-            timelapse_files_sorted = sorted(timelapse_files_nonzero, key=lambda p: p.stat().st_mtime)
-            for i, f in enumerate(timelapse_files_sorted):
-                symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
-                symlink_p.symlink_to(f)
-
-
-            start = time.time()
-
-            cmd = [
-                'ffmpeg',
-                '-y',
-                '-f', 'image2',
-                '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
-                '-i', '{0:s}/%04d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
-                '-vcodec', 'libx264',
-                '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
-                '-pix_fmt', 'yuv420p',
-                '-movflags', '+faststart',
-                '{0:s}'.format(str(video_file)),
-            ]
-
-            ffmpeg_subproc = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                preexec_fn=lambda: os.nice(19),
-            )
-
-            elapsed_s = time.time() - start
-            logger.info('Timelapse generated in %0.4f s', elapsed_s)
-
-            logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
-
-            # delete all existing symlinks in seqfolder
-            rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
-            if rmlinks:
-                logger.warning('Removing existing symlinks in %s', seqfolder)
-                for l_p in rmlinks:
-                    l_p.unlink()
-
-
-            # remove sequence folder
-            try:
-                seqfolder.rmdir()
-            except OSError as e:
-                logger.error('Cannote remove sequence folder: %s', str(e))
-
-
-            ### Upload ###
-            self.uploadVideo(video_file)
-
-
-            ### Keogram ###
-            keogram_file = img_folder.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
-            self.generateKeogram(keogram_file, timelapse_files_sorted)
-            self.uploadKeogram(keogram_file)
 
             self._releaseLock()
+
+
+
+    def generateVideo(self, timespec, img_folder, timeofday):
+        video_file = img_folder.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
+
+        if video_file.exists():
+            logger.warning('Video is already generated: %s', video_file)
+            return
+
+
+        seqfolder = img_folder.joinpath('.sequence')
+
+        if not seqfolder.exists():
+            logger.info('Creating sequence folder %s', seqfolder)
+            seqfolder.mkdir()
+
+
+        # delete all existing symlinks in seqfolder
+        rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
+        if rmlinks:
+            logger.warning('Removing existing symlinks in %s', seqfolder)
+            for l_p in rmlinks:
+                l_p.unlink()
+
+
+        # find all files
+        timelapse_files = list()
+        self.getFolderFilesByExt(img_folder, timelapse_files)
+
+        # Exclude empty files
+        timelapse_files_nonzero = filter(lambda p: p.stat().st_size != 0, timelapse_files)
+
+        logger.info('Creating symlinked files for timelapse')
+        timelapse_files_sorted = sorted(timelapse_files_nonzero, key=lambda p: p.stat().st_mtime)
+        for i, f in enumerate(timelapse_files_sorted):
+            symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
+            symlink_p.symlink_to(f)
+
+
+        start = time.time()
+
+        cmd = [
+            'ffmpeg',
+            '-y',
+            '-f', 'image2',
+            '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
+            '-i', '{0:s}/%04d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
+            '-vcodec', 'libx264',
+            '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
+            '-pix_fmt', 'yuv420p',
+            '-movflags', '+faststart',
+            '{0:s}'.format(str(video_file)),
+        ]
+
+        ffmpeg_subproc = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            preexec_fn=lambda: os.nice(19),
+        )
+
+        elapsed_s = time.time() - start
+        logger.info('Timelapse generated in %0.4f s', elapsed_s)
+
+        logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+
+        # delete all existing symlinks in seqfolder
+        rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
+        if rmlinks:
+            logger.warning('Removing existing symlinks in %s', seqfolder)
+            for l_p in rmlinks:
+                l_p.unlink()
+
+
+        # remove sequence folder
+        try:
+            seqfolder.rmdir()
+        except OSError as e:
+            logger.error('Cannote remove sequence folder: %s', str(e))
+
+
+        ### Upload ###
+        self.uploadVideo(video_file)
+
 
 
     def uploadVideo(self, video_file):
@@ -164,14 +172,24 @@ class VideoProcessWorker(Process):
             })
 
 
-    def generateKeogram(self, keogram_file, timelapse_files):
+    def generateKeogram(self, timespec, img_folder, timeofday):
+            keogram_file = img_folder.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+
             if keogram_file.exists():
                 logger.warning('Keogram is already generated: %s', keogram_file)
                 return
 
+
+            # find all files
+            timelapse_files = list()
+            self.getFolderFilesByExt(img_folder, timelapse_files)
+
+
             kg = KeogramGenerator(self.config, timelapse_files)
             kg.angle = self.config['KEOGRAM_ANGLE']
             kg.generate(keogram_file)
+
+            self.uploadKeogram(keogram_file)
 
 
     def uploadKeogram(self, keogram_file):
