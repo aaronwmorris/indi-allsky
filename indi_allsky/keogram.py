@@ -1,5 +1,6 @@
 import cv2
 import numpy
+import math
 import time
 from pprint import pformat
 
@@ -15,6 +16,12 @@ class KeogramGenerator(object):
         self.file_list = file_list
 
         self._angle = int(self.config['KEOGRAM_ANGLE'])
+
+        self.original_width = None
+        self.original_height = None
+
+        self.rotated_width = None
+        self.rotated_height = None
 
 
     @property
@@ -71,8 +78,10 @@ class KeogramGenerator(object):
         processing_elapsed_s = time.time() - processing_start
         logger.info('Images processed for keogram in %0.1f s', processing_elapsed_s)
 
+        keogram_trimmed = self.trimEdges(keogram_data)
+
         logger.warning('Creating keogram: %s', outfile)
-        cv2.imwrite(str(outfile), keogram_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        cv2.imwrite(str(outfile), keogram_trimmed, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
 
 
     def rotate(self, image):
@@ -94,5 +103,57 @@ class KeogramGenerator(object):
 
             return rotated
 
+
+    def trimEdges(self, image):
+        # if the rotation angle exceeds the diagonal angle of the original image, use the height as the hypotenuse
+        switch_angle = 90 - math.degrees(math.atan(self.original_height / self.original_width))
+        logger.info('Switch angle: %0.2f', switch_angle)
+
+
+        angle_180_r = abs(self._angle) % 180
+        if angle_180_r > 90:
+            angle_90_r = 90 - (abs(self._angle) % 90)
+        else:
+            angle_90_r = abs(self._angle) % 90
+
+
+        if angle_90_r < switch_angle:
+            hyp_1 = self.original_width
+            c_angle = angle_90_r
+        else:
+            hyp_1 = self.original_height
+            c_angle = 90 - angle_90_r
+
+
+        logger.info('Trim angle: %d', c_angle)
+
+        height, width = image.shape[:2]
+        logger.info('Keogram dimensions: %d x %d', width, height)
+        logger.info('Original image dimensions: %d x %d', self.original_width, self.original_height)
+        logger.info('Original rotated image dimensions: %d x %d', self.rotated_width, self.rotated_height)
+
+
+        adj_1 = math.cos(math.radians(c_angle)) * hyp_1
+        adj_2 = int(adj_1 - (self.rotated_width / 2))
+
+        trim_height = int(math.tan(math.radians(c_angle)) * adj_2)
+        logger.info('Trim height: %d', trim_height)
+
+
+        x1 = 0
+        y1 = trim_height
+        x2 = width
+        y2 = height - trim_height
+
+        logger.info('Calculated trimmed area: (%d, %d) (%d, %d)', x1, y1, x2, y2)
+        trimmed_image = image[
+            y1:y2,
+            x1:x2,
+        ]
+
+        trimmed_height, trimmed_width = trimmed_image.shape[:2]
+        logger.info('New trimmed image: %d x %d', trimmed_width, trimmed_height)
+
+        return trimmed_image
 
 
