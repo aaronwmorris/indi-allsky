@@ -73,7 +73,7 @@ class VideoProcessWorker(Process):
 
 
     def generateVideo(self, timespec, img_folder, timeofday):
-        video_file = img_folder.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
+        video_file = img_folder.parent.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -173,7 +173,7 @@ class VideoProcessWorker(Process):
 
 
     def generateKeogram(self, timespec, img_folder, timeofday):
-            keogram_file = img_folder.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+            keogram_file = img_folder.parent.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
 
             if keogram_file.exists():
                 logger.warning('Keogram is already generated: %s', keogram_file)
