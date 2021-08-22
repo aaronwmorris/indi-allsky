@@ -728,9 +728,21 @@ class ImageProcessWorker(Process):
 
         # Find the gain of each channel
         k = (b_avg + g_avg + r_avg) / 3
-        kb = k / b_avg
-        kg = k / g_avg
-        kr = k / r_avg
+
+        try:
+            kb = k / b_avg
+        except ZeroDivisionError:
+            kb = k / 0.1
+
+        try:
+            kg = k / g_avg
+        except ZeroDivisionError:
+            kg = k / 0.1
+
+        try:
+            kr = k / r_avg
+        except ZeroDivisionError:
+            kr = k / 0.1
 
         b = cv2.addWeighted(src1=b, alpha=kb, src2=0, beta=0, gamma=0)
         g = cv2.addWeighted(src1=g, alpha=kg, src2=0, beta=0, gamma=0)
