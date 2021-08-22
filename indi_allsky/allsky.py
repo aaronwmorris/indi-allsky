@@ -38,6 +38,9 @@ class IndiAllSky(object):
 
         self.config_file = f_config_file.name
 
+        self._indi_server = 'localhost'
+        self._indi_port = 7624
+
         self.image_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
@@ -87,6 +90,23 @@ class IndiAllSky(object):
         signal.signal(signal.SIGTERM, self.sigterm_handler)
         signal.signal(signal.SIGINT, self.sigint_handler)
 
+
+    @property
+    def indi_server(self):
+        return self._indi_server
+
+    @indi_server.setter
+    def indi_server(self, new_server):
+        self._indi_server = str(new_server)
+
+
+    @property
+    def indi_port(self):
+        return self._indi_port
+
+    @indi_port.setter
+    def indi_port(self, new_port):
+        self._indi_port = int(new_port)
 
 
     def sighup_handler(self, signum, frame):
@@ -186,8 +206,8 @@ class IndiAllSky(object):
             self.bin_v,
         )
 
-        # set indi server localhost and port 7624
-        self.indiclient.setServer("localhost", 7624)
+        # set indi server localhost and port
+        self.indiclient.setServer(self._indi_server, self._indi_port)
 
         # connect to indi server
         logger.info("Connecting to indiserver")

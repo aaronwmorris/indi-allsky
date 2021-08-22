@@ -48,6 +48,20 @@ if __name__ == "__main__":
         choices=('syslog', 'stderr'),
         default='stderr',
     )
+    argparser.add_argument(
+        '--server',
+        '-s',
+        help='indi server',
+        type=str,
+        default='localhost',
+    )
+    argparser.add_argument(
+        '--port',
+        '-p',
+        help='indi port',
+        type=int,
+        default=7624,
+    )
 
     args = argparser.parse_args()
 
@@ -68,6 +82,8 @@ if __name__ == "__main__":
 
 
     ia = indi_allsky.IndiAllSky(args.config)
+    ia.indi_server = args.server
+    ia.indi_port = args.port
 
     action_func = getattr(ia, args.action)
     action_func(*args_list)
