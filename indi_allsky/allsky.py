@@ -51,7 +51,7 @@ class IndiAllSky(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
         self.night = None
-        self.moonmode_v = Value('i', -1)
+        self.moonmode_v = Value('f', 0.0)  # contains moon phase %
         self.moonmode = None
 
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
@@ -395,9 +395,9 @@ class IndiAllSky(object):
 
 
             self.night = self.detectNight()
-            self.moonmode = self.detectMoonMode()
             #logger.info('self.night_v.value: %r', self.night_v.value)
             #logger.info('is night: %r', self.night)
+            self.moonmode = self.detectMoonMode()
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
@@ -480,7 +480,7 @@ class IndiAllSky(object):
 
         if self.night_v.value != int(self.night):
             pass
-        elif self.night and self.moonmode_v.value != int(self.moonmode):
+        elif self.night and bool(self.moonmode_v.value) != bool(self.moonmode):
             pass
         else:
             # No need to reconfigure
@@ -506,7 +506,7 @@ class IndiAllSky(object):
             self.night_v.value = int(self.night)
 
         with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
+            self.moonmode_v.value = float(self.moonmode)
 
 
         # Sleep after reconfiguration
@@ -545,9 +545,9 @@ class IndiAllSky(object):
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
                     logger.info('Moon Mode conditions detected')
-                    return True
+                    return moon_phase
 
-        return False
+        return 0.0
 
 
     def darks(self):
