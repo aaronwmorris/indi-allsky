@@ -16,6 +16,7 @@ class KeogramGenerator(object):
         self.file_list = file_list
 
         self._angle = int(self.config['KEOGRAM_ANGLE'])
+        self._h_scale_factor = 33
 
         self.original_width = None
         self.original_height = None
@@ -31,6 +32,15 @@ class KeogramGenerator(object):
     @angle.setter
     def angle(self, new_angle):
         self._angle = int(new_angle)
+
+
+    @property
+    def h_scale_factor(self):
+        return self._h_scale_factor
+
+    @h_scale_factor.setter
+    def h_scale_factor(self, new_factor):
+        self._h_scale_factor = int(new_factor)
 
 
     def generate(self, outfile):
@@ -87,10 +97,17 @@ class KeogramGenerator(object):
         processing_elapsed_s = time.time() - processing_start
         logger.info('Images processed for keogram in %0.1f s', processing_elapsed_s)
 
+        # trim off the top and bottom bars
         keogram_trimmed = self.trimEdges(keogram_data)
 
+        # scale horizontal size
+        trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
+        new_width = trimmed_width
+        new_height = int(trimmed_height * self._h_scale_factor / 100)
+        keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
         logger.warning('Creating keogram: %s', outfile)
-        cv2.imwrite(str(outfile), keogram_trimmed, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
 
 
     def rotate(self, image):

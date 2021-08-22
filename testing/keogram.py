@@ -19,6 +19,8 @@ class KeogramGenerator(object):
     def __init__(self):
         self._angle = 0
 
+        self._h_scale_factor = 33
+
         self.original_width = None
         self.original_height = None
 
@@ -33,6 +35,15 @@ class KeogramGenerator(object):
     @angle.setter
     def angle(self, new_angle):
         self._angle = float(new_angle)
+
+
+    @property
+    def h_scale_factor(self):
+        return self._h_scale_factor
+
+    @h_scale_factor.setter
+    def h_scale_factor(self, new_factor):
+        self._h_scale_factor = int(new_factor)
 
 
 
@@ -99,13 +110,25 @@ class KeogramGenerator(object):
 
         #logger.info('Data: %s', pformat(keogram_data))
 
-        trimmed_keogram = self.trimEdges(keogram_data)
-
         logger.warning('Creating %s', outfile)
         cv2.imwrite(outfile, keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
+
+        # trim bars at top and bottom
+        trimmed_keogram = self.trimEdges(keogram_data)
+
         logger.warning('Creating trim_%s', outfile)
         cv2.imwrite('trim_{0:s}'.format(outfile), trimmed_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+
+        # scale horizontal
+        trimmed_height, trimmed_width = trimmed_keogram.shape[:2]
+        new_width = trimmed_width
+        new_height = int(trimmed_height * self._h_scale_factor / 100)
+        keogram_resized = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+        logger.warning('Creating trim_resize_%s', outfile)
+        cv2.imwrite('trim_resize_{0:s}'.format(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def rotate(self, image):
