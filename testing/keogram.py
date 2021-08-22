@@ -134,11 +134,11 @@ class KeogramGenerator(object):
 
 
     def trimEdges(self, image):
-        angle_90_r = abs(self._angle) % 90
-
         # if the rotation angle exceeds the diagonal angle of the original image, use the height as the hypotenuse
         switch_angle = 90 - math.degrees(math.atan(self.original_height / self.original_width))
         logger.info('Switch angle: %0.2f', switch_angle)
+
+        angle_90_r = abs(self._angle) % 90
         if angle_90_r < switch_angle:
             hyp_1 = self.original_width
             c_angle = angle_90_r
