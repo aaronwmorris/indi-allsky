@@ -55,11 +55,18 @@ class KeogramGenerator(object):
                 continue
 
 
+            height, width = image.shape[:2]
+            self.original_height = height
+            self.original_width = width
+
+
             rotated_image = self.rotate(image)
             del image
 
 
             rot_height, rot_width = rotated_image.shape[:2]
+            self.rotated_height = rot_height
+            self.rotated_width = rot_width
 
             rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
 
@@ -73,6 +80,8 @@ class KeogramGenerator(object):
                 keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
             keogram_data = numpy.append(keogram_data, rotated_center_line, 1)
+
+            del rotated_image
 
 
         processing_elapsed_s = time.time() - processing_start
