@@ -316,6 +316,7 @@ class IndiClient(PyIndi.BaseClient):
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
 
+
     def get_control(self, name, ctl_type, timeout=None, device=None):
         if not device:
             device = self._device
