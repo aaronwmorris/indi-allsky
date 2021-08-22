@@ -675,6 +675,8 @@ class IndiAllSky(object):
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
+            'video'       : True,
+            'keogram'     : False,
         })
 
 
@@ -695,6 +697,52 @@ class IndiAllSky(object):
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
+            'video'       : True,
+            'keogram'     : False,
+        })
+
+
+    def generateNightKeogram(self, timespec):
+        self._generateNightKeogram(timespec)
+        self._stopVideoProcessWorker()
+
+
+    def _generateNightKeogram(self, timespec):
+        self._startVideoProcessWorker()
+
+        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+
+        logger.warning('Generating night time keogram for %s', timespec)
+        img_day_folder = img_base_folder.joinpath('night')
+
+        self.video_q.put({
+            'timespec'    : timespec,
+            'img_folder'  : img_day_folder,
+            'timeofday'   : 'night',
+            'video'       : False,
+            'keogram'     : True,
+        })
+
+
+    def generateDayKeogram(self, timespec):
+        self._generateDayKeogram(timespec)
+        self._stopVideoProcessWorker()
+
+
+    def _generateDayKeogram(self, timespec):
+        self._startVideoProcessWorker()
+
+        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+
+        logger.warning('Generating day time keogram for %s', timespec)
+        img_day_folder = img_base_folder.joinpath('day')
+
+        self.video_q.put({
+            'timespec'    : timespec,
+            'img_folder'  : img_day_folder,
+            'timeofday'   : 'day',
+            'video'       : False,
+            'keogram'     : True,
         })
 
 

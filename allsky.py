@@ -26,7 +26,16 @@ if __name__ == "__main__":
     argparser.add_argument(
         'action',
         help='action',
-        choices=('run', 'darks', 'generateDayTimelapse', 'generateNightTimelapse', 'generateAllTimelapse', 'expireImages'),
+        choices=(
+            'run',
+            'darks',
+            'generateDayTimelapse',
+            'generateNightTimelapse',
+            'generateAllTimelapse',
+            'generateNightKeogram',
+            'generateDayKeogram',
+            'expireImages',
+        ),
     )
     argparser.add_argument(
         '--config',
