@@ -80,7 +80,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     if [[ "$CPU_ARCH" == "armv7l" ]]; then
         # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
             wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
             sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
@@ -148,7 +148,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     RSYSLOG_GROUP=adm
 
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
     fi
