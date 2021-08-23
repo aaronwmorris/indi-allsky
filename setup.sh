@@ -257,12 +257,12 @@ sudo systemctl restart rsyslog
 echo "Start apache2 service"
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo a2enmod ssl
-    sudo a2site default-ssl
+    sudo a2ensite default-ssl
     sudo systemctl enable apache2
-    sudo systemctl start apache2
+    sudo systemctl restart apache2
 elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
     sudo systemctl enable httpd
-    sudo systemctl start httpd
+    sudo systemctl restart httpd
 fi
 
 
