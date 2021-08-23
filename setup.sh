@@ -37,7 +37,7 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     echo
     echo
     echo "Detected a custom installation of INDI in /usr/local/bin"
-    echo "The setup script is probably going to fail"
+    echo "The setup script might fail"
     echo
     echo
     sleep 10
@@ -80,6 +80,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        indi-full \
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -107,13 +108,18 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        indi-full \
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
-    # need to find an indi repo
+    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    fi
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -135,6 +141,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        indi-full \
         libindi-dev
 
 else
