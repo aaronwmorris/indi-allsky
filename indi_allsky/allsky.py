@@ -420,13 +420,13 @@ class IndiAllSky(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec)
+                    self._generateNightTimelapse(timespec, keogram=True)
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec)
+                    self._generateDayTimelapse(timespec, keogram=True)
 
 
             # reconfigure if needed
@@ -651,11 +651,11 @@ class IndiAllSky(object):
 
 
     def generateDayTimelapse(self, timespec):
-        self._generateDayTimelapse(timespec)
+        self._generateDayTimelapse(timespec, keogram=False)
         self._stopVideoProcessWorker()
 
 
-    def _generateDayTimelapse(self, timespec):
+    def _generateDayTimelapse(self, timespec, keogram=True):
         self._startVideoProcessWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -668,16 +668,16 @@ class IndiAllSky(object):
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
             'video'       : True,
-            'keogram'     : False,
+            'keogram'     : keogram,
         })
 
 
     def generateNightTimelapse(self, timespec):
-        self._generateNightTimelapse(timespec)
+        self._generateNightTimelapse(timespec, keogram=False)
         self._stopVideoProcessWorker()
 
 
-    def _generateNightTimelapse(self, timespec):
+    def _generateNightTimelapse(self, timespec, keogram=True):
         self._startVideoProcessWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -690,7 +690,7 @@ class IndiAllSky(object):
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
             'video'       : True,
-            'keogram'     : False,
+            'keogram'     : keogram,
         })
 
 
