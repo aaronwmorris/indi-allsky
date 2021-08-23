@@ -191,6 +191,15 @@ class IndiAllSky(object):
         if not c.get('CCD_EXPOSURE_DEF'):
             c['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
 
+
+        # set keogram scale factor
+        if not c.get('KEOGRAM_V_SCALE'):
+            c['KEOGRAM_H_SCALE'] = 33
+
+        if not c.get('KEOGRAM_H_SCALE'):
+            c['KEOGRAM_H_SCALE'] = 100
+
+
         return c
 
 

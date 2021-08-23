@@ -16,7 +16,8 @@ class KeogramGenerator(object):
         self.file_list = file_list
 
         self._angle = int(self.config['KEOGRAM_ANGLE'])
-        self._h_scale_factor = 33
+        self._v_scale_factor = 100
+        self._h_scale_factor = 100
 
         self.original_width = None
         self.original_height = None
@@ -32,6 +33,15 @@ class KeogramGenerator(object):
     @angle.setter
     def angle(self, new_angle):
         self._angle = int(new_angle)
+
+
+    @property
+    def v_scale_factor(self):
+        return self._v_scale_factor
+
+    @v_scale_factor.setter
+    def v_scale_factor(self, new_factor):
+        self._v_scale_factor = int(new_factor)
 
 
     @property
@@ -102,8 +112,8 @@ class KeogramGenerator(object):
 
         # scale horizontal size
         trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
-        new_width = trimmed_width
-        new_height = int(trimmed_height * self._h_scale_factor / 100)
+        new_width = int(trimmed_width * self._h_scale_factor / 100)
+        new_height = int(trimmed_height * self._v_scale_factor / 100)
         keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
         logger.warning('Creating keogram: %s', outfile)
