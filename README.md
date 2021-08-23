@@ -225,6 +225,7 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 ## To Do
 
 * 16bit image handling
+* Star trails
 
 ## Acknowledgements
 
