@@ -143,12 +143,6 @@ class IndiAllSky(object):
             self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
 
-        # set default exposure
-        if not self.config.get('CCD_EXPOSURE_DEF'):
-            self.config['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
-        # no need to update shared value on HUP
-
-
         # CFA/Debayer setting
         if not self.config.get('CFA_PATTERN'):
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
@@ -192,6 +186,10 @@ class IndiAllSky(object):
         c = json.loads(json_config)
 
         # set any new config defaults which might not be in the config
+
+        # set default exposure
+        if not c.get('CCD_EXPOSURE_DEF'):
+            c['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
 
         return c
 
@@ -257,10 +255,6 @@ class IndiAllSky(object):
 
         logger.info('Minimum CCD exposure: {0:0.7f}'.format(self.config['CCD_EXPOSURE_MIN']))
 
-
-        # set default exposure
-        if not self.config.get('CCD_EXPOSURE_DEF'):
-            self.config['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
 
         with self.exposure_v.get_lock():
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
