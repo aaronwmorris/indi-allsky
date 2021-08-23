@@ -72,6 +72,9 @@ sudo true
 
 echo "Installing packages..."
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -107,6 +110,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -135,6 +141,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -243,6 +252,18 @@ sudo chmod 644 /var/log/indi-allsky.log
 sudo chown $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky.log
 sudo cp ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d
 sudo systemctl restart rsyslog
+
+
+echo "Start apache2 service"
+if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+    sudo a2enmod ssl
+    sudo a2site default-ssl
+    sudo systemctl enable apache2
+    sudo systemctl start apache2
+elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+    sudo systemctl enable httpd
+    sudo systemctl start httpd
+fi
 
 
 echo "Setup image folder"
