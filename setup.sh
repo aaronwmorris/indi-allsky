@@ -33,6 +33,11 @@ DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
 
+echo "##############################################"
+echo "### Welcome to the indi-allsy setup script ###"
+echo "##############################################"
+
+
 if [ -f "/usr/local/bin/indiserver" ]; then
     echo
     echo
@@ -40,8 +45,26 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     echo "The setup script might fail"
     echo
     echo
-    sleep 10
+    sleep 3
 fi
+
+
+echo
+echo
+echo "Distribution: $DISTRO_NAME"
+echo "Release: $DISTRO_RELEASE"
+echo
+echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
+echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
+echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
+echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
+echo
+echo
+echo "Setup proceeding in 10 seconds... (control-c to cancel)"
+echo
+sleep 10
+
+
 
 
 # Run sudo to ask for initial password
