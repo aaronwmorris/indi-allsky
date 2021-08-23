@@ -194,7 +194,7 @@ class IndiAllSky(object):
 
         # set keogram scale factor
         if not c.get('KEOGRAM_V_SCALE'):
-            c['KEOGRAM_H_SCALE'] = 33
+            c['KEOGRAM_V_SCALE'] = 33
 
         if not c.get('KEOGRAM_H_SCALE'):
             c['KEOGRAM_H_SCALE'] = 100
