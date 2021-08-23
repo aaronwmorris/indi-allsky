@@ -187,6 +187,11 @@ class IndiAllSky(object):
 
         # set any new config defaults which might not be in the config
 
+        # translate old config option
+        if c.get('IMAGE_SCALE_PERCENT') and not c.get('IMAGE_SCALE'):
+            c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
+
+
         # set default exposure
         if not c.get('CCD_EXPOSURE_DEF'):
             c['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF

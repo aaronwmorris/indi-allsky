@@ -155,7 +155,7 @@ All configuration is read from config.json.  You can find configuration examples
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
-| IMAGE_SCALE_PERCENT | null        | (percent) Image scaling factor |
+| IMAGE_SCALE         | 100         | (percent) Image scaling factor |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
 | FFMPEG_BITRATE      | 2500k       | (kilobytes) Target data rate for timelapse video compression |

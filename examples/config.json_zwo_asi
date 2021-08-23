@@ -65,7 +65,7 @@
     "IMAGE_FOLDER"   : "/var/www/html/allsky/images",
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,
-    "IMAGE_SCALE_PERCENT" : false,
+    "IMAGE_SCALE"    : 100,
 
     "IMAGE_EXPIRE_DAYS" : 30,
 

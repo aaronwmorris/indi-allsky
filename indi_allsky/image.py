@@ -150,7 +150,7 @@ class ImageProcessWorker(Process):
                 scidata_cal_flip = scidata_cal_flip_v
 
 
-            if self.config['IMAGE_SCALE_PERCENT']:
+            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
                 scidata_scaled = self.scale_image(scidata_cal_flip)
             else:
                 scidata_scaled = scidata_cal_flip
@@ -782,9 +782,9 @@ class ImageProcessWorker(Process):
 
 
     def scale_image(self, data_bytes):
-        logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE_PERCENT'])
-        new_width = int(self.image_width * self.config['IMAGE_SCALE_PERCENT'] / 100.0)
-        new_height = int(self.image_height * self.config['IMAGE_SCALE_PERCENT'] / 100.0)
+        logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
+        new_width = int(self.image_width * self.config['IMAGE_SCALE'] / 100.0)
+        new_height = int(self.image_height * self.config['IMAGE_SCALE'] / 100.0)
 
         logger.info('New size: %d x %d', new_width, new_height)
         self.image_width = new_width
