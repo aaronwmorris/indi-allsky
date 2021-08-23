@@ -267,13 +267,13 @@ class IndiAllSky(object):
         if not self.config.get('CCD_EXPOSURE_MIN'):
             self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
-        logger.info('Minimum CCD exposure: {0:0.7f}'.format(self.config['CCD_EXPOSURE_MIN']))
+        logger.info('Minimum CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_MIN']))
 
 
         with self.exposure_v.get_lock():
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
 
-        logger.info('Default CCD exposure: {0:0.6f}'.format(self.config['CCD_EXPOSURE_DEF']))
+        logger.info('Default CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_DEF']))
 
 
         # CFA/Debayer setting
@@ -749,7 +749,7 @@ class IndiAllSky(object):
     def shoot(self, exposure, sync=True, timeout=None):
         if not timeout:
             timeout = (exposure * 2.0) + 5.0
-        logger.info('Taking %0.6f s exposure (gain %d)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
         self.indiclient.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
 
