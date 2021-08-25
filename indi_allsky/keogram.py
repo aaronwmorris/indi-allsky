@@ -2,6 +2,7 @@ import cv2
 import numpy
 import math
 import time
+from datetime import datetime
 from pprint import pformat
 
 
@@ -11,6 +12,12 @@ logger = multiprocessing.get_logger()
 
 
 class KeogramGenerator(object):
+
+    # label settings
+    line_thickness = 2
+    line_length = 35
+
+
     def __init__(self, config, file_list):
         self.config = config
         self.file_list = file_list
@@ -66,6 +73,9 @@ class KeogramGenerator(object):
 
         processing_start = time.time()
 
+        # keep track of this for labels
+        timestamps_list = list()
+
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
             image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
@@ -74,6 +84,7 @@ class KeogramGenerator(object):
                 logger.error('Unable to read %s', filename)
                 continue
 
+            timestamps_list.append(filename.stat().st_mtime)
 
             height, width = image.shape[:2]
             self.original_height = height
@@ -115,6 +126,10 @@ class KeogramGenerator(object):
         new_width = int(trimmed_width * self._h_scale_factor / 100)
         new_height = int(trimmed_height * self._v_scale_factor / 100)
         keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+        # apply time labels
+        if self.config.get('KEOGRAM_LABEL'):
+            self.applyLabels(keogram_resized, timestamps_list)
 
         logger.warning('Creating keogram: %s', outfile)
         cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
@@ -192,4 +207,70 @@ class KeogramGenerator(object):
 
         return trimmed_image
 
+
+    def applyLabels(self, keogram, timestamps_list):
+        height, width = keogram.shape[:2]
+
+        # starting point
+        last_time = datetime.fromtimestamp(timestamps_list[0])
+        last_hour_str = last_time.strftime('%H')
+
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        for i, u_ts in enumerate(timestamps_list):
+            ts = datetime.fromtimestamp(u_ts)
+            hour_str = ts.strftime('%H')
+
+            if not hour_str != last_hour_str:
+                continue
+
+            last_hour_str = hour_str
+
+            line_x = int(i * width / len(timestamps_list))
+
+            line_start = (line_x, height)
+            line_end = (line_x, height - self.line_length)
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.line(
+                    img=keogram,
+                    pt1=line_start,
+                    pt2=line_end,
+                    color=(0, 0, 0),
+                    thickness=self.line_thickness + 1,
+                    lineType=lineType,
+                )  # black outline
+            cv2.line(
+                img=keogram,
+                pt1=line_start,
+                pt2=line_end,
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                thickness=self.line_thickness,
+                lineType=lineType,
+            )
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=keogram,
+                    text=hour_str,
+                    org=(line_x + 5, height - 5),
+                    fontFace=fontFace,
+                    color=(0, 0, 0),
+                    lineType=lineType,
+                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+            cv2.putText(
+                img=keogram,
+                text=hour_str,
+                org=(line_x + 5, height - 5),
+                fontFace=fontFace,
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                lineType=lineType,
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
 

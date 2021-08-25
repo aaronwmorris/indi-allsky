@@ -149,6 +149,7 @@ All configuration is read from config.json.  You can find configuration examples
 | KEOGRAM_ANGLE       | 0           | (int) Angle of image rotation for keogram generation |
 | KEOGRAM_H_SCALE     | 100         | (int) Horizontal scaling of keograms |
 | KEOGRAM_V_SCALE     | 33          | (int) Vertical scaling of keograms |
+| KEOGRAM_LABEL       | true        | (bool) Label keogram timeline |
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |

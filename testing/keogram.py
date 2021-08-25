@@ -18,6 +18,7 @@ logger = logging
 
 class KeogramGenerator(object):
 
+    # label settings
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.8
     font_thickness = 1
@@ -75,7 +76,9 @@ class KeogramGenerator(object):
 
         processing_start = time.time()
 
+        # keep track of this for labels
         timestamps_list = list()
+
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
             image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
