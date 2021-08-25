@@ -6,6 +6,7 @@ import math
 import argparse
 import logging
 import time
+from datetime import datetime
 from pathlib import Path
 from pprint import pformat
 
@@ -16,6 +17,16 @@ logger = logging
 
 
 class KeogramGenerator(object):
+
+    font_face = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.8
+    font_thickness = 1
+    line_length = 35
+    line_color = (200, 200, 200)
+    line_thickness = 2
+    line_type = cv2.LINE_AA
+
+
     def __init__(self):
         self._angle = 0
 
@@ -64,6 +75,7 @@ class KeogramGenerator(object):
 
         processing_start = time.time()
 
+        timestamps_list = list()
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
             image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
@@ -71,6 +83,8 @@ class KeogramGenerator(object):
             if isinstance(image, type(None)):
                 logger.error('Unable to read %s', filename)
                 continue
+
+            timestamps_list.append(filename.stat().st_mtime)
 
             #logger.info('Data: %s', pformat(image))
             height, width = image.shape[:2]
@@ -127,8 +141,17 @@ class KeogramGenerator(object):
         new_height = int(trimmed_height * self._h_scale_factor / 100)
         keogram_resized = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
+
         logger.warning('Creating trim_resize_%s', outfile)
         cv2.imwrite('trim_resize_{0:s}'.format(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+
+        # apply time labels
+        self.applyLabels(keogram_resized, timestamps_list)
+
+
+        logger.warning('Creating labeled_trim_resize_%s', outfile)
+        cv2.imwrite('labeled_trim_resize_{0:s}'.format(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def rotate(self, image):
@@ -224,7 +247,65 @@ class KeogramGenerator(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
+    def applyLabels(self, keogram, timestamps_list):
+        height, width = keogram.shape[:2]
 
+        # starting point
+        last_time = datetime.fromtimestamp(timestamps_list[0])
+        last_hour_str = last_time.strftime('%H')
+
+        for i, u_ts in enumerate(timestamps_list):
+            ts = datetime.fromtimestamp(u_ts)
+            hour_str = ts.strftime('%H')
+
+            if not hour_str != last_hour_str:
+                continue
+
+            last_hour_str = hour_str
+
+            line_x = int(i * width / len(timestamps_list))
+
+            line_start = (line_x, height)
+            line_end = (line_x, height - self.line_length)
+
+            cv2.line(
+                img=keogram,
+                pt1=line_start,
+                pt2=line_end,
+                color=(0, 0, 0),
+                thickness=self.line_thickness + 1,
+                lineType=self.line_type,
+            )
+            cv2.line(
+                img=keogram,
+                pt1=line_start,
+                pt2=line_end,
+                color=self.line_color,
+                thickness=self.line_thickness,
+                lineType=self.line_type,
+            )
+
+
+            cv2.putText(
+                img=keogram,
+                text=hour_str,
+                org=(line_x + 5, height - 5),
+                fontFace=self.font_face,
+                color=(0, 0, 0),
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness + 1,
+            )
+            cv2.putText(
+                img=keogram,
+                text=hour_str,
+                org=(line_x + 5, height - 5),
+                fontFace=self.font_face,
+                color=self.line_color,
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness,
+            )
 
 
 if __name__ == "__main__":
