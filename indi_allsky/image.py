@@ -109,9 +109,9 @@ class ImageProcessWorker(Process):
 
             scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
-            #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+            #scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)  # this seems to work very well for CFA images, but not grayscale
             #scidata_calibrated_8 = self._convert_to_8bit(scidata_calibrated)
-            #scidata_calibrated_8 = self._convert_to_8bit_cast(scidata_calibrated)
+            #scidata_calibrated_8 = self._convert_to_8bit_cast(scidata_calibrated)  # this seems to work very well for grayscale, but not CFA images
             scidata_calibrated_8 = scidata_calibrated
 
             # debayer
@@ -794,12 +794,15 @@ class ImageProcessWorker(Process):
 
 
     def _convert_to_8bit_cast(self, data_bytes):
+        # works well for grayscale but not CFA
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
         if ccd_bits == 8:
             return data_bytes
 
-        return (data_bytes / 256).astype('uint8')
+        logger.info('Downsampling image from %d to 8 bits', ccd_bits)
+
+        return (data_bytes / 257).astype('uint8')
 
 
     def _convert_to_8bit(self, data_bytes):
@@ -814,10 +817,13 @@ class ImageProcessWorker(Process):
 
 
     def _convert_16bit_to_8bit(self, data_bytes_16):
+        # works well for CFA but not grayscale
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
         if ccd_bits == 8:
             return data_bytes_16
+
+        logger.info('Downsampling image from %d to 8 bits', ccd_bits)
 
         data_bytes_8 = numpy.frombuffer(data_bytes_16, dtype=numpy.uint8)
         even = data_bytes_8[0::2]
