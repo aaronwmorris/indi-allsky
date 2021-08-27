@@ -44,7 +44,7 @@ class IndiAllSky(object):
         self.image_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
-        self.device = None
+        self.ccdDevice = None
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -132,10 +132,10 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.device.getDeviceName()
+        self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
 
         # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
+        ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
 
         # set minimum exposure
@@ -240,26 +240,26 @@ class IndiAllSky(object):
             sys.exit(1)
 
         logger.info('Found %d CCDs', len(ccd_list))
-        device = ccd_list[0]
+        ccdDevice = ccd_list[0]
 
-        logger.warning('Connecting to device %s', device.getDeviceName())
-        self.indiclient.connectDevice(device.getDeviceName())
-        self.device = device
+        logger.warning('Connecting to device %s', ccdDevice.getDeviceName())
+        self.indiclient.connectDevice(ccdDevice.getDeviceName())
+        self.ccdDevice = ccdDevice
 
         # set default device in indiclient
-        self.indiclient.device = self.device
+        self.indiclient.device = self.ccdDevice
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.device.getDeviceName()
+        self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
-        self.indiclient.setBLOBMode(1, self.device.getDeviceName(), None)
+        self.indiclient.setBLOBMode(1, self.ccdDevice.getDeviceName(), None)
 
-        self.indiclient.configureCcd(self.config['INDI_CONFIG_DEFAULTS'])
+        self.indiclient.configureDevice(self.ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
 
         # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
+        ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
 
 
@@ -492,7 +492,7 @@ class IndiAllSky(object):
             with self.moonmode_v.get_lock():
                 self.moonmode_v.value = float(self.moonmode)
 
-            temp = self.indiclient.getCcdTemperature()
+            temp = self.indiclient.getCcdTemperature(self.ccdDevice)
             if temp:
                 with self.sensortemp_v.get_lock():
                     logger.info("Sensor temperature: %0.1f", temp[0].value)
@@ -505,16 +505,16 @@ class IndiAllSky(object):
         if self.night:
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+                self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+                self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+                self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+                self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
-            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
-            self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+            self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         # Update shared values
@@ -525,7 +525,7 @@ class IndiAllSky(object):
             self.moonmode_v.value = float(self.moonmode)
 
 
-        temp = self.indiclient.getCcdTemperature()
+        temp = self.indiclient.getCcdTemperature(self.ccdDevice)
         if temp:
             with self.sensortemp_v.get_lock():
                 logger.info("Sensor temperature: %0.1f", temp[0].value)
@@ -590,8 +590,8 @@ class IndiAllSky(object):
         ######
 
         ### NIGHT MODE DARKS ###
-        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
@@ -613,8 +613,8 @@ class IndiAllSky(object):
 
 
         ### NIGHT MOON MODE DARKS ###
-        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
 
 
         ### take darks
@@ -638,8 +638,8 @@ class IndiAllSky(object):
 
 
         ### DAY DARKS ###
-        self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
-        self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
+        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         ### take darks
@@ -764,8 +764,9 @@ class IndiAllSky(object):
     def shoot(self, exposure, sync=True, timeout=None):
         if not timeout:
             timeout = (exposure * 2.0) + 5.0
+
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
-        self.indiclient.set_number('CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
 
 
 

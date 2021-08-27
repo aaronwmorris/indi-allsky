@@ -45,7 +45,6 @@ class IndiClient(PyIndi.BaseClient):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
-        self._device = None
         self._filename_t = '{0:s}.{1:s}'
         self._img_subdirs = []
 
@@ -53,14 +52,6 @@ class IndiClient(PyIndi.BaseClient):
 
         logger.info('creating an instance of IndiClient')
 
-
-    @property
-    def device(self):
-        return self._device
-
-    @device.setter
-    def device(self, new_device):
-        self._device = new_device
 
     @property
     def timeout(self):
@@ -144,10 +135,10 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
-    def getCcdInfo(self):
+    def getCcdInfo(self, ccdDevice):
         ccdinfo = dict()
 
-        ctl_CCD_EXPOSURE = self.get_control('CCD_EXPOSURE', 'number')
+        ctl_CCD_EXPOSURE = self.get_control(ccdDevice, 'CCD_EXPOSURE', 'number')
         ccdinfo['CCD_EXPOSURE'] = dict()
         for i in ctl_CCD_EXPOSURE:
             ccdinfo['CCD_EXPOSURE'][i.getName()] = {
@@ -159,7 +150,7 @@ class IndiClient(PyIndi.BaseClient):
             }
 
 
-        ctl_CCD_INFO = self.get_control('CCD_INFO', 'number')
+        ctl_CCD_INFO = self.get_control(ccdDevice, 'CCD_INFO', 'number')
 
         ccdinfo['CCD_INFO'] = dict()
         for i in ctl_CCD_INFO:
@@ -173,7 +164,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         try:
-            ctl_CCD_CFA = self.get_control('CCD_CFA', 'text')
+            ctl_CCD_CFA = self.get_control(ccdDevice, 'CCD_CFA', 'text')
 
             ccdinfo['CCD_CFA'] = dict()
             for i in ctl_CCD_CFA:
@@ -187,7 +178,7 @@ class IndiClient(PyIndi.BaseClient):
             }
 
 
-        ctl_CCD_FRAME = self.get_control('CCD_FRAME', 'number')
+        ctl_CCD_FRAME = self.get_control(ccdDevice, 'CCD_FRAME', 'number')
 
         ccdinfo['CCD_FRAME'] = dict()
         for i in ctl_CCD_FRAME:
@@ -232,33 +223,40 @@ class IndiClient(PyIndi.BaseClient):
         return ccd_list
 
 
-    def configureCcd(self, indi_config):
-        ### Configure CCD Properties
+    def configureDevice(self, device, indi_config):
+        ### Configure Device Properties
         for k, v in indi_config.get('PROPERTIES', {}).items():
             logger.info('Setting property %s', k)
-            self.set_number(k, v)
+            self.set_number(device, k, v)
 
-        ### Configure CCD Switches
+        ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)
-            self.set_switch(k, on_switches=v['on'], off_switches=v.get('off', []))
+            self.set_switch(device, k, on_switches=v['on'], off_switches=v.get('off', []))
 
         ### Configure controls
-        #self.indiclient.set_controls(indi_config.get('CONTROLS', {}))
+        #self.set_controls(device, indi_config.get('CONTROLS', {}))
 
         # Sleep after configuration
         time.sleep(1.0)
 
 
-    def getCcdTemperature(self):
-        temp = self.device.getNumber("CCD_TEMPERATURE")
+    def getCcdTemperature(self, ccdDevice):
+        temp = ccdDevice.getNumber("CCD_TEMPERATURE")
 
         return temp
 
 
-    def setCcdGain(self, gain_value):
+    def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):
+        if not timeout:
+            timeout = (exposure * 2.0) + 5.0
+
+        self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+
+
+    def setCcdGain(self, ccdDevice, gain_value):
         logger.warning('Setting CCD gain to %d', gain_value)
-        indi_exec = self.device.getDriverExec()
+        indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in ['indi_asi_ccd']:
             gain_config = {
@@ -280,7 +278,7 @@ class IndiClient(PyIndi.BaseClient):
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
 
-        self.configureCcd(gain_config)
+        self.configureDevice(ccdDevice, gain_config)
 
 
         # Update shared gain value
@@ -288,7 +286,7 @@ class IndiClient(PyIndi.BaseClient):
             self.gain_v.value = int(gain_value)
 
 
-    def setCcdBinning(self, bin_value):
+    def setCcdBinning(self, ccdDevice, bin_value):
         if type(bin_value) is int:
             bin_value = [bin_value, bin_value]
         elif type(bin_value) is str:
@@ -299,7 +297,7 @@ class IndiClient(PyIndi.BaseClient):
 
         logger.warning('Setting CCD binning to (%d, %d)', bin_value[0], bin_value[1])
 
-        indi_exec = self.device.getDriverExec()
+        indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in ['indi_asi_ccd', 'indi_sv305_ccd']:
             binning_config = {
@@ -313,7 +311,7 @@ class IndiClient(PyIndi.BaseClient):
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
-        self.configureCcd(binning_config)
+        self.configureDevice(ccdDevice, binning_config)
 
         # Update shared gain value
         with self.bin_v.get_lock():
@@ -323,10 +321,7 @@ class IndiClient(PyIndi.BaseClient):
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
 
 
-    def get_control(self, name, ctl_type, timeout=None, device=None):
-        if not device:
-            device = self._device
-
+    def get_control(self, device, name, ctl_type, timeout=None):
         if timeout is None:
             timeout = self._timeout
 
@@ -351,19 +346,13 @@ class IndiClient(PyIndi.BaseClient):
         return ctl
 
 
-    def set_controls(self, controls, device=None):
-        if not device:
-            device = self._device
-
-        self.set_number('CCD_CONTROLS', controls, device=device)
+    def set_controls(self, device, controls):
+        self.set_number(device, 'CCD_CONTROLS', controls)
 
 
-    def set_number(self, name, values, sync=True, timeout=None, device=None):
-        if not device:
-            device = self._device
-
+    def set_number(self, device, name, values, sync=True, timeout=None):
         #logger.info('Name: %s, values: %s', name, str(values))
-        c = self.get_control(name, 'number', device=device)
+        c = self.get_control(device, name, 'number')
         for control_name, index in self.__map_indexes(c, values.keys()).items():
             c[index].value = values[control_name]
 
@@ -375,11 +364,8 @@ class IndiClient(PyIndi.BaseClient):
         return c
 
 
-    def set_switch(self, name, on_switches=[], off_switches=[], sync=True, timeout=None, device=None):
-        if not device:
-            device = self._device
-
-        c = self.get_control(name, 'switch', device=device)
+    def set_switch(self, device, name, on_switches=[], off_switches=[], sync=True, timeout=None):
+        c = self.get_control(device, name, 'switch')
 
         is_exclusive = c.getRule() == PyIndi.ISR_ATMOST1 or c.getRule() == PyIndi.ISR_1OFMANY
         if is_exclusive :
@@ -400,15 +386,12 @@ class IndiClient(PyIndi.BaseClient):
         self.sendNewSwitch(c)
 
 
-    def set_text(self, control_name, values, sync=True, timeout=None, device=None):
-        if not device:
-            device = self._device
-
-        c = self.get_control(control_name, 'text')
+    def set_text(self, device, control_name, values, sync=True, timeout=None):
+        c = self.get_control(device, control_name, 'text')
         for control_name, index in self.__map_indexes(c, values.keys()).items():
             c[index].text = values[control_name]
 
-        self.indi_client.sendNewText(c)
+        self.sendNewText(c)
 
         if sync:
             self.__wait_for_ctl_statuses(c, timeout=timeout)
@@ -416,24 +399,24 @@ class IndiClient(PyIndi.BaseClient):
         return c
 
 
-    def values(self, ctl_name, ctl_type):
-        return dict(map(lambda c: (c.name, c.value), self.get_control(ctl_name, ctl_type)))
+    def values(self, device, ctl_name, ctl_type):
+        return dict(map(lambda c: (c.name, c.value), self.get_control(device, ctl_name, ctl_type)))
 
 
-    def switch_values(self, name, ctl=None):
-        return self.__control2dict(name, 'switch', lambda c: {'value': c.getState() == PyIndi.ISS_ON}, ctl)
+    def switch_values(self, device, name, ctl=None):
+        return self.__control2dict(device, name, 'switch', lambda c: {'value': c.getState() == PyIndi.ISS_ON}, ctl)
 
 
-    def text_values(self, name, ctl=None):
-        return self.__control2dict(name, 'text', lambda c: {'value': c.text}, ctl)
+    def text_values(self, device, name, ctl=None):
+        return self.__control2dict(device, name, 'text', lambda c: {'value': c.text}, ctl)
 
 
-    def number_values(self, name, ctl=None):
-        return self.__control2dict(name, 'text', lambda c: {'value': c.value, 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
+    def number_values(self, device, name, ctl=None):
+        return self.__control2dict(device, name, 'text', lambda c: {'value': c.value, 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
 
 
-    def light_values(self, name, ctl=None):
-        return self.__control2dict(name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
+    def light_values(self, device, name, ctl=None):
+        return self.__control2dict(device, name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
 
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
@@ -463,13 +446,13 @@ class IndiClient(PyIndi.BaseClient):
         return result
 
 
-    def __control2dict(self, control_name, control_type, transform, control=None):
+    def __control2dict(self, device, control_name, control_type, transform, control=None):
         def get_dict(element):
             dest = {'name': element.name, 'label': element.label}
             dest.update(transform(element))
             return dest
 
-        control = control if control else self.get_control(control_name, control_type)
+        control = control if control else self.get_control(device, control_name, control_type)
 
         return [get_dict(c) for c in control]
 
