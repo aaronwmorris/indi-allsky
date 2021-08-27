@@ -412,12 +412,6 @@ class IndiAllSky(object):
                 time.sleep(60)
                 continue
 
-            temp = self.device.getNumber("CCD_TEMPERATURE")
-            if temp:
-                with self.sensortemp_v.get_lock():
-                    logger.info("Sensor temperature: %0.1f", temp[0].value)
-                    self.sensortemp_v.value = temp[0].value
-
 
             ### Change between day and night
             if self.night_v.value != int(self.night):
@@ -491,8 +485,22 @@ class IndiAllSky(object):
         elif self.night and bool(self.moonmode_v.value) != bool(self.moonmode):
             pass
         else:
+            # Update shared values
+            with self.night_v.get_lock():
+                self.night_v.value = int(self.night)
+
+            with self.moonmode_v.get_lock():
+                self.moonmode_v.value = float(self.moonmode)
+
+            temp = self.indiclient.device.getNumber("CCD_TEMPERATURE")
+            if temp:
+                with self.sensortemp_v.get_lock():
+                    logger.info("Sensor temperature: %0.1f", temp[0].value)
+                    self.sensortemp_v.value = temp[0].value
+
             # No need to reconfigure
             return
+
 
         if self.night:
             if self.moonmode:
@@ -515,6 +523,13 @@ class IndiAllSky(object):
 
         with self.moonmode_v.get_lock():
             self.moonmode_v.value = float(self.moonmode)
+
+
+        temp = self.indiclient.device.getNumber("CCD_TEMPERATURE")
+        if temp:
+            with self.sensortemp_v.get_lock():
+                logger.info("Sensor temperature: %0.1f", temp[0].value)
+                self.sensortemp_v.value = temp[0].value
 
 
         # Sleep after reconfiguration
