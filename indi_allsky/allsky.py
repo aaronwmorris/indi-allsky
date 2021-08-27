@@ -492,7 +492,7 @@ class IndiAllSky(object):
             with self.moonmode_v.get_lock():
                 self.moonmode_v.value = float(self.moonmode)
 
-            temp = self.indiclient.device.getNumber("CCD_TEMPERATURE")
+            temp = self.indiclient.getCcdTemperature()
             if temp:
                 with self.sensortemp_v.get_lock():
                     logger.info("Sensor temperature: %0.1f", temp[0].value)
@@ -525,7 +525,7 @@ class IndiAllSky(object):
             self.moonmode_v.value = float(self.moonmode)
 
 
-        temp = self.indiclient.device.getNumber("CCD_TEMPERATURE")
+        temp = self.indiclient.getCcdTemperature()
         if temp:
             with self.sensortemp_v.get_lock():
                 logger.info("Sensor temperature: %0.1f", temp[0].value)

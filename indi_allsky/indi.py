@@ -250,6 +250,12 @@ class IndiClient(PyIndi.BaseClient):
         time.sleep(1.0)
 
 
+    def getCcdTemperature(self):
+        temp = self.device.getNumber("CCD_TEMPERATURE")
+
+        return temp
+
+
     def setCcdGain(self, gain_value):
         logger.warning('Setting CCD gain to %d', gain_value)
         indi_exec = self.device.getDriverExec()
