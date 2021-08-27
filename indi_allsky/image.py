@@ -9,6 +9,7 @@ import tempfile
 import shutil
 import copy
 import math
+#from pprint import pformat
 
 import ephem
 
@@ -65,6 +66,7 @@ class ImageProcessWorker(Process):
         self.image_width = 0
         self.image_height = 0
 
+        self.image_bit_depth = 0
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -95,7 +97,12 @@ class ImageProcessWorker(Process):
             ### OpenCV ###
             blobfile = io.BytesIO(imgdata)
             hdulist = fits.open(blobfile)
+
+            #logger.info('HDU Header = %s', pformat(hdulist[0].header))
+
             scidata_uncalibrated = hdulist[0].data
+
+            self.detectBitDepth(scidata_uncalibrated)
 
             self.image_height, self.image_width = scidata_uncalibrated.shape
             logger.info('Image: %d x %d', self.image_width, self.image_height)
@@ -191,6 +198,30 @@ class ImageProcessWorker(Process):
                 })
 
 
+    def detectBitDepth(self, data):
+        max_val = numpy.amax(data)
+        logger.info('Image max value: %d', int(max_val))
+
+        if max_val > 32768:
+            self.image_bit_depth = 16
+        elif max_val > 16384:
+            self.image_bit_depth = 15
+        elif max_val > 8192:
+            self.image_bit_depth = 14
+        elif max_val > 4096:
+            self.image_bit_depth = 13
+        elif max_val > 2096:
+            self.image_bit_depth = 12
+        elif max_val > 1024:
+            self.image_bit_depth = 11
+        elif max_val > 512:
+            self.image_bit_depth = 10
+        elif max_val > 256:
+            self.image_bit_depth = 9
+        else:
+            self.image_bit_depth = 8
+
+        logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
     def write_fit(self, hdulist, exp_date, img_subdirs):
@@ -802,43 +833,12 @@ class ImageProcessWorker(Process):
         if ccd_bits == 8:
             return data_bytes_16
 
-        if not self.config['CFA_PATTERN']:
-            return self._convert_16bit_to_8bit_mono(data_bytes_16)
 
-        return self._convert_16bit_to_8bit_CFA(data_bytes_16)
+        logger.info('Downsampling image from %d to 8 bits', self.image_bit_depth)
 
-
-    def _convert_16bit_to_8bit_mono(self, data_bytes_16):
-        # works well for grayscale but not CFA
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-        if ccd_bits == 8:
-            return data_bytes_16
-
-
-        logger.info('Downsampling image from %d to 8 bits', ccd_bits)
-
-        div_factor = int((2 ** 16) / 255)
+        div_factor = int((2 ** self.image_bit_depth) / 255)
 
         return (data_bytes_16 / div_factor).astype('uint8')
-
-
-    def _convert_16bit_to_8bit_CFA(self, data_bytes_16):
-        # works well for CFA but not grayscale
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-        if ccd_bits == 8:
-            return data_bytes_16
-
-        logger.info('Downsampling image from %d to 8 bits', ccd_bits)
-
-        data_bytes_8 = numpy.frombuffer(data_bytes_16, dtype=numpy.uint8)
-        even = data_bytes_8[0::2]
-        odd = data_bytes_8[1::2]
-
-        # Convert bayer16 to bayer8
-        bayer8_image = (even >> 4) | (odd << 4)
-        bayer8_image = bayer8_image.reshape((self.image_height, self.image_width))
-
-        return bayer8_image
 
 
     def calculateSkyObject(self, skyObj):
