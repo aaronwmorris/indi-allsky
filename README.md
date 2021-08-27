@@ -202,7 +202,7 @@ The hardware below has at least been plugged in and tested for correct detection
 
 | Vendor   | Model           | Notes |
 | -------- | --------------- | ----- |
-| Svbony   | SV305           | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug. |
+| Svbony   | SV305           | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug.<br/>16bit mode images show horizontal lines. |
 | ZWO      | ASI290MM        |       |
 | ZWO      | ASI178MM        |       |
 | ZWO      | ASI178MC        |       |
@@ -227,7 +227,6 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 
 ## To Do
 
-* 16bit image handling
 * Star trails
 
 ## Acknowledgements
