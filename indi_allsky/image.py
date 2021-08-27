@@ -211,6 +211,10 @@ class ImageProcessWorker(Process):
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
 
+        file_dir = filename.parent
+        if not file_dir.exists():
+            file_dir.mkdir(mode=0o755, parents=True)
+
         logger.info('fit filename: %s', filename)
 
         if filename.exists():
@@ -332,13 +336,11 @@ class ImageProcessWorker(Process):
 
         day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
-            day_folder.mkdir(parents=True)
-            day_folder.chmod(0o755)
+            day_folder.mkdir(mode=0o755, parents=True)
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
-            hour_folder.mkdir()
-            hour_folder.chmod(0o755)
+            hour_folder.mkdir(mode=0o755)
 
         return hour_folder
 
