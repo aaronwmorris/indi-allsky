@@ -34,7 +34,7 @@ class ImageProcessWorker(Process):
     }
 
 
-    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_fits=False, save_images=True):
+    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
         super(ImageProcessWorker, self).__init__()
 
         #self.threadID = idx
@@ -53,7 +53,6 @@ class ImageProcessWorker(Process):
         self.last_exposure = None
 
         self.filename_t = '{0:s}.{1:s}'
-        self.save_fits = save_fits
         self.save_images = save_images
 
         self.target_adu_found = False
@@ -101,7 +100,7 @@ class ImageProcessWorker(Process):
             self.image_height, self.image_width = scidata_uncalibrated.shape
             logger.info('Image: %d x %d', self.image_width, self.image_height)
 
-            if self.save_fits:
+            if self.config.get('IMAGE_SAVE_RAW'):
                 self.write_fit(hdulist, exp_date, img_subdirs)
 
 
@@ -196,7 +195,7 @@ class ImageProcessWorker(Process):
 
     def write_fit(self, hdulist, exp_date, img_subdirs):
         ### Do not write image files if fits are enabled
-        if not self.save_fits:
+        if not self.config.get('IMAGE_SAVE_RAW'):
             return
 
 
@@ -209,7 +208,12 @@ class ImageProcessWorker(Process):
 
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
+        if img_subdirs:
+            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
+        else:
+            folder = self.getImageFolder(exp_date)
+            filename = folder.joinpath(self.filename_t.format(date_str, 'fit'))
+
 
         file_dir = filename.parent
         if not file_dir.exists():
@@ -813,7 +817,9 @@ class ImageProcessWorker(Process):
 
         logger.info('Downsampling image from %d to 8 bits', ccd_bits)
 
-        return (data_bytes_16 / 257).astype('uint8')
+        div_factor = int((2 ** 16) / 255)
+
+        return (data_bytes_16 / div_factor).astype('uint8')
 
 
     def _convert_16bit_to_8bit_CFA(self, data_bytes_16):

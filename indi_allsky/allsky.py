@@ -64,7 +64,6 @@ class IndiAllSky(object):
         self.video_q = Queue()
         self.video_worker_idx = 0
 
-        self.save_fits = False
         self.save_images = True
 
         self.upload_worker = None
@@ -302,7 +301,6 @@ class IndiAllSky(object):
             self.sensortemp_v,
             self.night_v,
             self.moonmode_v,
-            save_fits=self.save_fits,
             save_images=self.save_images,
         )
         self.image_worker.start()
@@ -575,7 +573,7 @@ class IndiAllSky(object):
 
     def darks(self):
 
-        self.save_fits = True
+        self.config['IMAGE_SAVE_RAW'] = True
         self.save_images = False
 
         self._initialize()
