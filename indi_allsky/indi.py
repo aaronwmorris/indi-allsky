@@ -254,6 +254,32 @@ class IndiClient(PyIndi.BaseClient):
         self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
 
+    def getCcdGain(self, ccdDevice):
+        indi_exec = ccdDevice.getDriverExec()
+
+        if indi_exec in ['indi_asi_ccd']:
+            gain_ctl = self.get_control(ccdDevice, 'CCD_CONTROLS', 'number')
+            gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
+            index = gain_index_dict['Gain']
+        elif indi_exec in ['indi_sv305_ccd']:
+            gain_ctl = self.get_control(ccdDevice, 'CCD_GAIN', 'number')
+            gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
+            index = gain_index_dict['GAIN']
+        else:
+            raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
+
+        gain_info = {
+            'current' : gain_ctl[index].getValue(),
+            'min'     : gain_ctl[index].min,
+            'max'     : gain_ctl[index].max,
+            'step'    : gain_ctl[index].step,
+            'format'  : gain_ctl[index].format,
+        }
+
+        #logger.info('Gain Info: %s', pformat(gain_info))
+        return gain_info
+
+
     def setCcdGain(self, ccdDevice, gain_value):
         logger.warning('Setting CCD gain to %d', gain_value)
         indi_exec = ccdDevice.getDriverExec()
