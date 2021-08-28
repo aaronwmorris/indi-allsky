@@ -265,6 +265,9 @@ class IndiClient(PyIndi.BaseClient):
             gain_ctl = self.get_control(ccdDevice, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
             index = gain_index_dict['GAIN']
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support gain settings')
+            return {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -300,6 +303,9 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support gain settings')
+            gain_config = {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -334,6 +340,9 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support bin settings')
+            return
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
