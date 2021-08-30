@@ -213,7 +213,9 @@ The hardware below has at least been plugged in and tested for correct detection
 | ZWO      | ASI183MM Pro    |       |
 | ZWO      | ASI183MC Pro    |       |
 | Generic  | indi_webcam_ccd | No gain controls.  Little control over image quality. |
-
+| QHY      | TBD             |       |
+| Altair   | TBD             |       |
+| Touptek  | TBD             |       |
 
 
 ## File Transfer
