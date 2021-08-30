@@ -102,24 +102,45 @@ class ImageProcessWorker(Process):
 
             scidata_uncalibrated = hdulist[0].data
 
-            self.detectBitDepth(scidata_uncalibrated)
-
-            self.image_height, self.image_width = scidata_uncalibrated.shape
-            logger.info('Image: %d x %d', self.image_width, self.image_height)
-
-            if self.config.get('IMAGE_SAVE_RAW'):
-                self.write_fit(hdulist, exp_date, img_subdirs)
-
 
             processing_start = time.time()
 
-            scidata_calibrated = self.calibrate(scidata_uncalibrated)
+            if len(scidata_uncalibrated.shape) == 2:
+                # gray scale or bayered
+                self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
+                logger.info('Image: %d x %d', self.image_width, self.image_height)
 
-            scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
-            #scidata_calibrated_8 = scidata_calibrated
+                self.detectBitDepth(scidata_uncalibrated)
 
-            # debayer
-            scidata_debayered = self.debayer(scidata_calibrated_8)
+                if self.config.get('IMAGE_SAVE_RAW'):
+                    self.write_fit(hdulist, exp_date, img_subdirs)
+
+                scidata_calibrated = self.calibrate(scidata_uncalibrated)
+
+                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+                #scidata_calibrated_8 = scidata_calibrated
+
+                # debayer
+                scidata_debayered = self.debayer(scidata_calibrated_8)
+
+            else:
+                # data is probably RGB
+                #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+                self.config['CFA_PATTERN'] = True  # probably RGB data
+
+                #INDI returns array in the wrong order for cv2
+                scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
+                scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 1)
+                #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+
+                self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
+
+                self.detectBitDepth(scidata_uncalibrated)
+                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated)
+
+                scidata_debayered = cv2.cvtColor(scidata_calibrated_8, cv2.COLOR_RGB2BGR)
+
+
 
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
@@ -829,11 +850,7 @@ class ImageProcessWorker(Process):
 
 
     def _convert_16bit_to_8bit(self, data_bytes_16):
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-        if ccd_bits == 8:
-            return data_bytes_16
-
-
+        # always run this to cast to uint8
         logger.info('Downsampling image from %d to 8 bits', self.image_bit_depth)
 
         div_factor = int((2 ** self.image_bit_depth) / 255)
