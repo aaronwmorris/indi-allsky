@@ -70,7 +70,7 @@ class ImageProcessWorker(Process):
 
         self.image_bit_depth = 0
 
-        self.sqm = IndiAllskySqm(self.config)
+        self._sqm = IndiAllskySqm(self.config)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -150,7 +150,7 @@ class ImageProcessWorker(Process):
             adu, adu_average = self.calculate_histogram(scidata_debayered)
 
             # sqm calculation
-            self.sqm.calculate(scidata_debayered)
+            self.calculateSqm(scidata_debayered)
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered)
@@ -934,3 +934,20 @@ class ImageProcessWorker(Process):
 
     def remap(self, x, in_min, in_max, out_min, out_max):
         return (float(x) - float(in_min)) * (float(out_max) - float(out_min)) / (float(in_max) - float(in_min)) + float(out_min)
+
+
+    def calculateSqm(self, data):
+        sqm_value = self._sqm.calculate(data)
+
+        sqm_data = {
+            'sqm' : sqm_value,
+        }
+
+        sqm_filename = self.image_dir.joinpath('sqm_data.js')
+        sqm_file_contents = 'sqm_data = {0:s};'.format(json.dumps(sqm_data))
+
+        with io.open(str(sqm_filename), 'w') as f_sqm_data:
+            f_sqm_data.write(sqm_file_contents)
+
+        sqm_filename.chmod(0o644)
+
