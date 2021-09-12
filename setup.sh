@@ -247,11 +247,19 @@ sudo systemctl enable $ALLSKY_SERVICE_NAME
 
 
 echo "Setup rsyslog logging"
-sudo touch /var/log/indi-allsky.log
-sudo chmod 644 /var/log/indi-allsky.log
-sudo chown $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky.log
-sudo cp ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d
+[[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir -m 755 /var/log/indi-allsky
+sudo touch /var/log/indi-allsky/indi-allsky.log
+sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
+
+sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/indi-allsky.conf
+sudo chown root:root /etc/rsyslog.d/indi-allsky.conf
+sudo chmod 644 /etc/rsyslog.d/indi-allsky.conf
 sudo systemctl restart rsyslog
+
+sudo cp -f ${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky
+sudo chown root:root /etc/logrotate.d/indi-allsky
+sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "Start apache2 service"
