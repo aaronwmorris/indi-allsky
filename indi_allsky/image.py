@@ -621,8 +621,8 @@ class ImageProcessWorker(Process):
             y2 = int(self.config['ADU_ROI'][3] / self.bin_v.value)
 
             scidata = data_bytes[
-                y1:(y1 + y2),
-                x1:(x1 + x2),
+                y1:y2,
+                x1:x2,
             ]
         else:
             scidata = data_bytes
