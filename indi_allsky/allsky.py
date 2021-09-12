@@ -792,6 +792,10 @@ class IndiAllSky(object):
         cutoff_age = datetime.now() - timedelta(days=days)
 
         old_files = filter(lambda p: p.stat().st_mtime < cutoff_age.timestamp(), file_list)
+
+        # Exclude keograms
+        old_files = filter(lambda p: 'keogram' not in p.name, old_files)
+
         for f in old_files:
             logger.info('Removing old image: %s', f)
 
