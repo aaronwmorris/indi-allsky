@@ -21,6 +21,8 @@ from astropy.io import fits
 import cv2
 import numpy
 
+from .sqm import IndiAllskySqm
+
 
 logger = multiprocessing.get_logger()
 
@@ -67,6 +69,8 @@ class ImageProcessWorker(Process):
         self.image_height = 0
 
         self.image_bit_depth = 0
+
+        self.sqm = IndiAllskySqm(self.config)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -144,6 +148,9 @@ class ImageProcessWorker(Process):
 
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
+
+            # sqm calculation
+            self.sqm.calculate(scidata_debayered)
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered)
