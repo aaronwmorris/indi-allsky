@@ -71,6 +71,7 @@ class ImageProcessWorker(Process):
         self.image_bit_depth = 0
 
         self._sqm = IndiAllskySqm(self.config)
+        self.sqm_value = 0
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -150,7 +151,7 @@ class ImageProcessWorker(Process):
             adu, adu_average = self.calculate_histogram(scidata_debayered)
 
             # sqm calculation
-            self.calculateSqm(scidata_debayered)
+            self.sqm_value = self.calculateSqm(scidata_debayered)
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered)
@@ -374,6 +375,7 @@ class ImageProcessWorker(Process):
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
+            'sqm'                 : self.sqm_value,
             'time'                : exp_date.strftime('%s'),
         }
 
@@ -950,4 +952,6 @@ class ImageProcessWorker(Process):
             f_sqm_data.write(sqm_file_contents)
 
         sqm_filename.chmod(0o644)
+
+        return sqm_value
 
