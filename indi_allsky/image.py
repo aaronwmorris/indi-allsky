@@ -122,6 +122,9 @@ class ImageProcessWorker(Process):
 
                 scidata_calibrated = self.calibrate(scidata_uncalibrated)
 
+                # sqm calculation
+                self.sqm_value = self.calculateSqm(scidata_calibrated)
+
                 scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
                 #scidata_calibrated_8 = scidata_calibrated
 
@@ -140,6 +143,9 @@ class ImageProcessWorker(Process):
 
                 self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
 
+                # sqm calculation
+                self.sqm_value = self.calculateSqm(scidata_uncalibrated)
+
                 self.detectBitDepth(scidata_uncalibrated)
                 scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated)
 
@@ -149,9 +155,6 @@ class ImageProcessWorker(Process):
 
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered)
-
-            # sqm calculation
-            self.sqm_value = self.calculateSqm(scidata_debayered)
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered)
