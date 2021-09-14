@@ -22,6 +22,7 @@ from .indi import IndiClient
 from .image import ImageProcessWorker
 from .video import VideoProcessWorker
 from .uploader import FileUploader
+from .db import IndiAllSkyDb
 from .exceptions import TimeOutException
 
 logger = multiprocessing.get_logger()
@@ -70,6 +71,7 @@ class IndiAllSky(object):
         self.upload_q = Queue()
         self.upload_worker_idx = 0
 
+        self._db = IndiAllSkyDb()
 
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
@@ -132,6 +134,7 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
+        self.config['CCD_DB_ID'] = self._db.addCamera(self.config['CCD_NAME'])
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
@@ -250,6 +253,7 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
+        self.config['CCD_DB_ID'] = self._db.addCamera(self.config['CCD_NAME'])
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')

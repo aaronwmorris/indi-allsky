@@ -9,3 +9,4 @@ pycurl
 imageio
 imageio-ffmpeg
 pygifsicle
+SQLAlchemy

@@ -106,6 +106,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        sqlite3 \
         indi-full \
         libindi-dev
 
@@ -137,6 +138,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        sqlite3 \
         indi-full \
         libindi-dev
 
@@ -173,6 +175,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
+        sqlite3 \
         indi-full \
         libindi-dev
 
@@ -286,6 +289,11 @@ for F in $HTDOCS_FILES; do
     cp -i "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
     chmod 644 "${HTDOCS_FOLDER}/${F}"
 done
+
+
+echo "Setup DB folder"
+[[ ! -d "/var/lib/indi-allsky" ]] && sudo mkdir -m 755 "/var/lib/indi-allsky"
+sudo chown -R $USER /var/lib/indi-allsky
 
 
 echo

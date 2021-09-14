@@ -22,6 +22,7 @@ import cv2
 import numpy
 
 from .sqm import IndiAllskySqm
+from .db import IndiAllSkyDb
 
 
 logger = multiprocessing.get_logger()
@@ -72,6 +73,8 @@ class ImageProcessWorker(Process):
 
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
+
+        self._db = IndiAllSkyDb()
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -207,7 +210,21 @@ class ImageProcessWorker(Process):
             self.write_status_json(exp_date, adu, adu_average)  # write json status file
 
             if self.save_images:
-                latest_file = self.write_img(scidata_scaled, exp_date, img_subdirs)
+                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
+
+                self._db.addImage(
+                    self.config['CCD_DB_ID'],
+                    new_filename,
+                    self.last_exposure,
+                    self.gain_v.value,
+                    self.sensortemp_v.value,
+                    adu,
+                    self.target_adu_found,  # stable
+                    self.moonmode_v.value,
+                    night=self.night_v.value,
+                    adu_roi=self.config['ADU_ROI'],
+                    sqm=self.sqm_value,
+                )
 
                 ### upload images
                 if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
@@ -299,7 +316,7 @@ class ImageProcessWorker(Process):
     def write_img(self, scidata, exp_date, img_subdirs):
         ### Do not write image files if fits are enabled
         if not self.save_images:
-            return
+            return None, None
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
@@ -337,7 +354,7 @@ class ImageProcessWorker(Process):
             logger.info('Daytime timelapse is disabled')
             tmpfile_name.unlink()  # cleanup temp file
             logger.info('Finished writing files')
-            return latest_file
+            return latest_file, None
 
 
         ### Write the timelapse file
@@ -350,7 +367,7 @@ class ImageProcessWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
-            return
+            return latest_file, None
 
         shutil.copy2(str(tmpfile_name), str(filename))
         filename.chmod(0o644)
@@ -361,7 +378,7 @@ class ImageProcessWorker(Process):
 
         logger.info('Finished writing files')
 
-        return latest_file
+        return latest_file, filename
 
 
     def write_status_json(self, exp_date, adu, adu_average):
