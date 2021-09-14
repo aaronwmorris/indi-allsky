@@ -14,8 +14,13 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
+DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
+
+
 class IndiAllSkyDb(object):
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self._session = self._getDbConn()
 
 
@@ -30,7 +35,7 @@ class IndiAllSkyDb(object):
 
     def _getDbConn(self):
 
-        engine = create_engine('sqlite:////var/lib/indi-allsky/indi-allsky.sqlite', echo=False)
+        engine = create_engine(DATABASE_URI, echo=False)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
 
@@ -51,7 +56,7 @@ class IndiAllSkyDb(object):
 
         logger.info('Camera DB ID: %d', camera.id)
 
-        return camera.id
+        return camera
 
 
     def addImage(self, camera_id, filename, exposure, gain, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False):

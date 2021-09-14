@@ -74,7 +74,7 @@ class ImageProcessWorker(Process):
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
 
-        self._db = IndiAllSkyDb()
+        self._db = IndiAllSkyDb(self.config)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -213,7 +213,7 @@ class ImageProcessWorker(Process):
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
 
                 self._db.addImage(
-                    self.config['CCD_DB_ID'],
+                    self.config['DB_CCD_ID'],
                     new_filename,
                     self.last_exposure,
                     self.gain_v.value,

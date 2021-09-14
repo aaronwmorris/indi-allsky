@@ -31,11 +31,14 @@ logger = multiprocessing.get_logger()
 class IndiAllSky(object):
 
     CCD_EXPOSURE_DEF = 0.000100
+    DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
+
+        self.config['DB_URI'] = self.DATABASE_URI
 
         self.config_file = f_config_file.name
 
@@ -71,7 +74,7 @@ class IndiAllSky(object):
         self.upload_q = Queue()
         self.upload_worker_idx = 0
 
-        self._db = IndiAllSkyDb()
+        self._db = IndiAllSkyDb(self.config)
 
         self.__state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
         self.__switch_types = { PyIndi.ISR_1OFMANY: 'ONE_OF_MANY', PyIndi.ISR_ATMOST1: 'AT_MOST_ONE', PyIndi.ISR_NOFMANY: 'ANY'}
@@ -125,6 +128,8 @@ class IndiAllSky(object):
         # overwrite config
         self.config = c
 
+        self.config['DATABASE_URI'] = self.DATABASE_URI
+
         # Update shared values
         self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
         self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
@@ -134,7 +139,9 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
-        self.config['CCD_DB_ID'] = self._db.addCamera(self.config['CCD_NAME'])
+
+        db_camera = self._db.addCamera(self.config['CCD_NAME'])
+        self.config['DB_CCD_ID'] = db_camera.id
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
@@ -253,7 +260,9 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
-        self.config['CCD_DB_ID'] = self._db.addCamera(self.config['CCD_NAME'])
+
+        db_camera = self._db.addCamera(self.config['CCD_NAME'])
+        self.config['DB_CCD_ID'] = db_camera.id
 
         # set BLOB mode to BLOB_ALSO
         logger.info('Set BLOB mode')
