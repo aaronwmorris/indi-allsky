@@ -20,16 +20,6 @@ logger = multiprocessing.get_logger()
 Base = declarative_base()
 
 
-class IndiAllSkyDbVersionTable(Base):
-    __tablename__ = 'version'
-
-    id = Column(Integer, primary_key=True)
-    version = Column(Integer, nullable=False)
-
-    def __repr__(self):
-        return '<Version {0:d}>'.format(self.id)
-
-
 class IndiAllSkyDbCameraTable(Base):
     __tablename__ = 'camera'
 
