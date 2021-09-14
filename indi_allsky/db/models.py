@@ -5,6 +5,7 @@ from sqlalchemy import String
 from sqlalchemy import Float
 from sqlalchemy import Boolean
 from sqlalchemy import DateTime
+from sqlalchemy import Date
 from sqlalchemy import func
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
@@ -36,6 +37,7 @@ class IndiAllSkyDbImageTable(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True, server_default=func.now())
+    daydate = Column(Date, nullable=False, index=True)
     exposure = Column(Float, nullable=False)
     gain = Column(Integer, default=0, nullable=False)
     temp = Column(Float, nullable=True)
@@ -59,6 +61,7 @@ class IndiAllSkyDbVideoTable(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True, server_default=func.now())
+    daydate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=True, nullable=False, index=True)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='videos')
@@ -73,6 +76,7 @@ class IndiAllSkyDbKeogramTable(Base):
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True, server_default=func.now())
+    daydate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=True, nullable=False, index=True)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
