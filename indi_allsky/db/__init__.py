@@ -1,9 +1,9 @@
 from .main import IndiAllSkyDb
-from .main import IndiAllSkyDbVersionTable
-from .main import IndiAllSkyDbCameraTable
-from .main import IndiAllSkyDbImageTable
-from .main import IndiAllSkyDbVideoTable
-from .main import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbVersionTable
+from .models import IndiAllSkyDbCameraTable
+from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
 
 __all__ = (
     'IndiAllSkyDb',
