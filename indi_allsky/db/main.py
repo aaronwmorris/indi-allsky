@@ -1,4 +1,3 @@
-from .models import IndiAllSkyDbVersionTable
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
