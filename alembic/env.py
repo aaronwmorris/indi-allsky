@@ -5,6 +5,12 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from indi_allsky.db.models import Base
+from indi_allsky.db.models import IndiAllSkyDbCameraTable
+from indi_allsky.db.models import IndiAllSkyDbImageTable
+from indi_allsky.db.models import IndiAllSkyDbVideoTable
+from indi_allsky.db.models import IndiAllSkyDbKeogramTable
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -17,7 +23,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
