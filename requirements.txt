@@ -10,3 +10,4 @@ imageio
 imageio-ffmpeg
 pygifsicle
 SQLAlchemy
+alembic
