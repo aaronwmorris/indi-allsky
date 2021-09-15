@@ -21,6 +21,7 @@ HTDOCS_FILES="
     latest.html
     loop.html
     loop_realtime.html
+    sqm.html
     settings_latest.js
     settings_loop.js
     .htaccess
