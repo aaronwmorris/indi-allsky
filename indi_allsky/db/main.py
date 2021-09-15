@@ -60,7 +60,7 @@ class IndiAllSkyDb(object):
         return camera
 
 
-    def addImage(self, camera_id, filename, exposure, gain, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False):
+    def addImage(self, filename, exposure, gain, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False):
         if not filename:
             return
 
@@ -95,7 +95,7 @@ class IndiAllSkyDb(object):
 
 
         image = IndiAllSkyDbImageTable(
-            camera_id=camera_id,
+            camera_id=self.config['DB_CCD_ID'],
             filename=filename_str,
             daydate=daydate,
             exposure=exposure,
@@ -116,7 +116,7 @@ class IndiAllSkyDb(object):
         return image
 
 
-    def addVideo(self, camera_id, filename, timeofday):
+    def addVideo(self, filename, timeofday):
         if not filename:
             return
 
@@ -139,7 +139,7 @@ class IndiAllSkyDb(object):
 
 
         video = IndiAllSkyDbVideoTable(
-            camera_id=camera_id,
+            camera_id=self.config['DB_CCD_ID'],
             filename=filename_str,
             daydate=daydate,
             night=night,
@@ -151,7 +151,7 @@ class IndiAllSkyDb(object):
         return video
 
 
-    def addKeogram(self, camera_id, filename, timeofday):
+    def addKeogram(self, filename, timeofday):
         if not filename:
             return
 
@@ -174,7 +174,7 @@ class IndiAllSkyDb(object):
 
 
         keogram = IndiAllSkyDbKeogramTable(
-            camera_id=camera_id,
+            camera_id=self.config['DB_CCD_ID'],
             filename=filename_str,
             daydate=daydate,
             night=night,

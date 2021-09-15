@@ -213,7 +213,6 @@ class ImageProcessWorker(Process):
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
 
                 self._db.addImage(
-                    self.config['DB_CCD_ID'],
                     new_filename,
                     self.last_exposure,
                     self.gain_v.value,

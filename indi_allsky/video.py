@@ -155,7 +155,6 @@ class VideoProcessWorker(Process):
 
 
         self._db.addVideo(
-            self.config['DB_CCD_ID'],
             video_file,
             timeofday,
         )
@@ -201,7 +200,6 @@ class VideoProcessWorker(Process):
             kg.generate(keogram_file)
 
             self._db.addKeogram(
-                self.config['DB_CCD_ID'],
                 keogram_file,
                 timeofday,
             )
