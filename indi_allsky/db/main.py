@@ -15,9 +15,6 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
-
-
 class IndiAllSkyDb(object):
     def __init__(self, config):
         self.config = config
@@ -36,7 +33,7 @@ class IndiAllSkyDb(object):
 
     def _getDbConn(self):
 
-        engine = create_engine(DATABASE_URI, echo=False)
+        engine = create_engine(self.config['DB_URI'], echo=False)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
 
