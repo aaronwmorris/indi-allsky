@@ -81,6 +81,7 @@ class IndiAllSkyDb(object):
         else:
             moonphase = None
 
+        moonmode_val = bool(moonmode)
 
         night_val = bool(night)  # integer to boolean
         adu_roi_val = bool(adu_roi)
@@ -104,7 +105,7 @@ class IndiAllSkyDb(object):
             adu=adu,
             adu_roi=adu_roi_val,
             stable=stable,
-            moonmode=moonmode,
+            moonmode=moonmode_val,
             moonphase=moonphase,
             sqm=sqm,
         )
