@@ -96,6 +96,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -128,6 +129,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -164,6 +166,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
@@ -221,11 +224,11 @@ done
 echo "Setting up indiserver service"
 TMP1=$(tempfile)
 sed \
- -e "s|%INDISERVER_USER%|$USER|" \
- -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
+ -e "s|%INDISERVER_USER%|$USER|g" \
+ -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
-sudo cp -f $TMP1 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
+sudo cp -f "$TMP1" /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 sudo chown root:root /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
@@ -234,10 +237,10 @@ sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 echo "Setting up indi-allsky service"
 TMP2=$(tempfile)
 sed \
- -e "s|%ALLSKY_USER%|$USER|" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
-sudo cp -f $TMP2 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
+sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
@@ -265,16 +268,39 @@ sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
+
 echo "Start apache2 service"
+
+TMP3=$(tempfile)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+
+
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+    sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
+    sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
+    sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+    sudo a2enmod rewrite
     sudo a2enmod ssl
-    sudo a2ensite default-ssl
+    sudo a2enmod wsgi
+    sudo a2dissite 000-default
+    sudo a2dissite default-ssl
+    sudo a2ensite indi-allsky
     sudo systemctl enable apache2
     sudo systemctl restart apache2
 elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+    sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
+    sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
+    sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
+
     sudo systemctl enable httpd
     sudo systemctl restart httpd
 fi
+
+[[ -f "$TMP3" ]] && rm -f "$TMP3"
+
 
 
 echo "Setup image folder"
