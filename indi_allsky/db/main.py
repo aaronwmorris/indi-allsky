@@ -1,13 +1,20 @@
 import datetime
 
-from .models import IndiAllSkyDbCameraTable
-from .models import IndiAllSkyDbImageTable
-from .models import IndiAllSkyDbVideoTable
-from .models import IndiAllSkyDbKeogramTable
-from .models import Base
+from ..flask import db
+from ..flask import create_app
+from ..flask.models import IndiAllSkyDbCameraTable
+from ..flask.models import IndiAllSkyDbImageTable
+from ..flask.models import IndiAllSkyDbVideoTable
+from ..flask.models import IndiAllSkyDbKeogramTable
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+#from .models import IndiAllSkyDbCameraTable
+#from .models import IndiAllSkyDbImageTable
+#from .models import IndiAllSkyDbVideoTable
+#from .models import IndiAllSkyDbKeogramTable
+#from .models import Base
+
+#from sqlalchemy import create_engine
+#from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 
 import multiprocessing
@@ -15,42 +22,45 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
+app = create_app()
+app.app_context().push()
+
+
 class IndiAllSkyDb(object):
     def __init__(self, config):
         self.config = config
 
-        self._session = self._getDbConn()
+        #self._session = self._getDbConn()
 
 
-    @property
-    def session(self):
-        return self._session
+    #@property
+    #def session(self):
+    #    return self._session
 
-    @session.setter
-    def session(self, foobar):
-        pass  # readonly
+    #@session.setter
+    #def session(self, foobar):
+    #    pass  # readonly
 
 
-    def _getDbConn(self):
+    #def _getDbConn(self):
 
-        engine = create_engine(self.config['DB_URI'], echo=False)
-        Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
+    #    engine = create_engine(self.config['DB_URI'], echo=False)
+    #    Base.metadata.create_all(engine)
+    #    Session = sessionmaker(bind=engine)
 
-        return Session()
-
+    #    return Session()
 
 
     def addCamera(self, camera_name):
         try:
-            camera = self._session.query(IndiAllSkyDbCameraTable).filter(IndiAllSkyDbCameraTable.name == camera_name).one()
+            camera = db.session.query(IndiAllSkyDbCameraTable).filter(IndiAllSkyDbCameraTable.name == camera_name).one()
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
                 name=camera_name,
             )
 
-            self._session.add(camera)
-            self._session.commit()
+            db.session.add(camera)
+            db.session.commit()
 
         logger.info('Camera DB ID: %d', camera.id)
 
@@ -108,8 +118,8 @@ class IndiAllSkyDb(object):
             sqm=sqm,
         )
 
-        self._session.add(image)
-        self._session.commit()
+        db.session.add(image)
+        db.session.commit()
 
         return image
 
@@ -143,8 +153,8 @@ class IndiAllSkyDb(object):
             night=night,
         )
 
-        self._session.add(video)
-        self._session.commit()
+        db.session.add(video)
+        db.session.commit()
 
         return video
 
@@ -178,8 +188,8 @@ class IndiAllSkyDb(object):
             night=night,
         )
 
-        self._session.add(keogram)
-        self._session.commit()
+        db.session.add(keogram)
+        db.session.commit()
 
         return keogram
 

@@ -9,5 +9,6 @@ pycurl
 imageio
 imageio-ffmpeg
 pygifsicle
-SQLAlchemy
-alembic
+Flask
+Flask-SQLAlchemy
+Flask-Migrate

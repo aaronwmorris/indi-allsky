@@ -294,8 +294,8 @@ done
 echo "Setup DB"
 [[ ! -d "/var/lib/indi-allsky" ]] && sudo mkdir -m 755 "/var/lib/indi-allsky"
 sudo chown -R "$USER" /var/lib/indi-allsky
-alembic revision --autogenerate
-alembic upgrade head
+flask db revision --autogenerate
+flask db upgrade head
 
 
 echo
