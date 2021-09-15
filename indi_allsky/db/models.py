@@ -8,6 +8,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import Date
 from sqlalchemy import func
 from sqlalchemy import ForeignKey
+from sqlalchemy.sql import expression
 from sqlalchemy.orm import relationship
 
 
@@ -39,15 +40,15 @@ class IndiAllSkyDbImageTable(Base):
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
     exposure = Column(Float, nullable=False)
-    gain = Column(Integer, default=0, nullable=False)
+    gain = Column(Integer, server_default='0', nullable=False)
     binmode = Column(Integer, server_default='1', nullable=False)
     temp = Column(Float, nullable=True)
-    night = Column(Boolean, default=True, nullable=False, index=True)
+    night = Column(Boolean, server_default=expression.true(), nullable=False, index=True)
     adu = Column(Float, nullable=False)
-    stable = Column(Boolean, default=True, nullable=False)
-    moonmode = Column(Boolean, default=False, nullable=False)
+    stable = Column(Boolean, server_default=expression.true(), nullable=False)
+    moonmode = Column(Boolean, server_default=expression.false(), nullable=False)
     moonphase = Column(Float, nullable=True)
-    adu_roi = Column(Boolean, default=False, nullable=False)
+    adu_roi = Column(Boolean, server_default=expression.false(), nullable=False)
     sqm = Column(Float, nullable=True)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='images')
@@ -63,7 +64,7 @@ class IndiAllSkyDbVideoTable(Base):
     filename = Column(String(length=255), unique=True, nullable=False)
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
-    night = Column(Boolean, default=True, nullable=False, index=True)
+    night = Column(Boolean, default=expression.true(), nullable=False, index=True)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='videos')
 
@@ -78,7 +79,7 @@ class IndiAllSkyDbKeogramTable(Base):
     filename = Column(String(length=255), unique=True, nullable=False)
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
-    night = Column(Boolean, default=True, nullable=False, index=True)
+    night = Column(Boolean, default=expression.true(), nullable=False, index=True)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
 
