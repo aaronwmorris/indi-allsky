@@ -40,6 +40,7 @@ class IndiAllSkyDbImageTable(Base):
     daydate = Column(Date, nullable=False, index=True)
     exposure = Column(Float, nullable=False)
     gain = Column(Integer, default=0, nullable=False)
+    binmode = Column(Integer, server_default='1', nullable=False)
     temp = Column(Float, nullable=True)
     night = Column(Boolean, default=True, nullable=False, index=True)
     adu = Column(Float, nullable=False)

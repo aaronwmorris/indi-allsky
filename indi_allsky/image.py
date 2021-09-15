@@ -216,6 +216,7 @@ class ImageProcessWorker(Process):
                     new_filename,
                     self.last_exposure,
                     self.gain_v.value,
+                    self.bin_v.value,
                     self.sensortemp_v.value,
                     adu,
                     self.target_adu_found,  # stable

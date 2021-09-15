@@ -60,7 +60,7 @@ class IndiAllSkyDb(object):
         return camera
 
 
-    def addImage(self, filename, exposure, gain, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False):
+    def addImage(self, filename, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False):
         if not filename:
             return
 
@@ -100,6 +100,7 @@ class IndiAllSkyDb(object):
             daydate=daydate,
             exposure=exposure,
             gain=gain,
+            binmode=binmode,
             temp=temp_val,
             night=night_val,
             adu=adu,
