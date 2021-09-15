@@ -1,3 +1,5 @@
+import datetime
+
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
@@ -83,9 +85,18 @@ class IndiAllSkyDb(object):
         night_val = bool(night)  # integer to boolean
         adu_roi_val = bool(adu_roi)
 
+
+        if night:
+            # day date for night is offset by 12 hours
+            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+        else:
+            daydate = datetime.datetime.now()
+
+
         image = IndiAllSkyDbImageTable(
             camera_id=camera_id,
             filename=filename_str,
+            daydate=daydate,
             exposure=exposure,
             gain=gain,
             temp=temp_val,
