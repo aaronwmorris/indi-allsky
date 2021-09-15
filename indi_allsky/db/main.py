@@ -116,4 +116,74 @@ class IndiAllSkyDb(object):
         return image
 
 
+    def addVideo(self, camera_id, filename, timeofday):
+        if not filename:
+            return
+
+        logger.info('Adding video %s to DB', filename)
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        if night:
+            # day date for night is offset by 12 hours
+            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+        else:
+            daydate = datetime.datetime.now()
+
+
+        video = IndiAllSkyDbVideoTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            daydate=daydate,
+            night=night,
+        )
+
+        self._session.add(video)
+        self._session.commit()
+
+        return video
+
+
+    def addKeogram(self, camera_id, filename, timeofday):
+        if not filename:
+            return
+
+        logger.info('Adding keogram %s to DB', filename)
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        if night:
+            # day date for night is offset by 12 hours
+            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+        else:
+            daydate = datetime.datetime.now()
+
+
+        keogram = IndiAllSkyDbKeogramTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            daydate=daydate,
+            night=night,
+        )
+
+        self._session.add(keogram)
+        self._session.commit()
+
+        return keogram
+
+
 

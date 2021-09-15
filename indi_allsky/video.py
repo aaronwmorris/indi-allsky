@@ -7,6 +7,7 @@ import fcntl
 import errno
 
 from .keogram import KeogramGenerator
+from .db import IndiAllSkyDb
 
 from multiprocessing import Process
 #from threading import Thread
@@ -29,6 +30,8 @@ class VideoProcessWorker(Process):
         self.config = config
         self.video_q = video_q
         self.upload_q = upload_q
+
+        self._db = IndiAllSkyDb(self.config)
 
         self.f_lock = None
 
@@ -151,6 +154,12 @@ class VideoProcessWorker(Process):
             logger.error('Cannote remove sequence folder: %s', str(e))
 
 
+        self._db.addVideo(
+            self.config['DB_CCD_ID'],
+            video_file,
+            timeofday,
+        )
+
         ### Upload ###
         self.uploadVideo(video_file)
 
@@ -190,6 +199,12 @@ class VideoProcessWorker(Process):
             kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
             kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
             kg.generate(keogram_file)
+
+            self._db.addKeogram(
+                self.config['DB_CCD_ID'],
+                keogram_file,
+                timeofday,
+            )
 
             self.uploadKeogram(keogram_file)
 
