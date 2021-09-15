@@ -291,9 +291,11 @@ for F in $HTDOCS_FILES; do
 done
 
 
-echo "Setup DB folder"
+echo "Setup DB"
 [[ ! -d "/var/lib/indi-allsky" ]] && sudo mkdir -m 755 "/var/lib/indi-allsky"
-sudo chown -R $USER /var/lib/indi-allsky
+sudo chown -R "$USER" /var/lib/indi-allsky
+alembic revision --autogenerate
+alembic upgrade head
 
 
 echo
