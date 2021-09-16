@@ -27,7 +27,7 @@ class GetLatestImages {
     public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
 
     private $_hours = '-2 HOURS';
-    private $_limit = 1000;
+    private $_limit = 100;
 
     public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
 
@@ -36,7 +36,7 @@ class GetLatestImages {
         $image_list = array();
 
         $conn = new PDO($this->db_uri);
-        $stmt = $conn->prepare("SELECT filename FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime ASC LIMIT :limit");
+        $stmt = $conn->prepare("SELECT filename FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime DESC LIMIT :limit");
         $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
         $stmt->bindParam(':limit', $this->_limit, PDO::PARAM_INT);
         $stmt->execute();
@@ -52,8 +52,6 @@ class GetLatestImages {
 
             $image_list[] = $relpath;
         }
-
-        array_splice($image_list, 0, -100);  # get last 100 images
 
         return($image_list);
     }
