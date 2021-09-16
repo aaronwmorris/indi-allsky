@@ -17,7 +17,7 @@ HTDOCS_FOLDER="/var/www/html/allsky"
 
 
 HTDOCS_FILES="
-    js_latest.php
+    js_loop.php
     latest.html
     loop.html
     loop_realtime.html
