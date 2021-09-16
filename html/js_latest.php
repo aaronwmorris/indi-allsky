@@ -1,6 +1,11 @@
 <?php
 
-set_error_handler('errHandle');
+#error_reporting(E_ALL);
+#ini_set('error_reporting', E_ALL);
+#ini_set('display_errors', 1);
+
+
+#set_error_handler('errHandle');
 function errHandle($errNo, $errStr, $errFile, $errLine) {
     $date = date("Y-m-d h:m:s");
     $hostname = gethostname();
@@ -19,94 +24,38 @@ function errHandle($errNo, $errStr, $errFile, $errLine) {
 header("content-type: application/x-javascript");
 
 class GetLatestImages {
-    public $image_dir_base = 'images';
-    public $image_ext = array('jpg', 'jpeg', 'png');
+    public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
+
+    private $_hours = '-2 HOURS';
+    private $_limit = 1000;
+
+    public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
+
 
     public function main() {
         $image_list = array();
 
-        ### Night starts when the sun is below the horizon (normally -6 degrees)
-        ### Trying to keep this script simple, so I look for both day and night files
-        ### If it is night, no files should be found for the day (same for day/night respectively)
+        $conn = new PDO($this->db_uri);
+        $stmt = $conn->prepare("SELECT filename FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime ASC LIMIT :limit");
+        $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
+        $stmt->bindParam(':limit', $this->_limit, PDO::PARAM_INT);
+        $stmt->execute();
 
+        while($row = $stmt->fetch()) {
+            $filename = $row['filename'];
 
-        ### current hour
-        $now = strtotime('now');
+            if (! file_exists($filename)) {
+                continue;
+            }
 
-        # day
-        $day_current_Ymd = date('Ymd', $now);  // no offset during day
-        $day_current_d_H = date('d_H', $now);  // hour is not offset
-        $day_current_hour_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $day_current_Ymd, 'day', $day_current_d_H));
-        $this->_getFolderFilesByExt($day_current_hour_dir, $image_list);
+            $relpath = str_replace($this->rootpath, '', $filename);
 
-        # night
-        $night_current_Ymd = date('Ymd', strtotime('-12 hours'));  // night folders are offset by 12 hours
-        $night_current_d_H = date('d_H', $now);  // hour is not offset
-        $night_current_hour_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $night_current_Ymd, 'night', $night_current_d_H));
-
-        $this->_getFolderFilesByExt($night_current_hour_dir, $image_list);
-
-
-        ### last hour
-        $minus_1h = strtotime('-1 hours');
-
-        # day
-        $day_minus_1h_Ymd = date('Ymd', $minus_1h);  // no offset during day
-        $day_minus_1h_d_H = date('d_H', $minus_1h);  // hour is not offset
-        $day_minus_1h_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $day_minus_1h_Ymd, 'day', $day_minus_1h_d_H));
-
-        $this->_getFolderFilesByExt($day_minus_1h_dir, $image_list);
-
-
-        # night
-        $night_minus_1h_Ymd = date('Ymd', strtotime('-12 hours'));  // night folders are offset by 12 hours
-        $night_minus_1h_d_H = date('d_H', $minus_1h);  // hour is not offset
-        $night_minus_1h_dir = join(DIRECTORY_SEPARATOR, array($this->image_dir_base, $night_minus_1h_Ymd, 'night', $night_minus_1h_d_H));
-        $this->_getFolderFilesByExt($night_minus_1h_dir, $image_list);
-
-
-        # sort oldest to newest
-        usort($image_list, function($x, $y) { return filemtime($x) > filemtime($y); });
+            $image_list[] = $relpath;
+        }
 
         array_splice($image_list, 0, -100);  # get last 100 images
 
         return($image_list);
-    }
-
-
-    private function _getFolderFilesByExt($folder, &$r_image_list) {
-        if (! is_dir($folder)) {
-            error_log(sprintf('Folder not found: %s', $folder));
-            return;
-        }
-
-        $h_dir = opendir($folder);
-
-        while (false !== ($entry = readdir($h_dir))) {
-            if ($entry == "." || $entry == "..") {
-                continue;
-            }
-
-            $entry_path = join(DIRECTORY_SEPARATOR, array($folder, $entry));
-
-            if (is_dir($entry_path)) {
-                # recursion
-                $this->_getFolderFilesByExt($entry_path, $r_image_list);
-            }
-
-            if (is_file($entry_path)) {
-                foreach ($this->image_ext as $ext) {
-                    $re = sprintf('/\.%s$/', $ext);
-                    if (preg_match($re, $entry)) {
-                        array_push($r_image_list, $entry_path);
-                        break;
-                    }
-                }
-            }
-
-        }
-
-        closedir($h_dir);
     }
 
 }

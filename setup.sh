@@ -97,6 +97,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        php-sqlite3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -129,6 +130,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        php-sqlite3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -165,6 +167,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        php-sqlite3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
