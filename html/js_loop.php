@@ -53,7 +53,9 @@ class GetLatestImages {
             $image_list[] = $relpath;
         }
 
-        return($image_list);
+        $r_image_list = array_reverse($image_list);
+
+        return($r_image_list);
     }
 
 }
