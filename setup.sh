@@ -268,8 +268,15 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "Start apache2 service"
+TMP3=$(tempfile)
+
+cat ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+    sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
+    sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
+    sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
     sudo a2enmod rewrite
     sudo a2enmod ssl
     sudo a2dissite 000-default
@@ -278,9 +285,15 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo systemctl enable apache2
     sudo systemctl restart apache2
 elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+    sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
+    sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
+    sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
+
     sudo systemctl enable httpd
     sudo systemctl restart httpd
 fi
+
+[[ -f "$TMP3" ]] && rm -f "$TMP3"
 
 
 
