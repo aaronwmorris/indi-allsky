@@ -308,6 +308,7 @@ sudo chown -R "$USER" "$HTDOCS_FOLDER"
 
 [[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images"
 [[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images/darks"
+[[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir -m 755 "$HTDOCS_FOLDER/js"
 
 for F in $HTDOCS_FILES; do
     # ask to overwrite if they already exist
