@@ -154,13 +154,15 @@ class VideoProcessWorker(Process):
             logger.error('Cannote remove sequence folder: %s', str(e))
 
 
-        self._db.addVideo(
+        video_entry = self._db.addVideo(
             video_file,
             timeofday,
         )
 
         ### Upload ###
         self.uploadVideo(video_file)
+
+        self._db.addUploadedFlag(video_entry)
 
 
 
@@ -199,12 +201,14 @@ class VideoProcessWorker(Process):
             kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
             kg.generate(keogram_file)
 
-            self._db.addKeogram(
+            keogram_entry = self._db.addKeogram(
                 keogram_file,
                 timeofday,
             )
 
             self.uploadKeogram(keogram_file)
+
+            self._db.addUploadedFlag(keogram_entry)
 
 
     def uploadKeogram(self, keogram_file):

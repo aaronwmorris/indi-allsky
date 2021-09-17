@@ -212,7 +212,7 @@ class ImageProcessWorker(Process):
             if self.save_images:
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
 
-                self._db.addImage(
+                image_entry = self._db.addImage(
                     new_filename,
                     self.last_exposure,
                     self.gain_v.value,
@@ -245,6 +245,8 @@ class ImageProcessWorker(Process):
                     'local_file' : latest_file,
                     'remote_file' : remote_file,
                 })
+
+                self._db.addUploadedFlag(image_entry)
 
 
     def detectBitDepth(self, data):

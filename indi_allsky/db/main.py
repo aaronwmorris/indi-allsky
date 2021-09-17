@@ -183,4 +183,9 @@ class IndiAllSkyDb(object):
         return keogram
 
 
+    def addUploadedFlag(self, entry):
+        entry.uploaded = True
+        self._session.commit()
+
+
 
