@@ -36,9 +36,9 @@ DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
 
-echo "##############################################"
-echo "### Welcome to the indi-allsy setup script ###"
-echo "##############################################"
+echo "###############################################"
+echo "### Welcome to the indi-allsky setup script ###"
+echo "###############################################"
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
@@ -73,7 +73,7 @@ sleep 10
 # Run sudo to ask for initial password
 sudo true
 
-echo "Installing packages..."
+echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
@@ -205,7 +205,7 @@ cd $OLDPWD
 
 
 
-echo "Python virtualenv setup"
+echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir -m 755 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
@@ -224,7 +224,7 @@ done
 
 #echo $CCD_DRIVER
 
-echo "Setting up indiserver service"
+echo "**** Setting up indiserver service ****"
 TMP1=$(tempfile)
 sed \
  -e "s|%INDISERVER_USER%|$USER|g" \
@@ -237,7 +237,7 @@ sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
 
-echo "Setting up indi-allsky service"
+echo "**** Setting up indi-allsky service ****"
 TMP2=$(tempfile)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
@@ -249,13 +249,13 @@ sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
-echo "Enabling services"
+echo "**** Enabling services ****"
 sudo systemctl daemon-reload
 sudo systemctl enable $INDISEVER_SERVICE_NAME
 sudo systemctl enable $ALLSKY_SERVICE_NAME
 
 
-echo "Setup rsyslog logging"
+echo "**** Setup rsyslog logging ****"
 [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir -m 755 /var/log/indi-allsky
 sudo touch /var/log/indi-allsky/indi-allsky.log
 sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
@@ -272,7 +272,7 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 
-echo "Start apache2 service"
+echo "**** Start apache2 service ****"
 TMP3=$(tempfile)
 
 cat ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
@@ -302,7 +302,7 @@ fi
 
 
 
-echo "Setup image folder"
+echo "**** Setup image folder ****"
 [[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -m 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER" "$HTDOCS_FOLDER"
 
@@ -316,7 +316,7 @@ for F in $HTDOCS_FILES; do
 done
 
 
-echo "Setup DB"
+echo "**** Setup DB ****"
 [[ ! -d "/var/lib/indi-allsky" ]] && sudo mkdir -m 755 "/var/lib/indi-allsky"
 sudo chown -R "$USER" /var/lib/indi-allsky
 alembic revision --autogenerate
