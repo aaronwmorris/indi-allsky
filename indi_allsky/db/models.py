@@ -50,6 +50,7 @@ class IndiAllSkyDbImageTable(Base):
     moonphase = Column(Float, nullable=True)
     adu_roi = Column(Boolean, server_default=expression.false(), nullable=False)
     sqm = Column(Float, nullable=True)
+    uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
@@ -65,6 +66,7 @@ class IndiAllSkyDbVideoTable(Base):
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='videos')
 
@@ -80,6 +82,7 @@ class IndiAllSkyDbKeogramTable(Base):
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
 
