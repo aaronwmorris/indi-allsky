@@ -40,7 +40,7 @@ class IndiAllSkyDbImageTable(Base):
     datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
     daydate = Column(Date, nullable=False, index=True)
     exposure = Column(Float, nullable=False)
-    gain = Column(Integer, server_default='0', nullable=False)
+    gain = Column(Integer, nullable=False)
     binmode = Column(Integer, server_default='1', nullable=False)
     temp = Column(Float, nullable=True)
     night = Column(Boolean, server_default=expression.true(), nullable=False, index=True)
@@ -56,6 +56,22 @@ class IndiAllSkyDbImageTable(Base):
 
     def __repr__(self):
         return '<Image {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbDarkFrameTable(Base):
+    __tablename__ = 'darkframe'
+
+    id = Column(Integer, primary_key=True)
+    filename = Column(String(length=255), unique=True, nullable=False)
+    datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    bitdepth = Column(Integer, nullable=False, index=True)
+    exposure = Column(Float, nullable=False, index=True)
+    gain = Column(Integer, nullable=False, index=True)
+    binmode = Column(Integer, server_default='1', nullable=False, index=True)
+    temp = Column(Float, nullable=True, index=True)
+
+    def __repr__(self):
+        return '<DarkFrame {0:s}>'.format(self.filename)
 
 
 class IndiAllSkyDbVideoTable(Base):
