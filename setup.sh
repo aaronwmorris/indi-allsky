@@ -17,13 +17,15 @@ HTDOCS_FOLDER="/var/www/html/allsky"
 
 
 HTDOCS_FILES="
-    js_loop.php
     latest.html
+    latestDb.html
     loop.html
     loop_realtime.html
     sqm.html
-    settings_latest.js
-    settings_loop.js
+    js/js_loop.php
+    js/settings_latest.js
+    js/settings_latestDb.js
+    js/settings_loop.js
     .htaccess
     images/.htaccess
     images/darks/.htaccess
@@ -309,7 +311,7 @@ sudo chown -R "$USER" "$HTDOCS_FOLDER"
 
 for F in $HTDOCS_FILES; do
     # ask to overwrite if they already exist
-    cp -i "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
+    cp -f "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
     chmod 644 "${HTDOCS_FOLDER}/${F}"
 done
 

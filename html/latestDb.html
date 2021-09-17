@@ -12,7 +12,7 @@ html, body {
  background-color: #000000;
 }
 </style>
-<script type="text/javascript" src="settings_latestDb.js"></script>
+<script type="text/javascript" src="js/settings_latestDb.js"></script>
 <script type="text/javascript">
 var image_list = [];
 var fullscreen = false;  //initial state
@@ -84,7 +84,7 @@ function showImage(url, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS('js_loop.php?limit=' + maxFrames, function() {
+    loadJS('js/js_loop.php?limit=' + maxFrames, function() {
         while (image_list.length > maxFrames) {
             image_list.splice(0, 1);  // remove first image
         };
