@@ -51,13 +51,14 @@ class GetLatestImages {
         $image_list = array();
 
         $conn = new PDO($this->db_uri);
-        $stmt = $conn->prepare("SELECT filename FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime DESC LIMIT :limit");
+        $stmt = $conn->prepare("SELECT filename,sqm FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime DESC LIMIT :limit");
         $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
         $stmt->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt->execute();
 
         while($row = $stmt->fetch()) {
             $filename = $row['filename'];
+            $sqm = $row['sqm'];
 
             if (! file_exists($filename)) {
                 continue;
@@ -65,7 +66,10 @@ class GetLatestImages {
 
             $relpath = str_replace($this->rootpath, '', $filename);
 
-            $image_list[] = $relpath;
+            $image_list[] = array(
+                'file' => $relpath,
+                'sqm' => $sqm,
+            );
         }
 
         $r_image_list = array_reverse($image_list);
