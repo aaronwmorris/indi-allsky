@@ -27,9 +27,24 @@ class GetLatestImages {
     public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
 
     private $_hours = '-2 HOURS';
-    private $_limit = 100;
+    private $_limit_default = 40;
 
     public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
+
+
+    public function __construct() {
+        if (isset($_GET['limit'])) {
+            $limit = htmlspecialchars($_GET['limit']);
+
+            if (filter_var($limit, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100]])) {
+                $this->limit = intval($limit);
+            } else {
+                $this->limit = $this->_limit_default;
+            }
+        } else {
+            $this->limit = $this->_limit_default;
+        }
+    }
 
 
     public function main() {
@@ -38,7 +53,7 @@ class GetLatestImages {
         $conn = new PDO($this->db_uri);
         $stmt = $conn->prepare("SELECT filename FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime DESC LIMIT :limit");
         $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
-        $stmt->bindParam(':limit', $this->_limit, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt->execute();
 
         while($row = $stmt->fetch()) {

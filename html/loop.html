@@ -83,8 +83,8 @@ function showImage(url, idx) {
 
 
 function loadNextImage() {
-    console.log('Loading next image');
-    loadJS('js_loop.php', function() {
+    console.log('Loading next images');
+    loadJS('js_loop.php?limit=' + maxFrames, function() {
         while (image_list.length > maxFrames) {
             image_list.splice(0, 1);  // remove first image
         };

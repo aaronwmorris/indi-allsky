@@ -1,3 +1,5 @@
-var url = "images/latest.jpg"; //url to load image from
 var refreshInterval = 15000; //in ms
-var drawDate = false; //draw date string
+var maxFrames = 1;
+var frameTime = 250; // in ms
+var drawIndex = false;
+var rock = false;
