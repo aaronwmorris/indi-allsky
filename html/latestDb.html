@@ -25,33 +25,24 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    // prevent concurrent updates to list
-    var image_list_copy = JSON.parse(JSON.stringify(image_list))
+    while(image_list.length == 0) {
+        await sleep(100);
+    }
 
-    for (var i = 0; i < image_list_copy.length; i++) {
-        showImage(image_list_copy[i]["file"], i);
-        await sleep(frameTime);
-    };
+    showImage(image_list[0]);
 
-    if (rock) {
-        for (var i = image_list_copy.length - 1; i >= 0; i--) {
-            showImage(image_list_copy[i]["file"], i);
-            await sleep(frameTime);
-        };
-    };
-
-    setTimeout(loop, (image_list.length + 3) * frameTime);
+    setTimeout(loop, refreshInterval);
 }
 
 
-function showImage(url, idx) {
-    console.log('Showing image ' + url);
+function showImage(entry) {
+    console.log('Showing image ' + entry["file"]);
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
     var img = new Image();
-    img.src = url;
+    img.src = entry["file"];
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -65,30 +56,13 @@ function showImage(url, idx) {
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
-        if(drawIndex) {
-            var text = idx;
-            var maxWidth = 10;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(idx, x, y, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(idx, x, y, maxWidth);
-        }
-
     };
 }
 
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS('js/js_loop.php?limit=' + maxFrames, function() {
-        while (image_list.length > maxFrames) {
-            image_list.splice(0, 1);  // remove first image
-        };
-    });
+    loadJS('js/js_loop.php?limit=1', function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 

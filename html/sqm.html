@@ -13,31 +13,51 @@ html, body {
 }
 </style>
 <script type="text/javascript" src="js/settings_latest.js"></script>
-<script type="text/javascript" src="images/sqm_data.js"></script>
 <script type="text/javascript">
-var img;
+var image_list = [];
 var fullscreen = false;  //initial state
 
 function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(image_list.length == 0) {
+        await sleep(100);
+    }
+
+    showImage(image_list[0]);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["file"]);
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    img = new Image();
+    var img = new Image();
+    img.src = entry["file"];
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
 
         var hRatio = canvas.width  / this.width;
-        var vRatio =  canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio ); 
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 
         context.drawImage(this, 0, 0, this.width, this.height,
-                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
 
-        var sqm_text = "SQM " + sqm_data['sqm'].toFixed(1);
+        var sqm_text = "SQM " + parseFloat(entry["sqm"]).toFixed(1);
         var maxWidth = 120;
         var x = canvas.width-10-maxWidth;
         var y = canvas.height-10;
@@ -50,35 +70,18 @@ function init() {
         context.fillText(sqm_text, x, y, maxWidth);
 
     };
-
-    refresh();
 }
 
-function refresh() {
-    img.src = url + "?t=" + new Date().getTime();
-    loadJS('images/sqm_data.js', function() {});
-    setTimeout(refresh, refreshInterval);
+
+function loadNextImage() {
+    console.log('Loading next images');
+    loadJS('js/js_loop.php?limit=1', function() {});
+    setTimeout(loadNextImage, refreshInterval);
 }
 
-function setResizeHandler(callback, timeout) {
-    var timer_id = undefined;
-    window.addEventListener("resize", function() {
-        if(timer_id != undefined) {
-            clearTimeout(timer_id);
-            timer_id = undefined;
-        }
-        timer_id = setTimeout(function() {
-            timer_id = undefined;
-            callback();
-        }, timeout);
-    });
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
 }
-
-function resize_callback() {
-    refresh();
-}
-setResizeHandler(resize_callback, 500);
-
 
 function loadJS(url, onDone, onError) {
     if(!onDone)onDone=function(){};
@@ -147,8 +150,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     };
 });
 
+
 </script>
-<title>Timelapse</title>
+<title>SQM</title>
 </head>
 
 <body onload="JavaScript:init();">
