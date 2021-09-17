@@ -26,7 +26,7 @@ async function loop() {
     console.log('Starting loop');
 
     // prevent concurrent updates to list
-    var image_list_copy = JSON.parse(JSON.stringify(image_list))
+    var image_list_copy = JSON.parse(JSON.stringify(image_list));
 
     for (var i = 0; i < image_list_copy.length; i++) {
         showImage(image_list_copy[i], i);
