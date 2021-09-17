@@ -111,6 +111,26 @@ function loadJS(url, onDone, onError) {
 }
 
 
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    window.addEventListener("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(image_list[0]);
+}
+setResizeHandler(resize_callback, 500);
+
+
 function goFullscreen(elem) {
     if(fullscreen) {
         closeFullscreen();
