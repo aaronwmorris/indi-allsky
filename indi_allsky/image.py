@@ -962,18 +962,5 @@ class ImageProcessWorker(Process):
 
     def calculateSqm(self, data):
         sqm_value = self._sqm.calculate(data, self.last_exposure)
-
-        sqm_data = {
-            'sqm' : sqm_value,
-        }
-
-        sqm_filename = self.image_dir.joinpath('sqm_data.js')
-        sqm_file_contents = 'sqm_data = {0:s};'.format(json.dumps(sqm_data))
-
-        with io.open(str(sqm_filename), 'w') as f_sqm_data:
-            f_sqm_data.write(sqm_file_contents)
-
-        sqm_filename.chmod(0o644)
-
         return sqm_value
 
