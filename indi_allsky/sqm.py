@@ -30,7 +30,7 @@ class IndiAllskySqm(object):
         sqm_avg = numpy.mean(masked)
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
-        # offset the sqm based on the exposure
+        # offset the sqm based on the exposure and gain
         weighted_sqm_avg = ((self.max_exposure - exposure) + 1) * (sqm_avg + (self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain))
 
         logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
@@ -68,6 +68,25 @@ class IndiAllskySqm(object):
         # find values less than mask percentile
         # assuming max values are saturated pixels due to stars
         masked = img[img < p]
+
+        return masked
+
+
+    def getStarless(self, img):
+        self.image_height, self.image_width = img.shape[:2]
+
+        roidata = self.getRoi(img)
+
+        no_stars = self.replaceStars(roidata)
+
+        return no_stars
+
+
+
+    def replaceStars(self, img):
+        p = numpy.percentile(img, self.mask_percentile)
+
+        masked = numpy.where[img < p, 0, img]
 
         return masked
 
