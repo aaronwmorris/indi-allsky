@@ -34,7 +34,7 @@ class IndiAllskySqm(object):
             weighted_sqm_avg = sqm_avg
         else:
             # offset the sqm based on the exposure
-            weighted_sqm_avg = (self.max_exposure - exposure) * sqm_avg
+            weighted_sqm_avg = ((self.max_exposure - exposure) + 1) * sqm_avg
 
         logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
 
