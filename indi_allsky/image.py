@@ -961,6 +961,6 @@ class ImageProcessWorker(Process):
 
 
     def calculateSqm(self, data):
-        sqm_value = self._sqm.calculate(data, self.last_exposure)
+        sqm_value = self._sqm.calculate(data, self.last_exposure, self.gain_v.value)
         return sqm_value
 

@@ -20,7 +20,7 @@ class IndiAllskySqm(object):
         self.image_width = None
 
 
-    def calculate(self, img, exposure):
+    def calculate(self, img, exposure, gain):
         self.image_height, self.image_width = img.shape[:2]
 
         roidata = self.getRoi(img)
@@ -30,11 +30,8 @@ class IndiAllskySqm(object):
         sqm_avg = numpy.mean(masked)
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
-        if self.max_exposure == exposure:
-            weighted_sqm_avg = sqm_avg
-        else:
-            # offset the sqm based on the exposure
-            weighted_sqm_avg = ((self.max_exposure - exposure) + 1) * sqm_avg
+        # offset the sqm based on the exposure
+        weighted_sqm_avg = ((self.max_exposure - exposure) + 1) * (sqm_avg + (self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain))
 
         logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
 
