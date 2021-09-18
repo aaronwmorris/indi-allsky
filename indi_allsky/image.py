@@ -688,11 +688,11 @@ class ImageProcessWorker(Process):
 
         if self.exposure_v.value < 0.001000:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_adu_min = self.target_adu - (self.target_adu_dev * 1.5)
-            target_adu_max = self.target_adu + (self.target_adu_dev * 1.5)
+            target_adu_min = self.target_adu - (self.target_adu_dev * 2.0)
+            target_adu_max = self.target_adu + (self.target_adu_dev * 2.0)
             current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 1.5)
             current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 1.5)
-            exp_scale_factor = 0.75  # scale exposure calculation
+            exp_scale_factor = 0.50  # scale exposure calculation
             history_max_vals = 6  # number of entries to use to calculate average
         else:
             target_adu_min = self.target_adu - (self.target_adu_dev * 1.0)
