@@ -2,6 +2,7 @@ import sys
 import time
 import io
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -24,6 +25,8 @@ from .video import VideoProcessWorker
 from .uploader import FileUploader
 from .db import IndiAllSkyDb
 from .exceptions import TimeOutException
+
+from sqlalchemy.orm.exc import NoResultFound
 
 logger = multiprocessing.get_logger()
 
@@ -780,7 +783,6 @@ class IndiAllSky(object):
         self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
 
 
-
     def expireImages(self, days=None):
         ### This needs to be run before generating a timelapse
 
@@ -830,6 +832,176 @@ class IndiAllSky(object):
                 d.rmdir()
             except OSError as e:
                 logger.error('Cannot remove folder: %s', str(e))
+
+
+    def dbImportImages(self):
+        from .db import IndiAllSkyDbCameraTable
+        from .db import IndiAllSkyDbImageTable
+        from .db import IndiAllSkyDbVideoTable
+        from .db import IndiAllSkyDbKeogramTable
+
+        dbsession = self._db.session
+
+        try:
+            camera = dbsession.query(IndiAllSkyDbCameraTable).order_by(IndiAllSkyDbCameraTable.id.desc()).first()
+        except NoResultFound:
+            logger.error('No camera found')
+            sys.exit(1)
+
+        logger.info('Found camera: %s', camera.name)
+
+
+        file_list_videos = list()
+        self.getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
+
+
+        #/var/www/html/allsky/images/20210915/allsky-timelapse-20210915-night.mp4
+        re_video = re.compile(r'(?P<daydate_str>\d{8})\/.+timelapse\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+        for f in file_list_videos:
+            logger.info('Timelapse: %s', f)
+
+            m = re.search(re_video, str(f))
+            if not m:
+                logger.error(' Regex did not match file')
+                continue
+
+            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
+            #logger.info('Daydate: %s', str(d_daydate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
+
+            try:
+                video = dbsession.query(IndiAllSkyDbVideoTable).filter_by(filename=str(f)).one()
+                logger.info(' Timelapse already imported')
+                continue
+            except NoResultFound:
+                video = IndiAllSkyDbVideoTable(
+                    filename=str(f),
+                    datetime=d_datetime,
+                    daydate=d_daydate,
+                    night=night,
+                    uploaded=False,
+                    camera_id=camera.id,
+                )
+
+                dbsession.add(video)
+                dbsession.commit()
+
+                logger.info(' Timelapse inserted')
+
+
+
+        file_list = list()
+        self.getFolderFilesByExt(self.image_dir, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+
+
+        file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list)
+
+        #/var/www/html/allsky/images/20210915/allsky-keogram-20210915-night.jpg
+        re_keogram = re.compile(r'(?P<daydate_str>\d{8})\/.+keogram\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        for f in file_list_keograms:
+            logger.info('Keogram: %s', f)
+
+            m = re.search(re_keogram, str(f))
+            if not m:
+                logger.error(' Regex did not match file')
+                continue
+
+            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
+            #logger.info('Daydate: %s', str(d_daydate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
+
+            try:
+                keogram = dbsession.query(IndiAllSkyDbKeogramTable).filter_by(filename=str(f)).one()
+                logger.info(' Keogram already imported')
+                continue
+            except NoResultFound:
+                keogram = IndiAllSkyDbKeogramTable(
+                    filename=str(f),
+                    datetime=d_datetime,
+                    daydate=d_daydate,
+                    night=night,
+                    uploaded=False,
+                    camera_id=camera.id,
+                )
+
+                dbsession.add(keogram)
+                dbsession.commit()
+
+                logger.info(' Keogram inserted')
+
+
+        # Exclude keograms
+        file_list_images = filter(lambda p: 'keogram' not in p.name, file_list)
+
+        #/var/www/html/allsky/images/20210825/night/26_02/20210826_020202.jpg
+        re_image = re.compile(r'(?P<daydate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/(?P<datetime_str>[0-9_]+)\.[a-z]+$')
+        for f in file_list_images:
+            logger.info('Image: %s', f)
+
+            m = re.search(re_image, str(f))
+            if not m:
+                logger.error(' Regex did not match file')
+                continue
+
+            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+            #logger.info('Datetime string: %s', m.group('datetime_str'))
+
+            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
+            #logger.info('Daydate: %s', str(d_daydate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_datetime = datetime.strptime(m.group('datetime_str'), '%Y%m%d_%H%M%S')
+            #logger.info('Datetime: %s', str(d_datetime))
+
+
+            try:
+                image = dbsession.query(IndiAllSkyDbImageTable).filter_by(filename=str(f)).one()
+                logger.info(' Image already imported')
+                continue
+            except NoResultFound:
+                image = IndiAllSkyDbImageTable(
+                    filename=str(f),
+                    camera_id=camera.id,
+                    datetime=d_datetime,
+                    daydate=d_daydate,
+                    exposure=0.0,
+                    gain=-1,
+                    binmode=1,
+                    night=night,
+                    adu=0.0,
+                    stable=True,
+                    moonmode=False,
+                    adu_roi=False,
+                    uploaded=False
+                )
+
+                dbsession.add(image)
+                dbsession.commit()
+
+                logger.info(' Image inserted')
 
 
     def getFolderSymlinks(self, folder, symlink_list):

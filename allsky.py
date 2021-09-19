@@ -34,6 +34,7 @@ if __name__ == "__main__":
             'generateNightKeogram',
             'generateDayKeogram',
             'expireImages',
+            'dbImportImages',
         ),
     )
     argparser.add_argument(
