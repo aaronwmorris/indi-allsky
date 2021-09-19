@@ -843,7 +843,6 @@ class IndiAllSky(object):
 
 
     def dbImportImages(self):
-        from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbVideoTable
         from .db import IndiAllSkyDbKeogramTable
@@ -851,12 +850,10 @@ class IndiAllSky(object):
         dbsession = self._db.session
 
         try:
-            camera = dbsession.query(IndiAllSkyDbCameraTable).order_by(IndiAllSkyDbCameraTable.id.desc()).first()
+            camera_id = self._db.getCurrentCameraId()
         except NoResultFound:
             logger.error('No camera found')
             sys.exit(1)
-
-        logger.info('Found camera: %s', camera.name)
 
 
         file_list_videos = list()
@@ -897,7 +894,7 @@ class IndiAllSky(object):
                     daydate=d_daydate,
                     night=night,
                     uploaded=False,
-                    camera_id=camera.id,
+                    camera_id=camera_id,
                 )
 
                 dbsession.add(video)
@@ -947,7 +944,7 @@ class IndiAllSky(object):
                     daydate=d_daydate,
                     night=night,
                     uploaded=False,
-                    camera_id=camera.id,
+                    camera_id=camera_id,
                 )
 
                 dbsession.add(keogram)
@@ -992,7 +989,7 @@ class IndiAllSky(object):
             except NoResultFound:
                 image = IndiAllSkyDbImageTable(
                     filename=str(f),
-                    camera_id=camera.id,
+                    camera_id=camera_id,
                     datetime=d_datetime,
                     daydate=d_daydate,
                     exposure=0.0,

@@ -1,13 +1,17 @@
 import os
 import io
 import time
+from datetime import datetime
 from pathlib import Path
 import subprocess
+import tempfile
 import fcntl
 import errno
 
 from .keogram import KeogramGenerator
 from .db import IndiAllSkyDb
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
 #from threading import Thread
@@ -76,6 +80,26 @@ class VideoProcessWorker(Process):
 
 
     def generateVideo(self, timespec, img_folder, timeofday):
+        from .db import IndiAllSkyDbImageTable
+        from .db import IndiAllSkyDbVideoTable
+
+        dbsession = self._db.session
+
+
+        try:
+            d_datetime = datetime.strptime(timespec, '%Y%m%d')
+            d_daydate = d_datetime.date()
+        except ValueError:
+            logger.error('Invalid time spec')
+            return
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
         video_file = img_folder.parent.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
 
         if video_file.exists():
@@ -83,33 +107,49 @@ class VideoProcessWorker(Process):
             return
 
 
-        seqfolder = img_folder.joinpath('.sequence')
+        try:
+            # delete old video entry if it exists
+            video_entry = dbsession.query(IndiAllSkyDbVideoTable)\
+                .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                .one()
 
-        if not seqfolder.exists():
-            logger.info('Creating sequence folder %s', seqfolder)
-            seqfolder.mkdir()
+            logger.warning('Removing orphaned video db entry')
+            dbsession.delete(video_entry)
+            dbsession.commit()
+        except NoResultFound:
+            pass
 
 
-        # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(lambda p: p.is_symlink(), seqfolder.iterdir()))
-        if rmlinks:
-            logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l_p in rmlinks:
-                l_p.unlink()
+        seqfolder = tempfile.TemporaryDirectory()
+        p_seqfolder = Path(seqfolder.name)
 
 
         # find all files
+        timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .filter(IndiAllSkyDbImageTable.daydate == d_daydate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .order_by(IndiAllSkyDbImageTable.datetime.asc())
+
+
+        logger.info('Found %d images for timelapse', timelapse_files_entries.count())
+
         timelapse_files = list()
-        self.getFolderFilesByExt(img_folder, timelapse_files)
+        for entry in timelapse_files_entries:
+            p_entry = Path(entry.filename)
 
-        # Exclude empty files
-        timelapse_files_nonzero = filter(lambda p: p.stat().st_size != 0, timelapse_files)
+            if not p_entry.exists():
+                logger.error('File not found: %s', p_entry)
+                continue
 
-        logger.info('Creating symlinked files for timelapse')
-        timelapse_files_sorted = sorted(timelapse_files_nonzero, key=lambda p: p.stat().st_mtime)
-        for i, f in enumerate(timelapse_files_sorted):
-            symlink_p = seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
-            symlink_p.symlink_to(f)
+            if p_entry.stat().st_size == 0:
+                continue
+
+            timelapse_files.append(p_entry)
+
+
+        for i, f in enumerate(timelapse_files):
+            p_symlink = p_seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
+            p_symlink.symlink_to(f)
 
 
         start = time.time()
@@ -119,7 +159,7 @@ class VideoProcessWorker(Process):
             '-y',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
-            '-i', '{0:s}/%04d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
+            '-i', '{0:s}/%04d.{1:s}'.format(str(p_seqfolder), self.config['IMAGE_FILE_TYPE']),
             '-vcodec', 'libx264',
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
             '-pix_fmt', 'yuv420p',
@@ -139,19 +179,8 @@ class VideoProcessWorker(Process):
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
-        # delete all existing symlinks in seqfolder
-        rmlinks = list(filter(lambda p: p.is_symlink(), Path(seqfolder).iterdir()))
-        if rmlinks:
-            logger.warning('Removing existing symlinks in %s', seqfolder)
-            for l_p in rmlinks:
-                l_p.unlink()
-
-
-        # remove sequence folder
-        try:
-            seqfolder.rmdir()
-        except OSError as e:
-            logger.error('Cannote remove sequence folder: %s', str(e))
+        # delete all existing symlinks and sequence folder
+        seqfolder.cleanup()
 
 
         video_entry = self._db.addVideo(

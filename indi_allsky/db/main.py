@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 
 from .models import Base
 from .models import IndiAllSkyDbCameraTable
@@ -60,9 +61,16 @@ class IndiAllSkyDb(object):
         if not filename:
             return
 
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
         logger.info('Adding image %s to DB', filename)
 
+
         filename_str = str(filename)  # might be a pathlib object
+
 
         # If temp is 0, write null
         if temp:
@@ -91,7 +99,7 @@ class IndiAllSkyDb(object):
 
 
         image = IndiAllSkyDbImageTable(
-            camera_id=self.config['DB_CCD_ID'],
+            camera_id=self.getCurrentCameraId(),
             filename=filename_str,
             daydate=daydate,
             exposure=exposure,
@@ -117,7 +125,13 @@ class IndiAllSkyDb(object):
         if not filename:
             return
 
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
         logger.info('Adding video %s to DB', filename)
+
 
         filename_str = str(filename)  # might be a pathlib object
 
@@ -136,7 +150,7 @@ class IndiAllSkyDb(object):
 
 
         video = IndiAllSkyDbVideoTable(
-            camera_id=self.config['DB_CCD_ID'],
+            camera_id=self.getCurrentCameraId(),
             filename=filename_str,
             daydate=daydate,
             night=night,
@@ -152,7 +166,13 @@ class IndiAllSkyDb(object):
         if not filename:
             return
 
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
         logger.info('Adding keogram %s to DB', filename)
+
 
         filename_str = str(filename)  # might be a pathlib object
 
@@ -171,7 +191,7 @@ class IndiAllSkyDb(object):
 
 
         keogram = IndiAllSkyDbKeogramTable(
-            camera_id=self.config['DB_CCD_ID'],
+            camera_id=self.getCurrentCameraId(),
             filename=filename_str,
             daydate=daydate,
             night=night,
@@ -188,4 +208,17 @@ class IndiAllSkyDb(object):
         self._session.commit()
 
 
+    def getCurrentCameraId(self):
+        if self.config.get('DB_CCD_ID'):
+            return self.config['DB_CCD_ID']
+        else:
+            try:
+                camera = self._session.query(IndiAllSkyDbCameraTable)\
+                    .order_by(IndiAllSkyDbCameraTable.id.desc())\
+                    .first()
+            except NoResultFound:
+                logger.error('No cameras found')
+                raise
+
+        return camera.id
 
