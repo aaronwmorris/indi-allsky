@@ -196,64 +196,118 @@ class VideoProcessWorker(Process):
 
 
     def uploadVideo(self, video_file):
-            ### Upload video
-            if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
-                logger.warning('Video uploading disabled')
-                return
+        ### Upload video
+        if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
+            logger.warning('Video uploading disabled')
+            return
 
-            remote_path = Path(self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'])
-            remote_file = remote_path.joinpath(video_file.name)
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'])
+        remote_file = remote_path.joinpath(video_file.name)
 
-            # tell worker to upload file
-            self.upload_q.put({
-                'local_file' : video_file,
-                'remote_file' : remote_file,
-            })
+        # tell worker to upload file
+        self.upload_q.put({
+            'local_file' : video_file,
+            'remote_file' : remote_file,
+        })
 
 
     def generateKeogram(self, timespec, img_folder, timeofday):
-            keogram_file = img_folder.parent.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+        from .db import IndiAllSkyDbImageTable
+        from .db import IndiAllSkyDbKeogramTable
 
-            if keogram_file.exists():
-                logger.warning('Keogram is already generated: %s', keogram_file)
-                return
-
-
-            # find all files
-            timelapse_files = list()
-            self.getFolderFilesByExt(img_folder, timelapse_files)
+        dbsession = self._db.session
 
 
-            kg = KeogramGenerator(self.config, timelapse_files)
-            kg.angle = self.config['KEOGRAM_ANGLE']
-            kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
-            kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
-            kg.generate(keogram_file)
+        try:
+            d_datetime = datetime.strptime(timespec, '%Y%m%d')
+            d_daydate = d_datetime.date()
+        except ValueError:
+            logger.error('Invalid time spec')
+            return
 
-            keogram_entry = self._db.addKeogram(
-                keogram_file,
-                timeofday,
-            )
 
-            self.uploadKeogram(keogram_file)
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
 
-            self._db.addUploadedFlag(keogram_entry)
+
+
+        keogram_file = img_folder.parent.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+
+        if keogram_file.exists():
+            logger.warning('Keogram is already generated: %s', keogram_file)
+            return
+
+
+        try:
+            # delete old keogram entry if it exists
+            keogram_entry = dbsession.query(IndiAllSkyDbKeogramTable)\
+                .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                .one()
+
+            logger.warning('Removing orphaned keogram db entry')
+            dbsession.delete(keogram_entry)
+            dbsession.commit()
+        except NoResultFound:
+            pass
+
+
+        # find all files
+        keogram_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .filter(IndiAllSkyDbImageTable.daydate == d_daydate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .order_by(IndiAllSkyDbImageTable.datetime.asc())
+
+
+        logger.info('Found %d images for keogram', keogram_files_entries.count())
+
+
+        keogram_files = list()
+        for entry in keogram_files_entries:
+            p_entry = Path(entry.filename)
+
+            if not p_entry.exists():
+                logger.error('File not found: %s', p_entry)
+                continue
+
+            if p_entry.stat().st_size == 0:
+                continue
+
+            keogram_files.append(p_entry)
+
+
+
+        kg = KeogramGenerator(self.config, keogram_files)
+        kg.angle = self.config['KEOGRAM_ANGLE']
+        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
+        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+        kg.generate(keogram_file)
+
+        keogram_entry = self._db.addKeogram(
+            keogram_file,
+            timeofday,
+        )
+
+        self.uploadKeogram(keogram_file)
+
+        self._db.addUploadedFlag(keogram_entry)
 
 
     def uploadKeogram(self, keogram_file):
-            ### Upload video
-            if not self.config['FILETRANSFER']['UPLOAD_KEOGRAM']:
-                logger.warning('Keogram uploading disabled')
-                return
+        ### Upload video
+        if not self.config['FILETRANSFER']['UPLOAD_KEOGRAM']:
+            logger.warning('Keogram uploading disabled')
+            return
 
-            remote_path = Path(self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'])
-            remote_file = remote_path.joinpath(keogram_file.name)
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'])
+        remote_file = remote_path.joinpath(keogram_file.name)
 
-            # tell worker to upload file
-            self.upload_q.put({
-                'local_file' : keogram_file,
-                'remote_file' : remote_file,
-            })
+        # tell worker to upload file
+        self.upload_q.put({
+            'local_file' : keogram_file,
+            'remote_file' : remote_file,
+        })
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
