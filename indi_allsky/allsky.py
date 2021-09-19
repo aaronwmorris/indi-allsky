@@ -852,6 +852,7 @@ class IndiAllSky(object):
 
     def dbImportImages(self):
         from .db import IndiAllSkyDbImageTable
+        from .db import IndiAllSkyDbDarkFrameTable
         from .db import IndiAllSkyDbVideoTable
         from .db import IndiAllSkyDbKeogramTable
 
@@ -862,6 +863,53 @@ class IndiAllSky(object):
         except NoResultFound:
             logger.error('No camera found')
             sys.exit(1)
+
+
+        file_list_darkframes = list()
+        self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darkframes, extension_list=['fit', 'fits'])
+
+
+        #/var/www/html/allsky/images/darks/dark_6s_8bit_gain250_bin1.fit
+        re_darkframe = re.compile(r'\/dark_(?P<exposure_str>\d+)s_(?P<bitdepth_str>\d+)bit_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
+
+
+        for f in file_list_darkframes:
+            logger.info('Raw frame: %s', f)
+
+            m = re.search(re_darkframe, str(f))
+            if not m:
+                logger.error(' Regex did not match file')
+                continue
+
+
+            #logger.info('Exposure string: %s', m.group('exposure_str'))
+            #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
+            #logger.info('Gain string: %s', m.group('gain_str'))
+            #logger.info('Binmode string: %s', m.group('binmode_str'))
+
+            exposure = float(m.group('exposure_str'))
+            bitdepth = int(m.group('bitdepth_str'))
+            gain = int(m.group('gain_str'))
+            binmode = int(m.group('binmode_str'))
+
+            try:
+                darkframe = dbsession.query(IndiAllSkyDbDarkFrameTable).filter(IndiAllSkyDbDarkFrameTable.filename == str(f)).one()
+                logger.info(' Dark frame already imported')
+                continue
+            except NoResultFound:
+                darkframe = IndiAllSkyDbDarkFrameTable(
+                    filename=str(f),
+                    bitdepth=bitdepth,
+                    exposure=exposure,
+                    gain=gain,
+                    binmode=binmode,
+                )
+
+                dbsession.add(darkframe)
+                dbsession.commit()
+
+                logger.info(' Dark frame inserted')
+
 
 
         file_list_videos = list()
