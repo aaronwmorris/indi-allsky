@@ -272,6 +272,7 @@ class IndiAllSky(object):
         self.indiclient.setBLOBMode(1, self.ccdDevice.getDeviceName(), None)
 
         self.indiclient.configureDevice(self.ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
+        self.indiclient.setFrameType(self.ccdDevice, 'FRAME_LIGHT')  # default frame type is light
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
@@ -588,11 +589,16 @@ class IndiAllSky(object):
 
 
     def darks(self):
-
         self.config['IMAGE_SAVE_RAW'] = True
         self.save_images = False
 
         self._initialize()
+
+        self.indiclient.setFrameType(self.ccdDevice, 'FRAME_DARK')
+
+        # update CCD information
+        ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
+        self.config['CCD_INFO'] = ccd_info
 
         self._startImageProcessWorker()
 
@@ -607,10 +613,12 @@ class IndiAllSky(object):
         self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
         self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
+        ccd_bits = self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']
+
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_dark_exposures:
-            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
+            filename_t = 'dark_{0:d}s_{1:d}bit_gain{2:d}_bin{3:d}.{4:s}'.format(int(exp), ccd_bits, self.gain_v.value, self.bin_v.value, '{1}')
             self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()

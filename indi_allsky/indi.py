@@ -78,6 +78,18 @@ class IndiClient(PyIndi.BaseClient):
         self._img_subdirs = new_img_subdirs
 
 
+    def setFrameType(self, ccd_device, frame_type):
+        frame_config = {
+            "SWITCHES" : {
+                "CCD_FRAME_TYPE" : {
+                    "on"  : [frame_type],
+                }
+            }
+        }
+
+        self.configureDevice(ccd_device, frame_config)
+
+
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
 
@@ -189,6 +201,13 @@ class IndiClient(PyIndi.BaseClient):
                 'step'    : i.step,
                 'format'  : i.format,
             }
+
+
+        ctl_CCD_FRAME_TYPE = self.get_control(ccdDevice, 'CCD_FRAME_TYPE', 'switch')
+        ccdinfo['CCD_FRAME_TYPE'] = dict()
+
+        for i in ctl_CCD_FRAME_TYPE:
+            ccdinfo['CCD_FRAME_TYPE'][i.getName()] = i.getState()
 
 
         #logger.info('CCD Info: %s', pformat(ccdinfo))
