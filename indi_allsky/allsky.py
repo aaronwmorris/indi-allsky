@@ -613,7 +613,7 @@ class IndiAllSky(object):
         self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
         self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
-        ccd_bits = self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']
+        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up

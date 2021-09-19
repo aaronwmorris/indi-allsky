@@ -4,6 +4,7 @@ from pathlib import Path
 from .models import Base
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 
@@ -119,6 +120,44 @@ class IndiAllSkyDb(object):
         self._session.commit()
 
         return image
+
+
+    def addDarkFrame(self, filename, bitdepth, exposure, gain, binmode, temp):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
+        logger.info('Adding dark frame %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        # If temp is 0, write null
+        if temp:
+            temp_val = float(temp)
+        else:
+            temp_val = None
+
+
+        dark = IndiAllSkyDbDarkFrameTable(
+            camera_id=self.getCurrentCameraId(),
+            filename=filename_str,
+            bitdepth=bitdepth,
+            exposure=exposure,
+            gain=gain,
+            binmode=binmode,
+            temp=temp_val,
+        )
+
+        self._session.add(dark)
+        self._session.commit()
+
+        return dark
 
 
     def addVideo(self, filename, timeofday):

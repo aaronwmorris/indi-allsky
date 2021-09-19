@@ -108,8 +108,9 @@ class ImageProcessWorker(Process):
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
             image_type = hdulist[0].header['IMAGETYP']
-            logger.info('Detected image type: %s', image_type)
+            image_bitpix = hdulist[0].header['BITPIX']
 
+            logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
 
             scidata_uncalibrated = hdulist[0].data
 
@@ -124,9 +125,9 @@ class ImageProcessWorker(Process):
                 self.detectBitDepth(scidata_uncalibrated)
 
                 if self.config.get('IMAGE_SAVE_RAW'):
-                    self.write_fit(hdulist, exp_date, img_subdirs)
+                    self.write_fit(hdulist, exp_date, img_subdirs, image_type, image_bitpix)
 
-                scidata_calibrated = self.calibrate(scidata_uncalibrated)
+                scidata_calibrated = self.calibrate(scidata_uncalibrated, image_bitpix)
 
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_calibrated)
@@ -278,7 +279,7 @@ class ImageProcessWorker(Process):
         logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
-    def write_fit(self, hdulist, exp_date, img_subdirs):
+    def write_fit(self, hdulist, exp_date, img_subdirs, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
@@ -316,6 +317,17 @@ class ImageProcessWorker(Process):
         Path(f_tmpfile.name).unlink()  # delete temp file
 
         logger.info('Finished writing fit file')
+
+        if image_type == 'Dark Frame':
+            self._db.addDarkFrame(
+                filename,
+                image_bitpix,
+                self.last_exposure,
+                self.gain_v.value,
+                self.bin_v.value,
+                self.sensortemp_v.value,
+            )
+
 
 
     def write_img(self, scidata, exp_date, img_subdirs):
@@ -435,11 +447,11 @@ class ImageProcessWorker(Process):
         return hour_folder
 
 
-    def calibrate(self, scidata_uncalibrated):
+    def calibrate(self, scidata_uncalibrated, image_bitpix):
         # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
         dark_exposure = int(self.last_exposure) + (5 - (int(self.last_exposure) % 5)) + 1  # round up exposure for dark frame
 
-        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_gain{1:d}_bin{2:d}.fit'.format(dark_exposure, self.gain_v.value, self.bin_v.value))
+        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_{1:d}bit_gain{2:d}_bin{3:d}.fit'.format(dark_exposure, image_bitpix, self.gain_v.value, self.bin_v.value))
 
         if not dark_file.exists():
             logger.warning('Dark not found: %s', dark_file)
