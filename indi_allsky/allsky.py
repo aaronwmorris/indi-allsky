@@ -785,6 +785,10 @@ class IndiAllSky(object):
 
     def expireImages(self, days=None):
         ### This needs to be run before generating a timelapse
+        from .db import IndiAllSkyDbImageTable
+
+        dbsession = self._db.session
+
 
         if not days:
             days = self.config['IMAGE_EXPIRE_DAYS']
@@ -801,23 +805,27 @@ class IndiAllSky(object):
                 logger.error('Cannot remove symlink: %s', str(e))
 
         # Old image files need to be pruned
-        file_list = list()
-        self.getFolderFilesByExt(self.image_dir, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
-
         cutoff_age = datetime.now() - timedelta(days=days)
 
-        old_files = filter(lambda p: p.stat().st_mtime < cutoff_age.timestamp(), file_list)
+        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.datetime < cutoff_age)
 
-        # Exclude keograms
-        old_files = filter(lambda p: 'keogram' not in p.name, old_files)
 
-        for f in old_files:
-            logger.info('Removing old image: %s', f)
+        logger.warning('Found %d expired images to delete', old_images.count())
+        for file_entry in old_images:
+            logger.info('Removing old image: %s', file_entry.filename)
+
+            file_p = Path(file_entry.filename)
 
             try:
-                f.unlink()
+                file_p.unlink()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+            dbsession.delete(file_entry)
+            dbsession.commit()
 
 
         # Remove empty folders
@@ -879,7 +887,7 @@ class IndiAllSky(object):
             d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
-                video = dbsession.query(IndiAllSkyDbVideoTable).filter_by(filename=str(f)).one()
+                video = dbsession.query(IndiAllSkyDbVideoTable).filter(IndiAllSkyDbVideoTable.filename == str(f)).one()
                 logger.info(' Timelapse already imported')
                 continue
             except NoResultFound:
@@ -929,7 +937,7 @@ class IndiAllSky(object):
             d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
-                keogram = dbsession.query(IndiAllSkyDbKeogramTable).filter_by(filename=str(f)).one()
+                keogram = dbsession.query(IndiAllSkyDbKeogramTable).filter(IndiAllSkyDbKeogramTable.filename == str(f)).one()
                 logger.info(' Keogram already imported')
                 continue
             except NoResultFound:
@@ -978,7 +986,7 @@ class IndiAllSky(object):
 
 
             try:
-                image = dbsession.query(IndiAllSkyDbImageTable).filter_by(filename=str(f)).one()
+                image = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.filename == str(f)).one()
                 logger.info(' Image already imported')
                 continue
             except NoResultFound:
