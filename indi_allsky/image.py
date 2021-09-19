@@ -24,6 +24,8 @@ import numpy
 from .sqm import IndiAllskySqm
 from .db import IndiAllSkyDb
 
+from sqlalchemy.orm.exc import NoResultFound
+
 
 logger = multiprocessing.get_logger()
 
@@ -448,21 +450,37 @@ class ImageProcessWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated, image_bitpix):
+        from .db import IndiAllSkyDbDarkFrameTable
+
+        dbsession = self._db.session
+
         # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
         dark_exposure = int(self.last_exposure) + (5 - (int(self.last_exposure) % 5)) + 1  # round up exposure for dark frame
 
-        dark_file = self.image_dir.joinpath('darks', 'dark_{0:d}s_{1:d}bit_gain{2:d}_bin{3:d}.fit'.format(dark_exposure, image_bitpix, self.gain_v.value, self.bin_v.value))
-
-        if not dark_file.exists():
-            logger.warning('Dark not found: %s', dark_file)
+        try:
+            dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+                .filter(IndiAllSkyDbDarkFrameTable.exposure == float(dark_exposure))\
+                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+                .one()
+        except NoResultFound:
+            logger.warning('Dark not found: %ds %dbit gain %d bin %d', int(dark_exposure), image_bitpix, self.gain_v.value, self.bin_v.value)
             return scidata_uncalibrated
 
-        with fits.open(str(dark_file)) as dark:
+        p_dark_frame = Path(dark_frame_entry.filename)
+        if not p_dark_frame.exists():
+            logger.warning('Dark not found: %ds %dbit gain %d bin %d', int(dark_exposure), image_bitpix, self.gain_v.value, self.bin_v.value)
+            return scidata_uncalibrated
+
+
+        logger.info('Matched dark: %s', p_dark_frame)
+
+        with fits.open(p_dark_frame) as dark:
             scidata = cv2.subtract(scidata_uncalibrated, dark[0].data)
             del dark[0].data   # make sure memory is freed
 
         return scidata
-
 
 
     def debayer(self, scidata):
