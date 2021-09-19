@@ -107,6 +107,9 @@ class ImageProcessWorker(Process):
             hdulist = fits.open(blobfile)
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
+            image_type = hdulist[0].header['IMAGETYP']
+            logger.info('Detected image type: %s', image_type)
+
 
             scidata_uncalibrated = hdulist[0].data
 
