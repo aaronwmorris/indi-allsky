@@ -26,6 +26,8 @@ from .db import IndiAllSkyDb
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .exceptions import CalibrationNotFound
+
 
 logger = multiprocessing.get_logger()
 
@@ -129,7 +131,12 @@ class ImageProcessWorker(Process):
                 if self.config.get('IMAGE_SAVE_RAW'):
                     self.write_fit(hdulist, exp_date, img_subdirs, image_type, image_bitpix)
 
-                scidata_calibrated = self.calibrate(scidata_uncalibrated, image_bitpix)
+                try:
+                    scidata_calibrated = self.calibrate(scidata_uncalibrated, image_bitpix)
+                    calibrated = True
+                except CalibrationNotFound:
+                    scidata_calibrated = scidata_uncalibrated
+                    calibrated = False
 
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_calibrated)
@@ -157,6 +164,8 @@ class ImageProcessWorker(Process):
 
                 self.detectBitDepth(scidata_uncalibrated)
                 scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated)
+
+                calibrated = False
 
                 scidata_debayered = cv2.cvtColor(scidata_calibrated_8, cv2.COLOR_RGB2BGR)
 
@@ -229,6 +238,7 @@ class ImageProcessWorker(Process):
                     self.moonmode_v.value,
                     night=self.night_v.value,
                     adu_roi=self.config['ADU_ROI'],
+                    calibrated=calibrated,
                     sqm=self.sqm_value,
                 )
 
@@ -466,12 +476,12 @@ class ImageProcessWorker(Process):
                 .one()
         except NoResultFound:
             logger.warning('Dark not found: %ds %dbit gain %d bin %d', int(dark_exposure), image_bitpix, self.gain_v.value, self.bin_v.value)
-            return scidata_uncalibrated
+            raise CalibrationNotFound('Dark not found')
 
         p_dark_frame = Path(dark_frame_entry.filename)
         if not p_dark_frame.exists():
-            logger.warning('Dark not found: %ds %dbit gain %d bin %d', int(dark_exposure), image_bitpix, self.gain_v.value, self.bin_v.value)
-            return scidata_uncalibrated
+            logger.warning('Dark file missing: %s', dark_frame_entry.filename)
+            raise CalibrationNotFound('Dark file missing: {0:s}'.format(dark_frame_entry.filename))
 
 
         logger.info('Matched dark: %s', p_dark_frame)

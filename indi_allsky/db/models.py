@@ -51,6 +51,7 @@ class IndiAllSkyDbImageTable(Base):
     adu_roi = Column(Boolean, server_default=expression.false(), nullable=False)
     sqm = Column(Float, nullable=True)
     uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
+    calibrated = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
     camera = relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
