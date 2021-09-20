@@ -86,6 +86,7 @@ Some very simple web pages are included to view images.  HTML5 canvas and javasc
 | latest.html         | The latest image is loaded every 15 seconds and displayed.  Setting configured in settings_latest.js |
 | loop.html           | A set of the latest images are loaded and displayed in a loop (like a GIF).  Settings configured in settings_loop.js |
 | loop_realtime.html  | A loop is slowly built dynamically with the latest images loaded at regular intervals.  Settings configured in settings_loop.js |
+| sqm.html            | Displays a calculated sky quality value based on the brightness of the sky in the center region of the frame |
 
 
 ## Performance
@@ -108,6 +109,9 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | Astrometry        | pyephem       | https://rhodesmill.org/pyephem/ |
 | File transfer     | pycurl        | http://pycurl.io/ |
 |                   | paramiko      | http://www.paramiko.org/ |
+| Database          | sqlite        | https://www.sqlite.org/ |
+|                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
+|                   | alembic       | https://alembic.sqlalchemy.org/ |
 
 ## Architecture
 
