@@ -480,7 +480,7 @@ class ImageProcessWorker(Process):
 
         p_dark_frame = Path(dark_frame_entry.filename)
         if not p_dark_frame.exists():
-            logger.warning('Dark file missing: %s', dark_frame_entry.filename)
+            logger.error('Dark file missing: %s', dark_frame_entry.filename)
             raise CalibrationNotFound('Dark file missing: {0:s}'.format(dark_frame_entry.filename))
 
 
