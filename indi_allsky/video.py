@@ -148,7 +148,7 @@ class VideoProcessWorker(Process):
 
 
         for i, f in enumerate(timelapse_files):
-            p_symlink = p_seqfolder.joinpath('{0:04d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
+            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             p_symlink.symlink_to(f)
 
 
@@ -159,7 +159,7 @@ class VideoProcessWorker(Process):
             '-y',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
-            '-i', '{0:s}/%04d.{1:s}'.format(str(p_seqfolder), self.config['IMAGE_FILE_TYPE']),
+            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), self.config['IMAGE_FILE_TYPE']),
             '-vcodec', 'libx264',
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
             '-pix_fmt', 'yuv420p',
