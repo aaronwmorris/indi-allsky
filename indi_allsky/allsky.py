@@ -618,7 +618,14 @@ class IndiAllSky(object):
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_dark_exposures:
-            filename_t = 'dark_{0:d}s_{1:d}bit_gain{2:d}_bin{3:d}.{4:s}'.format(int(exp), ccd_bits, self.gain_v.value, self.bin_v.value, '{1}')
+            filename_t = 'dark_ccd{0:d}_{1:d}s_{2:d}bit_gain{3:d}_bin{4:d}.{5:s}'.format(
+                self.config['DB_CCD_ID'],
+                ccd_bits,
+                int(exp),
+                self.gain_v.value,
+                self.bin_v.value,
+                '{1}',
+            )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()
@@ -642,7 +649,14 @@ class IndiAllSky(object):
         ### take darks
         night_moonmode_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_moonmode_dark_exposures:
-            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
+            filename_t = 'dark_ccd{0:d}_{1:d}s_{2:d}bit_gain{3:d}_bin{4:d}.{5:s}'.format(
+                self.config['DB_CCD_ID'],
+                ccd_bits,
+                int(exp),
+                self.gain_v.value,
+                self.bin_v.value,
+                '{1}',
+            )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()
@@ -668,7 +682,14 @@ class IndiAllSky(object):
         # day will rarely exceed 1 second
         day_dark_exposures = range(1, (5 + 2), 5)  # 1 and 6, don't ask
         for exp in day_dark_exposures:
-            filename_t = 'dark_{0:d}s_gain{1:d}_bin{2:d}.{3:s}'.format(int(exp), self.gain_v.value, self.bin_v.value, '{1}')
+            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+                self.config['DB_CCD_ID'],
+                ccd_bits,
+                int(exp),
+                self.gain_v.value,
+                self.bin_v.value,
+                '{1}',
+            )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
             start = time.time()
@@ -859,8 +880,8 @@ class IndiAllSky(object):
         self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darkframes, extension_list=['fit', 'fits'])
 
 
-        #/var/www/html/allsky/images/darks/dark_6s_8bit_gain250_bin1.fit
-        re_darkframe = re.compile(r'\/dark_(?P<exposure_str>\d+)s_(?P<bitdepth_str>\d+)bit_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
+        #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1.fit
+        re_darkframe = re.compile(r'\/dark_ccd\d+_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
 
 
         for f in file_list_darkframes:
