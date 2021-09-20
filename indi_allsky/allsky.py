@@ -618,7 +618,7 @@ class IndiAllSky(object):
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_dark_exposures:
-            filename_t = 'dark_ccd{0:d}_{1:d}s_{2:d}bit_gain{3:d}_bin{4:d}.{5:s}'.format(
+            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 self.config['DB_CCD_ID'],
                 ccd_bits,
                 int(exp),
@@ -649,7 +649,7 @@ class IndiAllSky(object):
         ### take darks
         night_moonmode_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_moonmode_dark_exposures:
-            filename_t = 'dark_ccd{0:d}_{1:d}s_{2:d}bit_gain{3:d}_bin{4:d}.{5:s}'.format(
+            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 self.config['DB_CCD_ID'],
                 ccd_bits,
                 int(exp),
