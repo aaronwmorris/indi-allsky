@@ -13,6 +13,7 @@ INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
+DB_FOLDER="/var/lib/indi-allsky"
 #### end config ####
 
 
@@ -61,6 +62,7 @@ echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
+echo "DB_FOLDER: $DB_FOLDER"
 echo
 echo
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
@@ -318,8 +320,13 @@ done
 
 
 echo "**** Setup DB ****"
-[[ ! -d "/var/lib/indi-allsky" ]] && sudo mkdir -m 755 "/var/lib/indi-allsky"
-sudo chown -R "$USER" /var/lib/indi-allsky
+[[ ! -d "$DB_FOLDER" ]] && sudo mkdir -m 755 "$DB_FOLDER"
+[[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir -m 755 "${DB_FOLDER}/backup"
+sudo chown -R "$USER" "$DB_FOLDER"
+if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
+    echo "**** Backup DB prior to migration ****"
+    sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > "${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
+fi
 alembic revision --autogenerate
 alembic upgrade head
 
