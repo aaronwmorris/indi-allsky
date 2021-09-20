@@ -495,13 +495,14 @@ class ImageProcessWorker(Process):
 
         try:
             dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+                .filter(IndiAllSkyDbDarkFrameTable.camera_id == self.config['DB_CCD_ID'])\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure == float(dark_exposure))\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
                 .one()
         except NoResultFound:
-            logger.warning('Dark not found: %ds %dbit gain %d bin %d', int(dark_exposure), image_bitpix, self.gain_v.value, self.bin_v.value)
+            logger.warning('Dark not found: ccd%d %dbit %ds gain %d bin %d', self.config['DB_CCD_ID'], image_bitpix, int(dark_exposure), self.gain_v.value, self.bin_v.value)
             raise CalibrationNotFound('Dark not found')
 
         p_dark_frame = Path(dark_frame_entry.filename)
