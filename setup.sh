@@ -325,7 +325,9 @@ echo "**** Setup DB ****"
 sudo chown -R "$USER" "$DB_FOLDER"
 if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     echo "**** Backup DB prior to migration ****"
-    sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > "${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
+    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
+    sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
+    gzip $DB_BACKUP
 fi
 alembic revision --autogenerate
 alembic upgrade head
