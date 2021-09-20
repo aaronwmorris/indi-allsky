@@ -30,6 +30,7 @@ class IndiAllSkyDbCameraTable(Base):
     images = relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
+    darkframes = relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
 
 
 class IndiAllSkyDbImageTable(Base):
@@ -70,6 +71,8 @@ class IndiAllSkyDbDarkFrameTable(Base):
     gain = Column(Integer, nullable=False, index=True)
     binmode = Column(Integer, server_default='1', nullable=False, index=True)
     temp = Column(Float, nullable=True, index=True)
+    camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
+    camera = relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)

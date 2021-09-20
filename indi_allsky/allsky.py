@@ -893,6 +893,7 @@ class IndiAllSky(object):
                     exposure=exposure,
                     gain=gain,
                     binmode=binmode,
+                    camera_id=camera_id,
                 )
 
                 dbsession.add(darkframe)
