@@ -801,16 +801,6 @@ class IndiAllSky(object):
         if not days:
             days = self.config['IMAGE_EXPIRE_DAYS']
 
-        # Orphaned symlinks need to be removed
-        symlink_list = list()
-        self.getFolderSymlinks(self.image_dir, symlink_list)
-        for f in symlink_list:
-            logger.info('Removing orphaned symlink: %s', f)
-
-            try:
-                f.unlink()
-            except OSError as e:
-                logger.error('Cannot remove symlink: %s', str(e))
 
         # Old image files need to be pruned
         cutoff_age = datetime.now() - timedelta(days=days)
@@ -1063,14 +1053,6 @@ class IndiAllSky(object):
                 dbsession.commit()
 
                 logger.info(' Image inserted')
-
-
-    def getFolderSymlinks(self, folder, symlink_list):
-        for item in Path(folder).iterdir():
-            if item.is_symlink():
-                symlink_list.append(item)
-            elif item.is_dir():
-                self.getFolderSymlinks(item, symlink_list)  # recursion
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
