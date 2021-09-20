@@ -297,6 +297,9 @@ class ImageProcessWorker(Process):
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
 
+        from .db import IndiAllSkyDbDarkFrameTable
+        dbsession = self._db.session
+
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
@@ -320,18 +323,27 @@ class ImageProcessWorker(Process):
 
         logger.info('fit filename: %s', filename)
 
-        if filename.exists():
-            logger.error('File exists: %s (skipping)', filename)
-            return
-
-        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
-        filename.chmod(0o644)
-
-        Path(f_tmpfile.name).unlink()  # delete temp file
-
-        logger.info('Finished writing fit file')
 
         if image_type == 'Dark Frame':
+            try:
+                dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(filename))\
+                    .one()
+
+                if filename.exists():
+                    logger.warning('Removing old dark frame: %s', filename)
+                    filename.unlink()
+
+                dbsession.delete(dark_frame_entry)
+                dbsession.commit()
+            except NoResultFound:
+                pass
+
+
+            shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+            filename.chmod(0o644)
+
+
             self._db.addDarkFrame(
                 filename,
                 image_bitpix,
@@ -340,6 +352,19 @@ class ImageProcessWorker(Process):
                 self.bin_v.value,
                 self.sensortemp_v.value,
             )
+
+        else:
+            if filename.exists():
+                logger.error('File exists: %s (skipping)', filename)
+                return
+
+            shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+            filename.chmod(0o644)
+
+
+        Path(f_tmpfile.name).unlink()  # delete temp file
+
+        logger.info('Finished writing fit file')
 
 
 
