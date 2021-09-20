@@ -141,7 +141,7 @@ class ImageProcessWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_calibrated)
 
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated)
+                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated, image_bitpix)
                 #scidata_calibrated_8 = scidata_calibrated
 
                 # debayer
@@ -163,7 +163,7 @@ class ImageProcessWorker(Process):
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated)
 
                 self.detectBitDepth(scidata_uncalibrated)
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated)
+                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated, image_bitpix)
 
                 calibrated = False
 
@@ -266,6 +266,7 @@ class ImageProcessWorker(Process):
 
 
     def detectBitDepth(self, data):
+        ### This will need some rework if cameras return signed int data
         max_val = numpy.amax(data)
         logger.info('Image max value: %d', int(max_val))
 
@@ -923,9 +924,11 @@ class ImageProcessWorker(Process):
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _convert_16bit_to_8bit(self, data_bytes_16):
-        # always run this to cast to uint8
-        logger.info('Downsampling image from %d to 8 bits', self.image_bit_depth)
+    def _convert_16bit_to_8bit(self, data_bytes_16, image_bitpix):
+        if image_bitpix == 8:
+            return data_bytes_16
+
+        logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
         div_factor = int((2 ** self.image_bit_depth) / 255)
 
