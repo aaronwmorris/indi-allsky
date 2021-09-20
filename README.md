@@ -88,6 +88,12 @@ Some very simple web pages are included to view images.  HTML5 canvas and javasc
 | loop_realtime.html  | A loop is slowly built dynamically with the latest images loaded at regular intervals.  Settings configured in settings_loop.js |
 | sqm.html            | Displays a calculated sky quality value based on the brightness of the sky in the center region of the frame |
 
+## Database
+
+All media generated are logged in a local SQLite database stored in /var/lib/indi-allsky/indi-allsky.sqlite  This database is used as the source of images for timelapse and keogram generation, as well as, for displaying images via the web interfaces.
+
+The database is managed via the python modules SQLAlchemy and alembic to provide migrations (schema upgrades) automatically in the setup.sh script.
+
 
 ## Performance
 
@@ -109,7 +115,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | Astrometry        | pyephem       | https://rhodesmill.org/pyephem/ |
 | File transfer     | pycurl        | http://pycurl.io/ |
 |                   | paramiko      | http://www.paramiko.org/ |
-| Database          | sqlite        | https://www.sqlite.org/ |
+| Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
 
