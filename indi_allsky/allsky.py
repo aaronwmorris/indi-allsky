@@ -826,7 +826,7 @@ class IndiAllSky(object):
         # Old image files need to be pruned
         cutoff_age = datetime.now() - timedelta(days=days)
 
-        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.datetime < cutoff_age)
+        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.createDate < cutoff_age)
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
@@ -929,7 +929,7 @@ class IndiAllSky(object):
 
 
         #/var/www/html/allsky/images/20210915/allsky-timelapse-20210915-night.mp4
-        re_video = re.compile(r'(?P<daydate_str>\d{8})\/.+timelapse\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+        re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
         for f in file_list_videos:
             logger.info('Timelapse: %s', f)
 
@@ -938,18 +938,18 @@ class IndiAllSky(object):
                 logger.error(' Regex did not match file')
                 continue
 
-            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
             #logger.info('Time of day string: %s', m.group('timeofday_str'))
 
-            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
-            #logger.info('Daydate: %s', str(d_daydate))
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
 
             if m.group('timeofday_str') == 'night':
                 night = True
             else:
                 night = False
 
-            d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
                 video = dbsession.query(IndiAllSkyDbVideoTable).filter(IndiAllSkyDbVideoTable.filename == str(f)).one()
@@ -958,8 +958,8 @@ class IndiAllSky(object):
             except NoResultFound:
                 video = IndiAllSkyDbVideoTable(
                     filename=str(f),
-                    datetime=d_datetime,
-                    daydate=d_daydate,
+                    createDate=d_createDate,
+                    dayDate=d_dayDate,
                     night=night,
                     uploaded=False,
                     camera_id=camera_id,
@@ -979,7 +979,7 @@ class IndiAllSky(object):
         file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list)
 
         #/var/www/html/allsky/images/20210915/allsky-keogram-20210915-night.jpg
-        re_keogram = re.compile(r'(?P<daydate_str>\d{8})\/.+keogram\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
         for f in file_list_keograms:
             logger.info('Keogram: %s', f)
 
@@ -988,18 +988,18 @@ class IndiAllSky(object):
                 logger.error(' Regex did not match file')
                 continue
 
-            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
             #logger.info('Time of day string: %s', m.group('timeofday_str'))
 
-            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
-            #logger.info('Daydate: %s', str(d_daydate))
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
 
             if m.group('timeofday_str') == 'night':
                 night = True
             else:
                 night = False
 
-            d_datetime = datetime.fromtimestamp(f.stat().st_mtime)
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
                 keogram = dbsession.query(IndiAllSkyDbKeogramTable).filter(IndiAllSkyDbKeogramTable.filename == str(f)).one()
@@ -1008,8 +1008,8 @@ class IndiAllSky(object):
             except NoResultFound:
                 keogram = IndiAllSkyDbKeogramTable(
                     filename=str(f),
-                    datetime=d_datetime,
-                    daydate=d_daydate,
+                    createDate=d_createDate,
+                    dayDate=d_dayDate,
                     night=night,
                     uploaded=False,
                     camera_id=camera_id,
@@ -1025,7 +1025,7 @@ class IndiAllSky(object):
         file_list_images = filter(lambda p: 'keogram' not in p.name, file_list)
 
         #/var/www/html/allsky/images/20210825/night/26_02/20210826_020202.jpg
-        re_image = re.compile(r'(?P<daydate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/(?P<datetime_str>[0-9_]+)\.[a-z]+$')
+        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/(?P<createDate_str>[0-9_]+)\.[a-z]+$')
         for f in file_list_images:
             logger.info('Image: %s', f)
 
@@ -1034,20 +1034,20 @@ class IndiAllSky(object):
                 logger.error(' Regex did not match file')
                 continue
 
-            #logger.info('Daydate string: %s', m.group('daydate_str'))
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
             #logger.info('Time of day string: %s', m.group('timeofday_str'))
-            #logger.info('Datetime string: %s', m.group('datetime_str'))
+            #logger.info('createDate string: %s', m.group('createDate_str'))
 
-            d_daydate = datetime.strptime(m.group('daydate_str'), '%Y%m%d')
-            #logger.info('Daydate: %s', str(d_daydate))
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
 
             if m.group('timeofday_str') == 'night':
                 night = True
             else:
                 night = False
 
-            d_datetime = datetime.strptime(m.group('datetime_str'), '%Y%m%d_%H%M%S')
-            #logger.info('Datetime: %s', str(d_datetime))
+            d_createDate = datetime.strptime(m.group('createDate_str'), '%Y%m%d_%H%M%S')
+            #logger.info('createDate: %s', str(d_createDate))
 
 
             try:
@@ -1058,8 +1058,8 @@ class IndiAllSky(object):
                 image = IndiAllSkyDbImageTable(
                     filename=str(f),
                     camera_id=camera_id,
-                    datetime=d_datetime,
-                    daydate=d_daydate,
+                    createDate=d_createDate,
+                    dayDate=d_dayDate,
                     exposure=0.0,
                     gain=-1,
                     binmode=1,

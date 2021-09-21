@@ -87,8 +87,7 @@ class VideoProcessWorker(Process):
 
 
         try:
-            d_datetime = datetime.strptime(timespec, '%Y%m%d')
-            d_daydate = d_datetime.date()
+            d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
             return
@@ -126,9 +125,9 @@ class VideoProcessWorker(Process):
 
         # find all files
         timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
-            .filter(IndiAllSkyDbImageTable.daydate == d_daydate)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
-            .order_by(IndiAllSkyDbImageTable.datetime.asc())
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
         logger.info('Found %d images for timelapse', timelapse_files_entries.count())
@@ -219,8 +218,7 @@ class VideoProcessWorker(Process):
 
 
         try:
-            d_datetime = datetime.strptime(timespec, '%Y%m%d')
-            d_daydate = d_datetime.date()
+            d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
             return
@@ -255,9 +253,9 @@ class VideoProcessWorker(Process):
 
         # find all files
         keogram_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
-            .filter(IndiAllSkyDbImageTable.daydate == d_daydate)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
-            .order_by(IndiAllSkyDbImageTable.datetime.asc())
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
         logger.info('Found %d images for keogram', keogram_files_entries.count())

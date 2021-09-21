@@ -27,6 +27,7 @@ class IndiAllSkyDbCameraTable(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(length=100), unique=True, nullable=False)
+    createDate = Column(DateTime, nullable=False, server_default=func.now())
     images = relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
@@ -38,8 +39,8 @@ class IndiAllSkyDbImageTable(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
-    datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
-    daydate = Column(Date, nullable=False, index=True)
+    createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    dayDate = Column(Date, nullable=False, index=True)
     exposure = Column(Float, nullable=False)
     gain = Column(Integer, nullable=False)
     binmode = Column(Integer, server_default='1', nullable=False)
@@ -65,7 +66,7 @@ class IndiAllSkyDbDarkFrameTable(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
-    datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
     bitdepth = Column(Integer, nullable=False, index=True)
     exposure = Column(Float, nullable=False, index=True)
     gain = Column(Integer, nullable=False, index=True)
@@ -83,8 +84,8 @@ class IndiAllSkyDbVideoTable(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
-    datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
-    daydate = Column(Date, nullable=False, index=True)
+    createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    dayDate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
@@ -99,8 +100,8 @@ class IndiAllSkyDbKeogramTable(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String(length=255), unique=True, nullable=False)
-    datetime = Column(DateTime, nullable=False, index=True, server_default=func.now())
-    daydate = Column(Date, nullable=False, index=True)
+    createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    dayDate = Column(Date, nullable=False, index=True)
     night = Column(Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)

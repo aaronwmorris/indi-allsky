@@ -94,15 +94,15 @@ class IndiAllSkyDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
         else:
-            daydate = datetime.datetime.now()
+            dayDate = datetime.datetime.now().date()
 
 
         image = IndiAllSkyDbImageTable(
             camera_id=self.getCurrentCameraId(),
             filename=filename_str,
-            daydate=daydate,
+            dayDate=dayDate,
             exposure=exposure,
             gain=gain,
             binmode=binmode,
@@ -184,15 +184,15 @@ class IndiAllSkyDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
         else:
-            daydate = datetime.datetime.now()
+            dayDate = datetime.datetime.now().date()
 
 
         video = IndiAllSkyDbVideoTable(
             camera_id=self.getCurrentCameraId(),
             filename=filename_str,
-            daydate=daydate,
+            dayDate=dayDate,
             night=night,
         )
 
@@ -225,15 +225,15 @@ class IndiAllSkyDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            daydate = datetime.datetime.now() - datetime.timedelta(hours=12)
+            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
         else:
-            daydate = datetime.datetime.now()
+            dayDate = datetime.datetime.now().date()
 
 
         keogram = IndiAllSkyDbKeogramTable(
             camera_id=self.getCurrentCameraId(),
             filename=filename_str,
-            daydate=daydate,
+            dayDate=dayDate,
             night=night,
         )
 
