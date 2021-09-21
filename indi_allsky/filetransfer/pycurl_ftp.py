@@ -1,7 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
-from .exceptions import PermissionFailure
+#from .exceptions import PermissionFailure
 
 import pycurl
 import io
@@ -80,6 +80,8 @@ class pycurl_ftp(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_COULDNT_CONNECT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
+                raise ConnectionFailure(msg) from e
             else:
                 raise e from e
 
@@ -89,7 +91,7 @@ class pycurl_ftp(GenericFileTransfer):
         upload_elapsed_s = time.time() - start
         local_file_size = localfile.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
-        
+
 
 # alias
 class ftp(pycurl_ftp):
