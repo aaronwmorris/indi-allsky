@@ -27,6 +27,7 @@ from .db import IndiAllSkyDb
 from .exceptions import TimeOutException
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 
 logger = multiprocessing.get_logger()
 
@@ -904,24 +905,24 @@ class IndiAllSky(object):
             binmode = int(m.group('binmode_str'))
 
 
-            try:
-                dbsession.query(IndiAllSkyDbDarkFrameTable).filter(IndiAllSkyDbDarkFrameTable.filename == str(f)).one()
-                logger.info(' Dark frame already imported')
-                continue
-            except NoResultFound:
-                darkframe_dict = {
-                    'filename'   : str(f),
-                    'bitdepth'   : bitdepth,
-                    'exposure'   : exposure,
-                    'gain'       : gain,
-                    'binmode'    : binmode,
-                    'camera_id'  : camera_id,
-                }
+            darkframe_dict = {
+                'filename'   : str(f),
+                'bitdepth'   : bitdepth,
+                'exposure'   : exposure,
+                'gain'       : gain,
+                'binmode'    : binmode,
+                'camera_id'  : camera_id,
+            }
 
+            try:
                 dbsession.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
                 dbsession.commit()
 
                 logger.info(' Dark frame inserted')
+            except IntegrityError as e:
+                logger.warning('Integrity error: %s', str(e))
+                dbsession.rollback()
+                continue
 
 
 
@@ -952,24 +953,24 @@ class IndiAllSky(object):
 
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
-            try:
-                dbsession.query(IndiAllSkyDbVideoTable).filter(IndiAllSkyDbVideoTable.filename == str(f)).one()
-                logger.info(' Timelapse already imported')
-                continue
-            except NoResultFound:
-                video_dict = {
-                    'filename'   : str(f),
-                    'createDate' : d_createDate,
-                    'dayDate'    : d_dayDate,
-                    'night'      : night,
-                    'uploaded'   : False,
-                    'camera_id'  : camera_id,
-                }
+            video_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
 
+            try:
                 dbsession.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
                 dbsession.commit()
 
                 logger.info(' Timelapse inserted')
+            except IntegrityError as e:
+                logger.warning('Integrity error: %s', str(e))
+                dbsession.rollback()
+                continue
 
 
 
@@ -1002,24 +1003,24 @@ class IndiAllSky(object):
 
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
-            try:
-                dbsession.query(IndiAllSkyDbKeogramTable).filter(IndiAllSkyDbKeogramTable.filename == str(f)).one()
-                logger.info(' Keogram already imported')
-                continue
-            except NoResultFound:
-                keogram_dict = {
-                    'filename'   : str(f),
-                    'createDate' : d_createDate,
-                    'dayDate'    : d_dayDate,
-                    'night'      : night,
-                    'uploaded'   : False,
-                    'camera_id'  : camera_id,
-                }
+            keogram_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
 
+            try:
                 dbsession.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
                 dbsession.commit()
 
                 logger.info(' Keogram inserted')
+            except IntegrityError as e:
+                logger.warning('Integrity error: %s', str(e))
+                dbsession.rollback()
+                continue
 
 
         # Exclude keograms
@@ -1051,31 +1052,31 @@ class IndiAllSky(object):
             #logger.info('createDate: %s', str(d_createDate))
 
 
-            try:
-                dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.filename == str(f)).one()
-                logger.info(' Image already imported')
-                continue
-            except NoResultFound:
-                image_dict = {
-                    'filename'   : str(f),
-                    'camera_id'  : camera_id,
-                    'createDate' : d_createDate,
-                    'dayDate'    : d_dayDate,
-                    'exposure'   : 0.0,
-                    'gain'       : -1,
-                    'binmode'    : 1,
-                    'night'      : night,
-                    'adu'        : 0.0,
-                    'stable'     : True,
-                    'moonmode'   : False,
-                    'adu_roi'    : False,
-                    'uploaded'   : False,
-                }
+            image_dict = {
+                'filename'   : str(f),
+                'camera_id'  : camera_id,
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'exposure'   : 0.0,
+                'gain'       : -1,
+                'binmode'    : 1,
+                'night'      : night,
+                'adu'        : 0.0,
+                'stable'     : True,
+                'moonmode'   : False,
+                'adu_roi'    : False,
+                'uploaded'   : False,
+            }
 
+            try:
                 dbsession.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
                 dbsession.commit()
 
                 logger.info(' Image inserted')
+            except IntegrityError as e:
+                logger.warning('Integrity error: %s', str(e))
+                dbsession.rollback()
+                continue
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
