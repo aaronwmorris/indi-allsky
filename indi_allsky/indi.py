@@ -268,7 +268,7 @@ class IndiClient(PyIndi.BaseClient):
 
     def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):
         if not timeout:
-            timeout = (exposure * 2.0) + 5.0
+            timeout = self._timeout
 
         self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
