@@ -51,7 +51,7 @@ class GetLatestImages {
         $image_list = array();
 
         $conn = new PDO($this->db_uri);
-        $stmt = $conn->prepare("SELECT filename,sqm FROM image WHERE datetime > datetime(datetime('now'), :hours) ORDER BY datetime DESC LIMIT :limit");
+        $stmt = $conn->prepare("SELECT filename,sqm FROM image WHERE createDate > datetime(datetime('now'), :hours) ORDER BY createDate DESC LIMIT :limit");
         $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
         $stmt->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt->execute();
