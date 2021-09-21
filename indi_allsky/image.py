@@ -58,8 +58,6 @@ class ImageProcessWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        self.last_exposure = None
-
         self.filename_t = '{0:s}.{1:s}'
         self.save_images = save_images
 
@@ -94,6 +92,7 @@ class ImageProcessWorker(Process):
                 return
 
             imgdata = i_dict['imgdata']
+            exposure = i_dict['exposure']
             exp_date = i_dict['exp_date']
             filename_t = i_dict.get('filename_t')
             img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
@@ -102,9 +101,6 @@ class ImageProcessWorker(Process):
                 self.filename_t = filename_t
 
             self.image_count += 1
-
-            # Save last exposure value for picture
-            self.last_exposure = self.exposure_v.value
 
             ### OpenCV ###
             blobfile = io.BytesIO(imgdata)
@@ -129,17 +125,17 @@ class ImageProcessWorker(Process):
                 self.detectBitDepth(scidata_uncalibrated)
 
                 if self.config.get('IMAGE_SAVE_RAW'):
-                    self.write_fit(hdulist, exp_date, img_subdirs, image_type, image_bitpix)
+                    self.write_fit(hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix)
 
                 try:
-                    scidata_calibrated = self.calibrate(scidata_uncalibrated, image_bitpix)
+                    scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, image_bitpix)
                     calibrated = True
                 except CalibrationNotFound:
                     scidata_calibrated = scidata_uncalibrated
                     calibrated = False
 
                 # sqm calculation
-                self.sqm_value = self.calculateSqm(scidata_calibrated)
+                self.sqm_value = self.calculateSqm(scidata_calibrated, exposure)
 
                 scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated, image_bitpix)
                 #scidata_calibrated_8 = scidata_calibrated
@@ -160,7 +156,7 @@ class ImageProcessWorker(Process):
                 self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
 
                 # sqm calculation
-                self.sqm_value = self.calculateSqm(scidata_uncalibrated)
+                self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
                 self.detectBitDepth(scidata_uncalibrated)
                 scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated, image_bitpix)
@@ -172,7 +168,7 @@ class ImageProcessWorker(Process):
 
 
             # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_debayered)
+            adu, adu_average = self.calculate_histogram(scidata_debayered, exposure)
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered)
@@ -215,21 +211,21 @@ class ImageProcessWorker(Process):
             # denoise
             #scidata_denoise = self.fastDenoise(scidata_sci_cal_flip)
 
-            self.image_text(scidata_scaled, exp_date)
+            self.image_text(scidata_scaled, exposure, exp_date)
 
 
             processing_elapsed_s = time.time() - processing_start
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
-            self.write_status_json(exp_date, adu, adu_average)  # write json status file
+            self.write_status_json(exposure, exp_date, adu, adu_average)  # write json status file
 
             if self.save_images:
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
 
                 image_entry = self._db.addImage(
                     new_filename,
-                    self.last_exposure,
+                    exposure,
                     self.gain_v.value,
                     self.bin_v.value,
                     self.sensortemp_v.value,
@@ -292,7 +288,7 @@ class ImageProcessWorker(Process):
         logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
-    def write_fit(self, hdulist, exp_date, img_subdirs, image_type, image_bitpix):
+    def write_fit(self, hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
@@ -347,7 +343,7 @@ class ImageProcessWorker(Process):
             self._db.addDarkFrame(
                 filename,
                 image_bitpix,
-                self.last_exposure,
+                exposure,
                 self.gain_v.value,
                 self.bin_v.value,
                 self.sensortemp_v.value,
@@ -436,7 +432,7 @@ class ImageProcessWorker(Process):
         return latest_file, filename
 
 
-    def write_status_json(self, exp_date, adu, adu_average):
+    def write_status_json(self, exposure, exp_date, adu, adu_average):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -444,7 +440,7 @@ class ImageProcessWorker(Process):
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
-            'exposure'            : self.last_exposure,
+            'exposure'            : exposure,
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
@@ -485,13 +481,13 @@ class ImageProcessWorker(Process):
         return hour_folder
 
 
-    def calibrate(self, scidata_uncalibrated, image_bitpix):
+    def calibrate(self, scidata_uncalibrated, exposure, image_bitpix):
         from .db import IndiAllSkyDbDarkFrameTable
 
         dbsession = self._db.session
 
         # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
-        dark_exposure = int(self.last_exposure) + (5 - (int(self.last_exposure) % 5)) + 1  # round up exposure for dark frame
+        dark_exposure = int(exposure) + (5 - (int(exposure) % 5)) + 1  # round up exposure for dark frame
 
         try:
             dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
@@ -532,7 +528,7 @@ class ImageProcessWorker(Process):
         return scidata_wb
 
 
-    def image_text(self, data_bytes, exp_date):
+    def image_text(self, data_bytes, exposure, exp_date):
         # not sure why these are returned as tuples
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
@@ -614,7 +610,7 @@ class ImageProcessWorker(Process):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
                 img=data_bytes,
-                text='Exposure {0:0.6f}'.format(self.last_exposure),
+                text='Exposure {0:0.6f}'.format(exposure),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 fontFace=fontFace[0],
                 color=(0, 0, 0),
@@ -624,7 +620,7 @@ class ImageProcessWorker(Process):
             )  # black outline
         cv2.putText(
             img=data_bytes,
-            text='Exposure {0:0.6f}'.format(self.last_exposure),
+            text='Exposure {0:0.6f}'.format(exposure),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             fontFace=fontFace[0],
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
@@ -712,7 +708,7 @@ class ImageProcessWorker(Process):
             )
 
 
-    def calculate_histogram(self, data_bytes):
+    def calculate_histogram(self, data_bytes, exposure):
         if self.config['ADU_ROI']:
             logger.warn('Calculating ADU from RoI')
             # divide the coordinates by binning value
@@ -756,7 +752,7 @@ class ImageProcessWorker(Process):
         logger.info('Brightness average: %0.2f', adu)
 
 
-        if self.exposure_v.value < 0.001000:
+        if exposure < 0.001000:
             # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
             target_adu_min = self.target_adu - (self.target_adu_dev * 2.0)
             target_adu_max = self.target_adu + (self.target_adu_dev * 2.0)
@@ -774,7 +770,7 @@ class ImageProcessWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(adu, target_adu_min, target_adu_max, exp_scale_factor)
+            self.recalculate_exposure(exposure, adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -805,7 +801,7 @@ class ImageProcessWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, adu, target_adu_min, target_adu_max, exp_scale_factor):
+    def recalculate_exposure(self, exposure, adu, target_adu_min, target_adu_max, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
@@ -816,15 +812,13 @@ class ImageProcessWorker(Process):
             return
 
 
-        current_exposure = self.exposure_v.value
-
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = current_exposure - ((current_exposure - (current_exposure * (self.target_adu / adu))) * exp_scale_factor)
+            new_exposure = exposure - ((exposure - (exposure * (self.target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            new_exposure = current_exposure - ((current_exposure - (current_exposure * (self.target_adu / adu))) * exp_scale_factor)
+            new_exposure = exposure - ((exposure - (exposure * (self.target_adu / adu))) * exp_scale_factor)
         else:
-            new_exposure = current_exposure
+            new_exposure = exposure
 
 
 
@@ -1032,7 +1026,7 @@ class ImageProcessWorker(Process):
         return (float(x) - float(in_min)) * (float(out_max) - float(out_min)) / (float(in_max) - float(in_min)) + float(out_min)
 
 
-    def calculateSqm(self, data):
-        sqm_value = self._sqm.calculate(data, self.last_exposure, self.gain_v.value)
+    def calculateSqm(self, data, exposure):
+        sqm_value = self._sqm.calculate(data, exposure, self.gain_v.value)
         return sqm_value
 

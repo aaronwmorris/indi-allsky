@@ -806,9 +806,6 @@ class IndiAllSky(object):
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        if not timeout:
-            timeout = (exposure * 2.0) + 5.0
-
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
         self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
 

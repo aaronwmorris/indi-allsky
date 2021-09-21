@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+#from pprint import pformat
 
 from .models import Base
 from .models import IndiAllSkyDbCameraTable
@@ -127,6 +128,8 @@ class IndiAllSkyDb(object):
         if not filename:
             return
 
+        #logger.info('####### Exposure: %s', pformat(exposure))
+
         p_filename = Path(filename)
         if not p_filename.exists():
             logger.error('File not found: %s', p_filename)
@@ -137,11 +140,7 @@ class IndiAllSkyDb(object):
 
         filename_str = str(filename)  # might be a pathlib object
 
-        if isinstance(exposure, float):
-            # hack to ensure integer is calculated properly
-            exposure_int = int(exposure + 0.1)
-        else:
-            exposure_int = exposure
+        exposure_int = int(exposure)
 
 
         # If temp is 0, write null

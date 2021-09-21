@@ -48,7 +48,8 @@ class IndiClient(PyIndi.BaseClient):
         self._filename_t = '{0:s}.{1:s}'
         self._img_subdirs = []
 
-        self._timeout = 10.0
+        self._timeout = 60.0
+        self._exposure = 0.0
 
         logger.info('creating an instance of IndiClient')
 
@@ -60,6 +61,14 @@ class IndiClient(PyIndi.BaseClient):
     @timeout.setter
     def timeout(self, new_timeout):
         self._timeout = float(new_timeout)
+
+    @property
+    def exposure(self):
+        return self._exposure
+
+    @exposure.setter
+    def exposure(self, new_exposure):
+        self._exposure = float(new_exposure)
 
     @property
     def filename_t(self):
@@ -118,6 +127,7 @@ class IndiClient(PyIndi.BaseClient):
         ### process data in worker
         self.image_q.put({
             'imgdata'     : imgdata,
+            'exposure'    : self._exposure,
             'exp_date'    : exp_date,
             'filename_t'  : self._filename_t,
             'img_subdirs' : self._img_subdirs,
@@ -176,7 +186,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
         try:
-            ctl_CCD_CFA = self.get_control(ccdDevice, 'CCD_CFA', 'text')
+            logger.info('Detecting bayer pattern')
+            ctl_CCD_CFA = self.get_control(ccdDevice, 'CCD_CFA', 'text', timeout=5.0)
 
             ccdinfo['CCD_CFA'] = dict()
             for i in ctl_CCD_CFA:
@@ -269,6 +280,8 @@ class IndiClient(PyIndi.BaseClient):
     def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):
         if not timeout:
             timeout = self._timeout
+
+        self._exposure = exposure
 
         self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
