@@ -903,21 +903,22 @@ class IndiAllSky(object):
             gain = int(m.group('gain_str'))
             binmode = int(m.group('binmode_str'))
 
+
             try:
-                darkframe = dbsession.query(IndiAllSkyDbDarkFrameTable).filter(IndiAllSkyDbDarkFrameTable.filename == str(f)).one()
+                dbsession.query(IndiAllSkyDbDarkFrameTable).filter(IndiAllSkyDbDarkFrameTable.filename == str(f)).one()
                 logger.info(' Dark frame already imported')
                 continue
             except NoResultFound:
-                darkframe = IndiAllSkyDbDarkFrameTable(
-                    filename=str(f),
-                    bitdepth=bitdepth,
-                    exposure=exposure,
-                    gain=gain,
-                    binmode=binmode,
-                    camera_id=camera_id,
-                )
+                darkframe_dict = {
+                    'filename'   : str(f),
+                    'bitdepth'   : bitdepth,
+                    'exposure'   : exposure,
+                    'gain'       : gain,
+                    'binmode'    : binmode,
+                    'camera_id'  : camera_id,
+                }
 
-                dbsession.add(darkframe)
+                dbsession.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
                 dbsession.commit()
 
                 logger.info(' Dark frame inserted')
@@ -952,20 +953,20 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
-                video = dbsession.query(IndiAllSkyDbVideoTable).filter(IndiAllSkyDbVideoTable.filename == str(f)).one()
+                dbsession.query(IndiAllSkyDbVideoTable).filter(IndiAllSkyDbVideoTable.filename == str(f)).one()
                 logger.info(' Timelapse already imported')
                 continue
             except NoResultFound:
-                video = IndiAllSkyDbVideoTable(
-                    filename=str(f),
-                    createDate=d_createDate,
-                    dayDate=d_dayDate,
-                    night=night,
-                    uploaded=False,
-                    camera_id=camera_id,
-                )
+                video_dict = {
+                    'filename'   : str(f),
+                    'createDate' : d_createDate,
+                    'dayDate'    : d_dayDate,
+                    'night'      : night,
+                    'uploaded'   : False,
+                    'camera_id'  : camera_id,
+                }
 
-                dbsession.add(video)
+                dbsession.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
                 dbsession.commit()
 
                 logger.info(' Timelapse inserted')
@@ -1002,20 +1003,20 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             try:
-                keogram = dbsession.query(IndiAllSkyDbKeogramTable).filter(IndiAllSkyDbKeogramTable.filename == str(f)).one()
+                dbsession.query(IndiAllSkyDbKeogramTable).filter(IndiAllSkyDbKeogramTable.filename == str(f)).one()
                 logger.info(' Keogram already imported')
                 continue
             except NoResultFound:
-                keogram = IndiAllSkyDbKeogramTable(
-                    filename=str(f),
-                    createDate=d_createDate,
-                    dayDate=d_dayDate,
-                    night=night,
-                    uploaded=False,
-                    camera_id=camera_id,
-                )
+                keogram_dict = {
+                    'filename'   : str(f),
+                    'createDate' : d_createDate,
+                    'dayDate'    : d_dayDate,
+                    'night'      : night,
+                    'uploaded'   : False,
+                    'camera_id'  : camera_id,
+                }
 
-                dbsession.add(keogram)
+                dbsession.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
                 dbsession.commit()
 
                 logger.info(' Keogram inserted')
@@ -1051,27 +1052,27 @@ class IndiAllSky(object):
 
 
             try:
-                image = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.filename == str(f)).one()
+                dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.filename == str(f)).one()
                 logger.info(' Image already imported')
                 continue
             except NoResultFound:
-                image = IndiAllSkyDbImageTable(
-                    filename=str(f),
-                    camera_id=camera_id,
-                    createDate=d_createDate,
-                    dayDate=d_dayDate,
-                    exposure=0.0,
-                    gain=-1,
-                    binmode=1,
-                    night=night,
-                    adu=0.0,
-                    stable=True,
-                    moonmode=False,
-                    adu_roi=False,
-                    uploaded=False
-                )
+                image_dict = {
+                    'filename'   : str(f),
+                    'camera_id'  : camera_id,
+                    'createDate' : d_createDate,
+                    'dayDate'    : d_dayDate,
+                    'exposure'   : 0.0,
+                    'gain'       : -1,
+                    'binmode'    : 1,
+                    'night'      : night,
+                    'adu'        : 0.0,
+                    'stable'     : True,
+                    'moonmode'   : False,
+                    'adu_roi'    : False,
+                    'uploaded'   : False,
+                }
 
-                dbsession.add(image)
+                dbsession.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
                 dbsession.commit()
 
                 logger.info(' Image inserted')
