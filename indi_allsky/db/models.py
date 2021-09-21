@@ -68,7 +68,7 @@ class IndiAllSkyDbDarkFrameTable(Base):
     filename = Column(String(length=255), unique=True, nullable=False)
     createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
     bitdepth = Column(Integer, nullable=False, index=True)
-    exposure = Column(Float, nullable=False, index=True)
+    exposure = Column(Integer, nullable=False, index=True)
     gain = Column(Integer, nullable=False, index=True)
     binmode = Column(Integer, server_default='1', nullable=False, index=True)
     temp = Column(Float, nullable=True, index=True)
