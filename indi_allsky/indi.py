@@ -87,18 +87,6 @@ class IndiClient(PyIndi.BaseClient):
         self._img_subdirs = new_img_subdirs
 
 
-    def setFrameType(self, ccd_device, frame_type):
-        frame_config = {
-            "SWITCHES" : {
-                "CCD_FRAME_TYPE" : {
-                    "on"  : [frame_type],
-                }
-            }
-        }
-
-        self.configureDevice(ccd_device, frame_config)
-
-
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
 
@@ -155,6 +143,30 @@ class IndiClient(PyIndi.BaseClient):
 
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+
+
+    def resetCcdFrame(self, ccd_device):
+        reset_config = {
+            "SWITCHES" : {
+                "CCD_FRAME_RESET" : {
+                    "on"  : ['RESET'],
+                }
+            }
+        }
+
+        self.configureDevice(ccd_device, reset_config)
+
+
+    def setFrameType(self, ccd_device, frame_type):
+        frame_config = {
+            "SWITCHES" : {
+                "CCD_FRAME_TYPE" : {
+                    "on"  : [frame_type],
+                }
+            }
+        }
+
+        self.configureDevice(ccd_device, frame_config)
 
 
     def getCcdInfo(self, ccdDevice):
