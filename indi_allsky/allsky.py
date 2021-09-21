@@ -882,7 +882,7 @@ class IndiAllSky(object):
 
 
         #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1.fit
-        re_darkframe = re.compile(r'\/dark_ccd\d+_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
+        re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
 
 
         for f in file_list_darkframes:
@@ -894,11 +894,13 @@ class IndiAllSky(object):
                 continue
 
 
+            #logger.info('CCD ID string: %s', m.group('ccd_id_str'))
             #logger.info('Exposure string: %s', m.group('exposure_str'))
             #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
             #logger.info('Gain string: %s', m.group('gain_str'))
             #logger.info('Binmode string: %s', m.group('binmode_str'))
 
+            ccd_id = int(m.group('ccd_id_str'))
             exposure = float(m.group('exposure_str'))
             bitdepth = int(m.group('bitdepth_str'))
             gain = int(m.group('gain_str'))
@@ -911,7 +913,7 @@ class IndiAllSky(object):
                 'exposure'   : exposure,
                 'gain'       : gain,
                 'binmode'    : binmode,
-                'camera_id'  : camera_id,
+                'camera_id'  : ccd_id,
             }
 
             try:
