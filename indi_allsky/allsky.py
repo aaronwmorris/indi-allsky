@@ -681,7 +681,7 @@ class IndiAllSky(object):
 
         ### take darks
         # day will rarely exceed 1 second
-        day_dark_exposures = range(1, (5 + 2), 5)  # 1 and 6, don't ask
+        day_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in day_dark_exposures:
             filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 self.config['DB_CCD_ID'],
