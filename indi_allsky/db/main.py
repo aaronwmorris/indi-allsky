@@ -137,6 +137,12 @@ class IndiAllSkyDb(object):
 
         filename_str = str(filename)  # might be a pathlib object
 
+        if isinstance(exposure, float):
+            # hack to ensure integer is calculated properly
+            exposure_int = int(exposure + 0.1)
+        else:
+            exposure_int = exposure
+
 
         # If temp is 0, write null
         if temp:
@@ -149,7 +155,7 @@ class IndiAllSkyDb(object):
             camera_id=self.getCurrentCameraId(),
             filename=filename_str,
             bitdepth=bitdepth,
-            exposure=exposure,
+            exposure=exposure_int,
             gain=gain,
             binmode=binmode,
             temp=temp_val,

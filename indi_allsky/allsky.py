@@ -901,7 +901,7 @@ class IndiAllSky(object):
             #logger.info('Binmode string: %s', m.group('binmode_str'))
 
             ccd_id = int(m.group('ccd_id_str'))
-            exposure = float(m.group('exposure_str'))
+            exposure = int(m.group('exposure_str'))
             bitdepth = int(m.group('bitdepth_str'))
             gain = int(m.group('gain_str'))
             binmode = int(m.group('binmode_str'))
