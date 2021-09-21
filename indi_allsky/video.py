@@ -14,6 +14,7 @@ from .db import IndiAllSkyDb
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
+import queue
 #from threading import Thread
 import multiprocessing
 
@@ -42,7 +43,10 @@ class VideoProcessWorker(Process):
 
     def run(self):
         while True:
-            v_dict = self.video_q.get()
+            try:
+                v_dict = self.video_q.get(block=True, timeout=3.0)
+            except queue.Empty:
+                continue
 
             if v_dict.get('stop'):
                 return

@@ -1,5 +1,6 @@
 import time
 from multiprocessing import Process
+import queue
 #from threading import Thread
 
 import multiprocessing
@@ -23,7 +24,11 @@ class FileUploader(Process):
 
     def run(self):
         while True:
-            u_dict = self.upload_q.get()
+            try:
+                u_dict = self.upload_q.get(block=True, timeout=1.0)
+            except queue.Empty:
+                continue
+
 
             if u_dict.get('stop'):
                 return

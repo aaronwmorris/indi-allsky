@@ -14,6 +14,7 @@ import math
 import ephem
 
 from multiprocessing import Process
+import queue
 #from threading import Thread
 import multiprocessing
 
@@ -86,7 +87,10 @@ class ImageProcessWorker(Process):
 
     def run(self):
         while True:
-            i_dict = self.image_q.get()
+            try:
+                i_dict = self.image_q.get(block=True, timeout=0.5)
+            except queue.Empty:
+                continue
 
             if i_dict.get('stop'):
                 return
