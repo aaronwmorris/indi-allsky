@@ -14,15 +14,9 @@ class IndiAllskySqm(object):
     def __init__(self, config):
         self.config = config
 
-        self.max_exposure = self.config['CCD_EXPOSURE_MAX']
-
-        self.image_height = None
-        self.image_width = None
-
 
     def calculate(self, img, exposure, gain):
-        self.image_height, self.image_width = img.shape[:2]
-
+        logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
         roidata = self.getRoi(img)
 
         masked = self.maskStars(roidata)
@@ -31,7 +25,7 @@ class IndiAllskySqm(object):
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.max_exposure - exposure) / 10) + 1) * (sqm_avg + ((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10) + 1))
 
         logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
 
@@ -40,16 +34,18 @@ class IndiAllskySqm(object):
 
 
     def getRoi(self, img):
+        image_height, image_width = img.shape[:2]
+
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
             x1, y1, x2, y2 = sqm_roi
         except ValueError:
             logger.warning('Using central 20% ROI for SQM calculations')
-            x1 = int((self.image_width / 2) - (self.image_width / 5))
-            y1 = int((self.image_height / 2) - (self.image_height / 5))
-            x2 = int((self.image_width / 2) + (self.image_width / 5))
-            y2 = int((self.image_height / 2) + (self.image_height / 5))
+            x1 = int((image_width / 2) - (image_width / 5))
+            y1 = int((image_height / 2) - (image_height / 5))
+            x2 = int((image_width / 2) + (image_width / 5))
+            y2 = int((image_height / 2) + (image_height / 5))
 
 
         roidata = img[
