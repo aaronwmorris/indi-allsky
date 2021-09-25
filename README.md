@@ -3,6 +3,22 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 ![](./content/20210421_043940.jpg)
 
+## Features
+* Multiple camera vendor support
+ * ZWO
+ * Svbony
+ * QHY
+ * More to come
+* Dark frames to remove hot pixels
+* Timelapse video generation
+* Network file transfers - Upload images and videos to remote site
+* Keograms
+* Images display local hour angle of sun and moon
+* Moon mode - reduced gain when the moon is overhead
+* Remote INDI server operation - operate camera remotely over the network
+* Pseudo-Sky Quality Meter - Use your all sky camera to measure sky brightness/quality
+* SQLite database stores image metadata
+
 ## Requirements
 * A computer running a modern Linux distribution, such as a Raspberry Pi
     * Multicore is recommended
@@ -227,6 +243,8 @@ The hardware below has at least been plugged in and tested for correct detection
 | Touptek  | TBD             |       |
 | Generic  | indi_webcam_ccd | No gain controls.  Little control over image quality. |
 
+If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
+
 
 ## File Transfer
 
@@ -245,6 +263,7 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 ## To Do
 
 * Star trails
+* Additional camera vendor support
 
 ## Acknowledgements
 
