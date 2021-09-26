@@ -23,11 +23,13 @@ function errHandle($errNo, $errStr, $errFile, $errLine) {
 
 header("content-type: application/x-javascript");
 
-class GetLatestImages {
+class GetImageData {
     public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
 
     private $_hours = '-2 HOURS';
     private $_limit_default = 40;
+
+    private $_sqm_history = '-30 MINUTES';
 
     public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
 
@@ -44,19 +46,30 @@ class GetLatestImages {
         } else {
             $this->limit = $this->_limit_default;
         }
+
+
+        $this->_conn = $this->_dbConnect();
+
     }
 
 
-    public function main() {
+    private function _dbConnect() {
+        $conn = new PDO($this->db_uri);
+        return($conn);
+    }
+
+
+    public function getLatestImages() {
+        $data = array();
         $image_list = array();
 
-        $conn = new PDO($this->db_uri);
-        $stmt = $conn->prepare("SELECT filename,sqm FROM image WHERE createDate > datetime(datetime('now'), :hours) ORDER BY createDate DESC LIMIT :limit");
-        $stmt->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
-        $stmt->bindParam(':limit', $this->limit, PDO::PARAM_INT);
-        $stmt->execute();
+        # fetch files
+        $stmt_files = $this->_conn->prepare("SELECT filename,sqm FROM image WHERE createDate > datetime(datetime('now'), :hours) ORDER BY createDate DESC LIMIT :limit");
+        $stmt_files->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
+        $stmt_files->bindParam(':limit', $this->limit, PDO::PARAM_INT);
+        $stmt_files->execute();
 
-        while($row = $stmt->fetch()) {
+        while($row = $stmt_files->fetch()) {
             $filename = $row['filename'];
             $sqm = $row['sqm'];
 
@@ -77,10 +90,30 @@ class GetLatestImages {
         return($r_image_list);
     }
 
+
+    public function getSqmData() {
+        $sqm_data = array();
+
+        # fetch sqm stats
+        $stmt_sqm = $this->_conn->prepare("SELECT max(sqm) AS max_sqm,min(sqm) as min_sqm FROM image WHERE createDate > datetime(datetime('now'), :hours)");
+        $stmt_sqm->bindParam(':hours', $this->_sqm_history, PDO::PARAM_STR);
+        $stmt_sqm->execute();
+
+        $row = $stmt_sqm->fetch();
+
+        $sqm_data['max'] = $row['max_sqm'];
+        $sqm_data['min'] = $row['min_sqm'];
+
+
+        return($sqm_data);
+    }
+
 }
 
-$x = new GetLatestImages();
-$image_list = $x->main();
+$x = new GetImageData();
+$image_list = $x->getLatestImages();
+$sqm_data = $x->getSqmData();
 
 print('image_list = ' . json_encode($image_list) . ';');
+print('sqm_data = ' . json_encode($sqm_data) . ';');
 ?>
