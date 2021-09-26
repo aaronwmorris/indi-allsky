@@ -95,7 +95,7 @@ class GetImageData {
         $sqm_data = array();
 
         # fetch sqm stats
-        $stmt_sqm = $this->_conn->prepare("SELECT max(sqm) AS max_sqm,min(sqm) as min_sqm FROM image WHERE createDate > datetime(datetime('now'), :hours)");
+        $stmt_sqm = $this->_conn->prepare("SELECT max(sqm) AS max_sqm,min(sqm) as min_sqm,avg(sqm) as avg_sqm FROM image WHERE createDate > datetime(datetime('now'), :hours)");
         $stmt_sqm->bindParam(':hours', $this->_sqm_history, PDO::PARAM_STR);
         $stmt_sqm->execute();
 
@@ -103,6 +103,7 @@ class GetImageData {
 
         $sqm_data['max'] = $row['max_sqm'];
         $sqm_data['min'] = $row['min_sqm'];
+        $sqm_data['avg'] = $row['avg_sqm'];
 
 
         return($sqm_data);

@@ -15,7 +15,7 @@ html, body {
 <script type="text/javascript" src="js/settings_latest.js"></script>
 <script type="text/javascript">
 var image_list = [];
-var sqm_data = {"min" : 0, "max" : 0};
+var sqm_data = {"min" : 0, "max" : 0, "avg" : 0};
 var fullscreen = false;  //initial state
 
 function init() {
@@ -63,7 +63,7 @@ function showImage(entry) {
         context.lineWidth = 10;
         var maxWidth = 200;
         var x = canvas.width-10-maxWidth;
-        var y = canvas.height-100;
+        var y = canvas.height-150;
 
 
         var sqm_text = "jSQM " + parseFloat(entry["sqm"]).toFixed(1);
@@ -82,11 +82,17 @@ function showImage(entry) {
         context.fillStyle = 'lightgrey';
         context.fillText(sqm_max_text, x, y+40, maxWidth);
 
+        var sqm_avg_text = "Avg " + parseFloat(sqm_data["avg"]).toFixed(1);
+        context.strokeStyle = 'black';
+        context.strokeText(sqm_avg_text, x, y+80, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(sqm_avg_text, x, y+80, maxWidth);
+
         var sqm_min_text = "Min " + parseFloat(sqm_data["min"]).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_min_text, x, y+80, maxWidth);
+        context.strokeText(sqm_min_text, x, y+120, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_min_text, x, y+80, maxWidth);
+        context.fillText(sqm_min_text, x, y+120, maxWidth);
     };
 }
 
