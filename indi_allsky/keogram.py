@@ -22,7 +22,7 @@ class KeogramGenerator(object):
         self.config = config
         self.file_list = file_list
 
-        self._angle = int(self.config['KEOGRAM_ANGLE'])
+        self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
         self._h_scale_factor = 100
 
@@ -39,7 +39,7 @@ class KeogramGenerator(object):
 
     @angle.setter
     def angle(self, new_angle):
-        self._angle = int(new_angle)
+        self._angle = new_angle
 
 
     @property
@@ -185,16 +185,21 @@ class KeogramGenerator(object):
 
 
         adj_1 = math.cos(math.radians(c_angle)) * hyp_1
-        adj_2 = int(adj_1 - (self.rotated_width / 2))
+        adj_2 = adj_1 - (self.rotated_width / 2)
 
-        trim_height = int(math.tan(math.radians(c_angle)) * adj_2)
-        logger.info('Trim height: %d', trim_height)
+        trim_height_pre = math.tan(math.radians(c_angle)) * adj_2
+
+        # trim double the orb radius so they do not show up in the keograms
+        trim_height = trim_height_pre + (self.config['ORB_PROPERTIES']['RADIUS'] * 2)
+
+        trim_height_int = int(trim_height)
+        logger.info('Trim height: %d', trim_height_int)
 
 
         x1 = 0
-        y1 = trim_height
+        y1 = trim_height_int
         x2 = width
-        y2 = height - trim_height
+        y2 = height - trim_height_int
 
         logger.info('Calculated trimmed area: (%d, %d) (%d, %d)', x1, y1, x2, y2)
         trimmed_image = image[
