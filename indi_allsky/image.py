@@ -42,6 +42,13 @@ class ImageProcessWorker(Process):
         'GBRG' : cv2.COLOR_BAYER_GR2BGR,  # untested
     }
 
+    __cfa_gray_map = {
+        'GRBG' : cv2.COLOR_BAYER_GB2GRAY,
+        'RGGB' : cv2.COLOR_BAYER_BG2GRAY,
+        'BGGR' : cv2.COLOR_BAYER_RG2GRAY,
+        'GBRG' : cv2.COLOR_BAYER_GR2GRAY,
+    }
+
 
     def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
         super(ImageProcessWorker, self).__init__()
@@ -73,6 +80,7 @@ class ImageProcessWorker(Process):
         self.image_height = 0
 
         self.image_bit_depth = 0
+        self.color = self.config['CFA_PATTERN']  # flag can be overriden if color data is convert to grayscale
 
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
@@ -150,7 +158,7 @@ class ImageProcessWorker(Process):
             else:
                 # data is probably RGB
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
-                self.config['CFA_PATTERN'] = True  # probably RGB data
+                self.color = True  # probably RGB data
 
                 #INDI returns array in the wrong order for cv2
                 scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
@@ -524,12 +532,15 @@ class ImageProcessWorker(Process):
         if not self.config['CFA_PATTERN']:
             return scidata
 
-        debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
+        if self.config['IMAGE_GRAYSCALE']:
+            debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
+            self.color = False
+        else:
+            debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
+
         scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 
-        scidata_wb = scidata_bgr
-
-        return scidata_wb
+        return scidata_bgr
 
 
     def image_text(self, data_bytes, exposure, exp_date):
@@ -728,7 +739,7 @@ class ImageProcessWorker(Process):
         else:
             scidata = data_bytes
 
-        if not self.config['CFA_PATTERN']:
+        if not self.color:
             m_avg = cv2.mean(scidata)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
@@ -842,7 +853,7 @@ class ImageProcessWorker(Process):
         ### ohhhh, contrasty
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
 
-        if not self.config['CFA_PATTERN']:
+        if not self.color:
             # mono
             return clahe.apply(data_bytes)
 
@@ -860,7 +871,7 @@ class ImageProcessWorker(Process):
 
 
     def equalizeHistogram(self, data_bytes):
-        if not self.config['CFA_PATTERN']:
+        if not self.color:
             return data_bytes
 
         ycrcb_img = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2YCrCb)
@@ -869,7 +880,7 @@ class ImageProcessWorker(Process):
 
 
     def white_balance_bgr(self, data_bytes):
-        if not self.config['CFA_PATTERN']:
+        if not self.color:
             return data_bytes
 
         if not self.config['AUTO_WB']:
@@ -907,7 +918,7 @@ class ImageProcessWorker(Process):
 
 
     def white_balance_bgr_2(self, data_bytes):
-        if not self.config['CFA_PATTERN']:
+        if not self.color:
             return data_bytes
 
         lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
