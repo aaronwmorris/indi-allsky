@@ -5,10 +5,11 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 ## Features
 * Multiple camera vendor support
- * ZWO
- * Svbony
- * QHY
- * More to come
+    * ZWO
+    * Svbony
+    * QHY
+    * Generic web cameras
+    * More to come
 * Dark frames to remove hot pixels
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
