@@ -15,7 +15,27 @@ logger = multiprocessing.get_logger()
 
 class IndiClient(PyIndi.BaseClient):
 
-    __state_to_str = { PyIndi.IPS_IDLE: 'IDLE', PyIndi.IPS_OK: 'OK', PyIndi.IPS_BUSY: 'BUSY', PyIndi.IPS_ALERT: 'ALERT' }
+    __state_to_str = {
+        PyIndi.IPS_IDLE  : 'IDLE',
+        PyIndi.IPS_OK    : 'OK',
+        PyIndi.IPS_BUSY  : 'BUSY',
+        PyIndi.IPS_ALERT : 'ALERT',
+    }
+
+    __switch_types = {
+        PyIndi.ISR_1OFMANY : 'ONE_OF_MANY',
+        PyIndi.ISR_ATMOST1 : 'AT_MOST_ONE',
+        PyIndi.ISR_NOFMANY : 'ANY',
+    }
+
+    __type_to_str = {
+        PyIndi.INDI_NUMBER  : 'number',
+        PyIndi.INDI_SWITCH  : 'switch',
+        PyIndi.INDI_TEXT    : 'text',
+        PyIndi.INDI_LIGHT   : 'light',
+        PyIndi.INDI_BLOB    : 'blob',
+        PyIndi.INDI_UNKNOWN : 'unknown',
+    }
 
     __indi_interfaces = {
         PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
