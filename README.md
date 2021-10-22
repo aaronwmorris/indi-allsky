@@ -183,6 +183,7 @@ All configuration is read from config.json.  You can find configuration examples
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
+| IMAGE_GRAYSCALE     | false       | Convert image to grayscale |
 | IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |

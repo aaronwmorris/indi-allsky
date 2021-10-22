@@ -55,11 +55,12 @@
         "png"   : 9
     },
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
-    "IMAGE_FOLDER"   : "/var/www/html/allsky/images",
-    "IMAGE_FLIP_V"   : false,
-    "IMAGE_FLIP_H"   : false,
-    "IMAGE_SCALE"    : 100,
-    "IMAGE_SAVE_RAW" : false,
+    "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
+    "IMAGE_FLIP_V"     : false,
+    "IMAGE_FLIP_H"     : false,
+    "IMAGE_SCALE"      : 100,
+    "IMAGE_SAVE_RAW"   : false,
+    "IMAGE_GRAYSCALE"  : false,
 
     "IMAGE_EXPIRE_DAYS" : 30,
 

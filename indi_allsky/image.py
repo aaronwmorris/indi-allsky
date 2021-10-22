@@ -532,7 +532,7 @@ class ImageProcessWorker(Process):
         if not self.config['CFA_PATTERN']:
             return scidata
 
-        if self.config['IMAGE_GRAYSCALE']:
+        if self.config.get('IMAGE_GRAYSCALE'):
             debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
             self.color = False
         else:
