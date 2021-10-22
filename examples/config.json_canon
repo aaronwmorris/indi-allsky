@@ -15,30 +15,25 @@
     },
 
     "INDI_CONFIG_DEFAULTS" : {
-        "PROPERTIES" : {},
-        "SWITCHES" : {
-            "CAPTURE_VIDEO_SIZE" : {
-                "on" : ["1280x720"]
-            },
-            "OUTPUT_FORMAT_OPTION" : {
-                "on" : ["16 bit Grayscale"],
-                "off" : [
-                    "8 bit RGB",
-                    "16 bit RGB"
-                ]
+        "PROPERTIES" : {
+            "CCD_INFO" : {
+                "CCD_MAX_X" : 5184,
+                "CCD_MAX_Y" : 3456,
+                "CCD_PIXEL_SIZE" : 4.3,
+                "CCD_BITSPERPIXEL" : 16
             }
-        }
+        },
+        "SWITCHES" : {}
     },
 
-    "CCD_EXPOSURE_MAX" : 15.000000,
-    "comment_CCD_EXPOSURE_MIN" : "webcam driver does not like low exposure times",
-    "CCD_EXPOSURE_MIN" : 0.500000,
-    "CCD_EXPOSURE_DEF" : 0.500000,
+    "CCD_EXPOSURE_MAX" : 15.00000,
+    "CCD_EXPOSURE_MIN" : 0.00025,
+    "CCD_EXPOSURE_DEF" : 0.10000,
     "EXPOSURE_PERIOD"  : 15.00000,
-    "AUTO_WB" : true,
+    "AUTO_WB"          : true,
 
     "comment_TARGET_ADU" : "Average channel brightness target",
-    "TARGET_ADU" : 50,
+    "TARGET_ADU" : 75,
     "comment_TARGET_ADU_DEV" : "Allowed deviation from the mean before recalculating",
     "TARGET_ADU_DEV" : 10,
     "comment_ADU_ROI" : "Region of Interest for ADU calculations",
@@ -55,6 +50,11 @@
     "NIGHT_MOONMODE_ALT_DEG"   : 0,
     "NIGHT_MOONMODE_PHASE"     : 33,
 
+    "KEOGRAM_ANGLE"    : 0,
+    "KEOGRAM_H_SCALE"  : 100,
+    "KEOGRAM_V_SCALE"  : 33,
+    "KEOGRAM_LABEL"    : true,
+
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",
     "comment_IMAGE_FILE_COMPRESSION" : "0-100 for jpg, 0-9 for png",
@@ -65,11 +65,10 @@
     },
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
     "IMAGE_FOLDER"   : "/var/www/html/allsky/images",
-    "_IMAGE_FOLDER"   : "",
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,
     "IMAGE_SCALE"    : 100,
-    "IMAGE_SAVE_RAW" : true,
+    "IMAGE_SAVE_RAW" : false,
 
     "IMAGE_EXPIRE_DAYS" : 30,
 
@@ -90,8 +89,8 @@
 
     "ORB_PROPERTIES" : {
         "RADIUS"      : 9,
-        "SUN_COLOR"   : [255, 255, 255],
-        "MOON_COLOR"  : [128, 128, 128]
+        "SUN_COLOR"   : [0, 255, 255],
+        "MOON_COLOR"  : [255, 255, 255]
     },
 
     "FILETRANSFER" : {
@@ -106,7 +105,9 @@
         "REMOTE_IMAGE_NAME"      : "image-resize.{0}",
         "REMOTE_IMAGE_FOLDER"    : "/tmp",
         "REMOTE_VIDEO_FOLDER"    : "/tmp",
+        "REMOTE_KEOGRAM_FOLDER"  : "/tmp",
         "UPLOAD_IMAGE"           : false,
-        "UPLOAD_VIDEO"           : false
+        "UPLOAD_VIDEO"           : false,
+        "UPLOAD_KEOGRAM"         : false
     }
 }

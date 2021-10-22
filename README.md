@@ -8,6 +8,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * ZWO
     * Svbony
     * QHY
+    * Canon DSLRs
     * Generic web cameras
     * More to come
 * Dark frames to remove hot pixels
@@ -231,19 +232,20 @@ I have extensively tested the ZWO ASI290MM and the Svbony SV305.  3-4 weeks of s
 
 The hardware below has at least been plugged in and tested for correct detection and CFA decoding.
 
-| Vendor   | Model           | Notes |
-| -------- | --------------- | ----- |
-| Svbony   | SV305           | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug.<br/>16bit mode images show horizontal lines. |
-| ZWO      | ASI290MM        |       |
-| ZWO      | ASI178MM        |       |
-| ZWO      | ASI178MC        |       |
-| ZWO      | ASI071MC Pro    |       |
-| ZWO      | ASI183MM Pro    |       |
-| ZWO      | ASI183MC Pro    |       |
-| QHY      | QHY5LII-M       |       |
-| Altair   | TBD             |       |
-| Touptek  | TBD             |       |
-| Generic  | indi_webcam_ccd | No gain controls.  Little control over image quality. |
+| Vendor   | Model               | Notes |
+| -------- | ------------------- | ----- |
+| Svbony   | SV305               | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug.<br/>16bit mode images show horizontal lines. |
+| ZWO      | ASI290MM            |       |
+| ZWO      | ASI178MM            |       |
+| ZWO      | ASI178MC            |       |
+| ZWO      | ASI071MC Pro        |       |
+| ZWO      | ASI183MM Pro        |       |
+| ZWO      | ASI183MC Pro        |       |
+| QHY      | QHY5LII-M           |       |
+| Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
+| Altair   | TBD                 |       |
+| Touptek  | TBD                 |       |
+| Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
 
 If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
 
