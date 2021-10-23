@@ -150,11 +150,11 @@ All configuration is read from config.json.  You can find configuration examples
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |
 | CCD_CONFIG          |             | (dict) Indi configuration parameters for CCD |
-| > NIGHT > GAIN      |             | (int) Gain for night time |
+| > NIGHT > GAIN      |             | (int) Gain/ISO for night time |
 | > NIGHT > BINNING   |             | (int) Bin mode for night time |
-| > MOONMODE > GAIN    |            | (int) Gain for moon mode|
+| > MOONMODE > GAIN    |            | (int) Gain/ISO for moon mode|
 | > MOONMODE > BINNING |            | (int) Bin mode for moon mode|
-| > DAY > GAIN        |             | (int) Gain for day time |
+| > DAY > GAIN        |             | (int) Gain/ISO for day time |
 | > DAY > BINNING     |             | (int) Bin mode for day time |
 | INDI_CONFIG_DEFAULTS |            | (dict) Indi default configuration parameters |
 | > PROPERTIES        |             | (dict) Indi properties |
