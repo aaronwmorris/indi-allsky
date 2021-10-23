@@ -56,6 +56,22 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
+    __canon_iso_switch = {
+        'auto' : 'ISO0',
+        0      : 'ISO0',  # ISO0 is auto
+        100    : 'ISO1',
+        200    : 'ISO2',
+        400    : 'ISO3',
+        800    : 'ISO4',
+        1600   : 'ISO5',
+        3200   : 'ISO6',
+        6400   : 'ISO7',
+        12800  : 'ISO8',   # untested
+        25600  : 'ISO9',   # untested
+        51200  : 'ISO10',  # untested
+    }
+
+
     def __init__(self, config, indiblob_status_send, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
@@ -329,11 +345,11 @@ class IndiClient(PyIndi.BaseClient):
             gain_ctl = self.get_control(ccdDevice, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
             index = gain_index_dict['GAIN']
-        elif indi_exec in ['indi_webcam_ccd']:
-            logger.warning('indi_webcam_ccd does not support gain settings')
-            return {}
         elif indi_exec in ['indi_canon_ccd']:
             logger.warning('indi_canon_ccd does not support gain settings')
+            return {}
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support gain settings')
             return {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
@@ -351,7 +367,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdGain(self, ccdDevice, gain_value):
-        logger.warning('Setting CCD gain to %d', gain_value)
+        logger.warning('Setting CCD gain to %s', str(gain_value))
         indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in ['indi_asi_ccd']:
@@ -370,11 +386,24 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
+        elif indi_exec in ['indi_canon_ccd']:
+            logger.info('Mapping gain to ISO for Canon device')
+
+            try:
+                gain_switch = self.__canon_iso_switch[gain_value]
+            except KeyError:
+                logger.error('Canon ISO not found for %s, using auto', str(gain_value))
+                gain_switch = 'ISO0'
+
+            gain_config = {
+                'SWITCHES' : {
+                    'CCD_ISO' : {
+                        'on' : [gain_switch],
+                    },
+                },
+            }
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
-            gain_config = {}
-        elif indi_exec in ['indi_canon_ccd']:
-            logger.warning('indi_canon_ccd does not support gain settings')
             gain_config = {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
@@ -410,11 +439,11 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_webcam_ccd']:
-            logger.warning('indi_webcam_ccd does not support bin settings')
-            return
         elif indi_exec in ['indi_canon_ccd']:
             logger.warning('indi_canon_ccd does not support bin settings')
+            return
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support bin settings')
             return
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
