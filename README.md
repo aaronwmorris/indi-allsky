@@ -73,6 +73,11 @@ source virtualenv/indi-allsky/bin/activate
 ./allsky.py -c config.json run
 ```
 
+### Logs
+* When indi-allsky is run from the command line, logs are sent to STDERR by default.
+* When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in /var/log/indi-allsky/indi-allsky.log and rotated daily.
+
+
 ### Dark frames
 1. Stop indi-allsky service (above)
 1. Activate the indi-allsky python virtual environment (above)
@@ -246,6 +251,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Altair   | TBD                 |       |
 | Touptek  | TBD                 |       |
 | Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
+| n/a      | indi_simulator_ccd  | CCD Simulator.  Install GSC to generate sample images. |
 
 If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
 
