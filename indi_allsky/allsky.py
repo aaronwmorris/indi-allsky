@@ -199,6 +199,12 @@ class IndiAllSky(object):
             c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
 
 
+        # normalize exposure period
+        if c['EXPOSURE_PERIOD'] < c['CCD_EXPOSURE_MAX']:
+            logger.warning('Exposure period is less than maximum exposure, correcting')
+            c['EXPOSURE_PERIOD'] = c['CCD_EXPOSURE_MAX']
+
+
         # set default exposure
         if not c.get('CCD_EXPOSURE_DEF'):
             c['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
