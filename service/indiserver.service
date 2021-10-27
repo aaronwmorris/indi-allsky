@@ -4,7 +4,7 @@ Description=Indi Server
 [Service]
 User=%INDISERVER_USER%
 PAMName=login
-ExecStart=indiserver indi_simulator_telescope %INDI_CCD_DRIVER%
+ExecStart=%INDI_DRIVER_PATH%/indiserver indi_simulator_telescope %INDI_CCD_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
  

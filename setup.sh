@@ -187,6 +187,45 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         indi-full \
         libindi-dev
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    fi
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        php-sqlite3 \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        zlib1g-dev \
+        libgnutls28-dev \
+        ffmpeg \
+        gifsicle \
+        sqlite3 \
+        indi-full \
+        libindi-dev
+
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
     exit 1
@@ -229,6 +268,7 @@ done
 echo "**** Setting up indiserver service ****"
 TMP1=$(tempfile)
 sed \
+ -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
  -e "s|%INDISERVER_USER%|$USER|g" \
  -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
