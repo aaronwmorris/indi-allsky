@@ -17,8 +17,8 @@
     "INDI_CONFIG_DEFAULTS" : {
         "PROPERTIES" : {
             "EQUATORIAL_PE" : {
-                "RA_PE"  : 3.78,
-                "DEC_PE" : 24.17
+                "RA_PE"  : 16.7175,
+                "DEC_PE" : 36.4233
             },
             "CCD_TEMP_RAMP" : {
                 "RAMP_SLOPE"     : 2,
