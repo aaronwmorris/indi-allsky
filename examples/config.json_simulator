@@ -1,7 +1,7 @@
 {
     "CCD_CONFIG" : {
         "NIGHT" : {
-            "GAIN"    : 250,
+            "GAIN"    : 100,
             "BINNING" : 1
         },
         "MOONMODE" : {
@@ -17,8 +17,15 @@
     "INDI_CONFIG_DEFAULTS" : {
         "PROPERTIES" : {
             "EQUATORIAL_PE" : {
-                "RA_PE"  : 0,
-                "DEC_PE" : 0
+                "RA_PE"  : 3.78,
+                "DEC_PE" : 24.17
+            },
+            "CCD_TEMP_RAMP" : {
+                "RAMP_SLOPE"     : 2,
+                "RAMP_THRESHOLD" : 0.2
+            },
+            "CCD_TEMPERATURE" : {
+                "CCD_TEMPERATURE_VALUE" : -2.1
             }
         },
         "SWITCHES" : {
