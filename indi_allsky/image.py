@@ -857,7 +857,7 @@ class ImageProcessWorker(Process):
             # mono
             return clahe.apply(data_bytes)
 
-        # color
+        # color, apply to luminance
         lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
 
         l, a, b = cv2.split(lab)
@@ -871,6 +871,23 @@ class ImageProcessWorker(Process):
 
 
     def equalizeHistogram(self, data_bytes):
+        if not self.color:
+            # mono
+            return cv2.equalizeHist(data_bytes)
+
+        # color, apply to luminance
+        lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
+
+        l, a, b = cv2.split(lab)
+
+        cl = cv2.equalizeHist(l)
+
+        new_lab = cv2.merge((cl, a, b))
+
+        return cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    def equalizeHistogramColor(self, data_bytes):
         if not self.color:
             return data_bytes
 
