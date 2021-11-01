@@ -190,9 +190,9 @@ class ImageProcessWorker(Process):
 
             # source extraction
             if self.night_v.value and self.config['DETECT_STARS']:
-                blobs = self._sep.detectObjects(scidata_debayered_8)
+                blob_stars = self._sep.detectObjects(scidata_debayered_8)
             else:
-                blobs = list()
+                blob_stars = list()
 
 
             # white balance
@@ -243,7 +243,7 @@ class ImageProcessWorker(Process):
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
-            self.write_status_json(exposure, exp_date, adu, adu_average)  # write json status file
+            self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
             if self.save_images:
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
@@ -457,7 +457,7 @@ class ImageProcessWorker(Process):
         return latest_file, filename
 
 
-    def write_status_json(self, exposure, exp_date, adu, adu_average):
+    def write_status_json(self, exposure, exp_date, adu, adu_average, blob_stars):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -472,6 +472,7 @@ class ImageProcessWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : self.sqm_value,
+            'stars'               : len(blob_stars),
             'time'                : exp_date.strftime('%s'),
         }
 
