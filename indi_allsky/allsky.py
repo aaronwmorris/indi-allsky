@@ -218,6 +218,11 @@ class IndiAllSky(object):
             c['KEOGRAM_H_SCALE'] = 100
 
 
+        # enable star detection by default
+        if not c.get('DETECT_STARS'):
+            c['DETECT_STARS'] = True
+
+
         return c
 
 
