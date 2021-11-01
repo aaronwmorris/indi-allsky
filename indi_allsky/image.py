@@ -24,6 +24,7 @@ import numpy
 
 from .sqm import IndiAllskySqm
 from .db import IndiAllSkyDb
+#from .sep import IndiAllSkySep
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -146,14 +147,15 @@ class ImageProcessWorker(Process):
                     scidata_calibrated = scidata_uncalibrated
                     calibrated = False
 
+
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_calibrated, exposure)
 
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated, image_bitpix)
-                #scidata_calibrated_8 = scidata_calibrated
-
                 # debayer
-                scidata_debayered = self.debayer(scidata_calibrated_8)
+                scidata_debayered = self.debayer(scidata_calibrated)
+
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix)
+                #scidata_debayered_8 = scidata_debayered
 
             else:
                 # data is probably RGB
@@ -171,22 +173,29 @@ class ImageProcessWorker(Process):
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
                 self.detectBitDepth(scidata_uncalibrated)
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated, image_bitpix)
+
+                scidata_bgr = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix)
 
                 calibrated = False
-
-                scidata_debayered = cv2.cvtColor(scidata_calibrated_8, cv2.COLOR_RGB2BGR)
 
 
 
             # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_debayered, exposure)
+            adu, adu_average = self.calculate_histogram(scidata_debayered_8, exposure)
+
+
+            # source extraction
+            #allsky_sep = IndiAllSkySep(self.config)
+            #allsky_sep.detectObjects(scidata_debayered_8)
+
 
             # white balance
-            #scidata_balanced = self.equalizeHistogram(scidata_debayered)
-            scidata_balanced = self.white_balance_bgr(scidata_debayered)
-            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered)
-            #scidata_balanced = scidata_debayered
+            #scidata_balanced = self.equalizeHistogram(scidata_debayered_8)
+            scidata_balanced = self.white_balance_bgr(scidata_debayered_8)
+            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered_8)
+            #scidata_balanced = scidata_debayered_8
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
