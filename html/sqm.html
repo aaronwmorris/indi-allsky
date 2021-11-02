@@ -58,13 +58,46 @@ function showImage(entry) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
 
-        context.font = '32px serif';
         context.textAlign = 'left';
         context.lineWidth = 10;
         var maxWidth = 200;
         var x = canvas.width-10-maxWidth;
         var y = canvas.height-150;
 
+
+        // Stars
+        context.font = '32px serif';
+
+        var sqm_text = "Stars " + parseFloat(entry["stars"]);
+        context.strokeStyle = 'black';
+        context.strokeText(sqm_text, x-175, y, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(sqm_text, x-175, y, maxWidth);
+
+        context.font = '20px serif';
+
+        var stars_max_text = "Max " + parseFloat(stars_data["max"]);
+        context.strokeStyle = 'black';
+        context.strokeText(stars_max_text, x-175, y+40, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(stars_max_text, x-175, y+40, maxWidth);
+
+        var stars_avg_text = "Avg " + parseFloat(stars_data["avg"]);
+        context.strokeStyle = 'black';
+        context.strokeText(stars_avg_text, x-175, y+80, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(stars_avg_text, x-175, y+80, maxWidth);
+
+        var stars_min_text = "Min " + parseFloat(stars_data["min"]);
+        context.strokeStyle = 'black';
+        context.strokeText(stars_min_text, x-175, y+120, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(stars_min_text, x-175, y+120, maxWidth);
+
+
+
+        // SQM
+        context.font = '32px serif';
 
         var sqm_text = "jSQM " + parseFloat(entry["sqm"]).toFixed(1);
         context.strokeStyle = 'black';

@@ -30,6 +30,7 @@ class GetImageData {
     private $_limit_default = 40;
 
     private $_sqm_history = '-30 MINUTES';
+    private $_stars_history = '-30 MINUTES';
 
     public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
 
@@ -64,7 +65,7 @@ class GetImageData {
         $image_list = array();
 
         # fetch files
-        $stmt_files = $this->_conn->prepare("SELECT filename,sqm FROM image WHERE createDate > datetime(datetime('now'), :hours) ORDER BY createDate DESC LIMIT :limit");
+        $stmt_files = $this->_conn->prepare("SELECT filename,sqm,stars FROM image WHERE createDate > datetime(datetime('now'), :hours) ORDER BY createDate DESC LIMIT :limit");
         $stmt_files->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
         $stmt_files->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt_files->execute();
@@ -72,6 +73,7 @@ class GetImageData {
         while($row = $stmt_files->fetch()) {
             $filename = $row['filename'];
             $sqm = $row['sqm'];
+            $stars = $row['stars'];
 
             if (! file_exists($filename)) {
                 continue;
@@ -82,6 +84,7 @@ class GetImageData {
             $image_list[] = array(
                 'file' => $relpath,
                 'sqm' => $sqm,
+                'stars' => $stars,
             );
         }
 
@@ -107,12 +110,34 @@ class GetImageData {
         return($sqm_data);
     }
 
+
+    public function getStarsData() {
+        $stars_data = array();
+
+        # fetch sqm stats
+        $stmt_stars = $this->_conn->prepare("SELECT max(stars) AS max_stars,min(stars) as min_stars,avg(stars) as avg_stars FROM image WHERE createDate > datetime(datetime('now'), :hours)");
+        $stmt_stars->bindParam(':hours', $this->_stars_history, PDO::PARAM_STR);
+        $stmt_stars->execute();
+
+        $row = $stmt_stars->fetch();
+
+        $stars_data['max'] = $row['max_stars'];
+        $stars_data['min'] = $row['min_stars'];
+        $stars_data['avg'] = $row['avg_stars'];
+
+
+        return($stars_data);
+    }
+
+
 }
 
 $x = new GetImageData();
 $image_list = $x->getLatestImages();
 $sqm_data = $x->getSqmData();
+$stars_data = $x->getStarsData();
 
 print('image_list = ' . json_encode($image_list) . ';');
 print('sqm_data = ' . json_encode($sqm_data) . ';');
+print('stars_data = ' . json_encode($stars_data) . ';');
 ?>
