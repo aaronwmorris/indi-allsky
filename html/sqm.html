@@ -82,7 +82,7 @@ function showImage(entry) {
         context.fillStyle = 'lightgrey';
         context.fillText(stars_max_text, x-175, y+40, maxWidth);
 
-        var stars_avg_text = "Avg " + parseFloat(stars_data["avg"]);
+        var stars_avg_text = "Avg " + parseFloat(stars_data["avg"]).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(stars_avg_text, x-175, y+80, maxWidth);
         context.fillStyle = 'lightgrey';
