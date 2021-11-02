@@ -351,6 +351,9 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
             return {}
+        elif indi_exec in ['indi_v4l2_ccd']:
+            logger.warning('indi_v4l2_ccd does not support gain settings')
+            return {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -405,6 +408,9 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
             gain_config = {}
+        elif indi_exec in ['indi_v4l2_ccd']:
+            logger.warning('indi_v4l2_ccd does not support gain settings')
+            gain_config = {}
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -444,6 +450,9 @@ class IndiClient(PyIndi.BaseClient):
             return
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
+            return
+        elif indi_exec in ['indi_v4l2_ccd']:
+            logger.warning('indi_v4l2_ccd does not support bin settings')
             return
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
