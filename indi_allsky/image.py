@@ -261,6 +261,7 @@ class ImageProcessWorker(Process):
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=calibrated,
                     sqm=self.sqm_value,
+                    stars=len(blob_stars),
                 )
 
                 ### upload images

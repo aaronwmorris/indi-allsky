@@ -52,6 +52,7 @@ class IndiAllSkyDbImageTable(Base):
     moonphase = Column(Float, nullable=True)
     adu_roi = Column(Boolean, server_default=expression.false(), nullable=False)
     sqm = Column(Float, nullable=True)
+    stars = Column(Integer, nullable=True)
     uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     calibrated = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
