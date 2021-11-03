@@ -63,7 +63,7 @@ class IndiAllSkySep(object):
 
         sep_start = time.time()
 
-        blobs = blob_dog(sep_data, max_sigma=5, min_sigma=1, threshold=.05, overlap=0.1)
+        blobs = blob_dog(sep_data, max_sigma=5, min_sigma=1, threshold=.1, overlap=0.1)
 
         sep_elapsed_s = time.time() - sep_start
         logger.info('SEP processing in %0.4f s', sep_elapsed_s)
@@ -88,7 +88,7 @@ class IndiAllSkySep(object):
             cv2.circle(
                 img=sep_data,
                 center=(int(x) + self.x_offset, int(y) + self.y_offset),
-                radius=int(r) + 2,
+                radius=int(r) + 4,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
                 thickness=1,
