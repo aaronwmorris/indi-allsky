@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from skimage.feature import blob_dog
 import cv2
+import numpy
 
 import multiprocessing
 
@@ -75,7 +76,7 @@ class IndiAllSkySep(object):
 
 
     def drawCircles(self, original_data, blob_list):
-        if blob_list:
+        if numpy.any(blob_list):
             # Compute radii in the 3rd column
             blob_list[:, 2] = blob_list[:, 2] * math.sqrt(2)
 
@@ -87,8 +88,8 @@ class IndiAllSkySep(object):
             cv2.circle(
                 img=sep_data,
                 center=(int(x) + self.x_offset, int(y) + self.y_offset),
-                radius=int(r),
-                color=(255, 255, 255),
+                radius=int(r) + 2,
+                color=(0, 0, 255),
                 #thickness=cv2.FILLED,
                 thickness=1,
             )
