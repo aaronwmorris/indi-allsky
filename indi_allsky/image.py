@@ -24,6 +24,7 @@ import numpy
 
 from .sqm import IndiAllskySqm
 from .db import IndiAllSkyDb
+from .stars import IndiAllSkyStars
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -84,6 +85,8 @@ class ImageProcessWorker(Process):
 
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
+
+        self._stars = IndiAllSkyStars(self.config)
 
         self._db = IndiAllSkyDb(self.config)
 
@@ -146,14 +149,15 @@ class ImageProcessWorker(Process):
                     scidata_calibrated = scidata_uncalibrated
                     calibrated = False
 
+
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_calibrated, exposure)
 
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_calibrated, image_bitpix)
-                #scidata_calibrated_8 = scidata_calibrated
-
                 # debayer
-                scidata_debayered = self.debayer(scidata_calibrated_8)
+                scidata_debayered = self.debayer(scidata_calibrated)
+
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix)
+                #scidata_debayered_8 = scidata_debayered
 
             else:
                 # data is probably RGB
@@ -171,22 +175,31 @@ class ImageProcessWorker(Process):
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
                 self.detectBitDepth(scidata_uncalibrated)
-                scidata_calibrated_8 = self._convert_16bit_to_8bit(scidata_uncalibrated, image_bitpix)
+
+                scidata_bgr = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix)
 
                 calibrated = False
-
-                scidata_debayered = cv2.cvtColor(scidata_calibrated_8, cv2.COLOR_RGB2BGR)
 
 
 
             # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_debayered, exposure)
+            adu, adu_average = self.calculate_histogram(scidata_debayered_8, exposure)
+
+
+            # source extraction
+            if self.night_v.value and self.config['DETECT_STARS']:
+                blob_stars = self._stars.detectObjects(scidata_debayered_8)
+            else:
+                blob_stars = list()
+
 
             # white balance
-            #scidata_balanced = self.equalizeHistogram(scidata_debayered)
-            scidata_balanced = self.white_balance_bgr(scidata_debayered)
-            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered)
-            #scidata_balanced = scidata_debayered
+            #scidata_balanced = self.equalizeHistogram(scidata_debayered_8)
+            scidata_balanced = self.white_balance_bgr(scidata_debayered_8)
+            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered_8)
+            #scidata_balanced = scidata_debayered_8
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
@@ -230,7 +243,7 @@ class ImageProcessWorker(Process):
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
-            self.write_status_json(exposure, exp_date, adu, adu_average)  # write json status file
+            self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
             if self.save_images:
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
@@ -248,6 +261,7 @@ class ImageProcessWorker(Process):
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=calibrated,
                     sqm=self.sqm_value,
+                    stars=len(blob_stars),
                 )
 
                 ### upload images
@@ -444,7 +458,7 @@ class ImageProcessWorker(Process):
         return latest_file, filename
 
 
-    def write_status_json(self, exposure, exp_date, adu, adu_average):
+    def write_status_json(self, exposure, exp_date, adu, adu_average, blob_stars):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -459,6 +473,7 @@ class ImageProcessWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : self.sqm_value,
+            'stars'               : len(blob_stars),
             'time'                : exp_date.strftime('%s'),
         }
 
@@ -725,19 +740,26 @@ class ImageProcessWorker(Process):
 
     def calculate_histogram(self, data_bytes, exposure):
         if self.config['ADU_ROI']:
-            logger.warn('Calculating ADU from RoI')
+            logger.warning('Calculating ADU from RoI')
             # divide the coordinates by binning value
             x1 = int(self.config['ADU_ROI'][0] / self.bin_v.value)
             y1 = int(self.config['ADU_ROI'][1] / self.bin_v.value)
             x2 = int(self.config['ADU_ROI'][2] / self.bin_v.value)
             y2 = int(self.config['ADU_ROI'][3] / self.bin_v.value)
 
-            scidata = data_bytes[
-                y1:y2,
-                x1:x2,
-            ]
         else:
-            scidata = data_bytes
+            logger.warning('Using central ROI for ADU calculations')
+            x1 = int((self.image_width / 2) - (self.image_width / 3))
+            y1 = int((self.image_height / 2) - (self.image_height / 3))
+            x2 = int((self.image_width / 2) + (self.image_width / 3))
+            y2 = int((self.image_height / 2) + (self.image_height / 3))
+
+
+        scidata = data_bytes[
+            y1:y2,
+            x1:x2,
+        ]
+
 
         if not self.color:
             m_avg = cv2.mean(scidata)[0]

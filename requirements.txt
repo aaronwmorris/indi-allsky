@@ -3,6 +3,7 @@ git+https://github.com/indilib/pyindi-client.git@68803a1#egg=pyindi-client
 astropy
 #astropy[all]
 opencv-python
+scikit-image
 ephem
 paramiko
 pycurl
