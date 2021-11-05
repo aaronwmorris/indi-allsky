@@ -13,9 +13,9 @@ import math
 
 import ephem
 
-from multiprocessing import Process
+#from multiprocessing import Process
+from threading import Thread
 import queue
-#from threading import Thread
 import multiprocessing
 
 from astropy.io import fits
@@ -34,7 +34,7 @@ from .exceptions import CalibrationNotFound
 logger = multiprocessing.get_logger()
 
 
-class ImageProcessWorker(Process):
+class ImageWorker(Thread):
 
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
@@ -52,10 +52,10 @@ class ImageProcessWorker(Process):
 
 
     def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
-        super(ImageProcessWorker, self).__init__()
+        super(ImageWorker, self).__init__()
 
-        #self.threadID = idx
-        self.name = 'ImageProcessWorker{0:03d}'.format(idx)
+        self.threadID = idx
+        self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
         self.image_q = image_q

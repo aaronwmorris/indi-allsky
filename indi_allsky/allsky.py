@@ -18,8 +18,8 @@ from multiprocessing import Value
 import multiprocessing
 
 from .indi import IndiClient
-from .image import ImageProcessWorker
-from .video import VideoProcessWorker
+from .image import ImageWorker
+from .video import VideoWorker
 from .uploader import FileUploader
 from .db import IndiAllSkyDb
 from .exceptions import TimeOutException
@@ -155,22 +155,22 @@ class IndiAllSky(object):
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
 
-        self._stopVideoProcessWorker()
-        self._stopImageProcessWorker()
-        self._stopImageUploadWorker()
+        self._stopVideoWorker()
+        self._stopImageWorker()
+        self._stopFileUploadWorker()
 
         # Restart worker with new config
-        self._startVideoProcessWorker()
-        self._startImageProcessWorker()
-        self._startImageUploadWorker()
+        self._startVideoWorker()
+        self._startImageWorker()
+        self._startFileUploadWorker()
 
 
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
-        self._stopVideoProcessWorker(terminate=True)
-        self._stopImageProcessWorker(terminate=True)
-        self._stopImageUploadWorker(terminate=True)
+        self._stopVideoWorker(terminate=True)
+        self._stopImageWorker(terminate=True)
+        self._stopFileUploadWorker(terminate=True)
 
         sys.exit()
 
@@ -178,9 +178,9 @@ class IndiAllSky(object):
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
-        self._stopVideoProcessWorker()
-        self._stopImageProcessWorker()
-        self._stopImageUploadWorker()
+        self._stopVideoWorker()
+        self._stopImageWorker()
+        self._stopFileUploadWorker()
 
         sys.exit()
 
@@ -305,15 +305,15 @@ class IndiAllSky(object):
         logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
 
 
-    def _startImageProcessWorker(self):
+    def _startImageWorker(self):
         if self.image_worker:
             if self.image_worker.is_alive():
                 return
 
         self.image_worker_idx += 1
 
-        logger.info('Starting ImageProcessorWorker process')
-        self.image_worker = ImageProcessWorker(
+        logger.info('Starting ImageWorker process')
+        self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
             self.image_q,
@@ -329,7 +329,7 @@ class IndiAllSky(object):
         self.image_worker.start()
 
 
-    def _stopImageProcessWorker(self, terminate=False):
+    def _stopImageWorker(self, terminate=False):
         if not self.image_worker:
             return
 
@@ -337,23 +337,23 @@ class IndiAllSky(object):
             return
 
         if terminate:
-            logger.info('Terminating ImageProcessorWorker process')
+            logger.info('Terminating ImageWorker process')
             self.image_worker.terminate()
 
-        logger.info('Stopping ImageProcessorWorker process')
+        logger.info('Stopping ImageWorker process')
         self.image_q.put({ 'stop' : True })
         self.image_worker.join()
 
 
-    def _startVideoProcessWorker(self):
+    def _startVideoWorker(self):
         if self.video_worker:
             if self.video_worker.is_alive():
                 return
 
         self.video_worker_idx += 1
 
-        logger.info('Starting VideoProcessorWorker process')
-        self.video_worker = VideoProcessWorker(
+        logger.info('Starting VideoWorker process')
+        self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
             self.video_q,
@@ -362,7 +362,7 @@ class IndiAllSky(object):
         self.video_worker.start()
 
 
-    def _stopVideoProcessWorker(self, terminate=False):
+    def _stopVideoWorker(self, terminate=False):
         if not self.video_worker:
             return
 
@@ -370,15 +370,15 @@ class IndiAllSky(object):
             return
 
         if terminate:
-            logger.info('Terminating VideoProcessorWorker process')
+            logger.info('Terminating VideoWorker process')
             self.video_worker.terminate()
 
-        logger.info('Stopping VideoProcessorWorker process')
+        logger.info('Stopping VideoWorker process')
         self.video_q.put({ 'stop' : True })
         self.video_worker.join()
 
 
-    def _startImageUploadWorker(self):
+    def _startFileUploadWorker(self):
         if self.upload_worker:
             if self.upload_worker.is_alive():
                 return
@@ -395,7 +395,7 @@ class IndiAllSky(object):
         self.upload_worker.start()
 
 
-    def _stopImageUploadWorker(self, terminate=False):
+    def _stopFileUploadWorker(self, terminate=False):
         if not self.upload_worker:
             return
 
@@ -403,10 +403,10 @@ class IndiAllSky(object):
             return
 
         if terminate:
-            logger.info('Terminating ImageUploadWorker process')
+            logger.info('Terminating FileUploadWorker process')
             self.upload_worker.terminate()
 
-        logger.info('Stopping ImageUploadWorker process')
+        logger.info('Stopping FileUploadWorker process')
         self.upload_q.put({ 'stop' : True })
         self.upload_worker.join()
 
@@ -418,9 +418,9 @@ class IndiAllSky(object):
         ### main loop starts
         while True:
             # restart worker if it has failed
-            self._startImageProcessWorker()
-            self._startVideoProcessWorker()
-            self._startImageUploadWorker()
+            self._startImageWorker()
+            self._startVideoWorker()
+            self._startFileUploadWorker()
 
 
             self.night = self.detectNight()
@@ -606,7 +606,7 @@ class IndiAllSky(object):
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
 
-        self._startImageProcessWorker()
+        self._startImageWorker()
 
         self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
 
@@ -713,9 +713,9 @@ class IndiAllSky(object):
 
 
         ### stop image processing worker
-        self._stopImageProcessWorker()
-        self._stopVideoProcessWorker()
-        self._stopImageUploadWorker()
+        self._stopImageWorker()
+        self._stopVideoWorker()
+        self._stopFileUploadWorker()
 
 
         ### INDI disconnect
@@ -724,11 +724,11 @@ class IndiAllSky(object):
 
     def generateDayTimelapse(self, timespec):
         self._generateDayTimelapse(timespec, keogram=False)
-        self._stopVideoProcessWorker()
+        self._stopVideoWorker()
 
 
     def _generateDayTimelapse(self, timespec, keogram=True):
-        self._startVideoProcessWorker()
+        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -746,11 +746,11 @@ class IndiAllSky(object):
 
     def generateNightTimelapse(self, timespec):
         self._generateNightTimelapse(timespec, keogram=False)
-        self._stopVideoProcessWorker()
+        self._stopVideoWorker()
 
 
     def _generateNightTimelapse(self, timespec, keogram=True):
-        self._startVideoProcessWorker()
+        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -768,11 +768,11 @@ class IndiAllSky(object):
 
     def generateNightKeogram(self, timespec):
         self._generateNightKeogram(timespec)
-        self._stopVideoProcessWorker()
+        self._stopVideoWorker()
 
 
     def _generateNightKeogram(self, timespec):
-        self._startVideoProcessWorker()
+        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -790,11 +790,11 @@ class IndiAllSky(object):
 
     def generateDayKeogram(self, timespec):
         self._generateDayKeogram(timespec)
-        self._stopVideoProcessWorker()
+        self._stopVideoWorker()
 
 
     def _generateDayKeogram(self, timespec):
-        self._startVideoProcessWorker()
+        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
