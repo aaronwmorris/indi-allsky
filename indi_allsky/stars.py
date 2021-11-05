@@ -12,7 +12,7 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class IndiAllSkySep(object):
+class IndiAllSkyStars(object):
 
     def __init__(self, config):
         self.config = config
@@ -66,7 +66,7 @@ class IndiAllSkySep(object):
         blobs = blob_dog(sep_data, max_sigma=5, min_sigma=1, threshold=.1, overlap=0.1)
 
         sep_elapsed_s = time.time() - sep_start
-        logger.info('SEP processing in %0.4f s', sep_elapsed_s)
+        logger.info('Star detection in %0.4f s', sep_elapsed_s)
 
         logger.info('Found %d objects', len(blobs))
 
@@ -104,7 +104,7 @@ class IndiAllSkySep(object):
 
         cv2.imwrite(str(tmpfile_name), sep_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
 
-        sep_file = self.image_dir.joinpath('blobs.jpg')
+        sep_file = self.image_dir.joinpath('stars.jpg')
 
         shutil.copy2(f_tmpfile.name, str(sep_file))  # copy file in place
         sep_file.chmod(0o644)

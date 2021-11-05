@@ -24,7 +24,7 @@ import numpy
 
 from .sqm import IndiAllskySqm
 from .db import IndiAllSkyDb
-from .sep import IndiAllSkySep
+from .stars import IndiAllSkyStars
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -86,7 +86,7 @@ class ImageProcessWorker(Process):
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
 
-        self._sep = IndiAllSkySep(self.config)
+        self._stars = IndiAllSkyStars(self.config)
 
         self._db = IndiAllSkyDb(self.config)
 
@@ -190,7 +190,7 @@ class ImageProcessWorker(Process):
 
             # source extraction
             if self.night_v.value and self.config['DETECT_STARS']:
-                blob_stars = self._sep.detectObjects(scidata_debayered_8)
+                blob_stars = self._stars.detectObjects(scidata_debayered_8)
             else:
                 blob_stars = list()
 
