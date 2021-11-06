@@ -1,6 +1,6 @@
 import time
-#from multiprocessing import Process
-from threading import Thread
+from multiprocessing import Process
+#from threading import Thread
 import queue
 
 import multiprocessing
@@ -10,11 +10,11 @@ from . import filetransfer
 logger = multiprocessing.get_logger()
 
 
-class FileUploader(Thread):
+class FileUploader(Process):
     def __init__(self, idx, config, upload_q):
         super(FileUploader, self).__init__()
 
-        self.threadID = idx
+        #self.threadID = idx
         self.name = 'FileUploader{0:03d}'.format(idx)
 
         self.config = config

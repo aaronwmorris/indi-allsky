@@ -9,8 +9,8 @@ import multiprocessing
 
 logger = multiprocessing.get_logger()
 
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(threadName)s %(funcName)s() #%(lineno)d: %(message)s')
-LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(threadName)s %(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
 
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)

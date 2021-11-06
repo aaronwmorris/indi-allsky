@@ -13,8 +13,8 @@ import math
 
 import ephem
 
-#from multiprocessing import Process
-from threading import Thread
+from multiprocessing import Process
+#from threading import Thread
 import queue
 import multiprocessing
 
@@ -34,7 +34,7 @@ from .exceptions import CalibrationNotFound
 logger = multiprocessing.get_logger()
 
 
-class ImageWorker(Thread):
+class ImageWorker(Process):
 
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
@@ -54,7 +54,7 @@ class ImageWorker(Thread):
     def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
         super(ImageWorker, self).__init__()
 
-        self.threadID = idx
+        #self.threadID = idx
         self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
