@@ -106,6 +106,7 @@ class DetectBlob(object):
         shutil.copy2(f_tmpfile.name, str(sep_file))  # copy file in place
         sep_file.chmod(0o644)
 
+        tmpfile_name.unlink()  # cleanup
 
 
 if __name__ == "__main__":
