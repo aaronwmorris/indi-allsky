@@ -21,16 +21,16 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class VideoProcessWorker(Process):
+class VideoWorker(Process):
 
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
     def __init__(self, idx, config, video_q, upload_q):
-        super(VideoProcessWorker, self).__init__()
+        super(VideoWorker, self).__init__()
 
         #self.threadID = idx
-        self.name = 'VideoProcessWorker{0:03d}'.format(idx)
+        self.name = 'VideoWorker{0:03d}'.format(idx)
 
         self.config = config
         self.video_q = video_q

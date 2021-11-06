@@ -1,7 +1,7 @@
 import time
 from multiprocessing import Process
-import queue
 #from threading import Thread
+import queue
 
 import multiprocessing
 
