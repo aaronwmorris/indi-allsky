@@ -19,7 +19,7 @@ logger = logging
 class DetectBlob(object):
 
     _detectionThreshold = 0.50
-    _distanceThreshold = 15
+    _distanceThreshold = 10
 
     def __init__(self):
         self.x_offset = 0
@@ -68,16 +68,20 @@ class DetectBlob(object):
         result = cv2.matchTemplate(sep_data, self.template, cv2.TM_CCOEFF_NORMED)
         result_filter = numpy.where(result >= self._detectionThreshold)
 
+        blobs = list()
+        for pt in zip(*result_filter[::-1]):
+            for blob in blobs:
+                d = math.sqrt(((pt[0] - blob[0]) ** 2) + ((pt[1] - blob[1]) ** 2))
+                if d < self._distanceThreshold:
+                    break
+
+            else:
+                # if none of the points are under the distance threshold, then add it
+                blobs.append(pt)
+
+
         sep_elapsed_s = time.time() - sep_start
         logger.info('SEP processing in %0.4f s', sep_elapsed_s)
-
-        blobs = list()
-        ptPrev = result_filter[0]  # fix to reference just first tuple
-        for pt in zip(*result_filter[::-1]):
-            d = math.sqrt(((pt[0] - ptPrev[0]) ** 2) + ((pt[1] - ptPrev[1]) ** 2))
-            if d > self._distanceThreshold:
-                blobs.append(pt)
-            ptPrev = pt
 
 
         logger.info('Found %d objects', len(blobs))
