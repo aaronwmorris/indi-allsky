@@ -44,7 +44,7 @@ class DetectBlob(object):
             ksize=(2, 2),
         )
 
-        cv2.imwrite('star.jpg', self.star, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite('star.jpg', self.star, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
 
