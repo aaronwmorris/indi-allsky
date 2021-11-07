@@ -1,5 +1,4 @@
 import time
-import math
 import tempfile
 import shutil
 from pathlib import Path
@@ -112,15 +111,11 @@ class IndiAllSkyStars(object):
 
 
     def drawCircles(self, original_data, blob_list):
-        if numpy.any(blob_list):
-            # Compute radii in the 3rd column
-            blob_list[:, 2] = blob_list[:, 2] * math.sqrt(2)
-
         sep_data = original_data.copy()
 
         logger.info('Draw circles around objects')
         for blob in blob_list:
-            y, x, r = blob
+            x, y = blob
 
             center = (
                 int(x + (self.star_template_w / 2)) + self.x_offset,
@@ -130,7 +125,7 @@ class IndiAllSkyStars(object):
             cv2.circle(
                 img=sep_data,
                 center=center,
-                radius=int(r) + 4,
+                radius=5,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
                 thickness=1,
