@@ -3,7 +3,7 @@
 import argparse
 import time
 import logging
-import math
+#import math
 import tempfile
 import shutil
 from pathlib import Path
@@ -26,12 +26,11 @@ class DetectBlob(object):
         self.y_offset = 0
 
         # start with a black image
-        self.star_template = numpy.zeros([15, 15], dtype=numpy.uint8)
-        self.star_template_w, self.star_template_h = self.star_template.shape[::-1]
+        template = numpy.zeros([15, 15], dtype=numpy.uint8)
 
         # draw a white circle
         cv2.circle(
-            img=self.star_template,
+            img=template,
             center=(7, 7),
             radius=3,
             color=(255, 255, 255),
@@ -39,13 +38,14 @@ class DetectBlob(object):
         )
 
         # blur circle to simulate a star
-        self.star = cv2.blur(
-            src=self.star_template,
+        self.star_template = cv2.blur(
+            src=template,
             ksize=(2, 2),
         )
 
-        #cv2.imwrite('star.jpg', self.star, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        self.star_template_w, self.star_template_h = self.star_template.shape[::-1]
 
+        #cv2.imwrite('star.jpg', self.star_template, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def detectObjects(self, image_file):
@@ -84,7 +84,7 @@ class DetectBlob(object):
 
         sep_start = time.time()
 
-        result = cv2.matchTemplate(sep_data, self.star, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(sep_data, self.star_template, cv2.TM_CCOEFF_NORMED)
         result_filter = numpy.where(result >= self._detectionThreshold)
 
         blobs = list()
@@ -116,9 +116,15 @@ class DetectBlob(object):
         logger.info('Draw circles around objects')
         for blob in blob_list:
             x, y = blob
+
+            center = (
+                int(x + (self.star_template_w / 2)) + self.x_offset,
+                int(y + (self.star_template_h / 2)) + self.y_offset,
+            )
+
             cv2.circle(
                 img=sep_data,
-                center=(int(x + (self.star_template_w / 2)) + self.x_offset, int(y + (self.star_template_h / 2) + self.y_offset)),
+                center=center,
                 radius=5,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
