@@ -90,8 +90,8 @@ class DetectBlob(object):
         blobs = list()
         for pt in zip(*result_filter[::-1]):
             for blob in blobs:
-                d = math.sqrt(((pt[0] - blob[0]) ** 2) + ((pt[1] - blob[1]) ** 2))
-                if d < self._distanceThreshold:
+                #d = math.sqrt(((pt[0] - blob[0]) ** 2) + ((pt[1] - blob[1]) ** 2))
+                if (abs(pt[0] - blob[0]) < self._distanceThreshold) and (abs(pt[1] - blob[1]) < self._distanceThreshold):
                     break
 
             else:
