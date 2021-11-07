@@ -3,7 +3,6 @@ import math
 import tempfile
 import shutil
 from pathlib import Path
-from skimage.feature import blob_dog
 import cv2
 import numpy
 
@@ -13,6 +12,10 @@ logger = multiprocessing.get_logger()
 
 
 class IndiAllSkyStars(object):
+
+    _detectionThreshold = 0.50
+    _distanceThreshold = 10
+
 
     def __init__(self, config):
         self.config = config
@@ -25,6 +28,26 @@ class IndiAllSkyStars(object):
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
+
+        # start with a black image
+        template = numpy.zeros([15, 15], dtype=numpy.uint8)
+
+        # draw a white circle
+        cv2.circle(
+            img=template,
+            center=(7, 7),
+            radius=3,
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
+
+        # blur circle to simulate a star
+        self.star_template = cv2.blur(
+            src=template,
+            ksize=(2, 2),
+        )
+
+        self.star_template_w, self.star_template_h = self.star_template.shape[::-1]
 
 
     def detectObjects(self, original_data):
@@ -63,7 +86,20 @@ class IndiAllSkyStars(object):
 
         sep_start = time.time()
 
-        blobs = blob_dog(sep_data, max_sigma=5, min_sigma=1, threshold=.1, overlap=0.1)
+
+        result = cv2.matchTemplate(sep_data, self.star_template, cv2.TM_CCOEFF_NORMED)
+        result_filter = numpy.where(result >= self._detectionThreshold)
+
+        blobs = list()
+        for pt in zip(*result_filter[::-1]):
+            for blob in blobs:
+                if (abs(pt[0] - blob[0]) < self._distanceThreshold) and (abs(pt[1] - blob[1]) < self._distanceThreshold):
+                    break
+
+            else:
+                # if none of the points are under the distance threshold, then add it
+                blobs.append(pt)
+
 
         sep_elapsed_s = time.time() - sep_start
         logger.info('Star detection in %0.4f s', sep_elapsed_s)
@@ -85,9 +121,15 @@ class IndiAllSkyStars(object):
         logger.info('Draw circles around objects')
         for blob in blob_list:
             y, x, r = blob
+
+            center = (
+                int(x + (self.star_template_w / 2)) + self.x_offset,
+                int(y + (self.star_template_h / 2)) + self.y_offset,
+            )
+
             cv2.circle(
                 img=sep_data,
-                center=(int(x) + self.x_offset, int(y) + self.y_offset),
+                center=center,
                 radius=int(r) + 4,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
