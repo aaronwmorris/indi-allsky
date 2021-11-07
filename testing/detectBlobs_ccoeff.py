@@ -19,14 +19,33 @@ logger = logging
 class DetectBlob(object):
 
     _detectionThreshold = 0.50
-    _distanceThreshold = 10
+    _distanceThreshold = 7
 
     def __init__(self):
         self.x_offset = 0
         self.y_offset = 0
 
-        self.template = cv2.imread('resources/templateSM.jpg', cv2.IMREAD_GRAYSCALE)
-        self.t_w, self.t_h = self.template.shape[::-1]
+        # start with a black image
+        self.star_template = numpy.zeros([15, 15], dtype=numpy.uint8)
+        self.star_template_w, self.star_template_h = self.star_template.shape[::-1]
+
+        # draw a white circle
+        cv2.circle(
+            img=self.star_template,
+            center=(7, 7),
+            radius=3,
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
+
+        # blur circle to simulate a star
+        self.star = cv2.blur(
+            src=self.star_template,
+            ksize=(2, 2),
+        )
+
+        cv2.imwrite('star.jpg', self.star, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
 
 
     def detectObjects(self, image_file):
@@ -65,7 +84,7 @@ class DetectBlob(object):
 
         sep_start = time.time()
 
-        result = cv2.matchTemplate(sep_data, self.template, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(sep_data, self.star, cv2.TM_CCOEFF_NORMED)
         result_filter = numpy.where(result >= self._detectionThreshold)
 
         blobs = list()
@@ -94,15 +113,12 @@ class DetectBlob(object):
     def drawCircles(self, original_data, blob_list):
         sep_data = original_data.copy()
 
-        t2_w = int(self.t_w / 2)
-        t2_h = int(self.t_h / 2)
-
         logger.info('Draw circles around objects')
         for blob in blob_list:
             x, y = blob
             cv2.circle(
                 img=sep_data,
-                center=(int(x + 1) + t2_w + self.x_offset, int(y + 1) + t2_h + self.y_offset),
+                center=(int(x + (self.star_template_w / 2)) + self.x_offset, int(y + (self.star_template_h / 2) + self.y_offset)),
                 radius=5,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
