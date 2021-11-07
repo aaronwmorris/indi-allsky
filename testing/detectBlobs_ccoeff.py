@@ -118,8 +118,8 @@ class DetectBlob(object):
             x, y = blob
 
             center = (
-                int(x + (self.star_template_w / 2)) + self.x_offset,
-                int(y + (self.star_template_h / 2)) + self.y_offset,
+                int(x + (self.star_template_w / 2)) + self.x_offset + 1,
+                int(y + (self.star_template_h / 2)) + self.y_offset + 1,
             )
 
             cv2.circle(
