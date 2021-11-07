@@ -105,13 +105,22 @@ class DetectBlob(object):
 
         logger.info('Found %d objects', len(blobs))
 
-        self.drawCircles(original_data, blobs)
+        self.drawCircles(original_data, blobs, (x1, y1, x2, y2))
 
         return blobs
 
 
-    def drawCircles(self, original_data, blob_list):
+    def drawCircles(self, original_data, blob_list, box):
         sep_data = original_data.copy()
+
+        logger.info('Draw box around ROI')
+        cv2.rectangle(
+            img=sep_data,
+            pt1=(box[0], box[1]),
+            pt2=(box[2], box[3]),
+            color=(128, 128, 128),
+            thickness=1,
+        )
 
         logger.info('Draw circles around objects')
         for blob in blob_list:
