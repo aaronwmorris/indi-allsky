@@ -134,7 +134,7 @@ class IndiAllSkyStars(object):
             cv2.circle(
                 img=sep_data,
                 center=center,
-                radius=5,
+                radius=6,
                 color=(0, 0, 255),
                 #thickness=cv2.FILLED,
                 thickness=1,
