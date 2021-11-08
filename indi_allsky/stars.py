@@ -12,7 +12,7 @@ logger = multiprocessing.get_logger()
 
 class IndiAllSkyStars(object):
 
-    _detectionThreshold = 0.50
+    _detectionThreshold = 0.55
     _distanceThreshold = 10
 
 

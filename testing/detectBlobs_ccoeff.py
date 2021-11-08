@@ -18,7 +18,7 @@ logger = logging
 
 class DetectBlob(object):
 
-    _detectionThreshold = 0.50
+    _detectionThreshold = 0.55
     _distanceThreshold = 10
 
     def __init__(self):
