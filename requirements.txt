@@ -2,7 +2,8 @@
 git+https://github.com/indilib/pyindi-client.git@68803a1#egg=pyindi-client
 astropy
 #astropy[all]
-opencv-python
+#opencv-python
+opencv-python-headless
 #scikit-image
 ephem
 paramiko
