@@ -116,6 +116,58 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         indi-full \
         libindi-dev
 
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+
+    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+
+            ### Need to find an apt repo for debian
+
+            #sudo apt-get update
+
+            ### ensure apt-key is installed
+            #sudo apt-get -y install \
+            #    apt-utils \
+            #    gpg
+
+            ### This repo will not work
+            #sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 487CEC2B3F33A288
+            #echo "deb http://ppa.launchpad.net/mutlaqja/ppa/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mutlaqja-ubuntu-ppa-focal.list
+            #echo "#deb-src http://ppa.launchpad.net/mutlaqja/ppa/ubuntu xenial main" | sudo tee -a /etc/apt/sources.list.d/mutlaqja-ubuntu-ppa-focal.list
+        fi
+    fi
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        php-sqlite3 \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        ffmpeg \
+        gifsicle \
+        sqlite3 \
+        indi-full \
+        libindi-dev
+
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
