@@ -76,7 +76,55 @@ sleep 10
 sudo true
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+    if [[ "$CPU_ARCH" == "armv7l" ]]; then
+        echo
+        echo
+        echo "Raspbian 11 is not yet support in the Astroberry repo"
+        echo
+        echo
+        exit 1
+
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+        fi
+    fi
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        virtualenv \
+        git \
+        apache2 \
+        libapache2-mod-php \
+        php-sqlite3 \
+        libgnutls28-dev \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        ffmpeg \
+        gifsicle \
+        sqlite3 \
+        indi-full \
+        libindi-dev
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
 
