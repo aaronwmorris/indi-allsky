@@ -126,20 +126,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            ### Install INDI from Debian testing distro (bookworm)
+            echo 'APT::Default-Release "bullseye";' | sudo tee /etc/apt/apt.conf.d/99defaultrelease
 
-            ### Need to find an apt repo for debian
-
-            #sudo apt-get update
-
-            ### ensure apt-key is installed
-            #sudo apt-get -y install \
-            #    apt-utils \
-            #    gpg
-
-            ### This repo will not work
-            #sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 487CEC2B3F33A288
-            #echo "deb http://ppa.launchpad.net/mutlaqja/ppa/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/mutlaqja-ubuntu-ppa-focal.list
-            #echo "#deb-src http://ppa.launchpad.net/mutlaqja/ppa/ubuntu xenial main" | sudo tee -a /etc/apt/sources.list.d/mutlaqja-ubuntu-ppa-focal.list
+            echo "deb     http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee /etc/apt/sources.list.d/bookworm.list
+            echo "#deb-src http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
+            echo "deb     http://security.debian.org/         bookworm-security main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
         fi
     fi
 
@@ -154,6 +146,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
+        libgnutls28-dev \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -164,8 +157,11 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libnova-dev \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
+        sqlite3
+
+     ### Install INDI from Debian testing distro (bookworm)
+     sudo apt-get -y install -t bookworm \
+        indi-bin \
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
