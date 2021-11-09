@@ -349,6 +349,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
+pip3 uninstall -y opencv-python  # replaced package with opencv-python-headless
 pip3 install -r requirements.txt
 
 
