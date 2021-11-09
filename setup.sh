@@ -83,7 +83,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
-    if [[ "$CPU_ARCH" == "armv7l" ]]; then
+    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         echo
         echo
         echo "Raspbian 11 is not yet support in the Astroberry repo"
@@ -131,7 +131,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
-    if [[ "$CPU_ARCH" == "armv7l" ]]; then
+    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         # Astroberry repository
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
