@@ -459,9 +459,12 @@ done
 
 echo "**** Setup DB ****"
 [[ ! -d "$DB_FOLDER" ]] && sudo mkdir -m 755 "$DB_FOLDER"
+[[ -d "$DB_FOLDER" ]] && sudo chmod ugo+rx "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir -m 755 "${DB_FOLDER}/backup"
 sudo chown -R "$USER" "$DB_FOLDER"
 if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
+    sudo chmod ugo+r "$DB_FOLDER/indi-allsky.sqlite"
+
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
     sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
