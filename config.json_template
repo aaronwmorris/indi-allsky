@@ -30,7 +30,7 @@
     "comment_ADU_ROI" : "Region of Interest for ADU calculations",
     "ADU_ROI" : [],
     "comment_DETECT_STARS" : "Enable Star detection",
-    "DETECT_STARS" : True,
+    "DETECT_STARS" : true,
 
     "LOCATION_LATITUDE"  : 33,
     "LOCATION_LONGITUDE" : -84,
