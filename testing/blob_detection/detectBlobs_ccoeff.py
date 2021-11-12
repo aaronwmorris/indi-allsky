@@ -87,6 +87,9 @@ class DetectBlob(object):
         result = cv2.matchTemplate(sep_data, self.star_template, cv2.TM_CCOEFF_NORMED)
         result_filter = numpy.where(result >= self._detectionThreshold)
 
+        sep_elapsed_s = time.time() - sep_start
+        sep_dedup_start = time.time()
+
         blobs = list()
         for pt in zip(*result_filter[::-1]):
             for blob in blobs:
@@ -99,8 +102,12 @@ class DetectBlob(object):
                 blobs.append(pt)
 
 
-        sep_elapsed_s = time.time() - sep_start
+        sep_dedup_elapsed_s = time.time() - sep_dedup_start
+        total_elapsed_s = time.time() - sep_start
+
         logger.info('SEP processing in %0.4f s', sep_elapsed_s)
+        logger.info('Deduplication in %0.4f s', sep_dedup_elapsed_s)
+        logger.info('Total in %0.4f s', total_elapsed_s)
 
 
         logger.info('Found %d objects', len(blobs))
