@@ -157,7 +157,7 @@ class DetectBlob(object):
 
         cv2.imwrite(str(tmpfile_name), sep_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
-        sep_file = Path('blobs_ccoeff.jpg')
+        sep_file = Path('blobs_matchTemplate.jpg')
 
         shutil.copy2(f_tmpfile.name, str(sep_file))  # copy file in place
         sep_file.chmod(0o644)
