@@ -487,7 +487,7 @@ class IndiClient(PyIndi.BaseClient):
             if not ctl and 0 < timeout < time.time() - started:
                 raise TimeOutException('Timeout finding control {0}'.format(name))
 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
         return ctl
 
@@ -580,7 +580,7 @@ class IndiClient(PyIndi.BaseClient):
             if 0 < timeout < elapsed:
                 raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.getName(), elapsed, timeout, self.__state_to_str[ctl.getState()] ))
 
-            time.sleep(0.05)
+            time.sleep(0.15)
 
 
     def __map_indexes(self, ctl, values):
