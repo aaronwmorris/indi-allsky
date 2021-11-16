@@ -429,7 +429,7 @@ class IndiExposureTest(object):
             start = time.time()
 
             try:
-                self.shoot(CCD_EXPOSURE)
+                self.shoot(CCD_EXPOSURE, sync=True)
             except TimeOutException as e:
                 logger.error('Timeout: %s', str(e))
                 time.sleep(5.0)
