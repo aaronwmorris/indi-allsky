@@ -3,7 +3,7 @@
 import sys
 import logging
 import time
-from datetime import datetime
+import ctypes
 import PyIndi
 
 
@@ -92,12 +92,10 @@ class IndiClient(PyIndi.BaseClient):
         start = time.time()
 
         ### get image data
-        imgdata = bp.getblobdata()
+        bp.getblobdata()
 
         elapsed_s = time.time() - start
         logger.info('Blob downloaded in %0.4f s', elapsed_s)
-
-        exp_date = datetime.now()
 
 
     def newSwitch(self, svp):
@@ -335,7 +333,7 @@ class IndiClient(PyIndi.BaseClient):
             if not ctl and 0 < timeout < time.time() - started:
                 raise TimeOutException('Timeout finding control {0}'.format(name))
 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
         return ctl
 
