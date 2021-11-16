@@ -7,7 +7,7 @@ from datetime import datetime
 import PyIndi
 
 
-CCD_EXPOSURE = 5.0
+CCD_EXPOSURE = 15.0
 
 
 ### sv305
