@@ -364,7 +364,7 @@ done
 #echo $CCD_DRIVER
 
 echo "**** Setting up indiserver service ****"
-TMP1=$(tempfile)
+TMP1=$(mktemp)
 sed \
  -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
  -e "s|%INDISERVER_USER%|$USER|g" \
@@ -378,7 +378,7 @@ sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
 
 
 echo "**** Setting up indi-allsky service ****"
-TMP2=$(tempfile)
+TMP2=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
@@ -413,7 +413,7 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "**** Start apache2 service ****"
-TMP3=$(tempfile)
+TMP3=$(mktemp)
 
 cat ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
