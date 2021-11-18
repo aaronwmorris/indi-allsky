@@ -181,6 +181,11 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
+    def updateCcdBlobMode(self, ccd_device, blobmode=PyIndi.B_ALSO, prop=None):
+        logger.info('Set BLOB mode')
+        self.setBLOBMode(blobmode, ccd_device.getDeviceName(), prop)
+
+
     def resetCcdFrame(self, ccd_device):
         reset_config = {
             "SWITCHES" : {
