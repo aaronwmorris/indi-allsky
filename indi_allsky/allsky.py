@@ -443,13 +443,13 @@ class IndiAllSky(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, keogram=True)
+                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, keogram=True)
+                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
             # reconfigure if needed
@@ -727,7 +727,7 @@ class IndiAllSky(object):
         self._stopVideoWorker()
 
 
-    def _generateDayTimelapse(self, timespec, keogram=True):
+    def _generateDayTimelapse(self, timespec, camera_id, keogram=True):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -739,6 +739,7 @@ class IndiAllSky(object):
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
+            'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
         })
@@ -749,7 +750,7 @@ class IndiAllSky(object):
         self._stopVideoWorker()
 
 
-    def _generateNightTimelapse(self, timespec, keogram=True):
+    def _generateNightTimelapse(self, timespec, camera_id, keogram=True):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -761,6 +762,7 @@ class IndiAllSky(object):
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
+            'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
         })

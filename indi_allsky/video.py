@@ -62,6 +62,7 @@ class VideoWorker(Process):
             timespec = v_dict['timespec']
             img_folder = v_dict['img_folder']
             timeofday = v_dict['timeofday']
+            camera_id = v_dict['camera_id']
             video = v_dict.get('video', True)
             keogram = v_dict.get('keogram', True)
 
@@ -72,18 +73,19 @@ class VideoWorker(Process):
 
 
             if video:
-                self.generateVideo(timespec, img_folder, timeofday)
+                self.generateVideo(timespec, img_folder, timeofday, camera_id)
 
 
             if keogram:
-                self.generateKeogram(timespec, img_folder, timeofday)
+                self.generateKeogram(timespec, img_folder, timeofday, camera_id)
 
 
             self._releaseLock()
 
 
 
-    def generateVideo(self, timespec, img_folder, timeofday):
+    def generateVideo(self, timespec, img_folder, timeofday, camera_id):
+        from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbVideoTable
 
@@ -129,6 +131,8 @@ class VideoWorker(Process):
 
         # find all files
         timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
@@ -214,7 +218,8 @@ class VideoWorker(Process):
         })
 
 
-    def generateKeogram(self, timespec, img_folder, timeofday):
+    def generateKeogram(self, timespec, img_folder, timeofday, camera_id):
+        from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbKeogramTable
 
@@ -257,6 +262,8 @@ class VideoWorker(Process):
 
         # find all files
         keogram_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
