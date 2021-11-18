@@ -181,6 +181,11 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
+    def updateCcdBlobMode(self, ccd_device, blobmode=PyIndi.B_ALSO, prop=None):
+        logger.info('Set BLOB mode')
+        self.setBLOBMode(blobmode, ccd_device.getDeviceName(), prop)
+
+
     def resetCcdFrame(self, ccd_device):
         reset_config = {
             "SWITCHES" : {
@@ -337,7 +342,7 @@ class IndiClient(PyIndi.BaseClient):
     def getCcdGain(self, ccdDevice):
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd']:
+        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd', 'indi_altair_ccd']:
             gain_ctl = self.get_control(ccdDevice, 'CCD_CONTROLS', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
             index = gain_index_dict['Gain']
@@ -373,7 +378,7 @@ class IndiClient(PyIndi.BaseClient):
         logger.warning('Setting CCD gain to %s', str(gain_value))
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd']:
+        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd', 'indi_altair_ccd']:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
@@ -436,7 +441,7 @@ class IndiClient(PyIndi.BaseClient):
 
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_simulator_ccd']:
+        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_altair_ccd', 'indi_simulator_ccd']:
             binning_config = {
                 "PROPERTIES" : {
                     "CCD_BINNING" : {

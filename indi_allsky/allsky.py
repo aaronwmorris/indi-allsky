@@ -274,8 +274,7 @@ class IndiAllSky(object):
         self.config['DB_CCD_ID'] = db_camera.id
 
         # set BLOB mode to BLOB_ALSO
-        logger.info('Set BLOB mode')
-        self.indiclient.setBLOBMode(1, self.ccdDevice.getDeviceName(), None)
+        self.indiclient.updateCcdBlobMode(self.ccdDevice)
 
         self.indiclient.configureDevice(self.ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
         self.indiclient.setFrameType(self.ccdDevice, 'FRAME_LIGHT')  # default frame type is light
