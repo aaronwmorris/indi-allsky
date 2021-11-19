@@ -722,7 +722,7 @@ class IndiAllSky(object):
 
 
     def generateDayTimelapse(self, timespec='', camera_id=0):
-        if not camera_id:
+        if camera_id == 0:
             try:
                 camera_id = self._db.getCurrentCameraId()
             except NoResultFound:
@@ -741,7 +741,7 @@ class IndiAllSky(object):
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating day time timelapse for %s', timespec)
+        logger.warning('Generating day time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
         self.video_q.put({
@@ -755,7 +755,7 @@ class IndiAllSky(object):
 
 
     def generateNightTimelapse(self, timespec='', camera_id=0):
-        if not camera_id:
+        if camera_id == 0:
             try:
                 camera_id = self._db.getCurrentCameraId()
             except NoResultFound:
@@ -774,7 +774,7 @@ class IndiAllSky(object):
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating night time timelapse for %s', timespec)
+        logger.warning('Generating night time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
         self.video_q.put({
@@ -787,45 +787,67 @@ class IndiAllSky(object):
         })
 
 
-    def generateNightKeogram(self, timespec):
-        self._generateNightKeogram(timespec)
+    def generateNightKeogram(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateNightKeogram(timespec, camera_id)
         self._stopVideoWorker()
 
 
-    def _generateNightKeogram(self, timespec):
+    def _generateNightKeogram(self, timespec, camera_id):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating night time keogram for %s', timespec)
+        logger.warning('Generating night time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
+            'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
         })
 
 
-    def generateDayKeogram(self, timespec):
-        self._generateDayKeogram(timespec)
+    def generateDayKeogram(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateDayKeogram(timespec, camera_id)
         self._stopVideoWorker()
 
 
-    def _generateDayKeogram(self, timespec):
+    def _generateDayKeogram(self, timespec, camera_id):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating day time keogram for %s', timespec)
+        logger.warning('Generating day time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
+            'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
         })
