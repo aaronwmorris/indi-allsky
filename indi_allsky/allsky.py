@@ -721,7 +721,7 @@ class IndiAllSky(object):
         self.indiclient.disconnectServer()
 
 
-    def generateDayTimelapse(self, timespec, camera_id=0):
+    def generateDayTimelapse(self, timespec='', camera_id=0):
         if not camera_id:
             try:
                 camera_id = self._db.getCurrentCameraId()
@@ -754,7 +754,7 @@ class IndiAllSky(object):
         })
 
 
-    def generateNightTimelapse(self, timespec, camera_id=0):
+    def generateNightTimelapse(self, timespec='', camera_id=0):
         if not camera_id:
             try:
                 camera_id = self._db.getCurrentCameraId()

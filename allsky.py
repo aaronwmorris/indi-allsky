@@ -96,7 +96,7 @@ if __name__ == "__main__":
     kwargs_dict = dict()
 
     if args.timespec:
-        args_list.append(args.timespec)
+        kwargs_dict['timespec'] = (args.timespec)
 
     if args.cameraId:
         kwargs_dict['camera_id'] = args.cameraId
