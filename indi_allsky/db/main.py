@@ -44,15 +44,20 @@ class IndiAllSkyDb(object):
 
 
     def addCamera(self, camera_name):
+        now = datetime.datetime.now()
+
         try:
             camera = self._session.query(IndiAllSkyDbCameraTable).filter(IndiAllSkyDbCameraTable.name == camera_name).one()
+            camera.connectDate = now
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
                 name=camera_name,
+                connectDate=now,
             )
 
             self._session.add(camera)
-            self._session.commit()
+
+        self._session.commit()
 
         logger.info('Camera DB ID: %d', camera.id)
 
