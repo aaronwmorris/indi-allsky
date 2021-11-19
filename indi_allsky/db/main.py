@@ -265,7 +265,7 @@ class IndiAllSkyDb(object):
         else:
             try:
                 camera = self._session.query(IndiAllSkyDbCameraTable)\
-                    .order_by(IndiAllSkyDbCameraTable.id.desc())\
+                    .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
                     .first()
             except NoResultFound:
                 logger.error('No cameras found')

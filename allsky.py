@@ -52,6 +52,13 @@ if __name__ == "__main__":
         type=str,
     )
     argparser.add_argument(
+        '--cameraId',
+        '-C',
+        help='camera id (0 == auto)',
+        type=int,
+        default=0,
+    )
+    argparser.add_argument(
         '--log',
         '-l',
         help='log output',
@@ -86,9 +93,13 @@ if __name__ == "__main__":
 
 
     args_list = list()
+    kwargs_dict = dict()
 
     if args.timespec:
         args_list.append(args.timespec)
+
+    if args.cameraId:
+        kwargs_dict['camera_id'] = args.cameraId
 
 
     ia = indi_allsky.IndiAllSky(args.config)
@@ -96,7 +107,7 @@ if __name__ == "__main__":
     ia.indi_port = args.port
 
     action_func = getattr(ia, args.action)
-    action_func(*args_list)
+    action_func(*args_list, **kwargs_dict)
 
 
 # vim let=g:syntastic_python_flake8_args='--ignore="E203,E303,E501,E265,E266,E201,E202,W391"'

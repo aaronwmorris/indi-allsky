@@ -721,8 +721,18 @@ class IndiAllSky(object):
         self.indiclient.disconnectServer()
 
 
-    def generateDayTimelapse(self, timespec):
-        self._generateDayTimelapse(timespec, keogram=False)
+    def generateDayTimelapse(self, timespec, camera_id=0):
+        if not camera_id:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateDayTimelapse(timespec, camera_id, keogram=False)
         self._stopVideoWorker()
 
 
@@ -744,8 +754,18 @@ class IndiAllSky(object):
         })
 
 
-    def generateNightTimelapse(self, timespec):
-        self._generateNightTimelapse(timespec, keogram=False)
+    def generateNightTimelapse(self, timespec, camera_id=0):
+        if not camera_id:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateNightTimelapse(timespec, camera_id, keogram=False)
         self._stopVideoWorker()
 
 
