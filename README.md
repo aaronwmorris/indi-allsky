@@ -8,6 +8,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * ZWO
     * Svbony
     * QHY
+    * Altair
+    * ToupTek
     * Canon DSLRs
     * Generic web cameras
     * More to come
@@ -239,7 +241,7 @@ The hardware below has at least been plugged in and tested for correct detection
 
 | Vendor   | Model               | Notes |
 | -------- | ------------------- | ----- |
-| Svbony   | SV305               | 40% of frames require double the configured exposure time to complete.  Likely a firmware bug.<br/>16bit mode images show horizontal lines. |
+| Svbony   | SV305               |       |
 | ZWO      | ASI290MM            |       |
 | ZWO      | ASI178MM            |       |
 | ZWO      | ASI178MC            |       |
@@ -247,10 +249,10 @@ The hardware below has at least been plugged in and tested for correct detection
 | ZWO      | ASI183MM Pro        |       |
 | ZWO      | ASI183MC Pro        |       |
 | QHY      | QHY5LII-M           |       |
+| Altair   | GPCAM2 290M         |       |
+| Touptek  | G-1200-KMB          |       |
 | Canon    | 550D (Rebel T2i)    | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
-| Altair   | TBD                 |       |
-| Touptek  | TBD                 |       |
 | Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
 | n/a      | indi_simulator_ccd  | CCD Simulator.  Install GSC to generate sample images. |
 
