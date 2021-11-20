@@ -105,7 +105,7 @@ class VideoWorker(Process):
             night = False
 
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
+        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.mp4'.format(camera_id, timespec, timeofday))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -241,7 +241,7 @@ class VideoWorker(Process):
 
 
 
-        keogram_file = img_folder.parent.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.jpg'.format(camera_id, timespec, timeofday))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
