@@ -728,7 +728,7 @@ class ImageWorker(Process):
                 )  # black outline
             cv2.putText(
                 img=data_bytes,
-                text='* Moon Mode {0:0.1f}% *'.format(self.moonmode_v.value),
+                text='* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 fontFace=fontFace[0],
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
