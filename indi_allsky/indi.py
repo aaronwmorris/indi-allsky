@@ -81,7 +81,7 @@ class IndiClient(PyIndi.BaseClient):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
-        self._filename_t = '{0:s}.{1:s}'
+        self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self._img_subdirs = []
 
         self._timeout = 60.0
@@ -153,6 +153,7 @@ class IndiClient(PyIndi.BaseClient):
             'imgdata'     : imgdata,
             'exposure'    : self._exposure,
             'exp_date'    : exp_date,
+            'camera_id'   : self.config['DB_CCD_ID'],
             'filename_t'  : self._filename_t,
             'img_subdirs' : self._img_subdirs,
         })
