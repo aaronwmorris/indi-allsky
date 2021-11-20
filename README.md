@@ -28,7 +28,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Multicore is recommended
         * ARM
         * x86_64
-    * 1GB RAM  (512MB might work, but may require additional swap space)
+    * 1GB RAM minimum
+        * 512MB is adequate for image acquisition, but not enough to generate timelapse videos with ffmpeg
     * 64GB of storage minimum to store 2 months of videos and 30 days of JPEG images.
     * (Optional) Internet connectivity for image uploading
 * An INDI supported camera
