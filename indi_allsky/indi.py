@@ -307,7 +307,7 @@ class IndiClient(PyIndi.BaseClient):
         return ccd_list
 
 
-    def configureDevice(self, device, indi_config):
+    def configureDevice(self, device, indi_config, sleep=1.0):
         ### Configure Device Properties
         for k, v in indi_config.get('PROPERTIES', {}).items():
             logger.info('Setting property %s', k)
@@ -322,7 +322,7 @@ class IndiClient(PyIndi.BaseClient):
         #self.set_controls(device, indi_config.get('CONTROLS', {}))
 
         # Sleep after configuration
-        time.sleep(1.0)
+        time.sleep(sleep)
 
 
     def getCcdTemperature(self, ccdDevice):
