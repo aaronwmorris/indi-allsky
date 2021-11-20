@@ -192,6 +192,7 @@ class VideoWorker(Process):
 
         video_entry = self._db.addVideo(
             video_file,
+            camera_id,
             timeofday,
         )
 
@@ -295,6 +296,7 @@ class VideoWorker(Process):
 
         keogram_entry = self._db.addKeogram(
             keogram_file,
+            camera_id,
             timeofday,
         )
 

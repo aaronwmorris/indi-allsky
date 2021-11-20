@@ -141,7 +141,7 @@ class ImageWorker(Process):
                 self.detectBitDepth(scidata_uncalibrated)
 
                 if self.config.get('IMAGE_SAVE_RAW'):
-                    self.write_fit(hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix)
+                    self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
@@ -251,6 +251,7 @@ class ImageWorker(Process):
 
                 image_entry = self._db.addImage(
                     new_filename,
+                    camera_id,
                     exposure,
                     self.gain_v.value,
                     self.bin_v.value,
@@ -315,7 +316,7 @@ class ImageWorker(Process):
         logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
-    def write_fit(self, hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix):
+    def write_fit(self, camera_id, hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
@@ -369,6 +370,7 @@ class ImageWorker(Process):
 
             self._db.addDarkFrame(
                 filename,
+                camera_id,
                 image_bitpix,
                 exposure,
                 self.gain_v.value,
