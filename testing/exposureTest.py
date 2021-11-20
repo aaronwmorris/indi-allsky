@@ -19,8 +19,24 @@ INDI_CONFIG = {
     "SWITCHES" : {
         "FRAME_FORMAT" : {
             "on"  : ["FORMAT_RAW8"],
-            "off" : ["FORMAT_RAW12"]
-        }
+            "off" : ["FORMAT_RAW12"],
+        },
+        "DEBUG" : {
+            "on"  : ["ENABLE"],
+            "off" : ["DISABLE"],
+        },
+        "DEBUG_LEVEL" : {
+            "on"  : ["DBG_ERROR", "DBG_WARNING", "DBG_SESSION", "DBG_DEBUG"],
+            "off" : ["DBG_EXTRA_1"],
+        },
+        "LOGGING_LEVEL" : {
+            "on"  : ["LOG_ERROR", "LOG_WARNING", "LOG_SESSION", "LOG_DEBUG"],
+            "off" : ["LOG_EXTRA_1"],
+        },
+        "LOG_OUTPUT" : {
+            "on"  : ["CLIENT_DEBUG", "FILE_DEBUG"],
+            "off" : [],
+        },
     }
 }
 
