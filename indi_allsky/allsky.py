@@ -414,6 +414,9 @@ class IndiAllSky(object):
 
         self._initialize()
 
+        next_frame_time = datetime.now()  # start immediately
+        waiting_for_frame = False
+
         ### main loop starts
         while True:
             # restart worker if it has failed
@@ -455,24 +458,6 @@ class IndiAllSky(object):
             self.reconfigureCcd()
 
 
-            start = time.time()
-
-            try:
-                self.shoot(self.exposure_v.value, sync=False)
-            except TimeOutException as e:
-                # This exception should only be rasied in synchronous mode
-                logger.error('Timeout: %s', str(e))
-                time.sleep(5.0)
-                continue
-
-            shoot_elapsed_s = time.time() - start
-            logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
-
-            # dead mans switch
-            #signal.alarm(5)  # sync
-            signal.alarm(65)  # async
-
-
             if self.night:
                 # always indicate timelapse generation at night
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
@@ -480,24 +465,29 @@ class IndiAllSky(object):
                 # must be day time
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
-            try:
-                self.indiblob_status_receive.recv()  # wait until image is received
-            except TimeOutException:
-                logger.error('Timeout waiting on exposure, continuing')
-                time.sleep(5.0)
-                continue
 
-            signal.alarm(0)  # reset timeout
+            # every ~10 seconds end this loop and run the code above
+            for x in range(200):
+                now = datetime.now()
+
+                if not waiting_for_frame and now > next_frame_time:
+                    frame_start_time = now
+
+                    self.shoot(self.exposure_v.value, sync=False)
+                    waiting_for_frame = True
+
+                    next_frame_time = frame_start_time + timedelta(seconds=self.config['EXPOSURE_PERIOD'])
 
 
-            full_elapsed_s = time.time() - start
-            logger.info('Exposure received in %0.4f s', full_elapsed_s)
+                if self.indiblob_status_receive.poll():
+                    self.indiblob_status_receive.recv()  # wait until image is received
+                    waiting_for_frame = False
 
-            # sleep for the remaining eposure period
-            remaining_s = float(self.config['EXPOSURE_PERIOD']) - full_elapsed_s
-            if remaining_s > 0:
-                logger.info('Sleeping for additional %0.4f s', remaining_s)
-                time.sleep(remaining_s)
+                    elapsed = datetime.now() - frame_start_time
+                    logger.info('Exposure received in %0.4f s', elapsed.microseconds / 1000000)
+
+
+                time.sleep(0.05)
 
 
     def reconfigureCcd(self):
