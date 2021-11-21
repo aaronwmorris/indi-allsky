@@ -84,7 +84,7 @@ class IndiClient(PyIndi.BaseClient):
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self._img_subdirs = []
 
-        self._timeout = 60.0
+        self._timeout = 65.0
         self._exposure = 0.0
 
         logger.info('creating an instance of IndiClient')

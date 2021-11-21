@@ -458,8 +458,9 @@ class IndiAllSky(object):
             start = time.time()
 
             try:
-                self.shoot(self.exposure_v.value)
+                self.shoot(self.exposure_v.value, sync=False)
             except TimeOutException as e:
+                # This exception should only be rasied in synchronous mode
                 logger.error('Timeout: %s', str(e))
                 time.sleep(5.0)
                 continue
@@ -467,8 +468,9 @@ class IndiAllSky(object):
             shoot_elapsed_s = time.time() - start
             logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
 
-            # should take far less than 5 seconds here
-            signal.alarm(5)
+            # dead mans switch
+            #signal.alarm(5)  # sync
+            signal.alarm(65)  # async
 
 
             if self.night:
