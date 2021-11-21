@@ -24,8 +24,10 @@ class FileUploader(Process):
 
     def run(self):
         while True:
+            time.sleep(1.0)  # sleep every loop
+
             try:
-                u_dict = self.upload_q.get(block=True, timeout=1.0)
+                u_dict = self.upload_q.get_nowait()
             except queue.Empty:
                 continue
 

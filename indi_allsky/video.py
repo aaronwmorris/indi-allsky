@@ -43,8 +43,10 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
+            time.sleep(1.0)  # sleep every loop
+
             try:
-                v_dict = self.video_q.get(block=True, timeout=3.0)
+                v_dict = self.video_q.get_nowait()
             except queue.Empty:
                 continue
 

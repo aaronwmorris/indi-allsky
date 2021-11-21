@@ -98,10 +98,13 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
+            time.sleep(0.5)  # sleep every loop
+
             try:
-                i_dict = self.image_q.get(block=True, timeout=0.5)
+                i_dict = self.image_q.get_nowait()
             except queue.Empty:
                 continue
+
 
             if i_dict.get('stop'):
                 return
