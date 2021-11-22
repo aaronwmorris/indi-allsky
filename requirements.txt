@@ -1,8 +1,5 @@
-#pyindi-client
-git+https://github.com/indilib/pyindi-client.git@68803a1#egg=pyindi-client
+pyindi-client
 astropy
-#astropy[all]
-#opencv-python
 opencv-python-headless==4.5.3.56
 #scikit-image
 ephem
@@ -13,3 +10,7 @@ imageio-ffmpeg
 pygifsicle
 SQLAlchemy
 alembic
+# cryptography 36.0.0 not building on Debian 10 arm for now
+# https://github.com/pyca/cryptography/issues/6485
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=998232
+cryptography<36

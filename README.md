@@ -32,6 +32,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * 512MB is adequate for image acquisition, but not enough to generate timelapse videos with ffmpeg
     * 64GB of storage minimum to store 2 months of videos and 30 days of JPEG images.
     * (Optional) Internet connectivity for image uploading
+    * Note: Raspbian 11 (bullseye) support is not yet available for Astroberry
 * An INDI supported camera
     * CPU architecture support varies between camera manufacturers
 
