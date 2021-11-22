@@ -135,6 +135,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newBLOB(self, bp):
+        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
+
         logger.info("new BLOB %s", bp.name)
 
         #start = time.time()
@@ -144,8 +146,6 @@ class IndiClient(PyIndi.BaseClient):
 
         #elapsed_s = time.time() - start
         #logger.info('Blob downloaded in %0.4f s', elapsed_s)
-
-        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
         exp_date = datetime.now()
 
