@@ -414,8 +414,8 @@ class IndiAllSky(object):
 
         self._initialize()
 
-        next_frame_time = datetime.now()  # start immediately
-        frame_start_time = datetime.now()
+        next_frame_time = time.time()  # start immediately
+        frame_start_time = time.time()
         waiting_for_frame = False
 
         ### main loop starts
@@ -469,7 +469,7 @@ class IndiAllSky(object):
 
             # every ~10 seconds end this loop and run the code above
             for x in range(200):
-                now = datetime.now()
+                now = time.time()
 
                 if not waiting_for_frame and now > next_frame_time:
                     total_elapsed = now - frame_start_time
@@ -479,10 +479,9 @@ class IndiAllSky(object):
                     self.shoot(self.exposure_v.value, sync=False)
                     waiting_for_frame = True
 
-                    next_frame_time = frame_start_time + timedelta(seconds=self.config['EXPOSURE_PERIOD'])
+                    next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
 
-                    total_elapsed_seconds_f = total_elapsed.seconds + (total_elapsed.microseconds / 1000000)
-                    logger.info('Total time since last exposure %0.4f s', total_elapsed_seconds_f)
+                    logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
                 if self.indiblob_status_receive.poll():
                     frame_elapsed = now - frame_start_time
@@ -490,8 +489,7 @@ class IndiAllSky(object):
                     self.indiblob_status_receive.recv()  # wait until image is received
                     waiting_for_frame = False
 
-                    frame_elapsed_seconds_f = frame_elapsed.seconds + (frame_elapsed.microseconds / 1000000)
-                    logger.info('Exposure received in %0.4f s', frame_elapsed_seconds_f)
+                    logger.info('Exposure received in %0.4f s', frame_elapsed)
 
 
                 time.sleep(0.05)
