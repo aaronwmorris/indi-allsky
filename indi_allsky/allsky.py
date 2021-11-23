@@ -471,7 +471,7 @@ class IndiAllSky(object):
             for x in range(200):
                 now = time.time()
 
-                if not waiting_for_frame and now > next_frame_time:
+                if not waiting_for_frame and now >= next_frame_time:
                     total_elapsed = now - frame_start_time
 
                     frame_start_time = now
