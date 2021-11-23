@@ -453,7 +453,7 @@ class IndiExposureTest(object):
 
 
             full_elapsed_s = time.time() - start
-            logger.info('Exposure finished in %0.4f s', full_elapsed_s)
+            logger.info('Exposure finished in ######## %0.4f s ########', full_elapsed_s)
 
             # sleep for the remaining eposure period
             remaining_s = CCD_EXPOSURE - full_elapsed_s
