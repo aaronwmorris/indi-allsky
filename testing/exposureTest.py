@@ -91,6 +91,17 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 60.0
         logger.info('creating an instance of IndiClient')
 
+        self._exposureReceived = False
+
+
+    @property
+    def exposureReceived(self):
+        return self._exposureReceived
+
+    @exposureReceived.setter
+    def exposureReceived(self, foobar):
+        self._exposureReceived = False
+
 
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
@@ -105,13 +116,16 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         logger.info("new BLOB %s", bp.name)
-        start = time.time()
+
+        self._exposureReceived = True
+
+        #start = time.time()
 
         ### get image data
         bp.getblobdata()
 
-        elapsed_s = time.time() - start
-        logger.info('Blob downloaded in %0.4f s', elapsed_s)
+        #elapsed_s = time.time() - start
+        #logger.info('Blob downloaded in %0.4f s', elapsed_s)
 
 
     def newSwitch(self, svp):
@@ -440,27 +454,63 @@ class IndiExposureTest(object):
         self.indiclient.setCcdBinning(ccdDevice, CCD_BINMODE)
 
 
+        next_frame_time = time.time()  # start immediately
+        frame_start_time = time.time()
+        waiting_for_frame = False
+
         ### main loop starts
         while True:
-            start = time.time()
+            now = time.time()
 
-            try:
-                self.shoot(CCD_EXPOSURE, sync=True)
-            except TimeOutException as e:
-                logger.error('Timeout: %s', str(e))
-                time.sleep(5.0)
-                continue
+            ### Blocking mode ###
+
+            #try:
+            #    self.shoot(CCD_EXPOSURE, sync=True)
+            #except TimeOutException as e:
+            #    logger.error('Timeout: %s', str(e))
+            #    time.sleep(5.0)
+            #    continue
 
 
-            full_elapsed_s = time.time() - start
-            logger.info('Exposure finished in ######## %0.4f s ########', full_elapsed_s)
+            #full_elapsed_s = time.time() - now
+            #logger.info('Exposure finished in ######## %0.4f s ########', full_elapsed_s)
 
-            # sleep for the remaining eposure period
-            remaining_s = CCD_EXPOSURE - full_elapsed_s
-            if remaining_s > 0:
-                logger.info('Sleeping for additional %0.4f s', remaining_s)
-                time.sleep(remaining_s)
+            ### sleep for the remaining eposure period
+            #remaining_s = CCD_EXPOSURE - full_elapsed_s
+            #if remaining_s > 0:
+            #    logger.info('Sleeping for additional %0.4f s', remaining_s)
+            #    time.sleep(remaining_s)
 
+            ### End Blocking mode ###
+
+
+            ### Non-blocking mode ###
+
+            if not waiting_for_frame and now >= next_frame_time:
+                total_elapsed = now - frame_start_time
+
+                frame_start_time = now
+
+                self.shoot(CCD_EXPOSURE, sync=False)
+                waiting_for_frame = True
+
+                next_frame_time = frame_start_time + CCD_EXPOSURE
+
+                logger.info('Total time since last exposure %0.4f s', total_elapsed)
+
+
+            if self.indiclient.exposureReceived:
+                frame_elapsed = now - frame_start_time
+
+                waiting_for_frame = False
+                self.indiclient.exposureReceived = False
+
+                logger.info('Exposure received in ######## %0.4f s ########', frame_elapsed)
+
+
+            time.sleep(0.05)
+
+            ### End Non-blocking mode ###
 
 
 class TimeOutException(Exception):
