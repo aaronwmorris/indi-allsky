@@ -417,9 +417,12 @@ class IndiAllSky(object):
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
         waiting_for_frame = False
+        exposure_ctl = None  # populated later
 
         ### main loop starts
         while True:
+            loop_start_time = time.time()
+
             # restart worker if it has failed
             self._startImageWorker()
             self._startVideoWorker()
@@ -471,28 +474,40 @@ class IndiAllSky(object):
             for x in range(200):
                 now = time.time()
 
-                if not waiting_for_frame and now >= next_frame_time:
+                camera_ready = self.indiclient.ctl_ready(exposure_ctl)
+
+                if camera_ready and now >= next_frame_time:
                     total_elapsed = now - frame_start_time
 
                     frame_start_time = now
 
-                    self.shoot(self.exposure_v.value, sync=False)
+                    exposure_ctl = self.shoot(self.exposure_v.value, sync=False)
+                    camera_ready = False
                     waiting_for_frame = True
 
                     next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
 
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
-                if self.indiblob_status_receive.poll():
+
+                if camera_ready and waiting_for_frame:
                     frame_elapsed = now - frame_start_time
 
-                    self.indiblob_status_receive.recv()  # wait until image is received
                     waiting_for_frame = False
 
                     logger.info('Exposure received in %0.4f s', frame_elapsed)
 
 
+                # We do not really care about this for now, just clear it
+                if self.indiblob_status_receive.poll():
+                    self.indiblob_status_receive.recv()  # wait until image is received
+
+
                 time.sleep(0.05)
+
+
+            loop_elapsed = now - loop_start_time
+            #logger.info('Loop completed in %0.4f s', loop_elapsed)
 
 
     def reconfigureCcd(self):
@@ -852,7 +867,10 @@ class IndiAllSky(object):
 
     def shoot(self, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
-        self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+
+        ctl = self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+
+        return ctl
 
 
     def expireImages(self, days=None):

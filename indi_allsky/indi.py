@@ -135,9 +135,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newBLOB(self, bp):
-        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
-
         logger.info("new BLOB %s", bp.name)
+
+        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
         #start = time.time()
 
@@ -338,7 +338,9 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        ctl = self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+
+        return ctl
 
 
     def getCcdGain(self, ccdDevice):
@@ -538,6 +540,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self.sendNewSwitch(c)
 
+        return c
+
 
     def set_text(self, device, control_name, values, sync=True, timeout=None):
         c = self.get_control(device, control_name, 'text')
@@ -570,6 +574,15 @@ class IndiClient(PyIndi.BaseClient):
 
     def light_values(self, device, name, ctl=None):
         return self.__control2dict(device, name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
+
+
+    def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
+        if not ctl:
+            return True
+
+        ready = ctl.getState() in statuses
+
+        return ready
 
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
