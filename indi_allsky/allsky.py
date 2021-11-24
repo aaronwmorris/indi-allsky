@@ -476,6 +476,15 @@ class IndiAllSky(object):
 
                 camera_ready = self.indiclient.ctl_ready(exposure_ctl)
 
+
+                if camera_ready and waiting_for_frame:
+                    frame_elapsed = now - frame_start_time
+
+                    waiting_for_frame = False
+
+                    logger.info('Exposure received in %0.4f s', frame_elapsed)
+
+
                 if camera_ready and now >= next_frame_time:
                     total_elapsed = now - frame_start_time
 
@@ -488,14 +497,6 @@ class IndiAllSky(object):
                     next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
 
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
-
-
-                if camera_ready and waiting_for_frame:
-                    frame_elapsed = now - frame_start_time
-
-                    waiting_for_frame = False
-
-                    logger.info('Exposure received in %0.4f s', frame_elapsed)
 
 
                 # We do not really care about this for now, just clear it
