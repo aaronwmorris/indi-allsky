@@ -33,7 +33,7 @@
     "CCD_EXPOSURE_MAX" : 15.000000,
     "comment_CCD_EXPOSURE_MIN" : "webcam driver does not like low exposure times",
     "CCD_EXPOSURE_MIN" : 0.500000,
-    "CCD_EXPOSURE_DEF" : 0.500000,
+    "CCD_EXPOSURE_DEF" : 1.0,
     "EXPOSURE_PERIOD"  : 15.00000,
     "AUTO_WB" : true,
 

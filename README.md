@@ -170,7 +170,7 @@ All configuration is read from config.json.  You can find configuration examples
 | > SWITCHES          |             | (dict) Indi switches |
 | CCD_EXPOSURE_MAX    | 15          | (seconds) Maximum exposure time |
 | CCD_EXPOSURE_MIN    | Auto detected | (seconds) Minimum exposure time |
-| CCD_EXPOSURE_DEF    | 0.0001      | (seconds) Default/starting exposure |
+| CCD_EXPOSURE_DEF    | 1.0         | (seconds) Default/starting exposure |
 | EXPOSURE_PERIOD     | 15          | (seconds) Time between beginning of each exposure |
 | AUTO_WB             | true        | (bool) Automatic white balance adjustment |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
