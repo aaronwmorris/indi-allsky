@@ -148,6 +148,10 @@ class IndiAllSky(object):
         # set minimum exposure
         ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
+        # Some CCD drivers will not accept their stated minimum exposure.
+        # There might be some python -> C floating point conversion problem causing this.
+        ccd_min_exp = ccd_min_exp + 0.00000001
+
         if not self.config.get('CCD_EXPOSURE_MIN'):
             logger.warning('Setting minimum to %0.8f', ccd_min_exp)
             self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
@@ -293,6 +297,10 @@ class IndiAllSky(object):
 
         # set minimum exposure
         ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
+        # Some CCD drivers will not accept their stated minimum exposure.
+        # There might be some python -> C floating point conversion problem causing this.
+        ccd_min_exp = ccd_min_exp + 0.00000001
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
             self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
