@@ -32,7 +32,7 @@ logger = multiprocessing.get_logger()
 
 class IndiAllSky(object):
 
-    CCD_EXPOSURE_DEF = 0.000100
+    CCD_EXPOSURE_DEF = 1.0
     DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
