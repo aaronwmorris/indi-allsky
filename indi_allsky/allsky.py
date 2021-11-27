@@ -32,7 +32,6 @@ logger = multiprocessing.get_logger()
 
 class IndiAllSky(object):
 
-    CCD_EXPOSURE_DEF = 1.0
     DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
@@ -218,11 +217,6 @@ class IndiAllSky(object):
             c['EXPOSURE_PERIOD'] = c['CCD_EXPOSURE_MAX']
 
 
-        # set default exposure
-        if not c.get('CCD_EXPOSURE_DEF'):
-            c['CCD_EXPOSURE_DEF'] = self.CCD_EXPOSURE_DEF
-
-
         # set keogram scale factor
         if not c.get('KEOGRAM_V_SCALE'):
             c['KEOGRAM_V_SCALE'] = 33
@@ -301,7 +295,6 @@ class IndiAllSky(object):
         ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
-            logger.warning('Setting minimum to %0.8f', ccd_min_exp)
             self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
@@ -313,6 +306,15 @@ class IndiAllSky(object):
 
         logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
 
+
+        # set default exposure
+        #
+        # Note:  I have tried setting a default exposure of 1.0s which works fine for night time, but
+        #        during the day weird things can happen when the image sensor is completely oversaturated.
+        #        Instead of an all white image, you can get intermediate pixel values which confuses the
+        #        exposure detection algorithm
+        if not self.config.get('CCD_EXPOSURE_DEF'):
+            self.config['CCD_EXPOSURE_DEF'] = self.config['CCD_EXPOSURE_MIN']
 
         with self.exposure_v.get_lock():
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
