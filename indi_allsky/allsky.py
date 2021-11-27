@@ -145,9 +145,22 @@ class IndiAllSky(object):
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
 
+
         # set minimum exposure
+        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
         if not self.config.get('CCD_EXPOSURE_MIN'):
-            self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+            logger.warning('Setting minimum to {0:0.8f}', ccd_min_exp)
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
+            logger.warning(
+                'Minimum exposure {0:0.8f} too low, increasing to {1:0.8f}',
+                self.config.get('CCD_EXPOSURE_MIN'),
+                ccd_min_exp,
+            )
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+
+        logger.info('Minimum CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_MIN']))
 
 
         # CFA/Debayer setting
@@ -285,8 +298,18 @@ class IndiAllSky(object):
 
 
         # set minimum exposure
+        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
         if not self.config.get('CCD_EXPOSURE_MIN'):
-            self.config['CCD_EXPOSURE_MIN'] = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+            logger.warning('Setting minimum to {0:0.8f}', ccd_min_exp)
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
+            logger.warning(
+                'Minimum exposure {0:0.8f} too low, increasing to {1:0.8f}',
+                self.config.get('CCD_EXPOSURE_MIN'),
+                ccd_min_exp,
+            )
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
 
         logger.info('Minimum CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_MIN']))
 
