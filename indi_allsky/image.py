@@ -338,10 +338,10 @@ class ImageWorker(Process):
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         if img_subdirs:
-            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
+            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(camera_id, 'fit'))
         else:
             folder = self.getImageFolder(exp_date)
-            filename = folder.joinpath(self.filename_t.format(date_str, 'fit'))
+            filename = folder.joinpath(self.filename_t.format(camera_id, date_str, 'fit'))
 
 
         file_dir = filename.parent
