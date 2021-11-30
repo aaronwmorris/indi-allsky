@@ -143,8 +143,10 @@ class ImageWorker(Process):
 
                 self.detectBitDepth(scidata_uncalibrated)
 
+
                 if self.config.get('IMAGE_SAVE_RAW'):
                     self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
+
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
@@ -326,6 +328,14 @@ class ImageWorker(Process):
 
         from .db import IndiAllSkyDbDarkFrameTable
         dbsession = self._db.session
+
+
+        if image_type == 'Light Frame':
+            try:
+                calibrated_data = self.calibrate(hdulist[0].data, exposure, camera_id, image_bitpix)
+                hdulist[0].data = calibrated_data
+            except CalibrationNotFound:
+                pass
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
