@@ -319,7 +319,7 @@ class ImageWorker(Process):
         logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
-    def write_fit(self, camera_id, hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix):
+    def write_fit(self, hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
