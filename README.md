@@ -10,6 +10,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * QHY
     * Altair
     * ToupTek
+    * Raspberry Pi HQ Camera
     * Canon DSLRs
     * Generic web cameras
     * More to come
@@ -253,6 +254,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | QHY      | QHY5LII-M           |       |
 | Altair   | GPCAM2 290M         |       |
 | Touptek  | G-1200-KMB          |       |
+| Raspberry Pi | HQ Camera       |       |
 | Canon    | 550D (Rebel T2i)    | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
