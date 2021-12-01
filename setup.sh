@@ -122,6 +122,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         gifsicle \
         sqlite3 \
         indi-full \
+        indi-rpicam \
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -162,6 +163,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         gifsicle \
         sqlite3 \
         indi-full \
+        indi-rpicam \
         libindi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -330,7 +332,7 @@ fi
 
 # get list of drivers
 cd $INDI_DRIVER_PATH
-INDI_DRIVERS=$(ls indi_*_ccd)
+INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
 cd $OLDPWD
 
 
