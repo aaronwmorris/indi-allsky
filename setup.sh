@@ -476,6 +476,24 @@ alembic revision --autogenerate
 alembic upgrade head
 
 
+if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
+    echo "**** Enable Raspberry Pi camera interface ****"
+    sudo raspi-config nonint do_camera 0
+
+    echo "**** Ensure user is a member of the video group ****"
+    sudo usermod -a -G video "$USER"
+
+    echo
+    echo
+    echo "If this is the first time you have setup your Raspberry PI camera, please reboot when"
+    echo "this script completes to enable the camera interface..."
+    echo
+    echo
+
+    sleep 5
+fi
+
+
 echo
 echo
 echo
