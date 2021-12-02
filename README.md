@@ -244,7 +244,7 @@ The hardware below has at least been plugged in and tested for correct detection
 
 | Vendor   | Model               | Notes |
 | -------- | ------------------- | ----- |
-| Svbony   | SV305               |       |
+| Svbony   | SV305               | 40% of frames require double the configured exposure time to complete. Likely a firmware bug. |
 | ZWO      | ASI290MM            |       |
 | ZWO      | ASI178MM            |       |
 | ZWO      | ASI178MC            |       |
@@ -254,7 +254,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | QHY      | QHY5LII-M           |       |
 | Altair   | GPCAM2 290M         |       |
 | Touptek  | G-1200-KMB          |       |
-| Raspberry Pi | HQ Camera       |       |
+| Raspberry Pi | HQ Camera       | Exposures currently limited to 1s.  https://github.com/indilib/indi-3rdparty/issues/271 |
 | Canon    | 550D (Rebel T2i)    | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
