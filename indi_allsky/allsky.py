@@ -447,8 +447,15 @@ class IndiAllSky(object):
 
         self._initialize()
 
+        next_frame_time = time.time()  # start immediately
+        frame_start_time = time.time()
+        waiting_for_frame = False
+        exposure_ctl = None  # populated later
+
         ### main loop starts
         while True:
+            loop_start_time = time.time()
+
             # restart worker if it has failed
             self._startImageWorker()
             self._startVideoWorker()
@@ -475,33 +482,17 @@ class IndiAllSky(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, keogram=True)
+                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, keogram=True)
+                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
             # reconfigure if needed
             self.reconfigureCcd()
-
-
-            start = time.time()
-
-            try:
-                self.shoot(self.exposure_v.value)
-            except TimeOutException as e:
-                logger.error('Timeout: %s', str(e))
-                time.sleep(5.0)
-                continue
-
-            shoot_elapsed_s = time.time() - start
-            logger.info('shoot() completed in %0.4f s', shoot_elapsed_s)
-
-            # should take far less than 5 seconds here
-            signal.alarm(5)
 
 
             if self.night:
@@ -511,24 +502,46 @@ class IndiAllSky(object):
                 # must be day time
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
-            try:
-                self.indiblob_status_receive.recv()  # wait until image is received
-            except TimeOutException:
-                logger.error('Timeout waiting on exposure, continuing')
-                time.sleep(5.0)
-                continue
 
-            signal.alarm(0)  # reset timeout
+            # every ~10 seconds end this loop and run the code above
+            for x in range(200):
+                now = time.time()
+
+                camera_ready = self.indiclient.ctl_ready(exposure_ctl)
 
 
-            full_elapsed_s = time.time() - start
-            logger.info('Exposure received in %0.4f s', full_elapsed_s)
+                if camera_ready and waiting_for_frame:
+                    frame_elapsed = now - frame_start_time
 
-            # sleep for the remaining eposure period
-            remaining_s = float(self.config['EXPOSURE_PERIOD']) - full_elapsed_s
-            if remaining_s > 0:
-                logger.info('Sleeping for additional %0.4f s', remaining_s)
-                time.sleep(remaining_s)
+                    waiting_for_frame = False
+
+                    logger.info('Exposure received in %0.4f s', frame_elapsed)
+
+
+                if camera_ready and now >= next_frame_time:
+                    total_elapsed = now - frame_start_time
+
+                    frame_start_time = now
+
+                    exposure_ctl = self.shoot(self.exposure_v.value, sync=False)
+                    camera_ready = False
+                    waiting_for_frame = True
+
+                    next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
+
+                    logger.info('Total time since last exposure %0.4f s', total_elapsed)
+
+
+                # We do not really care about this for now, just clear it
+                if self.indiblob_status_receive.poll():
+                    self.indiblob_status_receive.recv()  # wait until image is received
+
+
+                time.sleep(0.05)
+
+
+            loop_elapsed = now - loop_start_time
+            #logger.info('Loop completed in %0.4f s', loop_elapsed)
 
 
     def reconfigureCcd(self):
@@ -656,13 +669,13 @@ class IndiAllSky(object):
         ### take darks
         night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_dark_exposures:
-            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
-                self.config['DB_CCD_ID'],
+            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+                '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1}',
+                '{1:s}',
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -687,13 +700,13 @@ class IndiAllSky(object):
         ### take darks
         night_moonmode_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in night_moonmode_dark_exposures:
-            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
-                self.config['DB_CCD_ID'],
+            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+                '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1}',
+                '{1:s}',
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -720,13 +733,13 @@ class IndiAllSky(object):
         # day will rarely exceed 1 second
         day_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
         for exp in day_dark_exposures:
-            filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
-                self.config['DB_CCD_ID'],
+            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+                '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1}',
+                '{1:s}',
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -754,89 +767,133 @@ class IndiAllSky(object):
         self.indiclient.disconnectServer()
 
 
-    def generateDayTimelapse(self, timespec):
-        self._generateDayTimelapse(timespec, keogram=False)
+    def generateDayTimelapse(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateDayTimelapse(timespec, camera_id, keogram=False)
         self._stopVideoWorker()
 
 
-    def _generateDayTimelapse(self, timespec, keogram=True):
+    def _generateDayTimelapse(self, timespec, camera_id, keogram=True):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating day time timelapse for %s', timespec)
+        logger.warning('Generating day time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
+            'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
         })
 
 
-    def generateNightTimelapse(self, timespec):
-        self._generateNightTimelapse(timespec, keogram=False)
+    def generateNightTimelapse(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateNightTimelapse(timespec, camera_id, keogram=False)
         self._stopVideoWorker()
 
 
-    def _generateNightTimelapse(self, timespec, keogram=True):
+    def _generateNightTimelapse(self, timespec, camera_id, keogram=True):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating night time timelapse for %s', timespec)
+        logger.warning('Generating night time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
+            'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
         })
 
 
-    def generateNightKeogram(self, timespec):
-        self._generateNightKeogram(timespec)
+    def generateNightKeogram(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateNightKeogram(timespec, camera_id)
         self._stopVideoWorker()
 
 
-    def _generateNightKeogram(self, timespec):
+    def _generateNightKeogram(self, timespec, camera_id):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating night time keogram for %s', timespec)
+        logger.warning('Generating night time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
+            'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
         })
 
 
-    def generateDayKeogram(self, timespec):
-        self._generateDayKeogram(timespec)
+    def generateDayKeogram(self, timespec='', camera_id=0):
+        if camera_id == 0:
+            try:
+                camera_id = self._db.getCurrentCameraId()
+            except NoResultFound:
+                logger.error('No camera found')
+                sys.exit(1)
+        else:
+            camera_id = int(camera_id)
+
+
+        self._generateDayKeogram(timespec, camera_id)
         self._stopVideoWorker()
 
 
-    def _generateDayKeogram(self, timespec):
+    def _generateDayKeogram(self, timespec, camera_id):
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
-        logger.warning('Generating day time keogram for %s', timespec)
+        logger.warning('Generating day time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
         self.video_q.put({
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
+            'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
         })
@@ -844,7 +901,10 @@ class IndiAllSky(object):
 
     def shoot(self, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
-        self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+
+        ctl = self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+
+        return ctl
 
 
     def expireImages(self, days=None):

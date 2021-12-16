@@ -44,22 +44,27 @@ class IndiAllSkyDb(object):
 
 
     def addCamera(self, camera_name):
+        now = datetime.datetime.now()
+
         try:
             camera = self._session.query(IndiAllSkyDbCameraTable).filter(IndiAllSkyDbCameraTable.name == camera_name).one()
+            camera.connectDate = now
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
                 name=camera_name,
+                connectDate=now,
             )
 
             self._session.add(camera)
-            self._session.commit()
+
+        self._session.commit()
 
         logger.info('Camera DB ID: %d', camera.id)
 
         return camera
 
 
-    def addImage(self, filename, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
+    def addImage(self, filename, camera_id, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
         if not filename:
             return
 
@@ -101,7 +106,7 @@ class IndiAllSkyDb(object):
 
 
         image = IndiAllSkyDbImageTable(
-            camera_id=self.getCurrentCameraId(),
+            camera_id=camera_id,
             filename=filename_str,
             dayDate=dayDate,
             exposure=exposure,
@@ -125,7 +130,7 @@ class IndiAllSkyDb(object):
         return image
 
 
-    def addDarkFrame(self, filename, bitdepth, exposure, gain, binmode, temp):
+    def addDarkFrame(self, filename, camera_id, bitdepth, exposure, gain, binmode, temp):
         if not filename:
             return
 
@@ -152,7 +157,7 @@ class IndiAllSkyDb(object):
 
 
         dark = IndiAllSkyDbDarkFrameTable(
-            camera_id=self.getCurrentCameraId(),
+            camera_id=camera_id,
             filename=filename_str,
             bitdepth=bitdepth,
             exposure=exposure_int,
@@ -167,7 +172,7 @@ class IndiAllSkyDb(object):
         return dark
 
 
-    def addVideo(self, filename, timeofday):
+    def addVideo(self, filename, camera_id, timeofday):
         if not filename:
             return
 
@@ -196,7 +201,7 @@ class IndiAllSkyDb(object):
 
 
         video = IndiAllSkyDbVideoTable(
-            camera_id=self.getCurrentCameraId(),
+            camera_id=camera_id,
             filename=filename_str,
             dayDate=dayDate,
             night=night,
@@ -208,7 +213,7 @@ class IndiAllSkyDb(object):
         return video
 
 
-    def addKeogram(self, filename, timeofday):
+    def addKeogram(self, filename, camera_id, timeofday):
         if not filename:
             return
 
@@ -237,7 +242,7 @@ class IndiAllSkyDb(object):
 
 
         keogram = IndiAllSkyDbKeogramTable(
-            camera_id=self.getCurrentCameraId(),
+            camera_id=camera_id,
             filename=filename_str,
             dayDate=dayDate,
             night=night,
@@ -260,7 +265,7 @@ class IndiAllSkyDb(object):
         else:
             try:
                 camera = self._session.query(IndiAllSkyDbCameraTable)\
-                    .order_by(IndiAllSkyDbCameraTable.id.desc())\
+                    .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
                     .first()
             except NoResultFound:
                 logger.error('No cameras found')

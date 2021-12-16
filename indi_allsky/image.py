@@ -67,7 +67,7 @@ class ImageWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        self.filename_t = '{0:s}.{1:s}'
+        self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self.save_images = save_images
 
         self.target_adu_found = False
@@ -98,10 +98,13 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
+            time.sleep(0.5)  # sleep every loop
+
             try:
-                i_dict = self.image_q.get(block=True, timeout=0.5)
+                i_dict = self.image_q.get_nowait()
             except queue.Empty:
                 continue
+
 
             if i_dict.get('stop'):
                 return
@@ -109,6 +112,7 @@ class ImageWorker(Process):
             imgdata = i_dict['imgdata']
             exposure = i_dict['exposure']
             exp_date = i_dict['exp_date']
+            camera_id = i_dict['camera_id']
             filename_t = i_dict.get('filename_t')
             img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
 
@@ -139,11 +143,13 @@ class ImageWorker(Process):
 
                 self.detectBitDepth(scidata_uncalibrated)
 
+
                 if self.config.get('IMAGE_SAVE_RAW'):
-                    self.write_fit(hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix)
+                    self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
+
 
                 try:
-                    scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, image_bitpix)
+                    scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
                     calibrated = True
                 except CalibrationNotFound:
                     scidata_calibrated = scidata_uncalibrated
@@ -246,10 +252,11 @@ class ImageWorker(Process):
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
             if self.save_images:
-                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, img_subdirs)
+                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id, img_subdirs)
 
                 image_entry = self._db.addImage(
                     new_filename,
+                    camera_id,
                     exposure,
                     self.gain_v.value,
                     self.bin_v.value,
@@ -314,13 +321,21 @@ class ImageWorker(Process):
         logger.info('Detected bit depth: %d', self.image_bit_depth)
 
 
-    def write_fit(self, hdulist, exposure, exp_date, img_subdirs, image_type, image_bitpix):
+    def write_fit(self, hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
 
         from .db import IndiAllSkyDbDarkFrameTable
         dbsession = self._db.session
+
+
+        if image_type == 'Light Frame':
+            try:
+                calibrated_data = self.calibrate(hdulist[0].data, exposure, camera_id, image_bitpix)
+                hdulist[0].data = calibrated_data
+            except CalibrationNotFound:
+                pass
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
@@ -333,10 +348,10 @@ class ImageWorker(Process):
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         if img_subdirs:
-            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, 'fit'))
+            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(camera_id, 'fit'))
         else:
             folder = self.getImageFolder(exp_date)
-            filename = folder.joinpath(self.filename_t.format(date_str, 'fit'))
+            filename = folder.joinpath(self.filename_t.format(camera_id, date_str, 'fit'))
 
 
         file_dir = filename.parent
@@ -368,6 +383,7 @@ class ImageWorker(Process):
 
             self._db.addDarkFrame(
                 filename,
+                camera_id,
                 image_bitpix,
                 exposure,
                 self.gain_v.value,
@@ -390,7 +406,7 @@ class ImageWorker(Process):
 
 
 
-    def write_img(self, scidata, exp_date, img_subdirs):
+    def write_img(self, scidata, exp_date, camera_id, img_subdirs):
         ### Do not write image files if fits are enabled
         if not self.save_images:
             return None, None
@@ -438,7 +454,7 @@ class ImageWorker(Process):
         folder = self.getImageFolder(exp_date)
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(*img_subdirs).joinpath(self.filename_t.format(date_str, self.config['IMAGE_FILE_TYPE']))
+        filename = folder.joinpath(*img_subdirs).joinpath(self.filename_t.format(camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
 
         logger.info('Image filename: %s', filename)
 
@@ -508,7 +524,7 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def calibrate(self, scidata_uncalibrated, exposure, image_bitpix):
+    def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
         from .db import IndiAllSkyDbDarkFrameTable
 
         dbsession = self._db.session
@@ -518,14 +534,14 @@ class ImageWorker(Process):
 
         try:
             dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
-                .filter(IndiAllSkyDbDarkFrameTable.camera_id == self.config['DB_CCD_ID'])\
+                .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure == float(dark_exposure))\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
                 .one()
         except NoResultFound:
-            logger.warning('Dark not found: ccd%d %dbit %ds gain %d bin %d', self.config['DB_CCD_ID'], image_bitpix, int(dark_exposure), self.gain_v.value, self.bin_v.value)
+            logger.warning('Dark not found: ccd%d %dbit %ds gain %d bin %d', camera_id, image_bitpix, int(dark_exposure), self.gain_v.value, self.bin_v.value)
             raise CalibrationNotFound('Dark not found')
 
         p_dark_frame = Path(dark_frame_entry.filename)

@@ -43,8 +43,10 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
+            time.sleep(1.0)  # sleep every loop
+
             try:
-                v_dict = self.video_q.get(block=True, timeout=3.0)
+                v_dict = self.video_q.get_nowait()
             except queue.Empty:
                 continue
 
@@ -62,6 +64,7 @@ class VideoWorker(Process):
             timespec = v_dict['timespec']
             img_folder = v_dict['img_folder']
             timeofday = v_dict['timeofday']
+            camera_id = v_dict['camera_id']
             video = v_dict.get('video', True)
             keogram = v_dict.get('keogram', True)
 
@@ -72,18 +75,19 @@ class VideoWorker(Process):
 
 
             if video:
-                self.generateVideo(timespec, img_folder, timeofday)
+                self.generateVideo(timespec, img_folder, timeofday, camera_id)
 
 
             if keogram:
-                self.generateKeogram(timespec, img_folder, timeofday)
+                self.generateKeogram(timespec, img_folder, timeofday, camera_id)
 
 
             self._releaseLock()
 
 
 
-    def generateVideo(self, timespec, img_folder, timeofday):
+    def generateVideo(self, timespec, img_folder, timeofday, camera_id):
+        from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbVideoTable
 
@@ -103,7 +107,7 @@ class VideoWorker(Process):
             night = False
 
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse-{0:s}-{1:s}.mp4'.format(timespec, timeofday))
+        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.mp4'.format(camera_id, timespec, timeofday))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -129,6 +133,8 @@ class VideoWorker(Process):
 
         # find all files
         timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
@@ -188,6 +194,7 @@ class VideoWorker(Process):
 
         video_entry = self._db.addVideo(
             video_file,
+            camera_id,
             timeofday,
         )
 
@@ -214,7 +221,8 @@ class VideoWorker(Process):
         })
 
 
-    def generateKeogram(self, timespec, img_folder, timeofday):
+    def generateKeogram(self, timespec, img_folder, timeofday, camera_id):
+        from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbKeogramTable
 
@@ -235,7 +243,7 @@ class VideoWorker(Process):
 
 
 
-        keogram_file = img_folder.parent.joinpath('allsky-keogram-{0:s}-{1:s}.jpg'.format(timespec, timeofday))
+        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.jpg'.format(camera_id, timespec, timeofday))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
@@ -257,6 +265,8 @@ class VideoWorker(Process):
 
         # find all files
         keogram_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
@@ -288,6 +298,7 @@ class VideoWorker(Process):
 
         keogram_entry = self._db.addKeogram(
             keogram_file,
+            camera_id,
             timeofday,
         )
 

@@ -28,6 +28,7 @@ class IndiAllSkyDbCameraTable(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(length=100), unique=True, nullable=False)
     createDate = Column(DateTime, nullable=False, server_default=func.now())
+    connectDate = Column(DateTime, nullable=True)
     images = relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = relationship('IndiAllSkyDbKeogramTable', back_populates='camera')

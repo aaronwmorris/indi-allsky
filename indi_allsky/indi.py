@@ -81,10 +81,10 @@ class IndiClient(PyIndi.BaseClient):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
-        self._filename_t = '{0:s}.{1:s}'
+        self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self._img_subdirs = []
 
-        self._timeout = 60.0
+        self._timeout = 65.0
         self._exposure = 0.0
 
         logger.info('creating an instance of IndiClient')
@@ -136,15 +136,16 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         logger.info("new BLOB %s", bp.name)
-        start = time.time()
+
+        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
+
+        #start = time.time()
 
         ### get image data
         imgdata = bp.getblobdata()
 
-        elapsed_s = time.time() - start
-        logger.info('Blob downloaded in %0.4f s', elapsed_s)
-
-        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
+        #elapsed_s = time.time() - start
+        #logger.info('Blob downloaded in %0.4f s', elapsed_s)
 
         exp_date = datetime.now()
 
@@ -153,6 +154,7 @@ class IndiClient(PyIndi.BaseClient):
             'imgdata'     : imgdata,
             'exposure'    : self._exposure,
             'exp_date'    : exp_date,
+            'camera_id'   : self.config['DB_CCD_ID'],
             'filename_t'  : self._filename_t,
             'img_subdirs' : self._img_subdirs,
         })
@@ -336,7 +338,9 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        ctl = self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+
+        return ctl
 
 
     def getCcdGain(self, ccdDevice):
@@ -536,6 +540,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self.sendNewSwitch(c)
 
+        return c
+
 
     def set_text(self, device, control_name, values, sync=True, timeout=None):
         c = self.get_control(device, control_name, 'text')
@@ -568,6 +574,15 @@ class IndiClient(PyIndi.BaseClient):
 
     def light_values(self, device, name, ctl=None):
         return self.__control2dict(device, name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
+
+
+    def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
+        if not ctl:
+            return True
+
+        ready = ctl.getState() in statuses
+
+        return ready
 
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
