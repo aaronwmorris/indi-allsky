@@ -529,19 +529,17 @@ class ImageWorker(Process):
 
         dbsession = self._db.session
 
-        # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
-        dark_exposure = int(exposure) + (5 - (int(exposure) % 5)) + 1  # round up exposure for dark frame
+        dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+            .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
+            .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
+            .order_by(IndiAllSkyDbDarkFrameTable.exposure.asc())\
+            .first()
 
-        try:
-            dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
-                .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
-                .filter(IndiAllSkyDbDarkFrameTable.exposure == float(dark_exposure))\
-                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
-                .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
-                .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
-                .one()
-        except NoResultFound:
-            logger.warning('Dark not found: ccd%d %dbit %ds gain %d bin %d', camera_id, image_bitpix, int(dark_exposure), self.gain_v.value, self.bin_v.value)
+        if not dark_frame_entry:
+            logger.warning('Dark not found: ccd%d %dbit %0.7fs gain %d bin %d', camera_id, image_bitpix, float(exposure), self.gain_v.value, self.bin_v.value)
             raise CalibrationNotFound('Dark not found')
 
         p_dark_frame = Path(dark_frame_entry.filename)
