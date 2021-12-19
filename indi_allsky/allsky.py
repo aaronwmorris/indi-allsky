@@ -284,6 +284,9 @@ class IndiAllSky(object):
         db_camera = self._db.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
 
+        # Disable debugging
+        self.indiclient.disableDebug(self.ccdDevice)
+
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode(self.ccdDevice)
 
