@@ -544,7 +544,7 @@ class IndiAllSky(object):
 
 
             loop_elapsed = now - loop_start_time
-            #logger.info('Loop completed in %0.4f s', loop_elapsed)
+            logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
     def reconfigureCcd(self):
@@ -658,20 +658,21 @@ class IndiAllSky(object):
 
         self.indiclient.img_subdirs = ['darks']  # write darks into darks sub directory
 
-        ######
-        # dark frames are taken in increments of 5 seconds (offset +1)  1, 6, 11, 16, 21...
-        # Note the weird +2 in the ranges below are necessary for range to return the max value in the series
-        ######
-
         ### NIGHT MODE DARKS ###
         self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
         self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
+
+        # exposures start with 1 and then every 5s until the max exposure
+        dark_exposures = [1]
+        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5), 5))
+        dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
+
+
         ### take darks
-        night_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
-        for exp in night_dark_exposures:
+        for exp in dark_exposures:
             filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 '{0:d}',
                 ccd_bits,
@@ -701,8 +702,7 @@ class IndiAllSky(object):
 
 
         ### take darks
-        night_moonmode_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
-        for exp in night_moonmode_dark_exposures:
+        for exp in dark_exposures:
             filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 '{0:d}',
                 ccd_bits,
@@ -734,8 +734,7 @@ class IndiAllSky(object):
 
         ### take darks
         # day will rarely exceed 1 second
-        day_dark_exposures = range(1, (int(self.config['CCD_EXPOSURE_MAX']) + 5) + 2, 5)  # dark frames round up
-        for exp in day_dark_exposures:
+        for exp in dark_exposures:
             filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
                 '{0:d}',
                 ccd_bits,
