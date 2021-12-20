@@ -188,6 +188,19 @@ class IndiClient(PyIndi.BaseClient):
         self.setBLOBMode(blobmode, ccd_device.getDeviceName(), prop)
 
 
+    def disableDebug(self, device):
+        debug_config = {
+            "SWITCHES" : {
+                "DEBUG" : {
+                    "on"  : ["DISABLE"],
+                    "off" : ["ENABLE"],
+                },
+            }
+        }
+
+        self.configureDevice(device, debug_config)
+
+
     def resetCcdFrame(self, ccd_device):
         reset_config = {
             "SWITCHES" : {

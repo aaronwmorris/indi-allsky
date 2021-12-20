@@ -9,18 +9,13 @@ import PyIndi
 
 CCD_EXPOSURE = 15.0
 
-
-### sv305
-CCD_GAIN = 250
+### rpicam
+CCD_GAIN = 1
 CCD_BINMODE = 1
 
 INDI_CONFIG = {
     "PROPERTIES" : {},
     "SWITCHES" : {
-        "FRAME_FORMAT" : {
-            "on"  : ["FORMAT_RAW8"],
-            "off" : ["FORMAT_RAW12"],
-        },
         "DEBUG" : {
             "on"  : ["ENABLE"],
             "off" : ["DISABLE"],
@@ -39,6 +34,21 @@ INDI_CONFIG = {
         },
     }
 }
+
+
+### sv305
+#CCD_GAIN = 250
+#CCD_BINMODE = 1
+
+#INDI_CONFIG = {
+#    "PROPERTIES" : {},
+#    "SWITCHES" : {
+#        "FRAME_FORMAT" : {
+#            "on"  : ["FORMAT_RAW8"],
+#            "off" : ["FORMAT_RAW12"],
+#        },
+#    }
+#}
 
 ### simulator
 #CCD_GAIN = 100
@@ -210,7 +220,7 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_sv305_ccd', 'indi_qhy_ccd', 'indi_simulator_ccd']:
+        elif indi_exec in ['indi_sv305_ccd', 'indi_qhy_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
@@ -260,7 +270,7 @@ class IndiClient(PyIndi.BaseClient):
 
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_simulator_ccd']:
+        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
             binning_config = {
                 "PROPERTIES" : {
                     "CCD_BINNING" : {
