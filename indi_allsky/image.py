@@ -81,7 +81,6 @@ class ImageWorker(Process):
         self.image_height = 0
 
         self.image_bit_depth = 0
-        self.color = self.config['CFA_PATTERN']  # flag can be overriden if color data is convert to grayscale
 
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
@@ -168,7 +167,6 @@ class ImageWorker(Process):
             else:
                 # data is probably RGB
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
-                self.color = True  # probably RGB data
 
                 #INDI returns array in the wrong order for cv2
                 scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
@@ -563,7 +561,6 @@ class ImageWorker(Process):
 
         if self.config.get('IMAGE_GRAYSCALE'):
             debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
-            self.color = False
         else:
             debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
 
@@ -775,7 +772,8 @@ class ImageWorker(Process):
         ]
 
 
-        if not self.color:
+        if len(scidata.shape) == 2:
+            # mono
             m_avg = cv2.mean(scidata)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
@@ -889,7 +887,7 @@ class ImageWorker(Process):
         ### ohhhh, contrasty
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
 
-        if not self.color:
+        if len(data_bytes.shape) == 2:
             # mono
             return clahe.apply(data_bytes)
 
@@ -907,7 +905,7 @@ class ImageWorker(Process):
 
 
     def equalizeHistogram(self, data_bytes):
-        if not self.color:
+        if len(data_bytes.shape) == 2:
             # mono
             return cv2.equalizeHist(data_bytes)
 
@@ -924,7 +922,8 @@ class ImageWorker(Process):
 
 
     def equalizeHistogramColor(self, data_bytes):
-        if not self.color:
+        if len(data_bytes.shape) == 2:
+            # mono
             return data_bytes
 
         ycrcb_img = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2YCrCb)
@@ -933,7 +932,8 @@ class ImageWorker(Process):
 
 
     def white_balance_bgr(self, data_bytes):
-        if not self.color:
+        if len(data_bytes.shape) == 2:
+            # mono
             return data_bytes
 
         if not self.config['AUTO_WB']:
@@ -971,7 +971,8 @@ class ImageWorker(Process):
 
 
     def white_balance_bgr_2(self, data_bytes):
-        if not self.color:
+        if len(data_bytes.shape) == 2:
+            # mono
             return data_bytes
 
         lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
