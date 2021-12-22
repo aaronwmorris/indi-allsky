@@ -896,7 +896,6 @@ class ImageWorker(Process):
 
         l, a, b = cv2.split(lab)
 
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         cl = clahe.apply(l)
 
         new_lab = cv2.merge((cl, a, b))
