@@ -446,9 +446,23 @@ class IndiAllSky(object):
         self.upload_worker.join()
 
 
+    def _pre_run_tasks(self, ccdDevice):
+        # Tasks that need to be run before the main program loop
+
+        indi_exec = ccdDevice.getDriverExec()
+
+        if indi_exec in ['indi_rpicam']:
+            # Raspberry PI HQ Camera requires an initial throw away exposure of at least 2s
+            # in order to take exposures longer than 1s
+            logger.info('Taking throw away exposure for rpicam')
+            self.shoot(2.0, sync=True)
+
+
     def run(self):
 
         self._initialize()
+
+        self._pre_run_tasks(self.ccdDevice)
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
