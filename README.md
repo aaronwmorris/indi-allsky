@@ -242,23 +242,23 @@ I have extensively tested the ZWO ASI290MM and the Svbony SV305.  3-4 weeks of s
 
 The hardware below has at least been plugged in and tested for correct detection and CFA decoding.
 
-| Vendor   | Model               | Notes |
-| -------- | ------------------- | ----- |
-| Svbony   | SV305               | 40% of frames require double the configured exposure time to complete. Likely a firmware bug. |
-| ZWO      | ASI290MM            |       |
-| ZWO      | ASI178MM            |       |
-| ZWO      | ASI178MC            |       |
-| ZWO      | ASI071MC Pro        |       |
-| ZWO      | ASI183MM Pro        |       |
-| ZWO      | ASI183MC Pro        |       |
-| QHY      | QHY5LII-M           |       |
-| Altair   | GPCAM2 290M         |       |
-| Touptek  | G-1200-KMB          |       |
-| Raspberry Pi | HQ Camera       | Requires 2+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 |
-| Canon    | 550D (Rebel T2i)    | Camera resolution and pixel size have to be manually defined in config |
-| Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
-| Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
-| n/a      | indi_simulator_ccd  | CCD Simulator.  Install GSC to generate sample images. |
+| Vendor   | Model               | Rating | Notes |
+| -------- | ------------------- | ------ | ----- |
+| Svbony   | SV305               | C      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
+| ZWO      | ASI290MM            | A      |       |
+| ZWO      | ASI178MM            | A      |       |
+| ZWO      | ASI178MC            | A      |       |
+| ZWO      | ASI071MC Pro        | A      |       |
+| ZWO      | ASI183MM Pro        | A      |       |
+| ZWO      | ASI183MC Pro        | A      |       |
+| QHY      | QHY5LII-M           | A      |       |
+| Altair   | GPCAM2 290M         | A      |       |
+| Touptek  | G-1200-KMB          | A      |       |
+| Raspberry Pi | HQ Camera       | B      | Requires 2+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 |
+| Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
+| Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
+| Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
+| indi     | indi_simulator_ccd  |        | CCD Simulator.  Install GSC to generate sample images. |
 
 If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
 
