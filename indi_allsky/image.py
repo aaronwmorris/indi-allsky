@@ -79,10 +79,6 @@ class ImageWorker(Process):
         self.target_adu_dev = float(self.config['TARGET_ADU_DEV'])
 
         self.image_count = 0
-        self.image_width = 0
-        self.image_height = 0
-
-        self.image_bit_depth = 0
 
         self._sqm = IndiAllskySqm(self.config)
         self.sqm_value = 0
@@ -137,13 +133,15 @@ class ImageWorker(Process):
 
             processing_start = time.time()
 
-            self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
-            logger.info('Image: %d x %d', self.image_width, self.image_height)
+
+            image_bit_depth = self.detectBitDepth(scidata_uncalibrated)
+
+            image_height, image_width = scidata_uncalibrated.shape[:2]
+            logger.info('Image: %d x %d', image_width, image_height)
+
 
             if len(scidata_uncalibrated.shape) == 2:
                 # gray scale or bayered
-                self.detectBitDepth(scidata_uncalibrated)
-
 
                 if self.config.get('IMAGE_SAVE_RAW'):
                     self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
@@ -163,7 +161,7 @@ class ImageWorker(Process):
                 # debayer
                 scidata_debayered = self.debayer(scidata_calibrated)
 
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix)
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
                 #scidata_debayered_8 = scidata_debayered
 
             else:
@@ -178,11 +176,9 @@ class ImageWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
-                self.detectBitDepth(scidata_uncalibrated)
-
                 scidata_bgr = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
 
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix)
+                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix, image_bit_depth)
 
                 calibrated = False
 
@@ -298,25 +294,27 @@ class ImageWorker(Process):
         logger.info('Image max value: %d', int(max_val))
 
         if max_val > 32768:
-            self.image_bit_depth = 16
+            image_bit_depth = 16
         elif max_val > 16384:
-            self.image_bit_depth = 15
+            image_bit_depth = 15
         elif max_val > 8192:
-            self.image_bit_depth = 14
+            image_bit_depth = 14
         elif max_val > 4096:
-            self.image_bit_depth = 13
+            image_bit_depth = 13
         elif max_val > 2096:
-            self.image_bit_depth = 12
+            image_bit_depth = 12
         elif max_val > 1024:
-            self.image_bit_depth = 11
+            image_bit_depth = 11
         elif max_val > 512:
-            self.image_bit_depth = 10
+            image_bit_depth = 10
         elif max_val > 256:
-            self.image_bit_depth = 9
+            image_bit_depth = 9
         else:
-            self.image_bit_depth = 8
+            image_bit_depth = 8
 
-        logger.info('Detected bit depth: %d', self.image_bit_depth)
+        logger.info('Detected bit depth: %d', image_bit_depth)
+
+        return image_bit_depth
 
 
     def write_fit(self, hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix):
@@ -570,6 +568,8 @@ class ImageWorker(Process):
 
 
     def image_text(self, data_bytes, exposure, exp_date):
+        image_height, image_width = data_bytes.shape[:2]
+
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
@@ -587,7 +587,7 @@ class ImageWorker(Process):
 
             obs.date = sun_rise
             sun.compute(obs)
-            sunRiseX, sunRiseY = self.getOrbXY(sun, obs)
+            sunRiseX, sunRiseY = self.getOrbXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunRiseX, sunRiseY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.NeverUpError:
@@ -600,7 +600,7 @@ class ImageWorker(Process):
 
             obs.date = sun_set
             sun.compute(obs)
-            sunSetX, sunSetY = self.getOrbXY(sun, obs)
+            sunSetX, sunSetY = self.getOrbXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunSetX, sunSetY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.AlwaysUpError:
@@ -610,7 +610,7 @@ class ImageWorker(Process):
 
         obs.date = utcnow
         sun.compute(obs)
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs)
+        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
 
         self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
 
@@ -620,7 +620,7 @@ class ImageWorker(Process):
 
         obs.date = utcnow
         moon.compute(obs)
-        moonOrbX, moonOrbY = self.getOrbXY(moon, obs)
+        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
@@ -731,11 +731,12 @@ class ImageWorker(Process):
     def drawEdgeLine(self, data_bytes, pt, color):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
+        image_height, image_width = data_bytes.shape[:2]
 
         line_length = int(self.config['ORB_PROPERTIES']['RADIUS'] / 2)
 
         x, y = pt
-        if x == 0 or x == self.image_width:
+        if x == 0 or x == image_width:
             # line is on the left or right
             x1 = x - line_length
             y1 = y
@@ -769,6 +770,8 @@ class ImageWorker(Process):
 
 
     def calculate_histogram(self, data_bytes, exposure):
+        image_height, image_width = data_bytes.shape[:2]
+
         if self.config['ADU_ROI']:
             logger.warning('Calculating ADU from RoI')
             # divide the coordinates by binning value
@@ -779,10 +782,10 @@ class ImageWorker(Process):
 
         else:
             logger.warning('Using central ROI for ADU calculations')
-            x1 = int((self.image_width / 2) - (self.image_width / 3))
-            y1 = int((self.image_height / 2) - (self.image_height / 3))
-            x2 = int((self.image_width / 2) + (self.image_width / 3))
-            y2 = int((self.image_height / 2) + (self.image_height / 3))
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
 
 
         scidata = data_bytes[
@@ -1020,29 +1023,31 @@ class ImageWorker(Process):
 
 
     def scale_image(self, data_bytes):
+        image_height, image_width = data_bytes.shape[:2]
+
         logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
-        new_width = int(self.image_width * self.config['IMAGE_SCALE'] / 100.0)
-        new_height = int(self.image_height * self.config['IMAGE_SCALE'] / 100.0)
+        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
+        new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
 
         logger.info('New size: %d x %d', new_width, new_height)
-        self.image_width = new_width
-        self.image_height = new_height
 
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _convert_16bit_to_8bit(self, data_bytes_16, image_bitpix):
+    def _convert_16bit_to_8bit(self, data_bytes_16, image_bitpix, image_bit_depth):
         if image_bitpix == 8:
             return data_bytes_16
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
-        div_factor = int((2 ** self.image_bit_depth) / 255)
+        div_factor = int((2 ** image_bit_depth) / 255)
 
         return (data_bytes_16 / div_factor).astype('uint8')
 
 
-    def getOrbXY(self, skyObj, obs):
+    def getOrbXY(self, skyObj, obs, image_size):
+        image_height, image_width = image_size
+
         ha_rad = obs.sidereal_time() - skyObj.ra
         ha_deg = math.degrees(ha_rad)
 
@@ -1056,36 +1061,36 @@ class ImageWorker(Process):
         logger.info('%s hour angle: %0.2f', skyObj.name, ha_deg)
 
         abs_ha_deg = abs(ha_deg)
-        perimeter_half = self.image_width + self.image_height
+        perimeter_half = image_width + image_height
 
         mapped_ha_deg = int(self.remap(abs_ha_deg, 0, 180, 0, perimeter_half))
         #logger.info('Mapped hour angle: %d', mapped_ha_deg)
 
         ### The image perimeter is mapped to the hour angle for the X,Y coordinates
-        if mapped_ha_deg < (self.image_width / 2) and ha_deg < 0:
+        if mapped_ha_deg < (image_width / 2) and ha_deg < 0:
             #logger.info('Top right')
-            x = (self.image_width / 2) + mapped_ha_deg
+            x = (image_width / 2) + mapped_ha_deg
             y = 0
-        elif mapped_ha_deg < (self.image_width / 2) and ha_deg > 0:
+        elif mapped_ha_deg < (image_width / 2) and ha_deg > 0:
             #logger.info('Top left')
-            x = (self.image_width / 2) - mapped_ha_deg
+            x = (image_width / 2) - mapped_ha_deg
             y = 0
-        elif mapped_ha_deg > ((self.image_width / 2) + self.image_height) and ha_deg < 0:
+        elif mapped_ha_deg > ((image_width / 2) + image_height) and ha_deg < 0:
             #logger.info('Bottom right')
-            x = self.image_width - (mapped_ha_deg - (self.image_height + (self.image_width / 2)))
-            y = self.image_height
-        elif mapped_ha_deg > ((self.image_width / 2) + self.image_height) and ha_deg > 0:
+            x = image_width - (mapped_ha_deg - (image_height + (image_width / 2)))
+            y = image_height
+        elif mapped_ha_deg > ((image_width / 2) + image_height) and ha_deg > 0:
             #logger.info('Bottom left')
-            x = mapped_ha_deg - (self.image_height + (self.image_width / 2))
-            y = self.image_height
+            x = mapped_ha_deg - (image_height + (image_width / 2))
+            y = image_height
         elif ha_deg < 0:
             #logger.info('Right')
-            x = self.image_width
-            y = mapped_ha_deg - (self.image_width / 2)
+            x = image_width
+            y = mapped_ha_deg - (image_width / 2)
         elif ha_deg > 0:
             #logger.info('Left')
             x = 0
-            y = mapped_ha_deg - (self.image_width / 2)
+            y = mapped_ha_deg - (image_width / 2)
         else:
             raise Exception('This cannot happen')
 
