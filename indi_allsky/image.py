@@ -595,24 +595,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunRiseX, sunRiseY = self.getOrbXY(sun, obs)
 
-            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-                cv2.line(
-                    img=data_bytes,
-                    pt1=(sunRiseX, sunRiseY),
-                    pt2=(sunRiseX - int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunRiseY),
-                    color=(0, 0, 0),
-                    thickness=self.line_thickness + 1,
-                    lineType=lineType,
-                )  # black outline
-            cv2.line(
-                img=data_bytes,
-                pt1=(sunRiseX, sunRiseY),
-                pt2=(sunRiseX - int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunRiseY),
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                thickness=self.line_thickness,
-                lineType=lineType,
-            )
-
+            self.drawEdgeLine(data_bytes, (sunRiseX, sunRiseY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.NeverUpError:
             pass
 
@@ -625,24 +608,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunSetX, sunSetY = self.getOrbXY(sun, obs)
 
-            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-                cv2.line(
-                    img=data_bytes,
-                    pt1=(sunSetX, sunSetY),
-                    pt2=(sunSetX + int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunSetY),
-                    color=(0, 0, 0),
-                    thickness=self.line_thickness + 1,
-                    lineType=lineType,
-                )  # black outline
-            cv2.line(
-                img=data_bytes,
-                pt1=(sunSetX, sunSetY),
-                pt2=(sunSetX + int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunSetY),
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                thickness=self.line_thickness,
-                lineType=lineType,
-            )
-
+            self.drawEdgeLine(data_bytes, (sunSetX, sunSetY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.AlwaysUpError:
             pass
 
@@ -829,6 +795,46 @@ class ImageWorker(Process):
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
+
+
+    def drawEdgeLine(self, data_bytes, pt, color):
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+
+        line_length = int(self.config['ORB_PROPERTIES']['RADIUS'] / 2)
+
+        x, y = pt
+        if x == 0 or x == self.image_width:
+            # line is on the left or right
+            x1 = x - line_length
+            y1 = y
+            x2 = x + line_length
+            y2 = y
+        else:
+            # line is on the top or bottom
+            x1 = x
+            y1 = y - line_length
+            x2 = x
+            y2 = y + line_length
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.line(
+                img=data_bytes,
+                pt1=(x1, y1),
+                pt2=(x2, y2),
+                color=(0, 0, 0),
+                thickness=self.line_thickness + 1,
+                lineType=lineType,
+            )  # black outline
+        cv2.line(
+            img=data_bytes,
+            pt1=(x1, y2),
+            pt2=(x2, y2),
+            color=color,
+            thickness=self.line_thickness,
+            lineType=lineType,
+        )
 
 
     def calculate_histogram(self, data_bytes, exposure):
