@@ -572,10 +572,6 @@ class ImageWorker(Process):
 
 
     def image_text(self, data_bytes, exposure, exp_date):
-        # not sure why these are returned as tuples
-        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
-        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
@@ -618,23 +614,7 @@ class ImageWorker(Process):
         sun.compute(obs)
         sunOrbX, sunOrbY = self.getOrbXY(sun, obs)
 
-
-        # Sun outline
-        cv2.circle(
-            img=data_bytes,
-            center=(sunOrbX, sunOrbY),
-            radius=self.config['ORB_PROPERTIES']['RADIUS'],
-            color=(0, 0, 0),
-            thickness=cv2.FILLED,
-        )
-        # Draw sun
-        cv2.circle(
-            img=data_bytes,
-            center=(sunOrbX, sunOrbY),
-            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
-            color=self.config['ORB_PROPERTIES']['SUN_COLOR'],
-            thickness=cv2.FILLED,
-        )
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
 
 
         ### Moon
@@ -644,22 +624,8 @@ class ImageWorker(Process):
         moon.compute(obs)
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs)
 
-        # Moon outline
-        cv2.circle(
-            img=data_bytes,
-            center=(moonOrbX, moonOrbY),
-            radius=self.config['ORB_PROPERTIES']['RADIUS'],
-            color=(0, 0, 0),
-            thickness=cv2.FILLED,
-        )
-        # Draw moon
-        cv2.circle(
-            img=data_bytes,
-            center=(moonOrbX, moonOrbY),
-            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
-            color=self.config['ORB_PROPERTIES']['MOON_COLOR'],
-            thickness=cv2.FILLED,
-        )
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+
 
         #cv2.rectangle(
         #    img=data_bytes,
@@ -670,131 +636,98 @@ class ImageWorker(Process):
         #)
 
         line_offset = 0
-
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-            cv2.putText(
-                img=data_bytes,
-                text=exp_date.strftime('%Y%m%d %H:%M:%S'),
-                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace,
-                color=(0, 0, 0),
-                lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-            )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text=exp_date.strftime('%Y%m%d %H:%M:%S'),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace,
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType,
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        self.drawText(
+            data_bytes,
+            exp_date.strftime('%Y%m%d %H:%M:%S'),
+            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )
 
 
         line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-            cv2.putText(
-                img=data_bytes,
-                text='Exposure {0:0.6f}'.format(exposure),
-                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace,
-                color=(0, 0, 0),
-                lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-            )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text='Exposure {0:0.6f}'.format(exposure),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace,
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType,
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        self.drawText(
+            data_bytes,
+            'Exposure {0:0.6f}'.format(exposure),
+            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )
 
 
         line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-            cv2.putText(
-                img=data_bytes,
-                text='Gain {0:d}'.format(self.gain_v.value),
-                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace,
-                color=(0, 0, 0),
-                lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-            )  # black outline
-        cv2.putText(
-            img=data_bytes,
-            text='Gain {0:d}'.format(self.gain_v.value),
-            org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace,
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType,
-            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        self.drawText(
+            data_bytes,
+            'Gain {0:d}'.format(self.gain_v.value),
+            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )
 
 
         # Add temp if value is set, will be skipped if the temp is exactly 0
         if self.sensortemp_v.value:
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-
-            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-                cv2.putText(
-                    img=data_bytes,
-                    text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
-                    org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    fontFace=fontFace,
-                    color=(0, 0, 0),
-                    lineType=lineType,
-                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-                )  # black outline
-            cv2.putText(
-                img=data_bytes,
-                text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
-                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace,
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            self.drawText(
+                data_bytes,
+                'Temp {0:0.1f}'.format(self.sensortemp_v.value),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             )
+
 
         # Add moon mode indicator
         if self.moonmode_v.value:
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
 
-            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-                cv2.putText(
-                    img=data_bytes,
-                    text='* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
-                    org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    fontFace=fontFace,
-                    color=(0, 0, 0),
-                    lineType=lineType,
-                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
-                )  # black outline
+
+    def drawText(self, data_bytes, text, pt, color):
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
                 img=data_bytes,
-                text='* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
-                org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                text=text,
+                org=pt,
                 fontFace=fontFace,
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                color=(0, 0, 0),
                 lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
-                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+            )  # black outline
+        cv2.putText(
+            img=data_bytes,
+            text=text,
+            org=pt,
+            fontFace=fontFace,
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            lineType=lineType,
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        )
+
+
+    def drawEdgeCircle(self, data_bytes, pt, color):
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.circle(
+                img=data_bytes,
+                center=pt,
+                radius=self.config['ORB_PROPERTIES']['RADIUS'],
+                color=(0, 0, 0),
+                thickness=cv2.FILLED,
             )
+
+        cv2.circle(
+            img=data_bytes,
+            center=pt,
+            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
+            color=color,
+            thickness=cv2.FILLED,
+        )
 
 
     def drawEdgeLine(self, data_bytes, pt, color):
