@@ -1058,7 +1058,7 @@ class ImageWorker(Process):
         else:
             pass
 
-        logger.info('%s hour angle: %0.2f', skyObj.name, ha_deg)
+        logger.info('%s hour angle: %0.2f @ %s', skyObj.name, ha_deg, obs.date)
 
         abs_ha_deg = abs(ha_deg)
         perimeter_half = image_width + image_height
