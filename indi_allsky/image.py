@@ -574,69 +574,81 @@ class ImageWorker(Process):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
-        #obs.date = datetime.utcnow() - timedelta(hours=13)  # testing
 
 
         ### Sun
         sun = ephem.Sun()
-        sun.compute(obs)
-
-        sun_rise = obs.next_rising(sun)
-        sun_set = obs.next_setting(sun)
-
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs)
-
-        obs.date = sun_rise
-        sun.compute(obs)
-        sunRiseX, sunRiseY = self.getOrbXY(sun, obs)
-
-        obs.date = sun_set
-        sun.compute(obs)
-        sunSetX, sunSetY = self.getOrbXY(sun, obs)
 
         # Sun rise
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+        try:
+            sun_rise = obs.next_rising(sun)
+
+            obs.date = sun_rise
+            sun.compute(obs)
+            sunRiseX, sunRiseY = self.getOrbXY(sun, obs)
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.line(
+                    img=data_bytes,
+                    pt1=(sunRiseX, sunRiseY),
+                    pt2=(sunRiseX - 5, sunRiseY),
+                    color=(0, 0, 0),
+                    thickness=3,
+                    lineType=lineType,
+                )  # black outline
             cv2.line(
                 img=data_bytes,
                 pt1=(sunRiseX, sunRiseY),
                 pt2=(sunRiseX - 5, sunRiseY),
-                color=(0, 0, 0),
-                thickness=3,
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                thickness=2,
                 lineType=lineType,
-            )  # black outline
-        cv2.line(
-            img=data_bytes,
-            pt1=(sunRiseX, sunRiseY),
-            pt2=(sunRiseX - 5, sunRiseY),
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            thickness=2,
-            lineType=lineType,
-        )
+            )
+
+        except ephem.NeverUpError:
+            pass
 
 
         # Sun set
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+        try:
+            sun_set = obs.next_setting(sun)
+
+            obs.date = sun_set
+            sun.compute(obs)
+            sunSetX, sunSetY = self.getOrbXY(sun, obs)
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.line(
+                    img=data_bytes,
+                    pt1=(sunSetX, sunSetY),
+                    pt2=(sunSetX + 5, sunSetY),
+                    color=(0, 0, 0),
+                    thickness=3,
+                    lineType=lineType,
+                )  # black outline
             cv2.line(
                 img=data_bytes,
                 pt1=(sunSetX, sunSetY),
                 pt2=(sunSetX + 5, sunSetY),
-                color=(0, 0, 0),
-                thickness=3,
+                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                thickness=2,
                 lineType=lineType,
-            )  # black outline
-        cv2.line(
-            img=data_bytes,
-            pt1=(sunSetX, sunSetY),
-            pt2=(sunSetX + 5, sunSetY),
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            thickness=2,
-            lineType=lineType,
-        )
+            )
+
+        except ephem.AlwaysUpError:
+            pass
+
+
+
+        obs.date = utcnow
+        sun.compute(obs)
+        sunOrbX, sunOrbY = self.getOrbXY(sun, obs)
 
 
         # Sun outline
@@ -660,7 +672,7 @@ class ImageWorker(Process):
         ### Moon
         moon = ephem.Moon()
 
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        obs.date = utcnow
         moon.compute(obs)
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs)
 
