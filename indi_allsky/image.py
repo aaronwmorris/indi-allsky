@@ -137,11 +137,11 @@ class ImageWorker(Process):
 
             processing_start = time.time()
 
+            self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
+            logger.info('Image: %d x %d', self.image_width, self.image_height)
+
             if len(scidata_uncalibrated.shape) == 2:
                 # gray scale or bayered
-                self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
-                logger.info('Image: %d x %d', self.image_width, self.image_height)
-
                 self.detectBitDepth(scidata_uncalibrated)
 
 
@@ -174,8 +174,6 @@ class ImageWorker(Process):
                 scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
                 scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 1)
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
-
-                self.image_height, self.image_width = scidata_uncalibrated.shape[:2]
 
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
