@@ -571,10 +571,73 @@ class ImageWorker(Process):
 
     def image_text(self, data_bytes, exposure, exp_date):
         # not sure why these are returned as tuples
-        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE']),
-        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA']),
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        sunOrbX, sunOrbY = self.getOrbXY(ephem.Sun())
+
+        obs = ephem.Observer()
+        obs.lon = str(self.config['LOCATION_LONGITUDE'])
+        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        #obs.date = datetime.utcnow() - timedelta(hours=13)  # testing
+
+
+        ### Sun
+        sun = ephem.Sun()
+        sun.compute(obs)
+
+        sun_rise = obs.next_rising(sun)
+        sun_set = obs.next_setting(sun)
+
+        sunOrbX, sunOrbY = self.getOrbXY(sun, obs)
+
+        obs.date = sun_rise
+        sun.compute(obs)
+        sunRiseX, sunRiseY = self.getOrbXY(sun, obs)
+
+        obs.date = sun_set
+        sun.compute(obs)
+        sunSetX, sunSetY = self.getOrbXY(sun, obs)
+
+        # Sun rise
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.line(
+                img=data_bytes,
+                pt1=(sunRiseX, sunRiseY),
+                pt2=(sunRiseX - 5, sunRiseY),
+                color=(0, 0, 0),
+                thickness=3,
+                lineType=lineType,
+            )  # black outline
+        cv2.line(
+            img=data_bytes,
+            pt1=(sunRiseX, sunRiseY),
+            pt2=(sunRiseX - 5, sunRiseY),
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            thickness=2,
+            lineType=lineType,
+        )
+
+
+        # Sun set
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.line(
+                img=data_bytes,
+                pt1=(sunSetX, sunSetY),
+                pt2=(sunSetX + 5, sunSetY),
+                color=(0, 0, 0),
+                thickness=3,
+                lineType=lineType,
+            )  # black outline
+        cv2.line(
+            img=data_bytes,
+            pt1=(sunSetX, sunSetY),
+            pt2=(sunSetX + 5, sunSetY),
+            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            thickness=2,
+            lineType=lineType,
+        )
+
 
         # Sun outline
         cv2.circle(
@@ -594,7 +657,12 @@ class ImageWorker(Process):
         )
 
 
-        moonOrbX, moonOrbY = self.getOrbXY(ephem.Moon())
+        ### Moon
+        moon = ephem.Moon()
+
+        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        moon.compute(obs)
+        moonOrbX, moonOrbY = self.getOrbXY(moon, obs)
 
         # Moon outline
         cv2.circle(
@@ -628,9 +696,9 @@ class ImageWorker(Process):
                 img=data_bytes,
                 text=exp_date.strftime('%Y%m%d %H:%M:%S'),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace[0],
+                fontFace=fontFace,
                 color=(0, 0, 0),
-                lineType=lineType[0],
+                lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )  # black outline
@@ -638,9 +706,9 @@ class ImageWorker(Process):
             img=data_bytes,
             text=exp_date.strftime('%Y%m%d %H:%M:%S'),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace[0],
+            fontFace=fontFace,
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType[0],
+            lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
@@ -653,9 +721,9 @@ class ImageWorker(Process):
                 img=data_bytes,
                 text='Exposure {0:0.6f}'.format(exposure),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace[0],
+                fontFace=fontFace,
                 color=(0, 0, 0),
-                lineType=lineType[0],
+                lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )  # black outline
@@ -663,9 +731,9 @@ class ImageWorker(Process):
             img=data_bytes,
             text='Exposure {0:0.6f}'.format(exposure),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace[0],
+            fontFace=fontFace,
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType[0],
+            lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
@@ -678,9 +746,9 @@ class ImageWorker(Process):
                 img=data_bytes,
                 text='Gain {0:d}'.format(self.gain_v.value),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace[0],
+                fontFace=fontFace,
                 color=(0, 0, 0),
-                lineType=lineType[0],
+                lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )  # black outline
@@ -688,9 +756,9 @@ class ImageWorker(Process):
             img=data_bytes,
             text='Gain {0:d}'.format(self.gain_v.value),
             org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            fontFace=fontFace[0],
+            fontFace=fontFace,
             color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-            lineType=lineType[0],
+            lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
@@ -705,9 +773,9 @@ class ImageWorker(Process):
                     img=data_bytes,
                     text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
                     org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    fontFace=fontFace[0],
+                    fontFace=fontFace,
                     color=(0, 0, 0),
-                    lineType=lineType[0],
+                    lineType=lineType,
                     fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
@@ -715,9 +783,9 @@ class ImageWorker(Process):
                 img=data_bytes,
                 text='Temp {0:0.1f}'.format(self.sensortemp_v.value),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace[0],
+                fontFace=fontFace,
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                lineType=lineType[0],
+                lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
@@ -731,9 +799,9 @@ class ImageWorker(Process):
                     img=data_bytes,
                     text='* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
                     org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    fontFace=fontFace[0],
+                    fontFace=fontFace,
                     color=(0, 0, 0),
-                    lineType=lineType[0],
+                    lineType=lineType,
                     fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
@@ -741,9 +809,9 @@ class ImageWorker(Process):
                 img=data_bytes,
                 text='* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
                 org=(self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                fontFace=fontFace[0],
+                fontFace=fontFace,
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                lineType=lineType[0],
+                lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
@@ -1023,21 +1091,7 @@ class ImageWorker(Process):
         return (data_bytes_16 / div_factor).astype('uint8')
 
 
-    def calculateSkyObject(self, skyObj):
-        obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
-        #obs.date = datetime.utcnow() - timedelta(hours=13)  # testing
-
-        skyObj.compute(obs)
-
-        return obs
-
-
-    def getOrbXY(self, skyObj):
-        obs = self.calculateSkyObject(skyObj)
-
+    def getOrbXY(self, skyObj, obs):
         ha_rad = obs.sidereal_time() - skyObj.ra
         ha_deg = math.degrees(ha_rad)
 
