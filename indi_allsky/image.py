@@ -36,6 +36,8 @@ logger = multiprocessing.get_logger()
 
 class ImageWorker(Process):
 
+    line_thickness = 2
+
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'RGGB' : cv2.COLOR_BAYER_BG2BGR,
@@ -597,17 +599,17 @@ class ImageWorker(Process):
                 cv2.line(
                     img=data_bytes,
                     pt1=(sunRiseX, sunRiseY),
-                    pt2=(sunRiseX - 5, sunRiseY),
+                    pt2=(sunRiseX - int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunRiseY),
                     color=(0, 0, 0),
-                    thickness=3,
+                    thickness=self.line_thickness + 1,
                     lineType=lineType,
                 )  # black outline
             cv2.line(
                 img=data_bytes,
                 pt1=(sunRiseX, sunRiseY),
-                pt2=(sunRiseX - 5, sunRiseY),
+                pt2=(sunRiseX - int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunRiseY),
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                thickness=2,
+                thickness=self.line_thickness,
                 lineType=lineType,
             )
 
@@ -627,17 +629,17 @@ class ImageWorker(Process):
                 cv2.line(
                     img=data_bytes,
                     pt1=(sunSetX, sunSetY),
-                    pt2=(sunSetX + 5, sunSetY),
+                    pt2=(sunSetX + int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunSetY),
                     color=(0, 0, 0),
-                    thickness=3,
+                    thickness=self.line_thickness + 1,
                     lineType=lineType,
                 )  # black outline
             cv2.line(
                 img=data_bytes,
                 pt1=(sunSetX, sunSetY),
-                pt2=(sunSetX + 5, sunSetY),
+                pt2=(sunSetX + int(self.config['ORB_PROPERTIES']['RADIUS'] / 2), sunSetY),
                 color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-                thickness=2,
+                thickness=self.line_thickness,
                 lineType=lineType,
             )
 
