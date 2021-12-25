@@ -212,11 +212,18 @@ class ImageWorker(Process):
                 scidata_contrast = scidata_balanced
 
 
+            # crop
+            if self.config.get('IMAGE_CROP_ROI'):
+                scidata_cropped = self.crop_image(scidata_contrast)
+            else:
+                scidata_cropped = scidata_contrast
+
+
             # verticle flip
             if self.config['IMAGE_FLIP_V']:
-                scidata_cal_flip_v = cv2.flip(scidata_contrast, 0)
+                scidata_cal_flip_v = cv2.flip(scidata_cropped, 0)
             else:
-                scidata_cal_flip_v = scidata_contrast
+                scidata_cal_flip_v = scidata_cropped
 
             # horizontal flip
             if self.config['IMAGE_FLIP_H']:
@@ -1032,6 +1039,25 @@ class ImageWorker(Process):
         logger.info('New size: %d x %d', new_width, new_height)
 
         return cv2.resize(data_bytes, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+    def crop_image(self, data_bytes):
+        # divide the coordinates by binning value
+        x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.bin_v.value)
+        y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.bin_v.value)
+        x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.bin_v.value)
+        y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.bin_v.value)
+
+
+        scidata = data_bytes[
+            y1:y2,
+            x1:x2,
+        ]
+
+        new_height, new_width = scidata.shape[:2]
+        logger.info('New cropped size: %d x %d', new_width, new_height)
+
+        return scidata
 
 
     def _convert_16bit_to_8bit(self, data_bytes_16, image_bitpix, image_bit_depth):

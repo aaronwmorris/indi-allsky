@@ -198,6 +198,7 @@ All configuration is read from config.json.  You can find configuration examples
 | IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |
+| IMAGE_CROP_ROI      | []          | (array) Region of interest to crop image (x1, y1, x2, y2) |
 | IMAGE_SAVE_RAW      | false       | (bool) Save raw image file |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
