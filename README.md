@@ -198,6 +198,7 @@ All configuration is read from config.json.  You can find configuration examples
 | IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |
+| IMAGE_CROP_ROI      | []          | (array) Region of interest to crop image (x1, y1, x2, y2) |
 | IMAGE_SAVE_RAW      | false       | (bool) Save raw image file |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
@@ -242,25 +243,35 @@ I have extensively tested the ZWO ASI290MM and the Svbony SV305.  3-4 weeks of s
 
 The hardware below has at least been plugged in and tested for correct detection and CFA decoding.
 
-| Vendor   | Model               | Notes |
-| -------- | ------------------- | ----- |
-| Svbony   | SV305               | 40% of frames require double the configured exposure time to complete. Likely a firmware bug. |
-| ZWO      | ASI290MM            |       |
-| ZWO      | ASI178MM            |       |
-| ZWO      | ASI178MC            |       |
-| ZWO      | ASI071MC Pro        |       |
-| ZWO      | ASI183MM Pro        |       |
-| ZWO      | ASI183MC Pro        |       |
-| QHY      | QHY5LII-M           |       |
-| Altair   | GPCAM2 290M         |       |
-| Touptek  | G-1200-KMB          |       |
-| Raspberry Pi | HQ Camera       | Exposures currently limited to 1s.  https://github.com/indilib/indi-3rdparty/issues/271 |
-| Canon    | 550D (Rebel T2i)    | Camera resolution and pixel size have to be manually defined in config |
-| Canon    | 1300D (Rebel T6)    | Camera resolution and pixel size have to be manually defined in config |
-| Generic  | indi_webcam_ccd     | No gain controls.  Little control over image quality. |
-| n/a      | indi_simulator_ccd  | CCD Simulator.  Install GSC to generate sample images. |
+| Vendor   | Model               | Rating | Notes |
+| -------- | ------------------- | ------ | ----- |
+| Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
+| ZWO      | ASI290MM            | A      |       |
+| ZWO      | ASI178MM            | A      |       |
+| ZWO      | ASI178MC            | A      |       |
+| ZWO      | ASI071MC Pro        | A      |       |
+| ZWO      | ASI183MM Pro        | A      |       |
+| ZWO      | ASI183MC Pro        | A      |       |
+| QHY      | QHY5LII-M           | A      |       |
+| Altair   | GPCAM2 290M         | A      |       |
+| Touptek  | G-1200-KMB          | A      |       |
+| Raspberry Pi | HQ Camera       | C      | Requires 2+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures is not stable. |
+| Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
+| Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
+| Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
+| indi     | indi_simulator_ccd  |        | CCD Simulator.  Install GSC to generate sample images. |
 
 If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
+
+
+## Gotchas
+Common problems you might run into.
+
+* The indi-allsky python processes consume ~500MB of RAM.
+    * 1K (1920x1080) x264 encoding with ffmpeg requires an additional ~500MB of RAM.  1GB of RAM should be the bare minimum system memory.  You should also have 100-200MB of additional swap space to prevent running out of memory during encoding.
+    * 4K (3840x2160) x264 encoding requires an additional 2+GB of RAM.  4GB of RAM should be the minimum system memory.
+* The x264 codec is has a maximum frame size of 4096×2304.  If your camera generates images larger than this, you will need to scale the frames or use the Region of Interest (RoI) options to reduce the frame size.
+    * The RaspberryPi HQ camera has a bin1 image size of 4056x3040.  Setting IMAGE_SCALE to 75 in the config results in a image size of 3042x2280.  Alternatively, you can center crop the image using IMAGE_CROP_ROI set to [0, 368, 4056, 2672] for an image size of 4056×2304.
 
 
 ## File Transfer

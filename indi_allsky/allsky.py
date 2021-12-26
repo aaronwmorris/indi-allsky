@@ -446,9 +446,23 @@ class IndiAllSky(object):
         self.upload_worker.join()
 
 
+    def _pre_run_tasks(self, ccdDevice):
+        # Tasks that need to be run before the main program loop
+
+        indi_exec = ccdDevice.getDriverExec()
+
+        if indi_exec in ['indi_rpicam']:
+            # Raspberry PI HQ Camera requires an initial throw away exposure of at least 2s
+            # in order to take exposures longer than 1s
+            logger.info('Taking throw away exposure for rpicam')
+            self.shoot(ccdDevice, 2.0, sync=True)
+
+
     def run(self):
 
         self._initialize()
+
+        self._pre_run_tasks(self.ccdDevice)
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -526,7 +540,7 @@ class IndiAllSky(object):
 
                     frame_start_time = now
 
-                    exposure_ctl = self.shoot(self.exposure_v.value, sync=False)
+                    exposure_ctl = self.shoot(self.ccdDevice, self.exposure_v.value, sync=False)
                     camera_ready = False
                     waiting_for_frame = True
 
@@ -685,7 +699,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(float(exp))
+            self.shoot(self.ccdDevice, float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
             elapsed_s = time.time() - start
@@ -715,7 +729,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(float(exp))
+            self.shoot(self.ccdDevice, float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
             elapsed_s = time.time() - start
@@ -747,7 +761,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(float(exp))
+            self.shoot(self.ccdDevice, float(exp))
             self.indiblob_status_receive.recv()  # wait until image is received
 
             elapsed_s = time.time() - start
@@ -901,10 +915,10 @@ class IndiAllSky(object):
         })
 
 
-    def shoot(self, exposure, sync=True, timeout=None):
+    def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
-        ctl = self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+        ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
 
         return ctl
 

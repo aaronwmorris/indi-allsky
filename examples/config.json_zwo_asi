@@ -64,6 +64,7 @@
     },
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
     "IMAGE_FOLDER"   : "/var/www/html/allsky/images",
+    "IMAGE_CROP_ROI" : [],
     "IMAGE_FLIP_V"   : false,
     "IMAGE_FLIP_H"   : false,
     "IMAGE_SCALE"    : 100,
