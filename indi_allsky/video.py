@@ -276,6 +276,8 @@ class VideoWorker(Process):
         logger.info('Found %d images for keogram', keogram_files_entries.count())
 
 
+        processing_start = time.time()
+
         kg = KeogramGenerator(self.config)
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
@@ -304,6 +306,10 @@ class VideoWorker(Process):
 
 
         kg.finalize(keogram_file)
+
+        processing_elapsed_s = time.time() - processing_start
+        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
+
 
         keogram_entry = self._db.addKeogram(
             keogram_file,
