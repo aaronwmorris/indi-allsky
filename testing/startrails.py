@@ -2,11 +2,9 @@
 
 import cv2
 import numpy
-#import math
 import argparse
 import logging
 import time
-#from datetime import datetime
 from pathlib import Path
 #from pprint import pformat
 
@@ -18,8 +16,9 @@ logger = logging
 
 class StartrailGenerator(object):
 
-    def __init__(self, max_brightness):
-        self.max_brightness = max_brightness
+    def __init__(self):
+        self._max_brightness = 50
+        self._mask_threshold = 190
 
         self.trail_image = None
 
@@ -28,6 +27,23 @@ class StartrailGenerator(object):
         self.background_image_min_brightness = 10
 
         self.image_processing_elapsed_s = 0
+
+
+    @property
+    def max_brightness(self):
+        return self._max_brightness
+
+    @max_brightness.setter
+    def max_brightness(self, new_max):
+        self._max_brightness = new_max
+
+    @property
+    def mask_threshold(self):
+        return self._mask_threshold
+
+    @mask_threshold.setter
+    def mask_threshold(self, new_thold):
+        self._mask_threshold = new_thold
 
 
     def main(self, outfile, inputdir):
@@ -81,7 +97,7 @@ class StartrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         m_avg = cv2.mean(image_gray)[0]
-        if m_avg > self.max_brightness:
+        if m_avg > self._max_brightness:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             return
 
@@ -94,7 +110,7 @@ class StartrailGenerator(object):
             self.background_image = image  # image with the lowest score will be the permanent background
 
 
-        ret, mask = cv2.threshold(image_gray, 190, 255, cv2.THRESH_BINARY)
+        ret, mask = cv2.threshold(image_gray, self._mask_threshold, 255, cv2.THRESH_BINARY)
         mask_inv = cv2.bitwise_not(mask)
 
 
@@ -174,10 +190,19 @@ if __name__ == "__main__":
         type=int,
         default=50,
     )
+    argparser.add_argument(
+        '--threshold',
+        '-t',
+        help='mask threshold',
+        type=int,
+        default=190,
+    )
 
 
     args = argparser.parse_args()
 
-    kg = StartrailGenerator(args.max_brightness)
-    kg.main(args.output, args.inputdir)
+    sg = StartrailGenerator()
+    sg.max_brightness = args.max_brightness
+    sg.mask_threshold = args.threshold
+    sg.main(args.output, args.inputdir)
 
