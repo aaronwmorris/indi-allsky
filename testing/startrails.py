@@ -97,7 +97,7 @@ class StartrailGenerator(object):
             self.background_image = image  # image with the lowest score will be the permanent background
 
 
-        ret, mask = cv2.threshold(image_gray, 127, 255, cv2.THRESH_BINARY)
+        ret, mask = cv2.threshold(image_gray, 190, 255, cv2.THRESH_BINARY)
         mask_inv = cv2.bitwise_not(mask)
 
 
