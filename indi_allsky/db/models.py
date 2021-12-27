@@ -124,7 +124,7 @@ class IndiAllSkyDbStarTrailsTable(Base):
     night = Column(Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
     camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
-    camera = relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
+    camera = relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
 
     def __repr__(self):
         return '<StarTrails {0:s}>'.format(self.filename)
