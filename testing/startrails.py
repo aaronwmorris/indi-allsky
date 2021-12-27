@@ -57,15 +57,14 @@ class StartrailGenerator(object):
         self.finalize(outfile)
 
 
-        logger.warning('Images processed in %0.1f s', self.image_processing_elapsed_s)
+        logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
 
 
         processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total processing in %0.1f s', processing_elapsed_s)
+        logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
     def processImage(self, image):
-
         image_processing_start = time.time()
 
         if isinstance(self.trail_image, type(None)):
