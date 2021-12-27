@@ -78,9 +78,6 @@ class KeogramGenerator(object):
 
         processing_start = time.time()
 
-        # keep track of this for labels
-        self.timestamps_list = list()
-
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
             image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)

@@ -18,9 +18,8 @@ class KeogramGenerator(object):
     line_length = 35
 
 
-    def __init__(self, config, file_list):
+    def __init__(self, config):
         self.config = config
-        self.file_list = file_list
 
         self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
@@ -63,6 +62,33 @@ class KeogramGenerator(object):
     @h_scale_factor.setter
     def h_scale_factor(self, new_factor):
         self._h_scale_factor = int(new_factor)
+
+
+    def generate(self, outfile, file_list):
+        # Exclude empty files
+        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+
+        # Sort by timestamp
+        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
+
+
+        processing_start = time.time()
+
+        for filename in file_list_ordered:
+            logger.info('Reading file: %s', filename)
+            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(image, type(None)):
+                logger.error('Unable to read %s', filename)
+                continue
+
+            self.processImage(filename, image)
+
+
+        self.finalize(outfile)
+
+        processing_elapsed_s = time.time() - processing_start
+        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
 
     def processImage(self, filename, image):
