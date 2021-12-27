@@ -51,7 +51,7 @@ class StartrailGenerator(object):
                 logger.error('Unable to read %s', filename)
                 continue
 
-            self.processImage(image)
+            self.processImage(filename, image)
 
 
         self.finalize(outfile)
@@ -64,7 +64,7 @@ class StartrailGenerator(object):
         logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, image):
+    def processImage(self, filename, image):
         image_processing_start = time.time()
 
         if isinstance(self.trail_image, type(None)):
@@ -92,7 +92,7 @@ class StartrailGenerator(object):
 
         if m_avg < self.background_image_brightness and m_avg > self.background_image_min_brightness:
             # try to exclude images that are too dark
-            logger.info('Found new background candidate: score %0.2f', m_avg)
+            logger.info('Found new background candidate: %s - score %0.2f', filename, m_avg)
             self.background_image_brightness = m_avg  # new low score
             self.background_image = image  # image with the lowest score will be the permanent background
 
