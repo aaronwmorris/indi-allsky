@@ -32,6 +32,7 @@ class IndiAllSkyDbCameraTable(Base):
     images = relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
+    startrails = relationship('IndiAllSkyDbStarTrailsTable', back_populates='camera')
     darkframes = relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
 
 
@@ -111,4 +112,20 @@ class IndiAllSkyDbKeogramTable(Base):
 
     def __repr__(self):
         return '<Keogram {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbStarTrailsTable(Base):
+    __tablename__ = 'startrail'
+
+    id = Column(Integer, primary_key=True)
+    filename = Column(String(length=255), unique=True, nullable=False)
+    createDate = Column(DateTime, nullable=False, index=True, server_default=func.now())
+    dayDate = Column(Date, nullable=False, index=True)
+    night = Column(Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = Column(Boolean, server_default=expression.false(), nullable=False)
+    camera_id = Column(Integer, ForeignKey('camera.id'), nullable=False)
+    camera = relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
+
+    def __repr__(self):
+        return '<StarTrails {0:s}>'.format(self.filename)
 

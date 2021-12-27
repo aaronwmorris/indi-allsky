@@ -8,6 +8,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -252,6 +253,49 @@ class IndiAllSkyDb(object):
         self._session.commit()
 
         return keogram
+
+
+    def addStarTrail(self, filename, camera_id, timeofday='night'):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
+        logger.info('Adding star trail %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        if night:
+            # day date for night is offset by 12 hours
+            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
+        else:
+            dayDate = datetime.datetime.now().date()
+
+
+        startrail = IndiAllSkyDbStarTrailsTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        self._session.add(startrail)
+        self._session.commit()
+
+        return startrail
+
+
 
 
     def addUploadedFlag(self, entry):

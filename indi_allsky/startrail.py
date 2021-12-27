@@ -1,22 +1,18 @@
-#!/usr/bin/env python3
-
 import cv2
 import numpy
-import argparse
-import logging
 import time
-from pathlib import Path
-#from pprint import pformat
 
+import multiprocessing
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
+logger = multiprocessing.get_logger()
 
 
 
 class StarTrailGenerator(object):
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self._max_brightness = 50
         self._mask_threshold = 190
 
@@ -46,10 +42,7 @@ class StarTrailGenerator(object):
         self._mask_threshold = new_thold
 
 
-    def main(self, outfile, inputdir):
-        file_list = list()
-        self.getFolderFilesByExt(inputdir, file_list)
-
+    def generate(self, outfile, file_list):
         # Exclude empty files
         file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
@@ -150,59 +143,7 @@ class StarTrailGenerator(object):
         final_image = cv2.add(bg_masked, stars_masked)
 
 
-        logger.warning('Creating %s', outfile)
-        cv2.imwrite(outfile, final_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        logger.warning('Creating star trail: %s', outfile)
+        cv2.imwrite(str(outfile), final_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
 
-
-    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
-        if not extension_list:
-            extension_list = ['jpg']
-
-        logger.info('Searching for image files in %s', folder)
-
-        dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
-
-        for item in Path(folder).iterdir():
-            if item.is_file() and item.suffix in dot_extension_list:
-                file_list.append(item)
-            elif item.is_dir():
-                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
-
-
-if __name__ == "__main__":
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument(
-        'inputdir',
-        help='Input directory',
-        type=str,
-    )
-    argparser.add_argument(
-        '--output',
-        '-o',
-        help='output',
-        type=str,
-        required=True,
-    )
-    argparser.add_argument(
-        '--max_brightness',
-        '-l',
-        help='max brightness limit',
-        type=int,
-        default=50,
-    )
-    argparser.add_argument(
-        '--threshold',
-        '-t',
-        help='mask threshold',
-        type=int,
-        default=190,
-    )
-
-
-    args = argparser.parse_args()
-
-    sg = StarTrailGenerator()
-    sg.max_brightness = args.max_brightness
-    sg.mask_threshold = args.threshold
-    sg.main(args.output, args.inputdir)
 
