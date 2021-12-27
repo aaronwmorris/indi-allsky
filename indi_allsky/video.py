@@ -359,7 +359,7 @@ class VideoWorker(Process):
             startrail_entry = self._db.addStarTrail(
                 startrail_file,
                 camera_id,
-                timeofday,
+                timeofday=timeofday,
             )
 
 
