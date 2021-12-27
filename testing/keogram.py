@@ -94,8 +94,6 @@ class KeogramGenerator(object):
 
         self.finalize(outfile)
 
-        logger.warning('Keogram images processed in %0.1f s', self.image_processing_elapsed_s)
-
         processing_elapsed_s = time.time() - processing_start
         logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
@@ -140,6 +138,8 @@ class KeogramGenerator(object):
 
 
     def finalize(self, outfile):
+        logger.warning('Keogram images processed in %0.1f s', self.image_processing_elapsed_s)
+
         logger.warning('Creating %s', outfile)
         cv2.imwrite(outfile, self.keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 

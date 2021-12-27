@@ -32,6 +32,11 @@ class KeogramGenerator(object):
         self.rotated_width = None
         self.rotated_height = None
 
+        self.keogram_data = None
+
+        self.timestamps_list = list()
+        self.image_processing_elapsed_s = 0
+
 
     @property
     def angle(self):
@@ -60,66 +65,45 @@ class KeogramGenerator(object):
         self._h_scale_factor = int(new_factor)
 
 
-    def generate(self, outfile):
-        # Exclude empty files
-        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, self.file_list)
+    def processImage(self, filename, image):
+        image_processing_start = time.time()
 
-        # Sort by timestamp
-        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
+        self.timestamps_list.append(filename.stat().st_mtime)
 
-
-        # We do not know the array dimensions until the first image is rotated
-        keogram_data = None
-
-        processing_start = time.time()
-
-        # keep track of this for labels
-        timestamps_list = list()
-
-        for filename in file_list_ordered:
-            logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(image, type(None)):
-                logger.error('Unable to read %s', filename)
-                continue
-
-            timestamps_list.append(filename.stat().st_mtime)
-
-            height, width = image.shape[:2]
-            self.original_height = height
-            self.original_width = width
+        height, width = image.shape[:2]
+        self.original_height = height
+        self.original_width = width
 
 
-            rotated_image = self.rotate(image)
-            del image
+        rotated_image = self.rotate(image)
+        del image
 
 
-            rot_height, rot_width = rotated_image.shape[:2]
-            self.rotated_height = rot_height
-            self.rotated_width = rot_width
+        rot_height, rot_width = rotated_image.shape[:2]
+        self.rotated_height = rot_height
+        self.rotated_width = rot_width
 
-            rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
+        rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
 
-            if isinstance(keogram_data, type(None)):
-                new_shape = rotated_center_line.shape
-                logger.info('New Shape: %s', pformat(new_shape))
+        if isinstance(self.keogram_data, type(None)):
+            new_shape = rotated_center_line.shape
+            logger.info('New Shape: %s', pformat(new_shape))
 
-                new_dtype = rotated_center_line.dtype
-                logger.info('New dtype: %s', new_dtype)
+            new_dtype = rotated_center_line.dtype
+            logger.info('New dtype: %s', new_dtype)
 
-                keogram_data = numpy.empty(new_shape, dtype=new_dtype)
+            self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
-            keogram_data = numpy.append(keogram_data, rotated_center_line, 1)
+        self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
 
-            del rotated_image
+        self.image_processing_elapsed_s += time.time() - image_processing_start
 
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.info('Images processed for keogram in %0.1f s', processing_elapsed_s)
+    def finalize(self, outfile):
+        logger.info('Images processed for keogram in %0.1f s', self.image_processing_elapsed_s)
 
         # trim off the top and bottom bars
-        keogram_trimmed = self.trimEdges(keogram_data)
+        keogram_trimmed = self.trimEdges(self.keogram_data)
 
         # scale horizontal size
         trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
@@ -129,7 +113,7 @@ class KeogramGenerator(object):
 
         # apply time labels
         if self.config.get('KEOGRAM_LABEL'):
-            self.applyLabels(keogram_resized, timestamps_list)
+            self.applyLabels(keogram_resized)
 
         logger.warning('Creating keogram: %s', outfile)
         cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
@@ -213,17 +197,17 @@ class KeogramGenerator(object):
         return trimmed_image
 
 
-    def applyLabels(self, keogram, timestamps_list):
+    def applyLabels(self, keogram):
         height, width = keogram.shape[:2]
 
         # starting point
-        last_time = datetime.fromtimestamp(timestamps_list[0])
+        last_time = datetime.fromtimestamp(self.timestamps_list[0])
         last_hour_str = last_time.strftime('%H')
 
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        for i, u_ts in enumerate(timestamps_list):
+        for i, u_ts in enumerate(self.timestamps_list):
             ts = datetime.fromtimestamp(u_ts)
             hour_str = ts.strftime('%H')
 
@@ -232,7 +216,7 @@ class KeogramGenerator(object):
 
             last_hour_str = hour_str
 
-            line_x = int(i * width / len(timestamps_list))
+            line_x = int(i * width / len(self.timestamps_list))
 
             line_start = (line_x, height)
             line_end = (line_x, height - self.line_length)

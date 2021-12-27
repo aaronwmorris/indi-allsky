@@ -1,6 +1,7 @@
 import os
 import io
 import time
+import cv2
 from datetime import datetime
 from pathlib import Path
 import subprocess
@@ -275,7 +276,13 @@ class VideoWorker(Process):
         logger.info('Found %d images for keogram', keogram_files_entries.count())
 
 
-        keogram_files = list()
+        kg = KeogramGenerator(self.config)
+        kg.angle = self.config['KEOGRAM_ANGLE']
+        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
+        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+
+
+        # Files are presorted from the DB
         for entry in keogram_files_entries:
             p_entry = Path(entry.filename)
 
@@ -286,15 +293,17 @@ class VideoWorker(Process):
             if p_entry.stat().st_size == 0:
                 continue
 
-            keogram_files.append(p_entry)
+            logger.info('Reading file: %s', p_entry)
+            image = cv2.imread(str(p_entry), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(image, type(None)):
+                logger.error('Unable to read %s', p_entry)
+                continue
+
+            kg.processImage(p_entry, image)
 
 
-
-        kg = KeogramGenerator(self.config, keogram_files)
-        kg.angle = self.config['KEOGRAM_ANGLE']
-        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
-        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
-        kg.generate(keogram_file)
+        kg.finalize(keogram_file)
 
         keogram_entry = self._db.addKeogram(
             keogram_file,

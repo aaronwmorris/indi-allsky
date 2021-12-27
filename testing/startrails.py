@@ -57,9 +57,6 @@ class StartrailGenerator(object):
         self.finalize(outfile)
 
 
-        logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
-
-
         processing_elapsed_s = time.time() - processing_start
         logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
@@ -114,6 +111,8 @@ class StartrailGenerator(object):
 
 
     def finalize(self, outfile):
+        logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
+
         # need grayscale image for mask generation
         if len(self.trail_image.shape) == 2:
             base_image_gray = self.trail_image.copy()
