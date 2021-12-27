@@ -68,12 +68,14 @@ class StartrailGenerator(object):
 
             m_avg = cv2.mean(image_gray)[0]
             if m_avg > self.max_brightness:
-                logger.warning(' Excluding image due to brightness')
+                logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
                 continue
 
+            #logger.info(' Image brightness: %0.2f', m_avg)
 
             if m_avg < self.background_image_brightness and m_avg > self.background_image_min_brightness:
                 # try to exclude images that are too dark
+                logger.info('Found new background candidate: %s, score %0.2f', filename, m_avg)
                 self.background_image_brightness = m_avg  # new low score
                 self.background_image = image  # image with the lowest score will be the permanent background
 
