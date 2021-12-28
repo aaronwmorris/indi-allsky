@@ -2,6 +2,8 @@ import cv2
 import numpy
 import time
 
+from .exceptions import InsufficentData
+
 import multiprocessing
 
 logger = multiprocessing.get_logger()
@@ -17,6 +19,7 @@ class StarTrailGenerator(object):
         self._mask_threshold = 190
 
         self.trail_image = None
+        self.trail_count = 0
 
         self.background_image = None
         self.background_image_brightness = 255
@@ -96,6 +99,8 @@ class StarTrailGenerator(object):
 
         #logger.info(' Image brightness: %0.2f', m_avg)
 
+        self.trail_count += 1
+
         if m_avg < self.background_image_brightness and m_avg > self.background_image_min_brightness:
             # try to exclude images that are too dark
             logger.info('Found new background candidate: %s - score %0.2f', filename, m_avg)
@@ -121,6 +126,14 @@ class StarTrailGenerator(object):
 
     def finalize(self, outfile):
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
+
+
+        if isinstance(self.background_image, type(None)):
+            raise InsufficentData('Background image not detected')
+
+        if self.trail_count < 20:
+            raise InsufficentData('Not enough images found to build star trail')
+
 
         # need grayscale image for mask generation
         if len(self.trail_image.shape) == 2:

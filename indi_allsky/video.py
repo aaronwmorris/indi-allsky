@@ -14,6 +14,8 @@ from .startrail import StarTrailGenerator
 
 from .db import IndiAllSkyDb
 
+from .exceptions import InsufficentData
+
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
@@ -338,30 +340,33 @@ class VideoWorker(Process):
         kg.finalize(keogram_file)
 
         if night:
-            stg.finalize(startrail_file)
+            try:
+                stg.finalize(startrail_file)
+            except InsufficentData as e:
+                logger.error('Error generating star trail: %s', str(e))
 
 
         processing_elapsed_s = time.time() - processing_start
         logger.warning('Total keogram/star trail processing in %0.1f s', processing_elapsed_s)
 
 
-        keogram_entry = self._db.addKeogram(
-            keogram_file,
-            camera_id,
-            timeofday,
-        )
+        if keogram_file.exists():
+            keogram_entry = self._db.addKeogram(
+                keogram_file,
+                camera_id,
+                timeofday,
+            )
 
-        self.uploadKeogram(keogram_file)
-        self._db.addUploadedFlag(keogram_entry)
+            self.uploadKeogram(keogram_file)
+            self._db.addUploadedFlag(keogram_entry)
 
 
-        if night:
+        if night and startrail_file.exists():
             startrail_entry = self._db.addStarTrail(
                 startrail_file,
                 camera_id,
                 timeofday=timeofday,
             )
-
 
             self.uploadStarTrail(startrail_file)
             self._db.addUploadedFlag(startrail_entry)
