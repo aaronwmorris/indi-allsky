@@ -583,52 +583,80 @@ class ImageWorker(Process):
         obs = ephem.Observer()
         obs.lon = str(self.config['LOCATION_LONGITUDE'])
         obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.date = utcnow
 
 
-        ### Sun
         sun = ephem.Sun()
+        sun.compute(obs)
+        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-        # Sun rise
+        moon = ephem.Moon()
+        moon.compute(obs)
+        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
+
+
+        # Civil dawn
         try:
-            sun_rise = obs.next_rising(sun)
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
 
-            obs.date = sun_rise
+            obs.date = sun_civilDawn_date
             sun.compute(obs)
-            sunRiseX, sunRiseY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunRiseX, sunRiseY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.NeverUpError:
             pass
 
 
-        # Sun set
+        # Astronomical dawn
         try:
-            sun_set = obs.next_setting(sun)
+            obs.horizon = math.radians(-18)
+            sun_astroDawn_date = obs.next_rising(sun, use_center=True)
 
-            obs.date = sun_set
+            obs.date = sun_astroDawn_date
             sun.compute(obs)
-            sunSetX, sunSetY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunAstroDawnX, sunAstroDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunSetX, sunSetY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        except ephem.AlwaysUpError:
+            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.NeverUpError:
             pass
 
 
 
-        obs.date = utcnow
-        sun.compute(obs)
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
+        # Civil twilight
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
 
+            obs.date = sun_civilTwilight_date
+            sun.compute(obs)
+            sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            pass
+
+
+        # Astronomical twilight
+        try:
+            obs.horizon = math.radians(-18)
+            sun_astroTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_astroTwilight_date
+            sun.compute(obs)
+            sunAstroTwilightX, sunAstroTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            pass
+
+
+        # Sun
         self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
 
 
-        ### Moon
-        moon = ephem.Moon()
-
-        obs.date = utcnow
-        moon.compute(obs)
-        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
-
+        # Moon
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
 
