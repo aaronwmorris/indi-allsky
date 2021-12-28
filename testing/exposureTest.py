@@ -430,7 +430,7 @@ class IndiExposureTest(object):
 
         if indi_exec in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
-            # in order to take exposures longer than 1s
+            # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
             self.shoot(ccdDevice, 7.0, sync=True)
 

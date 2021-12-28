@@ -452,10 +452,10 @@ class IndiAllSky(object):
         indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in ['indi_rpicam']:
-            # Raspberry PI HQ Camera requires an initial throw away exposure of at least 2s
-            # in order to take exposures longer than 1s
+            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
+            # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(ccdDevice, 2.0, sync=True)
+            self.shoot(ccdDevice, 7.0, sync=True)
 
 
     def run(self):
@@ -532,7 +532,7 @@ class IndiAllSky(object):
 
                     waiting_for_frame = False
 
-                    logger.info('Exposure received in %0.4f s', frame_elapsed)
+                    logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
 
 
                 if camera_ready and now >= next_frame_time:
