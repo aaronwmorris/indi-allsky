@@ -706,7 +706,7 @@ class ImageWorker(Process):
         #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
         #self.drawText(
         #    data_bytes,
-        #    'Exposure Time {0:0.2f}'.format(exp_elapsed),
+        #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
         #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
         #    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         #)
