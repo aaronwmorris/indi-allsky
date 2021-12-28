@@ -73,13 +73,13 @@
 
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
-        "FONT_HEIGHT"    : 30,
+        "FONT_HEIGHT"    : 60,
         "FONT_X"         : 15,
-        "FONT_Y"         : 30,
+        "FONT_Y"         : 60,
         "FONT_COLOR"     : [200, 200, 200],
         "FONT_AA"        : "LINE_AA",
-        "FONT_SCALE"     : 0.80,
-        "FONT_THICKNESS" : 1,
+        "FONT_SCALE"     : 1.60,
+        "FONT_THICKNESS" : 2,
         "FONT_OUTLINE"   : true
     },
 
