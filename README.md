@@ -18,6 +18,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * Keograms
+* Star Trails
 * Images display local hour angle of sun and moon
 * Moon mode - reduced gain when the moon is overhead
 * Remote INDI server operation - operate camera remotely over the network
@@ -104,6 +105,11 @@ Below you can see it was cloudy the first half of the night and then clear.  If 
 ![](./content/keogram_example.jpg)
 
 Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.
+
+## Star Trails
+Star trail images stack the stars from each frame to show their progression across the sky.
+
+![](./content/startrails_20211202_789012.jpg)
 
 ## Web Interfaces
 
@@ -294,7 +300,6 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 
 ## To Do
 
-* Star trails
 * Additional camera vendor support
 
 ## Acknowledgements
