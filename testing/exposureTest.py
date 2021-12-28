@@ -313,8 +313,9 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        ctl = self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
+        return ctl
 
 
     def set_number(self, device, name, values, sync=True, timeout=None):
@@ -415,9 +416,23 @@ class IndiExposureTest(object):
         self.indiclient = None
 
 
-    def shoot(self, exposure, sync=True, timeout=None):
+    def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure', exposure)
-        self.indiclient.setCcdExposure(self.ccdDevice, exposure, sync=sync, timeout=timeout)
+        ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
+
+        return ctl
+
+
+    def _pre_run_tasks(self, ccdDevice):
+        # Tasks that need to be run before the main program loop
+
+        indi_exec = ccdDevice.getDriverExec()
+
+        if indi_exec in ['indi_rpicam']:
+            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
+            # in order to take exposures longer than 1s
+            logger.info('Taking throw away exposure for rpicam')
+            self.shoot(ccdDevice, 7.0, sync=True)
 
 
     def run(self):
@@ -463,6 +478,7 @@ class IndiExposureTest(object):
         self.indiclient.setCcdGain(ccdDevice, CCD_GAIN)
         self.indiclient.setCcdBinning(ccdDevice, CCD_BINMODE)
 
+        self._pre_run_tasks(ccdDevice)
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -475,7 +491,7 @@ class IndiExposureTest(object):
             ### Blocking mode ###
 
             #try:
-            #    self.shoot(CCD_EXPOSURE, sync=True)
+            #    self.shoot(ccdDevce, CCD_EXPOSURE, sync=True)
             #except TimeOutException as e:
             #    logger.error('Timeout: %s', str(e))
             #    time.sleep(5.0)
@@ -501,7 +517,7 @@ class IndiExposureTest(object):
 
                 frame_start_time = now
 
-                self.shoot(CCD_EXPOSURE, sync=False)
+                self.shoot(ccdDevice, CCD_EXPOSURE, sync=False)
                 waiting_for_frame = True
 
                 next_frame_time = frame_start_time + CCD_EXPOSURE
