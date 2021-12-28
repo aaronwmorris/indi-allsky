@@ -606,6 +606,10 @@ class ImageWorker(Process):
 
             self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
             pass
 
 
@@ -620,6 +624,10 @@ class ImageWorker(Process):
 
             self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
             pass
 
 
@@ -635,6 +643,10 @@ class ImageWorker(Process):
 
             self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
             pass
 
 
@@ -649,6 +661,10 @@ class ImageWorker(Process):
 
             self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
             pass
 
 
