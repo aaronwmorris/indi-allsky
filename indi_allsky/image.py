@@ -109,6 +109,7 @@ class ImageWorker(Process):
             imgdata = i_dict['imgdata']
             exposure = i_dict['exposure']
             exp_date = i_dict['exp_date']
+            exp_elapsed = i_dict['exp_elapsed']
             camera_id = i_dict['camera_id']
             filename_t = i_dict.get('filename_t')
             img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
@@ -243,7 +244,7 @@ class ImageWorker(Process):
             # denoise
             #scidata_denoise = self.fastDenoise(scidata_sci_cal_flip)
 
-            self.image_text(scidata_scaled, exposure, exp_date)
+            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -574,7 +575,7 @@ class ImageWorker(Process):
         return scidata_bgr
 
 
-    def image_text(self, data_bytes, exposure, exp_date):
+    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
         image_height, image_width = data_bytes.shape[:2]
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
@@ -700,6 +701,15 @@ class ImageWorker(Process):
             (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )
+
+
+        #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        #self.drawText(
+        #    data_bytes,
+        #    'Exposure Time {0:0.2f}'.format(exp_elapsed),
+        #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+        #    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+        #)
 
 
         line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
