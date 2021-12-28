@@ -581,8 +581,8 @@ class ImageWorker(Process):
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = utcnow
 
 

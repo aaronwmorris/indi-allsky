@@ -59,8 +59,8 @@ class IndiAllSky(object):
         self.moonmode_v = Value('f', 0.0)  # contains moon phase %
         self.moonmode = None
 
-        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
-        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         self.image_worker = None
         self.image_worker_idx = 0
@@ -128,8 +128,8 @@ class IndiAllSky(object):
         self.config['DATABASE_URI'] = self.DATABASE_URI
 
         # Update shared values
-        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
-        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         # reconfigure if needed
         self.reconfigureCcd()
@@ -621,8 +621,8 @@ class IndiAllSky(object):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -637,8 +637,8 @@ class IndiAllSky(object):
             self.night = self.detectNight()
 
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()
