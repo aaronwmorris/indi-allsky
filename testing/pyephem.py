@@ -2,6 +2,7 @@
 
 import ephem
 import datetime
+from dateutil import tz
 import math
 import logging
 
@@ -11,8 +12,11 @@ logger = logging
 
 LATITUDE = 33
 LONGITUDE = -84
+TIMEZONE = 'EST5EDT'
 TIME_OFFSET = -5
 
+
+local_tz = tz.gettz(TIMEZONE)
 
 obs = ephem.Observer()
 obs.lat = math.radians(LATITUDE)
@@ -40,6 +44,7 @@ sun_rise_ha = math.degrees(obs.sidereal_time() - sun.ra)
 logger.info('Sun alt: %0.1f', sun_alt_deg)
 logger.info('Sun HA: %0.1f', sun_ha_deg)
 logger.info('Sun rise: %s', ephem.Date(sun_rise_date + (ephem.hour * TIME_OFFSET)))
+#logger.info('Sun rise: %s', sun_rise_date.datetime().astimezone(local_tz))
 logger.info('Sun rise HA: %0.1f', sun_rise_ha)
 logger.info('Sun set: %s', ephem.Date(sun_set_date + (ephem.hour * TIME_OFFSET)))
 
