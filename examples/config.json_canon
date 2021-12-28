@@ -79,7 +79,7 @@
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
         "FONT_HEIGHT"    : 60,
-        "FONT_X"         : 15,
+        "FONT_X"         : 30,
         "FONT_Y"         : 60,
         "FONT_COLOR"     : [200, 200, 200],
         "FONT_AA"        : "LINE_AA",
