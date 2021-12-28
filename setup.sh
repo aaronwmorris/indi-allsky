@@ -83,6 +83,11 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
     if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         echo
         echo
@@ -98,6 +103,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
             sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
         fi
     fi
+
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -132,6 +138,11 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
     if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         # Astroberry repository
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
@@ -140,6 +151,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
             sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
         fi
     fi
+
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -172,6 +184,10 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
 
 
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
@@ -223,6 +239,10 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     # need to find an indi repo
 
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -254,11 +274,17 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
     fi
+
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -292,11 +318,17 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
     fi
+
 
     sudo apt-get update
     sudo apt-get -y install \
