@@ -66,7 +66,10 @@ class StarTrailGenerator(object):
             self.processImage(filename, image)
 
 
-        self.finalize(outfile)
+        try:
+            self.finalize(outfile)
+        except InsufficentData as e:
+            logger.error('Error generating star trail: %s', str(e))
 
 
         processing_elapsed_s = time.time() - processing_start
