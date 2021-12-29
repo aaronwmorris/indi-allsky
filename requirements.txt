@@ -2,6 +2,7 @@ pyindi-client
 astropy
 opencv-python-headless==4.5.3.56
 #scikit-image
+python-dateutil
 ephem
 paramiko
 pycurl

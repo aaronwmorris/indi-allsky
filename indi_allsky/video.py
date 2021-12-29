@@ -1,6 +1,7 @@
 import os
 import io
 import time
+import cv2
 from datetime import datetime
 from pathlib import Path
 import subprocess
@@ -9,7 +10,11 @@ import fcntl
 import errno
 
 from .keogram import KeogramGenerator
+from .startrail import StarTrailGenerator
+
 from .db import IndiAllSkyDb
+
+from .exceptions import InsufficentData
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -67,6 +72,7 @@ class VideoWorker(Process):
             camera_id = v_dict['camera_id']
             video = v_dict.get('video', True)
             keogram = v_dict.get('keogram', True)
+            #startrail = v_dict.get('startrail', True)
 
 
             if not img_folder.exists():
@@ -79,7 +85,7 @@ class VideoWorker(Process):
 
 
             if keogram:
-                self.generateKeogram(timespec, img_folder, timeofday, camera_id)
+                self.generateKeogramStarTrails(timespec, img_folder, timeofday, camera_id)
 
 
             self._releaseLock()
@@ -221,10 +227,11 @@ class VideoWorker(Process):
         })
 
 
-    def generateKeogram(self, timespec, img_folder, timeofday, camera_id):
+    def generateKeogramStarTrails(self, timespec, img_folder, timeofday, camera_id):
         from .db import IndiAllSkyDbCameraTable
         from .db import IndiAllSkyDbImageTable
         from .db import IndiAllSkyDbKeogramTable
+        from .db import IndiAllSkyDbStarTrailsTable
 
         dbsession = self._db.session
 
@@ -244,9 +251,14 @@ class VideoWorker(Process):
 
 
         keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.jpg'.format(camera_id, timespec, timeofday))
+        startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.jpg'.format(camera_id, timespec, timeofday))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
+            return
+
+        if startrail_file.exists():
+            logger.warning('Star trail is already generated: %s', startrail_file)
             return
 
 
@@ -263,8 +275,21 @@ class VideoWorker(Process):
             pass
 
 
+        try:
+            # delete old star trail entry if it exists
+            startrail_entry = dbsession.query(IndiAllSkyDbStarTrailsTable)\
+                .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                .one()
+
+            logger.warning('Removing orphaned star trail db entry')
+            dbsession.delete(startrail_entry)
+            dbsession.commit()
+        except NoResultFound:
+            pass
+
+
         # find all files
-        keogram_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+        files_entries = dbsession.query(IndiAllSkyDbImageTable)\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
@@ -272,11 +297,25 @@ class VideoWorker(Process):
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
-        logger.info('Found %d images for keogram', keogram_files_entries.count())
+        logger.info('Found %d images for keogram/star trails', files_entries.count())
 
 
-        keogram_files = list()
-        for entry in keogram_files_entries:
+        processing_start = time.time()
+
+        kg = KeogramGenerator(self.config)
+        kg.angle = self.config['KEOGRAM_ANGLE']
+        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
+        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+
+
+        stg = StarTrailGenerator(self.config)
+        stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
+        stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
+        stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
+
+
+        # Files are presorted from the DB
+        for entry in files_entries:
             p_entry = Path(entry.filename)
 
             if not p_entry.exists():
@@ -286,30 +325,57 @@ class VideoWorker(Process):
             if p_entry.stat().st_size == 0:
                 continue
 
-            keogram_files.append(p_entry)
+            logger.info('Reading file: %s', p_entry)
+            image = cv2.imread(str(p_entry), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(image, type(None)):
+                logger.error('Unable to read %s', p_entry)
+                continue
+
+            kg.processImage(p_entry, image)
+
+            if night:
+                stg.processImage(p_entry, image)
 
 
+        kg.finalize(keogram_file)
 
-        kg = KeogramGenerator(self.config, keogram_files)
-        kg.angle = self.config['KEOGRAM_ANGLE']
-        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
-        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
-        kg.generate(keogram_file)
+        if night:
+            try:
+                stg.finalize(startrail_file)
+            except InsufficentData as e:
+                logger.error('Error generating star trail: %s', str(e))
 
-        keogram_entry = self._db.addKeogram(
-            keogram_file,
-            camera_id,
-            timeofday,
-        )
 
-        self.uploadKeogram(keogram_file)
+        processing_elapsed_s = time.time() - processing_start
+        logger.warning('Total keogram/star trail processing in %0.1f s', processing_elapsed_s)
 
-        self._db.addUploadedFlag(keogram_entry)
+
+        if keogram_file.exists():
+            keogram_entry = self._db.addKeogram(
+                keogram_file,
+                camera_id,
+                timeofday,
+            )
+
+            self.uploadKeogram(keogram_file)
+            self._db.addUploadedFlag(keogram_entry)
+
+
+        if night and startrail_file.exists():
+            startrail_entry = self._db.addStarTrail(
+                startrail_file,
+                camera_id,
+                timeofday=timeofday,
+            )
+
+            self.uploadStarTrail(startrail_file)
+            self._db.addUploadedFlag(startrail_entry)
 
 
     def uploadKeogram(self, keogram_file):
         ### Upload video
-        if not self.config['FILETRANSFER']['UPLOAD_KEOGRAM']:
+        if not self.config['FILETRANSFER'].get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
             return
 
@@ -319,6 +385,21 @@ class VideoWorker(Process):
         # tell worker to upload file
         self.upload_q.put({
             'local_file' : keogram_file,
+            'remote_file' : remote_file,
+        })
+
+
+    def uploadStarTrail(self, startrail_file):
+        if not self.config['FILETRANSFER'].get('UPLOAD_STARTRAIL'):
+            logger.warning('Star trail uploading disabled')
+            return
+
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'])
+        remote_file = remote_path.joinpath(startrail_file.name)
+
+        # tell worker to upload file
+        self.upload_q.put({
+            'local_file' : startrail_file,
             'remote_file' : remote_file,
         })
 

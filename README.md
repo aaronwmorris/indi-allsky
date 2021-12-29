@@ -18,6 +18,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * Keograms
+* Star Trails
 * Images display local hour angle of sun and moon
 * Moon mode - reduced gain when the moon is overhead
 * Remote INDI server operation - operate camera remotely over the network
@@ -105,6 +106,11 @@ Below you can see it was cloudy the first half of the night and then clear.  If 
 
 Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.
 
+## Star Trails
+Star trail images stack the stars from each frame to show their progression across the sky.
+
+![](./content/startrails_20211202_789012.jpg)
+
 ## Web Interfaces
 
 Some very simple web pages are included to view images.  HTML5 canvas and javascript are utilized for some simple interactivity.
@@ -190,6 +196,9 @@ All configuration is read from config.json.  You can find configuration examples
 | KEOGRAM_H_SCALE     | 100         | (int) Horizontal scaling of keograms |
 | KEOGRAM_V_SCALE     | 33          | (int) Vertical scaling of keograms |
 | KEOGRAM_LABEL       | true        | (bool) Label keogram timeline |
+| STARTRAILS_MAX_ADU  | 50          | (int) Max ADU/brightness of image to be included in star trails |
+| STARTRAILS_MASK_THOLD    | 190    | (int) Minimum threshold for star mask generation for star trails |
+| STARTRAILS_PIXEL_THOLD   | 0.1    | (float) Cutoff percentage of pixels in mask to eliminate images from star trails |
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
@@ -227,10 +236,12 @@ All configuration is read from config.json.  You can find configuration examples
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
 | REMOTE_IMAGE_FOLDER |             | (str) Remote folder to upload latest image |
 | REMOTE_VIDEO_FOLDER |             | (str) Remote folder to upload time lapse videos |
-| REMOTE_KEOGRAM_FOLDER |           | (str) Remote folder to upload keograms |
+| REMOTE_KEOGRAM_FOLDER   |         | (str) Remote folder to upload keograms |
+| REMOTE_STARTRAIL_FOLDER |         | (str) Remote folder to upload star trails |
 | UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
 | UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
 | UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
+| UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
 
 ### Moon mode
 
@@ -255,7 +266,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | QHY      | QHY5LII-M           | A      |       |
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G-1200-KMB          | A      |       |
-| Raspberry Pi | HQ Camera       | C      | Requires 2+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures is not stable. |
+| Raspberry Pi | HQ Camera       | C      | Requires 7+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures, especially when going below 6 seconds when taking long exposures, is not stable. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
@@ -290,7 +301,6 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 
 ## To Do
 
-* Star trails
 * Additional camera vendor support
 
 ## Acknowledgements

@@ -39,6 +39,12 @@ class KeogramGenerator(object):
         self.rotated_width = None
         self.rotated_height = None
 
+        # We do not know the array dimensions until the first image is rotated
+        self.keogram_data = None
+
+        self.timestamps_list = list()
+        self.image_processing_elapsed_s = 0
+
 
     @property
     def angle(self):
@@ -70,14 +76,7 @@ class KeogramGenerator(object):
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-
-        # We do not know the array dimensions until the first image is rotated
-        keogram_data = None
-
         processing_start = time.time()
-
-        # keep track of this for labels
-        timestamps_list = list()
 
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
@@ -87,52 +86,63 @@ class KeogramGenerator(object):
                 logger.error('Unable to read %s', filename)
                 continue
 
-            timestamps_list.append(filename.stat().st_mtime)
-
-            #logger.info('Data: %s', pformat(image))
-            height, width = image.shape[:2]
-            self.original_height = height
-            self.original_width = width
-
-            rotated_image = self.rotate(image)
-            del image
+            self.processImage(filename, image)
 
 
-            rot_height, rot_width = rotated_image.shape[:2]
-            self.rotated_height = rot_height
-            self.rotated_width = rot_width
-
-            rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
-            #logger.info('Shape: %s', pformat(rotated_center_line.shape))
-            #logger.info('Data: %s', pformat(rotated_center_line))
-            #logger.info('Size: %s', pformat(rotated_center_line.size))
-
-
-            if isinstance(keogram_data, type(None)):
-                new_shape = rotated_center_line.shape
-                logger.info('New Shape: %s', pformat(new_shape))
-
-                new_dtype = rotated_center_line.dtype
-                logger.info('New dtype: %s', new_dtype)
-
-                keogram_data = numpy.empty(new_shape, dtype=new_dtype)
-
-            keogram_data = numpy.append(keogram_data, rotated_center_line, 1)
-
-            del rotated_image
-
+        self.finalize(outfile)
 
         processing_elapsed_s = time.time() - processing_start
-        logger.info('Images processed in %0.1f s', processing_elapsed_s)
+        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
-        #logger.info('Data: %s', pformat(keogram_data))
+
+    def processImage(self, filename, image):
+        image_processing_start = time.time()
+
+        self.timestamps_list.append(filename.stat().st_mtime)
+
+        #logger.info('Data: %s', pformat(image))
+        height, width = image.shape[:2]
+        self.original_height = height
+        self.original_width = width
+
+        rotated_image = self.rotate(image)
+        del image
+
+
+        rot_height, rot_width = rotated_image.shape[:2]
+        self.rotated_height = rot_height
+        self.rotated_width = rot_width
+
+        rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
+        #logger.info('Shape: %s', pformat(rotated_center_line.shape))
+        #logger.info('Data: %s', pformat(rotated_center_line))
+        #logger.info('Size: %s', pformat(rotated_center_line.size))
+
+
+        if isinstance(self.keogram_data, type(None)):
+            new_shape = rotated_center_line.shape
+            logger.info('New Shape: %s', pformat(new_shape))
+
+            new_dtype = rotated_center_line.dtype
+            logger.info('New dtype: %s', new_dtype)
+
+            self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
+
+        self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
+
+
+        self.image_processing_elapsed_s += time.time() - image_processing_start
+
+
+    def finalize(self, outfile):
+        logger.warning('Keogram images processed in %0.1f s', self.image_processing_elapsed_s)
 
         logger.warning('Creating %s', outfile)
-        cv2.imwrite(outfile, keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(outfile, self.keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
         # trim bars at top and bottom
-        trimmed_keogram = self.trimEdges(keogram_data)
+        trimmed_keogram = self.trimEdges(self.keogram_data)
 
         logger.warning('Creating trim_%s', outfile)
         cv2.imwrite('trim_{0:s}'.format(outfile), trimmed_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -150,7 +160,7 @@ class KeogramGenerator(object):
 
 
         # apply time labels
-        self.applyLabels(keogram_resized, timestamps_list)
+        self.applyLabels(keogram_resized)
 
 
         logger.warning('Creating labeled_trim_resize_%s', outfile)
@@ -252,14 +262,14 @@ class KeogramGenerator(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def applyLabels(self, keogram, timestamps_list):
+    def applyLabels(self, keogram):
         height, width = keogram.shape[:2]
 
         # starting point
-        last_time = datetime.fromtimestamp(timestamps_list[0])
+        last_time = datetime.fromtimestamp(self.timestamps_list[0])
         last_hour_str = last_time.strftime('%H')
 
-        for i, u_ts in enumerate(timestamps_list):
+        for i, u_ts in enumerate(self.timestamps_list):
             ts = datetime.fromtimestamp(u_ts)
             hour_str = ts.strftime('%H')
 
@@ -268,7 +278,7 @@ class KeogramGenerator(object):
 
             last_hour_str = hour_str
 
-            line_x = int(i * width / len(timestamps_list))
+            line_x = int(i * width / len(self.timestamps_list))
 
             line_start = (line_x, height)
             line_end = (line_x, height - self.line_length)

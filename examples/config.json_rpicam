@@ -48,6 +48,10 @@
     "KEOGRAM_V_SCALE"  : 33,
     "KEOGRAM_LABEL"    : true,
 
+    "STARTRAILS_MAX_ADU"    : 50,
+    "STARTRAILS_MASK_THOLD" : 190,
+    "STARTRAILS_PIXEL_THOLD": 0.1,
+
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",
     "comment_IMAGE_FILE_COMPRESSION" : "0-100 for jpg, 0-9 for png",
@@ -73,13 +77,13 @@
 
     "TEXT_PROPERTIES" : {
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
-        "FONT_HEIGHT"    : 30,
-        "FONT_X"         : 15,
-        "FONT_Y"         : 30,
+        "FONT_HEIGHT"    : 60,
+        "FONT_X"         : 30,
+        "FONT_Y"         : 60,
         "FONT_COLOR"     : [200, 200, 200],
         "FONT_AA"        : "LINE_AA",
-        "FONT_SCALE"     : 0.80,
-        "FONT_THICKNESS" : 1,
+        "FONT_SCALE"     : 1.60,
+        "FONT_THICKNESS" : 2,
         "FONT_OUTLINE"   : true
     },
 
@@ -102,8 +106,10 @@
         "REMOTE_IMAGE_FOLDER"    : "/tmp",
         "REMOTE_VIDEO_FOLDER"    : "/tmp",
         "REMOTE_KEOGRAM_FOLDER"  : "/tmp",
+        "REMOTE_STARTRAIL_FOLDER": "/tmp",
         "UPLOAD_IMAGE"           : false,
         "UPLOAD_VIDEO"           : false,
-        "UPLOAD_KEOGRAM"         : false
+        "UPLOAD_KEOGRAM"         : false,
+        "UPLOAD_STARTRAIL"       : false
     }
 }

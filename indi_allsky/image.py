@@ -109,6 +109,7 @@ class ImageWorker(Process):
             imgdata = i_dict['imgdata']
             exposure = i_dict['exposure']
             exp_date = i_dict['exp_date']
+            exp_elapsed = i_dict['exp_elapsed']
             camera_id = i_dict['camera_id']
             filename_t = i_dict.get('filename_t')
             img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
@@ -243,7 +244,7 @@ class ImageWorker(Process):
             # denoise
             #scidata_denoise = self.fastDenoise(scidata_sci_cal_flip)
 
-            self.image_text(scidata_scaled, exposure, exp_date)
+            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -574,61 +575,105 @@ class ImageWorker(Process):
         return scidata_bgr
 
 
-    def image_text(self, data_bytes, exposure, exp_date):
+    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
         image_height, image_width = data_bytes.shape[:2]
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
-
-
-        ### Sun
-        sun = ephem.Sun()
-
-        # Sun rise
-        try:
-            sun_rise = obs.next_rising(sun)
-
-            obs.date = sun_rise
-            sun.compute(obs)
-            sunRiseX, sunRiseY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunRiseX, sunRiseY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        except ephem.NeverUpError:
-            pass
-
-
-        # Sun set
-        try:
-            sun_set = obs.next_setting(sun)
-
-            obs.date = sun_set
-            sun.compute(obs)
-            sunSetX, sunSetY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunSetX, sunSetY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        except ephem.AlwaysUpError:
-            pass
-
-
-
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = utcnow
+
+
+        sun = ephem.Sun()
         sun.compute(obs)
         sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
-
-
-        ### Moon
         moon = ephem.Moon()
-
-        obs.date = utcnow
         moon.compute(obs)
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
+
+        # Civil dawn
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_civilDawn_date
+            sun.compute(obs)
+            sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+        # Astronomical dawn
+        try:
+            obs.horizon = math.radians(-18)
+            sun_astroDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_astroDawn_date
+            sun.compute(obs)
+            sunAstroDawnX, sunAstroDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+
+        # Civil twilight
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_civilTwilight_date
+            sun.compute(obs)
+            sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Astronomical twilight
+        try:
+            obs.horizon = math.radians(-18)
+            sun_astroTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_astroTwilight_date
+            sun.compute(obs)
+            sunAstroTwilightX, sunAstroTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Sun
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+
+
+        # Moon
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
 
@@ -656,6 +701,15 @@ class ImageWorker(Process):
             (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )
+
+
+        #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        #self.drawText(
+        #    data_bytes,
+        #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
+        #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+        #    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+        #)
 
 
         line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']

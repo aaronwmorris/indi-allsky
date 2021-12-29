@@ -59,8 +59,8 @@ class IndiAllSky(object):
         self.moonmode_v = Value('f', 0.0)  # contains moon phase %
         self.moonmode = None
 
-        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
-        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         self.image_worker = None
         self.image_worker_idx = 0
@@ -128,8 +128,8 @@ class IndiAllSky(object):
         self.config['DATABASE_URI'] = self.DATABASE_URI
 
         # Update shared values
-        self.night_sun_radians = math.radians(float(self.config['NIGHT_SUN_ALT_DEG']))
-        self.night_moonmode_radians = math.radians(float(self.config['NIGHT_MOONMODE_ALT_DEG']))
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         # reconfigure if needed
         self.reconfigureCcd()
@@ -452,10 +452,10 @@ class IndiAllSky(object):
         indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in ['indi_rpicam']:
-            # Raspberry PI HQ Camera requires an initial throw away exposure of at least 2s
-            # in order to take exposures longer than 1s
+            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
+            # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(ccdDevice, 2.0, sync=True)
+            self.shoot(ccdDevice, 7.0, sync=True)
 
 
     def run(self):
@@ -532,7 +532,7 @@ class IndiAllSky(object):
 
                     waiting_for_frame = False
 
-                    logger.info('Exposure received in %0.4f s', frame_elapsed)
+                    logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
 
 
                 if camera_ready and now >= next_frame_time:
@@ -621,8 +621,8 @@ class IndiAllSky(object):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -637,8 +637,8 @@ class IndiAllSky(object):
             self.night = self.detectNight()
 
         obs = ephem.Observer()
-        obs.lon = str(self.config['LOCATION_LONGITUDE'])
-        obs.lat = str(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()

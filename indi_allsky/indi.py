@@ -87,6 +87,8 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 65.0
         self._exposure = 0.0
 
+        self.exposureStartTime = None
+
         logger.info('creating an instance of IndiClient')
 
 
@@ -137,6 +139,8 @@ class IndiClient(PyIndi.BaseClient):
     def newBLOB(self, bp):
         logger.info("new BLOB %s", bp.name)
 
+        exposure_elapsed_s = time.time() - self.exposureStartTime
+
         self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
         #start = time.time()
@@ -154,6 +158,7 @@ class IndiClient(PyIndi.BaseClient):
             'imgdata'     : imgdata,
             'exposure'    : self._exposure,
             'exp_date'    : exp_date,
+            'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.config['DB_CCD_ID'],
             'filename_t'  : self._filename_t,
             'img_subdirs' : self._img_subdirs,
@@ -346,6 +351,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):
+        self.exposureStartTime = time.time()
+
         if not timeout:
             timeout = self._timeout
 
@@ -600,6 +607,7 @@ class IndiClient(PyIndi.BaseClient):
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
         started = time.time()
+
         if timeout is None:
             timeout = self._timeout
 
