@@ -32,14 +32,14 @@ logger = multiprocessing.get_logger()
 
 class IndiAllSky(object):
 
-    DATABASE_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
+    DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
 
-        self.config['DB_URI'] = self.DATABASE_URI
+        self.config['DB_URI'] = self.DB_URI
 
         self.config_file = f_config_file.name
 
@@ -125,7 +125,7 @@ class IndiAllSky(object):
         # overwrite config
         self.config = c
 
-        self.config['DATABASE_URI'] = self.DATABASE_URI
+        self.config['DB_URI'] = self.DB_URI
 
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
