@@ -198,6 +198,7 @@ All configuration is read from config.json.  You can find configuration examples
 | KEOGRAM_LABEL       | true        | (bool) Label keogram timeline |
 | STARTRAILS_MAX_ADU  | 50          | (int) Max ADU/brightness of image to be included in star trails |
 | STARTRAILS_MASK_THOLD    | 190    | (int) Minimum threshold for star mask generation for star trails |
+| STARTRAILS_PIXEL_THOLD   | 0.1    | (float) Cutoff percentage of pixels in mask to eliminate images from star trails |
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |

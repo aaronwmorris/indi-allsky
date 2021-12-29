@@ -17,9 +17,11 @@ class StarTrailGenerator(object):
 
         self._max_brightness = 50
         self._mask_threshold = 190
+        self._pixel_cutoff_threshold = 0.1
 
         self.trail_image = None
         self.trail_count = 0
+        self.pixels_cutoff = None
 
         self.background_image = None
         self.background_image_brightness = 255
@@ -43,6 +45,14 @@ class StarTrailGenerator(object):
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
         self._mask_threshold = new_thold
+
+    @property
+    def pixel_cutoff_threshold(self):
+        return self._pixel_cutoff_threshold
+
+    @pixel_cutoff_threshold.setter
+    def pixel_cutoff_threshold(self, new_thold):
+        self._pixel_cutoff_threshold = new_thold
 
 
     def generate(self, outfile, file_list):
@@ -82,6 +92,8 @@ class StarTrailGenerator(object):
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
 
+            self.pixels_cutoff = (image_height * image_width) * (self._pixel_cutoff_threshold / 100)
+
             # base image is just a black image
             if len(image.shape) == 2:
                 self.trail_image = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
@@ -101,6 +113,11 @@ class StarTrailGenerator(object):
             return
 
         #logger.info(' Image brightness: %0.2f', m_avg)
+
+        pixels_above_cutoff = (image_gray > self._mask_threshold).sum()
+        if pixels_above_cutoff > self.pixels_cutoff:
+            logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
+            return
 
         self.trail_count += 1
 

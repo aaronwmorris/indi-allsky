@@ -18,7 +18,7 @@ class StarTrailGenerator(object):
     def __init__(self):
         self._max_brightness = 50
         self._mask_threshold = 190
-        self._pixel_cutoff_threshold = 0.001
+        self._pixel_cutoff_threshold = 0.1
 
         self.trail_image = None
         self.trail_count = 0
@@ -96,7 +96,7 @@ class StarTrailGenerator(object):
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
 
-            self.pixels_cutoff = (image_height * image_width) * self._pixel_cutoff_threshold
+            self.pixels_cutoff = (image_height * image_width) * (self._pixel_cutoff_threshold / 100)
 
             # base image is just a black image
             if len(image.shape) == 2:
@@ -181,7 +181,7 @@ class StarTrailGenerator(object):
 
 
         logger.warning('Creating %s', outfile)
-        cv2.imwrite(outfile, final_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(str(outfile), final_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
@@ -234,9 +234,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--pixel_cutoff_threshold',
         '-p',
-        help='pixel cutoff threshold',
+        help='pixel cutoff threshold percentage',
         type=float,
-        default=0.001,
+        default=0.1,
     )
 
 

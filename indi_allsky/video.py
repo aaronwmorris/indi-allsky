@@ -311,6 +311,7 @@ class VideoWorker(Process):
         stg = StarTrailGenerator(self.config)
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
+        stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
 
 
         # Files are presorted from the DB
