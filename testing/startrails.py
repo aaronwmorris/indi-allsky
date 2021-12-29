@@ -13,14 +13,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
-
 class StarTrailGenerator(object):
 
     def __init__(self):
         self._max_brightness = 50
         self._mask_threshold = 190
+        self._pixel_cutoff_threshold = 0.001
 
         self.trail_image = None
+        self.trail_count = 0
+        self.pixels_cutoff = None
 
         self.background_image = None
         self.background_image_brightness = 255
@@ -44,6 +46,14 @@ class StarTrailGenerator(object):
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
         self._mask_threshold = new_thold
+
+    @property
+    def pixel_cutoff_threshold(self):
+        return self._pixel_cutoff_threshold
+
+    @pixel_cutoff_threshold.setter
+    def pixel_cutoff_threshold(self, new_thold):
+        self._pixel_cutoff_threshold = new_thold
 
 
     def main(self, outfile, inputdir):
@@ -70,7 +80,10 @@ class StarTrailGenerator(object):
             self.processImage(filename, image)
 
 
-        self.finalize(outfile)
+        try:
+            self.finalize(outfile)
+        except InsufficentData as e:
+            logger.error('Error generating star trail: %s', str(e))
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -82,6 +95,8 @@ class StarTrailGenerator(object):
 
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
+
+            self.pixels_cutoff = (image_height * image_width) * self._pixel_cutoff_threshold
 
             # base image is just a black image
             if len(image.shape) == 2:
@@ -102,6 +117,13 @@ class StarTrailGenerator(object):
             return
 
         #logger.info(' Image brightness: %0.2f', m_avg)
+
+        pixels_above_cutoff = (image_gray > self._mask_threshold).sum()
+        if pixels_above_cutoff > self.pixels_cutoff:
+            logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
+            return
+
+        self.trail_count += 1
 
         if m_avg < self.background_image_brightness and m_avg > self.background_image_min_brightness:
             # try to exclude images that are too dark
@@ -128,6 +150,14 @@ class StarTrailGenerator(object):
 
     def finalize(self, outfile):
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
+
+
+        if isinstance(self.background_image, type(None)):
+            raise InsufficentData('Background image not detected')
+
+        if self.trail_count < 20:
+            raise InsufficentData('Not enough images found to build star trail')
+
 
         # need grayscale image for mask generation
         if len(self.trail_image.shape) == 2:
@@ -169,6 +199,10 @@ class StarTrailGenerator(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
+class InsufficentData(Exception):
+    pass
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
@@ -191,11 +225,18 @@ if __name__ == "__main__":
         default=50,
     )
     argparser.add_argument(
-        '--threshold',
-        '-t',
+        '--mask_threshold',
+        '-m',
         help='mask threshold',
         type=int,
         default=190,
+    )
+    argparser.add_argument(
+        '--pixel_cutoff_threshold',
+        '-p',
+        help='pixel cutoff threshold',
+        type=float,
+        default=0.001,
     )
 
 
@@ -203,6 +244,7 @@ if __name__ == "__main__":
 
     sg = StarTrailGenerator()
     sg.max_brightness = args.max_brightness
-    sg.mask_threshold = args.threshold
+    sg.mask_threshold = args.mask_threshold
+    sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
     sg.main(args.output, args.inputdir)
 
