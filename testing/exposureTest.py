@@ -101,17 +101,6 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 60.0
         logger.info('creating an instance of IndiClient')
 
-        self._exposureReceived = False
-
-
-    @property
-    def exposureReceived(self):
-        return self._exposureReceived
-
-    @exposureReceived.setter
-    def exposureReceived(self, foobar):
-        self._exposureReceived = False
-
 
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
@@ -126,8 +115,6 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         logger.info("new BLOB %s", bp.name)
-
-        self._exposureReceived = True
 
         #start = time.time()
 
@@ -353,6 +340,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self.sendNewSwitch(c)
 
+        return c
+
 
     def get_control(self, device, name, ctl_type, timeout=None):
         if timeout is None:
@@ -377,6 +366,15 @@ class IndiClient(PyIndi.BaseClient):
             time.sleep(0.1)
 
         return ctl
+
+
+    def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
+        if not ctl:
+            return True
+
+        ready = ctl.getState() in statuses
+
+        return ready
 
 
     def __map_indexes(self, ctl, values):
@@ -483,6 +481,7 @@ class IndiExposureTest(object):
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
         waiting_for_frame = False
+        exposure_ctl = None  # populated later
 
         ### main loop starts
         while True:
@@ -511,27 +510,27 @@ class IndiExposureTest(object):
 
 
             ### Non-blocking mode ###
+            camera_ready = self.indiclient.ctl_ready(exposure_ctl)
 
-            if not waiting_for_frame and now >= next_frame_time:
+            if camera_ready and waiting_for_frame:
+                frame_elapsed = now - frame_start_time
+
+                waiting_for_frame = False
+
+                logger.info('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - CCD_EXPOSURE)
+
+
+            if camera_ready and now >= next_frame_time:
                 total_elapsed = now - frame_start_time
 
                 frame_start_time = now
 
-                self.shoot(ccdDevice, CCD_EXPOSURE, sync=False)
+                exposure_ctl = self.shoot(ccdDevice, CCD_EXPOSURE, sync=False)
                 waiting_for_frame = True
 
                 next_frame_time = frame_start_time + CCD_EXPOSURE
 
                 logger.info('Total time since last exposure %0.4f s', total_elapsed)
-
-
-            if self.indiclient.exposureReceived:
-                frame_elapsed = now - frame_start_time
-
-                waiting_for_frame = False
-                self.indiclient.exposureReceived = False
-
-                logger.info('Exposure received in ######## %0.4f s ########', frame_elapsed)
 
 
             time.sleep(0.05)
