@@ -48,6 +48,7 @@
 
     "STARTRAILS_MAX_ADU"    : 50,
     "STARTRAILS_MASK_THOLD" : 190,
+    "STARTRAILS_PIXEL_THOLD": 0.1,
 
     "comment_IMAGE_FILE_TYPE" : "jpg, png, or tif",
     "IMAGE_FILE_TYPE" : "jpg",
