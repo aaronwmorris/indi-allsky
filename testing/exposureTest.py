@@ -7,7 +7,18 @@ import ctypes
 import PyIndi
 
 
-CCD_EXPOSURE = 15.0
+CCD_EXPOSURES = [
+    15.0,
+    14.0,
+    14.0,
+    10.0,
+     9.0,
+     7.0,
+     6.0,
+     5.0,
+     3.0,
+     1.0,
+]
 
 ### rpicam
 CCD_GAIN = 1
@@ -483,6 +494,10 @@ class IndiExposureTest(object):
         waiting_for_frame = False
         exposure_ctl = None  # populated later
 
+        exposure = 0  # populated later
+        last_exposure = 0
+
+
         ### main loop starts
         while True:
             now = time.time()
@@ -490,7 +505,7 @@ class IndiExposureTest(object):
             ### Blocking mode ###
 
             #try:
-            #    self.shoot(ccdDevce, CCD_EXPOSURE, sync=True)
+            #    self.shoot(ccdDevce, exposure, sync=True)
             #except TimeOutException as e:
             #    logger.error('Timeout: %s', str(e))
             #    time.sleep(5.0)
@@ -501,11 +516,16 @@ class IndiExposureTest(object):
             #logger.info('Exposure finished in ######## %0.4f s ########', full_elapsed_s)
 
             ### sleep for the remaining eposure period
-            #remaining_s = CCD_EXPOSURE - full_elapsed_s
+            #remaining_s = exposure - full_elapsed_s
             #if remaining_s > 0:
             #    logger.info('Sleeping for additional %0.4f s', remaining_s)
             #    time.sleep(remaining_s)
 
+            #try:
+            #    exposure = CCD_EXPOSURES.pop(0)
+            #except IndexError:
+            #    logger.info('End of exposures')
+            #    sys.exit(0)
             ### End Blocking mode ###
 
 
@@ -517,7 +537,7 @@ class IndiExposureTest(object):
 
                 waiting_for_frame = False
 
-                logger.info('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - CCD_EXPOSURE)
+                logger.warning('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - last_exposure)
 
 
             if camera_ready and now >= next_frame_time:
@@ -525,10 +545,18 @@ class IndiExposureTest(object):
 
                 frame_start_time = now
 
-                exposure_ctl = self.shoot(ccdDevice, CCD_EXPOSURE, sync=False)
+                last_exposure = exposure
+
+                try:
+                    exposure = CCD_EXPOSURES.pop(0)
+                except IndexError:
+                    logger.info('End of exposures')
+                    sys.exit(0)
+
+                exposure_ctl = self.shoot(ccdDevice, exposure, sync=False)
                 waiting_for_frame = True
 
-                next_frame_time = frame_start_time + CCD_EXPOSURE
+                next_frame_time = frame_start_time + exposure
 
                 logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
