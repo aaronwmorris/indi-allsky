@@ -1044,8 +1044,8 @@ class IndiAllSky(object):
         self.getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
 
 
-        #/var/www/html/allsky/images/20210915/allsky-timelapse-20210915-night.mp4
-        re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+        #/var/www/html/allsky/images/20210915/allsky-timelapse_ccd1_20210915_night.mp4
+        re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
         for f in file_list_videos:
             logger.info('Timelapse: %s', f)
 
@@ -1096,8 +1096,8 @@ class IndiAllSky(object):
         ### Keograms
         file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list)
 
-        #/var/www/html/allsky/images/20210915/allsky-keogram-20210915-night.jpg
-        re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        #/var/www/html/allsky/images/20210915/allsky-keogram_ccd1_20210915_night.jpg
+        re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
         for f in file_list_keograms:
             logger.info('Keogram: %s', f)
 
@@ -1142,8 +1142,8 @@ class IndiAllSky(object):
         ### Star trails
         file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list)
 
-        #/var/www/html/allsky/images/20210915/allsky-startrail-20210915-night.jpg
-        re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrail\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
+        re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
         for f in file_list_startrail:
             logger.info('Star trail: %s', f)
 
@@ -1190,8 +1190,8 @@ class IndiAllSky(object):
         file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list)
         file_list_images_nok_nost = filter(lambda p: 'startrail' not in p.name, file_list_images_nok)
 
-        #/var/www/html/allsky/images/20210825/night/26_02/20210826_020202.jpg
-        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/(?P<createDate_str>[0-9_]+)\.[a-z]+$')
+        #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
+        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
         for f in file_list_images_nok_nost:
             logger.info('Image: %s', f)
 
