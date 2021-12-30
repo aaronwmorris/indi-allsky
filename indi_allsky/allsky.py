@@ -977,6 +977,7 @@ class IndiAllSky(object):
         from .db import IndiAllSkyDbDarkFrameTable
         from .db import IndiAllSkyDbVideoTable
         from .db import IndiAllSkyDbKeogramTable
+        from .db import IndiAllSkyDbStarTrailsTable
 
         dbsession = self._db.session
 
@@ -987,6 +988,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
+        ### Dark frames
         file_list_darkframes = list()
         self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darkframes, extension_list=['fit', 'fits'])
 
@@ -1037,13 +1039,13 @@ class IndiAllSky(object):
                 continue
 
 
-
+        ### Timelapse
         file_list_videos = list()
         self.getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
 
 
-        #/var/www/html/allsky/images/20210915/allsky-timelapse-20210915-night.mp4
-        re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+        #/var/www/html/allsky/images/20210915/allsky-timelapse_ccd1_20210915_night.mp4
+        re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
         for f in file_list_videos:
             logger.info('Timelapse: %s', f)
 
@@ -1086,14 +1088,16 @@ class IndiAllSky(object):
 
 
 
+        ### find all imaegs
         file_list = list()
         self.getFolderFilesByExt(self.image_dir, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
 
+        ### Keograms
         file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list)
 
-        #/var/www/html/allsky/images/20210915/allsky-keogram-20210915-night.jpg
-        re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram\-\d{8}\-(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        #/var/www/html/allsky/images/20210915/allsky-keogram_ccd1_20210915_night.jpg
+        re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
         for f in file_list_keograms:
             logger.info('Keogram: %s', f)
 
@@ -1135,12 +1139,60 @@ class IndiAllSky(object):
                 continue
 
 
-        # Exclude keograms
-        file_list_images = filter(lambda p: 'keogram' not in p.name, file_list)
+        ### Star trails
+        file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list)
 
-        #/var/www/html/allsky/images/20210825/night/26_02/20210826_020202.jpg
-        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/(?P<createDate_str>[0-9_]+)\.[a-z]+$')
-        for f in file_list_images:
+        #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
+        re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        for f in file_list_startrail:
+            logger.info('Star trail: %s', f)
+
+            m = re.search(re_startrail, str(f))
+            if not m:
+                logger.error(' Regex did not match file')
+                continue
+
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+
+            startrail_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
+
+            try:
+                dbsession.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
+                dbsession.commit()
+
+                logger.info(' Star trail inserted')
+            except IntegrityError as e:
+                logger.warning('Integrity error: %s', str(e))
+                dbsession.rollback()
+                continue
+
+
+        ### Images
+        # Exclude keograms and star trails
+        file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list)
+        file_list_images_nok_nost = filter(lambda p: 'startrail' not in p.name, file_list_images_nok)
+
+        #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
+        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
+        for f in file_list_images_nok_nost:
             logger.info('Image: %s', f)
 
             m = re.search(re_image, str(f))
