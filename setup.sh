@@ -536,4 +536,10 @@ echo
 echo "    sudo systemctl start indiserver"
 echo "    sudo systemctl start indi-allsky"
 echo
+echo
+echo "The web interface may be accessed with the following URL"
+echo " (You may have to manually access by IP)"
+echo
+echo "    https://$(hostname -s)/allsky/"
+echo
 echo "Enjoy!"
