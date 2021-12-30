@@ -98,9 +98,9 @@ source virtualenv/indi-allsky/bin/activate
     * 60 second maximum exposure:  ~15 minutes
 
 ## Keograms
-Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.
+Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.  The rotation parameter in the config is KEOGRAM_ANGLE
 
-Below you can see it was cloudy the first half of the night and then clear.  If you look closely enough, you can see the Andromeda galaxy as it passed through the meridian in this example keogram.  Jupiter is at the bottom.
+Below you can see perodic clouds passed over between 8-9pm and again between 4-5am.  If you look closely enough, you can see the Pleiades star cluster and the Orion constellation as it passed through the meridian in this example keogram.
 
 ![](./content/keogram_example.jpg)
 
