@@ -10,7 +10,7 @@ import fcntl
 import errno
 
 from .keogram import KeogramGenerator
-from .startrail import StarTrailGenerator
+from .starTrails import StarTrailGenerator
 
 from .db import IndiAllSkyDb
 
@@ -325,7 +325,7 @@ class VideoWorker(Process):
             if p_entry.stat().st_size == 0:
                 continue
 
-            logger.info('Reading file: %s', p_entry)
+            #logger.info('Reading file: %s', p_entry)
             image = cv2.imread(str(p_entry), cv2.IMREAD_UNCHANGED)
 
             if isinstance(image, type(None)):
