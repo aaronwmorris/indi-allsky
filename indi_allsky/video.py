@@ -10,7 +10,7 @@ import fcntl
 import errno
 
 from .keogram import KeogramGenerator
-from .startrail import StarTrailGenerator
+from .starTrails import StarTrailGenerator
 
 from .db import IndiAllSkyDb
 
