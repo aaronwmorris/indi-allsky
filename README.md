@@ -109,7 +109,7 @@ Note: The horizontal lines are just hot pixels that were subtracted by the dark 
 ## Star Trails
 Star trail images stack the stars from each frame to show their progression across the sky.
 
-![](./content/startrails_20211202_789012.jpg)
+![](./content/startrails_example.jpg)
 
 ## Web Interfaces
 
