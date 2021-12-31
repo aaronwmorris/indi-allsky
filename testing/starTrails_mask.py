@@ -23,6 +23,7 @@ class StarTrailGenerator(object):
         self.trail_image = None
         self.trail_count = 0
         self.pixels_cutoff = None
+        self.excluded_images = 0
 
         self.background_image = None
         self.background_image_brightness = 255
@@ -121,6 +122,7 @@ class StarTrailGenerator(object):
         pixels_above_cutoff = (image_gray > self._mask_threshold).sum()
         if pixels_above_cutoff > self.pixels_cutoff:
             logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
+            self.excluded_images += 1
             return
 
         self.trail_count += 1
@@ -150,6 +152,7 @@ class StarTrailGenerator(object):
 
     def finalize(self, outfile):
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
+        logger.warning('Excluded %d images', self.excluded_images)
 
 
         if isinstance(self.background_image, type(None)):
