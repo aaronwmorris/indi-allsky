@@ -17,15 +17,11 @@ class StarTrailGenerator(object):
 
         self._max_brightness = 50
         self._mask_threshold = 190
-        self._pixel_cutoff_threshold = 0.1
+        self._pixel_cutoff_threshold = 1.0
 
         self.trail_image = None
         self.trail_count = 0
         self.pixels_cutoff = None
-
-        self.background_image = None
-        self.background_image_brightness = 255
-        self.background_image_min_brightness = 10
 
         self.image_processing_elapsed_s = 0
 
@@ -121,25 +117,8 @@ class StarTrailGenerator(object):
 
         self.trail_count += 1
 
-        if m_avg < self.background_image_brightness and m_avg > self.background_image_min_brightness:
-            # try to exclude images that are too dark
-            logger.info('Found new background candidate: %s - score %0.2f', filename, m_avg)
-            self.background_image_brightness = m_avg  # new low score
-            self.background_image = image  # image with the lowest score will be the permanent background
-
-
-        ret, mask = cv2.threshold(image_gray, self._mask_threshold, 255, cv2.THRESH_BINARY)
-        mask_inv = cv2.bitwise_not(mask)
-
-
-        # Now black-out the area of stars in the background
-        bg_masked = cv2.bitwise_and(self.trail_image, self.trail_image, mask=mask_inv)
-
-        # Take only stars of original image
-        stars_masked = cv2.bitwise_and(image, image, mask=mask)
-
-        # Put stars on background
-        self.trail_image = cv2.add(bg_masked, stars_masked)
+        ### Here is the magic
+        self.trail_image = cv2.max(self.trail_image, image)
 
         self.image_processing_elapsed_s += time.time() - image_processing_start
 
@@ -148,35 +127,11 @@ class StarTrailGenerator(object):
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
 
 
-        if isinstance(self.background_image, type(None)):
-            raise InsufficentData('Background image not detected')
-
         if self.trail_count < 20:
             raise InsufficentData('Not enough images found to build star trail')
 
 
-        # need grayscale image for mask generation
-        if len(self.trail_image.shape) == 2:
-            base_image_gray = self.trail_image.copy()
-        else:
-            base_image_gray = cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2GRAY)
-
-
-        ret, mask = cv2.threshold(base_image_gray, 10, 255, cv2.THRESH_BINARY)
-        mask_inv = cv2.bitwise_not(mask)
-
-
-        # Now black-out the area of stars in the background
-        bg_masked = cv2.bitwise_and(self.background_image, self.background_image, mask=mask_inv)
-
-        # Take only stars of original image
-        stars_masked = cv2.bitwise_and(self.trail_image, self.trail_image, mask=mask)
-
-        # Put stars on background
-        final_image = cv2.add(bg_masked, stars_masked)
-
-
         logger.warning('Creating star trail: %s', outfile)
-        cv2.imwrite(str(outfile), final_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
 
 

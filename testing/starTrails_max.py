@@ -18,7 +18,7 @@ class StarTrailGenerator(object):
     def __init__(self):
         self._max_brightness = 50
         self._mask_threshold = 190
-        self._pixel_cutoff_threshold = 1
+        self._pixel_cutoff_threshold = 1.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         '-p',
         help='pixel cutoff threshold percentage',
         type=float,
-        default=1,
+        default=1.0,
     )
 
 
