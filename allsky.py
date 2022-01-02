@@ -34,7 +34,7 @@ if __name__ == "__main__":
             'generateDayTimelapse',
             'generateNightKeogram',
             'generateDayKeogram',
-            'expireImages',
+            'expireData',
             'dbImportImages',
         ),
     )
