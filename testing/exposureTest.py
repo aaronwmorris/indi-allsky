@@ -7,22 +7,29 @@ import ctypes
 import PyIndi
 
 
-CCD_EXPOSURES = [
-    15.0,
-    14.0,
-    14.0,
-    10.0,
-     9.0,
-     7.0,
-     6.0,
-     5.0,
-     3.0,
-     1.0,
-]
+CCD_EXPOSURES = [15 for x in range(1000)]
+#CCD_EXPOSURES = [
+#    15.0,
+#    14.0,
+#    14.0,
+#    10.0,
+#     9.0,
+#     7.0,
+#     6.0,
+#     5.0,
+#     3.0,
+#     1.0,
+#]
+
 
 ### rpicam
 CCD_GAIN = 1
 CCD_BINMODE = 1
+
+### sv305
+#CCD_GAIN = 250
+#CCD_BINMODE = 1
+
 
 INDI_CONFIG = {
     "PROPERTIES" : {},
@@ -45,21 +52,6 @@ INDI_CONFIG = {
         },
     }
 }
-
-
-### sv305
-#CCD_GAIN = 250
-#CCD_BINMODE = 1
-
-#INDI_CONFIG = {
-#    "PROPERTIES" : {},
-#    "SWITCHES" : {
-#        "FRAME_FORMAT" : {
-#            "on"  : ["FORMAT_RAW8"],
-#            "off" : ["FORMAT_RAW12"],
-#        },
-#    }
-#}
 
 ### simulator
 #CCD_GAIN = 100

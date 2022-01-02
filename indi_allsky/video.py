@@ -297,7 +297,8 @@ class VideoWorker(Process):
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
-        logger.info('Found %d images for keogram/star trails', files_entries.count())
+        image_count = files_entries.count()
+        logger.info('Found %d images for keogram/star trails', image_count)
 
 
         processing_start = time.time()
@@ -315,7 +316,10 @@ class VideoWorker(Process):
 
 
         # Files are presorted from the DB
-        for entry in files_entries:
+        for i, entry in enumerate(files_entries):
+            if i % 100 == 0:
+                logger.info('Processed %d of %d images', i, image_count)
+
             p_entry = Path(entry.filename)
 
             if not p_entry.exists():

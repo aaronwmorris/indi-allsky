@@ -863,17 +863,14 @@ class ImageWorker(Process):
 
             adu = m_avg
         else:
-            b, g, r = cv2.split(scidata)
-            b_avg = cv2.mean(b)[0]
-            g_avg = cv2.mean(g)[0]
-            r_avg = cv2.mean(r)[0]
+            scidata_mono = cv2.cvtColor(scidata, cv2.COLOR_BGR2GRAY)
 
-            logger.info('B mean: %0.2f', b_avg)
-            logger.info('G mean: %0.2f', g_avg)
-            logger.info('R mean: %0.2f', r_avg)
+            m_avg = cv2.mean(scidata_mono)[0]
 
-            # Find the gain of each channel
-            adu = (b_avg + g_avg + r_avg) / 3
+            logger.info('Greyscale mean: %0.2f', m_avg)
+
+            adu = m_avg
+
 
         if adu <= 0.0:
             # ensure we do not divide by zero
