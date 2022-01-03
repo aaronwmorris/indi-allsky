@@ -623,7 +623,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunAstroDawnX, sunAstroDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -660,7 +660,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunAstroTwilightX, sunAstroTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
