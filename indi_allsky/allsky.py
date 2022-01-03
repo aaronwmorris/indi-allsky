@@ -493,7 +493,7 @@ class IndiAllSky(object):
             ### Change between day and night
             if self.night_v.value != int(self.night):
                 if self.generate_timelapse_flag:
-                    self.expireImages()  # cleanup old images and folders
+                    self._expireData()  # cleanup old images and folders
 
                 if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
@@ -923,53 +923,23 @@ class IndiAllSky(object):
         return ctl
 
 
-    def expireImages(self, days=None):
-        ### This needs to be run before generating a timelapse
-        from .db import IndiAllSkyDbImageTable
-
-        dbsession = self._db.session
+    def expireData(self):
+        self._expireData()
+        self._stopVideoWorker()
 
 
-        if not days:
-            days = self.config['IMAGE_EXPIRE_DAYS']
-
-
-        # Old image files need to be pruned
-        cutoff_age = datetime.now() - timedelta(days=days)
-
-        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.createDate < cutoff_age)
-
-
-        logger.warning('Found %d expired images to delete', old_images.count())
-        for file_entry in old_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            file_p = Path(file_entry.filename)
-
-            try:
-                file_p.unlink()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
-
-            dbsession.delete(file_entry)
-            dbsession.commit()
-
-
-        # Remove empty folders
-        dir_list = list()
-        self.getFolderFolders(self.image_dir, dir_list)
-
-        empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
-        for d in empty_dirs:
-            logger.info('Removing empty directory: %s', d)
-
-            try:
-                d.rmdir()
-            except OSError as e:
-                logger.error('Cannot remove folder: %s', str(e))
+    def _expireData(self):
+        # This will delete old images from the filesystem and DB
+        self._startVideoWorker()
+        self.video_q.put({
+            'expireData'   : True,
+            'img_folder'   : self.image_dir,
+            'timespec'     : None,  # Not needed
+            'timeofday'    : None,  # Not needed
+            'camera_id'    : None,  # Not needed
+            'video'        : False,
+            'keogram'      : False,
+        })
 
 
     def dbImportImages(self):
@@ -1256,11 +1226,4 @@ class IndiAllSky(object):
                 file_list.append(item)
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
-
-
-    def getFolderFolders(self, folder, dir_list):
-        for item in Path(folder).iterdir():
-            if item.is_dir():
-                dir_list.append(item)
-                self.getFolderFolders(item, dir_list)  # recursion
 

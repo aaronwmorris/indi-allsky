@@ -3,6 +3,7 @@ import io
 import time
 import cv2
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 import subprocess
 import tempfile
@@ -73,11 +74,16 @@ class VideoWorker(Process):
             video = v_dict.get('video', True)
             keogram = v_dict.get('keogram', True)
             #startrail = v_dict.get('startrail', True)
+            expireData = v_dict.get('expireData', False)
 
 
             if not img_folder.exists():
                 logger.error('Image folder does not exist: %s', img_folder)
                 continue
+
+
+            if expireData:
+                self.expireData(img_folder)
 
 
             if video:
@@ -408,6 +414,49 @@ class VideoWorker(Process):
         })
 
 
+    def expireData(self, img_folder):
+        from .db import IndiAllSkyDbImageTable
+
+        dbsession = self._db.session
+
+        # Old image files need to be pruned
+        cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
+
+        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
+
+
+        logger.warning('Found %d expired images to delete', old_images.count())
+        for file_entry in old_images:
+            logger.info('Removing old image: %s', file_entry.filename)
+
+            file_p = Path(file_entry.filename)
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+            dbsession.delete(file_entry)
+            dbsession.commit()
+
+
+        # Remove empty folders
+        dir_list = list()
+        self.getFolderFolders(img_folder, dir_list)
+
+        empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
+        for d in empty_dirs:
+            logger.info('Removing empty directory: %s', d)
+
+            try:
+                d.rmdir()
+            except OSError as e:
+                logger.error('Cannot remove folder: %s', str(e))
+
+
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
@@ -421,6 +470,13 @@ class VideoWorker(Process):
                 file_list.append(item)
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+
+
+    def getFolderFolders(self, folder, dir_list):
+        for item in Path(folder).iterdir():
+            if item.is_dir():
+                dir_list.append(item)
+                self.getFolderFolders(item, dir_list)  # recursion
 
 
     def _getLock(self):
