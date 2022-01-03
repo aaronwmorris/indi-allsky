@@ -427,7 +427,7 @@ class VideoWorker(Process):
 
         logger.warning('Found %d expired images to delete', old_images.count())
         for file_entry in old_images:
-            logger.info('Removing old image: %s', file_entry.filename)
+            #logger.info('Removing old image: %s', file_entry.filename)
 
             file_p = Path(file_entry.filename)
 
@@ -439,8 +439,9 @@ class VideoWorker(Process):
             except FileNotFoundError as e:
                 logger.warning('File already removed: %s', str(e))
 
-            dbsession.delete(file_entry)
-            dbsession.commit()
+
+        old_images.delete()  # mass delete
+        dbsession.commit()
 
 
         # Remove empty folders
