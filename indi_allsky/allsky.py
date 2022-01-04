@@ -681,7 +681,7 @@ class IndiAllSky(object):
 
         # exposures start with 1 and then every 5s until the max exposure
         dark_exposures = [1]
-        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5), 5))
+        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
 
 
@@ -781,6 +781,28 @@ class IndiAllSky(object):
 
         ### INDI disconnect
         self.indiclient.disconnectServer()
+
+
+    def flushDarks(self):
+        from .db import IndiAllSkyDbDarkFrameTable
+        dbsession = self._db.session
+
+        dark_frames_all = dbsession.query(IndiAllSkyDbDarkFrameTable)
+
+        logger.warning('Found %s dark frames to flush', dark_frames_all.count())
+
+        time.sleep(5.0)
+
+        for dark_frame_entry in dark_frames_all:
+            filename = Path(dark_frame_entry.filename)
+
+            if filename.exists():
+                logger.warning('Removing dark frame: %s', filename)
+                filename.unlink()
+
+
+        dark_frames_all.delete()
+        dbsession.commit()
 
 
     def generateDayTimelapse(self, timespec='', camera_id=0):

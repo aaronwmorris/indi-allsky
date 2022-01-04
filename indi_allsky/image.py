@@ -147,6 +147,10 @@ class ImageWorker(Process):
                 if self.config.get('IMAGE_SAVE_RAW'):
                     self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
 
+                if image_type == 'Dark Frame':
+                    # if the image is a dark frame, no reason to proceed with processing
+                    continue
+
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
