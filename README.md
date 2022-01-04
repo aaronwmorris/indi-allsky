@@ -10,6 +10,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * QHY
     * Altair
     * ToupTek
+    * Player One Astronomy
     * Raspberry Pi HQ Camera
     * Canon DSLRs
     * Generic web cameras
@@ -266,6 +267,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | QHY      | QHY5LII-M           | A      |       |
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G-1200-KMB          | A      |       |
+| Player One   | Mars-C          | A      |       |
 | Raspberry Pi | HQ Camera       | C      | Requires 7+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures, especially when going below 6 seconds when taking long exposures, is not stable. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
