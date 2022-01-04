@@ -681,7 +681,7 @@ class IndiAllSky(object):
 
         # exposures start with 1 and then every 5s until the max exposure
         dark_exposures = [1]
-        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5), 5))
+        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
 
 
