@@ -65,6 +65,15 @@ echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo
 echo
+
+if [[ "$(id -u)" == "0" ]]; then
+    echo "Please do not run setup.sh as root"
+    echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
