@@ -1,0 +1,101 @@
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+html, body {
+ width: 100%;
+ height: 100%;
+ margin: 0px;
+ border: 0;
+ overflow: hidden; /*  Disable scrollbars */
+ display: block;  /* No floating content on sides */
+ background-color: #000000;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript">
+var myChart;
+var chart_data = [];
+
+function init() {
+    ctx = document.getElementById('myChart').getContext('2d');
+    myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'jSQM',
+                pointRadius: 4,
+                pointBackgroundColor: "rgba(0, 0, 255,1)",
+                borderColor: "gray",
+                data: []
+            }],
+        },
+        options: {
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    drawChart();
+}
+
+function drawChart() {
+    loadJS('js/js_chart.php', function() {});
+    //Add
+    myChart.data.datasets[0].data = chart_data;
+    myChart.update();
+
+    setTimeout(drawChart, 15000);
+}
+
+function loadJS(url, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+    var xhr=new XMLHttpRequest();
+    xhr.onreadystatechange=function() {
+        if(xhr.readyState==4){
+            if(xhr.status==200 || xhr.status==0) {
+            try {
+                eval(xhr.responseText);
+            } catch(e) {
+                onError(e);
+                return;
+            }
+            onDone();
+            } else {
+                onError(xhr.status);
+            }
+        }
+    }.bind(this);
+    try {
+        xhr.open("GET", url, true);
+        xhr.send();
+    } catch(e) {
+        onError(e);
+    }
+}
+
+
+</script>
+<title>Chart</title>
+</head>
+
+<body onload="JavaScript:init();">
+<canvas id="myChart" style="width:100%;max-width:500px;height:100%;max-height:500px"></canvas>
+</body>
+</html>
