@@ -31,9 +31,7 @@ class GetChartData {
     public $limit;
     private $_limit_default = 40;
 
-    private $_hours = '-2 HOURS';
-    private $_sqm_history = '-30 MINUTES';
-    private $_stars_history = '-30 MINUTES';
+    private $_hours = '-30 MINUTES';
 
     public $rootpath = '/var/www/html/allsky/';  # this needs to end with /
 
@@ -82,10 +80,9 @@ class GetChartData {
         $data = array();
         $chart_data = array();
 
-        $stmt_files = $this->_conn->prepare("SELECT image.sqm AS image_sqm, image.createDate as image_createDate FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours) ORDER BY image.createDate ASC LIMIT :limit");
+        $stmt_files = $this->_conn->prepare("SELECT image.sqm AS image_sqm, image.createDate as image_createDate FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours) ORDER BY image.createDate DESC");
         $stmt_files->bindParam(':cameraId', $this->cameraId, PDO::PARAM_INT);
         $stmt_files->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
-        $stmt_files->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt_files->execute();
 
         while($row = $stmt_files->fetch()) {
@@ -98,7 +95,9 @@ class GetChartData {
             );
         }
 
-        return($chart_data);
+        $r_chart_data = array_reverse($chart_data);
+
+        return($r_chart_data);
     }
 
 }

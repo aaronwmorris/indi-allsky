@@ -24,9 +24,10 @@ function init() {
         data: {
             datasets: [{
                 label: 'jSQM',
-                pointRadius: 4,
-                pointBackgroundColor: "rgba(0, 0, 255,1)",
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(0, 0, 255, 1)",
                 borderColor: "gray",
+                tension: 0.1,
                 data: []
             }],
         },
@@ -96,6 +97,6 @@ function loadJS(url, onDone, onError) {
 </head>
 
 <body onload="JavaScript:init();">
-<canvas id="myChart" style="width:100%;max-width:500px;height:100%;max-height:500px"></canvas>
+<canvas id="myChart" style="width:100%;max-width:800px;height:100%;max-height:500px"></canvas>
 </body>
 </html>
