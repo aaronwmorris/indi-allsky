@@ -26,12 +26,21 @@ function init() {
                 label: 'jSQM',
                 //pointRadius: 4,
                 pointBackgroundColor: "rgba(0, 0, 255, 1)",
-                borderColor: "gray",
+                borderColor: "rgba(127, 127, 127, 1)",
                 tension: 0.1,
                 data: []
             }],
         },
         options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
             animation : false,
             scales: {
                 x: {
