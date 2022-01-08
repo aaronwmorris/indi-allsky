@@ -30,6 +30,7 @@ if __name__ == "__main__":
         choices=(
             'run',
             'darks',
+            'flushDarks',
             'generateNightTimelapse',
             'generateDayTimelapse',
             'generateNightKeogram',
