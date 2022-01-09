@@ -15,9 +15,13 @@ html, body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript">
 var myChart;
-var json_data = {};
+var json_data = {
+    'chart_data' : [],
+};
 
 function init() {
+    loadChartData();
+
     ctx = document.getElementById('myChart').getContext('2d');
     myChart = new Chart(ctx, {
         type: "line",
@@ -61,17 +65,36 @@ function init() {
         }
     });
 
-    drawChart();
+    loop();
 }
+
+async function loop() {
+    while(json_data['chart_data'].length == 0) {
+        await sleep(100);
+    }
+
+    drawChart();
+    setTimeout(loop, 15000);
+}
+
+
+function loadChartData() {
+    console.log('Loading chart data');
+    loadJS('js/js_chart.php', function() {});
+    setTimeout(loadChartData, 15000);
+}
+
 
 function drawChart() {
-    loadJS('js/js_chart.php', function() {});
-    //Add
     myChart.data.datasets[0].data = json_data['chart_data'];
     myChart.update();
-
-    setTimeout(drawChart, 15000);
 }
+
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
 
 function loadJS(url, onDone, onError) {
     if(!onDone)onDone=function(){};
