@@ -21,7 +21,7 @@ function errHandle($errNo, $errStr, $errFile, $errLine) {
 }
 
 
-header("content-type: application/x-javascript");
+header("content-type: application/json");
 
 class GetChartData {
     public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
@@ -103,7 +103,9 @@ class GetChartData {
 }
 
 $x = new GetChartData();
-$chart_data = $x->getLatestChartData();
 
-print('chart_data = ' . json_encode($chart_data) . ';');
+$json_data = array();
+$json_data['chart_data'] = $x->getLatestChartData();
+
+print(json_encode($json_data));
 ?>

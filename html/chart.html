@@ -15,7 +15,7 @@ html, body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript">
 var myChart;
-var chart_data = [];
+var json_data = {};
 
 function init() {
     ctx = document.getElementById('myChart').getContext('2d');
@@ -67,7 +67,7 @@ function init() {
 function drawChart() {
     loadJS('js/js_chart.php', function() {});
     //Add
-    myChart.data.datasets[0].data = chart_data;
+    myChart.data.datasets[0].data = json_data['chart_data'];
     myChart.update();
 
     setTimeout(drawChart, 15000);
@@ -81,7 +81,7 @@ function loadJS(url, onDone, onError) {
         if(xhr.readyState==4){
             if(xhr.status==200 || xhr.status==0) {
             try {
-                eval(xhr.responseText);
+                json_data = JSON.parse(xhr.responseText);
             } catch(e) {
                 onError(e);
                 return;
