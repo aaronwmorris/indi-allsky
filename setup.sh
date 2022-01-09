@@ -23,7 +23,9 @@ HTDOCS_FILES="
     loop.html
     loop_realtime.html
     sqm.html
+    chart.html
     js/js_loop.php
+    js/js_chart.php
     js/settings_latest.js
     js/settings_latestDb.js
     js/settings_loop.js

@@ -21,7 +21,7 @@ function errHandle($errNo, $errStr, $errFile, $errLine) {
 }
 
 
-header("content-type: application/x-javascript");
+header("content-type: application/json");
 
 class GetImageData {
     public $db_uri = 'sqlite:/var/lib/indi-allsky/indi-allsky.sqlite';
@@ -154,11 +154,11 @@ class GetImageData {
 }
 
 $x = new GetImageData();
-$image_list = $x->getLatestImages();
-$sqm_data = $x->getSqmData();
-$stars_data = $x->getStarsData();
 
-print('image_list = ' . json_encode($image_list) . ';');
-print('sqm_data = ' . json_encode($sqm_data) . ';');
-print('stars_data = ' . json_encode($stars_data) . ';');
+$json_data = array();
+$json_data['image_list'] = $x->getLatestImages();
+$json_data['sqm_data'] = $x->getSqmData();
+$json_data['stars_data'] = $x->getStarsData();
+
+print(json_encode($json_data));
 ?>

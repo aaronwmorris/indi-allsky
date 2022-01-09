@@ -14,7 +14,9 @@ html, body {
 </style>
 <script type="text/javascript" src="js/settings_loop.js"></script>
 <script type="text/javascript">
-var image_list = [];
+var json_data = {
+    'image_list' : [],
+};
 var fullscreen = false;  //initial state
 
 function init() {
@@ -25,12 +27,12 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    while(image_list.length == 0) {
+    while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
 
     // prevent concurrent updates to list
-    var image_list_copy = JSON.parse(JSON.stringify(image_list));
+    var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
     for (var i = 0; i < image_list_copy.length; i++) {
         showImage(image_list_copy[i], i);
@@ -89,8 +91,8 @@ function showImage(entry, idx) {
 function loadNextImage() {
     console.log('Loading next images');
     loadJS('js/js_loop.php?limit=' + maxFrames, function() {
-        while (image_list.length > maxFrames) {
-            image_list.splice(0, 1);  // remove first image
+        while (json_data['image_list'].length > maxFrames) {
+            json_data['image_list'].splice(0, 1);  // remove first image
         };
     });
     setTimeout(loadNextImage, refreshInterval);
@@ -108,7 +110,7 @@ function loadJS(url, onDone, onError) {
         if(xhr.readyState==4){
             if(xhr.status==200 || xhr.status==0) {
             try {
-                eval(xhr.responseText);
+                json_data = JSON.parse(xhr.responseText);
             } catch(e) {
                 onError(e);
                 return;
