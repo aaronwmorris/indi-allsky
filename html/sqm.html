@@ -14,8 +14,11 @@ html, body {
 </style>
 <script type="text/javascript" src="js/settings_latest.js"></script>
 <script type="text/javascript">
-var image_list = [];
-var sqm_data = {"min" : 0, "max" : 0, "avg" : 0};
+var json_data = {
+    'image_list'  : [],
+    'sqm_data'    : {'min' : 0, 'max' : 0, 'avg' : 0},
+    'stars_data'  : {'min' : 0, 'max' : 0, 'avg' : 0},
+};
 var fullscreen = false;  //initial state
 
 function init() {
@@ -26,11 +29,11 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    while(image_list.length == 0) {
+    while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
 
-    showImage(image_list[0]);
+    showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
 }
@@ -76,19 +79,19 @@ function showImage(entry) {
 
         context.font = '20px serif';
 
-        var stars_max_text = "Max " + parseFloat(stars_data["max"]);
+        var stars_max_text = "Max " + parseFloat(json_data['stars_data']['max']);
         context.strokeStyle = 'black';
         context.strokeText(stars_max_text, x-175, y+40, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(stars_max_text, x-175, y+40, maxWidth);
 
-        var stars_avg_text = "Avg " + parseFloat(stars_data["avg"]).toFixed(1);
+        var stars_avg_text = "Avg " + parseFloat(json_data['stars_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(stars_avg_text, x-175, y+80, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(stars_avg_text, x-175, y+80, maxWidth);
 
-        var stars_min_text = "Min " + parseFloat(stars_data["min"]);
+        var stars_min_text = "Min " + parseFloat(json_data['stars_data']['min']);
         context.strokeStyle = 'black';
         context.strokeText(stars_min_text, x-175, y+120, maxWidth);
         context.fillStyle = 'lightgrey';
@@ -109,19 +112,19 @@ function showImage(entry) {
 
         context.font = '20px serif';
 
-        var sqm_max_text = "Max " + parseFloat(sqm_data["max"]).toFixed(1);
+        var sqm_max_text = "Max " + parseFloat(json_data['sqm_data']['max']).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(sqm_max_text, x, y+40, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(sqm_max_text, x, y+40, maxWidth);
 
-        var sqm_avg_text = "Avg " + parseFloat(sqm_data["avg"]).toFixed(1);
+        var sqm_avg_text = "Avg " + parseFloat(json_data['sqm_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(sqm_avg_text, x, y+80, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(sqm_avg_text, x, y+80, maxWidth);
 
-        var sqm_min_text = "Min " + parseFloat(sqm_data["min"]).toFixed(1);
+        var sqm_min_text = "Min " + parseFloat(json_data['sqm_data']['min']).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(sqm_min_text, x, y+120, maxWidth);
         context.fillStyle = 'lightgrey';
@@ -148,7 +151,7 @@ function loadJS(url, onDone, onError) {
         if(xhr.readyState==4){
             if(xhr.status==200 || xhr.status==0) {
             try {
-                eval(xhr.responseText);
+                json_data = JSON.parse(xhr.responseText);
             } catch(e) {
                 onError(e);
                 return;
@@ -183,7 +186,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    showImage(image_list[0]);
+    showImage(json_data['image_list'][0]);
 }
 setResizeHandler(resize_callback, 500);
 

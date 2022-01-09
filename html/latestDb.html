@@ -14,7 +14,9 @@ html, body {
 </style>
 <script type="text/javascript" src="js/settings_latestDb.js"></script>
 <script type="text/javascript">
-var image_list = [];
+var json_data = {
+    'image_list' : [],
+};
 var fullscreen = false;  //initial state
 
 function init() {
@@ -25,11 +27,11 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    while(image_list.length == 0) {
+    while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
 
-    showImage(image_list[0]);
+    showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
 }
@@ -78,7 +80,7 @@ function loadJS(url, onDone, onError) {
         if(xhr.readyState==4){
             if(xhr.status==200 || xhr.status==0) {
             try {
-                eval(xhr.responseText);
+                json_data = JSON.parse(xhr.responseText);
             } catch(e) {
                 onError(e);
                 return;
@@ -113,7 +115,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    showImage(image_list[0]);
+    showImage(json_data['image_list'][0]);
 }
 setResizeHandler(resize_callback, 500);
 
