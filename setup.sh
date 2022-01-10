@@ -515,8 +515,8 @@ if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
     gzip $DB_BACKUP
 fi
-alembic revision --autogenerate
-alembic upgrade head
+#flask db revision --autogenerate
+#flask db upgrade head
 
 
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
