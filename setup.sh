@@ -468,7 +468,7 @@ if [[ ! -f "flask.json" ]]; then
     sed -e "s|%SECRET_KEY%|$SECRET_KEY|g" flask.json_template > flask.json
 fi
 
-chmod 600 flask.json
+chmod 644 flask.json
 
 
 echo "**** Start apache2 service ****"
