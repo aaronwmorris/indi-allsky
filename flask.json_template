@@ -1,0 +1,6 @@
+{
+    "SQLALCHEMY_DATABASE_URI" : "sqlite:////var/lib/indi-allsky/indi-allsky.sqlite",
+    "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
+    "TEMPLATES_AUTO_RELOAD" : true,
+    "SECRET_KEY" : "%SECRET_KEY%"
+}

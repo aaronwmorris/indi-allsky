@@ -462,6 +462,14 @@ sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
+echo "**** Flask config ****"
+if [[ ! -f "flask.json" ]]; then
+    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
+    sed -e "s|%SECRET_KEY%|$SECRET_KEY|g" flask.json_template > flask.json
+fi
+
+chmod 600 flask.json
+
 
 echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
