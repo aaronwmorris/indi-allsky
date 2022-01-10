@@ -5,12 +5,15 @@ from flask_migrate import Migrate
 db = SQLAlchemy()
 migrate = Migrate()
 
-from .views import bp
+from .views import bp  # noqa
 
 
 def create_app():
     """Construct the core application."""
-    app = Flask(__name__, instance_relative_config=False)
+    app = Flask(
+        __name__,
+        instance_relative_config=False,
+    )
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -20,7 +23,7 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        from . import views
+        from . import views  # noqa
         db.create_all()  # Create sql tables for our data models
 
         return app

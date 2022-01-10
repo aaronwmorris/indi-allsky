@@ -69,6 +69,9 @@ class CamerasView(ListView):
         return cameras
 
 
+class ImageLoopView(TemplateView):
+    pass
+
 class JsonImageLoopView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
@@ -174,4 +177,5 @@ class JsonImageLoopView(JsonView):
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
