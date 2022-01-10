@@ -125,6 +125,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         libgnutls28-dev \
         swig \
@@ -173,6 +174,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         swig \
         libatlas-base-dev \
@@ -222,6 +224,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         libgnutls28-dev \
         swig \
@@ -263,6 +266,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         swig \
         libatlas-base-dev \
@@ -306,6 +310,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         libgnutls28-dev \
         swig \
@@ -350,6 +355,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         git \
         apache2 \
         libapache2-mod-php \
+        libapache2-mod-wsgi-py3 \
         php-sqlite3 \
         swig \
         libatlas-base-dev \
@@ -459,8 +465,10 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
-cat ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
@@ -469,6 +477,7 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
 
     sudo a2enmod rewrite
     sudo a2enmod ssl
+    sudo a2enmod wsgi
     sudo a2dissite 000-default
     sudo a2dissite default-ssl
     sudo a2ensite indi-allsky
