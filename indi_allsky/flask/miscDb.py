@@ -2,7 +2,8 @@ import datetime
 from pathlib import Path
 #from pprint import pformat
 
-from .models import Base
+from . import db
+
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
@@ -10,8 +11,6 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 
 import multiprocessing
@@ -19,36 +18,18 @@ import multiprocessing
 logger = multiprocessing.get_logger()
 
 
-class IndiAllSkyDb(object):
+class miscDb(object):
     def __init__(self, config):
         self.config = config
-
-        self._session = self._getDbConn()
-
-
-    @property
-    def session(self):
-        return self._session
-
-    @session.setter
-    def session(self, foobar):
-        pass  # readonly
-
-
-    def _getDbConn(self):
-
-        engine = create_engine(self.config['DB_URI'], echo=False)
-        Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-
-        return Session()
 
 
     def addCamera(self, camera_name):
         now = datetime.datetime.now()
 
         try:
-            camera = self._session.query(IndiAllSkyDbCameraTable).filter(IndiAllSkyDbCameraTable.name == camera_name).one()
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.name == camera_name)\
+                .one()
             camera.connectDate = now
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
@@ -56,9 +37,9 @@ class IndiAllSkyDb(object):
                 connectDate=now,
             )
 
-            self._session.add(camera)
+            db.session.add(camera)
 
-        self._session.commit()
+        db.session.commit()
 
         logger.info('Camera DB ID: %d', camera.id)
 
@@ -125,8 +106,8 @@ class IndiAllSkyDb(object):
             stars=stars,
         )
 
-        self._session.add(image)
-        self._session.commit()
+        db.session.add(image)
+        db.session.commit()
 
         return image
 
@@ -167,8 +148,8 @@ class IndiAllSkyDb(object):
             temp=temp_val,
         )
 
-        self._session.add(dark)
-        self._session.commit()
+        db.session.add(dark)
+        db.session.commit()
 
         return dark
 
@@ -208,8 +189,8 @@ class IndiAllSkyDb(object):
             night=night,
         )
 
-        self._session.add(video)
-        self._session.commit()
+        db.session.add(video)
+        db.session.commit()
 
         return video
 
@@ -249,8 +230,8 @@ class IndiAllSkyDb(object):
             night=night,
         )
 
-        self._session.add(keogram)
-        self._session.commit()
+        db.session.add(keogram)
+        db.session.commit()
 
         return keogram
 
@@ -290,8 +271,8 @@ class IndiAllSkyDb(object):
             night=night,
         )
 
-        self._session.add(startrail)
-        self._session.commit()
+        db.session.add(startrail)
+        db.session.commit()
 
         return startrail
 
@@ -300,7 +281,7 @@ class IndiAllSkyDb(object):
 
     def addUploadedFlag(self, entry):
         entry.uploaded = True
-        self._session.commit()
+        db.session.commit()
 
 
     def getCurrentCameraId(self):
@@ -308,7 +289,7 @@ class IndiAllSkyDb(object):
             return self.config['DB_CCD_ID']
         else:
             try:
-                camera = self._session.query(IndiAllSkyDbCameraTable)\
+                camera = IndiAllSkyDbCameraTable.query\
                     .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
                     .first()
             except NoResultFound:

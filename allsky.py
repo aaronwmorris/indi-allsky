@@ -6,6 +6,10 @@ import logging.handlers
 import argparse
 import multiprocessing
 
+# setup flask context for db access
+app = indi_allsky.flask.create_app()
+app.app_context().push()
+
 
 logger = multiprocessing.get_logger()
 
