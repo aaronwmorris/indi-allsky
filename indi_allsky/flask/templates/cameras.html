@@ -6,5 +6,10 @@
 {% endblock %}
 
 {% block content %}
-Cameras
+<table>
+<tr><th>Cameras</th></tr>
+{% for camera in objects %}
+<tr><td>{{ camera.name }}</td></tr>
+{% endfor %}
+</table>
 {% endblock %}

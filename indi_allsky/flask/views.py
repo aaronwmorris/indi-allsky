@@ -45,10 +45,10 @@ class IndexView(TemplateView):
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 
 
-class CameraView(ListView):
+class CamerasView(ListView):
     def get_objects(self):
         cameras = IndiAllSkyDbCameraTable.query.all()
         return cameras
 
 
-bp.add_url_rule('/cameras', view_func=IndexView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
