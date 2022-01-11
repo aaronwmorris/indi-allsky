@@ -1,6 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
+import io
 import re
+import json
 
 from flask import render_template
 from flask import request
@@ -18,7 +20,6 @@ from .models import IndiAllSkyDbImageTable
 from sqlalchemy import func
 
 from .forms import IndiAllskyConfigForm
-
 
 bp = Blueprint('indi-allsky', __name__, template_folder='templates', url_prefix='/')
 
@@ -187,8 +188,19 @@ class JsonImageLoopView(JsonView):
 
 class ConfigView(FormView):
     def get_objects(self):
+        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            try:
+                indi_allsky_config = json.loads(f_config_file.read())
+            except json.JSONDecodeError as e:
+                app.logger.error('Error decoding json: %s', str(e))
+
+
+        form_data = {
+            'CCD_EXPOSURE_MAX' : indi_allsky_config['CCD_EXPOSURE_MAX'],
+        }
+
         objects = {
-            'form_config' : IndiAllskyConfigForm(),
+            'form_config' : IndiAllskyConfigForm(data=form_data),
         }
 
         return objects
