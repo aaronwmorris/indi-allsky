@@ -484,6 +484,7 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
     sudo a2enmod rewrite
+    sudo a2enmod headers
     sudo a2enmod ssl
     sudo a2enmod wsgi
     sudo a2dissite 000-default
