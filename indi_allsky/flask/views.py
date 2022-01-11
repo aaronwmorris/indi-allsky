@@ -17,6 +17,9 @@ from .models import IndiAllSkyDbImageTable
 
 from sqlalchemy import func
 
+from .forms import IndiAllskyConfigForm
+
+
 bp = Blueprint('indi-allsky', __name__, template_folder='templates', url_prefix='/')
 
 
@@ -49,6 +52,12 @@ class ListView(View):
         raise NotImplementedError()
 
 
+class FormView(ListView):
+    def dispatch_request(self):
+        context = self.get_objects()
+        return self.render_template(context)
+
+
 class JsonView(View):
     def dispatch_request(self):
         json_data = self.get_objects()
@@ -71,6 +80,7 @@ class CamerasView(ListView):
 
 class ImageLoopView(TemplateView):
     pass
+
 
 class JsonImageLoopView(JsonView):
     def __init__(self):
@@ -175,7 +185,17 @@ class JsonImageLoopView(JsonView):
         return stars_data
 
 
+class ConfigView(FormView):
+    def get_objects(self):
+        objects = {
+            'form_config' : IndiAllskyConfigForm(),
+        }
+
+        return objects
+
+
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))

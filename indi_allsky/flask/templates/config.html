@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Config{% endblock %}
+
+{% block head %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<form id="form_config" method="post">
+    {{ form_config.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group">
+        {{ form_config.CCD_EXPOSURE_MAX.label }}
+        {{ form_config.CCD_EXPOSURE_MAX(class='form-control') }}
+        <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback"></div>
+    </div>
+    <button class="btn btn-primary">Submit</button>
+</form>
+<div id="success-message" style="display: none;"></div>
+
+<script>
+const form_config = document.getElementById('form_config');
+const successMessage = document.getElementById('success-message');
+const fields = {
+    csrf_token: {
+        input: document.getElementById('csrf_token'),
+        error: document.getElementById('csrf_token-error')
+    },
+    CCD_EXPOSURE_MAX : {
+        input: document.getElementById('CCD_EXPOSURE_MAX'),
+        error: document.getElementById('CCD_EXPOSURE_MAX-error')
+    },
+}
+
+
+form_config.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const response = await fetch('ajax/config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify({
+            csrf_token: fields.csrf_token.input.value,
+            age: fields.CCD_EXPOSURE_MAX.input.value
+        })
+    });
+    if (response.ok) {
+        successMessage.innerHTML = await response.text();
+        form.style.display = 'none';
+        successMessage.style.display = 'block';
+    } else {
+        const errors = await response.json();
+        Object.keys(errors).forEach((key) => {
+           fields[key].input.classList.add('is-invalid');
+           fields[key].error.innerHTML = errors[key][0];
+        });
+    }
+});
+
+</script>
+
+{% endblock %}
