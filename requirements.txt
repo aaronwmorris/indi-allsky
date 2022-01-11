@@ -12,6 +12,7 @@ pygifsicle
 Flask
 Flask-SQLAlchemy
 Flask-Migrate
+Flask-WTF
 # cryptography 36.0.0 not building on Debian 10 arm for now
 # https://github.com/pyca/cryptography/issues/6485
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=998232
