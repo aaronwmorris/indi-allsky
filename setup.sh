@@ -419,7 +419,8 @@ TMP1=$(mktemp)
 sed \
  -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
  -e "s|%INDISERVER_USER%|$USER|g" \
- -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
+ -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
+ ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
 sudo cp -f "$TMP1" /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
@@ -432,7 +433,8 @@ echo "**** Setting up indi-allsky service ****"
 TMP2=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
 sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
@@ -465,7 +467,11 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 echo "**** Flask config ****"
 if [[ ! -f "flask.json" ]]; then
     SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
-    sed -e "s|%SECRET_KEY%|$SECRET_KEY|g" flask.json_template > flask.json
+    sed \
+     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+     -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     flask.json_template > flask.json
 fi
 
 chmod 644 flask.json
@@ -475,7 +481,8 @@ echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
 
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
