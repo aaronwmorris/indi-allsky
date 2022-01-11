@@ -44,7 +44,7 @@ form_config.addEventListener('submit', async (e) => {
         },
         body: JSON.stringify({
             csrf_token: fields.csrf_token.input.value,
-            age: fields.CCD_EXPOSURE_MAX.input.value
+            CCD_EXPOSURE_MAX: fields.CCD_EXPOSURE_MAX.input.value
         })
     });
     if (response.ok) {
