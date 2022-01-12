@@ -313,6 +313,7 @@ class AjaxConfigView(View):
         if not indi_allsky_config['CCD_CONFIG'].get('DAY'):
             indi_allsky_config['CCD_CONFIG']['DAY'] = {}
 
+
         # update data
         indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
         indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])

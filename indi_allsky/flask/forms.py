@@ -6,8 +6,8 @@ from wtforms.validators import ValidationError
 
 
 def ccd_GAIN_validator(form, field):
-    if field.data <= 0:
-        raise ValidationError('Gain must be more than 0')
+    if field.data < 0:
+        raise ValidationError('Gain must be 0 or higher')
 
 
 def ccd_BINNING_validator(form, field):
@@ -48,15 +48,15 @@ def EXPOSURE_PERIOD_validator(form, field):
 
 
 class IndiAllskyConfigForm(FlaskForm):
-    CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[DataRequired(), ccd_GAIN_validator])
+    CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[DataRequired(), ccd_GAIN_validator])
+    CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__DAY__GAIN            = IntegerField('Daytime Gain', validators=[DataRequired(), ccd_GAIN_validator])
+    CCD_CONFIG__DAY__GAIN            = IntegerField('Daytime Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
-    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[DataRequired(), CCD_EXPOSURE_DEF_validator])
-    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[DataRequired(), CCD_EXPOSURE_MIN_validator])
+    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
+    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
 
     #def __init__(self, *args, **kwargs):
