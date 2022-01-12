@@ -93,7 +93,7 @@ function showImage(entry, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS('{{ url_for('indi-allsky.js_image_loop_view') }}?limit=' + maxFrames, function() {
+    loadJS("{{ url_for('indi-allsky.js_image_loop_view') }}?limit=" + maxFrames, function() {
         while (json_data['image_list'].length > maxFrames) {
             json_data['image_list'].splice(0, 1);  // remove first image
         };

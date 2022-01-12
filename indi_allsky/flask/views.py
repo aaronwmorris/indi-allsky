@@ -81,6 +81,10 @@ class CamerasView(ListView):
         return cameras
 
 
+class SqmView(TemplateView):
+    pass
+
+
 class ImageLoopView(TemplateView):
     pass
 
@@ -118,10 +122,11 @@ class JsonImageLoopView(JsonView):
     def getLatestImages(self):
         now_minus_hours = datetime.now() - timedelta(hours=self.hours)
 
+        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_hours)\
+            .filter(createDate_local > now_minus_hours)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
 
@@ -143,6 +148,7 @@ class JsonImageLoopView(JsonView):
     def getSqmData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
+        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -151,7 +157,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .filter(createDate_local > now_minus_minutes)\
             .first()
 
 
@@ -167,6 +173,7 @@ class JsonImageLoopView(JsonView):
     def getStarsData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
+        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
@@ -175,7 +182,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .filter(createDate_local > now_minus_minutes)\
             .first()
 
 
@@ -313,6 +320,7 @@ bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='in
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/chart', view_func=ChartView.as_view('chart_view', template_name='chart.html'))

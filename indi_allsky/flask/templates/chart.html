@@ -83,7 +83,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS('{{ url_for('indi-allsky.js_chart_view') }}', function() {});
+    loadJS("{{ url_for('indi-allsky.js_chart_view') }}", function() {});
     setTimeout(loadChartData, 15000);
 }
 
