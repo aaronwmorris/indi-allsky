@@ -14,7 +14,7 @@ def CCD_EXPOSURE_MAX_validator(form, field):
 
 
 class IndiAllskyConfigForm(FlaskForm):
-    CCD_EXPOSURE_MAX = FloatField('Exposure Max', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
+    CCD_EXPOSURE_MAX = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
