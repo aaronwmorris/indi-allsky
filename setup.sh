@@ -93,6 +93,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -149,6 +151,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -197,6 +201,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -250,6 +256,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
     # need to find an indi repo
 
@@ -288,6 +296,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -333,6 +343,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -462,6 +474,16 @@ sudo systemctl restart rsyslog
 sudo cp -f ${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky
 sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
+
+
+echo "**** Indi-allsky config ****"
+if [[ ! -f "config.json" ]]; then
+    cp config.json_template config.json
+fi
+
+# config.json needs to be writable by apache user
+chgrp "$APACHE_GROUP" config.json
+chmod 660 config.json
 
 
 echo "**** Flask config ****"
