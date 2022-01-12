@@ -206,8 +206,23 @@ class ConfigView(FormView):
         return objects
 
 
+class AjaxConfigView(View):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_config = IndiAllskyConfigForm(data=request.json)
+
+        if not form_config.validate():
+            return jsonify(form_config.errors), 400
+
+
+        return jsonify({})
+
+
+
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
+bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
