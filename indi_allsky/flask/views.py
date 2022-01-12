@@ -19,6 +19,7 @@ from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 
 from sqlalchemy import func
+from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
 
@@ -216,17 +217,23 @@ class JsonChartView(JsonView):
     def getChartData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
 
-        chart_query = IndiAllSkyDbImageTable.query\
+        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        chart_query = db.session.query(
+            createDate_local,
+            IndiAllSkyDbImageTable.sqm,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .filter(createDate_local > now_minus_minutes)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
+
+        #app.logger.info('Chart SQL: %s', str(chart_query))
 
         chart_data = list()
         for i in chart_query:
             data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : i.createDate_local.strftime('%H:%M:%S'),
                 'y' : i.sqm,
             }
 
