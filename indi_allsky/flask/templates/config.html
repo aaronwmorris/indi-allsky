@@ -71,6 +71,45 @@
         <div id="AUTO_WB-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.TARGET_ADU.label }}
+        {{ form_config.TARGET_ADU(class='form-control') }}
+        <div id="TARGET_ADU-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TARGET_ADU_DEV.label }}
+        {{ form_config.TARGET_ADU_DEV(class='form-control') }}
+        <div id="TARGET_ADU_DEV-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.ADU_ROI_X1.label }}
+        {{ form_config.ADU_ROI_X1(class='form-control') }}
+        <div id="ADU_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.ADU_ROI_Y1.label }}
+        {{ form_config.ADU_ROI_Y1(class='form-control') }}
+        <div id="ADU_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.ADU_ROI_X2.label }}
+        {{ form_config.ADU_ROI_X2(class='form-control') }}
+        <div id="ADU_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.ADU_ROI_Y2.label }}
+        {{ form_config.ADU_ROI_Y2(class='form-control') }}
+        <div id="ADU_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.DETECT_STARS.label }}
+        {{ form_config.DETECT_STARS(class='form-control') }}
+        <div id="DETECT_STARS-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
     <button class="btn btn-primary">Submit</button>
 </form>
 <div id="success-message" style="display: none;"></div>
@@ -92,10 +131,17 @@ const field_names = [
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
     'EXPOSURE_PERIOD',
+    'TARGET_ADU',
+    'TARGET_ADU_DEV',
+    'ADU_ROI_X1',
+    'ADU_ROI_Y1',
+    'ADU_ROI_X2',
+    'ADU_ROI_Y2',
 ];
 
 const checkbox_field_names = [
     'AUTO_WB',
+    'DETECT_STARS',
 ];
 
 var fields = {};

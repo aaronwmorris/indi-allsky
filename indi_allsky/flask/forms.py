@@ -57,6 +57,31 @@ def EXPOSURE_PERIOD_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def TARGET_ADU_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Target ADU must be greater than 0')
+
+    if field.data > 255 :
+        raise ValidationError('Target ADU must be less than 255')
+
+
+def TARGET_ADU_DEV_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Target ADU Deviation must be greater than 0')
+
+    if field.data > 100 :
+        raise ValidationError('Target ADU must be less than 100')
+
+
+def ADU_ROI_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('ADU Region of Interest must be 0 or greater')
+
+
+
 class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
@@ -69,6 +94,13 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
+    TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation', validators=[DataRequired(), TARGET_ADU_DEV_validator])
+    ADU_ROI_X1                       = IntegerField('ADU ROI x1', validators=[ADU_ROI_validator])
+    ADU_ROI_Y1                       = IntegerField('ADU ROI y1', validators=[ADU_ROI_validator])
+    ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
+    ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
+    DETECT_STARS                     = BooleanField('Star Detection')
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)

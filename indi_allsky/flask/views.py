@@ -270,7 +270,34 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
             'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', True),
+            'TARGET_ADU'                     : indi_allsky_config.get('TARGET_ADU', 75),
+            'TARGET_ADU_DEV'                 : indi_allsky_config.get('TARGET_ADU_DEV', 10),
+            'DETECT_STARS'                   : indi_allsky_config.get('DETECT_STARS', True),
         }
+
+
+        # ADU_ROI
+        try:
+            form_data['ADU_ROI_X1'] = indi_allsky_config.get('ADU_ROI', [])[0]
+        except IndexError:
+            form_data['ADU_ROI_X1'] = 0
+
+        try:
+            form_data['ADU_ROI_Y1'] = indi_allsky_config.get('ADU_ROI', [])[1]
+        except IndexError:
+            form_data['ADU_ROI_Y1'] = 0
+
+        try:
+            form_data['ADU_ROI_X2'] = indi_allsky_config.get('ADU_ROI', [])[2]
+        except IndexError:
+            form_data['ADU_ROI_X2'] = 0
+
+        try:
+            form_data['ADU_ROI_Y2'] = indi_allsky_config.get('ADU_ROI', [])[3]
+        except IndexError:
+            form_data['ADU_ROI_Y2'] = 0
+
+
 
         objects = {
             'form_config' : IndiAllskyConfigForm(data=form_data),
@@ -327,6 +354,22 @@ class AjaxConfigView(View):
         indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
+        indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
+        indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
+
+
+        # ADU_ROI
+        adu_roi_x1 = int(request.json['ADU_ROI_X1'])
+        adu_roi_y1 = int(request.json['ADU_ROI_Y1'])
+        adu_roi_x2 = int(request.json['ADU_ROI_X2'])
+        adu_roi_y2 = int(request.json['ADU_ROI_Y2'])
+
+        # the x2 and y2 values must be positive integers in order to be enabled and valid
+        if adu_roi_x2 and adu_roi_y2:
+            indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
+        else:
+            indi_allsky_config['ADU_ROI'] = []
 
 
         # save new config
