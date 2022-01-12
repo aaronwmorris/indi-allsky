@@ -18,11 +18,17 @@
     <button class="btn btn-primary">Submit</button>
 </form>
 <div id="success-message" style="display: none;"></div>
+<div id="failure-message" style="display: none;"></div>
 
 <script>
 const form_config = document.getElementById('form_config');
 const successMessage = document.getElementById('success-message');
+const failureMessage = document.getElementById('failure-message');
 const fields = {
+    form_global : {
+        input: failureMessage,
+        error: failureMessage
+    },
     csrf_token: {
         input: document.getElementById('csrf_token'),
         error: document.getElementById('csrf_token-error')
@@ -36,7 +42,7 @@ const fields = {
 
 form_config.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const response = await fetch('ajax/config', {
+    const response = await fetch('{{ url_for('indi-allsky.ajax_config_view') }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -48,8 +54,9 @@ form_config.addEventListener('submit', async (e) => {
         })
     });
     if (response.ok) {
-        successMessage.innerHTML = await response.text();
-        form.style.display = 'none';
+        const message = await response.json();
+        successMessage.innerHTML = message['success-message'];
+        //form_config.style.display = 'none';
         successMessage.style.display = 'block';
     } else {
         const errors = await response.json();
@@ -57,6 +64,7 @@ form_config.addEventListener('submit', async (e) => {
            fields[key].input.classList.add('is-invalid');
            fields[key].error.innerHTML = errors[key][0];
         });
+        failureMessage.style.display = 'block';
     }
 });
 

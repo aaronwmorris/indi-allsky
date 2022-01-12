@@ -216,19 +216,17 @@ class AjaxConfigView(View):
         if not form_config.validate():
             return jsonify(form_config.errors), 400
 
-        # form passed validation
-        try:
-            with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-                try:
-                    # try to preserve data order
-                    indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
-                except json.JSONDecodeError as e:
-                    app.logger.error('Error decoding json: %s', str(e))
-                    return jsonify({}), 400
-        except PermissionError as e:
-            app.logger.error('PermissionError: %s', str(e))
-            return jsonify({}), 400
 
+        # form passed validation
+
+        # no need to catch PermissionError here
+        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            try:
+                # try to preserve data order
+                indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError as e:
+                app.logger.error('Error decoding json: %s', str(e))
+                return jsonify({}), 400
 
         # update data
         indi_allsky_config['CCD_EXPOSURE_MAX'] = float(request.json['CCD_EXPOSURE_MAX'])
@@ -242,10 +240,17 @@ class AjaxConfigView(View):
             app.logger.info('Wrote new config.json')
         except PermissionError as e:
             app.logger.error('PermissionError: %s', str(e))
-            return jsonify({}), 400
+            error_data = {
+                'form_global' : [str(e)],
+            }
+            return jsonify(error_data), 400
 
 
-        return jsonify({})
+        message = {
+            'success-message' : 'Wrote new config',
+        }
+
+        return jsonify(message)
 
 
 
