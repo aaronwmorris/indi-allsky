@@ -13,7 +13,7 @@
     <div class="form-group">
         {{ form_config.CCD_EXPOSURE_MAX.label }}
         {{ form_config.CCD_EXPOSURE_MAX(class='form-control') }}
-        <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback"></div>
+        <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback" style="display: none;"></div>
     </div>
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -42,6 +42,13 @@ const fields = {
 
 form_config.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // hide all errors
+    successMessage.style.display = 'block';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
     const response = await fetch('{{ url_for('indi-allsky.ajax_config_view') }}', {
         method: 'POST',
         headers: {
@@ -61,10 +68,10 @@ form_config.addEventListener('submit', async (e) => {
     } else {
         const errors = await response.json();
         Object.keys(errors).forEach((key) => {
-           fields[key].input.classList.add('is-invalid');
-           fields[key].error.innerHTML = errors[key][0];
+            fields[key].input.classList.add('is-invalid');
+            fields[key].error.innerHTML = errors[key][0];
+            fields[key].error.style.display = 'block';
         });
-        failureMessage.style.display = 'block';
     }
 });
 
