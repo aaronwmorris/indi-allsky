@@ -187,6 +187,54 @@ class JsonImageLoopView(JsonView):
         return stars_data
 
 
+class ChartView(TemplateView):
+    pass
+
+
+class JsonChartView(JsonView):
+    def __init__(self):
+        self.camera_id = self.getLatestCamera()
+        self.chart_history_minutes = 30
+
+
+    def get_objects(self):
+        data = {
+            'chart_data' : self.getChartData(),
+        }
+
+        return data
+
+
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera.id
+
+
+    def getChartData(self):
+        now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
+
+        chart_query = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+
+        chart_data = list()
+        for i in chart_query:
+            data = {
+                'x' : i.createDate.strftime('%H:%M:%S'),
+                'y' : i.sqm,
+            }
+
+            chart_data.append(data)
+
+        return chart_data
+
+
 class ConfigView(FormView):
     def get_objects(self):
         with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
@@ -260,3 +308,5 @@ bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
+bp.add_url_rule('/chart', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
+bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
