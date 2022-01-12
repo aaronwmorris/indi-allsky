@@ -231,13 +231,15 @@ class AjaxConfigView(View):
 
 
         # update data
-        indi_allsky_config['CCD_EXPOSURE_MAX'] = request.json['CCD_EXPOSURE_MAX']
+        indi_allsky_config['CCD_EXPOSURE_MAX'] = float(request.json['CCD_EXPOSURE_MAX'])
 
         # save new config
         try:
             with io.open(app.config['INDI_ALLSKY_CONFIG'], 'w') as f_config_file:
                 f_config_file.write(json.dumps(indi_allsky_config, indent=4))
                 f_config_file.flush()
+
+            app.logger.info('Wrote new config.json')
         except PermissionError as e:
             app.logger.error('PermissionError: %s', str(e))
             return jsonify({}), 400
