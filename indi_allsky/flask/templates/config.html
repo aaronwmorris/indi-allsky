@@ -11,10 +11,60 @@
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
     <div class="form-group">
+        {{ form_config.CCD_CONFIG__NIGHT__GAIN.label }}
+        {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control') }}
+        <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.CCD_CONFIG__NIGHT__BINNING.label }}
+        {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control') }}
+        <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label }}
+        {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control') }}
+        <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label }}
+        {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control') }}
+        <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.CCD_CONFIG__DAY__GAIN.label }}
+        {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control') }}
+        <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.CCD_CONFIG__DAY__BINNING.label }}
+        {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control') }}
+        <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
         {{ form_config.CCD_EXPOSURE_MAX.label }}
         {{ form_config.CCD_EXPOSURE_MAX(class='form-control') }}
         <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback" style="display: none;"></div>
     </div>
+    <div class="form-group">
+        {{ form_config.CCD_EXPOSURE_DEF.label }}
+        {{ form_config.CCD_EXPOSURE_DEF(class='form-control') }}
+        <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.CCD_EXPOSURE_MIN.label }}
+        {{ form_config.CCD_EXPOSURE_MIN(class='form-control') }}
+        <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.EXPOSURE_PERIOD.label }}
+        {{ form_config.EXPOSURE_PERIOD(class='form-control') }}
+        <div id="EXPOSURE_PERIOD-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
     <button class="btn btn-primary">Submit</button>
 </form>
 <div id="success-message" style="display: none;"></div>
@@ -24,7 +74,34 @@
 const form_config = document.getElementById('form_config');
 const successMessage = document.getElementById('success-message');
 const failureMessage = document.getElementById('failure-message');
-const fields = {
+const field_names = [
+    'csrf_token',
+    'CCD_CONFIG__NIGHT__GAIN',
+    'CCD_CONFIG__NIGHT__BINNING',
+    'CCD_CONFIG__MOONMODE__GAIN',
+    'CCD_CONFIG__MOONMODE__BINNING',
+    'CCD_CONFIG__DAY__GAIN',
+    'CCD_CONFIG__DAY__BINNING',
+    'CCD_EXPOSURE_MAX',
+    'CCD_EXPOSURE_DEF',
+    'CCD_EXPOSURE_MIN',
+    'EXPOSURE_PERIOD',
+];
+
+var fields = {};
+// Populate fields object
+for (var i = 0; i < field_names.length; i++) {
+    fields[field_names[i]] = {
+        'input' : document.getElementById(field_names[i]),
+        'error' : document.getElementById(field_names[i] + '-error'),
+    };
+};
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+/*
+var fields = {
     form_global : {
         input: failureMessage,
         error: failureMessage
@@ -38,6 +115,7 @@ const fields = {
         error: document.getElementById('CCD_EXPOSURE_MAX-error')
     },
 }
+*/
 
 
 form_config.addEventListener('submit', async (e) => {
@@ -49,16 +127,21 @@ form_config.addEventListener('submit', async (e) => {
         fields[key].error.style.display = 'none';
     });
 
+
+    // Populate fields object
+    var json_data = {};
+    for (var i = 0; i < field_names.length; i++) {
+        json_data[field_names[i]] = fields[field_names[i]].input.value;
+    };
+
+
     const response = await fetch('{{ url_for('indi-allsky.ajax_config_view') }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': '{{ csrf_token() }}',
         },
-        body: JSON.stringify({
-            csrf_token: fields.csrf_token.input.value,
-            CCD_EXPOSURE_MAX: fields.CCD_EXPOSURE_MAX.input.value
-        })
+        body: JSON.stringify(json_data)
     });
     if (response.ok) {
         const message = await response.json();

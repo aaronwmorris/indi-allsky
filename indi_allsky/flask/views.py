@@ -259,7 +259,16 @@ class ConfigView(FormView):
 
 
         form_data = {
-            'CCD_EXPOSURE_MAX' : indi_allsky_config['CCD_EXPOSURE_MAX'],
+            'CCD_CONFIG__NIGHT__GAIN'        : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0),
+            'CCD_CONFIG__NIGHT__BINNING'     : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
+            'CCD_CONFIG__MOONMODE__GAIN'     : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0),
+            'CCD_CONFIG__MOONMODE__BINNING'  : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
+            'CCD_CONFIG__DAY__GAIN'          : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0),
+            'CCD_CONFIG__DAY__BINNING'       : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
+            'CCD_EXPOSURE_MAX'               : indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
+            'CCD_EXPOSURE_DEF'               : indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
+            'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
+            'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
         }
 
         objects = {
@@ -290,8 +299,32 @@ class AjaxConfigView(View):
                 app.logger.error('Error decoding json: %s', str(e))
                 return jsonify({}), 400
 
+
+        # sanity check
+        if not indi_allsky_config.get('CCD_CONFIG'):
+            indi_allsky_config['CCD_CONFIG'] = {}
+
+        if not indi_allsky_config['CCD_CONFIG'].get('NIGHT'):
+            indi_allsky_config['CCD_CONFIG']['NIGHT'] = {}
+
+        if not indi_allsky_config['CCD_CONFIG'].get('MOONMODE'):
+            indi_allsky_config['CCD_CONFIG']['MOONMODE'] = {}
+
+        if not indi_allsky_config['CCD_CONFIG'].get('DAY'):
+            indi_allsky_config['CCD_CONFIG']['DAY'] = {}
+
         # update data
-        indi_allsky_config['CCD_EXPOSURE_MAX'] = float(request.json['CCD_EXPOSURE_MAX'])
+        indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
+        indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
+        indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = int(request.json['CCD_CONFIG__MOONMODE__GAIN'])
+        indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
+        indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = int(request.json['CCD_CONFIG__DAY__GAIN'])
+        indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
+        indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
+        indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
+        indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
+        indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
+
 
         # save new config
         try:
