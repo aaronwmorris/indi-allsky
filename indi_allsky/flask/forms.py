@@ -6,6 +6,9 @@ from wtforms.validators import ValidationError
 
 
 def ccd_GAIN_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
     if field.data < 0:
         raise ValidationError('Gain must be 0 or higher')
 
@@ -27,6 +30,9 @@ def CCD_EXPOSURE_MAX_validator(form, field):
 
 
 def CCD_EXPOSURE_DEF_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
     if field.data < 0.0:
         raise ValidationError('Default Exposure must be 0 or more')
 
@@ -35,6 +41,9 @@ def CCD_EXPOSURE_DEF_validator(form, field):
 
 
 def CCD_EXPOSURE_MIN_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
     if field.data < 0.0:
         raise ValidationError('Minimum Exposure must be 0 or more')
 
