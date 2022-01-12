@@ -3,6 +3,7 @@ from datetime import timedelta
 import io
 import re
 import json
+from collections import OrderedDict
 
 from flask import render_template
 from flask import request
@@ -214,6 +215,32 @@ class AjaxConfigView(View):
 
         if not form_config.validate():
             return jsonify(form_config.errors), 400
+
+        # form passed validation
+        try:
+            with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+                try:
+                    # try to preserve data order
+                    indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+                except json.JSONDecodeError as e:
+                    app.logger.error('Error decoding json: %s', str(e))
+                    return jsonify({}), 400
+        except PermissionError as e:
+            app.logger.error('PermissionError: %s', str(e))
+            return jsonify({}), 400
+
+
+        # update data
+        indi_allsky_config['CCD_EXPOSURE_MAX'] = request.json['CCD_EXPOSURE_MAX']
+
+        # save new config
+        try:
+            with io.open(app.config['INDI_ALLSKY_CONFIG'], 'w') as f_config_file:
+                f_config_file.write(json.dumps(indi_allsky_config, indent=4))
+                f_config_file.flush()
+        except PermissionError as e:
+            app.logger.error('PermissionError: %s', str(e))
+            return jsonify({}), 400
 
 
         return jsonify({})
