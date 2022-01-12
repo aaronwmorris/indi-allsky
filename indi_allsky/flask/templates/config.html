@@ -65,6 +65,12 @@
         <div id="EXPOSURE_PERIOD-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.AUTO_WB.label }}
+        {{ form_config.AUTO_WB(class='form-control') }}
+        <div id="AUTO_WB-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
     <button class="btn btn-primary">Submit</button>
 </form>
 <div id="success-message" style="display: none;"></div>
@@ -88,14 +94,27 @@ const field_names = [
     'EXPOSURE_PERIOD',
 ];
 
+const checkbox_field_names = [
+    'AUTO_WB',
+];
+
 var fields = {};
 // Populate fields object
-for (var i = 0; i < field_names.length; i++) {
-    fields[field_names[i]] = {
-        'input' : document.getElementById(field_names[i]),
-        'error' : document.getElementById(field_names[i] + '-error'),
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
     };
-};
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
 fields['form_global'] = {
     'input' : failureMessage,
     'error' : failureMessage,
@@ -130,12 +149,16 @@ form_config.addEventListener('submit', async (e) => {
 
     // Populate fields object
     var json_data = {};
-    for (var i = 0; i < field_names.length; i++) {
-        json_data[field_names[i]] = fields[field_names[i]].input.value;
-    };
+    field_names.forEach(item => {
+        json_data[item] = fields[item].input.value;
+    });
 
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        json_data[item] = fields[item].input.checked;
+    });
 
-    const response = await fetch('{{ url_for('indi-allsky.ajax_config_view') }}', {
+    const response = await fetch("{{ url_for('indi-allsky.ajax_config_view') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

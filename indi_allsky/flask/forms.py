@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
+from wtforms import BooleanField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 
@@ -67,6 +68,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
+    AUTO_WB                          = BooleanField('Auto White Balance')
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)

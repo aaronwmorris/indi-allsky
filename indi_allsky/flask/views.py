@@ -269,6 +269,7 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_DEF'               : indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
             'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
+            'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', True),
         }
 
         objects = {
@@ -325,6 +326,7 @@ class AjaxConfigView(View):
         indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
         indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
+        indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
 
 
         # save new config
