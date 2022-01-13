@@ -96,7 +96,6 @@ class JsonImageLoopView(JsonView):
         self.hours = 2
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
-        self.rootpath = '/var/www/html/allsky/'
 
 
     def get_objects(self):
@@ -132,7 +131,7 @@ class JsonImageLoopView(JsonView):
 
         image_list = list()
         for i in latest_images:
-            rel_filename = re.sub(r'^{0:s}'.format(self.rootpath), '', i.filename)
+            rel_filename = re.sub(r'^{0:s}/'.format(app.config['INDI_ALLSKY_DOCROOT']), '', i.filename)
 
             data = {
                 'file'  : rel_filename,

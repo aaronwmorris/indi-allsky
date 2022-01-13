@@ -493,6 +493,7 @@ if [[ ! -f "flask.json" ]]; then
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
      flask.json_template > flask.json
 fi
 
