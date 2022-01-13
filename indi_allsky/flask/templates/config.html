@@ -3,6 +3,11 @@
 {% block title %}Config{% endblock %}
 
 {% block head %}
+<style>
+    .invalid-feedback {
+        color:#ff0000;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -591,7 +596,7 @@ form_config.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     // hide all errors
-    successMessage.style.display = 'block';
+    successMessage.style.display = 'none';
     Object.keys(fields).forEach((key) => {
         fields[key].error.style.display = 'none';
     });
@@ -621,6 +626,9 @@ form_config.addEventListener('submit', async (e) => {
         successMessage.innerHTML = message['success-message'];
         //form_config.style.display = 'none';
         successMessage.style.display = 'block';
+        setTimeout(function() {
+            successMessage.style.display = 'none';
+        }, 5000);
     } else {
         const errors = await response.json();
         Object.keys(errors).forEach((key) => {
