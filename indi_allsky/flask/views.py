@@ -302,6 +302,13 @@ class ConfigView(FormView):
             'IMAGE_EXPIRE_DAYS'              : indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
             'FFMPEG_FRAMERATE'               : indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
             'FFMPEG_BITRATE'                 : indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
+            'TEXT_PROPERTIES__FONT_FACE'     : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
+            'TEXT_PROPERTIES__FONT_HEIGHT'   : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_HEIGHT', 30),
+            'TEXT_PROPERTIES__FONT_X'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15),
+            'TEXT_PROPERTIES__FONT_Y'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30),
+            'TEXT_PROPERTIES__FONT_SCALE'    : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
+            'TEXT_PROPERTIES__FONT_THICKNESS': indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
+            'TEXT_PROPERTIES__FONT_OUTLINE'  : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
         }
 
 
@@ -326,6 +333,11 @@ class ConfigView(FormView):
         except IndexError:
             form_data['ADU_ROI_Y2'] = 0
 
+
+        # Font color
+        text_properties__font_color = indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
+        text_properties__font_color_str = [str(x) for x in text_properties__font_color]
+        form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join(text_properties__font_color_str)
 
 
         objects = {
@@ -373,6 +385,9 @@ class AjaxConfigView(View):
         if not indi_allsky_config.get('IMAGE_FILE_COMPRESSION'):
             indi_allsky_config['IMAGE_FILE_COMPRESSION'] = {}
 
+        if not indi_allsky_config.get('TEXT_PROPERTIES'):
+            indi_allsky_config['TEXT_PROPERTIES'] = {}
+
 
         # update data
         indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
@@ -419,6 +434,13 @@ class AjaxConfigView(View):
         indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
         indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
         indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_FACE']         = str(request.json['TEXT_PROPERTIES__FONT_FACE'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_HEIGHT']       = int(request.json['TEXT_PROPERTIES__FONT_HEIGHT'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_X']            = int(request.json['TEXT_PROPERTIES__FONT_X'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_Y']            = int(request.json['TEXT_PROPERTIES__FONT_Y'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_OUTLINE']      = bool(request.json['TEXT_PROPERTIES__FONT_OUTLINE'])
 
 
         # ADU_ROI
@@ -432,6 +454,12 @@ class AjaxConfigView(View):
             indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
         else:
             indi_allsky_config['ADU_ROI'] = []
+
+
+        # TEXT_PROPERTIES FONT_COLOR
+        font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
+        r, g, b = font_color_str.split(',')
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(r), int(g), int(b)]
 
 
         # save new config

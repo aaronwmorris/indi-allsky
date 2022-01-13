@@ -257,10 +257,82 @@ def FFMPEG_BITRATE_validator(form, field):
         raise ValidationError('Invalid bitrate syntax')
 
 
+def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
+    fonts = (
+        'FONT_HERSHEY_SIMPLEX',
+        'FONT_HERSHEY_PLAIN',
+        'FONT_HERSHEY_DUPLEX',
+        'FONT_HERSHEY_COMPLEX',
+        'FONT_HERSHEY_TRIPLEX',
+        'FONT_HERSHEY_COMPLEX_SMALL',
+        'FONT_HERSHEY_SCRIPT_SIMPLEX',
+        'FONT_HERSHEY_SCRIPT_COMPLEX',
+    )
+
+    if field.data not in fonts:
+        raise ValidationError('Invalid selection')
+
+
+def TEXT_PROPERTIES__FONT_HEIGHT_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Font height must be greater than 1')
+
+
+def TEXT_PROPERTIES__FONT_X_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Font offset must be greater than 1')
+
+
+def TEXT_PROPERTIES__FONT_Y_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Font offset must be greater than 1')
+
+
+def TEXT_PROPERTIES__FONT_COLOR_validator(form, field):
+    color_regex = r'^\d+\,\d+\,\d+$'
+
+    if not re.search(color_regex, field.data):
+        raise ValidationError('Invalid syntax')
+
+    rgb = field.data.split(',')
+    for c in rgb:
+        if int(c) < 0:
+            raise ValidationError('Invalid syntax')
+        elif int(c) > 255:
+            raise ValidationError('Invalid syntax')
+
+
+def TEXT_PROPERTIES__FONT_SCALE_validator(form, field):
+    if field.data < 0.1:
+        raise ValidationError('Font scale must be greater than 0.1')
+
+    if field.data > 100:
+        raise ValidationError('Font scale too large')
+
+
+def TEXT_PROPERTIES__FONT_THICKNESS_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Font thickness must be 1 or more')
+
+    if field.data > 20:
+        raise ValidationError('Font thickness must be less than 20')
+
+
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
+    )
+
+    TEXT_PROPERTIES__FONT_FACE_choices = (
+        ('FONT_HERSHEY_SIMPLEX', 'Sans-Serif'),
+        ('FONT_HERSHEY_PLAIN', 'Sans-Serif (small)'),
+        ('FONT_HERSHEY_DUPLEX', 'Sans-Serif (complex)'),
+        ('FONT_HERSHEY_COMPLEX', 'Serif'),
+        ('FONT_HERSHEY_TRIPLEX', 'Serif (complex)'),
+        ('FONT_HERSHEY_COMPLEX_SMALL', 'Serif (small)'),
+        ('FONT_HERSHEY_SCRIPT_SIMPLEX', 'Script'),
+        ('FONT_HERSHEY_SCRIPT_COMPLEX', 'Script (complex)'),
     )
 
 
@@ -311,6 +383,15 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
+    TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
+    TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Font Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
+    TEXT_PROPERTIES__FONT_X          = IntegerField('Font X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
+    TEXT_PROPERTIES__FONT_Y          = IntegerField('Font Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
+    TEXT_PROPERTIES__FONT_COLOR      = StringField('Font Color (r,g,b)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_COLOR_validator])
+    TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
+    TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
+
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)

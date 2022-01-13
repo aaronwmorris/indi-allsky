@@ -280,6 +280,54 @@
         <div id="FFMPEG_BITRATE-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_FACE.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_X.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_X(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_Y.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_Y(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_COLOR.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_SCALE.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE.label }}
+        {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='form-control') }}
+        <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
 
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -327,6 +375,13 @@ const field_names = [
     'IMAGE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_BITRATE',
+    'TEXT_PROPERTIES__FONT_FACE',
+    'TEXT_PROPERTIES__FONT_HEIGHT',
+    'TEXT_PROPERTIES__FONT_X',
+    'TEXT_PROPERTIES__FONT_Y',
+    'TEXT_PROPERTIES__FONT_COLOR',
+    'TEXT_PROPERTIES__FONT_SCALE',
+    'TEXT_PROPERTIES__FONT_THICKNESS',
 ];
 
 const checkbox_field_names = [
@@ -341,6 +396,7 @@ const checkbox_field_names = [
     'IMAGE_FLIP_H',
     'IMAGE_SAVE_RAW',
     'IMAGE_GRAYSCALE',
+    'TEXT_PROPERTIES__FONT_OUTLINE',
 ];
 
 var fields = {};
