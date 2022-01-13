@@ -164,6 +164,54 @@
         <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.KEOGRAM_ANGLE.label }}
+        {{ form_config.KEOGRAM_ANGLE(class='form-control') }}
+        <div id="KEOGRAM_ANGLE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.KEOGRAM_H_SCALE.label }}
+        {{ form_config.KEOGRAM_H_SCALE(class='form-control') }}
+        <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.KEOGRAM_V_SCALE.label }}
+        {{ form_config.KEOGRAM_V_SCALE(class='form-control') }}
+        <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.KEOGRAM_LABEL.label }}
+        {{ form_config.KEOGRAM_LABEL(class='form-control') }}
+        <div id="KEOGRAM_LABEL-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.STARTRAILS_MAX_ADU.label }}
+        {{ form_config.STARTRAILS_MAX_ADU(class='form-control') }}
+        <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.STARTRAILS_MASK_THOLD.label }}
+        {{ form_config.STARTRAILS_MASK_THOLD(class='form-control') }}
+        <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.STARTRAILS_PIXEL_THOLD.label }}
+        {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control') }}
+        <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_FILE_TYPE.label }}
+        {{ form_config.IMAGE_FILE_TYPE(class='form-control') }}
+        <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
 
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -197,6 +245,13 @@ const field_names = [
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
+    'KEOGRAM_ANGLE',
+    'KEOGRAM_H_SCALE',
+    'KEOGRAM_V_SCALE',
+    'STARTRAILS_MAX_ADU',
+    'STARTRAILS_MASK_THOLD',
+    'STARTRAILS_PIXEL_THOLD',
+    'IMAGE_FILE_TYPE',
 ];
 
 const checkbox_field_names = [
@@ -206,6 +261,7 @@ const checkbox_field_names = [
     'DAYTIME_TIMELAPSE',
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
+    'KEOGRAM_LABEL',
 ];
 
 var fields = {};

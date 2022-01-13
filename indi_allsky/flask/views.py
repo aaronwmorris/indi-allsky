@@ -282,6 +282,14 @@ class ConfigView(FormView):
             'NIGHT_SUN_ALT_DEG'              : indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6),
             'NIGHT_MOONMODE_ALT_DEG'         : indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5),
             'NIGHT_MOONMODE_PHASE'           : indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50),
+            'KEOGRAM_ANGLE'                  : indi_allsky_config.get('KEOGRAM_ANGLE', 0),
+            'KEOGRAM_H_SCALE'                : indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
+            'KEOGRAM_V_SCALE'                : indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
+            'KEOGRAM_LABEL'                  : indi_allsky_config.get('KEOGRAM_LABEL', True),
+            'STARTRAILS_MAX_ADU'             : indi_allsky_config.get('STARTRAILS_MAX_ADU', 50),
+            'STARTRAILS_MASK_THOLD'          : indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
+            'STARTRAILS_PIXEL_THOLD'         : indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
+            'IMAGE_FILE_TYPE'                : indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
         }
 
 
@@ -375,6 +383,14 @@ class AjaxConfigView(View):
         indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = int(request.json['NIGHT_SUN_ALT_DEG'])
         indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = int(request.json['NIGHT_MOONMODE_ALT_DEG'])
         indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = int(request.json['NIGHT_MOONMODE_PHASE'])
+        indi_allsky_config['KEOGRAM_ANGLE']                        = int(request.json['KEOGRAM_ANGLE'])
+        indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
+        indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
+        indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
+        indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])
+        indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
+        indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])
+        indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
 
 
         # ADU_ROI

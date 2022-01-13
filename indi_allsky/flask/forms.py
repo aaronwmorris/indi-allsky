@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
 from wtforms import BooleanField
+from wtforms import SelectField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 
@@ -136,8 +137,73 @@ def NIGHT_MOONMODE_PHASE_validator(form, field):
         raise ValidationError('Moon illumination must be 100 or less')
 
 
+def KEOGRAM_ANGLE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -90:
+        raise ValidationError('Rotation angle must be -90 or greater')
+
+    if field.data > 90:
+        raise ValidationError('Rotation angle must be 90 or less')
+
+
+def KEOGRAM_H_SCALE_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Keogram Horizontal Scaling factor must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Keogram Horizontal Scaling factor must be 100 or less')
+
+
+def KEOGRAM_V_SCALE_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Keogram Verticle Scaling factor must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Keogram Verticle Scaling factor must be 100 or less')
+
+
+def STARTRAILS_MAX_ADU_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Star Trails Max ADU must be greater than 0')
+
+    if field.data > 255:
+        raise ValidationError('Star Trails Max ADU must be 255 or less')
+
+
+def STARTRAILS_MASK_THOLD_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Star Trails Mask Threshold must be greater than 0')
+
+    if field.data > 255:
+        raise ValidationError('Star Trails Mask Threshold must be 255 or less')
+
+
+def STARTRAILS_PIXEL_THOLD_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Star Trails Pixel Threshold must be 0 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Star Trails Pixel Threshold must be 100 or less')
+
+
+def IMAGE_FILE_TYPE_validator(form, field):
+    if field.data not in ('jpg', 'png'):
+        raise ValidationError('Please select a valid file type')
+
+
 
 class IndiAllskyConfigForm(FlaskForm):
+    IMAGE_FILE_TYPE_choices = (
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
+    )
+
+
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
@@ -165,6 +231,14 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_SUN_ALT_DEG                = IntegerField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
     NIGHT_MOONMODE_ALT_DEG           = IntegerField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
     NIGHT_MOONMODE_PHASE             = IntegerField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
+    KEOGRAM_ANGLE                    = IntegerField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
+    KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
+    KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
+    KEOGRAM_LABEL                    = BooleanField('Label Keogram')
+    STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
+    STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
+    STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
+    IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
