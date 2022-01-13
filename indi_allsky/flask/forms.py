@@ -81,6 +81,61 @@ def ADU_ROI_validator(form, field):
         raise ValidationError('ADU Region of Interest must be 0 or greater')
 
 
+def LOCATION_LATITUDE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -90:
+        raise ValidationError('Latitude must be greater than -90')
+
+    if field.data > 90:
+        raise ValidationError('Latitude must be less than 90')
+
+
+def LOCATION_LONGITUDE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -180:
+        raise ValidationError('Longitude must be greater than -180')
+
+    if field.data > 180:
+        raise ValidationError('Longitude must be less than 180')
+
+
+def NIGHT_SUN_ALT_DEG_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -90:
+        raise ValidationError('Sun altitude must be greater than -90')
+
+    if field.data > 90:
+        raise ValidationError('Sun altitude must be less than 90')
+
+
+def NIGHT_MOONMODE_ALT_DEG_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -90:
+        raise ValidationError('Moon altitude must be greater than -90')
+
+    if field.data > 90:
+        raise ValidationError('Moon altitude must be less than 90')
+
+
+def NIGHT_MOONMODE_PHASE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Moon illumination must be 0 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Moon illumination must be 100 or less')
+
+
 
 class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
@@ -101,6 +156,15 @@ class IndiAllskyConfigForm(FlaskForm):
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
     ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
     DETECT_STARS                     = BooleanField('Star Detection')
+    LOCATION_LATITUDE                = IntegerField('Latitude', validators=[LOCATION_LATITUDE_validator])
+    LOCATION_LONGITUDE               = IntegerField('Longitude', validators=[LOCATION_LONGITUDE_validator])
+    DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
+    DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
+    DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
+    NIGHT_CONTRAST_ENHANCE           = BooleanField('Night time Contrast Enhance')
+    NIGHT_SUN_ALT_DEG                = IntegerField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
+    NIGHT_MOONMODE_ALT_DEG           = IntegerField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
+    NIGHT_MOONMODE_PHASE             = IntegerField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)

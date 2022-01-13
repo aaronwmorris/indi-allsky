@@ -110,6 +110,61 @@
         <div id="DETECT_STARS-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.LOCATION_LATITUDE.label }}
+        {{ form_config.LOCATION_LATITUDE(class='form-control') }}
+        <div id="LOCATION_LATITUDE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.LOCATION_LONGITUDE.label }}
+        {{ form_config.LOCATION_LONGITUDE(class='form-control') }}
+        <div id="LOCATION_LONGITUDE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.DAYTIME_CAPTURE.label }}
+        {{ form_config.DAYTIME_CAPTURE(class='form-control') }}
+        <div id="DAYTIME_CAPTURE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.DAYTIME_TIMELAPSE.label }}
+        {{ form_config.DAYTIME_TIMELAPSE(class='form-control') }}
+        <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
+        {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='form-control') }}
+        <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.NIGHT_CONTRAST_ENHANCE.label }}
+        {{ form_config.NIGHT_CONTRAST_ENHANCE(class='form-control') }}
+        <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.NIGHT_SUN_ALT_DEG.label }}
+        {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control') }}
+        <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.NIGHT_MOONMODE_ALT_DEG.label }}
+        {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control') }}
+        <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.NIGHT_MOONMODE_PHASE.label }}
+        {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control') }}
+        <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+
     <button class="btn btn-primary">Submit</button>
 </form>
 <div id="success-message" style="display: none;"></div>
@@ -137,11 +192,20 @@ const field_names = [
     'ADU_ROI_Y1',
     'ADU_ROI_X2',
     'ADU_ROI_Y2',
+    'LOCATION_LATITUDE',
+    'LOCATION_LONGITUDE',
+    'NIGHT_SUN_ALT_DEG',
+    'NIGHT_MOONMODE_ALT_DEG',
+    'NIGHT_MOONMODE_PHASE',
 ];
 
 const checkbox_field_names = [
     'AUTO_WB',
     'DETECT_STARS',
+    'DAYTIME_CAPTURE',
+    'DAYTIME_TIMELAPSE',
+    'DAYTIME_CONTRAST_ENHANCE',
+    'NIGHT_CONTRAST_ENHANCE',
 ];
 
 var fields = {};
