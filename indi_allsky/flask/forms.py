@@ -372,7 +372,7 @@ def FILETRANSFER__USERNAME_validator(form, field):
     if not field.data:
         return
 
-    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+    username_regex = r'^[a-zA-Z0-9_\@\.\-\\]+$'
 
     if not re.search(username_regex, field.data):
         raise ValidationError('Invalid username')
