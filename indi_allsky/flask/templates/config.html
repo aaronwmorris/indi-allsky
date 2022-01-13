@@ -347,6 +347,24 @@
         <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.ORB_PROPERTIES__RADIUS.label }}
+        {{ form_config.ORB_PROPERTIES__RADIUS(class='form-control') }}
+        <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.ORB_PROPERTIES__SUN_COLOR.label }}
+        {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='form-control') }}
+        <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.ORB_PROPERTIES__MOON_COLOR.label }}
+        {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='form-control') }}
+        <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
 
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -405,6 +423,9 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_COLOR',
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
+    'ORB_PROPERTIES__RADIUS',
+    'ORB_PROPERTIES__SUN_COLOR',
+    'ORB_PROPERTIES__MOON_COLOR',
 ];
 
 const checkbox_field_names = [

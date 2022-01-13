@@ -308,6 +308,7 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__FONT_SCALE'    : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
             'TEXT_PROPERTIES__FONT_THICKNESS': indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
             'TEXT_PROPERTIES__FONT_OUTLINE'  : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
+            'ORB_PROPERTIES__RADIUS'         : indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
         }
 
 
@@ -360,6 +361,16 @@ class ConfigView(FormView):
         text_properties__font_color = indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
         text_properties__font_color_str = [str(x) for x in text_properties__font_color]
         form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join(text_properties__font_color_str)
+
+        # Sun orb color
+        orb_properties__sun_color = indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [255, 255, 255])
+        orb_properties__sun_color_str = [str(x) for x in orb_properties__sun_color]
+        form_data['ORB_PROPERTIES__SUN_COLOR'] = ','.join(orb_properties__sun_color_str)
+
+        # Moon orb color
+        orb_properties__moon_color = indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
+        orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
+        form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
 
         objects = {
@@ -450,7 +461,6 @@ class AjaxConfigView(View):
         indi_allsky_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
         indi_allsky_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
         indi_allsky_config['IMAGE_SCALE']                          = int(request.json['IMAGE_SCALE'])
-        #IMAGE_CROP_ROI
         indi_allsky_config['IMAGE_SAVE_RAW']                       = bool(request.json['IMAGE_SAVE_RAW'])
         indi_allsky_config['IMAGE_GRAYSCALE']                      = bool(request.json['IMAGE_GRAYSCALE'])
         indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
@@ -463,6 +473,7 @@ class AjaxConfigView(View):
         indi_allsky_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
         indi_allsky_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
         indi_allsky_config['TEXT_PROPERTIES']['FONT_OUTLINE']      = bool(request.json['TEXT_PROPERTIES__FONT_OUTLINE'])
+        indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
 
 
         # ADU_ROI
@@ -494,8 +505,18 @@ class AjaxConfigView(View):
 
         # TEXT_PROPERTIES FONT_COLOR
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
-        r, g, b = font_color_str.split(',')
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(r), int(g), int(b)]
+        font_r, font_g, font_b = font_color_str.split(',')
+        indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(font_r), int(font_g), int(font_b)]
+
+        # ORB_PROPERTIES SUN_COLOR
+        sun_color_str = str(request.json['ORB_PROPERTIES__SUN_COLOR'])
+        sun_r, sun_g, sun_b = sun_color_str.split(',')
+        indi_allsky_config['ORB_PROPERTIES']['SUN_COLOR'] = [int(sun_r), int(sun_g), int(sun_b)]
+
+        # ORB_PROPERTIES MOON_COLOR
+        moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
+        moon_r, moon_g, moon_b = moon_color_str.split(',')
+        indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
 
 
         # save new config
