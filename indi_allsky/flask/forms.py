@@ -348,6 +348,9 @@ def FILETRANSFER__CLASSNAME_validator(form, field):
 
 
 def FILETRANSFER__HOST_validator(form, field):
+    if not field.data:
+        return
+
     host_regex = r'^[a-zA-Z0-9\.\-]+$'
 
     if not re.search(host_regex, field.data):
@@ -366,6 +369,9 @@ def FILETRANSFER__PORT_validator(form, field):
 
 
 def FILETRANSFER__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
     username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
 
     if not re.search(username_regex, field.data):
@@ -490,10 +496,10 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
-    FILETRANSFER__HOST               = StringField('Host', validators=[DataRequired(), FILETRANSFER__HOST_validator])
+    FILETRANSFER__HOST               = StringField('Host', validators=[FILETRANSFER__HOST_validator])
     FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
-    FILETRANSFER__USERNAME           = StringField('Username', validators=[DataRequired(), FILETRANSFER__USERNAME_validator])
-    FILETRANSFER__PASSWORD           = PasswordField('Password', validators=[DataRequired(), FILETRANSFER__PASSWORD_validator])
+    FILETRANSFER__USERNAME           = StringField('Username', validators=[FILETRANSFER__USERNAME_validator])
+    FILETRANSFER__PASSWORD           = PasswordField('Password', validators=[FILETRANSFER__PASSWORD_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__REMOTE_IMAGE_NAME  = StringField('File transfer class', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
     FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])

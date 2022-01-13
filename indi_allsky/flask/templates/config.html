@@ -365,6 +365,96 @@
         <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__CLASSNAME.label }}
+        {{ form_config.FILETRANSFER__CLASSNAME(class='form-control') }}
+        <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__HOST.label }}
+        {{ form_config.FILETRANSFER__HOST(class='form-control') }}
+        <div id="FILETRANSFER__HOST-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__PORT.label }}
+        {{ form_config.FILETRANSFER__PORT(class='form-control') }}
+        <div id="FILETRANSFER__PORT-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__USERNAME.label }}
+        {{ form_config.FILETRANSFER__USERNAME(class='form-control') }}
+        <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__PASSWORD.label }}
+        {{ form_config.FILETRANSFER__PASSWORD(class='form-control') }}
+        <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__TIMEOUT.label }}
+        {{ form_config.FILETRANSFER__TIMEOUT(class='form-control') }}
+        <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label }}
+        {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control') }}
+        <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label }}
+        {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control') }}
+        <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label }}
+        {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='form-control') }}
+        <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label }}
+        {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='form-control') }}
+        <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label }}
+        {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='form-control') }}
+        <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label }}
+        {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-control') }}
+        <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__UPLOAD_VIDEO.label }}
+        {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='form-control') }}
+        <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label }}
+        {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='form-control') }}
+        <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label }}
+        {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='form-control') }}
+        <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
 
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -426,6 +516,17 @@ const field_names = [
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',
     'ORB_PROPERTIES__MOON_COLOR',
+    'FILETRANSFER__CLASSNAME',
+    'FILETRANSFER__HOST',
+    'FILETRANSFER__PORT',
+    'FILETRANSFER__USERNAME',
+    'FILETRANSFER__PASSWORD',
+    'FILETRANSFER__TIMEOUT',
+    'FILETRANSFER__REMOTE_IMAGE_NAME',
+    'FILETRANSFER__REMOTE_IMAGE_FOLDER',
+    'FILETRANSFER__REMOTE_VIDEO_FOLDER',
+    'FILETRANSFER__REMOTE_KEOGRAM_FOLDER',
+    'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
 ];
 
 const checkbox_field_names = [
@@ -441,6 +542,10 @@ const checkbox_field_names = [
     'IMAGE_SAVE_RAW',
     'IMAGE_GRAYSCALE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
+    'FILETRANSFER__UPLOAD_IMAGE',
+    'FILETRANSFER__UPLOAD_VIDEO',
+    'FILETRANSFER__UPLOAD_KEOGRAM',
+    'FILETRANSFER__UPLOAD_STARTRAIL',
 ];
 
 var fields = {};

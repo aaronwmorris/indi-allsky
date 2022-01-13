@@ -309,6 +309,21 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__FONT_THICKNESS': indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
             'TEXT_PROPERTIES__FONT_OUTLINE'  : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
             'ORB_PROPERTIES__RADIUS'         : indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
+            'FILETRANSFER__CLASSNAME'        : indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
+            'FILETRANSFER__HOST'             : indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
+            'FILETRANSFER__PORT'             : indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
+            'FILETRANSFER__USERNAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('USERNAME', ''),
+            'FILETRANSFER__PASSWORD'         : indi_allsky_config.get('FILETRANSFER', {}).get('PASSWORD', ''),
+            'FILETRANSFER__TIMEOUT'          : indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 5.0),
+            'FILETRANSFER__REMOTE_IMAGE_NAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{0}'),
+            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/tmp'),
+            'FILETRANSFER__UPLOAD_IMAGE'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', False),
+            'FILETRANSFER__UPLOAD_VIDEO'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
+            'FILETRANSFER__UPLOAD_KEOGRAM'   : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
+            'FILETRANSFER__UPLOAD_STARTRAIL' : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
         }
 
 
@@ -421,6 +436,12 @@ class AjaxConfigView(View):
         if not indi_allsky_config.get('TEXT_PROPERTIES'):
             indi_allsky_config['TEXT_PROPERTIES'] = {}
 
+        if not indi_allsky_config.get('ORB_PROPERTIES'):
+            indi_allsky_config['ORB_PROPERTIES'] = {}
+
+        if not indi_allsky_config.get('FILETRANSFER'):
+            indi_allsky_config['FILETRANSFER'] = {}
+
 
         # update data
         indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
@@ -474,6 +495,20 @@ class AjaxConfigView(View):
         indi_allsky_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
         indi_allsky_config['TEXT_PROPERTIES']['FONT_OUTLINE']      = bool(request.json['TEXT_PROPERTIES__FONT_OUTLINE'])
         indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
+        indi_allsky_config['FILETRANSFER']['CLASSNAME']            = str(request.json['FILETRANSFER__CLASSNAME'])
+        indi_allsky_config['FILETRANSFER']['HOST']                 = str(request.json['FILETRANSFER__HOST'])
+        indi_allsky_config['FILETRANSFER']['PORT']                 = int(request.json['FILETRANSFER__PORT'])
+        indi_allsky_config['FILETRANSFER']['USERNAME']             = str(request.json['FILETRANSFER__USERNAME'])
+        indi_allsky_config['FILETRANSFER']['PASSWORD']             = str(request.json['FILETRANSFER__PASSWORD'])
+        indi_allsky_config['FILETRANSFER']['TIMEOUT']              = float(request.json['FILETRANSFER__TIMEOUT'])
+        indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_IMAGE_FOLDER'])
+        indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
+        indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
+        indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
+        indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = bool(request.json['FILETRANSFER__UPLOAD_IMAGE'])
+        indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
+        indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
+        indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
 
 
         # ADU_ROI
