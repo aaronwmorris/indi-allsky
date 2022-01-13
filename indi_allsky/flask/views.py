@@ -402,7 +402,9 @@ class AjaxConfigView(View):
         form_config = IndiAllskyConfigForm(data=request.json)
 
         if not form_config.validate():
-            return jsonify(form_config.errors), 400
+            form_errors = form_config.errors  # this must be a property
+            form_errors['form_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
 
 
         # form passed validation
