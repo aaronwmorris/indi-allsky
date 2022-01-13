@@ -6,6 +6,7 @@ from wtforms import FloatField
 from wtforms import BooleanField
 from wtforms import SelectField
 from wtforms import StringField
+from wtforms import PasswordField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 
@@ -331,6 +332,72 @@ def ORB_PROPERTIES__RADIUS_validator(form, field):
         raise ValidationError('Orb radius must be 1 or more')
 
 
+def FILETRANSFER__CLASSNAME_validator(form, field):
+    class_names = (
+        'pycurl_sftp',
+        'paramiko_sftp',
+        'pycurl_ftpes',
+        'pycurl_ftps',
+        'pycurl_ftp',
+        'python_ftp',
+        'python_ftpes',
+    )
+
+    if field.data not in class_names:
+        raise ValidationError('Invalid selection')
+
+
+def FILETRANSFER__HOST_validator(form, field):
+    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid host name')
+
+
+def FILETRANSFER__PORT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Port must be 0 or greater')
+
+    if field.data > 65535:
+        raise ValidationError('Port must be less than 65535')
+
+
+def FILETRANSFER__USERNAME_validator(form, field):
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
+def FILETRANSFER__PASSWORD_validator(form, field):
+    pass
+
+
+def FILETRANSFER__TIMEOUT_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Timeout must be 1.0 or greater')
+
+    if field.data > 60:
+        raise ValidationError('Timeout must be 60 or less')
+
+
+def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
+    image_name_regex = r'^[a-zA-Z0-9_\.\-\{\}]+$'
+
+    if not re.search(image_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
+def REMOTE_FOLDER_validator(form, field):
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
 
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
@@ -347,6 +414,16 @@ class IndiAllskyConfigForm(FlaskForm):
         ('FONT_HERSHEY_COMPLEX_SMALL', 'Serif (small)'),
         ('FONT_HERSHEY_SCRIPT_SIMPLEX', 'Script'),
         ('FONT_HERSHEY_SCRIPT_COMPLEX', 'Script (complex)'),
+    )
+
+    FILETRANSFER__CLASSNAME_choices = (
+        ('pycurl_sftp', 'Curl SFTP'),
+        ('paramiko_sftp', 'Paramiko SFTP'),
+        ('pycurl_ftpes', 'Curl FTPS (explicit)'),
+        ('pycurl_ftps', 'Curl FTPS (implicit)'),
+        ('pycurl_ftp', 'Curl FTP'),
+        ('python_ftp', 'Python FTP'),
+        ('python_ftpes', 'Python FTPS (explicit)'),
     )
 
 
@@ -412,6 +489,21 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
+    FILETRANSFER__HOST               = StringField('Host', validators=[DataRequired(), FILETRANSFER__HOST_validator])
+    FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
+    FILETRANSFER__USERNAME           = StringField('Username', validators=[DataRequired(), FILETRANSFER__USERNAME_validator])
+    FILETRANSFER__PASSWORD           = PasswordField('Password', validators=[DataRequired(), FILETRANSFER__PASSWORD_validator])
+    FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
+    FILETRANSFER__REMOTE_IMAGE_NAME  = StringField('File transfer class', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
+    FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__UPLOAD_IMAGE       = BooleanField('Transfer images')
+    FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
+    FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
+    FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
 
 
     #def __init__(self, *args, **kwargs):
