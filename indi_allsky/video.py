@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import fcntl
 import errno
+import logging
 
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
@@ -23,9 +24,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from multiprocessing import Process
 import queue
 #from threading import Thread
-import multiprocessing
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class VideoWorker(Process):

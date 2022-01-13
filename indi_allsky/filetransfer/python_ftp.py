@@ -1,15 +1,16 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
-from .exceptions import PermissionFailure
+from .exceptions import TransferFailure
+#from .exceptions import PermissionFailure
 
 import ftplib
 import io
 import socket
 import time
-import multiprocessing
+import logging
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class python_ftp(GenericFileTransfer):

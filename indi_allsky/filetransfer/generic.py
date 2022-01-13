@@ -1,6 +1,6 @@
-import multiprocessing
+import logging
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class GenericFileTransfer(object):

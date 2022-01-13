@@ -1,12 +1,11 @@
 import cv2
 import numpy
 import time
+import logging
 
 from .exceptions import InsufficentData
 
-import multiprocessing
-
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 

@@ -9,6 +9,7 @@ import tempfile
 import shutil
 import copy
 import math
+import logging
 #from pprint import pformat
 
 import ephem
@@ -16,7 +17,6 @@ import ephem
 from multiprocessing import Process
 #from threading import Thread
 import queue
-import multiprocessing
 
 from astropy.io import fits
 import cv2
@@ -33,7 +33,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from .exceptions import CalibrationNotFound
 
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class ImageWorker(Process):

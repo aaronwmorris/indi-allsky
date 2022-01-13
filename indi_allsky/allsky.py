@@ -9,13 +9,13 @@ from datetime import timedelta
 #from pprint import pformat
 import math
 import signal
+import logging
 
 import ephem
 
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
-import multiprocessing
 
 from .indi import IndiClient
 from .image import ImageWorker
@@ -23,6 +23,7 @@ from .video import VideoWorker
 from .uploader import FileUploader
 from .exceptions import TimeOutException
 
+from flask import current_app as app  # noqa
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -30,7 +31,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSky(object):

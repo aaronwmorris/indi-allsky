@@ -4,10 +4,10 @@ import shutil
 from pathlib import Path
 import cv2
 import numpy
+import logging
 
-import multiprocessing
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyStars(object):

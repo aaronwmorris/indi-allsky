@@ -4,14 +4,16 @@ import indi_allsky
 import logging
 import logging.handlers
 import argparse
-import multiprocessing
+
 
 # setup flask context for db access
 app = indi_allsky.flask.create_app()
 app.app_context().push()
 
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
+# logger config in indi_allsky/flask/__init__.py
+
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
 LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
@@ -21,8 +23,6 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
-
-logger.setLevel(logging.INFO)
 
 
 

@@ -1,16 +1,15 @@
 import time
 import ctypes
 from datetime import datetime
+import logging
 #from pprint import pformat
-
-import multiprocessing
 
 import PyIndi
 
 from .exceptions import TimeOutException
 
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class IndiClient(PyIndi.BaseClient):
