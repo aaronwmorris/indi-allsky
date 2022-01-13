@@ -290,6 +290,18 @@ class ConfigView(FormView):
             'STARTRAILS_MASK_THOLD'          : indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
             'STARTRAILS_PIXEL_THOLD'         : indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
             'IMAGE_FILE_TYPE'                : indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
+            'IMAGE_FILE_COMPRESSION__JPG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
+            'IMAGE_FILE_COMPRESSION__PNG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 9),
+            'IMAGE_FOLDER'                   : indi_allsky_config.get('IMAGE_FOLDER', '/var/www/html/allsky/images'),
+            'IMAGE_FLIP_V'                   : indi_allsky_config.get('IMAGE_FLIP_V', False),
+            'IMAGE_FLIP_H'                   : indi_allsky_config.get('IMAGE_FLIP_H', False),
+            'IMAGE_SCALE'                    : indi_allsky_config.get('IMAGE_SCALE', 100),
+            #IMAGE_CROP_ROI
+            'IMAGE_SAVE_RAW'                 : indi_allsky_config.get('IMAGE_SAVE_RAW', False),
+            'IMAGE_GRAYSCALE'                : indi_allsky_config.get('IMAGE_GRAYSCALE', False),
+            'IMAGE_EXPIRE_DAYS'              : indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
+            'FFMPEG_FRAMERATE'               : indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
+            'FFMPEG_BITRATE'                 : indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
         }
 
 
@@ -358,6 +370,9 @@ class AjaxConfigView(View):
         if not indi_allsky_config['CCD_CONFIG'].get('DAY'):
             indi_allsky_config['CCD_CONFIG']['DAY'] = {}
 
+        if not indi_allsky_config.get('IMAGE_FILE_COMPRESSION'):
+            indi_allsky_config['IMAGE_FILE_COMPRESSION'] = {}
+
 
         # update data
         indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
@@ -391,6 +406,19 @@ class AjaxConfigView(View):
         indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
         indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])
         indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
+        indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
+        indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpeg']       = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])  # duplicate
+        indi_allsky_config['IMAGE_FILE_COMPRESSION']['png']        = int(request.json['IMAGE_FILE_COMPRESSION__PNG'])
+        indi_allsky_config['IMAGE_FOLDER']                         = str(request.json['IMAGE_FOLDER'])
+        indi_allsky_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
+        indi_allsky_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
+        indi_allsky_config['IMAGE_SCALE']                          = int(request.json['IMAGE_SCALE'])
+        #IMAGE_CROP_ROI
+        indi_allsky_config['IMAGE_SAVE_RAW']                       = bool(request.json['IMAGE_SAVE_RAW'])
+        indi_allsky_config['IMAGE_GRAYSCALE']                      = bool(request.json['IMAGE_GRAYSCALE'])
+        indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
+        indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
+        indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
 
 
         # ADU_ROI

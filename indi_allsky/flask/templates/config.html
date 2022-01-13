@@ -212,6 +212,74 @@
         <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
+    <div class="form-group">
+        {{ form_config.IMAGE_FILE_COMPRESSION__JPG.label }}
+        {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control') }}
+        <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_FILE_COMPRESSION__PNG.label }}
+        {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control') }}
+        <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_FOLDER.label }}
+        {{ form_config.IMAGE_FOLDER(class='form-control') }}
+        <div id="IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_FLIP_V.label }}
+        {{ form_config.IMAGE_FLIP_V(class='form-control') }}
+        <div id="IMAGE_FLIP_V-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_FLIP_H.label }}
+        {{ form_config.IMAGE_FLIP_H(class='form-control') }}
+        <div id="IMAGE_FLIP_H-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_SCALE.label }}
+        {{ form_config.IMAGE_SCALE(class='form-control') }}
+        <div id="IMAGE_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <!-- IMAGE_CROP_ROI -->
+
+    <div class="form-group">
+        {{ form_config.IMAGE_SAVE_RAW.label }}
+        {{ form_config.IMAGE_SAVE_RAW(class='form-control') }}
+        <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_GRAYSCALE.label }}
+        {{ form_config.IMAGE_GRAYSCALE(class='form-control') }}
+        <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.IMAGE_EXPIRE_DAYS.label }}
+        {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control') }}
+        <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FFMPEG_FRAMERATE.label }}
+        {{ form_config.FFMPEG_FRAMERATE(class='form-control') }}
+        <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
+    <div class="form-group">
+        {{ form_config.FFMPEG_BITRATE.label }}
+        {{ form_config.FFMPEG_BITRATE(class='form-control') }}
+        <div id="FFMPEG_BITRATE-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+
 
     <button class="btn btn-primary">Submit</button>
 </form>
@@ -252,6 +320,13 @@ const field_names = [
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',
     'IMAGE_FILE_TYPE',
+    'IMAGE_FILE_COMPRESSION__JPG',
+    'IMAGE_FILE_COMPRESSION__PNG',
+    'IMAGE_FOLDER',
+    'IMAGE_SCALE',
+    'IMAGE_EXPIRE_DAYS',
+    'FFMPEG_FRAMERATE',
+    'FFMPEG_BITRATE',
 ];
 
 const checkbox_field_names = [
@@ -262,6 +337,10 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'KEOGRAM_LABEL',
+    'IMAGE_FLIP_V',
+    'IMAGE_FLIP_H',
+    'IMAGE_SAVE_RAW',
+    'IMAGE_GRAYSCALE',
 ];
 
 var fields = {};

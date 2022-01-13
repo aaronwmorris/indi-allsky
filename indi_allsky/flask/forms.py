@@ -1,8 +1,11 @@
+from pathlib import Path
+import re
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
 from wtforms import BooleanField
 from wtforms import SelectField
+from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 
@@ -196,6 +199,63 @@ def IMAGE_FILE_TYPE_validator(form, field):
         raise ValidationError('Please select a valid file type')
 
 
+def IMAGE_FILE_COMPRESSION__JPG_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('JPEG compression must be 1 or greater')
+
+    if field.data > 100:
+        raise ValidationError('JPEG compression must be 100 or less')
+
+
+def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('PNG compression must be 1 or greater')
+
+    if field.data > 9:
+        raise ValidationError('PNG compression must be 9 or less')
+
+
+def IMAGE_FOLDER_validator(form, field):
+    image_folder_p = Path(field.data)
+
+    try:
+        if not image_folder_p.exists():
+            raise ValidationError('Directory does not exist')
+
+        if not image_folder_p.is_dir():
+            raise ValidationError('Path is not a directory')
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def IMAGE_SCALE_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Image Scaling must be 1 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Image Scaling must be 100 or less')
+
+
+def IMAGE_EXPIRE_DAYS_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Image Expiration must be 1 or greater')
+
+
+def FFMPEG_FRAMERATE_validator(form, field):
+    # guessing
+    if field.data < 10:
+        raise ValidationError('FFMPEG frame rate must be 10 or greater')
+
+    if field.data > 50:
+        raise ValidationError('FFMPEG frame rate must be 50 or less')
+
+
+def FFMPEG_BITRATE_validator(form, field):
+    bitrate_regex = r'^\d+[km]$'
+
+    if not re.search(bitrate_regex, field.data):
+        raise ValidationError('Invalid bitrate syntax')
+
 
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
@@ -239,6 +299,18 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
+    IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
+    IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
+    IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
+    IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
+    IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
+    IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])
+    #IMAGE_CROP_ROI
+    IMAGE_SAVE_RAW                   = BooleanField('Save RAW frames')
+    IMAGE_GRAYSCALE                  = BooleanField('Save in Grayscale')
+    IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
+    FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
+    FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
