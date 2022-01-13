@@ -236,6 +236,14 @@ def IMAGE_SCALE_validator(form, field):
         raise ValidationError('Image Scaling must be 100 or less')
 
 
+def IMAGE_CROP_ROI_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Crop Region of Interest must be 0 or greater')
+
+
 def IMAGE_EXPIRE_DAYS_validator(form, field):
     if field.data < 1:
         raise ValidationError('Image Expiration must be 1 or greater')
@@ -318,6 +326,8 @@ def TEXT_PROPERTIES__FONT_THICKNESS_validator(form, field):
         raise ValidationError('Font thickness must be less than 20')
 
 
+
+
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
@@ -377,7 +387,10 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])
-    #IMAGE_CROP_ROI
+    IMAGE_CROP_ROI_X1                = IntegerField('Image Crop ROI x1', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_CROP_ROI_Y1                = IntegerField('Image Crop ROI y1', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_CROP_ROI_X2                = IntegerField('Image Crop ROI x2', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_SAVE_RAW                   = BooleanField('Save RAW frames')
     IMAGE_GRAYSCALE                  = BooleanField('Save in Grayscale')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])

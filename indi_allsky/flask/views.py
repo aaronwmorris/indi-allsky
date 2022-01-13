@@ -296,7 +296,6 @@ class ConfigView(FormView):
             'IMAGE_FLIP_V'                   : indi_allsky_config.get('IMAGE_FLIP_V', False),
             'IMAGE_FLIP_H'                   : indi_allsky_config.get('IMAGE_FLIP_H', False),
             'IMAGE_SCALE'                    : indi_allsky_config.get('IMAGE_SCALE', 100),
-            #IMAGE_CROP_ROI
             'IMAGE_SAVE_RAW'                 : indi_allsky_config.get('IMAGE_SAVE_RAW', False),
             'IMAGE_GRAYSCALE'                : indi_allsky_config.get('IMAGE_GRAYSCALE', False),
             'IMAGE_EXPIRE_DAYS'              : indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
@@ -332,6 +331,29 @@ class ConfigView(FormView):
             form_data['ADU_ROI_Y2'] = indi_allsky_config.get('ADU_ROI', [])[3]
         except IndexError:
             form_data['ADU_ROI_Y2'] = 0
+
+
+        # IMAGE_CROP_ROI
+        try:
+            form_data['IMAGE_CROP_ROI_X1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[0]
+        except IndexError:
+            form_data['IMAGE_CROP_ROI_X1'] = 0
+
+        try:
+            form_data['IMAGE_CROP_ROI_Y1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[1]
+        except IndexError:
+            form_data['IMAGE_CROP_ROI_Y1'] = 0
+
+        try:
+            form_data['IMAGE_CROP_ROI_X2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[2]
+        except IndexError:
+            form_data['IMAGE_CROP_ROI_X2'] = 0
+
+        try:
+            form_data['IMAGE_CROP_ROI_Y2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[3]
+        except IndexError:
+            form_data['IMAGE_CROP_ROI_Y2'] = 0
+
 
 
         # Font color
@@ -454,6 +476,20 @@ class AjaxConfigView(View):
             indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
         else:
             indi_allsky_config['ADU_ROI'] = []
+
+
+        # IMAGE_CROP_ROI
+        image_crop_roi_x1 = int(request.json['IMAGE_CROP_ROI_X1'])
+        image_crop_roi_y1 = int(request.json['IMAGE_CROP_ROI_Y1'])
+        image_crop_roi_x2 = int(request.json['IMAGE_CROP_ROI_X2'])
+        image_crop_roi_y2 = int(request.json['IMAGE_CROP_ROI_Y2'])
+
+        # the x2 and y2 values must be positive integers in order to be enabled and valid
+        if image_crop_roi_x2 and image_crop_roi_y2:
+            indi_allsky_config['IMAGE_CROP_ROI'] = [image_crop_roi_x1, image_crop_roi_y1, image_crop_roi_x2, image_crop_roi_y2]
+        else:
+            indi_allsky_config['IMAGE_CROP_ROI'] = []
+
 
 
         # TEXT_PROPERTIES FONT_COLOR

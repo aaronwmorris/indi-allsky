@@ -248,7 +248,26 @@
         <div id="IMAGE_SCALE-error" class="invalid-feedback" style="display: none;"></div>
     </div>
 
-    <!-- IMAGE_CROP_ROI -->
+    <div class="form-group">
+        {{ form_config.IMAGE_CROP_ROI_X1.label }}
+        {{ form_config.IMAGE_CROP_ROI_X1(class='form-control') }}
+        <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.IMAGE_CROP_ROI_Y1.label }}
+        {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control') }}
+        <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.IMAGE_CROP_ROI_X2.label }}
+        {{ form_config.IMAGE_CROP_ROI_X2(class='form-control') }}
+        <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        {{ form_config.IMAGE_CROP_ROI_Y2.label }}
+        {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control') }}
+        <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+    </div>
 
     <div class="form-group">
         {{ form_config.IMAGE_SAVE_RAW.label }}
@@ -372,6 +391,10 @@ const field_names = [
     'IMAGE_FILE_COMPRESSION__PNG',
     'IMAGE_FOLDER',
     'IMAGE_SCALE',
+    'IMAGE_CROP_ROI_X1',
+    'IMAGE_CROP_ROI_Y1',
+    'IMAGE_CROP_ROI_X2',
+    'IMAGE_CROP_ROI_Y2',
     'IMAGE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_BITRATE',
