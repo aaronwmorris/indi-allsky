@@ -1,8 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 import io
-import re
 import json
+from pathlib import Path
 from collections import OrderedDict
 
 from flask import render_template
@@ -131,10 +131,11 @@ class JsonImageLoopView(JsonView):
 
         image_list = list()
         for i in latest_images:
-            rel_filename = re.sub(r'^{0:s}/'.format(app.config['INDI_ALLSKY_DOCROOT']), '', i.filename)
+            filename_p = Path(i.filename)
+            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
 
             data = {
-                'file'  : rel_filename,
+                'file'  : str(rel_filename_p),
                 'sqm'   : i.sqm,
                 'stars' : i.stars,
             }
