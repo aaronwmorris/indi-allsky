@@ -702,94 +702,177 @@
 
     <hr />
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__CLASSNAME.label }}
-        {{ form_config.FILETRANSFER__CLASSNAME(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__CLASSNAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__HOST.label }}
-        {{ form_config.FILETRANSFER__HOST(class='form-control bg-secondary') }}
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__HOST.label(class='col-form-label') }}
+        </div>
+            <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__HOST(class='form-control bg-secondary') }}
         <div id="FILETRANSFER__HOST-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__PORT.label }}
-        {{ form_config.FILETRANSFER__PORT(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__PORT-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PORT(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PORT-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__USERNAME.label }}
-        {{ form_config.FILETRANSFER__USERNAME(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__USERNAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__PASSWORD.label }}
-        {{ form_config.FILETRANSFER__PASSWORD(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PASSWORD(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__TIMEOUT.label }}
-        {{ form_config.FILETRANSFER__TIMEOUT(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__TIMEOUT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__TIMEOUT(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label }}
-        {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label }}
-        {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label }}
-        {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label }}
-        {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label }}
-        {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label }}
-        {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-check-input') }}
-        <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.FILETRANSFER__UPLOAD_VIDEO.label }}
-        {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='form-check-input') }}
-        <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label }}
-        {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='form-check-input') }}
-        <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label }}
-        {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='form-check-input') }}
-        <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
 
