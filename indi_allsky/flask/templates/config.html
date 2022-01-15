@@ -479,37 +479,59 @@
         <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_CROP_ROI_X1.label }}
-        {{ form_config.IMAGE_CROP_ROI_X1(class='form-control bg-secondary') }}
-        <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.IMAGE_CROP_ROI_Y1.label }}
-        {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
-        <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.IMAGE_CROP_ROI_X2.label }}
-        {{ form_config.IMAGE_CROP_ROI_X2(class='form-control bg-secondary') }}
-        <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.IMAGE_CROP_ROI_Y2.label }}
-        {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
-        <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            Image Crop
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_X1(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x1, y1</div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.IMAGE_SAVE_RAW.label }}
-        {{ form_config.IMAGE_SAVE_RAW(class='form-check-input') }}
-        <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_X2(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.IMAGE_GRAYSCALE.label }}
-        {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
-        <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_RAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_SAVE_RAW(class='form-check-input') }}
+                <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_GRAYSCALE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
+                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group">
