@@ -15,77 +15,148 @@
     {{ form_config.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__NIGHT__GAIN.label }}
-        {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
     </div>
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__NIGHT__BINNING.label }}
-        {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label }}
-        {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label }}
-        {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__DAY__GAIN.label }}
-        {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.CCD_CONFIG__DAY__BINNING.label }}
-        {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
-        <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.CCD_EXPOSURE_MAX.label }}
-        {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
-        <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
     </div>
-    <div class="form-group">
-        {{ form_config.CCD_EXPOSURE_DEF.label }}
-        {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
-        <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-    <div class="form-group">
-        {{ form_config.CCD_EXPOSURE_MIN.label }}
-        {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
-        <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-
-    <div class="form-group">
-        {{ form_config.EXPOSURE_PERIOD.label }}
-        {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-        <div id="EXPOSURE_PERIOD-error" class="invalid-feedback" style="display: none;"></div>
-    </div>
-
-    <div class="form-check">
-        {{ form_config.AUTO_WB.label }}
-        {{ form_config.AUTO_WB(class='form-check-input') }}
-        <div id="AUTO_WB-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TARGET_ADU.label }}
-        {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
-        <div id="TARGET_ADU-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TARGET_ADU_DEV.label }}
-        {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
-        <div id="TARGET_ADU_DEV-error" class="invalid-feedback" style="display: none;"></div>
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MAX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Default: 15, Min 1, Max 60</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_DEF.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0 = auto</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0 = auto</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.EXPOSURE_PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="EXPOSURE_PERIOD-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Seconds between start of each frame</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">Auto White Balance</div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.AUTO_WB(class='form-check-input') }}
+                <div id="AUTO_WB-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Target Image Brightness</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU_DEV-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Allowed Brightness deviation</div>
     </div>
 
     <div class="form-group">
