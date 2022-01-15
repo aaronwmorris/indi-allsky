@@ -286,106 +286,197 @@
 
     <hr />
 
-    <div class="form-group">
-        {{ form_config.NIGHT_SUN_ALT_DEG.label }}
-        {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
-        <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sun altitude for start of night</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.NIGHT_MOONMODE_ALT_DEG.label }}
-        {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
-        <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon altitude to enable Moon Mode</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.NIGHT_MOONMODE_PHASE.label }}
-        {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
-        <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.KEOGRAM_ANGLE.label }}
-        {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
-        <div id="KEOGRAM_ANGLE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -90, Max: 90 - Image rotate for Keogram data</div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.KEOGRAM_H_SCALE.label }}
-        {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
-        <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.KEOGRAM_V_SCALE.label }}
-        {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
-        <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.KEOGRAM_LABEL.label }}
-        {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
-        <div id="KEOGRAM_LABEL-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
+                <div id="KEOGRAM_LABEL-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.STARTRAILS_MAX_ADU.label }}
-        {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
-        <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.STARTRAILS_MASK_THOLD.label }}
-        {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
-        <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.STARTRAILS_PIXEL_THOLD.label }}
-        {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
-        <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_FILE_TYPE.label }}
-        {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
-        <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_FILE_COMPRESSION__JPG.label }}
-        {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
-        <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__JPG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_FILE_COMPRESSION__PNG.label }}
-        {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
-        <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__PNG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_FOLDER.label }}
-        {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
-        <div id="IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.IMAGE_FLIP_V.label }}
-        {{ form_config.IMAGE_FLIP_V(class='form-check-input') }}
-        <div id="IMAGE_FLIP_V-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_FLIP_V(class='form-check-input') }}
+                <div id="IMAGE_FLIP_V-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.IMAGE_FLIP_H.label }}
-        {{ form_config.IMAGE_FLIP_H(class='form-check-input') }}
-        <div id="IMAGE_FLIP_H-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_FLIP_H(class='form-check-input') }}
+                <div id="IMAGE_FLIP_H-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_SCALE.label }}
-        {{ form_config.IMAGE_SCALE(class='form-control bg-secondary') }}
-        <div id="IMAGE_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SCALE(class='form-control bg-secondary') }}
+            <div id="IMAGE_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group">
