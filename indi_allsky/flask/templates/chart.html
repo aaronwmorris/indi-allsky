@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Chart{% endblock %}
+{% block title %}Charts{% endblock %}
 
 {% block head %}
 <meta charset="UTF-8"/>
 <style>
-canvas {
+#sqm-chart {
     width:100%;
-    height:100%;
+    height:50%;
     max-height:500px;
 };
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
-var myChart;
+var sqm_chart;
 var json_data = {
     'chart_data' : [],
 };
@@ -21,8 +21,8 @@ var json_data = {
 function init() {
     loadChartData();
 
-    ctx = document.getElementById('myChart').getContext('2d');
-    myChart = new Chart(ctx, {
+    ctx = document.getElementById('sqm-chart').getContext('2d');
+    sqm_chart = new Chart(ctx, {
         type: "line",
         data: {
             datasets: [{
@@ -85,8 +85,8 @@ function loadChartData() {
 
 
 function drawChart() {
-    myChart.data.datasets[0].data = json_data['chart_data'].reverse();  // data is reversed in DB
-    myChart.update();
+    sqm_chart.data.datasets[0].data = json_data['chart_data'].reverse();  // data is reversed in DB
+    sqm_chart.update();
 }
 
 
@@ -132,6 +132,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 {% block content %}
 <div class="bg-dark">
-<canvas id="myChart"></canvas>
+<canvas id="sqm-chart"></canvas>
 </div>
 {% endblock %}
