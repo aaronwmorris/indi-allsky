@@ -228,6 +228,7 @@ class JsonChartView(JsonView):
         chart_query = db.session.query(
             createDate_local,
             IndiAllSkyDbImageTable.sqm,
+            IndiAllSkyDbImageTable.stars,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
@@ -237,14 +238,23 @@ class JsonChartView(JsonView):
 
         #app.logger.info('Chart SQL: %s', str(chart_query))
 
-        chart_data = list()
+        chart_data = {
+            'sqm'   : [],
+            'stars' : [],
+        }
         for i in chart_query:
-            data = {
+            sqm_data = {
                 'x' : i.createDate_local.strftime('%H:%M:%S'),
                 'y' : i.sqm,
             }
+            chart_data['sqm'].append(sqm_data)
 
-            chart_data.append(data)
+            star_data = {
+                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'y' : i.stars,
+            }
+            chart_data['stars'].append(star_data)
+
 
         return chart_data
 

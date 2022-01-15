@@ -15,7 +15,10 @@
 <script type="text/javascript">
 var sqm_chart;
 var json_data = {
-    'chart_data' : [],
+    'chart_data' : {
+        'sqm'   : [],
+        'stars' : [],
+    },
 };
 
 function init() {
@@ -68,7 +71,7 @@ function init() {
 }
 
 async function loop() {
-    while(json_data['chart_data'].length == 0) {
+    while(json_data['chart_data']['sqm'].length == 0) {
         await sleep(100);
     }
 
@@ -85,7 +88,7 @@ function loadChartData() {
 
 
 function drawChart() {
-    sqm_chart.data.datasets[0].data = json_data['chart_data'].reverse();  // data is reversed in DB
+    sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
     sqm_chart.update();
 }
 
@@ -132,6 +135,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 {% block content %}
 <div class="bg-dark">
-<canvas id="sqm-chart"></canvas>
+    <canvas id="sqm-chart"></canvas>
 </div>
 {% endblock %}
