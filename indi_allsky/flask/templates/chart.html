@@ -5,15 +5,17 @@
 {% block head %}
 <meta charset="UTF-8"/>
 <style>
-#sqm-chart {
-    width:100%;
+canvas {
+    width:50%;
+    max-width:1000px;
     height:50%;
-    max-height:500px;
+    max-height:300px;
 };
 </style>
 <script type="text/javascript" src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
 var sqm_chart;
+var stars_chart;
 var json_data = {
     'chart_data' : {
         'sqm'   : [],
@@ -24,8 +26,8 @@ var json_data = {
 function init() {
     loadChartData();
 
-    ctx = document.getElementById('sqm-chart').getContext('2d');
-    sqm_chart = new Chart(ctx, {
+    ctx_sqm = document.getElementById('sqm-chart').getContext('2d');
+    sqm_chart = new Chart(ctx_sqm, {
         type: "line",
         data: {
             datasets: [{
@@ -67,6 +69,51 @@ function init() {
         }
     });
 
+
+    ctx_stars = document.getElementById('stars-chart').getContext('2d');
+    stars_chart = new Chart(ctx_stars, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Stars',
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(0, 0, 255, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+
     loop();
 }
 
@@ -89,7 +136,9 @@ function loadChartData() {
 
 function drawChart() {
     sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
+    stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();  // data is reversed in DB
     sqm_chart.update();
+    stars_chart.update();
 }
 
 
@@ -136,5 +185,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
 {% block content %}
 <div class="bg-dark">
     <canvas id="sqm-chart"></canvas>
+</div>
+<div class="bg-dark">
+    <canvas id="stars-chart"></canvas>
 </div>
 {% endblock %}
