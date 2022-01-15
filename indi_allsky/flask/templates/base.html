@@ -23,10 +23,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('indi-allsky.config_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('static', filename='svg/toggles.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
-                    </li>
-                    <li>
                         <a href="{{ url_for('indi-allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('static', filename='svg/play-btn-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
@@ -53,6 +49,10 @@
                     <li>
                         <a href="{{ url_for('indi-allsky.chart_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('static', filename='svg/graph-up.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Chart</span> </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('indi-allsky.config_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('static', filename='svg/toggles.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
                     </li>
                 </ul>
                 <!--
