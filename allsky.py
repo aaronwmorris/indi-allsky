@@ -48,7 +48,7 @@ if __name__ == "__main__":
         '-c',
         help='config file',
         type=argparse.FileType('r'),
-        required=True,
+        default='/etc/indi-allsky/config.json',
     )
     argparser.add_argument(
         '--timespec',

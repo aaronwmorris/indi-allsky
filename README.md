@@ -230,7 +230,7 @@ All configuration is read from config.json.  You can find configuration examples
 | FILETRANSFER        |             | (dict) File tranfer configuration |
 | > CLASSNAME         |             | (str) File transfer class |
 | > HOST              |             | (str) Hostname for file transfer |
-| > PORT              | null        | (int) Port for file transfer (null for protocol default) |
+| > PORT              | 0           | (int) Port for file transfer (null for protocol default) |
 | > USERNAME          |             | (str) Username for file tranfer |
 | > PASSWORD          |             | (str) Password for file tranfer |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |

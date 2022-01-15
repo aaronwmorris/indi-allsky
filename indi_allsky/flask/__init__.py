@@ -58,7 +58,7 @@ def create_app():
         instance_relative_config=False,
     )
 
-    p_flask_config = Path(__file__).parent.parent.parent.joinpath('flask.json').absolute()
+    p_flask_config = Path('/etc/indi-allsky/flask.json')
     app.config.from_file(p_flask_config, load=json.load)
 
     csrf.init_app(app)

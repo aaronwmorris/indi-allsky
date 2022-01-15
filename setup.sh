@@ -12,6 +12,7 @@ export PATH
 INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
+ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 #### end config ####
@@ -63,6 +64,7 @@ echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
+echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo
@@ -446,6 +448,7 @@ TMP2=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
 sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
@@ -477,27 +480,36 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "**** Indi-allsky config ****"
-if [[ ! -f "config.json" ]]; then
-    cp config.json_template config.json
+[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 750 "$ALLSKY_ETC"
+sudo chown "$USER":"$APACHE_GROUP" "$ALLSKY_ETC"
+
+if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
+    sudo cp config.json_template "${ALLSKY_ETC}/config.json"
 fi
 
 # config.json needs to be writable by apache user
-chgrp "$APACHE_GROUP" config.json
-chmod 660 config.json
+sudo chown "$USER":"$APACHE_GROUP" "${ALLSKY_ETC}/config.json"
+sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
 
 echo "**** Flask config ****"
-if [[ ! -f "flask.json" ]]; then
+TMP4=$(mktemp)
+if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
     SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
     sed \
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
-     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
      -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
-     flask.json_template > flask.json
+     flask.json_template > $TMP4
+
+    sudo cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
 fi
 
-chmod 644 flask.json
+sudo chown "$USER":"$APACHE_GROUP" "${ALLSKY_ETC}/flask.json"
+sudo chmod 640 "${ALLSKY_ETC}/flask.json"
+
+[[ -f "$TMP4" ]] && rm -f "$TMP4"
 
 
 echo "**** Start apache2 service ****"
@@ -607,6 +619,6 @@ echo
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
-echo "    https://$(hostname -s)/allsky/"
+echo "    https://$(hostname -s)/"
 echo
 echo "Enjoy!"

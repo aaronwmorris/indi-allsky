@@ -97,7 +97,7 @@
         "CLASSNAME"              : "pycurl_sftp",
         "HOST"                   : "",
         "comment_PORT"           : "use null for protocol default",
-        "PORT"                   : null,
+        "PORT"                   : 0,
         "USERNAME"               : "",
         "PASSWORD"               : "",
         "TIMEOUT"                : 5.0,
