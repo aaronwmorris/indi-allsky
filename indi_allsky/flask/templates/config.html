@@ -319,6 +319,8 @@
         <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
     </div>
 
+    <hr />
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
@@ -365,6 +367,8 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <hr />
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
@@ -397,6 +401,8 @@
         </div>
         <div class="col-sm-8"></div>
     </div>
+
+    <hr />
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -534,89 +540,167 @@
         <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.IMAGE_EXPIRE_DAYS.label }}
-        {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
-        <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FFMPEG_FRAMERATE.label }}
-        {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
-        <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback" style="display: none;"></div>
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.FFMPEG_BITRATE.label }}
-        {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
-        <div id="FFMPEG_BITRATE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_BITRATE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_FACE.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_FACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_X.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_Y.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_COLOR.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_SCALE.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
-        <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-check">
-        {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE.label }}
-        {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
-        <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
+                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.ORB_PROPERTIES__RADIUS.label }}
-        {{ form_config.ORB_PROPERTIES__RADIUS(class='form-control bg-secondary') }}
-        <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback" style="display: none;"></div>
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__RADIUS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__RADIUS(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.ORB_PROPERTIES__SUN_COLOR.label }}
-        {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='form-control bg-secondary') }}
-        <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__SUN_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group">
-        {{ form_config.ORB_PROPERTIES__MOON_COLOR.label }}
-        {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='form-control bg-secondary') }}
-        <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MOON_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
+
+    <hr />
 
     <div class="form-group">
         {{ form_config.FILETRANSFER__CLASSNAME.label }}
