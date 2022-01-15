@@ -55,6 +55,9 @@
                             <img src="{{ url_for('static', filename='svg/toggles.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
                     </li>
                 </ul>
+                <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
+                    Status: <span class=".text-success">{{ indi_allsky_status }}</span>
+                </div>
                 <!--
                 <div class="dropdown py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">

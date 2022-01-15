@@ -36,29 +36,46 @@ class TemplateView(View):
     def __init__(self, template_name):
         self.template_name = template_name
 
-    def dispatch_request(self):
-        return render_template(self.template_name)
-
-
-class ListView(View):
-    def __init__(self, template_name):
-        self.template_name = template_name
 
     def render_template(self, context):
         return render_template(self.template_name, **context)
 
+
     def dispatch_request(self):
-        context = {'objects': self.get_objects()}
+        context = self.get_context()
         return self.render_template(context)
 
-    def get_objects(self):
-        raise NotImplementedError()
+
+    def get_context(self):
+        context = {
+            'indi_allsky_status' : self.get_indi_allsky_status(),
+        }
+        return context
 
 
-class FormView(ListView):
-    def dispatch_request(self):
-        context = self.get_objects()
-        return self.render_template(context)
+    def get_indi_allsky_status(self):
+        indi_status_p = Path(app.config['INDI_ALLSKY_STATUS'])
+
+        if not indi_status_p.exists():
+            app.logger.warning('json status file %s does not exist', indi_status_p)
+            return 'DOWN'
+
+
+        now_minus_2min = datetime.now() - timedelta(seconds=120)
+        i_modifyDate = datetime.fromtimestamp(indi_status_p.stat().st_mtime)
+
+        #app.logger.info('json status date: %s', str(i_modifyDate))
+
+        if i_modifyDate > now_minus_2min:
+            return 'RUNNING'
+
+
+        return 'DOWN'
+
+
+
+class FormView(TemplateView):
+    pass
 
 
 class JsonView(View):
@@ -75,10 +92,11 @@ class IndexView(TemplateView):
     pass
 
 
-class CamerasView(ListView):
-    def get_objects(self):
-        cameras = IndiAllSkyDbCameraTable.query.all()
-        return cameras
+class CamerasView(TemplateView):
+    def get_context(self):
+        context = super(CamerasView, self).get_context()
+        context['camera_list'] = IndiAllSkyDbCameraTable.query.all()
+        return context
 
 
 class SqmView(TemplateView):
@@ -260,7 +278,9 @@ class JsonChartView(JsonView):
 
 
 class ConfigView(FormView):
-    def get_objects(self):
+    def get_context(self):
+        context = super(ConfigView, self).get_context()
+
         with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
             try:
                 indi_allsky_config = json.loads(f_config_file.read())
@@ -398,11 +418,9 @@ class ConfigView(FormView):
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
 
-        objects = {
-            'form_config' : IndiAllskyConfigForm(data=form_data),
-        }
+        context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
-        return objects
+        return context
 
 
 class AjaxConfigView(View):

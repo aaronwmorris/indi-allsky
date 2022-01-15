@@ -6,5 +6,6 @@
     "SECRET_KEY" : "%SECRET_KEY%",
 
     "INDI_ALLSKY_CONFIG" : "%ALLSKY_DIRECTORY%/config.json",
-    "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%"
+    "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
+    "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json"
 }

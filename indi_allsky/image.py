@@ -503,10 +503,14 @@ class ImageWorker(Process):
         }
 
 
-        with io.open('/tmp/indi_status.json', 'w') as f_indi_status:
+        indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
+
+        with io.open(str(indi_allsky_status_p), 'w') as f_indi_status:
             json.dump(status, f_indi_status, indent=4)
             f_indi_status.flush()
             f_indi_status.close()
+
+        indi_allsky_status_p.chmod(0o644)
 
 
     def getImageFolder(self, exp_date):
