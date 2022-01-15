@@ -404,6 +404,14 @@ def REMOTE_FOLDER_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+def UPLOAD_IMAGE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Image Upload must be 0 or greater')
+
+
 
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
@@ -506,7 +514,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__UPLOAD_IMAGE       = BooleanField('Transfer images')
+    FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')

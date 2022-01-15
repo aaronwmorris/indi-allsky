@@ -825,15 +825,13 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label }}
+            {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-check-input') }}
-                <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
-            </div>
+            {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Enable image uploads</div>
+        <div class="col-sm-8">Enable image uploads (0 = disable, 1 = every image, 2 = every 2nd image, etc)</div>
     </div>
 
     <div class="form-group row">
@@ -947,6 +945,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_VIDEO_FOLDER',
     'FILETRANSFER__REMOTE_KEOGRAM_FOLDER',
     'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
+    'FILETRANSFER__UPLOAD_IMAGE',
 ];
 
 const checkbox_field_names = [
@@ -962,7 +961,6 @@ const checkbox_field_names = [
     'IMAGE_SAVE_RAW',
     'IMAGE_GRAYSCALE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
-    'FILETRANSFER__UPLOAD_IMAGE',
     'FILETRANSFER__UPLOAD_VIDEO',
     'FILETRANSFER__UPLOAD_KEOGRAM',
     'FILETRANSFER__UPLOAD_STARTRAIL',
