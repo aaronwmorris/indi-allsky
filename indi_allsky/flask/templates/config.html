@@ -4,9 +4,6 @@
 
 {% block head %}
 <style>
-    .invalid-feedback {
-        color:#ff0000;
-    };
 </style>
 {% endblock %}
 
@@ -21,7 +18,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Camera dependent</div>
     </div>
@@ -31,7 +28,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
@@ -42,7 +39,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Camera dependent</div>
     </div>
@@ -52,7 +49,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
@@ -63,7 +60,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Camera dependent</div>
     </div>
@@ -73,7 +70,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min 0, Max 4 - Camera dependent</div>
     </div>
@@ -86,7 +83,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Default: 15, Min 1, Max 60</div>
     </div>
@@ -96,7 +93,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">0 = auto</div>
     </div>
@@ -106,7 +103,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">0 = auto</div>
     </div>
@@ -117,7 +114,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-            <div id="EXPOSURE_PERIOD-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Seconds between start of each frame</div>
     </div>
@@ -131,7 +128,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.AUTO_WB(class='form-check-input') }}
-                <div id="AUTO_WB-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8"></div>
@@ -145,7 +142,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TARGET_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Target Image Brightness</div>
     </div>
@@ -156,7 +153,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU_DEV-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TARGET_ADU_DEV-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Allowed Brightness deviation</div>
     </div>
@@ -167,12 +164,12 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.ADU_ROI_X1(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ADU_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-2">
             {{ form_config.ADU_ROI_Y1(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x1, y1</div>
     </div>
@@ -181,12 +178,12 @@
         <div class="col-sm-2 col-form-label"></div>
         <div class="col-sm-2">
             {{ form_config.ADU_ROI_X2(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ADU_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-2">
             {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x2, y2</div>
     </div>
@@ -200,7 +197,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.DETECT_STARS(class='form-check-input') }}
-                <div id="DETECT_STARS-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="DETECT_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8"></div>
@@ -214,7 +211,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LATITUDE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min: -90, Max: 90</div>
     </div>
@@ -225,7 +222,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min: -180, Max: 180</div>
     </div>
@@ -239,7 +236,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.DAYTIME_CAPTURE(class='form-check-input') }}
-                <div id="DAYTIME_CAPTURE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="DAYTIME_CAPTURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable daytime image capture</div>
@@ -252,7 +249,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
-                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable daytime timelapse generation</div>
@@ -265,7 +262,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='form-check-input') }}
-                <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
@@ -278,7 +275,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
-                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
@@ -292,7 +289,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
-            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Sun altitude for start of night</div>
     </div>
@@ -303,7 +300,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
-            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Moon altitude to enable Moon Mode</div>
     </div>
@@ -314,7 +311,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
-            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
     </div>
@@ -327,7 +324,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min: -90, Max: 90 - Image rotate for Keogram data</div>
     </div>
@@ -338,7 +335,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Keogram horizontal scale factor</div>
     </div>
@@ -349,7 +346,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Keogram vertical scale factor</div>
     </div>
@@ -361,7 +358,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
-                <div id="KEOGRAM_LABEL-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="KEOGRAM_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Add keogram time labels</div>
@@ -375,7 +372,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Max average image brightness to include in star trails</div>
     </div>
@@ -386,7 +383,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Mask threshold for image brightness exclusion</div>
     </div>
@@ -397,7 +394,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Pixel threshold for mask threshold</div>
     </div>
@@ -410,7 +407,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
-            <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">File type for timelapse images</div>
     </div>
@@ -421,7 +418,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
-            <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Compression factor for JPEG images</div>
     </div>
@@ -432,7 +429,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
-            <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Compression factor for PNG images</div>
     </div>
@@ -443,7 +440,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
-            <div id="IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-4">Directory to store timelapse images</div>
     </div>
@@ -455,7 +452,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.IMAGE_FLIP_V(class='form-check-input') }}
-                <div id="IMAGE_FLIP_V-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="IMAGE_FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Flip timelapse images vertically</div>
@@ -468,7 +465,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.IMAGE_FLIP_H(class='form-check-input') }}
-                <div id="IMAGE_FLIP_H-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="IMAGE_FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Flip timelapse images horizontally</div>
@@ -480,7 +477,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_SCALE(class='form-control bg-secondary') }}
-            <div id="IMAGE_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Scale factor for timelapse images</div>
     </div>
@@ -491,11 +488,11 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_CROP_ROI_X1(class='form-control bg-secondary') }}
-            <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
-            <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x1, y1</div>
     </div>
@@ -505,11 +502,11 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_CROP_ROI_X2(class='form-control bg-secondary') }}
-            <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
-            <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x2, y2</div>
     </div>
@@ -521,7 +518,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.IMAGE_SAVE_RAW(class='form-check-input') }}
-                <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable saving raw FITS images</div>
@@ -534,7 +531,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
-                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Save images in grayscale</div>
@@ -546,7 +543,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
-            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Maximum age of timelapse image files before deletion</div>
     </div>
@@ -559,7 +556,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
-            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">ffmpeg framerate for timelapse videos</div>
     </div>
@@ -570,7 +567,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
-            <div id="FFMPEG_BITRATE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FFMPEG_BITRATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">ffmpeg bitrate</div>
     </div>
@@ -581,7 +578,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Font face for image metadata</div>
     </div>
@@ -592,7 +589,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Font height for row spacing</div>
     </div>
@@ -603,7 +600,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">X coordinate to start writing metadata</div>
     </div>
@@ -614,7 +611,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Y coordinate to start writing metadata</div>
     </div>
@@ -625,7 +622,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Font color in R,G,B</div>
     </div>
@@ -636,7 +633,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Font size</div>
     </div>
@@ -647,7 +644,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Font thickness</div>
     </div>
@@ -659,7 +656,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
-                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Add black outline to text</div>
@@ -673,7 +670,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__RADIUS(class='form-control bg-secondary') }}
-            <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Radius of Sun and Moon orbs on edge of image</div>
     </div>
@@ -684,7 +681,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='form-control bg-secondary') }}
-            <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Color of Sun Orb</div>
     </div>
@@ -695,7 +692,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='form-control bg-secondary') }}
-            <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Color of Moon Orb</div>
     </div>
@@ -708,7 +705,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.FILETRANSFER__CLASSNAME(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">File transfer protocol</div>
     </div>
@@ -719,7 +716,7 @@
         </div>
             <div class="col-sm-4">
             {{ form_config.FILETRANSFER__HOST(class='form-control bg-secondary') }}
-        <div id="FILETRANSFER__HOST-error" class="invalid-feedback" style="display: none;"></div>
+        <div id="FILETRANSFER__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Hostname for file transfer</div>
     </div>
@@ -730,7 +727,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__PORT(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__PORT-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">File transfer port (0 for protocol default)</div>
     </div>
@@ -741,7 +738,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__USERNAME(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Username for file transfer</div>
     </div>
@@ -752,7 +749,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__PASSWORD(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Password for file transfer</div>
     </div>
@@ -763,7 +760,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__TIMEOUT(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">File transfer timeout</div>
     </div>
@@ -774,7 +771,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Remote image name (template)</div>
     </div>
@@ -785,7 +782,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Remote folder to store images</div>
     </div>
@@ -796,7 +793,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Remote folder to store timelapse videos</div>
     </div>
@@ -807,7 +804,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Remote folder to store keograms</div>
     </div>
@@ -818,7 +815,7 @@
         </div>
         <div class="col-sm-4">
             {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Remote folder to store star trails</div>
     </div>
@@ -829,7 +826,7 @@
         </div>
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-control bg-secondary') }}
-            <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Enable image uploads (0 = disable, 1 = every image, 2 = every 2nd image, etc)</div>
     </div>
@@ -841,7 +838,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='form-check-input') }}
-                <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable timelapse video uploads</div>
@@ -854,7 +851,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='form-check-input') }}
-                <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable keogram uploads</div>
@@ -867,7 +864,7 @@
         <div class="col-sm-2">
             <div class="form-switch">
                 {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='form-check-input') }}
-                <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback" style="display: none;"></div>
+                <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Enable star trail uploads</div>
@@ -881,7 +878,7 @@
         </div>
         <div class="col-sm-6">
             {{ form_config.INDI_CONFIG_DEFAULTS(class='form-control bg-secondary', rows='10') }}
-            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback" style="display: none;"></div>
+            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
     </div>
 
@@ -890,8 +887,8 @@
 
     <button class="btn btn-primary">Submit</button>
 </form>
-<div id="success-message" style="display: none;"></div>
-<div id="failure-message" class="invalid-feedback" style="display: none;"></div>
+<div id="success-message" class="text-success" style="display: none;"></div>
+<div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
 
 <script>
 const form_config = document.getElementById('form_config');
