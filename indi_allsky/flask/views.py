@@ -96,7 +96,15 @@ class IndexView(TemplateView):
 class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
-        context['camera_list'] = IndiAllSkyDbCameraTable.query.all()
+
+        connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
+        context['camera_list'] = db.session.query(
+            IndiAllSkyDbCameraTable.id,
+            IndiAllSkyDbCameraTable.name,
+            connectDate_local,
+        )\
+            .all()
+
         return context
 
 

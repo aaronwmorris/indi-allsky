@@ -7,9 +7,17 @@
 
 {% block content %}
 <table>
-<tr><th>Cameras</th></tr>
+<tr>
+    <th>ID</th>
+    <th>Camera</th>
+    <th>Connect Date</th>
+</tr>
 {% for camera in camera_list %}
-<tr><td>{{ camera.name }}</td></tr>
+<tr>
+    <td>{{ camera.id }}</td>
+    <td>{{ camera.name }}</td>
+    <td>{{ camera.connectDate_local }}</td>
+</tr>
 {% endfor %}
 </table>
 {% endblock %}
