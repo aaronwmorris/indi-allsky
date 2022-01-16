@@ -418,6 +418,10 @@ class ConfigView(FormView):
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
 
+        # INDI config as json text
+        indi_config_defaults = indi_allsky_config.get('INDI_CONFIG_DEFAULTS', {})
+        form_data['INDI_CONFIG_DEFAULTS'] = json.dumps(indi_config_defaults, indent=4)
+
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
         return context
@@ -539,6 +543,7 @@ class AjaxConfigView(View):
         indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
         indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
+        indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
 
 
         # ADU_ROI

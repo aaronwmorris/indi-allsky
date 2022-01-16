@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import json
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
@@ -7,6 +8,7 @@ from wtforms import BooleanField
 from wtforms import SelectField
 from wtforms import StringField
 from wtforms import PasswordField
+from wtforms import TextAreaField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 
@@ -412,6 +414,34 @@ def UPLOAD_IMAGE_validator(form, field):
         raise ValidationError('Image Upload must be 0 or greater')
 
 
+def INDI_CONFIG_DEFAULTS_validator(form, field):
+    try:
+        json_data = json.loads(field.data)
+    except json.decoder.JSONDecodeError as e:
+        raise ValidationError(str(e))
+
+
+    for k in json_data.keys():
+        if k not in ('PROPERTIES', 'SWITCHES'):
+            raise ValidationError('Only PROPERTIES and SWITCHES attributes allowed')
+
+    try:
+        json_data['PROPERTIES']
+    except KeyError:
+        raise ValidationError('PROPERTIES attribute missing')
+
+    try:
+        json_data['SWITCHES']
+    except KeyError:
+        raise ValidationError('SWITCHES attribute missing')
+
+
+    for k, v in json_data['SWITCHES'].items():
+        for k2 in v.keys():
+            if k2 not in ('on', 'off'):
+                raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
+
+
 
 class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
@@ -518,6 +548,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
+    INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
 
     #def __init__(self, *args, **kwargs):
