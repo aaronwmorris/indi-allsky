@@ -58,7 +58,7 @@ class TemplateView(View):
 
         if not indi_status_p.exists():
             app.logger.warning('json status file %s does not exist', indi_status_p)
-            return 'DOWN'
+            return '<span class="text-danger">DOWN</span>'
 
 
         now_minus_2min = datetime.now() - timedelta(seconds=120)
@@ -67,10 +67,10 @@ class TemplateView(View):
         #app.logger.info('json status date: %s', str(i_modifyDate))
 
         if i_modifyDate > now_minus_2min:
-            return 'RUNNING'
+            return '<span class="text-success">RUNNING</span>'
 
 
-        return 'DOWN'
+        return '<span class="text-danger">DOWN</span>'
 
 
 
