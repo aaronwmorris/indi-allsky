@@ -17,6 +17,7 @@ from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbDarkFrameTable
 
 from sqlalchemy import func
 from sqlalchemy.types import DateTime
@@ -96,6 +97,29 @@ class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
         context['camera_list'] = IndiAllSkyDbCameraTable.query.all()
+        return context
+
+
+class DarkFramesView(TemplateView):
+    def get_context(self):
+        context = super(DarkFramesView, self).get_context()
+
+        createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        darkframe_list = db.session.query(
+            IndiAllSkyDbDarkFrameTable.id,
+            IndiAllSkyDbCameraTable.name.label('camera_name'),
+            createDate_local,
+            IndiAllSkyDbDarkFrameTable.bitdepth,
+            IndiAllSkyDbDarkFrameTable.exposure,
+            IndiAllSkyDbDarkFrameTable.gain,
+            IndiAllSkyDbDarkFrameTable.binmode,
+            IndiAllSkyDbDarkFrameTable.temp,
+        )\
+            .join(IndiAllSkyDbDarkFrameTable.camera)\
+            .all()
+
+
+        context['darkframe_list'] = darkframe_list
         return context
 
 
@@ -614,6 +638,7 @@ class AjaxConfigView(View):
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
