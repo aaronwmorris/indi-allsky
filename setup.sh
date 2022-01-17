@@ -12,6 +12,7 @@ export PATH
 INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
+GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
@@ -64,6 +65,7 @@ echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
+echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
@@ -457,16 +459,46 @@ sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
+echo "**** Setting up gunicorn ****"
+TMP5=$(mktemp)
+sed \
+ -e "s|%APACHE_USER%|$APACHE_USER|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
+
+sudo cp -f "$TMP5" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+[[ -f "$TMP5" ]] && rm -f "$TMP5"
+
+TMP6=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
+
+sudo cp -f "$TMP6" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+[[ -f "$TMP6" ]] && rm -f "$TMP6"
+
+
 echo "**** Enabling services ****"
 sudo systemctl daemon-reload
-sudo systemctl enable $INDISEVER_SERVICE_NAME
-sudo systemctl enable $ALLSKY_SERVICE_NAME
+sudo systemctl enable ${INDISEVER_SERVICE_NAME}.service
+sudo systemctl enable ${ALLSKY_SERVICE_NAME}.service
+sudo systemctl enable ${GUNICORN_SERVICE_NAME}.socket
+sudo systemctl enable ${GUNICORN_SERVICE_NAME}.service
+sudo systemctl start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Setup rsyslog logging ****"
 [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir -m 755 /var/log/indi-allsky
 sudo touch /var/log/indi-allsky/indi-allsky.log
 sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
+sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
 sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
 sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/indi-allsky.conf
@@ -515,7 +547,6 @@ sudo chmod 640 "${ALLSKY_ETC}/flask.json"
 echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
- -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
@@ -528,9 +559,8 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo a2enmod rewrite
     sudo a2enmod headers
     sudo a2enmod ssl
-    sudo a2enmod wsgi
-    #sudo a2enmod proxy
-    #sudo a2enmod proxy_http
+    sudo a2enmod proxy
+    sudo a2enmod proxy_http
     sudo a2dissite 000-default
     sudo a2dissite default-ssl
     sudo a2ensite indi-allsky

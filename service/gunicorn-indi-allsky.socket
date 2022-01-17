@@ -2,7 +2,7 @@
 Description=indi-allsky gunicorn socket
 
 [Socket]
-ListenStream=/run/gunicorn-indi-allsky.sock
+ListenStream=/run/%GUNICORN_SERVICE_NAME%.sock
 SocketUser=%APACHE_USER%
 SocketMode=644
 
