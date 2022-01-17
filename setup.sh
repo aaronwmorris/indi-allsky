@@ -40,6 +40,9 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
+# get primary group
+PGRP=$(id -ng)
+
 
 echo "###############################################"
 echo "### Welcome to the indi-allsky setup script ###"
@@ -513,15 +516,14 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 echo "**** Indi-allsky config ****"
 [[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 750 "$ALLSKY_ETC"
-sudo chown "$USER":"$APACHE_GROUP" "$ALLSKY_ETC"
+sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
 
 if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
     sudo cp config.json_template "${ALLSKY_ETC}/config.json"
 fi
 
-# config.json needs to be writable by apache user
-sudo chown "$USER":"$APACHE_GROUP" "${ALLSKY_ETC}/config.json"
-sudo chmod 660 "${ALLSKY_ETC}/config.json"
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
+sudo chmod 640 "${ALLSKY_ETC}/config.json"
 
 
 echo "**** Flask config ****"
@@ -538,7 +540,7 @@ if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
     sudo cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
 fi
 
-sudo chown "$USER":"$APACHE_GROUP" "${ALLSKY_ETC}/flask.json"
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 640 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP4" ]] && rm -f "$TMP4"
@@ -581,7 +583,7 @@ fi
 
 echo "**** Setup image folder ****"
 [[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -m 755 "$HTDOCS_FOLDER"
-sudo chown -R "$USER" "$HTDOCS_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 
 [[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images"
 [[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images/darks"
@@ -598,7 +600,7 @@ echo "**** Setup DB ****"
 [[ ! -d "$DB_FOLDER" ]] && sudo mkdir -m 755 "$DB_FOLDER"
 [[ -d "$DB_FOLDER" ]] && sudo chmod ugo+rx "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir -m 755 "${DB_FOLDER}/backup"
-sudo chown -R "$USER" "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
 if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     sudo chmod ugo+r "$DB_FOLDER/indi-allsky.sqlite"
 
