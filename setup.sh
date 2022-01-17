@@ -515,8 +515,9 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "**** Indi-allsky config ****"
-[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 750 "$ALLSKY_ETC"
+[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 755 "$ALLSKY_ETC"
 sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
+sudo chmod 755 "${ALLSKY_ETC}"
 
 if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
     sudo cp config.json_template "${ALLSKY_ETC}/config.json"
@@ -557,7 +558,16 @@ echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+
+
+if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
+    sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
+fi
+
+sudo chmod 644 "${ALLSKY_ETC}/apache.passwd"
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
 
 
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
