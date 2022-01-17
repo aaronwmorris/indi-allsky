@@ -546,6 +546,13 @@ sudo chmod 640 "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP4" ]] && rm -f "$TMP4"
 
 
+echo "**** Disabling competing web servers ****"
+sudo systemctl stop nginx || true
+sudo systemctl disable nnginx || true
+sudo systemctl stop lighttpd || true
+sudo systemctl disable lighttpd || true
+
+
 echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
