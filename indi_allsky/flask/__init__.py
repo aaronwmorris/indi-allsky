@@ -43,6 +43,10 @@ dictConfig({
             'level'    : 'INFO',
             'handlers' : ['wsgi'],
         },
+        'gunicorn.error' : {
+            'level'    : 'INFO',
+            'handlers' : ['syslog'],
+        },
         'indi_allsky' : {
             'level'    : 'INFO',
             'handlers' : [],  # empty
