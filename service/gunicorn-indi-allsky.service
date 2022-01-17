@@ -1,0 +1,19 @@
+[Unit]
+Description=indi-allsky gunicorn daemon
+Requires=gunicorn-indi-allsky.socket
+After=network.target
+
+[Service]
+Type=notify
+User=%ALLSKY_USER%
+Group=%ALLSKY_USER%
+RuntimeDirectory=gunicorn-indi-allsky
+WorkingDirectory=%ALLSKY_DIRECTORY%
+ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/gunicorn indi_allsky.wsgi --log-syslog --log-syslog-facility local7
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

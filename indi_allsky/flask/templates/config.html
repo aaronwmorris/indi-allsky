@@ -1038,7 +1038,7 @@ form_config.addEventListener('submit', async (e) => {
         json_data[item] = fields[item].input.checked;
     });
 
-    const response = await fetch("{{ url_for('indi-allsky.ajax_config_view') }}", {
+    const response = await fetch("{{ url_for('indi_allsky.ajax_config_view') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

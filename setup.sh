@@ -529,6 +529,8 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo a2enmod headers
     sudo a2enmod ssl
     sudo a2enmod wsgi
+    #sudo a2enmod proxy
+    #sudo a2enmod proxy_http
     sudo a2dissite 000-default
     sudo a2dissite default-ssl
     sudo a2ensite indi-allsky

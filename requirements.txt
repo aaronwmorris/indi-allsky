@@ -9,6 +9,7 @@ pycurl
 imageio
 imageio-ffmpeg
 pygifsicle
+gunicorn
 Flask
 Flask-SQLAlchemy
 Flask-Migrate

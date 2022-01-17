@@ -12,7 +12,7 @@ canvas {
     max-height:300px;
 };
 </style>
-<script type="text/javascript" src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
 var sqm_chart;
 var stars_chart;
@@ -129,7 +129,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi-allsky.js_chart_view') }}", function() {});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", function() {});
     setTimeout(loadChartData, 15000);
 }
 

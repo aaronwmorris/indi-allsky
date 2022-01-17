@@ -24,7 +24,15 @@ from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
 
-bp = Blueprint('indi-allsky', __name__, template_folder='templates', url_prefix='/')
+bp = Blueprint(
+    'indi_allsky',
+    __name__,
+    template_folder='templates',
+    static_folder='static',
+    url_prefix='/',  # wsgi
+    #url_prefix='/indi-allsky',  # gunicorn
+    static_url_path='static',
+)
 
 
 #@bp.route('/')
