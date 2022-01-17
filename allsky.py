@@ -84,6 +84,13 @@ if __name__ == "__main__":
         type=int,
         default=7624,
     )
+    argparser.add_argument(
+        '--pid',
+        '-P',
+        help='pid file',
+        type=str,
+        default='/var/lib/indi-allsky/indi-allsky.pid',
+    )
 
     args = argparser.parse_args()
 
@@ -110,6 +117,7 @@ if __name__ == "__main__":
     ia = indi_allsky.IndiAllSky(args.config)
     ia.indi_server = args.server
     ia.indi_port = args.port
+    ia.pidfile = args.pid
 
     action_func = getattr(ia, args.action)
     action_func(*args_list, **kwargs_dict)

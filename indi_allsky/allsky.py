@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import io
 import json
@@ -49,6 +50,8 @@ class IndiAllSky(object):
 
         self._indi_server = 'localhost'
         self._indi_port = 7624
+
+        self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
         self.image_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
@@ -112,6 +115,15 @@ class IndiAllSky(object):
     @indi_port.setter
     def indi_port(self, new_port):
         self._indi_port = int(new_port)
+
+
+    @property
+    def pidfile(self):
+        return self._pidfile
+
+    @pidfile.setter
+    def pidfile(self, new_pidfile):
+        self._pidfile = str(new_pidfile)
 
 
     def sighup_handler(self, signum, frame):
@@ -207,6 +219,19 @@ class IndiAllSky(object):
 
     def sigalarm_handler(self, signum, frame):
         raise TimeOutException()
+
+
+    def write_pid(self):
+        pidfile_p = Path(self._pidfile)
+
+        try:
+            pidfile_p.unlink()
+        except FileNotFoundError:
+            pass
+
+        with io.open(str(pidfile_p), 'w') as pid_f:
+            pid_f.write('{0:d}'.format(os.getpid()))
+            pid_f.flush()
 
 
     def _parseConfig(self, json_config):
@@ -463,6 +488,7 @@ class IndiAllSky(object):
 
 
     def run(self):
+        self.write_pid()
 
         self._initialize()
 
