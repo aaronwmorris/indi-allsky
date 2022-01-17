@@ -10,6 +10,7 @@ imageio
 imageio-ffmpeg
 pygifsicle
 gunicorn
+psutil
 Flask
 Flask-SQLAlchemy
 Flask-Migrate

@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 from collections import OrderedDict
+import psutil
 
 from flask import render_template
 from flask import request
@@ -62,25 +63,41 @@ class TemplateView(View):
         return context
 
 
-    def get_indi_allsky_status(self):
-        indi_status_p = Path(app.config['INDI_ALLSKY_STATUS'])
+    def get_indiallsky_pid(self):
+        indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
 
-        if not indi_status_p.exists():
-            app.logger.warning('json status file %s does not exist', indi_status_p)
+        try:
+            with io.open(str(indi_allsky_pid_p), 'r') as pid_f:
+                pid = pid_f.readline()
+                pid = pid.rstrip()
+
+        except FileNotFoundError:
+            return False
+        except PermissionError:
+            return None
+
+        try:
+            pid_int = int(pid)
+        except ValueError:
+            return None
+
+        return pid_int
+
+
+    def get_indi_allsky_status(self):
+        pid = self.get_indiallsky_pid()
+
+        if pid is None:
+            return '<span class="text-warning">UNKNOWN</span>'
+
+        if not pid:
             return '<span class="text-danger">DOWN</span>'
 
-
-        now_minus_2min = datetime.now() - timedelta(seconds=120)
-        i_modifyDate = datetime.fromtimestamp(indi_status_p.stat().st_mtime)
-
-        #app.logger.info('json status date: %s', str(i_modifyDate))
-
-        if i_modifyDate > now_minus_2min:
+        if psutil.pid_exists(pid):
             return '<span class="text-success">RUNNING</span>'
 
 
         return '<span class="text-danger">DOWN</span>'
-
 
 
 class FormView(TemplateView):
