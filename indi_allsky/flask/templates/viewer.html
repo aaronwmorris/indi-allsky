@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+</style>
+<link href="{{ url_for('static', filename='css/viewer.min.css') }}" rel="stylesheet">
+<script type="text/javascript" src="{{ url_for('static', filename='js/viewer.min.js') }}"></script>
+<script type="text/javascript">
+    //import Viewer from 'viewerjs';
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div>
+  <ul id="images">
+    <li><img src="/allsky/images/20220114/night/14_18/ccd1_20220114_181908.jpg" alt="Picture"></li>
+    <li><img src="/allsky/images/20220114/night/14_18/ccd1_20220114_181925.jpg" alt="Picture"></li>
+    <li><img src="/allsky/images/20220114/night/14_18/ccd1_20220114_181943.jpg" alt="Picture"></li>
+  </ul>
+</div>
+
+<script>
+
+const gallery = new Viewer(document.getElementById('images'));
+</script>
+{% endblock %}

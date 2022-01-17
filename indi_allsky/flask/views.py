@@ -139,6 +139,10 @@ class ImageLoopView(TemplateView):
     pass
 
 
+class ViewerView(TemplateView):
+    pass
+
+
 class JsonImageLoopView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
@@ -647,6 +651,7 @@ class AjaxConfigView(View):
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
