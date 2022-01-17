@@ -616,8 +616,25 @@ if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
     gzip $DB_BACKUP
 fi
-#flask db revision --autogenerate
-#flask db upgrade head
+
+
+# Check for old alembic folder
+if [[ -d "alembic" ]]; then
+    echo
+    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
+    echo "for database migrations"
+    echo
+    echo "This script will attempt to properly migrate the config"
+    echo
+    sleep 5
+
+    sqlite3 ${DB_FOLDER}/indi-allsky.sqlite "DELETE FROM alembic_version;"
+
+    rm -fR alembic
+fi
+
+flask db revision --autogenerate
+flask db upgrade head
 
 
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
