@@ -8,16 +8,17 @@ import logging
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
-from indi_allsky.db import IndiAllSkyDb
-from indi_allsky.db import IndiAllSkyDbCameraTable
-from indi_allsky.db import IndiAllSkyDbImageTable
-#from indi_allsky.db import IndiAllSkyDbVideoTable
+import indi_allsky
 
+# setup flask context for db access
+app = indi_allsky.flask.create_app()
+app.app_context().push()
 
-CONFIG = {
-    'DB_URI' : 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite',
-}
+from indi_allsky.flask.models import IndiAllSkyDbCameraTable
+from indi_allsky.flask.models import IndiAllSkyDbImageTable
+#from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 
+from indi_allsky.flask import db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
@@ -28,19 +29,17 @@ logger = logging
 class SqlTester(object):
 
     def __init__(self):
-        self._db = IndiAllSkyDb(CONFIG)
+        pass
 
 
     def main(self):
         camera_id = 1
-        timespec = '20211107'
+        timespec = '20220101'
 
         d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         night = True
 
-        dbsession = self._db.session
-
-        timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+        timelapse_files_entries = db.session.query(IndiAllSkyDbImageTable)\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
