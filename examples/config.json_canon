@@ -2,15 +2,15 @@
     "CCD_CONFIG" : {
         "NIGHT" : {
             "GAIN"    : 1600,
-            "BINNING" : 0
+            "BINNING" : 1
         },
         "MOONMODE" : {
             "GAIN"    : 400,
-            "BINNING" : 0
+            "BINNING" : 1
         },
         "DAY" : {
             "GAIN"    : 100,
-            "BINNING" : 0
+            "BINNING" : 1
         }
     },
 
@@ -103,7 +103,7 @@
         "CLASSNAME"              : "pycurl_sftp",
         "HOST"                   : "",
         "comment_PORT"           : "use null for protocol default",
-        "PORT"                   : null,
+        "PORT"                   : 0,
         "USERNAME"               : "",
         "PASSWORD"               : "",
         "TIMEOUT"                : 5.0,
@@ -112,7 +112,7 @@
         "REMOTE_VIDEO_FOLDER"    : "/tmp",
         "REMOTE_KEOGRAM_FOLDER"  : "/tmp",
         "REMOTE_STARTRAIL_FOLDER": "/tmp",
-        "UPLOAD_IMAGE"           : false,
+        "UPLOAD_IMAGE"           : 0,
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false
