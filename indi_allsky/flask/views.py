@@ -350,131 +350,115 @@ class ConfigView(FormView):
 
 
         form_data = {
-            'CCD_CONFIG__NIGHT__GAIN'        : int(indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0)),
-            'CCD_CONFIG__NIGHT__BINNING'     : int(indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1)),
-            'CCD_CONFIG__MOONMODE__GAIN'     : int(indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0)),
-            'CCD_CONFIG__MOONMODE__BINNING'  : int(indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1)),
-            'CCD_CONFIG__DAY__GAIN'          : int(indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0)),
-            'CCD_CONFIG__DAY__BINNING'       : int(indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1)),
-            'CCD_EXPOSURE_MAX'               : float(indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)),
-            'CCD_EXPOSURE_DEF'               : float(indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),
-            'CCD_EXPOSURE_MIN'               : float(indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0)),
-            'EXPOSURE_PERIOD'                : float(indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0)),
-            'AUTO_WB'                        : bool(indi_allsky_config.get('AUTO_WB', True)),
-            'TARGET_ADU'                     : int(indi_allsky_config.get('TARGET_ADU', 75)),
-            'TARGET_ADU_DEV'                 : int(indi_allsky_config.get('TARGET_ADU_DEV', 10)),
-            'DETECT_STARS'                   : bool(indi_allsky_config.get('DETECT_STARS', True)),
-            'LOCATION_LATITUDE'              : int(indi_allsky_config.get('LOCATION_LATITUDE', 0)),
-            'LOCATION_LONGITUDE'             : int(indi_allsky_config.get('LOCATION_LONGITUDE', 0)),
-            'DAYTIME_CAPTURE'                : bool(indi_allsky_config.get('DAYTIME_CAPTURE', False)),
-            'DAYTIME_TIMELAPSE'              : bool(indi_allsky_config.get('DAYTIME_TIMELAPSE', False)),
-            'DAYTIME_CONTRAST_ENHANCE'       : bool(indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False)),
-            'NIGHT_CONTRAST_ENHANCE'         : bool(indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False)),
-            'NIGHT_SUN_ALT_DEG'              : int(indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6)),
-            'NIGHT_MOONMODE_ALT_DEG'         : int(indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5)),
-            'NIGHT_MOONMODE_PHASE'           : int(indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50)),
-            'KEOGRAM_ANGLE'                  : int(indi_allsky_config.get('KEOGRAM_ANGLE', 0)),
-            'KEOGRAM_H_SCALE'                : int(indi_allsky_config.get('KEOGRAM_H_SCALE', 100)),
-            'KEOGRAM_V_SCALE'                : int(indi_allsky_config.get('KEOGRAM_V_SCALE', 33)),
-            'KEOGRAM_LABEL'                  : bool(indi_allsky_config.get('KEOGRAM_LABEL', True)),
-            'STARTRAILS_MAX_ADU'             : int(indi_allsky_config.get('STARTRAILS_MAX_ADU', 50)),
-            'STARTRAILS_MASK_THOLD'          : int(indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190)),
-            'STARTRAILS_PIXEL_THOLD'         : float(indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1)),
-            'IMAGE_FILE_TYPE'                : str(indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')),
-            'IMAGE_FILE_COMPRESSION__JPG'    : int(indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90)),
-            'IMAGE_FILE_COMPRESSION__PNG'    : int(indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 9)),
-            'IMAGE_FOLDER'                   : str(indi_allsky_config.get('IMAGE_FOLDER', '/var/www/html/allsky/images')),
-            'IMAGE_FLIP_V'                   : bool(indi_allsky_config.get('IMAGE_FLIP_V', False)),
-            'IMAGE_FLIP_H'                   : bool(indi_allsky_config.get('IMAGE_FLIP_H', False)),
-            'IMAGE_SCALE'                    : int(indi_allsky_config.get('IMAGE_SCALE', 100)),
-            'IMAGE_SAVE_RAW'                 : bool(indi_allsky_config.get('IMAGE_SAVE_RAW', False)),
-            'IMAGE_GRAYSCALE'                : bool(indi_allsky_config.get('IMAGE_GRAYSCALE', False)),
-            'IMAGE_EXPIRE_DAYS'              : int(indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30)),
-            'FFMPEG_FRAMERATE'               : int(indi_allsky_config.get('FFMPEG_FRAMERATE', 25)),
-            'FFMPEG_BITRATE'                 : str(indi_allsky_config.get('FFMPEG_BITRATE', '2500k')),
-            'TEXT_PROPERTIES__FONT_FACE'     : str(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX')),
-            'TEXT_PROPERTIES__FONT_HEIGHT'   : int(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_HEIGHT', 30)),
-            'TEXT_PROPERTIES__FONT_X'        : int(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15)),
-            'TEXT_PROPERTIES__FONT_Y'        : int(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30)),
-            'TEXT_PROPERTIES__FONT_SCALE'    : float(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8)),
-            'TEXT_PROPERTIES__FONT_THICKNESS': int(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1)),
-            'TEXT_PROPERTIES__FONT_OUTLINE'  : bool(indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True)),
-            'ORB_PROPERTIES__RADIUS'         : int(indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9)),
-            'FILETRANSFER__CLASSNAME'        : str(indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp')),
-            'FILETRANSFER__HOST'             : str(indi_allsky_config.get('FILETRANSFER', {}).get('HOST', '')),
-            'FILETRANSFER__PORT'             : int(indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0)),
-            'FILETRANSFER__USERNAME'         : str(indi_allsky_config.get('FILETRANSFER', {}).get('USERNAME', '')),
-            'FILETRANSFER__PASSWORD'         : str(indi_allsky_config.get('FILETRANSFER', {}).get('PASSWORD', '')),
-            'FILETRANSFER__TIMEOUT'          : float(indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 5.0)),
-            'FILETRANSFER__REMOTE_IMAGE_NAME'         : str(indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{0}')),
-            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : str(indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/tmp')),
-            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : str(indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/tmp')),
-            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : str(indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/tmp')),
-            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : str(indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/tmp')),
-            'FILETRANSFER__UPLOAD_IMAGE'     : int(indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0)),
-            'FILETRANSFER__UPLOAD_VIDEO'     : bool(indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False)),
-            'FILETRANSFER__UPLOAD_KEOGRAM'   : bool(indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False)),
-            'FILETRANSFER__UPLOAD_STARTRAIL' : bool(indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False)),
+            'CCD_CONFIG__NIGHT__GAIN'        : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0),
+            'CCD_CONFIG__NIGHT__BINNING'     : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
+            'CCD_CONFIG__MOONMODE__GAIN'     : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0),
+            'CCD_CONFIG__MOONMODE__BINNING'  : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
+            'CCD_CONFIG__DAY__GAIN'          : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0),
+            'CCD_CONFIG__DAY__BINNING'       : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
+            'CCD_EXPOSURE_MAX'               : indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
+            'CCD_EXPOSURE_DEF'               : indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
+            'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
+            'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
+            'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', True),
+            'TARGET_ADU'                     : indi_allsky_config.get('TARGET_ADU', 75),
+            'TARGET_ADU_DEV'                 : indi_allsky_config.get('TARGET_ADU_DEV', 10),
+            'DETECT_STARS'                   : indi_allsky_config.get('DETECT_STARS', True),
+            'LOCATION_LATITUDE'              : indi_allsky_config.get('LOCATION_LATITUDE', 0),
+            'LOCATION_LONGITUDE'             : indi_allsky_config.get('LOCATION_LONGITUDE', 0),
+            'DAYTIME_CAPTURE'                : indi_allsky_config.get('DAYTIME_CAPTURE', False),
+            'DAYTIME_TIMELAPSE'              : indi_allsky_config.get('DAYTIME_TIMELAPSE', False),
+            'DAYTIME_CONTRAST_ENHANCE'       : indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
+            'NIGHT_CONTRAST_ENHANCE'         : indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
+            'NIGHT_SUN_ALT_DEG'              : indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6),
+            'NIGHT_MOONMODE_ALT_DEG'         : indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5),
+            'NIGHT_MOONMODE_PHASE'           : indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50),
+            'KEOGRAM_ANGLE'                  : indi_allsky_config.get('KEOGRAM_ANGLE', 0),
+            'KEOGRAM_H_SCALE'                : indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
+            'KEOGRAM_V_SCALE'                : indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
+            'KEOGRAM_LABEL'                  : indi_allsky_config.get('KEOGRAM_LABEL', True),
+            'STARTRAILS_MAX_ADU'             : indi_allsky_config.get('STARTRAILS_MAX_ADU', 50),
+            'STARTRAILS_MASK_THOLD'          : indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
+            'STARTRAILS_PIXEL_THOLD'         : indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
+            'IMAGE_FILE_TYPE'                : indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
+            'IMAGE_FILE_COMPRESSION__JPG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
+            'IMAGE_FILE_COMPRESSION__PNG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 9),
+            'IMAGE_FOLDER'                   : indi_allsky_config.get('IMAGE_FOLDER', '/var/www/html/allsky/images'),
+            'IMAGE_FLIP_V'                   : indi_allsky_config.get('IMAGE_FLIP_V', False),
+            'IMAGE_FLIP_H'                   : indi_allsky_config.get('IMAGE_FLIP_H', False),
+            'IMAGE_SCALE'                    : indi_allsky_config.get('IMAGE_SCALE', 100),
+            'IMAGE_SAVE_RAW'                 : indi_allsky_config.get('IMAGE_SAVE_RAW', False),
+            'IMAGE_GRAYSCALE'                : indi_allsky_config.get('IMAGE_GRAYSCALE', False),
+            'IMAGE_EXPIRE_DAYS'              : indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
+            'FFMPEG_FRAMERATE'               : indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
+            'FFMPEG_BITRATE'                 : indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
+            'TEXT_PROPERTIES__FONT_FACE'     : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
+            'TEXT_PROPERTIES__FONT_HEIGHT'   : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_HEIGHT', 30),
+            'TEXT_PROPERTIES__FONT_X'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15),
+            'TEXT_PROPERTIES__FONT_Y'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30),
+            'TEXT_PROPERTIES__FONT_SCALE'    : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
+            'TEXT_PROPERTIES__FONT_THICKNESS': indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
+            'TEXT_PROPERTIES__FONT_OUTLINE'  : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
+            'ORB_PROPERTIES__RADIUS'         : indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
+            'FILETRANSFER__CLASSNAME'        : indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
+            'FILETRANSFER__HOST'             : indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
+            'FILETRANSFER__PORT'             : indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
+            'FILETRANSFER__USERNAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('USERNAME', ''),
+            'FILETRANSFER__PASSWORD'         : indi_allsky_config.get('FILETRANSFER', {}).get('PASSWORD', ''),
+            'FILETRANSFER__TIMEOUT'          : indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 5.0),
+            'FILETRANSFER__REMOTE_IMAGE_NAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{0}'),
+            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/tmp'),
+            'FILETRANSFER__UPLOAD_IMAGE'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
+            'FILETRANSFER__UPLOAD_VIDEO'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
+            'FILETRANSFER__UPLOAD_KEOGRAM'   : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
+            'FILETRANSFER__UPLOAD_STARTRAIL' : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
         }
 
 
         # ADU_ROI
         try:
-            form_data['ADU_ROI_X1'] = int(indi_allsky_config.get('ADU_ROI', [])[0])
+            form_data['ADU_ROI_X1'] = indi_allsky_config.get('ADU_ROI', [])[0]
         except IndexError:
-            form_data['ADU_ROI_X1'] = 0
-        except ValueError:
             form_data['ADU_ROI_X1'] = 0
 
         try:
-            form_data['ADU_ROI_Y1'] = int(indi_allsky_config.get('ADU_ROI', [])[1])
+            form_data['ADU_ROI_Y1'] = indi_allsky_config.get('ADU_ROI', [])[1]
         except IndexError:
-            form_data['ADU_ROI_Y1'] = 0
-        except ValueError:
             form_data['ADU_ROI_Y1'] = 0
 
         try:
-            form_data['ADU_ROI_X2'] = int(indi_allsky_config.get('ADU_ROI', [])[2])
+            form_data['ADU_ROI_X2'] = indi_allsky_config.get('ADU_ROI', [])[2]
         except IndexError:
-            form_data['ADU_ROI_X2'] = 0
-        except ValueError:
             form_data['ADU_ROI_X2'] = 0
 
         try:
-            form_data['ADU_ROI_Y2'] = int(indi_allsky_config.get('ADU_ROI', [])[3])
+            form_data['ADU_ROI_Y2'] = indi_allsky_config.get('ADU_ROI', [])[3]
         except IndexError:
-            form_data['ADU_ROI_Y2'] = 0
-        except ValueError:
             form_data['ADU_ROI_Y2'] = 0
 
 
         # IMAGE_CROP_ROI
         try:
-            form_data['IMAGE_CROP_ROI_X1'] = int(indi_allsky_config.get('IMAGE_CROP_ROI', [])[0])
+            form_data['IMAGE_CROP_ROI_X1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[0]
         except IndexError:
-            form_data['IMAGE_CROP_ROI_X1'] = 0
-        except ValueError:
             form_data['IMAGE_CROP_ROI_X1'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_Y1'] = int(indi_allsky_config.get('IMAGE_CROP_ROI', [])[1])
+            form_data['IMAGE_CROP_ROI_Y1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[1]
         except IndexError:
-            form_data['IMAGE_CROP_ROI_Y1'] = 0
-        except ValueError:
             form_data['IMAGE_CROP_ROI_Y1'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_X2'] = int(indi_allsky_config.get('IMAGE_CROP_ROI', [])[2])
+            form_data['IMAGE_CROP_ROI_X2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[2]
         except IndexError:
-            form_data['IMAGE_CROP_ROI_X2'] = 0
-        except ValueError:
             form_data['IMAGE_CROP_ROI_X2'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_Y2'] = int(indi_allsky_config.get('IMAGE_CROP_ROI', [])[3])
+            form_data['IMAGE_CROP_ROI_Y2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[3]
         except IndexError:
-            form_data['IMAGE_CROP_ROI_Y2'] = 0
-        except ValueError:
             form_data['IMAGE_CROP_ROI_Y2'] = 0
 
 
