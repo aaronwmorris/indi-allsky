@@ -114,16 +114,11 @@ Star trail images stack the stars from each frame to show their progression acro
 
 ![](./content/startrails_example.jpg)
 
-## Web Interfaces
+## Web Interface
 
-Some very simple web pages are included to view images.  HTML5 canvas and javascript are utilized for some simple interactivity.
+The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
 
-| File                | Description |
-| ------------------- | ----------- |
-| latest.html         | The latest image is loaded every 15 seconds and displayed.  Setting configured in settings_latest.js |
-| loop.html           | A set of the latest images are loaded and displayed in a loop (like a GIF).  Settings configured in settings_loop.js |
-| loop_realtime.html  | A loop is slowly built dynamically with the latest images loaded at regular intervals.  Settings configured in settings_loop.js |
-| sqm.html            | Displays a calculated sky quality value based on the brightness of the sky in the center region of the frame |
+The web interface is still a work in progress.
 
 ## Database
 
@@ -155,6 +150,10 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
+| Web interface     | Flask         | https://flask.palletsprojects.com/ |
+|                   | WTForms       | https://wtforms.readthedocs.io/ |
+|                   | Gunicorn      | https://gunicorn.org/ |
+|                   | Apache        | https://httpd.apache.org/ |
 
 ## Architecture
 
