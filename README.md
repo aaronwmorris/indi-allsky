@@ -59,12 +59,14 @@ cd indi-allsky.git
 ./setup.sh
 ```
  * Note:  You may be prompted for a password for sudo
-1. Copy a configuration from the examples/ folder to config.json .  Edit the config.json file to customize your settings
 1. Start the software
 ```
 sudo systemctl start indiserver
 sudo systemctl start indi-allsky
 ```
+1. Login to the indi-allsky web application
+https://raspberrypi/
+ * Note: The web server is configured with a self-signed certificate.
 
 ### Manual operation
 1. Stop indi-allsky service
@@ -77,7 +79,7 @@ source virtualenv/indi-allsky/bin/activate
 ```
 1. Start indi-allsky
 ```
-./allsky.py -c config.json run
+./allsky.py run
 ```
 
 ### Logs
@@ -90,7 +92,7 @@ source virtualenv/indi-allsky/bin/activate
 1. Activate the indi-allsky python virtual environment (above)
 1. Start indi-allsky with darks option
 ```
-./allsky.py -c config.json darks
+./allsky.py darks
 ```
 
 * Darks will be generated in 5 second increments (offset +1) for the configured gain and binmode for night, moonmode, and day frames.
@@ -162,7 +164,7 @@ indi-allsky utilizes python's multiprocessing library to enable parallelizing ta
 
 ## Configuration
 
-All configuration is read from config.json.  You can find configuration examples in the examples/ folder.
+All configuration is read from /etc/indi-allsky/config.json .  You can find configuration examples in the examples/ folder.
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |

@@ -520,7 +520,15 @@ sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 755 "${ALLSKY_ETC}"
 
 if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
-    sudo cp config.json_template "${ALLSKY_ETC}/config.json"
+    if [[ -f "config.json" ]]; then
+        # copy current config to etc
+        cp config.json "${ALLSKY_ETC}/config.json"
+        sudo rm -f config.json
+        ln -s "${ALLSKY_ETC}/config.json" config.json
+    else
+        # create new config
+        cp config.json_template "${ALLSKY_ETC}/config.json"
+    fi
 fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
@@ -538,7 +546,7 @@ if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
      -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
      flask.json_template > $TMP4
 
-    sudo cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
+    cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
 fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
