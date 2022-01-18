@@ -419,45 +419,57 @@ class ConfigView(FormView):
 
 
         # ADU_ROI
+        ADU_ROI = indi_allsky_config.get('ADU_ROI', [])
+        if ADU_ROI is None:
+            ADU_ROI = []
+        elif isinstance(ADU_ROI, bool):
+            ADU_ROI = []
+
         try:
-            form_data['ADU_ROI_X1'] = indi_allsky_config.get('ADU_ROI', [])[0]
+            form_data['ADU_ROI_X1'] = ADU_ROI[0]
         except IndexError:
             form_data['ADU_ROI_X1'] = 0
 
         try:
-            form_data['ADU_ROI_Y1'] = indi_allsky_config.get('ADU_ROI', [])[1]
+            form_data['ADU_ROI_Y1'] = ADU_ROI[1]
         except IndexError:
             form_data['ADU_ROI_Y1'] = 0
 
         try:
-            form_data['ADU_ROI_X2'] = indi_allsky_config.get('ADU_ROI', [])[2]
+            form_data['ADU_ROI_X2'] = ADU_ROI[2]
         except IndexError:
             form_data['ADU_ROI_X2'] = 0
 
         try:
-            form_data['ADU_ROI_Y2'] = indi_allsky_config.get('ADU_ROI', [])[3]
+            form_data['ADU_ROI_Y2'] = ADU_ROI[3]
         except IndexError:
             form_data['ADU_ROI_Y2'] = 0
 
 
         # IMAGE_CROP_ROI
+        IMAGE_CROP_ROI = indi_allsky_config.get('IMAGE_CROP_ROI', [])
+        if IMAGE_CROP_ROI is None:
+            IMAGE_CROP_ROI = []
+        elif isinstance(IMAGE_CROP_ROI, bool):
+            IMAGE_CROP_ROI = []
+
         try:
-            form_data['IMAGE_CROP_ROI_X1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[0]
+            form_data['IMAGE_CROP_ROI_X1'] = IMAGE_CROP_ROI[0]
         except IndexError:
             form_data['IMAGE_CROP_ROI_X1'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_Y1'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[1]
+            form_data['IMAGE_CROP_ROI_Y1'] = IMAGE_CROP_ROI[1]
         except IndexError:
             form_data['IMAGE_CROP_ROI_Y1'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_X2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[2]
+            form_data['IMAGE_CROP_ROI_X2'] = IMAGE_CROP_ROI[2]
         except IndexError:
             form_data['IMAGE_CROP_ROI_X2'] = 0
 
         try:
-            form_data['IMAGE_CROP_ROI_Y2'] = indi_allsky_config.get('IMAGE_CROP_ROI', [])[3]
+            form_data['IMAGE_CROP_ROI_Y2'] = IMAGE_CROP_ROI[3]
         except IndexError:
             form_data['IMAGE_CROP_ROI_Y2'] = 0
 
