@@ -710,5 +710,5 @@ bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_vi
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
-bp.add_url_rule('/chart', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
+bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
