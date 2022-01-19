@@ -120,6 +120,8 @@ The indi-allsky web interface is built on the Flask MVC framework.  It is design
 
 The web interface is still a work in progress.
 
+The default credentials for accessing the web interface are user `admin` and password `secret`
+
 ## Database
 
 All media generated are logged in a local SQLite database stored in /var/lib/indi-allsky/indi-allsky.sqlite  This database is used as the source of images for timelapse and keogram generation, as well as, for displaying images via the web interfaces.
