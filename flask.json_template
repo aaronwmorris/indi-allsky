@@ -1,0 +1,12 @@
+{
+    "SQLALCHEMY_DATABASE_URI" : "sqlite:///%DB_FOLDER%/indi-allsky.sqlite",
+    "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
+    "SESSION_COOKIE_SECURE" : true,
+    "TEMPLATES_AUTO_RELOAD" : true,
+    "SECRET_KEY" : "%SECRET_KEY%",
+
+    "INDI_ALLSKY_CONFIG" : "%ALLSKY_ETC%/config.json",
+    "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
+    "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json",
+    "INDI_ALLSKY_PID" : "%DB_FOLDER%/indi-allsky.pid"
+}

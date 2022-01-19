@@ -4,10 +4,16 @@ import indi_allsky
 import logging
 import logging.handlers
 import argparse
-import multiprocessing
 
 
-logger = multiprocessing.get_logger()
+# setup flask context for db access
+app = indi_allsky.flask.create_app()
+app.app_context().push()
+
+
+logger = logging.getLogger('indi_allsky')
+# logger config in indi_allsky/flask/__init__.py
+
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
 LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
@@ -17,8 +23,6 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
-
-logger.setLevel(logging.INFO)
 
 
 
@@ -44,7 +48,7 @@ if __name__ == "__main__":
         '-c',
         help='config file',
         type=argparse.FileType('r'),
-        required=True,
+        default='/etc/indi-allsky/config.json',
     )
     argparser.add_argument(
         '--timespec',
@@ -80,6 +84,13 @@ if __name__ == "__main__":
         type=int,
         default=7624,
     )
+    argparser.add_argument(
+        '--pid',
+        '-P',
+        help='pid file',
+        type=str,
+        default='/var/lib/indi-allsky/indi-allsky.pid',
+    )
 
     args = argparser.parse_args()
 
@@ -106,6 +117,7 @@ if __name__ == "__main__":
     ia = indi_allsky.IndiAllSky(args.config)
     ia.indi_server = args.server
     ia.indi_port = args.port
+    ia.pidfile = args.pid
 
     action_func = getattr(ia, args.action)
     action_func(*args_list, **kwargs_dict)

@@ -100,7 +100,7 @@
         "CLASSNAME"              : "pycurl_sftp",
         "HOST"                   : "",
         "comment_PORT"           : "use null for protocol default",
-        "PORT"                   : null,
+        "PORT"                   : 0,
         "USERNAME"               : "",
         "PASSWORD"               : "",
         "TIMEOUT"                : 5.0,
@@ -109,7 +109,7 @@
         "REMOTE_VIDEO_FOLDER"    : "/tmp",
         "REMOTE_KEOGRAM_FOLDER"  : "/tmp",
         "REMOTE_STARTRAIL_FOLDER": "/tmp",
-        "UPLOAD_IMAGE"           : false,
+        "UPLOAD_IMAGE"           : 0,
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false

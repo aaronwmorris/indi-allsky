@@ -1,0 +1,10 @@
+[Unit]
+Description=indi-allsky gunicorn socket
+
+[Socket]
+ListenStream=/run/%GUNICORN_SERVICE_NAME%.sock
+SocketUser=%APACHE_USER%
+SocketMode=644
+
+[Install]
+WantedBy=sockets.target

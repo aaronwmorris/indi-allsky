@@ -6,9 +6,9 @@ from .exceptions import TransferFailure
 import paramiko
 import socket
 import time
-import multiprocessing
+import logging
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class paramiko_sftp(GenericFileTransfer):

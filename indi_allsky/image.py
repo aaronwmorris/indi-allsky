@@ -9,6 +9,7 @@ import tempfile
 import shutil
 import copy
 import math
+import logging
 #from pprint import pformat
 
 import ephem
@@ -16,22 +17,23 @@ import ephem
 from multiprocessing import Process
 #from threading import Thread
 import queue
-import multiprocessing
 
 from astropy.io import fits
 import cv2
 import numpy
 
 from .sqm import IndiAllskySqm
-from .db import IndiAllSkyDb
 from .stars import IndiAllSkyStars
+
+from .flask import db
+from .flask.miscDb import miscDb
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
 
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class ImageWorker(Process):
@@ -85,7 +87,7 @@ class ImageWorker(Process):
 
         self._stars = IndiAllSkyStars(self.config)
 
-        self._db = IndiAllSkyDb(self.config)
+        self._miscDb = miscDb(self.config)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -260,7 +262,7 @@ class ImageWorker(Process):
             if self.save_images:
                 latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id, img_subdirs)
 
-                image_entry = self._db.addImage(
+                image_entry = self._miscDb.addImage(
                     new_filename,
                     camera_id,
                     exposure,
@@ -297,7 +299,7 @@ class ImageWorker(Process):
                     'remote_file' : remote_file,
                 })
 
-                self._db.addUploadedFlag(image_entry)
+                self._miscDb.addUploadedFlag(image_entry)
 
 
     def detectBitDepth(self, data):
@@ -334,8 +336,7 @@ class ImageWorker(Process):
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
 
-        from .db import IndiAllSkyDbDarkFrameTable
-        dbsession = self._db.session
+        from .flask.models import IndiAllSkyDbDarkFrameTable
 
 
         if image_type == 'Light Frame':
@@ -371,7 +372,7 @@ class ImageWorker(Process):
 
         if image_type == 'Dark Frame':
             try:
-                dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+                dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
                     .filter(IndiAllSkyDbDarkFrameTable.filename == str(filename))\
                     .one()
 
@@ -379,8 +380,8 @@ class ImageWorker(Process):
                     logger.warning('Removing old dark frame: %s', filename)
                     filename.unlink()
 
-                dbsession.delete(dark_frame_entry)
-                dbsession.commit()
+                db.session.delete(dark_frame_entry)
+                db.session.commit()
             except NoResultFound:
                 pass
 
@@ -389,7 +390,7 @@ class ImageWorker(Process):
             filename.chmod(0o644)
 
 
-            self._db.addDarkFrame(
+            self._miscDb.addDarkFrame(
                 filename,
                 camera_id,
                 image_bitpix,
@@ -502,10 +503,14 @@ class ImageWorker(Process):
         }
 
 
-        with io.open('/tmp/indi_status.json', 'w') as f_indi_status:
+        indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
+
+        with io.open(str(indi_allsky_status_p), 'w') as f_indi_status:
             json.dump(status, f_indi_status, indent=4)
             f_indi_status.flush()
             f_indi_status.close()
+
+        indi_allsky_status_p.chmod(0o644)
 
 
     def getImageFolder(self, exp_date):
@@ -533,11 +538,9 @@ class ImageWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
-        from .db import IndiAllSkyDbDarkFrameTable
+        from .flask.models import IndiAllSkyDbDarkFrameTable
 
-        dbsession = self._db.session
-
-        dark_frame_entry = dbsession.query(IndiAllSkyDbDarkFrameTable)\
+        dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\

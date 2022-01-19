@@ -9,22 +9,23 @@ import subprocess
 import tempfile
 import fcntl
 import errno
+import logging
 
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 
-from .db import IndiAllSkyDb
-
 from .exceptions import InsufficentData
+
+from .flask import db
+from .flask.miscDb import miscDb
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
 import queue
 #from threading import Thread
-import multiprocessing
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class VideoWorker(Process):
@@ -42,7 +43,7 @@ class VideoWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
-        self._db = IndiAllSkyDb(self.config)
+        self._miscDb = miscDb(self.config)
 
         self.f_lock = None
 
@@ -99,11 +100,9 @@ class VideoWorker(Process):
 
 
     def generateVideo(self, timespec, img_folder, timeofday, camera_id):
-        from .db import IndiAllSkyDbCameraTable
-        from .db import IndiAllSkyDbImageTable
-        from .db import IndiAllSkyDbVideoTable
-
-        dbsession = self._db.session
+        from .flask.models import IndiAllSkyDbCameraTable
+        from .flask.models import IndiAllSkyDbImageTable
+        from .flask.models import IndiAllSkyDbVideoTable
 
 
         try:
@@ -128,13 +127,13 @@ class VideoWorker(Process):
 
         try:
             # delete old video entry if it exists
-            video_entry = dbsession.query(IndiAllSkyDbVideoTable)\
+            video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
                 .one()
 
             logger.warning('Removing orphaned video db entry')
-            dbsession.delete(video_entry)
-            dbsession.commit()
+            db.session.delete(video_entry)
+            db.session.commit()
         except NoResultFound:
             pass
 
@@ -144,7 +143,7 @@ class VideoWorker(Process):
 
 
         # find all files
-        timelapse_files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+        timelapse_files_entries = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
@@ -204,7 +203,7 @@ class VideoWorker(Process):
         seqfolder.cleanup()
 
 
-        video_entry = self._db.addVideo(
+        video_entry = self._miscDb.addVideo(
             video_file,
             camera_id,
             timeofday,
@@ -213,7 +212,7 @@ class VideoWorker(Process):
         ### Upload ###
         self.uploadVideo(video_file)
 
-        self._db.addUploadedFlag(video_entry)
+        self._miscDb.addUploadedFlag(video_entry)
 
 
 
@@ -234,12 +233,10 @@ class VideoWorker(Process):
 
 
     def generateKeogramStarTrails(self, timespec, img_folder, timeofday, camera_id):
-        from .db import IndiAllSkyDbCameraTable
-        from .db import IndiAllSkyDbImageTable
-        from .db import IndiAllSkyDbKeogramTable
-        from .db import IndiAllSkyDbStarTrailsTable
-
-        dbsession = self._db.session
+        from .flask.models import IndiAllSkyDbCameraTable
+        from .flask.models import IndiAllSkyDbImageTable
+        from .flask.models import IndiAllSkyDbKeogramTable
+        from .flask.models import IndiAllSkyDbStarTrailsTable
 
 
         try:
@@ -270,32 +267,32 @@ class VideoWorker(Process):
 
         try:
             # delete old keogram entry if it exists
-            keogram_entry = dbsession.query(IndiAllSkyDbKeogramTable)\
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
                 .one()
 
             logger.warning('Removing orphaned keogram db entry')
-            dbsession.delete(keogram_entry)
-            dbsession.commit()
+            db.session.delete(keogram_entry)
+            db.session.commit()
         except NoResultFound:
             pass
 
 
         try:
             # delete old star trail entry if it exists
-            startrail_entry = dbsession.query(IndiAllSkyDbStarTrailsTable)\
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
                 .one()
 
             logger.warning('Removing orphaned star trail db entry')
-            dbsession.delete(startrail_entry)
-            dbsession.commit()
+            db.session.delete(startrail_entry)
+            db.session.commit()
         except NoResultFound:
             pass
 
 
         # find all files
-        files_entries = dbsession.query(IndiAllSkyDbImageTable)\
+        files_entries = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
@@ -362,25 +359,25 @@ class VideoWorker(Process):
 
 
         if keogram_file.exists():
-            keogram_entry = self._db.addKeogram(
+            keogram_entry = self._miscDb.addKeogram(
                 keogram_file,
                 camera_id,
                 timeofday,
             )
 
             self.uploadKeogram(keogram_file)
-            self._db.addUploadedFlag(keogram_entry)
+            self._miscDb.addUploadedFlag(keogram_entry)
 
 
         if night and startrail_file.exists():
-            startrail_entry = self._db.addStarTrail(
+            startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera_id,
                 timeofday=timeofday,
             )
 
             self.uploadStarTrail(startrail_file)
-            self._db.addUploadedFlag(startrail_entry)
+            self._miscDb.addUploadedFlag(startrail_entry)
 
 
     def uploadKeogram(self, keogram_file):
@@ -415,14 +412,13 @@ class VideoWorker(Process):
 
 
     def expireData(self, img_folder):
-        from .db import IndiAllSkyDbImageTable
+        from .flask.models import IndiAllSkyDbImageTable
 
-        dbsession = self._db.session
 
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
 
-        old_images = dbsession.query(IndiAllSkyDbImageTable).filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
+        old_images = IndiAllSkyDbImageTable.query.filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
@@ -441,7 +437,7 @@ class VideoWorker(Process):
 
 
         old_images.delete()  # mass delete
-        dbsession.commit()
+        db.session.commit()
 
 
         # Remove empty folders

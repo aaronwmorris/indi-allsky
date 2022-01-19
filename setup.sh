@@ -12,6 +12,8 @@ export PATH
 INDI_DRIVER_PATH=/usr/bin
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
+GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 #### end config ####
@@ -38,6 +40,9 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
+# get primary group
+PGRP=$(id -ng)
+
 
 echo "###############################################"
 echo "### Welcome to the indi-allsky setup script ###"
@@ -63,6 +68,8 @@ echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
+echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
+echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo
@@ -93,6 +100,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -148,6 +157,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -195,6 +206,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -247,6 +260,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
     # need to find an indi repo
 
@@ -284,6 +299,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -328,6 +345,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
 
 
     # reconfigure system timezone
@@ -413,7 +432,8 @@ TMP1=$(mktemp)
 sed \
  -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
  -e "s|%INDISERVER_USER%|$USER|g" \
- -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
+ -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
+ ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
 sudo cp -f "$TMP1" /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
@@ -426,7 +446,9 @@ echo "**** Setting up indi-allsky service ****"
 TMP2=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
 sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
@@ -434,16 +456,46 @@ sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
+echo "**** Setting up gunicorn ****"
+TMP5=$(mktemp)
+sed \
+ -e "s|%APACHE_USER%|$APACHE_USER|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
+
+sudo cp -f "$TMP5" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+[[ -f "$TMP5" ]] && rm -f "$TMP5"
+
+TMP6=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
+
+sudo cp -f "$TMP6" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+[[ -f "$TMP6" ]] && rm -f "$TMP6"
+
+
 echo "**** Enabling services ****"
 sudo systemctl daemon-reload
-sudo systemctl enable $INDISEVER_SERVICE_NAME
-sudo systemctl enable $ALLSKY_SERVICE_NAME
+sudo systemctl enable ${INDISEVER_SERVICE_NAME}.service
+sudo systemctl enable ${ALLSKY_SERVICE_NAME}.service
+sudo systemctl enable ${GUNICORN_SERVICE_NAME}.socket
+sudo systemctl enable ${GUNICORN_SERVICE_NAME}.service
+sudo systemctl start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Setup rsyslog logging ****"
 [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir -m 755 /var/log/indi-allsky
 sudo touch /var/log/indi-allsky/indi-allsky.log
 sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
+sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
 sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
 sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/indi-allsky.conf
@@ -456,11 +508,69 @@ sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
+echo "**** Indi-allsky config ****"
+[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 755 "$ALLSKY_ETC"
+sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
+sudo chmod 755 "${ALLSKY_ETC}"
+
+if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
+    if [[ -f "config.json" ]]; then
+        # copy current config to etc
+        cp config.json "${ALLSKY_ETC}/config.json"
+        sudo rm -f config.json
+        ln -s "${ALLSKY_ETC}/config.json" config.json
+    else
+        # create new config
+        cp config.json_template "${ALLSKY_ETC}/config.json"
+    fi
+fi
+
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
+sudo chmod 640 "${ALLSKY_ETC}/config.json"
+
+
+echo "**** Flask config ****"
+TMP4=$(mktemp)
+if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
+    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
+    sed \
+     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+     -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
+     flask.json_template > $TMP4
+
+    cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
+fi
+
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
+sudo chmod 640 "${ALLSKY_ETC}/flask.json"
+
+[[ -f "$TMP4" ]] && rm -f "$TMP4"
+
+
+echo "**** Disabling competing web servers ****"
+sudo systemctl stop nginx || true
+sudo systemctl disable nnginx || true
+sudo systemctl stop lighttpd || true
+sudo systemctl disable lighttpd || true
+
 
 echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
+sed \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
-cat ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+
+if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
+    sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
+fi
+
+sudo chmod 644 "${ALLSKY_ETC}/apache.passwd"
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
+
 
 if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
@@ -468,7 +578,10 @@ if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
     sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
     sudo a2enmod rewrite
+    sudo a2enmod headers
     sudo a2enmod ssl
+    sudo a2enmod proxy
+    sudo a2enmod proxy_http
     sudo a2dissite 000-default
     sudo a2dissite default-ssl
     sudo a2ensite indi-allsky
@@ -489,7 +602,7 @@ fi
 
 echo "**** Setup image folder ****"
 [[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -m 755 "$HTDOCS_FOLDER"
-sudo chown -R "$USER" "$HTDOCS_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 
 [[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images"
 [[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images/darks"
@@ -506,7 +619,7 @@ echo "**** Setup DB ****"
 [[ ! -d "$DB_FOLDER" ]] && sudo mkdir -m 755 "$DB_FOLDER"
 [[ -d "$DB_FOLDER" ]] && sudo chmod ugo+rx "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir -m 755 "${DB_FOLDER}/backup"
-sudo chown -R "$USER" "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
 if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     sudo chmod ugo+r "$DB_FOLDER/indi-allsky.sqlite"
 
@@ -515,8 +628,25 @@ if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
     sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
     gzip $DB_BACKUP
 fi
-alembic revision --autogenerate
-alembic upgrade head
+
+
+# Check for old alembic folder
+if [[ -d "alembic" ]]; then
+    echo
+    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
+    echo "for database migrations"
+    echo
+    echo "This script will attempt to properly migrate the config"
+    echo
+    sleep 5
+
+    sqlite3 ${DB_FOLDER}/indi-allsky.sqlite "DELETE FROM alembic_version;"
+
+    rm -fR alembic
+fi
+
+flask db revision --autogenerate
+flask db upgrade head
 
 
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
@@ -559,6 +689,6 @@ echo
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
-echo "    https://$(hostname -s)/allsky/"
+echo "    https://$(hostname -s)/"
 echo
 echo "Enjoy!"

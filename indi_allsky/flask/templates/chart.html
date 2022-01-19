@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Charts{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+canvas {
+    width:100%;
+    height:100%;
+    max-height:300px;
+};
+</style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
+<script type="text/javascript">
+var sqm_chart;
+var stars_chart;
+var json_data = {
+    'chart_data' : {
+        'sqm'   : [],
+        'stars' : [],
+        'temp'  : [],
+        'exp'   : [],
+    },
+};
+
+function init() {
+    loadChartData();
+
+    ctx_sqm = document.getElementById('sqm-chart').getContext('2d');
+    sqm_chart = new Chart(ctx_sqm, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'jSQM',
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(0, 192, 0, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+
+    ctx_stars = document.getElementById('stars-chart').getContext('2d');
+    stars_chart = new Chart(ctx_stars, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Stars',
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(192, 192, 192, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    ctx_temp = document.getElementById('temp-chart').getContext('2d');
+    temp_chart = new Chart(ctx_temp, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Temperature',
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(0, 0, 192, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    ctx_exposure = document.getElementById('exposure-chart').getContext('2d');
+    exposure_chart = new Chart(ctx_exposure, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Exposure',
+                //pointRadius: 4,
+                pointBackgroundColor: "rgba(192, 0, 0, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    loop();
+}
+
+async function loop() {
+    while(json_data['chart_data']['sqm'].length == 0) {
+        await sleep(100);
+    }
+
+    drawChart();
+    setTimeout(loop, 15000);
+}
+
+
+function loadChartData() {
+    console.log('Loading chart data');
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", function() {});
+    setTimeout(loadChartData, 15000);
+}
+
+
+function drawChart() {
+    sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
+    stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
+    temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
+    exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
+    sqm_chart.update();
+    stars_chart.update();
+    temp_chart.update();
+    exposure_chart.update();
+}
+
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+
+function loadJS(url, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+    var xhr=new XMLHttpRequest();
+    xhr.onreadystatechange=function() {
+        if(xhr.readyState==4){
+            if(xhr.status==200 || xhr.status==0) {
+            try {
+                json_data = JSON.parse(xhr.responseText);
+            } catch(e) {
+                onError(e);
+                return;
+            }
+            onDone();
+            } else {
+                onError(xhr.status);
+            }
+        }
+    }.bind(this);
+    try {
+        xhr.open("GET", url, true);
+        xhr.send();
+    } catch(e) {
+        onError(e);
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row bg-dark">
+  <div class="col-sm-6">
+    <canvas id="sqm-chart"></canvas>
+  </div>
+  <div class="col-sm-6">
+    <canvas id="stars-chart"></canvas>
+  </div>
+
+<div class="row bg-dark">
+  <div class="col-sm-6">
+    <canvas id="temp-chart"></canvas>
+  </div>
+  <div class="col-sm-6">
+    <canvas id="exposure-chart"></canvas>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,1069 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Config{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="form_config" method="post">
+    {{ form_config.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Camera dependent</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MAX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Default: 15, Min 1, Max 60</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_DEF.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0 = auto</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0 = auto</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.EXPOSURE_PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Seconds between start of each frame</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.AUTO_WB.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.AUTO_WB(class='form-check-input') }}
+                <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Target Image Brightness</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU_DEV-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Allowed Brightness deviation</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            ADU Region of Interest
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_X1(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x1, y1</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label"></div>
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_X2(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DETECT_STARS(class='form-check-input') }}
+                <div id="DETECT_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -90, Max: 90</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -180, Max: 180</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_CAPTURE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_CAPTURE(class='form-check-input') }}
+                <div id="DAYTIME_CAPTURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable daytime image capture</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
+                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable daytime timelapse generation</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sun altitude for start of night</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon altitude to enable Moon Mode</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -90, Max: 90 - Image rotate for Keogram data</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Keogram horizontal scale factor</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Keogram vertical scale factor</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
+                <div id="KEOGRAM_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Add keogram time labels</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Max average image brightness to include in star trails</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Mask threshold for image brightness exclusion</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Pixel threshold for mask threshold</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File type for timelapse images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__JPG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Compression factor for JPEG images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__PNG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Compression factor for PNG images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">Directory to store timelapse images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_FLIP_V(class='form-check-input') }}
+                <div id="IMAGE_FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Flip timelapse images vertically</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_FLIP_H(class='form-check-input') }}
+                <div id="IMAGE_FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Flip timelapse images horizontally</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SCALE(class='form-control bg-secondary') }}
+            <div id="IMAGE_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Scale factor for timelapse images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            Image Crop
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_X1(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x1, y1</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_X2(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_RAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_SAVE_RAW(class='form-check-input') }}
+                <div id="IMAGE_SAVE_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable saving raw FITS images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_GRAYSCALE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
+                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Save images in grayscale</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Maximum age of timelapse image files before deletion</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg framerate for timelapse videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_BITRATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg bitrate</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_FACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Font face for image metadata</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font height for row spacing</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">X coordinate to start writing metadata</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Y coordinate to start writing metadata</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font color in R,G,B</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font size</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font thickness</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
+                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Add black outline to text</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__RADIUS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__RADIUS(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__RADIUS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Radius of Sun and Moon orbs on edge of image</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__SUN_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__SUN_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Color of Sun Orb</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MOON_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Color of Moon Orb</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__CLASSNAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">File transfer protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__HOST.label(class='col-form-label') }}
+        </div>
+            <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__HOST(class='form-control bg-secondary') }}
+        <div id="FILETRANSFER__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Hostname for file transfer</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PORT(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File transfer port (0 for protocol default)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__USERNAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Username for file transfer</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PASSWORD(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Password for file transfer</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__TIMEOUT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__TIMEOUT(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File transfer timeout</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Remote image name. "{0}" is replaced with the configured image type extension.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store timelapse videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store keograms</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store star trails</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Enable image uploads (0 = disable, 1 = every image, 2 = every 2nd image, etc)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable timelapse video uploads</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable keogram uploads</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable star trail uploads</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.INDI_CONFIG_DEFAULTS(class='form-control bg-secondary', rows='10') }}
+            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+    <button class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+const form_config = document.getElementById('form_config');
+const successMessage = document.getElementById('success-message');
+const failureMessage = document.getElementById('failure-message');
+const field_names = [
+    'csrf_token',
+    'CCD_CONFIG__NIGHT__GAIN',
+    'CCD_CONFIG__NIGHT__BINNING',
+    'CCD_CONFIG__MOONMODE__GAIN',
+    'CCD_CONFIG__MOONMODE__BINNING',
+    'CCD_CONFIG__DAY__GAIN',
+    'CCD_CONFIG__DAY__BINNING',
+    'CCD_EXPOSURE_MAX',
+    'CCD_EXPOSURE_DEF',
+    'CCD_EXPOSURE_MIN',
+    'EXPOSURE_PERIOD',
+    'TARGET_ADU',
+    'TARGET_ADU_DEV',
+    'ADU_ROI_X1',
+    'ADU_ROI_Y1',
+    'ADU_ROI_X2',
+    'ADU_ROI_Y2',
+    'LOCATION_LATITUDE',
+    'LOCATION_LONGITUDE',
+    'NIGHT_SUN_ALT_DEG',
+    'NIGHT_MOONMODE_ALT_DEG',
+    'NIGHT_MOONMODE_PHASE',
+    'KEOGRAM_ANGLE',
+    'KEOGRAM_H_SCALE',
+    'KEOGRAM_V_SCALE',
+    'STARTRAILS_MAX_ADU',
+    'STARTRAILS_MASK_THOLD',
+    'STARTRAILS_PIXEL_THOLD',
+    'IMAGE_FILE_TYPE',
+    'IMAGE_FILE_COMPRESSION__JPG',
+    'IMAGE_FILE_COMPRESSION__PNG',
+    'IMAGE_FOLDER',
+    'IMAGE_SCALE',
+    'IMAGE_CROP_ROI_X1',
+    'IMAGE_CROP_ROI_Y1',
+    'IMAGE_CROP_ROI_X2',
+    'IMAGE_CROP_ROI_Y2',
+    'IMAGE_EXPIRE_DAYS',
+    'FFMPEG_FRAMERATE',
+    'FFMPEG_BITRATE',
+    'TEXT_PROPERTIES__FONT_FACE',
+    'TEXT_PROPERTIES__FONT_HEIGHT',
+    'TEXT_PROPERTIES__FONT_X',
+    'TEXT_PROPERTIES__FONT_Y',
+    'TEXT_PROPERTIES__FONT_COLOR',
+    'TEXT_PROPERTIES__FONT_SCALE',
+    'TEXT_PROPERTIES__FONT_THICKNESS',
+    'ORB_PROPERTIES__RADIUS',
+    'ORB_PROPERTIES__SUN_COLOR',
+    'ORB_PROPERTIES__MOON_COLOR',
+    'FILETRANSFER__CLASSNAME',
+    'FILETRANSFER__HOST',
+    'FILETRANSFER__PORT',
+    'FILETRANSFER__USERNAME',
+    'FILETRANSFER__PASSWORD',
+    'FILETRANSFER__TIMEOUT',
+    'FILETRANSFER__REMOTE_IMAGE_NAME',
+    'FILETRANSFER__REMOTE_IMAGE_FOLDER',
+    'FILETRANSFER__REMOTE_VIDEO_FOLDER',
+    'FILETRANSFER__REMOTE_KEOGRAM_FOLDER',
+    'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
+    'FILETRANSFER__UPLOAD_IMAGE',
+    'INDI_CONFIG_DEFAULTS',
+];
+
+const checkbox_field_names = [
+    'AUTO_WB',
+    'DETECT_STARS',
+    'DAYTIME_CAPTURE',
+    'DAYTIME_TIMELAPSE',
+    'DAYTIME_CONTRAST_ENHANCE',
+    'NIGHT_CONTRAST_ENHANCE',
+    'KEOGRAM_LABEL',
+    'IMAGE_FLIP_V',
+    'IMAGE_FLIP_H',
+    'IMAGE_SAVE_RAW',
+    'IMAGE_GRAYSCALE',
+    'TEXT_PROPERTIES__FONT_OUTLINE',
+    'FILETRANSFER__UPLOAD_VIDEO',
+    'FILETRANSFER__UPLOAD_KEOGRAM',
+    'FILETRANSFER__UPLOAD_STARTRAIL',
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+/*
+var fields = {
+    form_global : {
+        input: failureMessage,
+        error: failureMessage
+    },
+    csrf_token: {
+        input: document.getElementById('csrf_token'),
+        error: document.getElementById('csrf_token-error')
+    },
+    CCD_EXPOSURE_MAX : {
+        input: document.getElementById('CCD_EXPOSURE_MAX'),
+        error: document.getElementById('CCD_EXPOSURE_MAX-error')
+    },
+}
+*/
+
+
+form_config.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    field_names.forEach(item => {
+        json_data[item] = fields[item].input.value;
+    });
+
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        json_data[item] = fields[item].input.checked;
+    });
+
+    const response = await fetch("{{ url_for('indi_allsky.ajax_config_view') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify(json_data)
+    });
+    if (response.ok) {
+        const message = await response.json();
+        successMessage.innerHTML = message['success-message'];
+        //form_config.style.display = 'none';
+        successMessage.style.display = 'block';
+        setTimeout(function() {
+            successMessage.style.display = 'none';
+        }, 5000);
+    } else {
+        const errors = await response.json();
+        Object.keys(errors).forEach((key) => {
+            fields[key].input.classList.add('is-invalid');
+            fields[key].error.innerHTML = errors[key][0];
+            fields[key].error.style.display = 'block';
+        });
+    }
+});
+
+</script>
+
+{% endblock %}

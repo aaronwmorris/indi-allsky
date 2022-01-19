@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import io
 import json
@@ -9,25 +10,29 @@ from datetime import timedelta
 #from pprint import pformat
 import math
 import signal
+import logging
 
 import ephem
 
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
-import multiprocessing
 
 from .indi import IndiClient
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
-from .db import IndiAllSkyDb
 from .exceptions import TimeOutException
+
+from flask import current_app as app  # noqa
+from .flask import db
+from .flask.miscDb import miscDb
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
-logger = multiprocessing.get_logger()
+
+logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSky(object):
@@ -45,6 +50,8 @@ class IndiAllSky(object):
 
         self._indi_server = 'localhost'
         self._indi_port = 7624
+
+        self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
         self.image_q = Queue()
         self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
@@ -75,7 +82,7 @@ class IndiAllSky(object):
         self.upload_q = Queue()
         self.upload_worker_idx = 0
 
-        self._db = IndiAllSkyDb(self.config)
+        self._miscDb = miscDb(self.config)
 
 
         if self.config['IMAGE_FOLDER']:
@@ -110,6 +117,15 @@ class IndiAllSky(object):
         self._indi_port = int(new_port)
 
 
+    @property
+    def pidfile(self):
+        return self._pidfile
+
+    @pidfile.setter
+    def pidfile(self, new_pidfile):
+        self._pidfile = str(new_pidfile)
+
+
     def sighup_handler(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
@@ -137,7 +153,7 @@ class IndiAllSky(object):
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
 
-        db_camera = self._db.addCamera(self.config['CCD_NAME'])
+        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
 
         # get CCD information
@@ -203,6 +219,19 @@ class IndiAllSky(object):
 
     def sigalarm_handler(self, signum, frame):
         raise TimeOutException()
+
+
+    def write_pid(self):
+        pidfile_p = Path(self._pidfile)
+
+        try:
+            pidfile_p.unlink()
+        except FileNotFoundError:
+            pass
+
+        with io.open(str(pidfile_p), 'w') as pid_f:
+            pid_f.write('{0:d}'.format(os.getpid()))
+            pid_f.flush()
 
 
     def _parseConfig(self, json_config):
@@ -281,7 +310,7 @@ class IndiAllSky(object):
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
 
-        db_camera = self._db.addCamera(self.config['CCD_NAME'])
+        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
 
         # Disable debugging
@@ -459,6 +488,7 @@ class IndiAllSky(object):
 
 
     def run(self):
+        self.write_pid()
 
         self._initialize()
 
@@ -784,10 +814,9 @@ class IndiAllSky(object):
 
 
     def flushDarks(self):
-        from .db import IndiAllSkyDbDarkFrameTable
-        dbsession = self._db.session
+        from .flask.models import IndiAllSkyDbDarkFrameTable
 
-        dark_frames_all = dbsession.query(IndiAllSkyDbDarkFrameTable)
+        dark_frames_all = IndiAllSkyDbDarkFrameTable.query.all()
 
         logger.warning('Found %s dark frames to flush', dark_frames_all.count())
 
@@ -802,13 +831,13 @@ class IndiAllSky(object):
 
 
         dark_frames_all.delete()
-        dbsession.commit()
+        db.session.commit()
 
 
     def generateDayTimelapse(self, timespec='', camera_id=0):
         if camera_id == 0:
             try:
-                camera_id = self._db.getCurrentCameraId()
+                camera_id = self._miscDb.getCurrentCameraId()
             except NoResultFound:
                 logger.error('No camera found')
                 sys.exit(1)
@@ -841,7 +870,7 @@ class IndiAllSky(object):
     def generateNightTimelapse(self, timespec='', camera_id=0):
         if camera_id == 0:
             try:
-                camera_id = self._db.getCurrentCameraId()
+                camera_id = self._miscDb.getCurrentCameraId()
             except NoResultFound:
                 logger.error('No camera found')
                 sys.exit(1)
@@ -874,7 +903,7 @@ class IndiAllSky(object):
     def generateNightKeogram(self, timespec='', camera_id=0):
         if camera_id == 0:
             try:
-                camera_id = self._db.getCurrentCameraId()
+                camera_id = self._miscDb.getCurrentCameraId()
             except NoResultFound:
                 logger.error('No camera found')
                 sys.exit(1)
@@ -907,7 +936,7 @@ class IndiAllSky(object):
     def generateDayKeogram(self, timespec='', camera_id=0):
         if camera_id == 0:
             try:
-                camera_id = self._db.getCurrentCameraId()
+                camera_id = self._miscDb.getCurrentCameraId()
             except NoResultFound:
                 logger.error('No camera found')
                 sys.exit(1)
@@ -965,16 +994,14 @@ class IndiAllSky(object):
 
 
     def dbImportImages(self):
-        from .db import IndiAllSkyDbImageTable
-        from .db import IndiAllSkyDbDarkFrameTable
-        from .db import IndiAllSkyDbVideoTable
-        from .db import IndiAllSkyDbKeogramTable
-        from .db import IndiAllSkyDbStarTrailsTable
-
-        dbsession = self._db.session
+        from .flask.models import IndiAllSkyDbImageTable
+        from .flask.models import IndiAllSkyDbDarkFrameTable
+        from .flask.models import IndiAllSkyDbVideoTable
+        from .flask.models import IndiAllSkyDbKeogramTable
+        from .flask.models import IndiAllSkyDbStarTrailsTable
 
         try:
-            camera_id = self._db.getCurrentCameraId()
+            camera_id = self._miscDb.getCurrentCameraId()
         except NoResultFound:
             logger.error('No camera found')
             sys.exit(1)
@@ -1021,13 +1048,13 @@ class IndiAllSky(object):
             }
 
             try:
-                dbsession.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
-                dbsession.commit()
+                db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
+                db.session.commit()
 
                 logger.info(' Dark frame inserted')
             except IntegrityError as e:
                 logger.warning('Integrity error: %s', str(e))
-                dbsession.rollback()
+                db.session.rollback()
                 continue
 
 
@@ -1069,13 +1096,13 @@ class IndiAllSky(object):
             }
 
             try:
-                dbsession.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
-                dbsession.commit()
+                db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
+                db.session.commit()
 
                 logger.info(' Timelapse inserted')
             except IntegrityError as e:
                 logger.warning('Integrity error: %s', str(e))
-                dbsession.rollback()
+                db.session.rollback()
                 continue
 
 
@@ -1121,13 +1148,13 @@ class IndiAllSky(object):
             }
 
             try:
-                dbsession.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
-                dbsession.commit()
+                db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
+                db.session.commit()
 
                 logger.info(' Keogram inserted')
             except IntegrityError as e:
                 logger.warning('Integrity error: %s', str(e))
-                dbsession.rollback()
+                db.session.rollback()
                 continue
 
 
@@ -1167,13 +1194,13 @@ class IndiAllSky(object):
             }
 
             try:
-                dbsession.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
-                dbsession.commit()
+                db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
+                db.session.commit()
 
                 logger.info(' Star trail inserted')
             except IntegrityError as e:
                 logger.warning('Integrity error: %s', str(e))
-                dbsession.rollback()
+                db.session.rollback()
                 continue
 
 
@@ -1225,13 +1252,13 @@ class IndiAllSky(object):
             }
 
             try:
-                dbsession.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
-                dbsession.commit()
+                db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
+                db.session.commit()
 
                 logger.info(' Image inserted')
             except IntegrityError as e:
                 logger.warning('Integrity error: %s', str(e))
-                dbsession.rollback()
+                db.session.rollback()
                 continue
 
 

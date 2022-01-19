@@ -2,12 +2,11 @@ import time
 from multiprocessing import Process
 #from threading import Thread
 import queue
-
-import multiprocessing
+import logging
 
 from . import filetransfer
 
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class FileUploader(Process):

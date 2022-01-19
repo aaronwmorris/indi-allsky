@@ -3,12 +3,11 @@ import numpy
 import math
 import time
 from datetime import datetime
+import logging
 from pprint import pformat
 
 
-import multiprocessing
-
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class KeogramGenerator(object):
