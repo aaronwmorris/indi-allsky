@@ -308,6 +308,8 @@ class JsonChartView(JsonView):
             createDate_local,
             IndiAllSkyDbImageTable.sqm,
             IndiAllSkyDbImageTable.stars,
+            IndiAllSkyDbImageTable.temp,
+            IndiAllSkyDbImageTable.exposure,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
@@ -320,6 +322,8 @@ class JsonChartView(JsonView):
         chart_data = {
             'sqm'   : [],
             'stars' : [],
+            'temp'  : [],
+            'exp'   : [],
         }
         for i in chart_query:
             sqm_data = {
@@ -333,6 +337,18 @@ class JsonChartView(JsonView):
                 'y' : i.stars,
             }
             chart_data['stars'].append(star_data)
+
+            temp_data = {
+                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'y' : i.temp,
+            }
+            chart_data['temp'].append(temp_data)
+
+            exp_data = {
+                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'y' : i.exposure,
+            }
+            chart_data['exp'].append(exp_data)
 
 
         return chart_data
