@@ -725,10 +725,50 @@ class AjaxImageViewerView(View):
     def dispatch_request(self):
         form_viewer = IndiAllskyImageViewer(data=request.json)
 
-        if not form_viewer.validate():
-            form_errors = form_viewer.errors  # this must be a property
-            form_errors['form_global'] = ['Please fix the errors above']
-            return jsonify(form_errors), 400
+
+        form_year = request.json.get('YEAR_SELECT')
+        form_month = request.json.get('MONTH_SELECT')
+        form_day = request.json.get('DAY_SELECT')
+        form_hour = request.json.get('HOUR_SELECT')
+
+        json_data = {}
+
+        if form_hour:
+            #date_datetime = datetime.strptime('{0} {1} {2} {3}', '%Y %m %d %H')
+            pass
+
+
+        elif form_day:
+            form_datetime = datetime.strptime('{0} {1} {2}', '%Y %m %d')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+
+
+        elif form_month:
+            form_datetime = datetime.strptime('{0} {1}', '%Y %m')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}', '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+
+
+        return jsonify(json_data)
 
 
 
