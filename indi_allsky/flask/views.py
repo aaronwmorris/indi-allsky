@@ -25,6 +25,7 @@ from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
+from .forms import IndiAllskyImageViewerPreload
 
 
 bp = Blueprint(
@@ -713,7 +714,7 @@ class ImageViewerView(FormView):
             'HOUR_SELECT'  : None,
         }
 
-        context['form_viewer'] = IndiAllskyImageViewer(data=form_data)
+        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
 
         return context
 

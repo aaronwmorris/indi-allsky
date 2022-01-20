@@ -576,26 +576,6 @@ class IndiAllskyImageViewer(FlaskForm):
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
 
 
-    def __init__(self, *args, **kwargs):
-        super(IndiAllskyImageViewer, self).__init__(*args, **kwargs)
-
-        now = datetime.now()
-        year = now.strftime('%Y')
-        month = now.strftime('%m')
-        day = now.strftime('%d')
-
-
-        dates_start = time.time()
-
-        self.YEAR_SELECT.choices = self.getYears()
-        self.MONTH_SELECT.choices = self.getMonths(year)
-        self.DAY_SELECT.choices = self.getDays(year, month)
-        self.HOUR_SELECT.choices = self.getHours(year, month, day)
-
-        dates_elapsed_s = time.time() - dates_start
-        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
-
-
     def getYears(self):
         createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
 
@@ -689,6 +669,27 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
         return hour_choices
+
+
+class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
+
+        now = datetime.now()
+        year = now.strftime('%Y')
+        month = now.strftime('%m')
+        day = now.strftime('%d')
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = self.getMonths(year)
+        self.DAY_SELECT.choices = self.getDays(year, month)
+        self.HOUR_SELECT.choices = self.getHours(year, month, day)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
 
