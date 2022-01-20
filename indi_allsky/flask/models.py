@@ -8,8 +8,10 @@ class IndiAllSkyDbCameraTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())
-    connectDate = db.Column(db.DateTime(timezone=True), nullable=True)
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
+    #connectDate = db.Column(db.DateTime(timezone=True), nullable=True)
+    connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
@@ -22,7 +24,8 @@ class IndiAllSkyDbImageTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -50,7 +53,8 @@ class IndiAllSkyDbDarkFrameTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
     gain = db.Column(db.Integer, nullable=False, index=True)
@@ -68,7 +72,8 @@ class IndiAllSkyDbVideoTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -84,7 +89,8 @@ class IndiAllSkyDbKeogramTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -100,7 +106,8 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
