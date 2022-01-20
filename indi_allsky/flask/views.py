@@ -24,6 +24,8 @@ from sqlalchemy import func
 from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
+from .forms import IndiAllskyImageViewer
+
 
 bp = Blueprint(
     'indi_allsky',
@@ -700,11 +702,43 @@ class AjaxConfigView(View):
         return jsonify(message)
 
 
+class ImageViewerView(FormView):
+    def get_context(self):
+        context = super(ImageViewerView, self).get_context()
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+            'DAY_SELECT'   : None,
+            'HOUR_SELECT'  : None,
+        }
+
+        context['form_viewer'] = IndiAllskyImageViewer(data=form_data)
+
+        return context
+
+
+
+class AjaxImageViewerView(View):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_viewer = IndiAllskyImageViewer(data=request.json)
+
+        if not form_viewer.validate():
+            form_errors = form_viewer.errors  # this must be a property
+            form_errors['form_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
+bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('image_viewer_view', template_name='imageviewer.html'))
+bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
