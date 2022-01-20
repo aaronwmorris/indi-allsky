@@ -1015,13 +1015,13 @@ class IndiAllSky(object):
         #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1.fit
         re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
 
-
+        darkframe_entries = list()
         for f in file_list_darkframes:
-            logger.info('Raw frame: %s', f)
+            #logger.info('Raw frame: %s', f)
 
             m = re.search(re_darkframe, str(f))
             if not m:
-                logger.error(' Regex did not match file')
+                logger.error('Regex did not match file: %s', f)
                 continue
 
 
@@ -1047,15 +1047,17 @@ class IndiAllSky(object):
                 'camera_id'  : ccd_id,
             }
 
-            try:
-                db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
-                db.session.commit()
+            darkframe_entries.append(darkframe_dict)
 
-                logger.info(' Dark frame inserted')
-            except IntegrityError as e:
-                logger.warning('Integrity error: %s', str(e))
-                db.session.rollback()
-                continue
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
+            db.session.commit()
+
+            logger.warning('*** Dark frames inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
 
 
         ### Timelapse
@@ -1065,12 +1067,14 @@ class IndiAllSky(object):
 
         #/var/www/html/allsky/images/20210915/allsky-timelapse_ccd1_20210915_night.mp4
         re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+
+        video_entries = list()
         for f in file_list_videos:
-            logger.info('Timelapse: %s', f)
+            #logger.info('Timelapse: %s', f)
 
             m = re.search(re_video, str(f))
             if not m:
-                logger.error(' Regex did not match file')
+                logger.error('Regex did not match file: %s', f)
                 continue
 
             #logger.info('dayDate string: %s', m.group('dayDate_str'))
@@ -1095,15 +1099,17 @@ class IndiAllSky(object):
                 'camera_id'  : camera_id,
             }
 
-            try:
-                db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
-                db.session.commit()
+            video_entries.append(video_dict)
 
-                logger.info(' Timelapse inserted')
-            except IntegrityError as e:
-                logger.warning('Integrity error: %s', str(e))
-                db.session.rollback()
-                continue
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
+            db.session.commit()
+
+            logger.warning('*** Timelapse videos inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
 
 
 
@@ -1117,12 +1123,14 @@ class IndiAllSky(object):
 
         #/var/www/html/allsky/images/20210915/allsky-keogram_ccd1_20210915_night.jpg
         re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+
+        keogram_entries = list()
         for f in file_list_keograms:
-            logger.info('Keogram: %s', f)
+            #logger.info('Keogram: %s', f)
 
             m = re.search(re_keogram, str(f))
             if not m:
-                logger.error(' Regex did not match file')
+                logger.error('Regex did not match file: %s', f)
                 continue
 
             #logger.info('dayDate string: %s', m.group('dayDate_str'))
@@ -1147,15 +1155,17 @@ class IndiAllSky(object):
                 'camera_id'  : camera_id,
             }
 
-            try:
-                db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
-                db.session.commit()
+            keogram_entries.append(keogram_dict)
 
-                logger.info(' Keogram inserted')
-            except IntegrityError as e:
-                logger.warning('Integrity error: %s', str(e))
-                db.session.rollback()
-                continue
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
+            db.session.commit()
+
+            logger.warning('*** Keograms inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
 
 
         ### Star trails
@@ -1163,12 +1173,14 @@ class IndiAllSky(object):
 
         #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
         re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+
+        startrail_entries = list()
         for f in file_list_startrail:
-            logger.info('Star trail: %s', f)
+            #logger.info('Star trail: %s', f)
 
             m = re.search(re_startrail, str(f))
             if not m:
-                logger.error(' Regex did not match file')
+                logger.error('Regex did not match file: %s', f)
                 continue
 
             #logger.info('dayDate string: %s', m.group('dayDate_str'))
@@ -1193,15 +1205,17 @@ class IndiAllSky(object):
                 'camera_id'  : camera_id,
             }
 
-            try:
-                db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
-                db.session.commit()
+            startrail_entries.append(startrail_dict)
 
-                logger.info(' Star trail inserted')
-            except IntegrityError as e:
-                logger.warning('Integrity error: %s', str(e))
-                db.session.rollback()
-                continue
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
+            db.session.commit()
+
+            logger.warning('*** Star trails inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
 
 
         ### Images
@@ -1211,12 +1225,14 @@ class IndiAllSky(object):
 
         #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
         re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
+
+        image_entries = list()
         for f in file_list_images_nok_nost:
-            logger.info('Image: %s', f)
+            #logger.info('Image: %s', f)
 
             m = re.search(re_image, str(f))
             if not m:
-                logger.error(' Regex did not match file')
+                logger.error('Regex did not match file: %s', f)
                 continue
 
             #logger.info('dayDate string: %s', m.group('dayDate_str'))
@@ -1231,7 +1247,8 @@ class IndiAllSky(object):
             else:
                 night = False
 
-            d_createDate = datetime.strptime(m.group('createDate_str'), '%Y%m%d_%H%M%S')
+            #d_createDate = datetime.strptime(m.group('createDate_str'), '%Y%m%d_%H%M%S')
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
             #logger.info('createDate: %s', str(d_createDate))
 
 
@@ -1251,15 +1268,17 @@ class IndiAllSky(object):
                 'uploaded'   : False,
             }
 
-            try:
-                db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
-                db.session.commit()
 
-                logger.info(' Image inserted')
-            except IntegrityError as e:
-                logger.warning('Integrity error: %s', str(e))
-                db.session.rollback()
-                continue
+            image_entries.append(image_dict)
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
+            db.session.commit()
+
+            logger.warning('*** Images inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
