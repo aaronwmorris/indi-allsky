@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<form id="form_viewer" method="post">
+<form id="form_viewer">
     {{ form_viewer.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
@@ -46,7 +46,7 @@
         </div>
 
         <div class="col-sm-1">
-            <button class="btn btn-primary">Submit</button>
+            <button class="btn btn-primary" id="form_viewer_submit">Submit</button>
         </div>
     </div>
 
@@ -92,8 +92,16 @@ fields['form_global'] = {
     'error' : failureMessage,
 };
 
-form_viewer.addEventListener('submit', async (e) => {
-    e.preventDefault();
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+$("#form_viewer").on("submit", function() {
+    //e.preventDefault();
 
     // hide all errors
     successMessage.style.display = 'none';
@@ -113,30 +121,29 @@ form_viewer.addEventListener('submit', async (e) => {
         json_data[item] = fields[item].input.checked;
     });
 
-    const response = await fetch("{{ url_for('indi_allsky.ajax_imageviewer_view') }}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}',
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            successMessage.innerHTML = data['success-message'];
+            //form_viewer.style.display = 'none';
+            successMessage.style.display = 'block';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 5000);
         },
-        body: JSON.stringify(json_data)
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
     });
-    if (response.ok) {
-        const message = await response.json();
-        successMessage.innerHTML = message['success-message'];
-        //form_viewer.style.display = 'none';
-        successMessage.style.display = 'block';
-        setTimeout(function() {
-            successMessage.style.display = 'none';
-        }, 5000);
-    } else {
-        const errors = await response.json();
-        Object.keys(errors).forEach((key) => {
-            fields[key].input.classList.add('is-invalid');
-            fields[key].error.innerHTML = errors[key][0];
-            fields[key].error.style.display = 'block';
-        });
-    }
+
+    return false;
 });
 
 </script>
