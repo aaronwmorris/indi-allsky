@@ -21,7 +21,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 
 from sqlalchemy import func
-from sqlalchemy.types import DateTime
+#from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
@@ -125,11 +125,11 @@ class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
 
-        connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
+        #connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
         context['camera_list'] = db.session.query(
             IndiAllSkyDbCameraTable.id,
             IndiAllSkyDbCameraTable.name,
-            connectDate_local,
+            IndiAllSkyDbCameraTable.connectDate,
         )\
             .all()
 
@@ -140,11 +140,11 @@ class DarkFramesView(TemplateView):
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
 
-        createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         darkframe_list = db.session.query(
             IndiAllSkyDbDarkFrameTable.id,
             IndiAllSkyDbCameraTable.name.label('camera_name'),
-            createDate_local,
+            IndiAllSkyDbCameraTable.createDate,
             IndiAllSkyDbDarkFrameTable.bitdepth,
             IndiAllSkyDbDarkFrameTable.exposure,
             IndiAllSkyDbDarkFrameTable.gain,
@@ -203,11 +203,11 @@ class JsonImageLoopView(JsonView):
     def getLatestImages(self):
         now_minus_hours = datetime.now() - timedelta(hours=self.hours)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_hours)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_hours)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
 
@@ -230,7 +230,7 @@ class JsonImageLoopView(JsonView):
     def getSqmData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -239,7 +239,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
 
@@ -255,7 +255,7 @@ class JsonImageLoopView(JsonView):
     def getStarsData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
@@ -264,7 +264,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
 
@@ -306,9 +306,9 @@ class JsonChartView(JsonView):
     def getChartData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         chart_query = db.session.query(
-            createDate_local,
+            IndiAllSkyDbImageTable.createDate,
             IndiAllSkyDbImageTable.sqm,
             IndiAllSkyDbImageTable.stars,
             IndiAllSkyDbImageTable.temp,
@@ -316,7 +316,7 @@ class JsonChartView(JsonView):
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
@@ -330,25 +330,25 @@ class JsonChartView(JsonView):
         }
         for i in chart_query:
             sqm_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.sqm,
             }
             chart_data['sqm'].append(sqm_data)
 
             star_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.stars,
             }
             chart_data['stars'].append(star_data)
 
             temp_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.temp,
             }
             chart_data['temp'].append(temp_data)
 
             exp_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.exposure,
             }
             chart_data['exp'].append(exp_data)
