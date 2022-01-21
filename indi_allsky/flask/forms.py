@@ -19,12 +19,14 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 #from sqlalchemy import func
 #from sqlalchemy.types import DateTime
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app  # noqa
 
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
 
 from . import db
 
@@ -801,11 +803,41 @@ class IndiAllskyVideoViewer(FlaskForm):
             rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
 
             entry = {
-                'url'     : str(rel_filename_p),
-                'dayDate' : v.dayDate.strftime('%B %d'),
-                'night'   : v.night,
+                'url'        : str(rel_filename_p),
+                'dayDate'    : v.dayDate.strftime('%B %d'),
+                'night'      : v.night,
             }
             videos_data.append(entry)
+
+        # cannot query the DB from inside the DB query
+        for entry in videos_data:
+            try:
+                keogram_entry = db.session.query(
+                    IndiAllSkyDbKeogramTable.filename,
+                )\
+                    .filter(IndiAllSkyDbKeogramTable.dayDate == v.dayDate)\
+                    .filter(IndiAllSkyDbKeogramTable.night == v.night)\
+                    .one()
+
+                keogram_url = str(Path(keogram_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
+            except NoResultFound:
+                keogram_url = None
+
+
+            try:
+                startrail_entry = db.session.query(
+                    IndiAllSkyDbStarTrailsTable.filename,
+                )\
+                    .filter(IndiAllSkyDbStarTrailsTable.dayDate == v.dayDate)\
+                    .filter(IndiAllSkyDbStarTrailsTable.night == v.night)\
+                    .one()
+
+                startrail_url = Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+            except NoResultFound:
+                startrail_url = None
+
+            entry['keogram']    = keogram_url
+            entry['startrail']  = startrail_url
 
 
         return videos_data
