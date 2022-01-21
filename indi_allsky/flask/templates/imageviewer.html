@@ -32,19 +32,6 @@ function init() {
         context.drawImage(this, 0, 0, this.width, this.height,
                                 centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
-        if(drawDate) {
-            var now = new Date();
-            var text = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-            var maxWidth = 100;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(text, x, y, maxWidth);
-            context.fillStyle = 'white';
-            context.fillText(text, x, y, maxWidth);
-        }
     };
 
 }

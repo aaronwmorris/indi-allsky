@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 import json
 import time
-from datetime import datetime
+#from datetime import datetime
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -19,6 +19,7 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 #from sqlalchemy import func
 #from sqlalchemy.types import DateTime
+#from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app  # noqa
 
@@ -706,11 +707,16 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
-        now = datetime.now()
-        year = now.strftime('%Y')
-        month = now.strftime('%m')
-        day = now.strftime('%d')
-        hour = now.strftime('%H')
+        last_image = db.session.query(
+            IndiAllSkyDbImageTable.createDate,
+        )\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+        year = last_image.createDate.strftime('%Y')
+        month = last_image.createDate.strftime('%m')
+        day = last_image.createDate.strftime('%d')
+        hour = last_image.createDate.strftime('%H')
 
 
         dates_start = time.time()

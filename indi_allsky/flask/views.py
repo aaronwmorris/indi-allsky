@@ -23,6 +23,7 @@ from .models import IndiAllSkyDbDarkFrameTable
 from sqlalchemy import func
 #from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
+#from sqlalchemy.orm.exc import NoResultFound
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
