@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 import json
 import time
-#from datetime import datetime
+from datetime import datetime
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -612,7 +612,9 @@ class IndiAllskyImageViewer(FlaskForm):
 
         month_choices = []
         for m in months_query:
-            entry = (m.createDate_month, str(m.createDate_month))
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
             month_choices.append(entry)
 
 
@@ -694,7 +696,7 @@ class IndiAllskyImageViewer(FlaskForm):
             filename_p = Path(i.filename)
             rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
 
-            entry = (str(rel_filename_p), str(i.createDate.strftime('%M:%S')))
+            entry = (str(rel_filename_p), str(i.createDate.strftime('%H:%M:%S')))
             images_choices.append(entry)
 
 
