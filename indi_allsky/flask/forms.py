@@ -1,6 +1,9 @@
 from pathlib import Path
 import re
 import json
+import time
+from datetime import datetime
+
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
@@ -11,6 +14,18 @@ from wtforms import PasswordField
 from wtforms import TextAreaField
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
+
+from sqlalchemy import extract
+#from sqlalchemy import asc
+#from sqlalchemy import func
+#from sqlalchemy.types import DateTime
+#from sqlalchemy.orm.exc import NoResultFound
+
+from flask import current_app as app  # noqa
+
+from .models import IndiAllSkyDbImageTable
+
+from . import db
 
 
 def ccd_GAIN_validator(form, field):
@@ -553,4 +568,169 @@ class IndiAllskyConfigForm(FlaskForm):
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
+
+
+class IndiAllskyImageViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+    DAY_SELECT           = SelectField('Day', choices=[], validators=[])
+    HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
+    IMG_SELECT           = SelectField('Image', choices=[], validators=[])
+
+
+    def getYears(self):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+
+        years_query = db.session.query(
+            createDate_year,
+        )\
+            .distinct()\
+            .order_by(createDate_year.desc())
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.createDate_year, str(y.createDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+
+        months_query = db.session.query(
+            createDate_year,
+            createDate_month,
+        )\
+            .filter(createDate_year == year)\
+            .distinct()\
+            .order_by(createDate_month.desc())
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+    def getDays(self, year, month):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+
+        days_query = db.session.query(
+            createDate_year,
+            createDate_month,
+            createDate_day,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .distinct()\
+            .order_by(createDate_day.desc())
+
+        day_choices = []
+        for d in days_query:
+            entry = (d.createDate_day, str(d.createDate_day))
+            day_choices.append(entry)
+
+
+        return day_choices
+
+
+    def getHours(self, year, month, day):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        hours_query = db.session.query(
+            createDate_year,
+            createDate_month,
+            createDate_day,
+            createDate_hour,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .filter(createDate_day == day)\
+            .distinct()\
+            .order_by(createDate_hour.desc())
+
+        hour_choices = []
+        for h in hours_query:
+            entry = (h.createDate_hour, str(h.createDate_hour))
+            hour_choices.append(entry)
+
+
+        return hour_choices
+
+
+    def getImages(self, year, month, day, hour):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        images_query = db.session.query(
+            IndiAllSkyDbImageTable.filename,
+            IndiAllSkyDbImageTable.createDate,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .filter(createDate_day == day)\
+            .filter(createDate_hour == hour)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+        images_choices = []
+        for i in images_query:
+            filename_p = Path(i.filename)
+            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            entry = (str(rel_filename_p), str(i.createDate.strftime('%H:%M:%S')))
+            images_choices.append(entry)
+
+
+        return images_choices
+
+
+
+
+class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
+
+        last_image = db.session.query(
+            IndiAllSkyDbImageTable.createDate,
+        )\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+        year = last_image.createDate.strftime('%Y')
+        month = last_image.createDate.strftime('%m')
+        day = last_image.createDate.strftime('%d')
+        hour = last_image.createDate.strftime('%H')
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = self.getMonths(year)
+        self.DAY_SELECT.choices = self.getDays(year, month)
+        self.HOUR_SELECT.choices = self.getHours(year, month, day)
+        self.IMG_SELECT.choices = self.getImages(year, month, day, hour)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
 

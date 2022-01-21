@@ -51,6 +51,10 @@
                             <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Charts</span> </a>
                     </li>
                     <li>
+                        <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Images</span> </a>
+                    </li>
+                    <li>
                         <a href="{{ url_for('indi_allsky.config_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/toggles.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
                     </li>

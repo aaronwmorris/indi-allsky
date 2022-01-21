@@ -265,6 +265,7 @@ class ImageWorker(Process):
                 image_entry = self._miscDb.addImage(
                     new_filename,
                     camera_id,
+                    exp_date,
                     exposure,
                     self.gain_v.value,
                     self.bin_v.value,

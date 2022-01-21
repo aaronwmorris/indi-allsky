@@ -21,9 +21,14 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 
 from sqlalchemy import func
-from sqlalchemy.types import DateTime
+#from sqlalchemy import extract
+#from sqlalchemy.types import DateTime
+#from sqlalchemy.orm.exc import NoResultFound
 
 from .forms import IndiAllskyConfigForm
+from .forms import IndiAllskyImageViewer
+from .forms import IndiAllskyImageViewerPreload
+
 
 bp = Blueprint(
     'indi_allsky',
@@ -42,27 +47,7 @@ bp = Blueprint(
 #    return render_template('index.html')
 
 
-class TemplateView(View):
-    def __init__(self, template_name):
-        self.template_name = template_name
-
-
-    def render_template(self, context):
-        return render_template(self.template_name, **context)
-
-
-    def dispatch_request(self):
-        context = self.get_context()
-        return self.render_template(context)
-
-
-    def get_context(self):
-        context = {
-            'indi_allsky_status' : self.get_indi_allsky_status(),
-        }
-        return context
-
-
+class BaseView(View):
     def get_indiallsky_pid(self):
         indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
 
@@ -100,11 +85,40 @@ class TemplateView(View):
         return '<span class="text-danger">DOWN</span>'
 
 
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera.id
+
+
+class TemplateView(BaseView):
+    def __init__(self, template_name):
+        self.template_name = template_name
+
+
+    def render_template(self, context):
+        return render_template(self.template_name, **context)
+
+
+    def dispatch_request(self):
+        context = self.get_context()
+        return self.render_template(context)
+
+
+    def get_context(self):
+        context = {
+            'indi_allsky_status' : self.get_indi_allsky_status(),
+        }
+        return context
+
+
 class FormView(TemplateView):
     pass
 
 
-class JsonView(View):
+class JsonView(BaseView):
     def dispatch_request(self):
         json_data = self.get_objects()
         return jsonify(json_data)
@@ -122,11 +136,11 @@ class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
 
-        connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
+        #connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
         context['camera_list'] = db.session.query(
             IndiAllSkyDbCameraTable.id,
             IndiAllSkyDbCameraTable.name,
-            connectDate_local,
+            IndiAllSkyDbCameraTable.connectDate,
         )\
             .all()
 
@@ -137,11 +151,11 @@ class DarkFramesView(TemplateView):
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
 
-        createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         darkframe_list = db.session.query(
             IndiAllSkyDbDarkFrameTable.id,
             IndiAllSkyDbCameraTable.name.label('camera_name'),
-            createDate_local,
+            IndiAllSkyDbCameraTable.createDate,
             IndiAllSkyDbDarkFrameTable.bitdepth,
             IndiAllSkyDbDarkFrameTable.exposure,
             IndiAllSkyDbDarkFrameTable.gain,
@@ -189,22 +203,14 @@ class JsonImageLoopView(JsonView):
         return data
 
 
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
-
-
     def getLatestImages(self):
         now_minus_hours = datetime.now() - timedelta(hours=self.hours)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_hours)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_hours)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
 
@@ -227,7 +233,7 @@ class JsonImageLoopView(JsonView):
     def getSqmData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -236,7 +242,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
 
@@ -252,7 +258,7 @@ class JsonImageLoopView(JsonView):
     def getStarsData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = db.session\
             .query(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
@@ -261,7 +267,7 @@ class JsonImageLoopView(JsonView):
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
 
@@ -303,9 +309,9 @@ class JsonChartView(JsonView):
     def getChartData(self):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
 
-        createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         chart_query = db.session.query(
-            createDate_local,
+            IndiAllSkyDbImageTable.createDate,
             IndiAllSkyDbImageTable.sqm,
             IndiAllSkyDbImageTable.stars,
             IndiAllSkyDbImageTable.temp,
@@ -313,7 +319,7 @@ class JsonChartView(JsonView):
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(createDate_local > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
@@ -327,25 +333,25 @@ class JsonChartView(JsonView):
         }
         for i in chart_query:
             sqm_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.sqm,
             }
             chart_data['sqm'].append(sqm_data)
 
             star_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.stars,
             }
             chart_data['stars'].append(star_data)
 
             temp_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.temp,
             }
             chart_data['temp'].append(temp_data)
 
             exp_data = {
-                'x' : i.createDate_local.strftime('%H:%M:%S'),
+                'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.exposure,
             }
             chart_data['exp'].append(exp_data)
@@ -516,7 +522,7 @@ class ConfigView(FormView):
         return context
 
 
-class AjaxConfigView(View):
+class AjaxConfigView(BaseView):
     methods = ['POST']
 
     def dispatch_request(self):
@@ -700,11 +706,106 @@ class AjaxConfigView(View):
         return jsonify(message)
 
 
+class ImageViewerView(FormView):
+    def get_context(self):
+        context = super(ImageViewerView, self).get_context()
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+            'DAY_SELECT'   : None,
+            'HOUR_SELECT'  : None,
+        }
+
+        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
+
+        return context
+
+
+
+class AjaxImageViewerView(BaseView):
+    methods = ['POST']
+
+    def __init__(self):
+        self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        form_viewer = IndiAllskyImageViewer(data=request.json)
+
+
+        form_year  = request.json.get('YEAR_SELECT')
+        form_month = request.json.get('MONTH_SELECT')
+        form_day   = request.json.get('DAY_SELECT')
+        form_hour  = request.json.get('HOUR_SELECT')
+
+        json_data = {}
+
+
+        if form_hour:
+            form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+            hour = form_datetime.strftime('%H')
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+
+        elif form_day:
+            form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_month:
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+        return jsonify(json_data)
+
+
+
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
+bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
+bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))

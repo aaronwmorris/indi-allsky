@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Image viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var img;
+var fullscreen = false;  //initial state
+
+function init() {
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio =  canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+
+
+    img.src = $("#IMG_SELECT").val();
+
+    $(document).keydown(function(e) {
+        var arrow = { left: 37, up: 38, right: 39, down: 40 };
+        var img_select_val = $("#IMG_SELECT").val();
+
+        switch (e.which) {
+            case arrow.left:
+                console.log('Previous image');
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == $("#IMG_SELECT")[0].options.length) {
+                        console.log('At latest image');
+                    } else if (element.value == img_select_val) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+                    };
+                });
+
+                break;
+            case arrow.right:
+                console.log('Next image');
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == 0) {
+                        console.log('At oldest image');
+                    } else if (element.value == img_select_val) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+                    };
+                });
+
+                break;
+            //case arrow.up:
+            //    //..
+            //    break;
+            //case arrow.down:
+            //    //..
+            //    break;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+    });
+
+}
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    window.addEventListener("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    //refresh();
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    var canvas = document.getElementById('canvas');
+    canvas.onclick = function() {
+        goFullscreen(this);
+    };
+});
+
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init();
+});
+</script>
+
+
+{% endblock %}
+
+{% block content %}
+<form id="form_viewer" onSubmit="return false;">
+    {{ form_viewer.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.DAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.DAY_SELECT(class='form-control bg-secondary') }}
+            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.HOUR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.HOUR_SELECT(class='form-control bg-secondary') }}
+            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.IMG_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_viewer.IMG_SELECT(class='form-control bg-secondary') }}
+            <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+</form>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-12">
+        <canvas id="canvas"/>
+    </div>
+</div>
+
+<script>
+const form_viewer = document.getElementById('form_viewer');
+const successMessage = document.getElementById('success-message');
+const failureMessage = document.getElementById('failure-message');
+const field_names = [
+    'csrf_token',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+    'DAY_SELECT',
+    'HOUR_SELECT',
+    'IMG_SELECT',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+$("#IMG_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    field_names.forEach(item => {
+        json_data[item] = fields[item].input.value;
+    });
+
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        json_data[item] = fields[item].input.checked;
+    });
+
+    img.src = fields['IMG_SELECT'].input.value;
+
+    return false;
+});
+
+
+$("#HOUR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+        'DAY_SELECT'   : fields["DAY_SELECT"].input.value,
+        'HOUR_SELECT'  : fields["HOUR_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+
+$("#DAY_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+        'DAY_SELECT'   : fields["DAY_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+$("#MONTH_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+
+</script>
+
+{% endblock %}

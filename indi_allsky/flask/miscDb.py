@@ -46,7 +46,7 @@ class miscDb(object):
         return camera
 
 
-    def addImage(self, filename, camera_id, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
+    def addImage(self, filename, camera_id, createDate, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
         if not filename:
             return
 
@@ -90,6 +90,7 @@ class miscDb(object):
         image = IndiAllSkyDbImageTable(
             camera_id=camera_id,
             filename=filename_str,
+            createDate=createDate,
             dayDate=dayDate,
             exposure=exposure,
             gain=gain,
