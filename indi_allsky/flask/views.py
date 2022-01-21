@@ -740,7 +740,7 @@ class AjaxImageViewerView(View):
 
 
         elif form_day:
-            form_datetime = datetime.strptime('{0} {1} {2}', '%Y %m %d')
+            form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
 
             year = form_datetime.strftime('%Y')
             month = form_datetime.strftime('%m')
@@ -750,22 +750,28 @@ class AjaxImageViewerView(View):
 
 
         elif form_month:
-            form_datetime = datetime.strptime('{0} {1}', '%Y %m')
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
             year = form_datetime.strftime('%Y')
             month = form_datetime.strftime('%m')
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
 
 
         elif form_year:
-            form_datetime = datetime.strptime('{0}', '%Y')
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
 
             year = form_datetime.strftime('%Y')
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
 
 

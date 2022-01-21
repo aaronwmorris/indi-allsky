@@ -101,8 +101,6 @@ $.ajaxSetup({
 
 
 $("#form_viewer").on("submit", function() {
-    //e.preventDefault();
-
     // hide all errors
     successMessage.style.display = 'none';
     Object.keys(fields).forEach((key) => {
@@ -145,6 +143,149 @@ $("#form_viewer").on("submit", function() {
 
     return false;
 });
+
+
+$("#DAY_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+        'DAY_SELECT'   : fields["DAY_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            successMessage.innerHTML = data['success-message'];
+            //form_viewer.style.display = 'none';
+            successMessage.style.display = 'block';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 5000);
+
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+$("#MONTH_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            successMessage.innerHTML = data['success-message'];
+            //form_viewer.style.display = 'none';
+            successMessage.style.display = 'block';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 5000);
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            successMessage.innerHTML = data['success-message'];
+            //form_viewer.style.display = 'none';
+            successMessage.style.display = 'block';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 5000);
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
 
 </script>
 
