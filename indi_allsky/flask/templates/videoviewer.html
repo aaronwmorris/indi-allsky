@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Timelapse viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+</style>
+<script type="text/javascript">
+</script>
+
+{% endblock %}
+
+{% block content %}
+<form id="form_video_viewer" onSubmit="return false;">
+    {{ form_video_viewer.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_video_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_video_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_video_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_video_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+</form>
+
+<hr />
+
+<script>
+const form_video_viewer = document.getElementById('form_video_viewer');
+const successMessage = document.getElementById('success-message');
+const failureMessage = document.getElementById('failure-message');
+const field_names = [
+    'csrf_token',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+
+$("#MONTH_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+
+</script>
+
+{% endblock %}

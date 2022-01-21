@@ -24,6 +24,7 @@ from sqlalchemy import extract
 from flask import current_app as app  # noqa
 
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
 
 from . import db
 
@@ -732,5 +733,73 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
+
+
+class IndiAllskyVideoViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+
+
+    def getYears(self):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+
+        years_query = db.session.query(
+            createDate_year,
+        )\
+            .distinct()\
+            .order_by(createDate_year.desc())
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.createDate_year, str(y.createDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+
+        months_query = db.session.query(
+            createDate_year,
+            createDate_month,
+        )\
+            .filter(createDate_year == year)\
+            .distinct()\
+            .order_by(createDate_month.desc())
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
+
+        last_video = db.session.query(
+            IndiAllSkyDbVideoTable.createDate,
+        )\
+            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+            .first()
+
+        year = last_video.createDate.strftime('%Y')
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = self.getMonths(year)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 

@@ -28,6 +28,8 @@ from sqlalchemy import func
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
+from .forms import IndiAllskyVideoViewer
+from .forms import IndiAllskyVideoViewerPreload
 
 
 bp = Blueprint(
@@ -798,6 +800,52 @@ class AjaxImageViewerView(BaseView):
         return jsonify(json_data)
 
 
+class VideoViewerView(FormView):
+    def get_context(self):
+        context = super(VideoViewerView, self).get_context()
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+        }
+
+        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data)
+
+        return context
+
+
+class AjaxVideoViewerView(BaseView):
+    methods = ['POST']
+
+    def __init__(self):
+        self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        form_video_viewer = IndiAllskyVideoViewer(data=request.json)
+
+
+        form_year  = request.json.get('YEAR_SELECT')
+        form_month = request.json.get('MONTH_SELECT')
+
+        json_data = {}
+
+        if form_month:
+            pass
+            #form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            #year = form_datetime.strftime('%Y')
+            #month = form_datetime.strftime('%m')
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
+
+        return jsonify(json_data)
+
 
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
@@ -806,6 +854,8 @@ bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', templat
 bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
 bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
+bp.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
+bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
