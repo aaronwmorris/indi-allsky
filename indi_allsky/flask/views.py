@@ -804,7 +804,7 @@ bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='in
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
-bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('image_viewer_view', template_name='imageviewer.html'))
+bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
