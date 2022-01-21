@@ -64,7 +64,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    refresh();
+    //refresh();
 }
 setResizeHandler(resize_callback, 500);
 
@@ -156,8 +156,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
         </div>
 
         <div class="col-sm-1">
-            <button class="btn btn-primary" id="form_viewer_submit">Submit</button>
+            {{ form_viewer.IMG_SELECT.label(class='col-form-label') }}
         </div>
+        <div class="col-sm-1">
+            {{ form_viewer.IMG_SELECT(class='form-control bg-secondary') }}
+            <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
     </div>
 
     <div id="success-message" class="text-success" style="display: none;"></div>
@@ -181,6 +186,7 @@ const field_names = [
     'MONTH_SELECT',
     'DAY_SELECT',
     'HOUR_SELECT',
+    'IMG_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -216,7 +222,7 @@ $.ajaxSetup({
 });
 
 
-function formViewerSubmit() {
+$("#IMG_SELECT").on("change", function() {
     // hide all errors
     successMessage.style.display = 'none';
     Object.keys(fields).forEach((key) => {
@@ -235,6 +241,26 @@ function formViewerSubmit() {
         json_data[item] = fields[item].input.checked;
     });
 
+    img.src = fields['IMG_SELECT'].input.value;
+
+    return false;
+});
+
+
+$("#HOUR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+        'DAY_SELECT'   : fields["DAY_SELECT"].input.value,
+        'HOUR_SELECT'  : fields["HOUR_SELECT"].input.value,
+    };
+
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -247,8 +273,11 @@ function formViewerSubmit() {
             //    successMessage.style.display = 'none';
             //}, 5000);
 
-            img.src = data['images'][0]['file'];
 
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -259,14 +288,8 @@ function formViewerSubmit() {
         },
     });
 
-    return false;
-};
-
-
-$("#form_viewer").on("submit", function() {
-    formViewerSubmit();
-    return false;
 });
+
 
 
 $("#DAY_SELECT").on("change", function() {
@@ -298,6 +321,11 @@ $("#DAY_SELECT").on("change", function() {
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
         },
         error: function(data){
@@ -344,6 +372,11 @@ $("#MONTH_SELECT").on("change", function() {
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
         },
         error: function(data){
@@ -393,6 +426,11 @@ $("#YEAR_SELECT").on("change", function() {
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
         },
         error: function(data){

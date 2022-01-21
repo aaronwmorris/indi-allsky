@@ -21,7 +21,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 
 from sqlalchemy import func
-from sqlalchemy import extract
+#from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
@@ -733,44 +733,23 @@ class AjaxImageViewerView(BaseView):
         form_viewer = IndiAllskyImageViewer(data=request.json)
 
 
-        form_year = request.json.get('YEAR_SELECT')
+        form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
-        form_day = request.json.get('DAY_SELECT')
-        form_hour = request.json.get('HOUR_SELECT')
+        form_day   = request.json.get('DAY_SELECT')
+        form_hour  = request.json.get('HOUR_SELECT')
 
         json_data = {}
 
+
         if form_hour:
-            #date_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
-            createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
-            createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
-            createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
-            createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+            form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
 
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+            hour = form_datetime.strftime('%H')
 
-            images = db.session.query(
-                IndiAllSkyDbImageTable.filename,
-            )\
-                .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(createDate_year == form_year)\
-                .filter(createDate_month == form_month)\
-                .filter(createDate_day == form_day)\
-                .filter(createDate_hour == form_hour)\
-                .order_by(IndiAllSkyDbImageTable.createDate.desc())
-
-            image_list = list()
-            for i in images:
-                filename_p = Path(i.filename)
-                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
-
-                data = {
-                    'file'  : str(rel_filename_p),
-                }
-
-                image_list.append(data)
-
-            json_data['images'] = image_list
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
 
 
         elif form_day:
@@ -781,7 +760,9 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.strftime('%d')
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
 
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -793,7 +774,9 @@ class AjaxImageViewerView(BaseView):
             day = json_data['DAY_SELECT'][0][0]
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
 
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -807,7 +790,9 @@ class AjaxImageViewerView(BaseView):
             day = json_data['DAY_SELECT'][0][0]
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
 
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
 
         return jsonify(json_data)
 

@@ -17,8 +17,8 @@ from wtforms.validators import ValidationError
 
 from sqlalchemy import extract
 #from sqlalchemy import asc
-from sqlalchemy import func
-from sqlalchemy.types import DateTime
+#from sqlalchemy import func
+#from sqlalchemy.types import DateTime
 
 from flask import current_app as app  # noqa
 
@@ -574,6 +574,7 @@ class IndiAllskyImageViewer(FlaskForm):
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
+    IMG_SELECT           = SelectField('Image', choices=[], validators=[])
 
 
     def getYears(self):
@@ -670,6 +671,37 @@ class IndiAllskyImageViewer(FlaskForm):
         return hour_choices
 
 
+    def getImages(self, year, month, day, hour):
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        images_query = db.session.query(
+            IndiAllSkyDbImageTable.filename,
+            IndiAllSkyDbImageTable.createDate,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .filter(createDate_day == day)\
+            .filter(createDate_hour == hour)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+        images_choices = []
+        for i in images_query:
+            filename_p = Path(i.filename)
+            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            entry = (str(rel_filename_p), str(i.createDate.strftime('%M:%S')))
+            images_choices.append(entry)
+
+
+        return images_choices
+
+
+
+
 class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
@@ -678,6 +710,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         year = now.strftime('%Y')
         month = now.strftime('%m')
         day = now.strftime('%d')
+        hour = now.strftime('%H')
 
 
         dates_start = time.time()
@@ -686,6 +719,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         self.MONTH_SELECT.choices = self.getMonths(year)
         self.DAY_SELECT.choices = self.getDays(year, month)
         self.HOUR_SELECT.choices = self.getHours(year, month, day)
+        self.IMG_SELECT.choices = self.getImages(year, month, day, hour)
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
