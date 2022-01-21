@@ -831,11 +831,12 @@ class AjaxVideoViewerView(BaseView):
         json_data = {}
 
         if form_month:
-            pass
-            #form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
-            #year = form_datetime.strftime('%Y')
-            #month = form_datetime.strftime('%m')
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['video_list'] = form_video_viewer.getVideos(year, month)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -843,6 +844,9 @@ class AjaxVideoViewerView(BaseView):
             year = form_datetime.strftime('%Y')
 
             json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['video_list'] = form_video_viewer.getVideos(year, month)
 
         return jsonify(json_data)
 

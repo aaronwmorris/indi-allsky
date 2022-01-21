@@ -781,6 +781,37 @@ class IndiAllskyVideoViewer(FlaskForm):
         return month_choices
 
 
+
+    def getVideos(self, year, month):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+
+        videos_query = db.session.query(
+            IndiAllSkyDbVideoTable.filename,
+            IndiAllSkyDbVideoTable.dayDate,
+            IndiAllSkyDbVideoTable.night,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.desc())
+
+        videos_data = []
+        for v in videos_query:
+            filename_p = Path(v.filename)
+            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            entry = {
+                'url'     : str(rel_filename_p),
+                'dayDate' : v.dayDate.strftime('%B %d'),
+                'night'   : v.night,
+            }
+            videos_data.append(entry)
+
+
+        return videos_data
+
+
+
 class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
