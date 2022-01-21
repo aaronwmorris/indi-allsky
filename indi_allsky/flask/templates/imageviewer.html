@@ -267,6 +267,9 @@ $("#HOUR_SELECT").on("change", function() {
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -316,6 +319,9 @@ $("#DAY_SELECT").on("change", function() {
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -367,6 +373,9 @@ $("#MONTH_SELECT").on("change", function() {
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -421,6 +430,9 @@ $("#YEAR_SELECT").on("change", function() {
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
+
+            img.src = fields['IMG_SELECT'].input.value;
+
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
