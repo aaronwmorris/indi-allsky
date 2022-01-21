@@ -21,6 +21,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 
 from sqlalchemy import func
+from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
 
 from .forms import IndiAllskyConfigForm
@@ -45,27 +46,7 @@ bp = Blueprint(
 #    return render_template('index.html')
 
 
-class TemplateView(View):
-    def __init__(self, template_name):
-        self.template_name = template_name
-
-
-    def render_template(self, context):
-        return render_template(self.template_name, **context)
-
-
-    def dispatch_request(self):
-        context = self.get_context()
-        return self.render_template(context)
-
-
-    def get_context(self):
-        context = {
-            'indi_allsky_status' : self.get_indi_allsky_status(),
-        }
-        return context
-
-
+class BaseView(View):
     def get_indiallsky_pid(self):
         indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
 
@@ -103,11 +84,40 @@ class TemplateView(View):
         return '<span class="text-danger">DOWN</span>'
 
 
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera.id
+
+
+class TemplateView(BaseView):
+    def __init__(self, template_name):
+        self.template_name = template_name
+
+
+    def render_template(self, context):
+        return render_template(self.template_name, **context)
+
+
+    def dispatch_request(self):
+        context = self.get_context()
+        return self.render_template(context)
+
+
+    def get_context(self):
+        context = {
+            'indi_allsky_status' : self.get_indi_allsky_status(),
+        }
+        return context
+
+
 class FormView(TemplateView):
     pass
 
 
-class JsonView(View):
+class JsonView(BaseView):
     def dispatch_request(self):
         json_data = self.get_objects()
         return jsonify(json_data)
@@ -190,14 +200,6 @@ class JsonImageLoopView(JsonView):
         }
 
         return data
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
 
 
     def getLatestImages(self):
@@ -519,7 +521,7 @@ class ConfigView(FormView):
         return context
 
 
-class AjaxConfigView(View):
+class AjaxConfigView(BaseView):
     methods = ['POST']
 
     def dispatch_request(self):
@@ -720,8 +722,12 @@ class ImageViewerView(FormView):
 
 
 
-class AjaxImageViewerView(View):
+class AjaxImageViewerView(BaseView):
     methods = ['POST']
+
+    def __init__(self):
+        self.camera_id = self.getLatestCamera()
+
 
     def dispatch_request(self):
         form_viewer = IndiAllskyImageViewer(data=request.json)
@@ -735,8 +741,36 @@ class AjaxImageViewerView(View):
         json_data = {}
 
         if form_hour:
-            #date_datetime = datetime.strptime('{0} {1} {2} {3}', '%Y %m %d %H')
-            pass
+            #date_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
+            createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+            createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+            createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+            createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+
+            images = db.session.query(
+                IndiAllSkyDbImageTable.filename,
+            )\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+                .filter(createDate_year == form_year)\
+                .filter(createDate_month == form_month)\
+                .filter(createDate_day == form_day)\
+                .filter(createDate_hour == form_hour)\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+            image_list = list()
+            for i in images:
+                filename_p = Path(i.filename)
+                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+                data = {
+                    'file'  : str(rel_filename_p),
+                }
+
+                image_list.append(data)
+
+            json_data['images'] = image_list
 
 
         elif form_day:

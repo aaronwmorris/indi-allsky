@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<form id="form_viewer">
+<form id="form_viewer" onSubmit="return false;">
     {{ form_viewer.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
@@ -100,7 +100,7 @@ $.ajaxSetup({
 });
 
 
-$("#form_viewer").on("submit", function() {
+function formViewerSubmit() {
     // hide all errors
     successMessage.style.display = 'none';
     Object.keys(fields).forEach((key) => {
@@ -141,6 +141,12 @@ $("#form_viewer").on("submit", function() {
         },
     });
 
+    return false;
+};
+
+
+$("#form_viewer").on("submit", function() {
+    formViewerSubmit();
     return false;
 });
 
