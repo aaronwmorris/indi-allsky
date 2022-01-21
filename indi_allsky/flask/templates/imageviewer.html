@@ -37,6 +37,46 @@ function init() {
 
     img.src = $("#IMG_SELECT").val();
 
+    $(document).keydown(function(e) {
+        var arrow = { left: 37, up: 38, right: 39, down: 40 };
+        var img_select_val = $("#IMG_SELECT").val();
+
+        switch (e.which) {
+            case arrow.left:
+                console.log('Previous image');
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == $("#IMG_SELECT")[0].options.length) {
+                        console.log('At latest image');
+                    } else if (element.value == img_select_val) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+                    };
+                });
+
+                break;
+            case arrow.right:
+                console.log('Next image');
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == 0) {
+                        console.log('At oldest image');
+                    } else if (element.value == img_select_val) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+                    };
+                });
+
+                break;
+            //case arrow.up:
+            //    //..
+            //    break;
+            //case arrow.down:
+            //    //..
+            //    break;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+    });
+
 }
 
 function setResizeHandler(callback, timeout) {
