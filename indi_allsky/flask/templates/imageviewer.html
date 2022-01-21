@@ -3,8 +3,118 @@
 {% block title %}indi-allsky: Image viewer{% endblock %}
 
 {% block head %}
+<meta charset="UTF-8"/>
 <style>
+canvas {
+    width: 100%;
+    height: auto;
+};
 </style>
+<script type="text/javascript">
+var img;
+var fullscreen = false;  //initial state
+
+function init() {
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio =  canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        if(drawDate) {
+            var now = new Date();
+            var text = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            var maxWidth = 100;
+            var x = canvas.width-10-maxWidth;
+            var y = canvas.height-10;
+
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
+            context.strokeText(text, x, y, maxWidth);
+            context.fillStyle = 'white';
+            context.fillText(text, x, y, maxWidth);
+        }
+    };
+
+}
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    window.addEventListener("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    refresh();
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    var canvas = document.getElementById('canvas');
+    canvas.onclick = function() {
+        goFullscreen(this);
+    };
+});
+
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    init();
+});
+</script>
+
+
 {% endblock %}
 
 {% block content %}
@@ -56,12 +166,8 @@
 </form>
 
 <div class="row">
-    <div class="col-sm-8 col-md-6">
-        <h3>Images</h3>
-        <div class="docs-galley mb-3">
-            <ul class="docs-pictures clearfix" id="image_ul">
-            </ul>
-        </div>
+    <div class="col-sm-12">
+        <canvas id="canvas"/>
     </div>
 </div>
 
@@ -135,18 +241,13 @@ function formViewerSubmit() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.innerHTML = data['success-message'];
-            //form_viewer.style.display = 'none';
-            successMessage.style.display = 'block';
-            setTimeout(function() {
-                successMessage.style.display = 'none';
-            }, 5000);
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
 
-
-            $("#image_ul").empty()
-            data['images'].forEach(item => {
-                $("#image_ul").append('<li><img src="' + item['file'] + '"></li>');
-            });
+            img.src = data['images'][0]['file'];
 
         },
         error: function(data){
@@ -187,12 +288,11 @@ $("#DAY_SELECT").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.innerHTML = data['success-message'];
-            //form_viewer.style.display = 'none';
-            successMessage.style.display = 'block';
-            setTimeout(function() {
-                successMessage.style.display = 'none';
-            }, 5000);
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
 
 
             $("#HOUR_SELECT").empty()
@@ -230,12 +330,11 @@ $("#MONTH_SELECT").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.innerHTML = data['success-message'];
-            //form_viewer.style.display = 'none';
-            successMessage.style.display = 'block';
-            setTimeout(function() {
-                successMessage.style.display = 'none';
-            }, 5000);
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
@@ -275,12 +374,11 @@ $("#YEAR_SELECT").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.innerHTML = data['success-message'];
-            //form_viewer.style.display = 'none';
-            successMessage.style.display = 'block';
-            setTimeout(function() {
-                successMessage.style.display = 'none';
-            }, 5000);
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
