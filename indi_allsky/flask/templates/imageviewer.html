@@ -55,6 +55,16 @@
 
 </form>
 
+<div class="row">
+    <div class="col-sm-8 col-md-6">
+        <h3>Images</h3>
+        <div class="docs-galley mb-3">
+            <ul class="docs-pictures clearfix" id="image_ul">
+            </ul>
+        </div>
+    </div>
+</div>
+
 <script>
 const form_viewer = document.getElementById('form_viewer');
 const successMessage = document.getElementById('success-message');
@@ -131,6 +141,13 @@ function formViewerSubmit() {
             setTimeout(function() {
                 successMessage.style.display = 'none';
             }, 5000);
+
+
+            $("#image_ul").empty()
+            data['images'].forEach(item => {
+                $("#image_ul").append('<li><img src="' + item['file'] + '"></li>');
+            });
+
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
