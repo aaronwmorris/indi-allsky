@@ -1051,7 +1051,7 @@ class IndiAllSky(object):
 
 
         try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, [darkframe_dict])
+            db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, darkframe_entries)
             db.session.commit()
 
             logger.warning('*** Dark frames inserted ***')
@@ -1103,7 +1103,7 @@ class IndiAllSky(object):
 
 
         try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, [video_dict])
+            db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, video_entries)
             db.session.commit()
 
             logger.warning('*** Timelapse videos inserted ***')
@@ -1159,7 +1159,7 @@ class IndiAllSky(object):
 
 
         try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, [keogram_dict])
+            db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, keogram_entries)
             db.session.commit()
 
             logger.warning('*** Keograms inserted ***')
@@ -1209,7 +1209,7 @@ class IndiAllSky(object):
 
 
         try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, [startrail_dict])
+            db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, startrail_entries)
             db.session.commit()
 
             logger.warning('*** Star trails inserted ***')
@@ -1272,7 +1272,7 @@ class IndiAllSky(object):
             image_entries.append(image_dict)
 
         try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, [image_dict])
+            db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, image_entries)
             db.session.commit()
 
             logger.warning('*** Images inserted ***')
