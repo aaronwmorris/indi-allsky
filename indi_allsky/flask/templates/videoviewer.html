@@ -7,6 +7,14 @@
 <style>
 </style>
 <script type="text/javascript">
+function init() {
+     MONTH_SELECT_on_change();
+};
+
+$( document ).ready(function() {
+    init();
+});
+
 </script>
 
 {% endblock %}
@@ -150,7 +158,7 @@ function populate_videos(video_list) {
 };
 
 
-$("#MONTH_SELECT").on("change", function() {
+function MONTH_SELECT_on_change() {
     // hide all errors
     successMessage.style.display = 'none';
     Object.keys(fields).forEach((key) => {
@@ -186,7 +194,11 @@ $("#MONTH_SELECT").on("change", function() {
         },
     });
 
-});
+};
+
+
+$("#MONTH_SELECT").on("change", MONTH_SELECT_on_change());
+
 
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
