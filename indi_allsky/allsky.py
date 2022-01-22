@@ -98,6 +98,8 @@ class IndiAllSky(object):
         signal.signal(signal.SIGTERM, self.sigterm_handler)
         signal.signal(signal.SIGINT, self.sigint_handler)
 
+        self.restart = False
+
 
     @property
     def indi_server(self):
@@ -187,14 +189,8 @@ class IndiAllSky(object):
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
 
-        self._stopVideoWorker()
-        self._stopImageWorker()
-        self._stopFileUploadWorker()
-
-        # Restart worker with new config
-        self._startVideoWorker()
-        self._startImageWorker()
-        self._startFileUploadWorker()
+        # set flag for program to restart processes
+        self.restart = True
 
 
     def sigterm_handler(self, signum, frame):
@@ -563,6 +559,16 @@ class IndiAllSky(object):
                     waiting_for_frame = False
 
                     logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
+
+
+                # restart here to ensure camera is not taking images
+                if self.restart and not waiting_for_frame:
+                    logger.warning('Restarting processes')
+                    self.restart = False
+                    self._stopImageWorker()
+                    self._stopVideoWorker()
+                    self._stopFileUploadWorker()
+
 
 
                 if camera_ready and now >= next_frame_time:
