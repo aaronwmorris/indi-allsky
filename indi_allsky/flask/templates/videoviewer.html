@@ -197,7 +197,9 @@ function MONTH_SELECT_on_change() {
 };
 
 
-$("#MONTH_SELECT").on("change", MONTH_SELECT_on_change());
+$("#MONTH_SELECT").on("change", function() {
+    MONTH_SELECT_on_change();
+})
 
 
 $("#YEAR_SELECT").on("change", function() {
