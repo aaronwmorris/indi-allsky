@@ -813,30 +813,37 @@ class IndiAllskyVideoViewer(FlaskForm):
         for entry in videos_data:
             dayDate = datetime.strptime(entry['dayDate'], '%B %d, %Y').date()
 
-            try:
-                keogram_entry = db.session.query(
-                    IndiAllSkyDbKeogramTable.filename,
-                )\
-                    .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
-                    .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
-                    .one()
+            # Querying the oldest due to a bug where regeneated files are added with the wrong dayDate
+            # fix is inbound
 
+            keogram_entry = db.session.query(
+                IndiAllSkyDbKeogramTable.filename,
+            )\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
+                .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
+                .order_by(IndiAllSkyDbKeogramTable.createDate.asc())\
+                .first()  # use the oldest (asc)
+
+            if keogram_entry:
                 keogram_url = str(Path(keogram_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
-            except NoResultFound:
+            else:
                 keogram_url = None
 
 
-            try:
-                startrail_entry = db.session.query(
-                    IndiAllSkyDbStarTrailsTable.filename,
-                )\
-                    .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
-                    .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
-                    .one()
+            startrail_entry = db.session.query(
+                IndiAllSkyDbStarTrailsTable.filename,
+            )\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
+                .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())\
+                .first()  # use the oldest (asc)
 
+
+            if startrail_entry:
                 startrail_url = str(Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
-            except NoResultFound:
+            else:
                 startrail_url = None
+
 
             entry['keogram']    = keogram_url
             entry['startrail']  = startrail_url

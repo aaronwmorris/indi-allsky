@@ -155,7 +155,7 @@ class miscDb(object):
         return dark
 
 
-    def addVideo(self, filename, camera_id, timeofday):
+    def addVideo(self, filename, camera_id, dayDate, timeofday):
         if not filename:
             return
 
@@ -176,13 +176,6 @@ class miscDb(object):
             night = False
 
 
-        if night:
-            # day date for night is offset by 12 hours
-            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
-        else:
-            dayDate = datetime.datetime.now().date()
-
-
         video = IndiAllSkyDbVideoTable(
             camera_id=camera_id,
             filename=filename_str,
@@ -196,7 +189,7 @@ class miscDb(object):
         return video
 
 
-    def addKeogram(self, filename, camera_id, timeofday):
+    def addKeogram(self, filename, camera_id, dayDate, timeofday):
         if not filename:
             return
 
@@ -217,13 +210,6 @@ class miscDb(object):
             night = False
 
 
-        if night:
-            # day date for night is offset by 12 hours
-            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
-        else:
-            dayDate = datetime.datetime.now().date()
-
-
         keogram = IndiAllSkyDbKeogramTable(
             camera_id=camera_id,
             filename=filename_str,
@@ -237,7 +223,7 @@ class miscDb(object):
         return keogram
 
 
-    def addStarTrail(self, filename, camera_id, timeofday='night'):
+    def addStarTrail(self, filename, camera_id, dayDate, timeofday='night'):
         if not filename:
             return
 
@@ -256,13 +242,6 @@ class miscDb(object):
             night = True
         else:
             night = False
-
-
-        if night:
-            # day date for night is offset by 12 hours
-            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
-        else:
-            dayDate = datetime.datetime.now().date()
 
 
         startrail = IndiAllSkyDbStarTrailsTable(
