@@ -24,7 +24,7 @@
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
                     <!--
                     <li class="dropdown">
@@ -53,6 +53,10 @@
                     <li>
                         <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Images</span> </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.config_view') }}" class="nav-link px-sm-0 px-2">
