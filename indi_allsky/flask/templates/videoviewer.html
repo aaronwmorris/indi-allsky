@@ -93,8 +93,8 @@ function populate_videos(video_list) {
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
-                'class' : "row",
-                'style' : "height:100;",
+            'class' : "row",
+            'style' : "height:100;",
         });
 
         $('<div />', {
@@ -110,8 +110,8 @@ function populate_videos(video_list) {
 
         if (item['startrail']) {
             $('<img />', {
-                'src' : item['startrail'],
-                'style' : "width:100%;"
+                'src'   : item['startrail'],
+                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
             }).appendTo(startrail_div);
         } else {
             startrail_div.append('None');
@@ -125,8 +125,8 @@ function populate_videos(video_list) {
 
         if (item['keogram']) {
             $('<img />', {
-                'src' : item['keogram'],
-                'style' : "width:100%;"
+                'src'   : item['keogram'],
+                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
             }).appendTo(keogram_div);
         } else {
             keogram_div.append('None');
