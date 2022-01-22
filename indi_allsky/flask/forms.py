@@ -19,11 +19,14 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 #from sqlalchemy import func
 #from sqlalchemy.types import DateTime
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app  # noqa
 
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
 
 from . import db
 
@@ -732,5 +735,136 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
+
+
+class IndiAllskyVideoViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+
+
+    def getYears(self):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+
+        years_query = db.session.query(
+            createDate_year,
+        )\
+            .distinct()\
+            .order_by(createDate_year.desc())
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.createDate_year, str(y.createDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+
+        months_query = db.session.query(
+            createDate_year,
+            createDate_month,
+        )\
+            .filter(createDate_year == year)\
+            .distinct()\
+            .order_by(createDate_month.desc())
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+
+    def getVideos(self, year, month):
+        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+
+        videos_query = db.session.query(
+            IndiAllSkyDbVideoTable.filename,
+            IndiAllSkyDbVideoTable.dayDate,
+            IndiAllSkyDbVideoTable.night,
+        )\
+            .filter(createDate_year == year)\
+            .filter(createDate_month == month)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.desc())
+
+        videos_data = []
+        for v in videos_query:
+            filename_p = Path(v.filename)
+            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            entry = {
+                'url'        : str(rel_filename_p),
+                'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
+                'night'      : v.night,
+            }
+            videos_data.append(entry)
+
+        # cannot query the DB from inside the DB query
+        for entry in videos_data:
+            dayDate = datetime.strptime(entry['dayDate'], '%B %d, %Y').date()
+
+            try:
+                keogram_entry = db.session.query(
+                    IndiAllSkyDbKeogramTable.filename,
+                )\
+                    .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
+                    .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
+                    .one()
+
+                keogram_url = str(Path(keogram_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
+            except NoResultFound:
+                keogram_url = None
+
+
+            try:
+                startrail_entry = db.session.query(
+                    IndiAllSkyDbStarTrailsTable.filename,
+                )\
+                    .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
+                    .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
+                    .one()
+
+                startrail_url = str(Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
+            except NoResultFound:
+                startrail_url = None
+
+            entry['keogram']    = keogram_url
+            entry['startrail']  = startrail_url
+
+
+        return videos_data
+
+
+
+class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
+
+        last_video = db.session.query(
+            IndiAllSkyDbVideoTable.createDate,
+        )\
+            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+            .first()
+
+        year = last_video.createDate.strftime('%Y')
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = self.getMonths(year)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 

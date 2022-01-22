@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Timelapse viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+</style>
+<script type="text/javascript">
+function init() {
+     MONTH_SELECT_on_change();
+};
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<form id="form_video_viewer" onSubmit="return false;">
+    {{ form_video_viewer.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_video_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_video_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_video_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_video_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+</form>
+
+<hr />
+
+<div id="videos_div">
+</div>
+
+<script>
+const form_video_viewer = document.getElementById('form_video_viewer');
+const successMessage = document.getElementById('success-message');
+const failureMessage = document.getElementById('failure-message');
+const field_names = [
+    'csrf_token',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : document.getElementById(item),
+        'error' : document.getElementById(item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+function populate_videos(video_list) {
+    $("#videos_div").empty();
+
+    video_list.forEach(item => {
+        var row_div = $('<div />', {
+            'class' : "row",
+            'style' : "height:100;",
+        });
+
+        $('<div />', {
+            'class' : "col-sm-1",
+            'text'  : item['dayDate'],
+        }).appendTo(row_div);
+
+
+        // star trail
+        var startrail_div = $('<div />', {
+            'class' : "col-sm-2",
+        }).appendTo(row_div);
+
+        if (item['startrail']) {
+            var st_a = $('<a />', {
+                'href'   : item['startrail'],
+                'target' : "_blank",
+            }).appendTo(startrail_div);
+
+            $('<img />', {
+                'src'   : item['startrail'],
+                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+            }).appendTo(st_a);
+        } else {
+            startrail_div.append('None');
+        }
+        
+
+        // keogram
+        var keogram_div = $('<div />', {
+            'class' : "col-sm-9",
+        }).appendTo(row_div);
+
+
+        var k_a = $('<a />', {
+            'href'   : item['url'],
+            'target' : "_blank",
+        }).appendTo(keogram_div);
+
+
+        if (item['keogram']) {
+            $('<img />', {
+                'src'   : item['keogram'],
+                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+            }).appendTo(k_a);
+        } else {
+            keogram_div.append('None');
+        }
+        
+        row_div.appendTo($("#videos_div"));
+    });
+
+};
+
+
+function MONTH_SELECT_on_change() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+            populate_videos(data['video_list']);
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+};
+
+
+$("#MONTH_SELECT").on("change", MONTH_SELECT_on_change());
+
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.style.display = 'none';
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.style.display = 'none';
+    });
+
+    var json_data = {
+        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            //successMessage.innerHTML = data['success-message'];
+            //successMessage.style.display = 'block';
+            //setTimeout(function() {
+            //    successMessage.style.display = 'none';
+            //}, 5000);
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            populate_videos(data['video_list']);
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.classList.add('is-invalid');
+                fields[key].error.innerHTML = errors[key][0];
+                fields[key].error.style.display = 'block';
+            });
+        },
+    });
+
+});
+
+
+
+</script>
+
+{% endblock %}
