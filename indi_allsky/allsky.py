@@ -99,6 +99,8 @@ class IndiAllSky(object):
         signal.signal(signal.SIGINT, self.sigint_handler)
 
         self.restart = False
+        self.shutdown = False
+        self.terminate = False
 
 
     @property
@@ -196,21 +198,16 @@ class IndiAllSky(object):
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
-        self._stopVideoWorker(terminate=True)
-        self._stopImageWorker(terminate=True)
-        self._stopFileUploadWorker(terminate=True)
-
-        sys.exit()
+        # set flag for program to stop processes
+        self.shutdown = True
+        self.terminate = True
 
 
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
-        self._stopVideoWorker()
-        self._stopImageWorker()
-        self._stopFileUploadWorker()
-
-        sys.exit()
+        # set flag for program to stop processes
+        self.shutdown = True
 
 
     def sigalarm_handler(self, signum, frame):
@@ -559,6 +556,18 @@ class IndiAllSky(object):
                     waiting_for_frame = False
 
                     logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
+
+
+                # shutdown here to ensure camera is not taking images
+                if self.shutdown and not waiting_for_frame:
+                    logger.warning('Shutting down')
+                    self._stopImageWorker(terminate=self.terminate)
+                    self._stopVideoWorker(terminate=self.terminate)
+                    self._stopFileUploadWorker(terminate=self.terminate)
+
+                    self.indiclient.disconnectServer()
+
+                    sys.exit()
 
 
                 # restart here to ensure camera is not taking images
