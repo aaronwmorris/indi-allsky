@@ -42,6 +42,9 @@
 
 <hr />
 
+<div id="videos_div">
+</div>
+
 <script>
 const form_video_viewer = document.getElementById('form_video_viewer');
 const successMessage = document.getElementById('success-message');
@@ -85,6 +88,55 @@ $.ajaxSetup({
 });
 
 
+function populate_videos(video_list) {
+    $("#videos_div").empty();
+
+    video_list.forEach(item => {
+        var row_div = $('<div />', {
+                'class' : "row",
+                'style' : "height:100;",
+        });
+
+        $('<div />', {
+            'class' : "col-sm-1",
+            'text'  : item['dayDate'],
+        }).appendTo(row_div);
+
+
+        // star trail
+        var startrail_div = $('<div />', {
+            'class' : "col-sm-2",
+        }).appendTo(row_div);
+
+        if (item['startrail']) {
+            $('<img />', {
+                'src' : item['startrail'],
+                'style' : "width:100%;"
+            }).appendTo(startrail_div);
+        } else {
+            startrail_div.append('None');
+        }
+        
+
+        // keogram
+        var keogram_div = $('<div />', {
+            'class' : "col-sm-9",
+        }).appendTo(row_div);
+
+        if (item['keogram']) {
+            $('<img />', {
+                'src' : item['keogram'],
+                'style' : "width:100%;"
+            }).appendTo(keogram_div);
+        } else {
+            keogram_div.append('None');
+        }
+        
+        row_div.appendTo($("#videos_div"));
+    });
+
+};
+
 
 $("#MONTH_SELECT").on("change", function() {
     // hide all errors
@@ -109,6 +161,8 @@ $("#MONTH_SELECT").on("change", function() {
             //setTimeout(function() {
             //    successMessage.style.display = 'none';
             //}, 5000);
+
+            populate_videos(data['video_list']);
 
         },
         error: function(data){
@@ -149,6 +203,8 @@ $("#YEAR_SELECT").on("change", function() {
             data['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
+
+            populate_videos(data['video_list']);
 
         },
         error: function(data){

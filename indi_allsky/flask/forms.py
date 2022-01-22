@@ -804,19 +804,21 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             entry = {
                 'url'        : str(rel_filename_p),
-                'dayDate'    : v.dayDate.strftime('%B %d'),
+                'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
                 'night'      : v.night,
             }
             videos_data.append(entry)
 
         # cannot query the DB from inside the DB query
         for entry in videos_data:
+            dayDate = datetime.strptime(entry['dayDate'], '%B %d, %Y').date()
+
             try:
                 keogram_entry = db.session.query(
                     IndiAllSkyDbKeogramTable.filename,
                 )\
-                    .filter(IndiAllSkyDbKeogramTable.dayDate == v.dayDate)\
-                    .filter(IndiAllSkyDbKeogramTable.night == v.night)\
+                    .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
+                    .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
                     .one()
 
                 keogram_url = str(Path(keogram_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
@@ -828,11 +830,11 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_entry = db.session.query(
                     IndiAllSkyDbStarTrailsTable.filename,
                 )\
-                    .filter(IndiAllSkyDbStarTrailsTable.dayDate == v.dayDate)\
-                    .filter(IndiAllSkyDbStarTrailsTable.night == v.night)\
+                    .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
+                    .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
                     .one()
 
-                startrail_url = Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+                startrail_url = str(Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
             except NoResultFound:
                 startrail_url = None
 
