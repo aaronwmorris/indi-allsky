@@ -206,6 +206,7 @@ class VideoWorker(Process):
         video_entry = self._miscDb.addVideo(
             video_file,
             camera_id,
+            d_dayDate,
             timeofday,
         )
 
@@ -362,6 +363,7 @@ class VideoWorker(Process):
             keogram_entry = self._miscDb.addKeogram(
                 keogram_file,
                 camera_id,
+                d_dayDate,
                 timeofday,
             )
 
@@ -373,6 +375,7 @@ class VideoWorker(Process):
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera_id,
+                d_dayDate,
                 timeofday=timeofday,
             )
 
