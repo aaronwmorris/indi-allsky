@@ -109,10 +109,15 @@ function populate_videos(video_list) {
         }).appendTo(row_div);
 
         if (item['startrail']) {
+            var st_a = $('<a />', {
+                'href'   : item['startrail'],
+                'target' : "_blank",
+            }).appendTo(startrail_div);
+
             $('<img />', {
                 'src'   : item['startrail'],
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-            }).appendTo(startrail_div);
+            }).appendTo(st_a);
         } else {
             startrail_div.append('None');
         }
@@ -123,11 +128,18 @@ function populate_videos(video_list) {
             'class' : "col-sm-9",
         }).appendTo(row_div);
 
+
+        var k_a = $('<a />', {
+            'href'   : item['url'],
+            'target' : "_blank",
+        }).appendTo(keogram_div);
+
+
         if (item['keogram']) {
             $('<img />', {
                 'src'   : item['keogram'],
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-            }).appendTo(keogram_div);
+            }).appendTo(k_a);
         } else {
             keogram_div.append('None');
         }
