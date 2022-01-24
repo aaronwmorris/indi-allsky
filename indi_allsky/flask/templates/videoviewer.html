@@ -41,6 +41,14 @@ $( document ).ready(function() {
             <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
+        <div class="col-sm-2">
+            {{ form_video_viewer.TIMEOFDAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-control bg-secondary') }}
+            <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
     </div>
 
     <div id="success-message" class="text-success" style="display: none;"></div>
@@ -61,6 +69,7 @@ const field_names = [
     'csrf_token',
     'YEAR_SELECT',
     'MONTH_SELECT',
+    'TIMEOFDAY_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -166,8 +175,9 @@ function MONTH_SELECT_on_change() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
-        'MONTH_SELECT' : fields["MONTH_SELECT"].input.value,
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.value,
+        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.value,
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.value,
     };
 
     $.ajax({
@@ -202,6 +212,11 @@ $("#MONTH_SELECT").on("change", function() {
 })
 
 
+$("#TIMEOFDAY_SELECT").on("change", function() {
+    MONTH_SELECT_on_change();
+})
+
+
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
     successMessage.style.display = 'none';
@@ -210,7 +225,8 @@ $("#YEAR_SELECT").on("change", function() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.value,
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.value,
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.value,
     };
 
     $.ajax({
