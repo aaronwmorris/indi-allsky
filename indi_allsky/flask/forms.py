@@ -22,7 +22,7 @@ from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.orm.exc import NoResultFound
 
-from flask import current_app as app  # noqa
+from flask import current_app as app
 
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
@@ -739,8 +739,15 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
 
 
 class IndiAllskyVideoViewer(FlaskForm):
+    TIMEOFDAY_SELECT_choices = (
+        ('all', 'All'),
+        ('day', 'Day'),
+        ('night', 'Night'),
+    )
+
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+    TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
 
 
     def getYears(self):
@@ -785,7 +792,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
 
-    def getVideos(self, year, month):
+    def getVideos(self, year, month, timeofday):
         createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
 
@@ -795,8 +802,21 @@ class IndiAllskyVideoViewer(FlaskForm):
             IndiAllSkyDbVideoTable.night,
         )\
             .filter(createDate_year == year)\
-            .filter(createDate_month == month)\
-            .order_by(IndiAllSkyDbVideoTable.createDate.desc())
+            .filter(createDate_month == month)
+
+
+        # add time of day filter
+        if timeofday == 'day':
+            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == False)  # noqa: E712
+        elif timeofday == 'night':
+            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == True)  # noqa: E712
+        else:
+            pass
+
+
+        # set order
+        videos_query = videos_query.order_by(IndiAllSkyDbVideoTable.createDate.desc())
+
 
         videos_data = []
         for v in videos_query:

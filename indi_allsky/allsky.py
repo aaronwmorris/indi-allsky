@@ -24,7 +24,7 @@ from .video import VideoWorker
 from .uploader import FileUploader
 from .exceptions import TimeOutException
 
-from flask import current_app as app  # noqa
+#from flask import current_app as app
 from .flask import db
 from .flask.miscDb import miscDb
 

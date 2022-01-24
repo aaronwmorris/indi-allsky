@@ -12,7 +12,7 @@ from flask import jsonify
 from flask import Blueprint
 from flask.views import View
 
-from flask import current_app as app  # noqa
+from flask import current_app as app
 
 from . import db
 
@@ -825,8 +825,9 @@ class AjaxVideoViewerView(BaseView):
         form_video_viewer = IndiAllskyVideoViewer(data=request.json)
 
 
-        form_year  = request.json.get('YEAR_SELECT')
-        form_month = request.json.get('MONTH_SELECT')
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+        form_timeofday = request.json.get('TIMEOFDAY_SELECT')
 
         json_data = {}
 
@@ -836,7 +837,7 @@ class AjaxVideoViewerView(BaseView):
             year = form_datetime.strftime('%Y')
             month = form_datetime.strftime('%m')
 
-            json_data['video_list'] = form_video_viewer.getVideos(year, month)
+            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -846,7 +847,7 @@ class AjaxVideoViewerView(BaseView):
             json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
             month = json_data['MONTH_SELECT'][0][0]
 
-            json_data['video_list'] = form_video_viewer.getVideos(year, month)
+            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
 
         return jsonify(json_data)
 
