@@ -11,7 +11,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
 
-from .views import bp  # noqa
+from .views import bp
 
 ### This causes problems with indi-allsky logging
 dictConfig({

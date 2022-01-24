@@ -12,7 +12,7 @@ from flask import jsonify
 from flask import Blueprint
 from flask.views import View
 
-from flask import current_app as app  # noqa
+from flask import current_app as app
 
 from . import db
 

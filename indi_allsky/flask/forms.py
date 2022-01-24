@@ -22,7 +22,7 @@ from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.orm.exc import NoResultFound
 
-from flask import current_app as app  # noqa
+from flask import current_app as app
 
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
