@@ -864,6 +864,12 @@ class SystemInfoView(TemplateView):
         context['cpu_load10'] = load10
         context['cpu_load15'] = load15
 
+        context['mem_usage'] = self.getMemoryUsage()
+
+        context['swap_usage'] = self.getSwapUsage()
+
+        context['rootfs_usage'] = self.getRootFsUsage()
+
         return context
 
 
@@ -877,6 +883,29 @@ class SystemInfoView(TemplateView):
 
     def getLoadAverage(self):
         return psutil.getloadavg()
+
+
+    def getMemoryUsage(self):
+        memory_info = psutil.virtual_memory()
+
+        memory_total = memory_info[0]
+        memory_free = memory_info[1]
+
+        used = 100 - ((memory_free * 100) / memory_total)
+
+        return used
+
+
+    def getSwapUsage(self):
+        swap_info = psutil.swap_memory()
+
+        return swap_info[3]
+
+
+    def getRootFsUsage(self):
+        disk_info = psutil.disk_usage('/')
+
+        return disk_info[3]
 
 
 
