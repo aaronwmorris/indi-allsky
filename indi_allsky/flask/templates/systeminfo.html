@@ -84,10 +84,11 @@
             <div class="row">
                 <div class="col-sm-2"></div>
         {% endif %}
+
             <div class="col-sm-2">{{t['name']}}</div>
             <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}c</div>
+
         {% if loop.index0 != 0 %}
-                </div>
             </div>
         {% endif %}
     {% endfor %}
