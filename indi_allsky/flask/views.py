@@ -870,6 +870,8 @@ class SystemInfoView(TemplateView):
 
         context['rootfs_usage'] = self.getRootFsUsage()
 
+        context['temp_list'] = self.getTemps()
+
         return context
 
 
@@ -906,6 +908,19 @@ class SystemInfoView(TemplateView):
         disk_info = psutil.disk_usage('/')
 
         return disk_info[3]
+
+
+    def getTemps(self):
+        temp_info = psutil.sensors_temperatures()
+
+        temp_list = list()
+        for t_key in temp_info.keys():
+            temp_list.append({
+                'name' : t_key,
+                'temp' : float(temp_info[t_key][0].current),
+            })
+
+        return temp_list
 
 
 
