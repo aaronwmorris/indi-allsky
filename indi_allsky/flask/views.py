@@ -915,10 +915,11 @@ class SystemInfoView(TemplateView):
 
         temp_list = list()
         for t_key in temp_info.keys():
-            temp_list.append({
-                'name' : t_key,
-                'temp' : float(temp_info[t_key][0].current),
-            })
+            for i in temp_info[t_key]:
+                temp_list.append({
+                    'name' : t_key,
+                    'temp' : float(i.current),
+                })
 
         return temp_list
 
