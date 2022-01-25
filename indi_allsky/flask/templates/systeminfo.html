@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: System Info{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-2">CPU Count</div>
+    <div class="col-sm-1">{{cpu_count}}</div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">CPU Usage</div>
+    <div class="col-sm-1">{{"%.1f"|format(cpu_usage)}}%</div>
+    <div class="col-sm-9">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage|int}}%"></div>
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">Load Average</div>
+    <div class="col-sm-1">5 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load5)}}</div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">10 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load10)}}</div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">15 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load15)}}</div>
+</div>
+{% endblock %}

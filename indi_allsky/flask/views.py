@@ -852,6 +852,33 @@ class AjaxVideoViewerView(BaseView):
         return jsonify(json_data)
 
 
+class SystemInfoView(TemplateView):
+    def get_context(self):
+        context = super(SystemInfoView, self).get_context()
+
+        context['cpu_count'] = self.getCpuCount()
+        context['cpu_usage'] = self.getCpuUsage()
+
+        load5, load10, load15 = self.getLoadAverage()
+        context['cpu_load5'] = load5
+        context['cpu_load10'] = load10
+        context['cpu_load15'] = load15
+
+        return context
+
+
+    def getCpuCount(self):
+        return psutil.cpu_count()
+
+
+    def getCpuUsage(self):
+        return psutil.cpu_percent()
+
+
+    def getLoadAverage(self):
+        return psutil.getloadavg()
+
+
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
@@ -868,3 +895,4 @@ bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', temp
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
+bp.add_url_rule('/systeminfo', view_func=SystemInfoView.as_view('systeminfo_view', template_name='systeminfo.html'))
