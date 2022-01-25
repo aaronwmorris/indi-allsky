@@ -940,4 +940,4 @@ bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', temp
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
-bp.add_url_rule('/systeminfo', view_func=SystemInfoView.as_view('systeminfo_view', template_name='systeminfo.html'))
+bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
