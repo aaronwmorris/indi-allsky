@@ -48,7 +48,7 @@
     <div class="col-sm-1">{{"%.1f"|format(mem_usage)}}%</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%"></div>
         </div>
     </div>
 </div>
@@ -58,7 +58,7 @@
     <div class="col-sm-1">{{"%.1f"|format(swap_usage)}}%</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%"></div>
         </div>
     </div>
 </div>
@@ -70,7 +70,7 @@
     <div class="col-sm-1">{{"%.1f"|format(rootfs_usage)}}%</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{rootfs_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{rootfs_usage|int}}%"></div>
         </div>
     </div>
 </div>
