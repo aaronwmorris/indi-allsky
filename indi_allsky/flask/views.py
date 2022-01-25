@@ -30,6 +30,7 @@ from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
+from .forms import IndiAllskySystemInfoForm
 
 
 bp = Blueprint(
@@ -924,6 +925,22 @@ class SystemInfoView(TemplateView):
         return temp_list
 
 
+class AjaxSystemInfoView(BaseView):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_system = IndiAllskySystemInfoForm(data=request.json)
+
+        if not form_system.validate():
+            form_errors = form_system.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+        json_data = {
+            'success-message' : request.json['COMMAND_hidden'],
+        }
+
+        return jsonify(json_data)
+
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
@@ -941,3 +958,4 @@ bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_v
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
+bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))

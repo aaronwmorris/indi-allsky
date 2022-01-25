@@ -96,4 +96,77 @@
 
 <hr />
 
+<div class="row">
+    <div class="col-sm-4">
+        <div id="success-message" class="text-success" style="display: none;"></div>
+        <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-4">
+        <button class="btn btn-primary" id="button_restart">Restart indi-allsky</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-4">
+        <button class="btn btn-primary" id="button_reboot">Reboot system</button>
+    </div>
+</div>
+
+
+<script>
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+
+function button_click(command) {
+    // hide all errors
+    $("#failure-message").css({'display' : 'none'});
+    $("#success-message").css({'display' : 'none'});
+
+    var json_data = {
+        'COMMAND_hidden' : command,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_system_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#success-message").html(data['success-message']);
+            $("#success-message").css({'display' : 'block'});
+            setTimeout(function() {
+                $("#success-message").css({'display' : 'none'});
+            }, 10000);
+
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            $("#failure-message").html(errors['COMMAND_hidden'][0]);
+            $("#failure-message").css({'display' : 'block'});
+        },
+    });
+
+};
+
+
+$("#button_restart").on("click", function() {
+    button_click('restart');
+});
+
+
+$("#button_reboot").on("click", function() {
+    button_click('reboot');
+});
+
+
+
+</script>
 {% endblock %}

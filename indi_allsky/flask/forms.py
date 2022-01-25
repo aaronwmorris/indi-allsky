@@ -12,6 +12,7 @@ from wtforms import SelectField
 from wtforms import StringField
 from wtforms import PasswordField
 from wtforms import TextAreaField
+from wtforms import HiddenField
 from wtforms.widgets import PasswordInput
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
@@ -894,5 +895,22 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+
+def COMMAND_validator(form, field):
+    commands = (
+        'restart',
+    )
+
+    if field.data not in commands:
+        raise ValidationError('Invalid command')
+
+
+
+class IndiAllskySystemInfoForm(FlaskForm):
+    # fake form to send commands to web application
+
+    COMMAND_hidden      = HiddenField('command_hidden', validators=[COMMAND_validator])
 
 
