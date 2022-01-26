@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import io
 import json
+import time
 from pathlib import Path
 from collections import OrderedDict
 import psutil
@@ -857,6 +858,8 @@ class SystemInfoView(TemplateView):
     def get_context(self):
         context = super(SystemInfoView, self).get_context()
 
+        context['uptime_str'] = self.getUptime()
+
         context['cpu_count'] = self.getCpuCount()
         context['cpu_usage'] = self.getCpuUsage()
 
@@ -874,6 +877,25 @@ class SystemInfoView(TemplateView):
         context['temp_list'] = self.getTemps()
 
         return context
+
+
+    def getUptime(self):
+        uptime_s = time.time() - psutil.boot_time()
+
+        days = int(uptime_s / 86400)
+        uptime_s -= (days * 86400)
+
+        hours = int(uptime_s / 3600)
+        uptime_s -= (hours * 3600)
+
+        minutes = int(uptime_s / 60)
+        uptime_s -= (minutes * 60)
+
+        seconds = int(uptime_s)
+
+        uptime_str = '{0:d} days, {1:d} hours, {2:d} minutes, {3:d} seconds'.format(days, hours, minutes, seconds)
+
+        return uptime_str
 
 
     def getCpuCount(self):
