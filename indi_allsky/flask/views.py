@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from collections import OrderedDict
 import psutil
+import dbus
 
 from flask import render_template
 from flask import request
@@ -876,6 +877,9 @@ class SystemInfoView(TemplateView):
 
         context['temp_list'] = self.getTemps()
 
+        context['indi_allsky_service'] = self.getSystemdUnitStatus('indi-allsky.service')
+        context['indiserver_service'] = self.getSystemdUnitStatus('indiserver.service')
+
         return context
 
 
@@ -945,6 +949,17 @@ class SystemInfoView(TemplateView):
                 })
 
         return temp_list
+
+
+    def getSystemdUnitStatus(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit))
+        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
+        unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
+
+        return str(unit_state)
 
 
 class AjaxSystemInfoView(BaseView):
