@@ -130,7 +130,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -181,7 +180,6 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -233,7 +231,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -277,7 +274,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -323,7 +319,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -370,7 +365,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
-        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -415,7 +409,7 @@ cd $OLDPWD
 echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir -m 755 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
-    virtualenv -p python3 --system-site-packages ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
+    virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
