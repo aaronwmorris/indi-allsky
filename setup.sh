@@ -427,6 +427,29 @@ done
 
 #echo $CCD_DRIVER
 
+echo "**** Remove old services ****"
+sudo systemctl stop ${INDISEVER_SERVICE_NAME}.service || true
+sudo systemctl stop ${ALLSKY_SERVICE_NAME}.service || true
+sudo systemctl stop ${GUNICORN_SERVICE_NAME}.socket || true
+sudo systemctl stop ${GUNICORN_SERVICE_NAME}.service || true
+sudo systemctl disable ${INDISEVER_SERVICE_NAME}.service || true
+sudo systemctl disable ${ALLSKY_SERVICE_NAME}.service || true
+sudo systemctl disable ${GUNICORN_SERVICE_NAME}.socket || true
+sudo systemctl disable ${GUNICORN_SERVICE_NAME}.service || true
+
+[[ -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service"
+[[ -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" 
+[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket"
+[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service"
+
+sudo systemctl daemon-reload
+
+
+
+# create users systemd folder
+[[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
+
+
 echo "**** Setting up indiserver service ****"
 TMP1=$(mktemp)
 sed \
@@ -436,9 +459,8 @@ sed \
  ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
-sudo cp -f "$TMP1" /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
+cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
 
@@ -450,9 +472,8 @@ sed \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
-sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
+cp -f "$TMP2" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
@@ -460,12 +481,12 @@ echo "**** Setting up gunicorn ****"
 TMP5=$(mktemp)
 sed \
  -e "s|%APACHE_USER%|$APACHE_USER|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
 
-sudo cp -f "$TMP5" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
-sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
-sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+cp -f "$TMP5" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
+chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
 [[ -f "$TMP5" ]] && rm -f "$TMP5"
 
 TMP6=$(mktemp)
@@ -475,19 +496,23 @@ sed \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
 
-sudo cp -f "$TMP6" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+cp -f "$TMP6" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 [[ -f "$TMP6" ]] && rm -f "$TMP6"
 
 
 echo "**** Enabling services ****"
-sudo systemctl daemon-reload
-sudo systemctl enable ${INDISEVER_SERVICE_NAME}.service
-sudo systemctl enable ${ALLSKY_SERVICE_NAME}.service
-sudo systemctl enable ${GUNICORN_SERVICE_NAME}.socket
-sudo systemctl enable ${GUNICORN_SERVICE_NAME}.service
-sudo systemctl start ${GUNICORN_SERVICE_NAME}.socket
+sudo loginctl enable-linger $USER
+systemctl --user daemon-reload
+systemctl --user enable ${INDISEVER_SERVICE_NAME}.service
+systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
+systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
+systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+
+
+echo "**** Ensure user is a member of the systemd-journal group ****"
+sudo usermod -a -G systemd-journal "$USER"
 
 
 echo "**** Setup rsyslog logging ****"
@@ -560,6 +585,7 @@ echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 

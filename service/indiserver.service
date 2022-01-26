@@ -1,12 +1,12 @@
 [Unit]
 Description=Indi Server
+After=network.target
  
 [Service]
-User=%INDISERVER_USER%
-PAMName=login
+#User=%INDISERVER_USER%
 ExecStart=%INDI_DRIVER_PATH%/indiserver indi_simulator_telescope %INDI_CCD_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
  
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

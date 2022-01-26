@@ -61,8 +61,8 @@ cd indi-allsky.git
  * Note:  You may be prompted for a password for sudo
 1. Start the software
 ```
-sudo systemctl start indiserver
-sudo systemctl start indi-allsky
+systemctl --user start indiserver
+systemctl --user start indi-allsky
 ```
 1. Login to the indi-allsky web application
 https://raspberrypi/
@@ -71,7 +71,7 @@ https://raspberrypi/
 ### Manual operation
 1. Stop indi-allsky service
 ```
-sudo systemctl stop indi-allsky
+systemctl --user stop indi-allsky
 ```
 1. Activate the indi-allsky python virtual environment
 ```
