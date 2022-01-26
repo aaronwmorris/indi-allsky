@@ -979,22 +979,23 @@ class AjaxSystemInfoView(BaseView):
 
         if service == app.config['INDISEVER_SERVICE_NAME']:
             if command == 'stop':
-                pass
+                r = self.stopSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
             elif command == 'start':
-                pass
+                r = self.startSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
                 }
                 return jsonify(errors_data), 400
 
+
         elif service == app.config['ALLSKY_SERVICE_NAME']:
             if command == 'hup':
-                pass
+                r = self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'stop':
-                pass
+                r = self.stopSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'start':
-                pass
+                r = self.startSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -1004,12 +1005,13 @@ class AjaxSystemInfoView(BaseView):
 
         elif service == app.config['GUNICORN_SERVICE_NAME']:
             if command == 'stop':
-                pass
+                r = self.stopSystemdUnit(app.config['GUNICORN_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
                 }
                 return jsonify(errors_data), 400
+
 
         else:
             errors_data = {
@@ -1017,11 +1019,43 @@ class AjaxSystemInfoView(BaseView):
             }
             return jsonify(errors_data), 400
 
+
+        app.logger.info('Command return: %s', str(r))
+
         json_data = {
-            'success-message' : '{0:s} {1:s}'.format(request.json['SERVICE_HIDDEN'], request.json['COMMAND_HIDDEN']),
+            'success-message' : 'Job submitted',
         }
 
         return jsonify(json_data)
+
+
+    def stopSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.StopUnit(unit, 'fail')
+
+        return r
+
+
+    def startSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.StartUnit(unit, 'fail')
+
+        return r
+
+
+    def hupSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.ReloadUnit(unit, 'fail')
+
+        return r
+
+
 
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
