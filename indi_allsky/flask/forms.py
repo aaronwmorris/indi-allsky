@@ -898,35 +898,35 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 
 
-def SERVICE_HIDDEN_validator(form, field):
-    services = (
-        'indiserver',
-        'indi-allsky',
-        'gunicorn-indi-allsky',
-    )
+#def SERVICE_HIDDEN_validator(form, field):
+#    services = (
+#        'indiserver.service',
+#        'indi-allsky.service',
+#        'gunicorn-indi-allsky.service',
+#    )
+#
+#    if field.data not in services:
+#        raise ValidationError('Invalid service')
 
-    if field.data not in services:
-        raise ValidationError('Invalid service')
 
 
-
-def COMMAND_HIDDEN_validator(form, field):
-    commands = (
-        'restart',
-        'stop',
-        'start',
-        'hup',
-    )
-
-    if field.data not in commands:
-        raise ValidationError('Invalid command')
+#def COMMAND_HIDDEN_validator(form, field):
+#    commands = (
+#        'restart',
+#        'stop',
+#        'start',
+#        'hup',
+#    )
+#
+#    if field.data not in commands:
+#        raise ValidationError('Invalid command')
 
 
 
 class IndiAllskySystemInfoForm(FlaskForm):
     # fake form to send commands to web application
 
-    SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[SERVICE_HIDDEN_validator])
-    COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[COMMAND_HIDDEN_validator])
+    SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[DataRequired()])
+    COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
 

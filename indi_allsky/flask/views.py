@@ -973,6 +973,50 @@ class AjaxSystemInfoView(BaseView):
             form_errors = form_system.errors  # this must be a property
             return jsonify(form_errors), 400
 
+
+        service = request.json['SERVICE_HIDDEN']
+        command = request.json['COMMAND_HIDDEN']
+
+        if service == app.config['INDISEVER_SERVICE_NAME']:
+            if command == 'stop':
+                pass
+            elif command == 'start':
+                pass
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+        elif service == app.config['ALLSKY_SERVICE_NAME']:
+            if command == 'hup':
+                pass
+            elif command == 'stop':
+                pass
+            elif command == 'start':
+                pass
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
+        elif service == app.config['GUNICORN_SERVICE_NAME']:
+            if command == 'stop':
+                pass
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+        else:
+            errors_data = {
+                'SERVICE_HIDDEN' : ['Unhandled service'],
+            }
+            return jsonify(errors_data), 400
+
         json_data = {
             'success-message' : '{0:s} {1:s}'.format(request.json['SERVICE_HIDDEN'], request.json['COMMAND_HIDDEN']),
         }

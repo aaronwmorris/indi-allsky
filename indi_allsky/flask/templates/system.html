@@ -116,10 +116,16 @@
     <div class="col-sm-2">Services</div>
     <div class="col-sm-2">indiserver</div>
     <div class="col-sm-2">{{indiserver_service}}</div>
+    <div class="col-sm-2"></div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_restart">Restart indiserver</button>
+        <button class="btn btn-primary" id="button_indiserver_stop">Stop indiserver</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indiserver_start">Start indiserver</button>
     </div>
 </div>
+
+<hr />
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -137,12 +143,18 @@
     </div>
 </div>
 
+<hr />
+
 <div class="row">
     <div class="col-sm-2"></div>
     <div class="col-sm-2">gunicorn-indi-allsky</div>
     <div class="col-sm-2">{{gunicorn_indi_allsky_service}}</div>
+    <div class="col-sm-2"></div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_restart">Restart gunicorn</button>
+        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_stop">Stop gunicorn</button>
+    </div>
+    <div class="col-sm-2">
+        Auto restarted
     </div>
 </div>
 
@@ -232,25 +244,30 @@ function button_click(service, command) {
 };
 
 
-$("#button_indiserver_restart").on("click", function() {
-    button_click('indiserver', 'restart');
+$("#button_indiserver_stop").on("click", function() {
+    button_click('indiserver.service', 'stop');
 });
-
+$("#button_indiserver_start").on("click", function() {
+    button_click('indiserver.service', 'start');
+});
 
 
 $("#button_indi_allsky_hup").on("click", function() {
-    button_click('indi-allsky', 'hup');
+    button_click('indi-allsky.service', 'hup');
 });
 $("#button_indi_allsky_stop").on("click", function() {
-    button_click('indi-allsky', 'stop');
+    button_click('indi-allsky.service', 'stop');
 });
 $("#button_indi_allsky_start").on("click", function() {
-    button_click('indi-allsky', 'start');
+    button_click('indi-allsky.service', 'start');
 });
 
 
-$("#button_gunicorn_indi_allsky_restart").on("click", function() {
-    button_click('gunicorn-indi-allsky', 'restart');
+$("#button_gunicorn_indi_allsky_stop").on("click", function() {
+    button_click('gunicorn-indi-allsky.service', 'stop');
+});
+$("#button_gunicorn_indi_allsky_start").on("click", function() {
+    button_click('gunicorn-indi-allsky.service', 'start');
 });
 
 
