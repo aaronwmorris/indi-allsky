@@ -898,9 +898,24 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 
 
-def COMMAND_validator(form, field):
+def SERVICE_HIDDEN_validator(form, field):
+    services = (
+        'indiserver',
+        'indi-allsky',
+        'gunicorn-indi-allsky',
+    )
+
+    if field.data not in services:
+        raise ValidationError('Invalid service')
+
+
+
+def COMMAND_HIDDEN_validator(form, field):
     commands = (
         'restart',
+        'stop',
+        'start',
+        'hup',
     )
 
     if field.data not in commands:
@@ -911,6 +926,7 @@ def COMMAND_validator(form, field):
 class IndiAllskySystemInfoForm(FlaskForm):
     # fake form to send commands to web application
 
-    COMMAND_hidden      = HiddenField('command_hidden', validators=[COMMAND_validator])
+    SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[SERVICE_HIDDEN_validator])
+    COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[COMMAND_HIDDEN_validator])
 
 

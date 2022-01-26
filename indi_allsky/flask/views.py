@@ -974,7 +974,7 @@ class AjaxSystemInfoView(BaseView):
             return jsonify(form_errors), 400
 
         json_data = {
-            'success-message' : request.json['COMMAND_hidden'],
+            'success-message' : '{0:s} {1:s}'.format(request.json['SERVICE_HIDDEN'], request.json['COMMAND_HIDDEN']),
         }
 
         return jsonify(json_data)

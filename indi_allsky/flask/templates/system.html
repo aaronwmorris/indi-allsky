@@ -127,23 +127,51 @@
     <div class="col-sm-4">
         <div id="success-message" class="text-success" style="display: none;"></div>
         <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div id="SERVICE_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div id="COMMAND_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
     </div>
 </div>
 
 <div class="row">
     <div class="col-sm-4">
-        <button class="btn btn-primary" id="button_restart">Restart indi-allsky</button>
+        <button class="btn btn-primary" id="button_indi_allsky_restart">Restart indi-allsky</button>
     </div>
 </div>
 
 <div class="row">
     <div class="col-sm-4">
-        <button class="btn btn-primary" id="button_reboot">Reboot system</button>
+        <button class="btn btn-primary" id="button_system_reboot">Reboot system</button>
     </div>
 </div>
 
 
 <script>
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+
+const field_names = [
+    'csrf_token',
+    'SERVICE_HIDDEN',
+    'COMMAND_HIDDEN',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'error' : failureMessage,
+};
+
+
+
 $.ajaxSetup({
     beforeSend: function(xhr, settings) {
         xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
@@ -152,13 +180,18 @@ $.ajaxSetup({
 
 
 
-function button_click(command) {
+function button_click(service, command) {
     // hide all errors
-    $("#failure-message").css({'display' : 'none'});
-    $("#success-message").css({'display' : 'none'});
+    failureMessage.css({'display' : 'none'});
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
 
     var json_data = {
-        'COMMAND_hidden' : command,
+        'SERVICE_HIDDEN' : service,
+        'COMMAND_HIDDEN' : command,
     };
 
     $.ajax({
@@ -167,30 +200,33 @@ function button_click(command) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            $("#success-message").html(data['success-message']);
-            $("#success-message").css({'display' : 'block'});
+            successMessage.html(data['success-message']);
+            successMessage.css({'display' : 'block'});
             setTimeout(function() {
-                $("#success-message").css({'display' : 'none'});
+                successMessage.css({'display' : 'none'});
             }, 10000);
 
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
-            $("#failure-message").html(errors['COMMAND_hidden'][0]);
-            $("#failure-message").css({'display' : 'block'});
+            Object.keys(errors).forEach((key) => {
+                fields[key].error.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
         },
     });
 
 };
 
 
-$("#button_restart").on("click", function() {
-    button_click('restart');
+$("#button_indi_allsky_restart").on("click", function() {
+    button_click('indi-allsky', 'restart');
 });
 
 
-$("#button_reboot").on("click", function() {
-    button_click('reboot');
+$("#button_system_reboot").on("click", function() {
+    button_click('system', 'reboot');
 });
 
 
