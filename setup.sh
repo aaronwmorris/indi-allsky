@@ -550,6 +550,9 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
         sudo rm -f config.json
         ln -s "${ALLSKY_ETC}/config.json" config.json
     else
+        # syntax check
+        cat config.json_template | json_pp >/dev/null
+
         # create new config
         cp config.json_template "${ALLSKY_ETC}/config.json"
     fi
@@ -561,17 +564,23 @@ sudo chmod 640 "${ALLSKY_ETC}/config.json"
 
 echo "**** Flask config ****"
 TMP4=$(mktemp)
-if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
-    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
-    sed \
-     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
-     -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
-     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-     -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
-     flask.json_template > $TMP4
+#if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
+sed \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
+ -e "s|%INDISEVER_SERVICE_NAME%|$INDISEVER_SERVICE_NAME|g" \
+ -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ flask.json_template > $TMP4
 
-    cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
-fi
+# syntax check
+cat $TMP4 | json_pp >/dev/null
+
+cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
+#fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 640 "${ALLSKY_ETC}/flask.json"

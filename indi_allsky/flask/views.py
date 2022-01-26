@@ -877,8 +877,8 @@ class SystemInfoView(TemplateView):
 
         context['temp_list'] = self.getTemps()
 
-        context['indi_allsky_service'] = self.getSystemdUnitStatus('indi-allsky.service')
-        context['indiserver_service'] = self.getSystemdUnitStatus('indiserver.service')
+        context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
+        context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
 
         return context
 
