@@ -480,8 +480,7 @@ chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
 echo "**** Setting up gunicorn ****"
 TMP5=$(mktemp)
 sed \
- -e "s|%APACHE_USER%|$APACHE_USER|g" \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
 
@@ -586,6 +585,7 @@ TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 

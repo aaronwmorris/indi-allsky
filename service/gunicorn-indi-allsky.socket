@@ -2,7 +2,7 @@
 Description=indi-allsky gunicorn socket
 
 [Socket]
-ListenStream=%ALLSKY_DIRECTORY%/%GUNICORN_SERVICE_NAME%.sock
+ListenStream=%DB_FOLDER%/%GUNICORN_SERVICE_NAME%.sock
 SocketMode=666
 
 [Install]
