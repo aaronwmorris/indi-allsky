@@ -104,26 +104,6 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">Services</div>
-    <div class="col-sm-2">indiserver</div>
-    <div class="col-sm-2">{{indiserver_service}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">indi-allsky</div>
-    <div class="col-sm-2">{{indi_allsky_service}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">gunicorn-indi-allsky</div>
-    <div class="col-sm-2">{{gunicorn_indi_allsky_service}}</div>
-</div>
-
-<hr />
-
-<div class="row">
     <div class="col-sm-4">
         <div id="success-message" class="text-success" style="display: none;"></div>
         <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
@@ -133,15 +113,47 @@
 </div>
 
 <div class="row">
-    <div class="col-sm-4">
-        <button class="btn btn-primary" id="button_indi_allsky_restart">Restart indi-allsky</button>
+    <div class="col-sm-2">Services</div>
+    <div class="col-sm-2">indiserver</div>
+    <div class="col-sm-2">{{indiserver_service}}</div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indiserver_restart">Restart indiserver</button>
     </div>
 </div>
 
 <div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">indi-allsky</div>
+    <div class="col-sm-2">{{indi_allsky_service}}</div>
+
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_hup">Reload indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_stop">Stop indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_start">Start indi-allsky</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">gunicorn-indi-allsky</div>
+    <div class="col-sm-2">{{gunicorn_indi_allsky_service}}</div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_restart">Restart gunicorn</button>
+    </div>
+</div>
+
+<hr />
+
+<!--
+<div class="row">
     <div class="col-sm-4">
         <button class="btn btn-primary" id="button_system_reboot">Reboot system</button>
     </div>
+-->
 </div>
 
 
@@ -220,14 +232,33 @@ function button_click(service, command) {
 };
 
 
-$("#button_indi_allsky_restart").on("click", function() {
-    button_click('indi-allsky', 'restart');
+$("#button_indiserver_restart").on("click", function() {
+    button_click('indiserver', 'restart');
 });
 
 
+
+$("#button_indi_allsky_hup").on("click", function() {
+    button_click('indi-allsky', 'hup');
+});
+$("#button_indi_allsky_stop").on("click", function() {
+    button_click('indi-allsky', 'stop');
+});
+$("#button_indi_allsky_start").on("click", function() {
+    button_click('indi-allsky', 'start');
+});
+
+
+$("#button_gunicorn_indi_allsky_restart").on("click", function() {
+    button_click('gunicorn-indi-allsky', 'restart');
+});
+
+
+/*
 $("#button_system_reboot").on("click", function() {
     button_click('system', 'reboot');
 });
+*/
 
 
 
