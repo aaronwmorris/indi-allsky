@@ -2,9 +2,8 @@
 Description=indi-allsky gunicorn socket
 
 [Socket]
-ListenStream=/run/%GUNICORN_SERVICE_NAME%.sock
-SocketUser=%APACHE_USER%
-SocketMode=644
+ListenStream=%DB_FOLDER%/%GUNICORN_SERVICE_NAME%.sock
+SocketMode=666
 
 [Install]
 WantedBy=sockets.target

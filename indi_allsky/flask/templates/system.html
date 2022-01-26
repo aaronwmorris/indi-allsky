@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: System Info{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-2">Uptime</div>
+    <div class="col-sm-6">{{uptime_str}}</div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">CPU Count</div>
+    <div class="col-sm-1">{{cpu_count}}</div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">CPU Usage</div>
+    <div class="col-sm-1">{{"%.1f"|format(cpu_usage)}}%</div>
+    <div class="col-sm-9">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage|int}}%"></div>
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">Load Average</div>
+    <div class="col-sm-1">5 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load5)}}</div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">10 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load10)}}</div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">15 min</div>
+    <div class="col-sm-1">{{"%.2f"|format(cpu_load15)}}</div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">Memory Usage</div>
+    <div class="col-sm-1">{{"%.1f"|format(mem_usage)}}%</div>
+    <div class="col-sm-9">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2">Swap Usage</div>
+    <div class="col-sm-1">{{"%.1f"|format(swap_usage)}}%</div>
+    <div class="col-sm-9">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%"></div>
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">Filesystem Usage</div>
+    <div class="col-sm-1">{{"%.1f"|format(rootfs_usage)}}%</div>
+    <div class="col-sm-9">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{rootfs_usage|int}}%"></div>
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">Environment</div>
+    {% for t in temp_list %}
+        {% if loop.index0 != 0 %}
+            <div class="row">
+                <div class="col-sm-2"></div>
+        {% endif %}
+
+            <div class="col-sm-2">{{t['name']}}</div>
+            <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}c</div>
+
+        {% if loop.index0 != 0 %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-4">
+        <div id="success-message" class="text-success" style="display: none;"></div>
+        <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div id="SERVICE_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div id="COMMAND_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2">Services</div>
+    <div class="col-sm-2">indiserver</div>
+    <div class="col-sm-2">{{indiserver_service}}</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indiserver_stop">Stop indiserver</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indiserver_start">Start indiserver</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">indi-allsky</div>
+    <div class="col-sm-2">{{indi_allsky_service}}</div>
+
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_hup">HUP indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_stop">Stop indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_start">Start indi-allsky</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">gunicorn-indi-allsky</div>
+    <div class="col-sm-2">{{gunicorn_indi_allsky_service}}</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_stop">Stop gunicorn</button>
+    </div>
+    <div class="col-sm-2">
+        Auto restarted
+    </div>
+</div>
+
+<hr />
+
+<!--
+<div class="row">
+    <div class="col-sm-4">
+        <button class="btn btn-primary" id="button_system_reboot">Reboot system</button>
+    </div>
+-->
+</div>
+
+
+<script>
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+
+const field_names = [
+    'csrf_token',
+    'SERVICE_HIDDEN',
+    'COMMAND_HIDDEN',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'error' : failureMessage,
+};
+
+
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
+
+function button_click(service, command) {
+    // hide all errors
+    failureMessage.css({'display' : 'none'});
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+
+    var json_data = {
+        'SERVICE_HIDDEN' : service,
+        'COMMAND_HIDDEN' : command,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_system_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            successMessage.html(data['success-message']);
+            successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                successMessage.css({'display' : 'none'});
+            }, 10000);
+
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].error.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+
+};
+
+
+$("#button_indiserver_stop").on("click", function() {
+    button_click('indiserver.service', 'stop');
+});
+$("#button_indiserver_start").on("click", function() {
+    button_click('indiserver.service', 'start');
+});
+
+
+$("#button_indi_allsky_hup").on("click", function() {
+    button_click('indi-allsky.service', 'hup');
+});
+$("#button_indi_allsky_stop").on("click", function() {
+    button_click('indi-allsky.service', 'stop');
+});
+$("#button_indi_allsky_start").on("click", function() {
+    button_click('indi-allsky.service', 'start');
+});
+
+
+$("#button_gunicorn_indi_allsky_stop").on("click", function() {
+    button_click('gunicorn-indi-allsky.service', 'stop');
+});
+$("#button_gunicorn_indi_allsky_start").on("click", function() {
+    button_click('gunicorn-indi-allsky.service', 'start');
+});
+
+
+/*
+$("#button_system_reboot").on("click", function() {
+    button_click('system', 'reboot');
+});
+*/
+
+
+
+</script>
+{% endblock %}

@@ -2,9 +2,11 @@ from datetime import datetime
 from datetime import timedelta
 import io
 import json
+import time
 from pathlib import Path
 from collections import OrderedDict
 import psutil
+import dbus
 
 from flask import render_template
 from flask import request
@@ -30,6 +32,7 @@ from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
+from .forms import IndiAllskySystemInfoForm
 
 
 bp = Blueprint(
@@ -852,6 +855,208 @@ class AjaxVideoViewerView(BaseView):
         return jsonify(json_data)
 
 
+class SystemInfoView(TemplateView):
+    def get_context(self):
+        context = super(SystemInfoView, self).get_context()
+
+        context['uptime_str'] = self.getUptime()
+
+        context['cpu_count'] = self.getCpuCount()
+        context['cpu_usage'] = self.getCpuUsage()
+
+        load5, load10, load15 = self.getLoadAverage()
+        context['cpu_load5'] = load5
+        context['cpu_load10'] = load10
+        context['cpu_load15'] = load15
+
+        context['mem_usage'] = self.getMemoryUsage()
+
+        context['swap_usage'] = self.getSwapUsage()
+
+        context['rootfs_usage'] = self.getRootFsUsage()
+
+        context['temp_list'] = self.getTemps()
+
+        context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
+        context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
+        context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
+
+        return context
+
+
+    def getUptime(self):
+        uptime_s = time.time() - psutil.boot_time()
+
+        days = int(uptime_s / 86400)
+        uptime_s -= (days * 86400)
+
+        hours = int(uptime_s / 3600)
+        uptime_s -= (hours * 3600)
+
+        minutes = int(uptime_s / 60)
+        uptime_s -= (minutes * 60)
+
+        seconds = int(uptime_s)
+
+        uptime_str = '{0:d} days, {1:d} hours, {2:d} minutes, {3:d} seconds'.format(days, hours, minutes, seconds)
+
+        return uptime_str
+
+
+    def getCpuCount(self):
+        return psutil.cpu_count()
+
+
+    def getCpuUsage(self):
+        return psutil.cpu_percent()
+
+
+    def getLoadAverage(self):
+        return psutil.getloadavg()
+
+
+    def getMemoryUsage(self):
+        memory_info = psutil.virtual_memory()
+
+        memory_total = memory_info[0]
+        memory_free = memory_info[1]
+
+        used = 100 - ((memory_free * 100) / memory_total)
+
+        return used
+
+
+    def getSwapUsage(self):
+        swap_info = psutil.swap_memory()
+
+        return swap_info[3]
+
+
+    def getRootFsUsage(self):
+        disk_info = psutil.disk_usage('/')
+
+        return disk_info[3]
+
+
+    def getTemps(self):
+        temp_info = psutil.sensors_temperatures()
+
+        temp_list = list()
+        for t_key in temp_info.keys():
+            for i in temp_info[t_key]:
+                temp_list.append({
+                    'name' : t_key,
+                    'temp' : float(i.current),
+                })
+
+        return temp_list
+
+
+    def getSystemdUnitStatus(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit))
+        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
+        unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
+
+        return str(unit_state)
+
+
+class AjaxSystemInfoView(BaseView):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_system = IndiAllskySystemInfoForm(data=request.json)
+
+        if not form_system.validate():
+            form_errors = form_system.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        service = request.json['SERVICE_HIDDEN']
+        command = request.json['COMMAND_HIDDEN']
+
+        if service == app.config['INDISEVER_SERVICE_NAME']:
+            if command == 'stop':
+                r = self.stopSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
+            elif command == 'start':
+                r = self.startSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
+        elif service == app.config['ALLSKY_SERVICE_NAME']:
+            if command == 'hup':
+                r = self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            elif command == 'stop':
+                r = self.stopSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            elif command == 'start':
+                r = self.startSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
+        elif service == app.config['GUNICORN_SERVICE_NAME']:
+            if command == 'stop':
+                r = self.stopSystemdUnit(app.config['GUNICORN_SERVICE_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
+        else:
+            errors_data = {
+                'SERVICE_HIDDEN' : ['Unhandled service'],
+            }
+            return jsonify(errors_data), 400
+
+
+        app.logger.info('Command return: %s', str(r))
+
+        json_data = {
+            'success-message' : 'Job submitted',
+        }
+
+        return jsonify(json_data)
+
+
+    def stopSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.StopUnit(unit, 'fail')
+
+        return r
+
+
+    def startSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.StartUnit(unit, 'fail')
+
+        return r
+
+
+    def hupSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.ReloadUnit(unit, 'fail')
+
+        return r
+
+
+
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
@@ -868,3 +1073,5 @@ bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', temp
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
+bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
+bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))

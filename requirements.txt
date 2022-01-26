@@ -1,5 +1,7 @@
 pyindi-client
 astropy
+#https://www.piwheels.org/project/numpy/
+numpy==1.21.4
 #https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless==4.5.5.62
 #scikit-image

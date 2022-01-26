@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=notify
-User=%ALLSKY_USER%
-RuntimeDirectory=%GUNICORN_SERVICE_NAME%
+#User=%ALLSKY_USER%
+#RuntimeDirectory=%GUNICORN_SERVICE_NAME%
 WorkingDirectory=%ALLSKY_DIRECTORY%
 ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/gunicorn indi_allsky.wsgi --threads 3 --log-syslog --log-syslog-facility local7
 ExecReload=/bin/kill -s HUP $MAINPID
@@ -15,4 +15,4 @@ TimeoutStopSec=5
 PrivateTmp=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

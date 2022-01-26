@@ -12,6 +12,7 @@ from wtforms import SelectField
 from wtforms import StringField
 from wtforms import PasswordField
 from wtforms import TextAreaField
+from wtforms import HiddenField
 from wtforms.widgets import PasswordInput
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
@@ -894,5 +895,38 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+
+#def SERVICE_HIDDEN_validator(form, field):
+#    services = (
+#        'indiserver.service',
+#        'indi-allsky.service',
+#        'gunicorn-indi-allsky.service',
+#    )
+#
+#    if field.data not in services:
+#        raise ValidationError('Invalid service')
+
+
+
+#def COMMAND_HIDDEN_validator(form, field):
+#    commands = (
+#        'restart',
+#        'stop',
+#        'start',
+#        'hup',
+#    )
+#
+#    if field.data not in commands:
+#        raise ValidationError('Invalid command')
+
+
+
+class IndiAllskySystemInfoForm(FlaskForm):
+    # fake form to send commands to web application
+
+    SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[DataRequired()])
+    COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
 

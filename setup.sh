@@ -130,6 +130,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -180,6 +181,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -231,6 +233,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -274,6 +277,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -319,6 +323,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -365,6 +370,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dbus \
         virtualenv \
         git \
         apache2 \
@@ -409,7 +415,7 @@ cd $OLDPWD
 echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir -m 755 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
-    virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
+    virtualenv -p python3 --system-site-packages ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
@@ -427,6 +433,29 @@ done
 
 #echo $CCD_DRIVER
 
+echo "**** Remove old services ****"
+sudo systemctl stop ${INDISEVER_SERVICE_NAME}.service || true
+sudo systemctl stop ${ALLSKY_SERVICE_NAME}.service || true
+sudo systemctl stop ${GUNICORN_SERVICE_NAME}.socket || true
+sudo systemctl stop ${GUNICORN_SERVICE_NAME}.service || true
+sudo systemctl disable ${INDISEVER_SERVICE_NAME}.service || true
+sudo systemctl disable ${ALLSKY_SERVICE_NAME}.service || true
+sudo systemctl disable ${GUNICORN_SERVICE_NAME}.socket || true
+sudo systemctl disable ${GUNICORN_SERVICE_NAME}.service || true
+
+[[ -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service"
+[[ -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" 
+[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket"
+[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service"
+
+sudo systemctl daemon-reload
+
+
+
+# create users systemd folder
+[[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
+
+
 echo "**** Setting up indiserver service ****"
 TMP1=$(mktemp)
 sed \
@@ -436,9 +465,8 @@ sed \
  ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
-sudo cp -f "$TMP1" /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${INDISEVER_SERVICE_NAME}.service
+cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
 
@@ -450,22 +478,20 @@ sed \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
 
-sudo cp -f "$TMP2" /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${ALLSKY_SERVICE_NAME}.service
+cp -f "$TMP2" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
 echo "**** Setting up gunicorn ****"
 TMP5=$(mktemp)
 sed \
- -e "s|%APACHE_USER%|$APACHE_USER|g" \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
 
-sudo cp -f "$TMP5" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
-sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
-sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket
+cp -f "$TMP5" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
+chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
 [[ -f "$TMP5" ]] && rm -f "$TMP5"
 
 TMP6=$(mktemp)
@@ -475,19 +501,23 @@ sed \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
 
-sudo cp -f "$TMP6" /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
-sudo chown root:root /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
-sudo chmod 644 /etc/systemd/system/${GUNICORN_SERVICE_NAME}.service
+cp -f "$TMP6" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 [[ -f "$TMP6" ]] && rm -f "$TMP6"
 
 
 echo "**** Enabling services ****"
-sudo systemctl daemon-reload
-sudo systemctl enable ${INDISEVER_SERVICE_NAME}.service
-sudo systemctl enable ${ALLSKY_SERVICE_NAME}.service
-sudo systemctl enable ${GUNICORN_SERVICE_NAME}.socket
-sudo systemctl enable ${GUNICORN_SERVICE_NAME}.service
-sudo systemctl start ${GUNICORN_SERVICE_NAME}.socket
+sudo loginctl enable-linger $USER
+systemctl --user daemon-reload
+systemctl --user enable ${INDISEVER_SERVICE_NAME}.service
+systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
+systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
+systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+
+
+echo "**** Ensure user is a member of the systemd-journal group ****"
+sudo usermod -a -G systemd-journal "$USER"
 
 
 echo "**** Setup rsyslog logging ****"
@@ -520,6 +550,9 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
         sudo rm -f config.json
         ln -s "${ALLSKY_ETC}/config.json" config.json
     else
+        # syntax check
+        cat config.json_template | json_pp >/dev/null
+
         # create new config
         cp config.json_template "${ALLSKY_ETC}/config.json"
     fi
@@ -531,17 +564,23 @@ sudo chmod 640 "${ALLSKY_ETC}/config.json"
 
 echo "**** Flask config ****"
 TMP4=$(mktemp)
-if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
-    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
-    sed \
-     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
-     -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
-     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-     -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
-     flask.json_template > $TMP4
+#if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
+sed \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
+ -e "s|%INDISEVER_SERVICE_NAME%|$INDISEVER_SERVICE_NAME|g" \
+ -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ flask.json_template > $TMP4
 
-    cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
-fi
+# syntax check
+cat $TMP4 | json_pp >/dev/null
+
+cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
+#fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 640 "${ALLSKY_ETC}/flask.json"
@@ -560,6 +599,8 @@ echo "**** Start apache2 service ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 

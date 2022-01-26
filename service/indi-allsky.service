@@ -3,8 +3,7 @@ Description=Indi AllSky Service
 After=network.target indiserver.service
  
 [Service]
-User=%ALLSKY_USER%
-PAMName=login
+#User=%INDISERVER_USER%
 WorkingDirectory=%ALLSKY_DIRECTORY%
 ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/python3 allsky.py --config %ALLSKY_ETC%/config.json --log syslog run
 ExecReload=/bin/kill -HUP $MAINPID
@@ -12,4 +11,4 @@ ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
  
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
