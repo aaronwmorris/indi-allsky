@@ -58,7 +58,7 @@ function refresh() {
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
-    window.addEventListener("resize", function() {
+    $(window).on("resize", function() {
         if(timer_id != undefined) {
             clearTimeout(timer_id);
             timer_id = undefined;
@@ -108,15 +108,12 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    var canvas = document.getElementById('canvas');
-    canvas.onclick = function() {
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
         goFullscreen(this);
-    };
-});
+    });
 
-
-document.addEventListener("DOMContentLoaded", function(event) {
     init();
 });
 </script>

@@ -88,7 +88,7 @@ function showImage(entry, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}?limit=" + maxFrames, function() {
+    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit' : maxFrames}, function() {
         while (json_data['image_list'].length > maxFrames) {
             json_data['image_list'].splice(0, 1);  // remove first image
         };
@@ -100,31 +100,23 @@ function sleep(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-function loadJS(url, onDone, onError) {
+function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
-    var xhr=new XMLHttpRequest();
-    xhr.onreadystatechange=function() {
-        if(xhr.readyState==4){
-            if(xhr.status==200 || xhr.status==0) {
-            try {
-                json_data = JSON.parse(xhr.responseText);
-            } catch(e) {
-                onError(e);
-                return;
-            }
-            onDone();
-            } else {
-                onError(xhr.status);
-            }
-        }
-    }.bind(this);
-    try {
-        xhr.open("GET", url, true);
-        xhr.send();
-    } catch(e) {
-        onError(e);
-    }
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+
 }
 
 
@@ -160,14 +152,11 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    var canvas = document.getElementById('canvas');
-    canvas.onclick = function() {
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
         goFullscreen(this);
-    };
-});
+    });
 
-document.addEventListener("DOMContentLoaded", function(event) {
     init();
 });
 

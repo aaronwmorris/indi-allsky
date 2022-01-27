@@ -27,7 +27,7 @@ var json_data = {
 function init() {
     loadChartData();
 
-    ctx_sqm = document.getElementById('sqm-chart').getContext('2d');
+    ctx_sqm = $('#sqm-chart')[0].getContext('2d');
     sqm_chart = new Chart(ctx_sqm, {
         type: "line",
         data: {
@@ -71,7 +71,7 @@ function init() {
     });
 
 
-    ctx_stars = document.getElementById('stars-chart').getContext('2d');
+    ctx_stars = $('#stars-chart')[0].getContext('2d');
     stars_chart = new Chart(ctx_stars, {
         type: "line",
         data: {
@@ -114,7 +114,7 @@ function init() {
         }
     });
 
-    ctx_temp = document.getElementById('temp-chart').getContext('2d');
+    ctx_temp = $('#temp-chart')[0].getContext('2d');
     temp_chart = new Chart(ctx_temp, {
         type: "line",
         data: {
@@ -157,7 +157,7 @@ function init() {
         }
     });
 
-    ctx_exposure = document.getElementById('exposure-chart').getContext('2d');
+    ctx_exposure = $('#exposure-chart')[0].getContext('2d');
     exposure_chart = new Chart(ctx_exposure, {
         type: "line",
         data: {
@@ -215,7 +215,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", function() {});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {}, function() {});
     setTimeout(loadChartData, 15000);
 }
 
@@ -237,35 +237,26 @@ function sleep(time) {
 }
 
 
-function loadJS(url, onDone, onError) {
+function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
-    var xhr=new XMLHttpRequest();
-    xhr.onreadystatechange=function() {
-        if(xhr.readyState==4){
-            if(xhr.status==200 || xhr.status==0) {
-            try {
-                json_data = JSON.parse(xhr.responseText);
-            } catch(e) {
-                onError(e);
-                return;
-            }
-            onDone();
-            } else {
-                onError(xhr.status);
-            }
-        }
-    }.bind(this);
-    try {
-        xhr.open("GET", url, true);
-        xhr.send();
-    } catch(e) {
-        onError(e);
-    }
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+
 }
 
 
-document.addEventListener("DOMContentLoaded", function(event) {
+$( document ).ready(function() {
     init();
 });
 
