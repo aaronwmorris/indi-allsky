@@ -62,9 +62,8 @@ $( document ).ready(function() {
 </div>
 
 <script>
-const form_video_viewer = document.getElementById('form_video_viewer');
-const successMessage = document.getElementById('success-message');
-const failureMessage = document.getElementById('failure-message');
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
     'YEAR_SELECT',
@@ -79,16 +78,16 @@ var fields = {};
 // Populate fields object
 field_names.forEach(item => {
     fields[item] = {
-        'input' : document.getElementById(item),
-        'error' : document.getElementById(item + '-error'),
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
     };
 });
 
 // Checkboxes
 checkbox_field_names.forEach(item => {
     fields[item] = {
-        'input' : document.getElementById(item),
-        'error' : document.getElementById(item + '-error'),
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
     };
 });
 
@@ -169,15 +168,15 @@ function populate_videos(video_list) {
 
 function MONTH_SELECT_on_change() {
     // hide all errors
-    successMessage.style.display = 'none';
+    successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
-        fields[key].error.style.display = 'none';
+        fields[key].error.css({'display' : 'none'});
     });
 
     var json_data = {
-        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.value,
-        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.value,
-        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.value,
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
     };
 
     $.ajax({
@@ -186,20 +185,15 @@ function MONTH_SELECT_on_change() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            //successMessage.innerHTML = data['success-message'];
-            //successMessage.style.display = 'block';
-            //setTimeout(function() {
-            //    successMessage.style.display = 'none';
-            //}, 5000);
 
             populate_videos(data['video_list']);
 
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
-                fields[key].input.classList.add('is-invalid');
-                fields[key].error.innerHTML = errors[key][0];
-                fields[key].error.style.display = 'block';
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
             });
         },
     });
@@ -219,14 +213,14 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
 
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.style.display = 'none';
+    successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
-        fields[key].error.style.display = 'none';
+        fields[key].error.css({'display' : 'none'});
     });
 
     var json_data = {
-        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.value,
-        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.value,
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
     };
 
     $.ajax({
@@ -235,11 +229,6 @@ $("#YEAR_SELECT").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            //successMessage.innerHTML = data['success-message'];
-            //successMessage.style.display = 'block';
-            //setTimeout(function() {
-            //    successMessage.style.display = 'none';
-            //}, 5000);
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
@@ -251,16 +240,14 @@ $("#YEAR_SELECT").on("change", function() {
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
-                fields[key].input.classList.add('is-invalid');
-                fields[key].error.innerHTML = errors[key][0];
-                fields[key].error.style.display = 'block';
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
             });
         },
     });
 
 });
-
-
 
 </script>
 
