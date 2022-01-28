@@ -18,6 +18,7 @@ var stars_chart;
 var json_data = {
     'chart_data' : {
         'sqm'   : [],
+        'sqm_d' : [],
         'stars' : [],
         'temp'  : [],
         'exp'   : [],
@@ -65,6 +66,51 @@ function init() {
                         color: 'rgba(75, 75, 75, 1)',
                         stacked: true,
                     },
+                },
+            }
+        }
+    });
+
+
+    ctx_sqm_d = $('#sqm_d-chart')[0].getContext('2d');
+    sqm_d_chart = new Chart(ctx_sqm_d, {
+        type: "bar",
+        data: {
+            datasets: [{
+                label: 'SQM delta',
+                backgroundColor: "rgba(127, 0, 0, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMax: 1000,
+                    suggestedMin: -1000,
                 },
             }
         }
@@ -222,10 +268,12 @@ function loadChartData() {
 
 function drawChart() {
     sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
+    sqm_d_chart.data.datasets[0].data = json_data['chart_data']['sqm_d'].reverse();
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
     sqm_chart.update();
+    sqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
@@ -265,20 +313,29 @@ $( document ).ready(function() {
 
 {% block content %}
 <div class="row bg-dark">
-  <div class="col-sm-6">
-    <canvas id="sqm-chart"></canvas>
-  </div>
-  <div class="col-sm-6">
-    <canvas id="stars-chart"></canvas>
-  </div>
+    <div class="col-sm-6">
+        <canvas id="sqm-chart"></canvas>
+    </div>
+
+    <div class="col-sm-6">
+        <canvas id="sqm_d-chart"></canvas>
+    </div>
+</div>
 
 <div class="row bg-dark">
-  <div class="col-sm-6">
-    <canvas id="temp-chart"></canvas>
-  </div>
-  <div class="col-sm-6">
-    <canvas id="exposure-chart"></canvas>
-  </div>
+    <div class="col-sm-6">
+        <canvas id="stars-chart"></canvas>
+    </div>
+
+    <div class="col-sm-6">
+        <canvas id="exposure-chart"></canvas>
+    </div>
 </div>
+
+<div class="row bg-dark">
+    <div class="col-sm-6">
+        <canvas id="temp-chart"></canvas>
+    </div>
 </div>
+
 {% endblock %}

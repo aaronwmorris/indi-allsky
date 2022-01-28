@@ -359,6 +359,7 @@ class JsonChartView(JsonView):
 
         chart_data = {
             'sqm'   : [],
+            'sqm_d' : [],
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
@@ -387,6 +388,27 @@ class JsonChartView(JsonView):
                 'y' : i.exposure,
             }
             chart_data['exp'].append(exp_data)
+
+
+        sqm_lag_list = db.session.query(
+            IndiAllSkyDbImageTable.id,
+            IndiAllSkyDbImageTable.createDate,
+            IndiAllSkyDbImageTable.sqm,
+            (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+
+        for i in sqm_lag_list:
+            sqm_d_data = {
+                'x' : i.createDate.strftime('%H:%M:%S'),
+                'y' : i.sqm_diff,
+            }
+
+            chart_data['sqm_d'].append(sqm_d_data)
 
 
         return chart_data
