@@ -34,6 +34,7 @@ from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
+from .forms import IndiAllskyHistoryForm
 
 
 bp = Blueprint(
@@ -313,18 +314,31 @@ class JsonImageLoopView(JsonView):
 
 
 class ChartView(TemplateView):
-    pass
+
+    def get_context(self):
+        context = super(ChartView, self).get_context()
+
+        context['form_history'] = IndiAllskyHistoryForm()
+
+        return context
 
 
 class JsonChartView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
-        self.chart_history_minutes = 30
+        self.chart_history_seconds = 600
 
 
     def get_objects(self):
+        history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
+
+        # safety, limit history to 1 day
+        if history_seconds > 86400:
+            history_seconds = 86400
+
+
         data = {
-            'chart_data' : self.getChartData(),
+            'chart_data' : self.getChartData(history_seconds),
         }
 
         return data
@@ -338,8 +352,8 @@ class JsonChartView(JsonView):
         return latest_camera.id
 
 
-    def getChartData(self):
-        now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
+    def getChartData(self, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         chart_query = db.session.query(
@@ -352,7 +366,7 @@ class JsonChartView(JsonView):
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 

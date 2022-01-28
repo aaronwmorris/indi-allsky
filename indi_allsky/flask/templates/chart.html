@@ -13,8 +13,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
-var sqm_chart;
-var stars_chart;
+var history_seconds = 600;  // default
 var json_data = {
     'chart_data' : {
         'sqm'   : [],
@@ -261,7 +260,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'limit_s' : history_seconds});
     setTimeout(loadChartData, 15000);
 }
 
@@ -305,6 +304,8 @@ function loadJS(url, data, onDone, onError) {
 
 
 $( document ).ready(function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+
     init();
 });
 
@@ -312,6 +313,19 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<form id="form_history" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
+
 <div class="row bg-dark">
     <div class="col-sm-6">
         <canvas id="sqm-chart"></canvas>
@@ -337,5 +351,14 @@ $( document ).ready(function() {
         <canvas id="temp-chart"></canvas>
     </div>
 </div>
+
+<script>
+
+$("#HISTORY_SELECT").on("change", function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+    console.log('Changing chart history: ' + history_seconds);
+});
+
+</script>
 
 {% endblock %}

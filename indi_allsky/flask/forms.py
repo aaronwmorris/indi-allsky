@@ -930,3 +930,15 @@ class IndiAllskySystemInfoForm(FlaskForm):
     COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
 
+
+class IndiAllskyHistoryForm(FlaskForm):
+    HISTORY_SELECT_choices = (
+        ('600', '10 Minutes'),
+        ('1800', '30 Minutes'),
+        ('3600', '1 Hour'),
+        ('10800', '3 Hours'),
+        ('21600', '6 Hours'),
+    )
+
+    HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, validators=[])
+
