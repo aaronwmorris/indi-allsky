@@ -181,6 +181,8 @@ class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
 
+        now_minus_3h = datetime.now() - timedelta(hours=3)
+
         createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
         image_lag_list = db.session.query(
             IndiAllSkyDbImageTable.id,
@@ -188,8 +190,10 @@ class ImageLagView(TemplateView):
             IndiAllSkyDbImageTable.exposure,
             (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
         )\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(50)
+        # filter is just to make it faster
 
 
         context['image_lag_list'] = image_lag_list
