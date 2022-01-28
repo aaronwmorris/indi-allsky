@@ -13,11 +13,11 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
-var sqm_chart;
-var stars_chart;
+var history_seconds;  // set later
 var json_data = {
     'chart_data' : {
         'sqm'   : [],
+        'sqm_d' : [],
         'stars' : [],
         'temp'  : [],
         'exp'   : [],
@@ -65,6 +65,51 @@ function init() {
                         color: 'rgba(75, 75, 75, 1)',
                         stacked: true,
                     },
+                },
+            }
+        }
+    });
+
+
+    ctx_sqm_d = $('#sqm_d-chart')[0].getContext('2d');
+    sqm_d_chart = new Chart(ctx_sqm_d, {
+        type: "bar",
+        data: {
+            datasets: [{
+                label: 'SQM delta',
+                backgroundColor: "rgba(127, 0, 0, 1)",
+                borderColor: "rgba(127, 127, 127, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMax: 250,
+                    suggestedMin: -250,
                 },
             }
         }
@@ -215,17 +260,19 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'limit_s' : history_seconds});
     setTimeout(loadChartData, 15000);
 }
 
 
 function drawChart() {
     sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
+    sqm_d_chart.data.datasets[0].data = json_data['chart_data']['sqm_d'].reverse();
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
     sqm_chart.update();
+    sqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
@@ -257,6 +304,8 @@ function loadJS(url, data, onDone, onError) {
 
 
 $( document ).ready(function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+
     init();
 });
 
@@ -264,21 +313,52 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="row bg-dark">
-  <div class="col-sm-6">
-    <canvas id="sqm-chart"></canvas>
-  </div>
-  <div class="col-sm-6">
-    <canvas id="stars-chart"></canvas>
-  </div>
+<form id="form_history" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
 
 <div class="row bg-dark">
-  <div class="col-sm-6">
-    <canvas id="temp-chart"></canvas>
-  </div>
-  <div class="col-sm-6">
-    <canvas id="exposure-chart"></canvas>
-  </div>
+    <div class="col-sm-6">
+        <canvas id="sqm-chart"></canvas>
+    </div>
+
+    <div class="col-sm-6">
+        <canvas id="sqm_d-chart"></canvas>
+    </div>
 </div>
+
+<div class="row bg-dark">
+    <div class="col-sm-6">
+        <canvas id="stars-chart"></canvas>
+    </div>
+
+    <div class="col-sm-6">
+        <canvas id="exposure-chart"></canvas>
+    </div>
 </div>
+
+<div class="row bg-dark">
+    <div class="col-sm-6">
+        <canvas id="temp-chart"></canvas>
+    </div>
+</div>
+
+<script>
+
+$("#HISTORY_SELECT").on("change", function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+    console.log('Changing chart history: ' + history_seconds);
+});
+
+</script>
+
 {% endblock %}

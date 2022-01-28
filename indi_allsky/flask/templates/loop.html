@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var history_seconds;  // set later
 var json_data = {
     'image_list' : [],
 };
@@ -88,10 +89,10 @@ function showImage(entry, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit' : maxFrames}, function() {
-        while (json_data['image_list'].length > maxFrames) {
-            json_data['image_list'].splice(0, 1);  // remove first image
-        };
+    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit_s' : history_seconds}, function() {
+        //while (json_data['image_list'].length > maxFrames) {
+        //    json_data['image_list'].splice(0, 1);  // remove first image
+        //};
     });
     setTimeout(loadNextImage, refreshInterval);
 }
@@ -153,6 +154,8 @@ function closeFullscreen() {
 }
 
 $( document ).ready(function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+
     $('#canvas').on("click", function() {
         goFullscreen(this);
     });
@@ -164,9 +167,32 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<form id="form_history" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_history.HISTORY_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
+
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>
     </div>
 </div>
+
+<script>
+
+$("#HISTORY_SELECT").on("change", function() {
+    history_seconds = $('#HISTORY_SELECT').val();
+    console.log('Changing loop history: ' + history_seconds);
+});
+
+</script>
+
 {% endblock %}

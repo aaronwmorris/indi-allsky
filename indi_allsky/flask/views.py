@@ -25,6 +25,7 @@ from .models import IndiAllSkyDbDarkFrameTable
 from sqlalchemy import func
 #from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
+from sqlalchemy.types import Integer
 #from sqlalchemy.orm.exc import NoResultFound
 
 from .forms import IndiAllskyConfigForm
@@ -33,6 +34,7 @@ from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
+from .forms import IndiAllskyHistoryForm
 
 
 bp = Blueprint(
@@ -175,12 +177,43 @@ class DarkFramesView(TemplateView):
         return context
 
 
+
+class ImageLagView(TemplateView):
+    def get_context(self):
+        context = super(ImageLagView, self).get_context()
+
+        now_minus_3h = datetime.now() - timedelta(hours=3)
+
+        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
+        image_lag_list = db.session.query(
+            IndiAllSkyDbImageTable.id,
+            IndiAllSkyDbImageTable.createDate,
+            IndiAllSkyDbImageTable.exposure,
+            (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+        )\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .limit(50)
+        # filter is just to make it faster
+
+
+        context['image_lag_list'] = image_lag_list
+
+        return context
+
+
+
 class SqmView(TemplateView):
     pass
 
 
 class ImageLoopView(TemplateView):
-    pass
+    def get_context(self):
+        context = super(ImageLoopView, self).get_context()
+
+        context['form_history'] = IndiAllskyHistoryForm()
+
+        return context
 
 
 class ViewerView(TemplateView):
@@ -190,17 +223,22 @@ class ViewerView(TemplateView):
 class JsonImageLoopView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
-        self.limit = 40
-        self.hours = 2
+        self.history_seconds = 900
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
+        self.limit = 1000  # sanity check
 
 
     def get_objects(self):
-        self.limit = request.args.get('limit', self.limit)
+        history_seconds = int(request.args.get('limit_s', self.history_seconds))
+        self.limit = int(request.args.get('limit', self.limit))
+
+        # sanity check
+        if history_seconds > 86400:
+            history_seconds = 86400
 
         data = {
-            'image_list' : self.getLatestImages(),
+            'image_list' : self.getLatestImages(history_seconds),
             'sqm_data'   : self.getSqmData(),
             'stars_data' : self.getStarsData(),
         }
@@ -208,14 +246,14 @@ class JsonImageLoopView(JsonView):
         return data
 
 
-    def getLatestImages(self):
-        now_minus_hours = datetime.now() - timedelta(hours=self.hours)
+    def getLatestImages(self, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_hours)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
 
@@ -286,18 +324,30 @@ class JsonImageLoopView(JsonView):
 
 
 class ChartView(TemplateView):
-    pass
+    def get_context(self):
+        context = super(ChartView, self).get_context()
+
+        context['form_history'] = IndiAllskyHistoryForm()
+
+        return context
 
 
 class JsonChartView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
-        self.chart_history_minutes = 30
+        self.chart_history_seconds = 900
 
 
     def get_objects(self):
+        history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
+
+        # safety, limit history to 1 day
+        if history_seconds > 86400:
+            history_seconds = 86400
+
+
         data = {
-            'chart_data' : self.getChartData(),
+            'chart_data' : self.getChartData(history_seconds),
         }
 
         return data
@@ -311,8 +361,8 @@ class JsonChartView(JsonView):
         return latest_camera.id
 
 
-    def getChartData(self):
-        now_minus_minutes = datetime.now() - timedelta(minutes=self.chart_history_minutes)
+    def getChartData(self, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         chart_query = db.session.query(
@@ -321,10 +371,11 @@ class JsonChartView(JsonView):
             IndiAllSkyDbImageTable.stars,
             IndiAllSkyDbImageTable.temp,
             IndiAllSkyDbImageTable.exposure,
+            (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
         )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
@@ -332,6 +383,7 @@ class JsonChartView(JsonView):
 
         chart_data = {
             'sqm'   : [],
+            'sqm_d' : [],
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
@@ -360,6 +412,13 @@ class JsonChartView(JsonView):
                 'y' : i.exposure,
             }
             chart_data['exp'].append(exp_data)
+
+            sqm_d_data = {
+                'x' : i.createDate.strftime('%H:%M:%S'),
+                'y' : i.sqm_diff,
+            }
+
+            chart_data['sqm_d'].append(sqm_d_data)
 
 
         return chart_data
@@ -1059,9 +1118,6 @@ class AjaxSystemInfoView(BaseView):
 
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
-bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
-bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
-bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
 bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
@@ -1072,6 +1128,14 @@ bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
-bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
+bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+
+# hidden
+bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
+
+# work in progress
+bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))

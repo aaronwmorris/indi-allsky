@@ -3,6 +3,12 @@
 {% block title %}indi-allsky: Dark Frames{% endblock %}
 
 {% block head %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -21,7 +27,7 @@
 <tr>
     <td>{{ dark.id }}</td>
     <td>{{ dark.camera_name }}</td>
-    <td>{{ dark.createDate }}</td>
+    <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ dark.bitdepth }}</td>
     <td>{{ dark.exposure }}</td>
     <td>{{ dark.gain }}</td>

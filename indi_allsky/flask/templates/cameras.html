@@ -3,6 +3,12 @@
 {% block title %}indi-allsky: Cameras{% endblock %}
 
 {% block head %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,7 +22,7 @@
 <tr>
     <td>{{ camera.id }}</td>
     <td>{{ camera.name }}</td>
-    <td>{{ camera.connectDate }}</td>
+    <td>{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
 </tr>
 {% endfor %}
 </table>

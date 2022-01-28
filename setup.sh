@@ -427,7 +427,7 @@ done
 
 #echo $CCD_DRIVER
 
-echo "**** Remove old services ****"
+echo "**** Remove old services (ignore errors) ****"
 sudo systemctl stop ${INDISEVER_SERVICE_NAME}.service || true
 sudo systemctl stop ${ALLSKY_SERVICE_NAME}.service || true
 sudo systemctl stop ${GUNICORN_SERVICE_NAME}.socket || true
@@ -582,7 +582,7 @@ sudo chmod 640 "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP4" ]] && rm -f "$TMP4"
 
 
-echo "**** Disabling competing web servers ****"
+echo "**** Disabling competing web servers (ignore errors) ****"
 sudo systemctl stop nginx || true
 sudo systemctl disable nnginx || true
 sudo systemctl stop lighttpd || true
@@ -710,15 +710,22 @@ if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
 fi
 
 
+echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
+# Not trying to push out the competition, these just cannot run at the same time :-)
+sudo systemctl stop allsky || true
+sudo systemctl disable allsky || true
+
+
 echo
 echo
 echo
 echo
-echo "Now copy a config file from the examples/ folder to config.json"
-echo "Customize config.json and start the software"
+echo "A configuration file has automatically been provisioned at /etc/indi-allsky/config.json"
 echo
-echo "    sudo systemctl start indiserver"
-echo "    sudo systemctl start indi-allsky"
+echo "Services can be started at the command line or can be started from the web interface"
+echo
+echo "    systemctl --user start indiserver"
+echo "    systemctl --user start indi-allsky"
 echo
 echo
 echo "The web interface may be accessed with the following URL"
