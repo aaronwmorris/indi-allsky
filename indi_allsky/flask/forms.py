@@ -940,8 +940,6 @@ class IndiAllskyHistoryForm(FlaskForm):
         ('7200', '2 Hours'),
         ('10800', '3 Hours'),
         ('14400', '4 Hours'),
-        ('18000', '5 Hours'),
-        ('21600', '6 Hours'),
     )
 
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, validators=[])

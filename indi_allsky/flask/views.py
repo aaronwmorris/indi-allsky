@@ -208,7 +208,12 @@ class SqmView(TemplateView):
 
 
 class ImageLoopView(TemplateView):
-    pass
+    def get_context(self):
+        context = super(ImageLoopView, self).get_context()
+
+        context['form_history'] = IndiAllskyHistoryForm()
+
+        return context
 
 
 class ViewerView(TemplateView):
@@ -218,17 +223,22 @@ class ViewerView(TemplateView):
 class JsonImageLoopView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
-        self.limit = 40
-        self.hours = 2
+        self.history_seconds = 900
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
+        self.limit = 1000  # sanity check
 
 
     def get_objects(self):
-        self.limit = request.args.get('limit', self.limit)
+        history_seconds = int(request.args.get('limit_s', self.history_seconds))
+        self.limit = int(request.args.get('limit', self.limit))
+
+        # sanity check
+        if history_seconds > 86400:
+            history_seconds = 86400
 
         data = {
-            'image_list' : self.getLatestImages(),
+            'image_list' : self.getLatestImages(history_seconds),
             'sqm_data'   : self.getSqmData(),
             'stars_data' : self.getStarsData(),
         }
@@ -236,14 +246,14 @@ class JsonImageLoopView(JsonView):
         return data
 
 
-    def getLatestImages(self):
-        now_minus_hours = datetime.now() - timedelta(hours=self.hours)
+    def getLatestImages(self, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_hours)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
 
@@ -314,7 +324,6 @@ class JsonImageLoopView(JsonView):
 
 
 class ChartView(TemplateView):
-
     def get_context(self):
         context = super(ChartView, self).get_context()
 

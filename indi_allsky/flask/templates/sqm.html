@@ -133,7 +133,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit' : 1}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit' : 1, 'limit_s' : 300}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
