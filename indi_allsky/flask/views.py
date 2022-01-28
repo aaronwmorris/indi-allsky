@@ -25,6 +25,7 @@ from .models import IndiAllSkyDbDarkFrameTable
 from sqlalchemy import func
 #from sqlalchemy import extract
 #from sqlalchemy.types import DateTime
+from sqlalchemy.types import Integer
 #from sqlalchemy.orm.exc import NoResultFound
 
 from .forms import IndiAllskyConfigForm
@@ -173,6 +174,28 @@ class DarkFramesView(TemplateView):
 
         context['darkframe_list'] = darkframe_list
         return context
+
+
+
+class ImageLagView(TemplateView):
+    def get_context(self):
+        context = super(ImageLagView, self).get_context()
+
+        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
+        image_lag_list = db.session.query(
+            IndiAllSkyDbImageTable.id,
+            IndiAllSkyDbImageTable.createDate,
+            IndiAllSkyDbImageTable.exposure,
+            (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+        )\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .limit(50)
+
+
+        context['image_lag_list'] = image_lag_list
+
+        return context
+
 
 
 class SqmView(TemplateView):
@@ -1059,9 +1082,6 @@ class AjaxSystemInfoView(BaseView):
 
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
-bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
-bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
-bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
 bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
@@ -1075,3 +1095,11 @@ bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_na
 bp.add_url_rule('/js/chart', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+
+# hidden
+bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
+
+# work in progress
+bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))
