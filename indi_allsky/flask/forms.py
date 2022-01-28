@@ -933,10 +933,14 @@ class IndiAllskySystemInfoForm(FlaskForm):
 
 class IndiAllskyHistoryForm(FlaskForm):
     HISTORY_SELECT_choices = (
-        ('600', '10 Minutes'),
+        ('900', '15 Minutes'),
         ('1800', '30 Minutes'),
+        ('2700', '45 Minutes'),
         ('3600', '1 Hour'),
+        ('7200', '2 Hours'),
         ('10800', '3 Hours'),
+        ('14400', '4 Hours'),
+        ('18000', '5 Hours'),
         ('21600', '6 Hours'),
     )
 

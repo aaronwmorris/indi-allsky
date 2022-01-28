@@ -326,7 +326,7 @@ class ChartView(TemplateView):
 class JsonChartView(JsonView):
     def __init__(self):
         self.camera_id = self.getLatestCamera()
-        self.chart_history_seconds = 600
+        self.chart_history_seconds = 900
 
 
     def get_objects(self):

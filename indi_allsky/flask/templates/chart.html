@@ -13,7 +13,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
-var history_seconds = 600;  // default
+var history_seconds;  // set later
 var json_data = {
     'chart_data' : {
         'sqm'   : [],
