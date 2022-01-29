@@ -928,7 +928,9 @@ class SystemInfoView(TemplateView):
         context['cpu_load10'] = load10
         context['cpu_load15'] = load15
 
-        context['mem_usage'] = self.getMemoryUsage()
+        mem_total, mem_usage = self.getMemoryUsage()
+        context['mem_total'] = mem_total
+        context['mem_usage'] = mem_usage
 
         context['swap_usage'] = self.getSwapUsage()
 
@@ -978,11 +980,14 @@ class SystemInfoView(TemplateView):
         memory_info = psutil.virtual_memory()
 
         memory_total = memory_info[0]
-        memory_free = memory_info[1]
+        #memory_free = memory_info[1]
+        memory_percent = memory_info[2]
 
-        used = 100 - ((memory_free * 100) / memory_total)
+        memory_total_mb = int(memory_total / 1024 / 1024)
 
-        return used
+        #memory_percent = 100 - ((memory_free * 100) / memory_total)
+
+        return memory_total_mb, memory_percent
 
 
     def getSwapUsage(self):
