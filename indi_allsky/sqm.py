@@ -8,7 +8,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskySqm(object):
 
-    mask_percentile = 99
+    #mask_percentile = 99
 
 
     def __init__(self, config):
@@ -19,9 +19,9 @@ class IndiAllskySqm(object):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
         roidata = self.getRoi(img)
 
-        masked = self.maskStars(roidata)
+        #masked = self.maskStars(roidata)
 
-        sqm_avg = numpy.mean(masked)
+        sqm_avg = numpy.mean(roidata)
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
@@ -68,21 +68,4 @@ class IndiAllskySqm(object):
         return masked
 
 
-    def getStarless(self, img):
-        self.image_height, self.image_width = img.shape[:2]
-
-        roidata = self.getRoi(img)
-
-        no_stars = self.replaceStars(roidata)
-
-        return no_stars
-
-
-
-    def replaceStars(self, img):
-        p = numpy.percentile(img, self.mask_percentile)
-
-        masked = numpy.where[img < p, 0, img]
-
-        return masked
 
