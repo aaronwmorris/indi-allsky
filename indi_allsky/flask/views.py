@@ -397,7 +397,7 @@ class JsonChartView(JsonView):
 
             star_data = {
                 'x' : i.createDate.strftime('%H:%M:%S'),
-                'y' : i.stars_rolling,
+                'y' : int(i.stars_rolling),
             }
             chart_data['stars'].append(star_data)
 
