@@ -34,16 +34,16 @@ async function loop() {
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
-    for (var i = 0; i < image_list_copy.length; i++) {
-        showImage(image_list_copy[i], i);
-        await sleep(frame_delay_ms);
-    };
-
     if (rock) {
-        for (var i = image_list_copy.length - 1; i >= 0; i--) {
+        for (var i = 0; i < image_list_copy.length; i++) {
             showImage(image_list_copy[i], i);
             await sleep(frame_delay_ms);
         };
+    };
+
+    for (var i = image_list_copy.length - 1; i >= 0; i--) {
+        showImage(image_list_copy[i], i);
+        await sleep(frame_delay_ms);
     };
 
     setTimeout(loop, 3000);
@@ -157,6 +157,7 @@ function closeFullscreen() {
 $( document ).ready(function() {
     history_seconds = $('#HISTORY_SELECT').val();
     frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
+    rock = $('#FRAMEDELAY_SELECT').prop('checked');
 
     $('#canvas').on("click", function() {
         goFullscreen(this);
@@ -171,18 +172,25 @@ $( document ).ready(function() {
 {% block content %}
 <form id="form_history" onSubmit="return false;">
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             {{ form_history.HISTORY_SELECT(class='form-control bg-secondary') }}
         </div>
 
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             {{ form_history.FRAMEDELAY_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             {{ form_history.FRAMEDELAY_SELECT(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_history.ROCK_CHECKBOX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_history.ROCK_CHECKBOX(class='form-check-input bg-secondary') }}
         </div>
     </div>
 </form>
@@ -204,9 +212,12 @@ $("#HISTORY_SELECT").on("change", function() {
 
 $("#FRAMEDELAY_SELECT").on("change", function() {
     frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
-    console.log('Changing loop history: ' + history_seconds);
+    console.log('Changing frame delay: ' + frame_delay_ms);
 });
 
+$("#ROCK_CHECKBOX").on("change", function() {
+    rock = $('#FRAMEDELAY_SELECT').prop('checked');
+});
 
 </script>
 

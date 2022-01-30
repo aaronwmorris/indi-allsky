@@ -944,6 +944,7 @@ class IndiAllskyHistoryForm(FlaskForm):
 
     FRAMEDELAY_SELECT_choices = (
         ('25', '25ms'),
+        ('50', '50ms'),
         ('75', '75ms'),
         ('150', '150ms'),
         ('300', '300ms'),
@@ -951,5 +952,6 @@ class IndiAllskyHistoryForm(FlaskForm):
     )
 
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
-    FRAMEDELAY_SELECT    = SelectField('Delay', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[1][0], validators=[])
+    FRAMEDELAY_SELECT    = SelectField('Delay', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[2][0], validators=[])
+    ROCK_CHECKBOX        = BooleanField('Rock', default=True)
 
