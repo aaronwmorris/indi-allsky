@@ -82,10 +82,13 @@ class GetImageData {
         $data = array();
         $image_list = array();
 
+        $query_date = new DateTime('now');
+        $query_date->modify($this->_hours);
+
         # fetch files
-        $stmt_files = $this->_conn->prepare("SELECT image.filename AS image_filename, image.sqm AS image_sqm, image.stars AS image_stars FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours) ORDER BY image.createDate DESC LIMIT :limit");
+        $stmt_files = $this->_conn->prepare("SELECT image.filename AS image_filename, image.sqm AS image_sqm, image.stars AS image_stars FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > :date ORDER BY image.createDate DESC LIMIT :limit");
         $stmt_files->bindParam(':cameraId', $this->cameraId, PDO::PARAM_INT);
-        $stmt_files->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
+        $stmt_files->bindParam(':date', $query_date->format('Y-m-d H:M:S'), PDO::PARAM_STR);
         $stmt_files->bindParam(':limit', $this->limit, PDO::PARAM_INT);
         $stmt_files->execute();
 
@@ -114,10 +117,13 @@ class GetImageData {
     public function getSqmData() {
         $sqm_data = array();
 
+        $query_date = new DateTime('now');
+        $query_date->modify($this->_hours);
+
         # fetch sqm stats
-        $stmt_sqm = $this->_conn->prepare("SELECT max(image.sqm) AS image_max_sqm, min(image.sqm) AS image_min_sqm, avg(image.sqm) AS image_avg_sqm FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours)");
+        $stmt_sqm = $this->_conn->prepare("SELECT max(image.sqm) AS image_max_sqm, min(image.sqm) AS image_min_sqm, avg(image.sqm) AS image_avg_sqm FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > :date");
         $stmt_sqm->bindParam(':cameraId', $this->cameraId, PDO::PARAM_INT);
-        $stmt_sqm->bindParam(':hours', $this->_sqm_history, PDO::PARAM_STR);
+        $stmt_sqm->bindParam(':date', $query_date->format('Y-m-d H:M:S'), PDO::PARAM_STR);
         $stmt_sqm->execute();
 
         $row = $stmt_sqm->fetch();
@@ -134,10 +140,13 @@ class GetImageData {
     public function getStarsData() {
         $stars_data = array();
 
+        $query_date = new DateTime('now');
+        $query_date->modify($this->_hours);
+
         # fetch sqm stats
-        $stmt_stars = $this->_conn->prepare("SELECT max(image.stars) AS image_max_stars, min(image.stars) AS image_min_stars, avg(image.stars) AS image_avg_stars FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours)");
+        $stmt_stars = $this->_conn->prepare("SELECT max(image.stars) AS image_max_stars, min(image.stars) AS image_min_stars, avg(image.stars) AS image_avg_stars FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > :date");
         $stmt_stars->bindParam(':cameraId', $this->cameraId, PDO::PARAM_INT);
-        $stmt_stars->bindParam(':hours', $this->_stars_history, PDO::PARAM_STR);
+        $stmt_stars->bindParam(':date', $query_date->format('Y-m-d H:M:S'), PDO::PARAM_STR);
         $stmt_stars->execute();
 
         $row = $stmt_stars->fetch();

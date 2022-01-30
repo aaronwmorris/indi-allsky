@@ -80,10 +80,12 @@ class GetChartData {
         $data = array();
         $chart_data = array();
 
-        #$stmt_files = $this->_conn->prepare("SELECT image.sqm AS image_sqm, datetime(image.createDate, 'localtime') AS image_createDate FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours) ORDER BY image.createDate DESC");
-        $stmt_files = $this->_conn->prepare("SELECT image.sqm AS image_sqm, image.createDate AS image_createDate FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > datetime(datetime('now'), :hours) ORDER BY image.createDate DESC");
+        $query_date = new DateTime('now');
+        $query_date->modify($this->_hours);
+
+        $stmt_files = $this->_conn->prepare("SELECT image.sqm AS image_sqm, image.createDate AS image_createDate FROM image JOIN camera ON camera.id = image.camera_id WHERE camera.id = :cameraId AND image.createDate > :date ORDER BY image.createDate DESC");
         $stmt_files->bindParam(':cameraId', $this->cameraId, PDO::PARAM_INT);
-        $stmt_files->bindParam(':hours', $this->_hours, PDO::PARAM_STR);
+        $stmt_files->bindParam(':date', $query_date->format('Y-m-d H:M:S'), PDO::PARAM_STR);
         $stmt_files->execute();
 
         while($row = $stmt_files->fetch()) {
