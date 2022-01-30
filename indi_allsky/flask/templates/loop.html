@@ -13,6 +13,7 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
 var history_seconds;  // set later
+var frame_delay_ms;  // set later
 var json_data = {
     'image_list' : [],
 };
@@ -35,17 +36,17 @@ async function loop() {
 
     for (var i = 0; i < image_list_copy.length; i++) {
         showImage(image_list_copy[i], i);
-        await sleep(frameTime);
+        await sleep(frame_delay_ms);
     };
 
     if (rock) {
         for (var i = image_list_copy.length - 1; i >= 0; i--) {
             showImage(image_list_copy[i], i);
-            await sleep(frameTime);
+            await sleep(frame_delay_ms);
         };
     };
 
-    setTimeout(loop, (image_list_copy.length + 3) * frameTime);
+    setTimeout(loop, 3000);
 }
 
 
@@ -155,6 +156,7 @@ function closeFullscreen() {
 
 $( document ).ready(function() {
     history_seconds = $('#HISTORY_SELECT').val();
+    frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
 
     $('#canvas').on("click", function() {
         goFullscreen(this);
@@ -175,6 +177,13 @@ $( document ).ready(function() {
         <div class="col-sm-2">
             {{ form_history.HISTORY_SELECT(class='form-control bg-secondary') }}
         </div>
+
+        <div class="col-sm-2">
+            {{ form_history.FRAMEDELAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_history.FRAMEDELAY_SELECT(class='form-control bg-secondary') }}
+        </div>
     </div>
 </form>
 
@@ -192,6 +201,12 @@ $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
     console.log('Changing loop history: ' + history_seconds);
 });
+
+$("#FRAMEDELAY_SELECT").on("change", function() {
+    frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
+    console.log('Changing loop history: ' + history_seconds);
+});
+
 
 </script>
 
