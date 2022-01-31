@@ -41,6 +41,7 @@ class IndiAllSkyDbImageTable(db.Model):
     stars = db.Column(db.Integer, nullable=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     calibrated = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    detections = db.Column(db.Integer, server_default='0', nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
