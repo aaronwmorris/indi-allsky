@@ -124,13 +124,18 @@ The default credentials for accessing the web interface are user `admin` and pas
 ![](./content/webui_home.png)
 
 ### Charts
+Early evening, the sun was still going down, but a cloud passed by, increasing the average brightness and lowering the star count.
 ![](./content/webui_chart01.png)
+
+A large cloud passed over significantly increasing the brightness of the sky and blocking out almost all of the stars.
 ![](./content/webui_chart02.png)
 
 ### Image viewer
+Historical images can be browsed.  (A small satellite flare.)
 ![](./content/webui_images.png)
 
 ### Timelapse viewer
+Historical Star trails and Keograms.  The Keogram image is linked directly to the timelapse video for the night.
 ![](./content/webui_timelapse_mono.png)
 
 ### System Info
