@@ -93,6 +93,14 @@ sleep 10
 # Run sudo to ask for initial password
 sudo true
 
+
+GITDIR_OWNER=$(stat -c "%U" "$(dirname $0)")
+if [[ "$GITDIR_OWNER" != "$USER" ]]; then
+    echo "Fixing git checkout ownership"
+    sudo chown -R "$USER":"$PGRP" "$(dirname $0)"
+fi
+
+
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     DEBIAN_DISTRO=1
