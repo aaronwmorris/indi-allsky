@@ -118,9 +118,24 @@ Star trail images stack the stars from each frame to show their progression acro
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
 
-The web interface is still a work in progress.
-
 The default credentials for accessing the web interface are user `admin` and password `secret`
+
+### Home Page
+![](./content/webui_home.png)
+
+### Charts
+![](./content/webui_chart01.png)
+![](./content/webui_chart02.png)
+
+### Image viewer
+![](./content/webui_images.png)
+
+### Timelapse viewer
+![](./content/webui_timelapse_mono.png)
+
+### System Info
+![](./content/webui_systeminfo.png)
+
 
 ## Database
 
