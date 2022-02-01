@@ -269,7 +269,10 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
      ### Install INDI from Debian testing distro (bookworm)
      sudo apt-get -y install -t bookworm \
         indi-bin \
-        libindi-dev
+        libindi-dev \
+        indi-asi \
+        indi-playerone \
+        indi-webcam
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
