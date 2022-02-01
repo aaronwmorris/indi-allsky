@@ -533,7 +533,6 @@ systemctl --user enable ${INDISEVER_SERVICE_NAME}.service
 systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
-systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Ensure user is a member of the systemd-journal group ****"
@@ -740,6 +739,11 @@ echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
 # Not trying to push out the competition, these just cannot run at the same time :-)
 sudo systemctl stop allsky || true
 sudo systemctl disable allsky || true
+
+
+echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
+# this needs to happen after creating the $DB_FOLDER
+systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo
