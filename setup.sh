@@ -152,6 +152,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3 \
@@ -201,6 +204,9 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3 \
@@ -253,6 +259,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3
@@ -295,6 +304,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3 \
@@ -341,6 +353,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3 \
@@ -388,6 +403,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libnova-dev \
         zlib1g-dev \
         libgnutls28-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
         ffmpeg \
         gifsicle \
         sqlite3 \
