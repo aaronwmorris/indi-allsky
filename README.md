@@ -267,7 +267,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
 | UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
 | UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
-| UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload |
+| UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload.  This is the data.json file for https://github.com/thomasjacquin/allsky-website |
 
 ### Moon mode
 
