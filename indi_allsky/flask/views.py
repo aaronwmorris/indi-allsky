@@ -450,16 +450,16 @@ class ConfigView(FormView):
             'TARGET_ADU'                     : indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DEV'                 : indi_allsky_config.get('TARGET_ADU_DEV', 10),
             'DETECT_STARS'                   : indi_allsky_config.get('DETECT_STARS', True),
-            'LOCATION_LATITUDE'              : indi_allsky_config.get('LOCATION_LATITUDE', 0),
-            'LOCATION_LONGITUDE'             : indi_allsky_config.get('LOCATION_LONGITUDE', 0),
+            'LOCATION_LATITUDE'              : indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
+            'LOCATION_LONGITUDE'             : indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
             'DAYTIME_CAPTURE'                : indi_allsky_config.get('DAYTIME_CAPTURE', False),
             'DAYTIME_TIMELAPSE'              : indi_allsky_config.get('DAYTIME_TIMELAPSE', False),
             'DAYTIME_CONTRAST_ENHANCE'       : indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
             'NIGHT_CONTRAST_ENHANCE'         : indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
-            'NIGHT_SUN_ALT_DEG'              : indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6),
-            'NIGHT_MOONMODE_ALT_DEG'         : indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5),
-            'NIGHT_MOONMODE_PHASE'           : indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50),
-            'KEOGRAM_ANGLE'                  : indi_allsky_config.get('KEOGRAM_ANGLE', 0),
+            'NIGHT_SUN_ALT_DEG'              : indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),
+            'NIGHT_MOONMODE_ALT_DEG'         : indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0),
+            'NIGHT_MOONMODE_PHASE'           : indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
+            'KEOGRAM_ANGLE'                  : indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
             'KEOGRAM_H_SCALE'                : indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
             'KEOGRAM_V_SCALE'                : indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
             'KEOGRAM_LABEL'                  : indi_allsky_config.get('KEOGRAM_LABEL', True),
@@ -653,16 +653,16 @@ class AjaxConfigView(BaseView):
         indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
         indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
-        indi_allsky_config['LOCATION_LATITUDE']                    = int(request.json['LOCATION_LATITUDE'])
-        indi_allsky_config['LOCATION_LONGITUDE']                   = int(request.json['LOCATION_LONGITUDE'])
+        indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
+        indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
         indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
         indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
         indi_allsky_config['DAYTIME_CONTRAST_ENHANCE']             = bool(request.json['DAYTIME_CONTRAST_ENHANCE'])
         indi_allsky_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
-        indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = int(request.json['NIGHT_SUN_ALT_DEG'])
-        indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = int(request.json['NIGHT_MOONMODE_ALT_DEG'])
-        indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = int(request.json['NIGHT_MOONMODE_PHASE'])
-        indi_allsky_config['KEOGRAM_ANGLE']                        = int(request.json['KEOGRAM_ANGLE'])
+        indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = float(request.json['NIGHT_SUN_ALT_DEG'])
+        indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = float(request.json['NIGHT_MOONMODE_ALT_DEG'])
+        indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
+        indi_allsky_config['KEOGRAM_ANGLE']                        = float(request.json['KEOGRAM_ANGLE'])
         indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
         indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
         indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
