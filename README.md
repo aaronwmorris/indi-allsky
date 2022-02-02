@@ -258,14 +258,16 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD          |             | (str) Password for file tranfer |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
-| REMOTE_IMAGE_FOLDER |             | (str) Remote folder to upload latest image |
-| REMOTE_VIDEO_FOLDER |             | (str) Remote folder to upload time lapse videos |
-| REMOTE_KEOGRAM_FOLDER   |         | (str) Remote folder to upload keograms |
-| REMOTE_STARTRAIL_FOLDER |         | (str) Remote folder to upload star trails |
+| REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
+| REMOTE_VIDEO_FOLDER        |      | (str) Remote folder to upload time lapse videos |
+| REMOTE_KEOGRAM_FOLDER      |      | (str) Remote folder to upload keograms |
+| REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |
+| REMOTE_ENDOFNIGHT_FOLDER   |      | (str) Remote folder to upload Allsky EndOfNight data |
 | UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
 | UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
 | UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
 | UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
+| UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload |
 
 ### Moon mode
 
