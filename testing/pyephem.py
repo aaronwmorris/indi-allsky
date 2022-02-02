@@ -4,7 +4,7 @@ import ephem
 import datetime
 from dateutil import tz
 import math
-#import json
+import json
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -94,11 +94,11 @@ except ephem.NeverUpError:
 
 
 data = {
-    'sunrise'            : sun_civilDawn_date.isoformat(),
-    'sunset'             : sun_civilTwilight_date.isoformat(),
+    'sunrise'            : sun_civilDawn_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
+    'sunset'             : sun_civilTwilight_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
     'streamDaytime'      : False,
 }
 
 
-#print(json.dumps(data, indent=4))
+print(json.dumps(data, indent=4))
 

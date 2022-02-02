@@ -468,8 +468,8 @@ class VideoWorker(Process):
 
 
         data = {
-            'sunrise'            : sun_civilDawn_date.isoformat(),
-            'sunset'             : sun_civilTwilight_date.isoformat(),
+            'sunrise'            : sun_civilDawn_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
+            'sunset'             : sun_civilTwilight_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
             'streamDaytime'      : bool(self.config['DAYTIME_CAPTURE']),
         }
 
