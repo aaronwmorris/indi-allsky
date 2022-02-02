@@ -44,6 +44,7 @@ obs.date = sun_rise_date
 sun_rise_ha = math.degrees(obs.sidereal_time() - sun.ra)
 
 
+logger.info('Sun alt: %0.7f rad', sun.alt)
 logger.info('Sun alt: %0.1f', sun_alt_deg)
 logger.info('Sun HA: %0.1f', sun_ha_deg)
 logger.info('Sun rise: %s', ephem.Date(sun_rise_date + (ephem.hour * TIME_OFFSET)))
@@ -73,8 +74,17 @@ logger.info('Moon phase: %0.2f%%', moon.moon_phase * 100)
 
 
 
+obs.date = utcnow
+sun.compute(obs)
+
+
 try:
-    sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+    if math.degrees(sun.alt) < 0:
+        logger.info('Sun below horizon')
+        sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+    else:
+        logger.info('Sun already above horizon')
+        sun_civilDawn_date = obs.previous_rising(sun, use_center=True).datetime()
 except ephem.NeverUpError:
     # northern hemisphere
     sun_civilDawn_date = utcnow + datetime.timedelta(years=10)
@@ -87,10 +97,10 @@ try:
     sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
 except ephem.AlwaysUpError:
     # northern hemisphere
-    sun_civilDawn_date = utcnow + datetime.timedelta(years=10)
+    sun_civilTwilight_date = utcnow - datetime.timedelta(days=1)
 except ephem.NeverUpError:
     # southern hemisphere
-    sun_civilDawn_date = utcnow - datetime.timedelta(days=1)
+    sun_civilTwilight_date = utcnow + datetime.timedelta(years=10)
 
 
 data = {

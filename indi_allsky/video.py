@@ -441,14 +441,18 @@ class VideoWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
         obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
-        obs.date = utcnow
 
         sun = ephem.Sun()
+
+        obs.date = utcnow
         sun.compute(obs)
 
 
         try:
-            sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+            if math.degrees(sun.alt) < 0:
+                sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+            else:
+                sun_civilDawn_date = obs.previous_rising(sun, use_center=True).datetime()
         except ephem.NeverUpError:
             # northern hemisphere
             sun_civilDawn_date = utcnow + timedelta(years=10)
@@ -461,10 +465,10 @@ class VideoWorker(Process):
             sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
         except ephem.AlwaysUpError:
             # northern hemisphere
-            sun_civilDawn_date = utcnow + timedelta(years=10)
+            sun_civilTwilight_date = utcnow - timedelta(days=1)
         except ephem.NeverUpError:
             # southern hemisphere
-            sun_civilDawn_date = utcnow - timedelta(days=1)
+            sun_civilTwilight_date = utcnow + timedelta(years=10)
 
 
         data = {
