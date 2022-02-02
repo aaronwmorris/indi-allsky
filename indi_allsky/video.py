@@ -6,6 +6,7 @@ import json
 import cv2
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 import subprocess
 import tempfile
@@ -474,8 +475,8 @@ class VideoWorker(Process):
 
 
         data = {
-            'sunrise'            : sun_civilDawn_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
-            'sunset'             : sun_civilTwilight_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
+            'sunrise'            : sun_civilDawn_date.replace(tzinfo=timezone.utc).isoformat(),
+            'sunset'             : sun_civilTwilight_date.replace(tzinfo=timezone.utc).isoformat(),
             'streamDaytime'      : bool(self.config['DAYTIME_CAPTURE']),
         }
 
