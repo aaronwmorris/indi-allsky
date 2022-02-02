@@ -1,6 +1,7 @@
 import os
 import io
 import time
+import json
 import cv2
 from datetime import datetime
 from datetime import timedelta
@@ -85,6 +86,10 @@ class VideoWorker(Process):
 
             if expireData:
                 self.expireData(img_folder)
+
+
+            if self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+                self.uploadAllskyEndOfNight(timeofday)
 
 
             if video:
@@ -412,6 +417,43 @@ class VideoWorker(Process):
             'local_file' : startrail_file,
             'remote_file' : remote_file,
         })
+
+
+    def uploadAllskyEndOfNight(self, timeofday):
+        if timeofday != 'night':
+            # Only upload at end of night
+            return
+
+        if not self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+            logger.warning('End of Night uploading disabled')
+            return
+
+        if not self.config['FILETRANSFER'].get('REMOTE_ENDOFNIGHT_FOLDER'):
+            logger.error('End of Night folder not configured')
+            return
+
+        data = {
+            'sunrise'            : None,
+            'sunset'             : None,
+            'streamDaytime'      : bool(self.config['DAYTIME_CAPTURE']),
+        }
+
+
+        data_tempfile_f = tempfile.NamedTemporaryFile(delete=False)
+
+        json.dump(data, data_tempfile_f, indent=4)
+        data_tempfile_f.flush()
+        data_tempfile_f.close()
+
+
+        data_json_p = Path(data_tempfile_f.name)
+        remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
+
+        self.upload_q.put({
+            'local_file' : data_json_p,
+            'remote_file' : remote_file_p,
+        })
+
 
 
     def expireData(self, img_folder):
