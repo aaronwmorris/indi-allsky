@@ -104,13 +104,15 @@
         "PASSWORD"               : "",
         "TIMEOUT"                : 5.0,
         "REMOTE_IMAGE_NAME"      : "image-resize.{0}",
-        "REMOTE_IMAGE_FOLDER"    : "/tmp",
-        "REMOTE_VIDEO_FOLDER"    : "/tmp",
-        "REMOTE_KEOGRAM_FOLDER"  : "/tmp",
-        "REMOTE_STARTRAIL_FOLDER": "/tmp",
+        "REMOTE_IMAGE_FOLDER"        : "/tmp",
+        "REMOTE_VIDEO_FOLDER"        : "/tmp",
+        "REMOTE_KEOGRAM_FOLDER"      : "/tmp",
+        "REMOTE_STARTRAIL_FOLDER"    : "/tmp",
+        "REMOTE_ENDOFNIGHT_FOLDER"   : "/tmp",
         "UPLOAD_IMAGE"           : 0,
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
-        "UPLOAD_STARTRAIL"       : false
+        "UPLOAD_STARTRAIL"       : false,
+        "UPLOAD_ENDOFNIGHT"      : false
     }
 }

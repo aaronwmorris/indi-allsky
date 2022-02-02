@@ -109,7 +109,7 @@ def ADU_ROI_validator(form, field):
 
 
 def LOCATION_LATITUDE_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < -90:
@@ -120,7 +120,7 @@ def LOCATION_LATITUDE_validator(form, field):
 
 
 def LOCATION_LONGITUDE_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < -180:
@@ -131,7 +131,7 @@ def LOCATION_LONGITUDE_validator(form, field):
 
 
 def NIGHT_SUN_ALT_DEG_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < -90:
@@ -142,7 +142,7 @@ def NIGHT_SUN_ALT_DEG_validator(form, field):
 
 
 def NIGHT_MOONMODE_ALT_DEG_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < -90:
@@ -153,7 +153,7 @@ def NIGHT_MOONMODE_ALT_DEG_validator(form, field):
 
 
 def NIGHT_MOONMODE_PHASE_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < 0:
@@ -164,7 +164,7 @@ def NIGHT_MOONMODE_PHASE_validator(form, field):
 
 
 def KEOGRAM_ANGLE_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < -90:
@@ -509,16 +509,16 @@ class IndiAllskyConfigForm(FlaskForm):
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
     ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
     DETECT_STARS                     = BooleanField('Star Detection')
-    LOCATION_LATITUDE                = IntegerField('Latitude', validators=[LOCATION_LATITUDE_validator])
-    LOCATION_LONGITUDE               = IntegerField('Longitude', validators=[LOCATION_LONGITUDE_validator])
+    LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
+    LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
     DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Night time Contrast Enhance')
-    NIGHT_SUN_ALT_DEG                = IntegerField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
-    NIGHT_MOONMODE_ALT_DEG           = IntegerField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
-    NIGHT_MOONMODE_PHASE             = IntegerField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
-    KEOGRAM_ANGLE                    = IntegerField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
+    NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
+    NIGHT_MOONMODE_ALT_DEG           = FloatField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
+    NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
+    KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
@@ -564,10 +564,12 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER = StringField('Remote EndOfNight Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
+    FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
 

@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 from multiprocessing import Process
 #from threading import Thread
 import queue
@@ -34,8 +35,16 @@ class FileUploader(Process):
             if u_dict.get('stop'):
                 return
 
+
             local_file = u_dict['local_file']
             remote_file = u_dict['remote_file']
+
+            remove_local = u_dict.get('remove_local')
+
+
+            local_file_p = Path(local_file)
+            remote_file_p = Path(remote_file)
+
 
             try:
                 client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
@@ -68,7 +77,7 @@ class FileUploader(Process):
 
             # Upload file
             try:
-                client.put(local_file, remote_file)
+                client.put(local_file_p, remote_file_p)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
@@ -93,6 +102,16 @@ class FileUploader(Process):
             upload_elapsed_s = time.time() - start
             logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
 
+
+            if remove_local:
+                try:
+                    local_file_p.unlink()
+                except PermissionError as e:
+                    logger.error('Cannot remove local file: %s', str(e))
+                    return
+                except FileNotFoundError as e:
+                    logger.error('Cannot remove local file: %s', str(e))
+                    return
 
 
             #raise Exception('Testing uncaught exception')

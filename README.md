@@ -207,8 +207,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
 | TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time |
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
-| LOCATION_LATITUDE   |             | (string) Your latitude for astrometric calculations |
-| LOCATION_LONGITUDE  |             | (string) Your longitude for astrometric calculations |
+| LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
+| LOCATION_LONGITUDE  |             | (float) Your longitude for astrometric calculations |
 | DAYTIME_CAPTURE     | false       | (bool) Perform day time image capture |
 | DAYTIME_TIMELAPSE   | false       | (bool) Generate timelapse from day time images |
 | DAYTIME_CONTRAST_ENHANCE | false  | (bool) Perform CLAHE contrast enhancement on day time images |
@@ -216,7 +216,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | NIGHT_SUN_ALT_DEG   | -6          | (degrees) Altitude of Sun to calculate beginning and end of night |
 | NIGHT_MOONMODE_ALT_DEG   | 0      | (degrees) Altitude of Moon to enable night time "moon mode" |
 | NIGHT_MOONMODE_PHASE     | 33     | (percent) Minimum illumination of Moon to enable night time "moon mode" |
-| KEOGRAM_ANGLE       | 0           | (int) Angle of image rotation for keogram generation |
+| KEOGRAM_ANGLE       | 0           | (float) Angle of image rotation for keogram generation |
 | KEOGRAM_H_SCALE     | 100         | (int) Horizontal scaling of keograms |
 | KEOGRAM_V_SCALE     | 33          | (int) Vertical scaling of keograms |
 | KEOGRAM_LABEL       | true        | (bool) Label keogram timeline |
@@ -258,14 +258,16 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD          |             | (str) Password for file tranfer |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
-| REMOTE_IMAGE_FOLDER |             | (str) Remote folder to upload latest image |
-| REMOTE_VIDEO_FOLDER |             | (str) Remote folder to upload time lapse videos |
-| REMOTE_KEOGRAM_FOLDER   |         | (str) Remote folder to upload keograms |
-| REMOTE_STARTRAIL_FOLDER |         | (str) Remote folder to upload star trails |
+| REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
+| REMOTE_VIDEO_FOLDER        |      | (str) Remote folder to upload time lapse videos |
+| REMOTE_KEOGRAM_FOLDER      |      | (str) Remote folder to upload keograms |
+| REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |
+| REMOTE_ENDOFNIGHT_FOLDER   |      | (str) Remote folder to upload Allsky EndOfNight data |
 | UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
 | UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
 | UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
 | UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
+| UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload.  This is the data.json file for https://github.com/thomasjacquin/allsky-website |
 
 ### Moon mode
 

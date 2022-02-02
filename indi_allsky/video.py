@@ -1,15 +1,20 @@
 import os
 import io
 import time
+import math
+import json
 import cv2
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 import subprocess
 import tempfile
 import fcntl
 import errno
 import logging
+
+import ephem
 
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
@@ -85,6 +90,10 @@ class VideoWorker(Process):
 
             if expireData:
                 self.expireData(img_folder)
+
+
+            if self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+                self.uploadAllskyEndOfNight(timeofday)
 
 
             if video:
@@ -412,6 +421,82 @@ class VideoWorker(Process):
             'local_file' : startrail_file,
             'remote_file' : remote_file,
         })
+
+
+    def uploadAllskyEndOfNight(self, timeofday):
+        if timeofday != 'night':
+            # Only upload at end of night
+            return
+
+        if not self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+            logger.warning('End of Night uploading disabled')
+            return
+
+        if not self.config['FILETRANSFER'].get('REMOTE_ENDOFNIGHT_FOLDER'):
+            logger.error('End of Night folder not configured')
+            return
+
+
+        logger.info('Generating Allsky EndOfNight data.json')
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+
+        sun = ephem.Sun()
+
+        obs.date = utcnow
+        sun.compute(obs)
+
+
+        try:
+            if math.degrees(sun.alt) < 0:
+                sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+            else:
+                sun_civilDawn_date = obs.previous_rising(sun, use_center=True).datetime()
+        except ephem.NeverUpError:
+            # northern hemisphere
+            sun_civilDawn_date = utcnow + timedelta(years=10)
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            sun_civilDawn_date = utcnow - timedelta(days=1)
+
+
+        try:
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            sun_civilTwilight_date = utcnow - timedelta(days=1)
+        except ephem.NeverUpError:
+            # southern hemisphere
+            sun_civilTwilight_date = utcnow + timedelta(years=10)
+
+
+        data = {
+            'sunrise'            : sun_civilDawn_date.replace(tzinfo=timezone.utc).isoformat(),
+            'sunset'             : sun_civilTwilight_date.replace(tzinfo=timezone.utc).isoformat(),
+            'streamDaytime'      : bool(self.config['DAYTIME_CAPTURE']),
+        }
+
+
+        data_tempfile_f = tempfile.NamedTemporaryFile(mode='w', delete=False)
+
+        json.dump(data, data_tempfile_f, indent=4)
+        data_tempfile_f.flush()
+        data_tempfile_f.close()
+
+
+        data_json_p = Path(data_tempfile_f.name)
+        remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
+
+        self.upload_q.put({
+            'local_file'     : data_json_p,
+            'remote_file'    : remote_file_p,
+            'remove_local'   : True,
+        })
+
 
 
     def expireData(self, img_folder):
