@@ -485,8 +485,9 @@ class VideoWorker(Process):
         remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
 
         self.upload_q.put({
-            'local_file' : data_json_p,
-            'remote_file' : remote_file_p,
+            'local_file'     : data_json_p,
+            'remote_file'    : remote_file_p,
+            'remove_local'   : True,
         })
 
 
