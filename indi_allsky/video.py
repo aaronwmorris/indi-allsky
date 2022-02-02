@@ -481,7 +481,7 @@ class VideoWorker(Process):
         }
 
 
-        data_tempfile_f = tempfile.NamedTemporaryFile(delete=False)
+        data_tempfile_f = tempfile.NamedTemporaryFile(mode='w', delete=False)
 
         json.dump(data, data_tempfile_f, indent=4)
         data_tempfile_f.flush()
