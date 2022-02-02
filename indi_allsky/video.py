@@ -448,7 +448,7 @@ class VideoWorker(Process):
 
 
         try:
-            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
+            sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
         except ephem.NeverUpError:
             # northern hemisphere
             sun_civilDawn_date = utcnow + timedelta(years=10)
@@ -458,7 +458,7 @@ class VideoWorker(Process):
 
 
         try:
-            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
         except ephem.AlwaysUpError:
             # northern hemisphere
             sun_civilDawn_date = utcnow + timedelta(years=10)

@@ -4,6 +4,7 @@ import ephem
 import datetime
 from dateutil import tz
 import math
+#import json
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -18,10 +19,12 @@ TIME_OFFSET = -5
 
 local_tz = tz.gettz(TIMEZONE)
 
+utcnow = datetime.datetime.utcnow()  # ephem expects UTC dates
+
 obs = ephem.Observer()
 obs.lat = math.radians(LATITUDE)
 obs.lon = math.radians(LONGITUDE)
-obs.date = datetime.datetime.utcnow()  # ephem expects UTC dates
+obs.date = utcnow
 
 sun = ephem.Sun()
 sun.compute(obs)
@@ -67,3 +70,35 @@ moon.compute(obs)
 moon_alt_deg = math.degrees(moon.alt)
 logger.info('Moon alt: %0.1f', moon_alt_deg)
 logger.info('Moon phase: %0.2f%%', moon.moon_phase * 100)
+
+
+
+try:
+    sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+except ephem.NeverUpError:
+    # northern hemisphere
+    sun_civilDawn_date = utcnow + datetime.timedelta(years=10)
+except ephem.AlwaysUpError:
+    # southern hemisphere
+    sun_civilDawn_date = utcnow - datetime.timedelta(days=1)
+
+
+try:
+    sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
+except ephem.AlwaysUpError:
+    # northern hemisphere
+    sun_civilDawn_date = utcnow + datetime.timedelta(years=10)
+except ephem.NeverUpError:
+    # southern hemisphere
+    sun_civilDawn_date = utcnow - datetime.timedelta(days=1)
+
+
+data = {
+    'sunrise'            : sun_civilDawn_date.isoformat(),
+    'sunset'             : sun_civilTwilight_date.isoformat(),
+    'streamDaytime'      : False,
+}
+
+
+#print(json.dumps(data, indent=4))
+
