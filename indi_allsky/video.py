@@ -1,6 +1,7 @@
 import os
 import io
 import time
+import math
 import json
 import cv2
 from datetime import datetime
@@ -11,6 +12,8 @@ import tempfile
 import fcntl
 import errno
 import logging
+
+import ephem
 
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
@@ -432,9 +435,41 @@ class VideoWorker(Process):
             logger.error('End of Night folder not configured')
             return
 
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.date = utcnow
+
+        sun = ephem.Sun()
+        sun.compute(obs)
+
+
+        try:
+            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
+        except ephem.NeverUpError:
+            # northern hemisphere
+            sun_civilDawn_date = utcnow + timedelta(years=10)
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            sun_civilDawn_date = utcnow - timedelta(days=1)
+
+
+        try:
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            sun_civilDawn_date = utcnow + timedelta(years=10)
+        except ephem.NeverUpError:
+            # southern hemisphere
+            sun_civilDawn_date = utcnow - timedelta(days=1)
+
+
         data = {
-            'sunrise'            : None,
-            'sunset'             : None,
+            'sunrise'            : sun_civilDawn_date.isoformat(),
+            'sunset'             : sun_civilTwilight_date.isoformat(),
             'streamDaytime'      : bool(self.config['DAYTIME_CAPTURE']),
         }
 
