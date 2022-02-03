@@ -953,9 +953,9 @@ class SystemInfoView(TemplateView):
         context['python_platform'] = platform.machine()
 
         context['indi_version'] = '.'.join((
-            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1),
-            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1),
-            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1),
+            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
 
         return context
