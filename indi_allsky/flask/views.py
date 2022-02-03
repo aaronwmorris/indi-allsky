@@ -1,3 +1,4 @@
+import platform
 from datetime import datetime
 from datetime import timedelta
 import io
@@ -7,6 +8,8 @@ from pathlib import Path
 from collections import OrderedDict
 import psutil
 import dbus
+
+import PyIndi
 
 from flask import render_template
 from flask import request
@@ -938,13 +941,22 @@ class SystemInfoView(TemplateView):
 
         context['swap_usage'] = self.getSwapUsage()
 
-        context['rootfs_usage'] = self.getRootFsUsage()
+        context['fs_data'] = self.getAllFsUsage()
 
         context['temp_list'] = self.getTemps()
 
         context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
         context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
+
+        context['python_version'] = platform.python_version()
+        context['python_platform'] = platform.machine()
+
+        context['indi_version'] = '.'.join((
+            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
+        ))
 
         return context
 
@@ -1000,10 +1012,21 @@ class SystemInfoView(TemplateView):
         return swap_info[3]
 
 
-    def getRootFsUsage(self):
-        disk_info = psutil.disk_usage('/')
+    def getAllFsUsage(self):
+        fs_list = psutil.disk_partitions()
 
-        return disk_info[3]
+        fs_data = list()
+        for fs in fs_list:
+            disk_usage = psutil.disk_usage(fs.mountpoint)
+
+            data = {
+                'mountpoint' : fs.mountpoint,
+                'percent' : disk_usage.percent,
+            }
+
+            fs_data.append(data)
+
+        return fs_data
 
 
     def getTemps(self):
