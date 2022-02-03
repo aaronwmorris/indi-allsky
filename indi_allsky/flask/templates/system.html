@@ -16,6 +16,7 @@
 <div class="row">
     <div class="col-sm-2">CPU Count</div>
     <div class="col-sm-1">{{cpu_count}}</div>
+    <div class="col-sm-2">{{python_platform}}</div>
 </div>
 
 <hr />
@@ -106,6 +107,13 @@
             </div>
         {% endif %}
     {% endfor %}
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2">System</div>
+    <div class="col-sm-2">Python {{python_version}}</div>
 </div>
 
 <hr />

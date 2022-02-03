@@ -1,3 +1,4 @@
+import platform
 from datetime import datetime
 from datetime import timedelta
 import io
@@ -945,6 +946,9 @@ class SystemInfoView(TemplateView):
         context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
         context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
+
+        context['python_version'] = platform.python_version()
+        context['python_platform'] = platform.machine()
 
         return context
 
