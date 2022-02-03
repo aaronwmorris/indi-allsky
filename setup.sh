@@ -94,11 +94,8 @@ sleep 10
 sudo true
 
 
-GITDIR_OWNER=$(stat -c "%U" "$(dirname $0)")
-if [[ "$GITDIR_OWNER" != "$USER" ]]; then
-    echo "Fixing git checkout ownership"
-    sudo chown -R "$USER":"$PGRP" "$(dirname $0)"
-fi
+echo "Fixing git checkout ownership"
+sudo chown -R "$USER":"$PGRP" "$(dirname $0)"
 
 
 echo "**** Installing packages... ****"
@@ -436,7 +433,8 @@ cd $OLDPWD
 
 
 echo "**** Python virtualenv setup ****"
-[[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir -m 755 "${ALLSKY_DIRECTORY}/virtualenv"
+[[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
+chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
 fi
@@ -543,7 +541,8 @@ sudo usermod -a -G systemd-journal "$USER"
 
 
 echo "**** Setup rsyslog logging ****"
-[[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir -m 755 /var/log/indi-allsky
+[[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
+sudo chmod 755 /var/log/indi-allsky
 sudo touch /var/log/indi-allsky/indi-allsky.log
 sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
 sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
@@ -561,9 +560,9 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 
 echo "**** Indi-allsky config ****"
-[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir -m 755 "$ALLSKY_ETC"
+[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
 sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
-sudo chmod 755 "${ALLSKY_ETC}"
+sudo chmod 775 "${ALLSKY_ETC}"
 
 if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
     if [[ -f "config.json" ]]; then
@@ -581,7 +580,7 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
 fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
-sudo chmod 640 "${ALLSKY_ETC}/config.json"
+sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
 
 echo "**** Flask config ****"
@@ -605,7 +604,7 @@ cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
 #fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
-sudo chmod 640 "${ALLSKY_ETC}/flask.json"
+sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP4" ]] && rm -f "$TMP4"
 
@@ -631,7 +630,7 @@ if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
     sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
 fi
 
-sudo chmod 644 "${ALLSKY_ETC}/apache.passwd"
+sudo chmod 664 "${ALLSKY_ETC}/apache.passwd"
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
 
 
@@ -664,27 +663,33 @@ fi
 
 
 echo "**** Setup image folder ****"
-[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -m 755 "$HTDOCS_FOLDER"
+[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir "$HTDOCS_FOLDER"
+sudo chmod 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 
-[[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images"
-[[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir -m 755 "$HTDOCS_FOLDER/images/darks"
-[[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir -m 755 "$HTDOCS_FOLDER/js"
+[[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir "$HTDOCS_FOLDER/images"
+chmod 775 "$HTDOCS_FOLDER/images"
+[[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir "$HTDOCS_FOLDER/images/darks"
+chmod 775 "$HTDOCS_FOLDER/images/darks"
+[[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir "$HTDOCS_FOLDER/js"
+chmod 775 "$HTDOCS_FOLDER/js"
 
 for F in $HTDOCS_FILES; do
-    # ask to overwrite if they already exist
     cp -f "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
-    chmod 644 "${HTDOCS_FOLDER}/${F}"
+    chmod 664 "${HTDOCS_FOLDER}/${F}"
 done
 
 
 echo "**** Setup DB ****"
-[[ ! -d "$DB_FOLDER" ]] && sudo mkdir -m 755 "$DB_FOLDER"
-[[ -d "$DB_FOLDER" ]] && sudo chmod ugo+rx "$DB_FOLDER"
-[[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir -m 755 "${DB_FOLDER}/backup"
-sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
+[[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
+sudo chmod 775 "$DB_FOLDER"
+sudo chown "$USER":"$PGRP" "$DB_FOLDER"
+[[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
+sudo chmod 775 "$DB_FOLDER/backup"
+sudo chown "$USER":"$PGRP" "$DB_FOLDER/backup"
 if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
-    sudo chmod ugo+r "$DB_FOLDER/indi-allsky.sqlite"
+    sudo chmod 664 "$DB_FOLDER/indi-allsky.sqlite"
+    sudo chown "$USER":"$PGRP" "$DB_FOLDER/indi-allsky.sqlite"
 
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
@@ -710,6 +715,10 @@ fi
 
 flask db revision --autogenerate
 flask db upgrade head
+
+
+sudo chmod 664 "$DB_FOLDER/indi-allsky.sqlite"
+sudo chown "$USER":"$PGRP" "$DB_FOLDER/indi-allsky.sqlite"
 
 
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
