@@ -941,7 +941,7 @@ class SystemInfoView(TemplateView):
 
         context['swap_usage'] = self.getSwapUsage()
 
-        context['rootfs_usage'] = self.getRootFsUsage()
+        context['fs_data'] = self.getAllFsUsage()
 
         context['temp_list'] = self.getTemps()
 
@@ -1012,10 +1012,21 @@ class SystemInfoView(TemplateView):
         return swap_info[3]
 
 
-    def getRootFsUsage(self):
-        disk_info = psutil.disk_usage('/')
+    def getAllFsUsage(self):
+        fs_list = psutil.disk_partitions()
 
-        return disk_info[3]
+        fs_data = list()
+        for fs in fs_list:
+            disk_usage = psutil.disk_usage(fs.mountpoint)
+
+            data = {
+                'mountpoint' : fs.mountpoint,
+                'percent' : disk_usage.percent,
+            }
+
+            fs_data.append(data)
+
+        return fs_data
 
 
     def getTemps(self):
