@@ -9,6 +9,8 @@ from collections import OrderedDict
 import psutil
 import dbus
 
+import PyIndi
+
 from flask import render_template
 from flask import request
 from flask import jsonify
@@ -949,6 +951,12 @@ class SystemInfoView(TemplateView):
 
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
+
+        context['indi_version'] = '.'.join((
+            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1),
+            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1),
+            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1),
+        ))
 
         return context
 
