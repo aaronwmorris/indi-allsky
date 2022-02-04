@@ -68,7 +68,11 @@
                     </li>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
-                    Status: {{ indi_allsky_status|safe }}
+                    <div>Status: {{ indi_allsky_status|safe }}</div>
+                    <div>Mode: {{astrometric_data.mode}}</div>
+                    <div>Sun: {{astrometric_data.sun_alt}}&deg;</div>
+                    <div>Moon: {{astrometric_data.moon_alt}}&deg;</div>
+                    <div>Phase: {{astrometric_data.moon_phase}}%</div>
                 </div>
                 <!--
                 <div class="dropdown py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
