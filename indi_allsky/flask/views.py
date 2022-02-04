@@ -4,10 +4,13 @@ from datetime import timedelta
 import io
 import json
 import time
+import math
 from pathlib import Path
 from collections import OrderedDict
 import psutil
 import dbus
+
+import ephem
 
 import PyIndi
 
@@ -95,6 +98,46 @@ class BaseView(View):
         return '<span class="text-danger">DOWN</span>'
 
 
+    def get_astrometric_info(self):
+        data = dict()
+
+        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            try:
+                indi_allsky_config = json.loads(f_config_file.read())
+            except json.JSONDecodeError as e:
+                app.logger.error('Error decoding json: %s', str(e))
+                return data
+
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(indi_allsky_config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(indi_allsky_config['LOCATION_LATITUDE'])
+
+        sun = ephem.Sun()
+        moon = ephem.Moon()
+
+        obs.date = utcnow
+        sun.compute(obs)
+        moon.compute(obs)
+
+        sun_alt = math.degrees(sun.alt)
+        data['sun_alt'] = '{0:0.1f}'.format(sun_alt)
+
+        moon_alt = math.degrees(moon.alt)
+        data['moon_alt'] = '{0:0.1f}'.format(moon_alt)
+        data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+
+        if sun_alt > indi_allsky_config['NIGHT_SUN_ALT_DEG']:
+            data['mode'] = 'Day'
+        else:
+            data['mode'] = 'Night'
+
+
+        return data
+
+
     def getLatestCamera(self):
         latest_camera = IndiAllSkyDbCameraTable.query\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
@@ -120,6 +163,7 @@ class TemplateView(BaseView):
     def get_context(self):
         context = {
             'indi_allsky_status' : self.get_indi_allsky_status(),
+            'astrometric_data'   : self.get_astrometric_info(),
         }
         return context
 
