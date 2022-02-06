@@ -1,6 +1,6 @@
 {
-    "INDI_SERVER : "localhost",
-    "INDI_PORT": 7624,
+    "INDI_SERVER" : "localhost",
+    "INDI_PORT"   : 7624,
 
     "CCD_CONFIG" : {
         "NIGHT" : {
