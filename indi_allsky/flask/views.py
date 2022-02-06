@@ -483,6 +483,8 @@ class ConfigView(FormView):
 
 
         form_data = {
+            'INDI_SERVER'                    : indi_allsky_config.get('INDI_SERVER', 'localhost'),
+            'INDI_PORT'                      : indi_allsky_config.get('INDI_PORT', 7624),
             'CCD_CONFIG__NIGHT__GAIN'        : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0),
             'CCD_CONFIG__NIGHT__BINNING'     : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
             'CCD_CONFIG__MOONMODE__GAIN'     : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0),
@@ -686,6 +688,8 @@ class AjaxConfigView(BaseView):
 
 
         # update data
+        indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
+        indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
         indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
         indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
         indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = int(request.json['CCD_CONFIG__MOONMODE__GAIN'])

@@ -48,9 +48,6 @@ class IndiAllSky(object):
 
         self.config_file = f_config_file.name
 
-        self._indi_server = 'localhost'
-        self._indi_port = 7624
-
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
         self.image_q = Queue()
@@ -101,24 +98,6 @@ class IndiAllSky(object):
         self.restart = False
         self.shutdown = False
         self.terminate = False
-
-
-    @property
-    def indi_server(self):
-        return self._indi_server
-
-    @indi_server.setter
-    def indi_server(self, new_server):
-        self._indi_server = str(new_server)
-
-
-    @property
-    def indi_port(self):
-        return self._indi_port
-
-    @indi_port.setter
-    def indi_port(self, new_port):
-        self._indi_port = int(new_port)
 
 
     @property
@@ -232,6 +211,14 @@ class IndiAllSky(object):
 
         # set any new config defaults which might not be in the config
 
+        # indi server
+        if not c.get('INDI_SERVER'):
+            c['INDI_SERVER'] = 'localhost'
+
+        if not c.get('INDI_PORT'):
+            c['INDI_PORT'] = 7624
+
+
         # translate old config option
         if c.get('IMAGE_SCALE_PERCENT') and not c.get('IMAGE_SCALE'):
             c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
@@ -270,7 +257,7 @@ class IndiAllSky(object):
         )
 
         # set indi server localhost and port
-        self.indiclient.setServer(self._indi_server, self._indi_port)
+        self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
 
         # connect to indi server
         logger.info("Connecting to indiserver")
