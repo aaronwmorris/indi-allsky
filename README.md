@@ -189,6 +189,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |
+| INDI_SERVER         | localhost   | (str) Hostname for INDI server |
+| INDI_PORT           | 7624        | (int) Port for INDI server |
 | CCD_CONFIG          |             | (dict) Indi configuration parameters for CCD |
 | > NIGHT > GAIN      |             | (int) Gain/ISO for night time |
 | > NIGHT > BINNING   |             | (int) Bin mode for night time |

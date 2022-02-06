@@ -33,6 +33,27 @@ from .models import IndiAllSkyDbStarTrailsTable
 from . import db
 
 
+def INDI_SERVER_validator(form, field):
+    if not field.data:
+        return
+
+    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid host name')
+
+
+def INDI_PORT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Port must be 0 or greater')
+
+    if field.data > 65535:
+        raise ValidationError('Port must be less than 65535')
+
+
 def ccd_GAIN_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -491,6 +512,8 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
+    INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])

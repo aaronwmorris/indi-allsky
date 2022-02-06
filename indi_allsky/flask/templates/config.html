@@ -14,6 +14,29 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.INDI_SERVER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.INDI_SERVER(class='form-control bg-secondary') }}
+            <div id="INDI_SERVER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">INDI server hostname (default: localhost)</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.INDI_PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.INDI_PORT(class='form-control bg-secondary') }}
+            <div id="INDI_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">INDI port (default: 7624)</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -919,6 +942,8 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
+    'INDI_SERVER',
+    'INDI_PORT',
     'CCD_CONFIG__NIGHT__GAIN',
     'CCD_CONFIG__NIGHT__BINNING',
     'CCD_CONFIG__MOONMODE__GAIN',
