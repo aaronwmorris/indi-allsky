@@ -188,11 +188,11 @@ def KEOGRAM_ANGLE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
-    if field.data < -90:
-        raise ValidationError('Rotation angle must be -90 or greater')
+    if field.data < -180:
+        raise ValidationError('Rotation angle must be -180 or greater')
 
-    if field.data > 90:
-        raise ValidationError('Rotation angle must be 90 or less')
+    if field.data > 180:
+        raise ValidationError('Rotation angle must be 180 or less')
 
 
 def KEOGRAM_H_SCALE_validator(form, field):
