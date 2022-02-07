@@ -80,6 +80,22 @@ obs.date = utcnow
 sun.compute(obs)
 
 
+#quarter
+quarter_names = (
+    'Waxing Crescent',
+    'Waxing Gibbous',
+    'Waning Gibbous',
+    'Waning Crescent'
+)
+sun_lon = ephem.Ecliptic(sun).lon
+moon_lon = ephem.Ecliptic(moon).lon
+
+angle = (moon_lon - sun_lon) % math.tau
+quarter = int(angle * 4.0 // math.tau)
+logger.info('Quarter: %d, %s', quarter + 1, quarter_names[quarter])
+
+
+
 try:
     if math.degrees(sun.alt) < 0:
         logger.info('Sun below horizon')

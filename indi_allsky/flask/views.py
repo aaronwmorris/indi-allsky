@@ -123,6 +123,7 @@ class BaseView(View):
         moon.compute(obs)
 
 
+        # sun
         sun_alt = math.degrees(sun.alt)
         data['sun_alt'] = '{0:0.1f}'.format(sun_alt)
 
@@ -136,9 +137,9 @@ class BaseView(View):
             data['sun_rising_sign'] = '-'
 
 
+        # moon
         moon_alt = math.degrees(moon.alt)
         data['moon_alt'] = '{0:0.1f}'.format(moon_alt)
-        data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
 
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow
@@ -150,10 +151,28 @@ class BaseView(View):
             data['moon_rising_sign'] = '-'
 
 
+        # day/night
         if sun_alt > indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
         else:
             data['mode'] = 'Night'
+
+
+        #moon phase
+        data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+
+        sun_lon = ephem.Ecliptic(sun).lon
+        moon_lon = ephem.Ecliptic(moon).lon
+        angle = (moon_lon - sun_lon) % math.tau
+        quarter = int(angle * 4.0 // math.tau)
+
+        # 0-1 waxing, 2-3 waning
+        if quarter < 2:
+            #waxing
+            data['moon_phase_sign'] = '+'
+        else:
+            #waning
+            data['moon_phase_sign'] = '-'
 
 
         return data
