@@ -238,7 +238,11 @@ class DarkFramesView(TemplateView):
             IndiAllSkyDbDarkFrameTable.temp,
         )\
             .join(IndiAllSkyDbDarkFrameTable.camera)\
-            .all()
+            .order_by(
+                IndiAllSkyDbCameraTable.id.desc(),
+                IndiAllSkyDbDarkFrameTable.gain.asc(),
+                IndiAllSkyDbDarkFrameTable.exposure.asc(),
+        )
 
 
         context['darkframe_list'] = darkframe_list
