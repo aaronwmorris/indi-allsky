@@ -122,12 +122,33 @@ class BaseView(View):
         sun.compute(obs)
         moon.compute(obs)
 
+
         sun_alt = math.degrees(sun.alt)
         data['sun_alt'] = '{0:0.1f}'.format(sun_alt)
+
+        sun_transit_date = obs.next_transit(sun).datetime()
+        sun_transit_delta = sun_transit_date - utcnow
+        if sun_transit_delta.seconds < 43200:  # 12 hours
+            #rising
+            data['sun_rising_sign'] = '+'
+        else:
+            #setting
+            data['sun_rising_sign'] = '-'
+
 
         moon_alt = math.degrees(moon.alt)
         data['moon_alt'] = '{0:0.1f}'.format(moon_alt)
         data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+
+        moon_transit_date = obs.next_transit(moon).datetime()
+        moon_transit_delta = moon_transit_date - utcnow
+        if moon_transit_delta.seconds < 43200:  # 12 hours
+            #rising
+            data['moon_rising_sign'] = '+'
+        else:
+            #setting
+            data['moon_rising_sign'] = '-'
+
 
         if sun_alt > indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
