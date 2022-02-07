@@ -131,10 +131,10 @@ class BaseView(View):
         sun_transit_delta = sun_transit_date - utcnow
         if sun_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['sun_rising_sign'] = '+'
+            data['sun_rising_sign'] = '&nearr;'
         else:
             #setting
-            data['sun_rising_sign'] = '-'
+            data['sun_rising_sign'] = '&searr;'
 
 
         # moon
@@ -145,10 +145,10 @@ class BaseView(View):
         moon_transit_delta = moon_transit_date - utcnow
         if moon_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['moon_rising_sign'] = '+'
+            data['moon_rising_sign'] = '&nearr;'
         else:
             #setting
-            data['moon_rising_sign'] = '-'
+            data['moon_rising_sign'] = '&searr;'
 
 
         # day/night
@@ -169,10 +169,10 @@ class BaseView(View):
         # 0-1 waxing, 2-3 waning
         if quarter < 2:
             #waxing
-            data['moon_phase_sign'] = '+'
+            data['moon_phase_sign'] = '&uarr;'
         else:
             #waning
-            data['moon_phase_sign'] = '-'
+            data['moon_phase_sign'] = '&darr;'
 
 
         return data
