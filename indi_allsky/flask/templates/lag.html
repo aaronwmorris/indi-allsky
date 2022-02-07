@@ -23,7 +23,7 @@ table, th, td {
 <tr>
     <td>{{ image.id }}</td>
     <td>{{ image.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ image.exposure }}</td>
+    <td>{{ "%0.7f"|format(image.exposure) }}</td>
     <td>{{ image.lag_diff }}</td>
 </tr>
 {% endfor %}
