@@ -125,7 +125,7 @@ class BaseView(View):
 
         # sun
         sun_alt = math.degrees(sun.alt)
-        data['sun_alt'] = '{0:0.1f}'.format(sun_alt)
+        data['sun_alt'] = sun_alt
 
         sun_transit_date = obs.next_transit(sun).datetime()
         sun_transit_delta = sun_transit_date - utcnow
@@ -139,7 +139,7 @@ class BaseView(View):
 
         # moon
         moon_alt = math.degrees(moon.alt)
-        data['moon_alt'] = '{0:0.1f}'.format(moon_alt)
+        data['moon_alt'] = moon_alt
 
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow
