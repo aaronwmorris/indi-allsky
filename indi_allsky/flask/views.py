@@ -123,37 +123,80 @@ class BaseView(View):
         moon.compute(obs)
 
 
+        # sun
         sun_alt = math.degrees(sun.alt)
-        data['sun_alt'] = '{0:0.1f}'.format(sun_alt)
+        data['sun_alt'] = sun_alt
 
         sun_transit_date = obs.next_transit(sun).datetime()
         sun_transit_delta = sun_transit_date - utcnow
         if sun_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['sun_rising_sign'] = '+'
+            data['sun_rising_sign'] = '&nearr;'
         else:
             #setting
-            data['sun_rising_sign'] = '-'
+            data['sun_rising_sign'] = '&searr;'
 
 
+        # moon
         moon_alt = math.degrees(moon.alt)
-        data['moon_alt'] = '{0:0.1f}'.format(moon_alt)
-        data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+        data['moon_alt'] = moon_alt
 
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow
         if moon_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['moon_rising_sign'] = '+'
+            data['moon_rising_sign'] = '&nearr;'
         else:
             #setting
-            data['moon_rising_sign'] = '-'
+            data['moon_rising_sign'] = '&searr;'
 
 
+        # day/night
         if sun_alt > indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
         else:
             data['mode'] = 'Night'
+
+
+        #moon phase
+        #data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+
+        sun_lon = ephem.Ecliptic(sun).lon
+        moon_lon = ephem.Ecliptic(moon).lon
+        sm_angle = (moon_lon - sun_lon) % math.tau
+
+
+        moon_quarter = int(sm_angle * 4.0 // math.tau)
+
+        if moon_quarter < 2:
+            #0, 1
+            data['moon_phase'] = 'Waxing'
+        else:
+            #2, 3
+            data['moon_phase'] = 'Waning'
+
+
+
+        cycle_percent = (sm_angle / math.tau) * 100
+
+        if cycle_percent > 0 and cycle_percent < 5:
+            data['moon_phase_sign'] = '🌑'
+        elif cycle_percent > 5 and cycle_percent < 18:
+            data['moon_phase_sign'] = '🌒'
+        elif cycle_percent > 18 and cycle_percent < 30:
+            data['moon_phase_sign'] = '🌓'
+        elif cycle_percent > 30 and cycle_percent < 45:
+            data['moon_phase_sign'] = '🌔'
+        elif cycle_percent > 45 and cycle_percent < 55:
+            data['moon_phase_sign'] = '🌕'
+        elif cycle_percent > 55 and cycle_percent < 70:
+            data['moon_phase_sign'] = '🌖'
+        elif cycle_percent > 70 and cycle_percent < 82:
+            data['moon_phase_sign'] = '🌗'
+        elif cycle_percent > 82 and cycle_percent < 95:
+            data['moon_phase_sign'] = '🌘'
+        elif cycle_percent > 95 and cycle_percent < 100:
+            data['moon_phase_sign'] = '🌑'
 
 
         return data

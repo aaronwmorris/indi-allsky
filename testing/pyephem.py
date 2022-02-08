@@ -20,6 +20,7 @@ TIME_OFFSET = -5
 local_tz = tz.gettz(TIMEZONE)
 
 utcnow = datetime.datetime.utcnow()  # ephem expects UTC dates
+#utcnow = datetime.datetime.utcnow() + datetime.timedelta(days=10)
 
 obs = ephem.Observer()
 obs.lat = math.radians(LATITUDE)
@@ -78,6 +79,26 @@ logger.info('Moon phase: %0.2f%%', moon.moon_phase * 100)
 
 obs.date = utcnow
 sun.compute(obs)
+moon.compute(obs)
+
+
+#quarter
+quarter_names = (
+    'Waxing Crescent',
+    'Waxing Gibbous',
+    'Waning Gibbous',
+    'Waning Crescent'
+)
+sun_lon = ephem.Ecliptic(sun).lon
+moon_lon = ephem.Ecliptic(moon).lon
+
+sm_angle = (moon_lon - sun_lon) % math.tau
+#logger.info('Sun/Moon angle: %0.8f', sm_angle)
+moon_quarter = int(sm_angle * 4.0 // math.tau)
+#logger.info('Quarter: %0.8f', sm_angle * 4.0 / math.tau)
+logger.info('Phase percent: %0.1f', (sm_angle / math.tau) * 100)
+logger.info('Quarter: %d, %s', moon_quarter + 1, quarter_names[moon_quarter])
+
 
 
 try:
