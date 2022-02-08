@@ -159,20 +159,44 @@ class BaseView(View):
 
 
         #moon phase
-        data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+        #data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
 
         sun_lon = ephem.Ecliptic(sun).lon
         moon_lon = ephem.Ecliptic(moon).lon
-        angle = (moon_lon - sun_lon) % math.tau
-        quarter = int(angle * 4.0 // math.tau)
+        sm_angle = (moon_lon - sun_lon) % math.tau
 
-        # 0-1 waxing, 2-3 waning
-        if quarter < 2:
-            #waxing
-            data['moon_phase_sign'] = '&uarr;'
+
+        moon_quarter = int(sm_angle * 4.0 // math.tau)
+
+        if moon_quarter < 2:
+            #0, 1
+            data['moon_phase'] = 'Waxing'
         else:
-            #waning
-            data['moon_phase_sign'] = '&darr;'
+            #2, 3
+            data['moon_phase'] = 'Waning'
+
+
+
+        cycle_percent = (sm_angle / math.tau) * 100
+
+        if cycle_percent > 0 and cycle_percent < 5:
+            data['moon_phase_sign'] = '🌑'
+        elif cycle_percent > 5 and cycle_percent < 18:
+            data['moon_phase_sign'] = '🌒'
+        elif cycle_percent > 18 and cycle_percent < 30:
+            data['moon_phase_sign'] = '🌓'
+        elif cycle_percent > 30 and cycle_percent < 45:
+            data['moon_phase_sign'] = '🌔'
+        elif cycle_percent > 45 and cycle_percent < 55:
+            data['moon_phase_sign'] = '🌕'
+        elif cycle_percent > 55 and cycle_percent < 70:
+            data['moon_phase_sign'] = '🌖'
+        elif cycle_percent > 70 and cycle_percent < 82:
+            data['moon_phase_sign'] = '🌗'
+        elif cycle_percent > 82 and cycle_percent < 95:
+            data['moon_phase_sign'] = '🌘'
+        elif cycle_percent > 95 and cycle_percent < 100:
+            data['moon_phase_sign'] = '🌑'
 
 
         return data

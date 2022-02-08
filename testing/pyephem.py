@@ -92,11 +92,12 @@ quarter_names = (
 sun_lon = ephem.Ecliptic(sun).lon
 moon_lon = ephem.Ecliptic(moon).lon
 
-angle = (moon_lon - sun_lon) % math.tau
-#logger.info('Moon angle: %0.8f', angle)
-quarter = int(angle * 4.0 // math.tau)
-#logger.info('Quarter: %0.8f', angle * 4.0 / math.tau)
-logger.info('Quarter: %d, %s', quarter + 1, quarter_names[quarter])
+sm_angle = (moon_lon - sun_lon) % math.tau
+#logger.info('Sun/Moon angle: %0.8f', sm_angle)
+moon_quarter = int(sm_angle * 4.0 // math.tau)
+#logger.info('Quarter: %0.8f', sm_angle * 4.0 / math.tau)
+logger.info('Phase percent: %0.1f', (sm_angle / math.tau) * 100)
+logger.info('Quarter: %d, %s', moon_quarter + 1, quarter_names[moon_quarter])
 
 
 
