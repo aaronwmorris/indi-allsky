@@ -159,7 +159,7 @@ class BaseView(View):
 
 
         #moon phase
-        #data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
+        data['moon_phase_percent'] = moon.moon_phase * 100.0
 
         sun_lon = ephem.Ecliptic(sun).lon
         moon_lon = ephem.Ecliptic(moon).lon
