@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import indi_allsky
+import sys
 import logging
 import logging.handlers
+import traceback
 import argparse
 
 
@@ -24,6 +26,25 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 
+
+def unhandled_exception(exc_type, exc_value, exc_traceback):
+    # Do not print exception when user cancels the program
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    logger.error("An uncaught exception occurred:")
+    logger.error("Type: %s", exc_type)
+    logger.error("Value: %s", exc_value)
+
+    if exc_traceback:
+        format_exception = traceback.format_tb(exc_traceback)
+        for line in format_exception:
+            logger.error(repr(line))
+
+
+#log unhandled exceptions
+sys.excepthook = unhandled_exception
 
 
 if __name__ == "__main__":
