@@ -12,7 +12,12 @@ import dbus
 
 import ephem
 
+# for version reporting
 import PyIndi
+import cv2
+import numpy
+import astropy
+import flask
 
 from flask import render_template
 from flask import request
@@ -1073,7 +1078,13 @@ class SystemInfoView(TemplateView):
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
 
-        context['indi_version'] = '.'.join((
+        context['cv2_version'] = str(getattr(cv2, '__version__', -1))
+        context['ephem_version'] = str(getattr(ephem, '__version__', -1))
+        context['numpy_version'] = str(getattr(numpy, '__version__', -1))
+        context['astropy_version'] = str(getattr(astropy, '__version__', -1))
+        context['flask_version'] = str(getattr(flask, '__version__', -1))
+        context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['pyindi_version'] = '.'.join((
             str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
             str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
