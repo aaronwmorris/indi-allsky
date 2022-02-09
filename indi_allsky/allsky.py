@@ -479,9 +479,17 @@ class IndiAllSky(object):
         waiting_for_frame = False
         exposure_ctl = None  # populated later
 
+        camera_ready_time = time.time()
+        camera_ready = False
+        last_camera_ready = False
+
         ### main loop starts
         while True:
             loop_start_time = time.time()
+
+
+            logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
+
 
             # restart worker if it has failed
             self._startImageWorker()
@@ -534,7 +542,11 @@ class IndiAllSky(object):
             for x in range(200):
                 now = time.time()
 
+                last_camera_ready = camera_ready
                 camera_ready = self.indiclient.ctl_ready(exposure_ctl)
+
+                if camera_ready and not last_camera_ready:
+                    camera_ready_time = now
 
 
                 if camera_ready and waiting_for_frame:
