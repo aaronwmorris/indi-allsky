@@ -482,6 +482,7 @@ class IndiAllSky(object):
         camera_ready_time = time.time()
         camera_ready = False
         last_camera_ready = False
+        exposure_state = 'unset'
 
         ### main loop starts
         while True:
@@ -489,6 +490,7 @@ class IndiAllSky(object):
 
 
             logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
+            logger.info('Exposure state: %s', exposure_state)
 
 
             # restart worker if it has failed
@@ -543,7 +545,7 @@ class IndiAllSky(object):
                 now = time.time()
 
                 last_camera_ready = camera_ready
-                camera_ready = self.indiclient.ctl_ready(exposure_ctl)
+                camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
 
                 if camera_ready and not last_camera_ready:
                     camera_ready_time = now
