@@ -141,6 +141,9 @@ class BaseView(View):
         moon_alt = math.degrees(moon.alt)
         data['moon_alt'] = moon_alt
 
+        #moon phase
+        data['moon_phase_percent'] = moon.moon_phase * 100.0
+
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow
         if moon_transit_delta.seconds < 43200:  # 12 hours
@@ -158,8 +161,6 @@ class BaseView(View):
             data['mode'] = 'Night'
 
 
-        #moon phase
-        #data['moon_phase'] = '{0:0.1f}'.format(moon.moon_phase * 100.0)
 
         sun_lon = ephem.Ecliptic(sun).lon
         moon_lon = ephem.Ecliptic(moon).lon
@@ -178,6 +179,7 @@ class BaseView(View):
 
 
         cycle_percent = (sm_angle / math.tau) * 100
+        data['cycle_percent'] = cycle_percent
 
         if cycle_percent > 0 and cycle_percent < 5:
             data['moon_phase_sign'] = '🌑'
@@ -198,6 +200,8 @@ class BaseView(View):
         elif cycle_percent > 95 and cycle_percent < 100:
             data['moon_phase_sign'] = '🌑'
 
+
+        #app.logger.info('Astrometric data: %s', data)
 
         return data
 
