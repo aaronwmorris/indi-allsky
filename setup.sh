@@ -520,11 +520,21 @@ sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
 
 cp -f "$TMP6" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 [[ -f "$TMP6" ]] && rm -f "$TMP6"
+
+
+TMP7=$(mktemp)
+cat ${ALLSKY_DIRECTORY}/service/gunicorn.conf.py > $TMP7
+
+cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
+chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
+[[ -f "$TMP7" ]] && rm -f "$TMP7"
+
 
 
 echo "**** Enabling services ****"

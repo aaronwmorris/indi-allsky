@@ -13,6 +13,7 @@ imageio
 imageio-ffmpeg
 pygifsicle
 gunicorn
+inotify
 psutil
 Flask
 Flask-SQLAlchemy
