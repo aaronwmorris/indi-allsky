@@ -597,11 +597,14 @@ class IndiClient(PyIndi.BaseClient):
 
     def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
         if not ctl:
-            return True
+            return True, 'unset'
 
-        ready = ctl.getState() in statuses
+        state = ctl.getState()
 
-        return ready
+        ready = state in statuses
+        state_str = self.__state_to_str.get(state, 'UNKNOWN')
+
+        return ready, state_str
 
 
     def __wait_for_ctl_statuses(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE], timeout=None):
