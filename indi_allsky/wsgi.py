@@ -1,4 +1,10 @@
-# WSGI file for mod_wsgi in apache
+# WSGI file for mod_wsgi in apache/gunicorn
+#
+# This file is monitored for changes via inotify
+# Updates should restart gunicorn automatically
+#
+# Version 00002
+#
 import logging
 
 from indi_allsky.flask import create_app
