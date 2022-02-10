@@ -52,7 +52,7 @@ class IndiAllSkyStars(object):
     def detectObjects(self, original_data):
         image_height, image_width = original_data.shape[:2]
 
-        sqm_roi = self.config.get('SQM_ROI', [])
+        sqm_roi = self.config.get('ADU_ROI', [])
 
         try:
             x1, y1, x2, y2 = sqm_roi
