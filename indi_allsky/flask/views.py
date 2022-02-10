@@ -660,6 +660,34 @@ class ConfigView(FormView):
             form_data['ADU_ROI_Y2'] = 0
 
 
+        # SQM_ROI
+        SQM_ROI = indi_allsky_config.get('SQM_ROI', [])
+        if SQM_ROI is None:
+            SQM_ROI = []
+        elif isinstance(SQM_ROI, bool):
+            SQM_ROI = []
+
+        try:
+            form_data['SQM_ROI_X1'] = SQM_ROI[0]
+        except IndexError:
+            form_data['SQM_ROI_X1'] = 0
+
+        try:
+            form_data['SQM_ROI_Y1'] = SQM_ROI[1]
+        except IndexError:
+            form_data['SQM_ROI_Y1'] = 0
+
+        try:
+            form_data['SQM_ROI_X2'] = SQM_ROI[2]
+        except IndexError:
+            form_data['SQM_ROI_X2'] = 0
+
+        try:
+            form_data['SQM_ROI_Y2'] = SQM_ROI[3]
+        except IndexError:
+            form_data['SQM_ROI_Y2'] = 0
+
+
         # IMAGE_CROP_ROI
         IMAGE_CROP_ROI = indi_allsky_config.get('IMAGE_CROP_ROI', [])
         if IMAGE_CROP_ROI is None:
@@ -849,6 +877,19 @@ class AjaxConfigView(BaseView):
             indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
         else:
             indi_allsky_config['ADU_ROI'] = []
+
+
+        # SQM_ROI
+        sqm_roi_x1 = int(request.json['SQM_ROI_X1'])
+        sqm_roi_y1 = int(request.json['SQM_ROI_Y1'])
+        sqm_roi_x2 = int(request.json['SQM_ROI_X2'])
+        sqm_roi_y2 = int(request.json['SQM_ROI_Y2'])
+
+        # the x2 and y2 values must be positive integers in order to be enabled and valid
+        if sqm_roi_x2 and sqm_roi_y2:
+            indi_allsky_config['SQM_ROI'] = [sqm_roi_x1, sqm_roi_y1, sqm_roi_x2, sqm_roi_y2]
+        else:
+            indi_allsky_config['SQM_ROI'] = []
 
 
         # IMAGE_CROP_ROI

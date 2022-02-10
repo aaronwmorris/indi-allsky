@@ -229,6 +229,38 @@
     <hr />
 
     <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            SQM/Star Region of Interest
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_X1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x1, y1</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label"></div>
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_X2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
         </div>
@@ -960,6 +992,10 @@ const field_names = [
     'ADU_ROI_Y1',
     'ADU_ROI_X2',
     'ADU_ROI_Y2',
+    'SQM_ROI_X1',
+    'SQM_ROI_Y1',
+    'SQM_ROI_X2',
+    'SQM_ROI_Y2',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
     'NIGHT_SUN_ALT_DEG',
