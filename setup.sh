@@ -9,13 +9,14 @@ export PATH
 
 
 #### config ####
-INDI_DRIVER_PATH=/usr/bin
+INDI_DRIVER_PATH="/usr/bin"
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
+INSTALL_INDI="true"
 #### end config ####
 
 
@@ -50,6 +51,10 @@ echo "###############################################"
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
+    # Do not install INDI
+    INSTALL_INDI="false"
+    INDI_DRIVER_PATH="/usr/local/bin"
+
     echo
     echo
     echo "Detected a custom installation of INDI in /usr/local/bin"
@@ -72,6 +77,7 @@ echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
+echo "INSTALL_INDI: $INSTALL_INDI"
 echo
 echo
 
@@ -154,10 +160,15 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
-        indi-rpicam \
-        libindi-dev
+        sqlite3
+
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            indi-rpicam \
+            libindi-dev
+    fi
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
@@ -206,10 +217,15 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
-        indi-rpicam \
-        libindi-dev
+        sqlite3
+
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            indi-rpicam \
+            libindi-dev
+    fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     DEBIAN_DISTRO=1
@@ -263,13 +279,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         gifsicle \
         sqlite3
 
-     ### Install INDI from Debian testing distro (bookworm)
-     sudo apt-get -y install -t bookworm \
-        indi-bin \
-        libindi-dev \
-        indi-asi \
-        indi-playerone \
-        indi-webcam
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        ### Install INDI from Debian testing distro (bookworm)
+        sudo apt-get -y install -t bookworm \
+            indi-bin \
+            libindi-dev \
+            indi-asi \
+            indi-playerone \
+            indi-webcam
+    fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
@@ -309,9 +328,14 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
-        libindi-dev
+        sqlite3
+
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev
+    fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     DEBIAN_DISTRO=1
@@ -358,9 +382,14 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
-        libindi-dev
+        sqlite3
+
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev
+    fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     DEBIAN_DISTRO=1
@@ -408,9 +437,14 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
-        sqlite3 \
-        indi-full \
-        libindi-dev
+        sqlite3
+
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev
+    fi
 
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
