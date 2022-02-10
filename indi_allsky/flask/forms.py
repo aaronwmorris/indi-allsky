@@ -177,7 +177,8 @@ def NIGHT_MOONMODE_ALT_DEG_validator(form, field):
     if field.data < -90:
         raise ValidationError('Moon altitude must be greater than -90')
 
-    if field.data > 90:
+    # 91 is disabled
+    if field.data > 91:
         raise ValidationError('Moon altitude must be less than 90')
 
 
