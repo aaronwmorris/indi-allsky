@@ -36,6 +36,8 @@
     "ADU_ROI" : [],
     "comment_DETECT_STARS" : "Enable Star detection",
     "DETECT_STARS" : true,
+    "comment_SQM_ROI" : "Region of Interest for SQM and Star detection",
+    "SQM_ROI" : [],
 
     "LOCATION_LATITUDE"  : 33,
     "LOCATION_LONGITUDE" : -84,
