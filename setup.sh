@@ -562,15 +562,6 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 [[ -f "$TMP6" ]] && rm -f "$TMP6"
 
 
-TMP7=$(mktemp)
-cat ${ALLSKY_DIRECTORY}/service/gunicorn.conf.py > $TMP7
-
-cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
-chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
-[[ -f "$TMP7" ]] && rm -f "$TMP7"
-
-
-
 echo "**** Enabling services ****"
 sudo loginctl enable-linger $USER
 systemctl --user daemon-reload
@@ -651,6 +642,15 @@ sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP4" ]] && rm -f "$TMP4"
+
+
+TMP7=$(mktemp)
+cat ${ALLSKY_DIRECTORY}/service/gunicorn.conf.py > $TMP7
+
+cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
+chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
+[[ -f "$TMP7" ]] && rm -f "$TMP7"
+
 
 
 echo "**** Disabling competing web servers (ignore errors) ****"
