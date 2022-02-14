@@ -58,7 +58,6 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     echo
     echo
     echo "Detected a custom installation of INDI in /usr/local/bin"
-    echo "The setup script might fail"
     echo
     echo
     sleep 3
@@ -115,25 +114,36 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_GROUP=www-data
 
 
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
 
-    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-        echo
-        echo
-        echo "Raspbian 11 is not yet support in the Astroberry repo"
-        echo
-        echo
-        exit 1
+    #if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+    #    echo
+    #    echo
+    #    echo "Raspbian 11 is not yet support in the Astroberry repo"
+    #    echo
+    #    echo
+    #    exit 1
 
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
-        fi
-    fi
+    #    # Astroberry repository
+    #    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+    #        echo "Installing INDI via Astroberry repository"
+    #        wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+    #        sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+    #    fi
+    #fi
 
 
     sudo apt-get update
@@ -237,20 +247,30 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_GROUP=www-data
 
 
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
 
-    if [[ "$CPU_ARCH" == "x86_64" ]]; then
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            ### Install INDI from Debian testing distro (bookworm)
-            echo 'APT::Default-Release "bullseye";' | sudo tee /etc/apt/apt.conf.d/99defaultrelease
+    #if [[ "$CPU_ARCH" == "x86_64" ]]; then
+    #    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    #        ### Install INDI from Debian testing distro (bookworm)
+    #        echo 'APT::Default-Release "bullseye";' | sudo tee /etc/apt/apt.conf.d/99defaultrelease
 
-            echo "deb     http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee /etc/apt/sources.list.d/bookworm.list
-            echo "#deb-src http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
-            echo "deb     http://security.debian.org/         bookworm-security main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
-        fi
-    fi
+    #        echo "deb     http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee /etc/apt/sources.list.d/bookworm.list
+    #        echo "#deb-src http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
+    #        echo "deb     http://security.debian.org/         bookworm-security main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
+    #    fi
+    #fi
 
 
     sudo apt-get update
