@@ -26,6 +26,8 @@
     indi_3rdparty_src: "{{ projects_folder }}/src/indi_3rdparty"
     indi_3rdparty_libs_build: "{{ projects_folder }}/build/indi_3rdparty_libs"
     indi_3rdparty_drivers_build: "{{ projects_folder }}/build/indi_3rdparty_drivers"
+  tags:
+    - always
 
 
 - name: Create Projects build folder
