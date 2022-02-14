@@ -1,3 +1,4 @@
+# This file is targeted to Raspbian/Debian 10 and Python 3.7
 pyindi-client
 astropy
 #https://www.piwheels.org/project/numpy/

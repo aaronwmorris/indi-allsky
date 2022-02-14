@@ -113,6 +113,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    VIRTUALENV_REQ=requirements_bravo.txt
+
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
@@ -189,6 +191,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    VIRTUALENV_REQ=requirements_alpha.txt
+
 
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
@@ -245,6 +249,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     RSYSLOG_GROUP=adm
     APACHE_USER=www-data
     APACHE_GROUP=www-data
+
+    VIRTUALENV_REQ=requirements_bravo.txt
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -319,7 +325,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    # need to find an indi repo
+    VIRTUALENV_REQ=requirements_alpha.txt
+
 
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
@@ -365,6 +372,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     RSYSLOG_GROUP=adm
     APACHE_USER=www-data
     APACHE_GROUP=www-data
+
+    VIRTUALENV_REQ=requirements_bravo.txt
 
 
     # reconfigure system timezone
@@ -419,6 +428,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     RSYSLOG_GROUP=adm
     APACHE_USER=www-data
     APACHE_GROUP=www-data
+
+    VIRTUALENV_REQ=requirements_alpha.txt
 
 
     # reconfigure system timezone
@@ -495,7 +506,7 @@ fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
 pip3 uninstall -y opencv-python  # replaced package with opencv-python-headless
-pip3 install -r requirements.txt
+pip3 install -r "$VIRTUALENV_REQ"
 
 
 PS3="Select an INDI driver: "
