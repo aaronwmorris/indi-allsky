@@ -1,0 +1,143 @@
+---
+
+- include: "install/main.yml"
+
+
+- debug:
+    msg:
+      - "INDI 3rdparty src folder: {{ indi_3rdparty_src }}"
+      - "INDI 3rdparty libs build folder: {{ indi_3rdparty_libs_build }}"
+      - "INDI 3rdparty drivers build folder: {{ indi_3rdparty_drivers_build }}"
+
+
+- name: Remove existing indi_3rdparty libs build folder
+  file:
+    path: "{{ indi_3rdparty_libs_build }}"
+    state: absent
+
+
+- name: Remove existing indi_3rdparty drivers build folder
+  file:
+    path: "{{ indi_3rdparty_drivers_build }}"
+    state: absent
+
+
+- name: Create indi_3rdparty libs build folder
+  file:
+    path: "{{ indi_3rdparty_libs_build }}"
+    state: directory
+
+
+- name: Create indi_3rdparty drivers build folder
+  file:
+    path: "{{ indi_3rdparty_drivers_build }}"
+    state: directory
+
+
+- debug:
+    msg:
+      - "INDI 3rdparty git repo: {{ indi_3rdparty_git_repo }}"
+      - "INDI 3rdparty git tag: {{ indi_3rdparty_git_version }}"
+      - "INDI 3rdparty git refspec: {{ indi_3rdparty_git_refspec }}"
+
+
+- name: Git checkout of indi_3rdparty
+  git:
+    repo: "{{ indi_3rdparty_git_repo }}"
+    dest: "{{ indi_3rdparty_src }}"
+    depth: 1
+    version: "{{ indi_3rdparty_git_version }}"
+    refspec: "{{ indi_3rdparty_git_refspec }}"
+
+
+### Build individual 3rdparty libs
+- name: Include 3rdparty lib build
+  include_tasks: lib_build.yml
+  vars:
+    local_lib: "{{ item }}"
+    local_indi_3rdparty_lib_src: "{{ indi_3rdparty_src }}/{{ item }}"
+    local_indi_3rdparty_lib_build: "{{ indi_3rdparty_libs_build }}_{{ item }}"
+  with_items: "{{ indi_3rdparty_build_libs }}"
+  when:
+    - indi_3rdparty_build_libs| length > 0
+
+
+### Build all libs
+- name: Setup indi_3rdparty libs build
+  command:
+    cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 {{ indi_3rdparty_src }}"
+    chdir: "{{ indi_3rdparty_libs_build }}"
+  when:
+    - indi_3rdparty_build_libs| length == 0
+
+
+- name: Build indi_3rdparty libs
+  community.general.make:
+    jobs: "{{ parallel_processes }}"
+    chdir: "{{ indi_3rdparty_libs_build }}"
+  when:
+    - indi_3rdparty_build_libs| length == 0
+
+
+- name: Install indi_3rdparty libs
+  community.general.make:
+    target: install
+    chdir: "{{ indi_3rdparty_libs_build }}"
+  become: yes
+  when:
+    - indi_3rdparty_build_libs| length == 0
+
+
+### Build individual 3rdparty drivers
+- name: Include 3rdparty driver build
+  include_tasks: driver_build.yml
+  vars:
+    local_driver: "{{ item }}"
+    local_indi_3rdparty_driver_src: "{{ indi_3rdparty_src }}/{{ item }}"
+    local_indi_3rdparty_driver_build: "{{ indi_3rdparty_drivers_build }}_{{ item }}"
+  with_items: "{{ indi_3rdparty_build_drivers }}"
+  when:
+    - indi_3rdparty_build_drivers | length > 0
+
+
+### Build all drivers
+- name: Setup indi_3rdparty drivers build
+  command:
+    cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release {{ indi_3rdparty_src }}"
+    chdir: "{{ indi_3rdparty_drivers_build }}"
+  when:
+    - indi_3rdparty_build_drivers | length == 0
+
+
+- name: Build indi_3rdparty drivers
+  community.general.make:
+    jobs: "{{ parallel_processes }}"
+    chdir: "{{ indi_3rdparty_drivers_build }}"
+  when:
+    - indi_3rdparty_build_drivers | length == 0
+
+
+- name: Install indi_3rdparty drivers
+  community.general.make:
+    target: install
+    chdir: "{{ indi_3rdparty_drivers_build }}"
+  become: yes
+  when:
+    - indi_3rdparty_build_drivers | length == 0
+
+
+- name: Cleanup indi_3rdparty libs build folder
+  file:
+    path: "{{ indi_3rdparty_libs_build }}"
+    state: absent
+  tags:
+    - cleanup
+
+
+- name: Cleanup indi_3rdparty drivers build folder
+  file:
+    path: "{{ indi_3rdparty_drivers_build }}"
+    state: absent
+  tags:
+    - cleanup
+

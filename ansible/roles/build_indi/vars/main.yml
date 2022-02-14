@@ -1,0 +1,7 @@
+---
+# vars file for build_indi
+cmake_bin: cmake
+indi_core_git_repo: https://github.com/indilib/indi.git
+indi_core_git_refspec: '+refs/tags/*:refs/remotes/origin/*'
+indi_3rdparty_git_repo: https://github.com/indilib/indi-3rdparty.git
+indi_3rdparty_git_refspec: '+refs/tags/*:refs/remotes/origin/*'

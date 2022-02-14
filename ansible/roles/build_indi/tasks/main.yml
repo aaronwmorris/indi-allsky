@@ -1,0 +1,61 @@
+---
+# tasks file for build_indi
+
+- set_fact:
+    dist_ver: "{{ ansible_facts['distribution'] }}_{{ ansible_facts['distribution_major_version'] }}"
+  tags:
+    - always
+
+
+- debug:
+    msg: "Detected: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_major_version'] }} ({{ ansible_facts['architecture'] }})"
+  tags:
+    - always
+
+
+- name: Include OS Distribution Family vars
+  include_vars: "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yml"
+  tags:
+    - always
+
+
+- set_fact:
+    indi_core_src: "{{ projects_folder }}/src/indi_core"
+    indi_core_build: "{{ projects_folder }}/build/indi_core"
+
+    indi_3rdparty_src: "{{ projects_folder }}/src/indi_3rdparty"
+    indi_3rdparty_libs_build: "{{ projects_folder }}/build/indi_3rdparty_libs"
+    indi_3rdparty_drivers_build: "{{ projects_folder }}/build/indi_3rdparty_drivers"
+
+
+- name: Create Projects build folder
+  file:
+    path: "{{ projects_folder }}/build"
+    state: directory
+  tags:
+    - always
+
+
+- name: Create Projects src folder
+  file:
+    path: "{{ projects_folder }}/src"
+    state: directory
+  tags:
+    - always
+
+
+- include: "common/main_pre.yml"
+  tags:
+    - common
+
+
+- include: "indi_core/main.yml"
+  tags:
+    - indi_core
+
+
+- include: "indi_3rdparty/main.yml"
+  tags:
+    - indi_3rdparty
+
+

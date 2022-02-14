@@ -1,0 +1,46 @@
+---
+
+- debug:
+    msg:
+      - "INDI 3rdparty {{ local_driver }} driver src folder: {{ local_indi_3rdparty_driver_src }}"
+      - "INDI 3rdparty {{ local_driver }} driver build folder: {{ local_indi_3rdparty_driver_build }}"
+
+
+- name: "Remove existing indi_3rdparty {{ local_driver }} build folder"
+  file:
+    path: "{{ local_indi_3rdparty_driver_build }}"
+    state: absent
+
+
+- name: "Create indi_3rdparty {{ local_driver }} build folder"
+  file:
+    path: "{{ local_indi_3rdparty_driver_build }}"
+    state: directory
+
+
+- name: "Setup indi_3rdparty {{ local_driver }} build"
+  command:
+    cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release {{ local_indi_3rdparty_driver_src }}"
+    chdir: "{{ local_indi_3rdparty_driver_build }}"
+
+
+- name: "Build indi_3rdparty {{ local_driver }}"
+  community.general.make:
+    jobs: "{{ parallel_processes }}"
+    chdir: "{{ local_indi_3rdparty_driver_build }}"
+
+
+- name: "Install indi_3rdparty {{ local_driver }}"
+  community.general.make:
+    target: install
+    chdir: "{{ local_indi_3rdparty_driver_build }}"
+  become: yes
+
+
+- name: "Cleanup indi_3rdparty {{ local_driver }} build folder"
+  file:
+    path: "{{ local_indi_3rdparty_driver_build }}"
+    state: absent
+  tags:
+    - cleanup
+

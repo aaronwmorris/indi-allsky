@@ -1,0 +1,47 @@
+---
+
+- name: Populate service facts
+  service_facts:
+
+
+#- debug:
+#    var: ansible_facts.services
+
+
+- name: Gather package facts
+  package_facts:
+    manager: auto
+  tags:
+    - always
+
+
+#- debug:
+#    var: ansible_facts.packages
+
+
+- set_fact:
+    remove_packages:  "{{ blocking_packages | intersect(ansible_facts.packages) }}"
+  tags:
+    - always
+
+
+- fail:
+    msg: "The following packages need to be removed before continuing: {{ remove_packages | join(', ')}}"
+  when:
+    - remove_packages | length > 0
+  tags:
+    - always
+
+
+- name: Create install path
+  file:
+    path: "{{ install_prefix }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when:
+    - install_prefix != '/usr'
+
+

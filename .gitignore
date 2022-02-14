@@ -17,3 +17,4 @@ virtualenv/*
 alembic/versions/*.py
 migrations/versions/*.py
 gunicorn-indi-allsky.sock
+*.retry

@@ -1,0 +1,78 @@
+---
+
+- include: "install/main.yml"
+
+
+- debug:
+    msg:
+      - "INDI core src folder: {{ indi_core_src }}"
+      - "INDI core build folder: {{ indi_core_build }}"
+
+
+- name: Remove existing indi_core build folder
+  file:
+    path: "{{ indi_core_build }}"
+    state: absent
+
+
+- name: Create indi_core build folder
+  file:
+    path: "{{ indi_core_build }}"
+    state: directory
+
+
+- debug:
+    msg:
+      - "INDI core git repo: {{ indi_core_git_repo }}"
+      - "INDI core git tag: {{ indi_core_git_version }}"
+      - "INDI core git refspec: {{ indi_core_git_refspec }}"
+
+
+- name: Git checkout of indi_core
+  git:
+    repo: "{{ indi_core_git_repo }}"
+    dest: "{{ indi_core_src }}"
+    depth: 1
+    version: "{{ indi_core_git_version }}"
+    refspec: "{{ indi_core_git_refspec }}"
+
+
+- name: Setup indi_core build
+  command:
+    cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release {{ indi_core_src }}"
+    chdir: "{{ indi_core_build }}"
+
+
+- name: Build indi_core
+  community.general.make:
+    jobs: "{{ parallel_processes }}"
+    chdir: "{{ indi_core_build }}"
+
+
+- name: Install indi_core
+  community.general.make:
+    target: install
+    chdir: "{{ indi_core_build }}"
+  become: yes
+
+
+- name: Cleanup indi_core build folder
+  file:
+    path: "{{ indi_core_build }}"
+    state: absent
+  tags:
+    - cleanup
+
+
+#- name: Create symbolic link for driver profiles to /usr/share/indi
+#  file:
+#    src: "{{ install_prefix }}/share/indi"
+#    dest: "/usr/share/indi"
+#    owner: root
+#    group: root
+#    state: link
+#    force: no
+#  become: yes
+#  when:
+#    - install_prefix != '/usr'
+
