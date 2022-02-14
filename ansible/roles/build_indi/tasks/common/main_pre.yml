@@ -45,3 +45,19 @@
     - install_prefix != '/usr'
 
 
+- name: Setup additional library paths
+  template:
+    src: ld.so.conf.d/astro.conf.j2
+    dest: /etc/ld.so.conf.d/astro.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when:
+    - install_prefix != '/usr'
+
+
+- name: Reload ldconfig
+  command:
+    cmd: "ldconfig"
+  become: true
