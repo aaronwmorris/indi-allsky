@@ -1,0 +1,26 @@
+# This file is targeted to Raspbian/Debian 11 and Python 3.9
+pyindi-client
+astropy
+#https://www.piwheels.org/project/numpy/
+numpy==1.22.2
+# Problem with numpy 1.21.4 wheel on Raspbian 11 armv7l
+# RuntimeError: module compiled against API version 0xf but this version of numpy is 0xe
+#https://www.piwheels.org/project/opencv-python-headless/
+opencv-python-headless==4.5.5.62
+#scikit-image
+python-dateutil
+ephem
+paramiko
+pycurl
+imageio
+imageio-ffmpeg
+pygifsicle
+gunicorn
+inotify
+psutil
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-WTF
+cryptography
+dbus-python
