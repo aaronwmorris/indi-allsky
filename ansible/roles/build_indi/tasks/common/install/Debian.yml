@@ -1,0 +1,15 @@
+---
+
+
+- name: Update repositories cache
+  become: yes
+  apt:
+    update_cache: yes
+
+
+- name: Install common development packages
+  become: yes
+  package:
+    name: "{{ common_packages }}"
+    state: present
+

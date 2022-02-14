@@ -1,0 +1,9 @@
+---
+
+
+- name: Install common development packages
+  package:
+    name: "{{ common_packages }}"
+    state: present
+  become: yes
+
