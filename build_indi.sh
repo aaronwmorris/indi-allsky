@@ -138,5 +138,5 @@ echo
 
 cd ${ALLSKY_DIRECTORY}/ansible
 
-ansible-playbook -i inventory.yml site.yml --ask-become-pass
+ansible-playbook -i inventory.yml site.yml --ask-become-pass $@
 
