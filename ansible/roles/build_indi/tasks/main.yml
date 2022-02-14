@@ -1,6 +1,15 @@
 ---
 # tasks file for build_indi
 
+
+- name: Test sudo access
+  command:
+    cmd: "true"
+  become: yes
+  tags:
+    - always
+
+
 - set_fact:
     dist_ver: "{{ ansible_facts['distribution'] }}_{{ ansible_facts['distribution_major_version'] }}"
   tags:
