@@ -147,7 +147,8 @@ class BaseView(View):
         data['moon_alt'] = moon_alt
 
         #moon phase
-        data['moon_phase_percent'] = moon.moon_phase * 100.0
+        moon_phase_percent = moon.moon_phase * 100.0
+        data['moon_phase_percent'] = moon_phase_percent
 
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow
@@ -186,24 +187,30 @@ class BaseView(View):
         cycle_percent = (sm_angle / math.tau) * 100
         data['cycle_percent'] = cycle_percent
 
-        if cycle_percent > 0 and cycle_percent < 5:
-            data['moon_phase_sign'] = '🌑'
-        elif cycle_percent > 5 and cycle_percent < 18:
-            data['moon_phase_sign'] = '🌒'
-        elif cycle_percent > 18 and cycle_percent < 30:
-            data['moon_phase_sign'] = '🌓'
-        elif cycle_percent > 30 and cycle_percent < 45:
-            data['moon_phase_sign'] = '🌔'
-        elif cycle_percent > 45 and cycle_percent < 55:
-            data['moon_phase_sign'] = '🌕'
-        elif cycle_percent > 55 and cycle_percent < 70:
-            data['moon_phase_sign'] = '🌖'
-        elif cycle_percent > 70 and cycle_percent < 82:
-            data['moon_phase_sign'] = '🌗'
-        elif cycle_percent > 82 and cycle_percent < 95:
-            data['moon_phase_sign'] = '🌘'
-        elif cycle_percent > 95 and cycle_percent < 100:
-            data['moon_phase_sign'] = '🌑'
+        if cycle_percent <= 50:
+            # waxing
+            if moon_phase_percent >= 0 and moon_phase_percent < 15:
+                data['moon_phase_sign'] = '🌑'
+            elif moon_phase_percent >= 15 and moon_phase_percent < 35:
+                data['moon_phase_sign'] = '🌒'
+            elif moon_phase_percent >= 35 and moon_phase_percent < 65:
+                data['moon_phase_sign'] = '🌓'
+            elif moon_phase_percent >= 65 and moon_phase_percent < 85:
+                data['moon_phase_sign'] = '🌔'
+            elif moon_phase_percent >= 85 and moon_phase_percent <= 100:
+                data['moon_phase_sign'] = '🌕'
+        else:
+            # waning
+            if moon_phase_percent >= 85 and moon_phase_percent <= 100:
+                data['moon_phase_sign'] = '🌕'
+            elif moon_phase_percent >= 65 and moon_phase_percent < 85:
+                data['moon_phase_sign'] = '🌖'
+            elif moon_phase_percent >= 35 and moon_phase_percent < 65:
+                data['moon_phase_sign'] = '🌗'
+            elif moon_phase_percent >= 15 and moon_phase_percent < 35:
+                data['moon_phase_sign'] = '🌘'
+            elif moon_phase_percent >= 0 and moon_phase_percent < 15:
+                data['moon_phase_sign'] = '🌑'
 
 
         #app.logger.info('Astrometric data: %s', data)
