@@ -35,9 +35,19 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * 512MB is adequate for image acquisition, but not enough to generate timelapse videos with ffmpeg
     * 64GB of storage minimum to store 2 months of videos and 30 days of JPEG images.
     * (Optional) Internet connectivity for image uploading
-    * Note: Raspbian 11 (bullseye) support is not yet available for Astroberry
 * An INDI supported camera
     * CPU architecture support varies between camera manufacturers
+
+### Distibution support
+| Distribution          | Arch           | Note |
+| --------------------- | -------------- | ---- |
+| Raspbian 10 (Legacy)  | armv6l         | Indi installed from Astroberry apt repo |
+| Raspbian 11           | armv6l         | Compile indi with build_indi.sh |
+| Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh <br />Some camera support appears to be missing such as Raspberry PI HQ camera <br />ZWO ASI, QHY, and Player One Astronomy cameras work |
+| Debian 10             | x86_64         | Compile indi with build_indi.sh |
+| Debian 11             | x86_64         | Compile indi with build_indi.sh |
+| Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
+| Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 
 MacOS support is theoretically possible, but not tested.  Not all INDI cameras have Mac firmwares available.
 
