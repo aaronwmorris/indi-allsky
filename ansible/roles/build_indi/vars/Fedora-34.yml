@@ -47,3 +47,4 @@ indi_3rdparty_packages:
   - gpsd-devel
   - libdc1394-devel
   - ffmpeg-devel
+  - fxload

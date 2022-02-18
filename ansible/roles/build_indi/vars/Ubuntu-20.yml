@@ -47,3 +47,4 @@ indi_3rdparty_packages:
   - libavcodec-dev
   - libavdevice-dev
   - pkg-config
+  - fxload

@@ -126,6 +126,27 @@
     - indi_3rdparty_build_drivers | length == 0
 
 
+- name: Install udev rules
+  copy:
+    src: "{{ indi_3rdparty_src }}/{{ item }}"
+    dest: "/etc/udev/rules.d/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  with_items: "{{ indi_udev_rules }}"
+  tags:
+    - udev
+
+
+- name: Reload udev rules
+  command:
+    cmd: "udevadm control --reload-rules"
+  become: yes
+  tags:
+    - udev
+
+
 - name: Cleanup indi_3rdparty libs build folder
   file:
     path: "{{ indi_3rdparty_libs_build }}"

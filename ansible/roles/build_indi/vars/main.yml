@@ -5,3 +5,33 @@ indi_core_git_repo: https://github.com/indilib/indi.git
 indi_core_git_refspec: '+refs/tags/*:refs/remotes/origin/*'
 indi_3rdparty_git_repo: https://github.com/indilib/indi-3rdparty.git
 indi_3rdparty_git_refspec: '+refs/tags/*:refs/remotes/origin/*'
+indi_udev_rules:
+  - libtoupcam/99-toupcam.rules
+  - libasi/99-asi.rules
+  - libapogee/99-apogee.rules
+  - indi-ffmv/99-fireflymv.rules
+  - indi-orion-ssg3/99-orionssg3.rules
+  - libaltaircam/99-altaircam.rules
+  - indi-armadillo-platypus/99-armadilloplatypus.rules
+  - libstarshootg/99-starshootg.rules
+  - libnncam/99-nncam.rules
+  - libqhy/85-qhyccd.rules
+  - libricohcamerasdk/99-pentax.rules
+  - libfishcamp/99-fishcamp.rules
+  - libmicam/99-miccd.rules
+  - libplayerone/99-player_one_astronomy.rules
+  - libsv305/90-svbonyusb.rules
+  - indi-nightscape/99-nightscape.rules
+  - libsbig/51-sbig-debian.rules
+  - indi-fli/99-fli.rules
+  - indi-sx/99-sx.rules
+  - indi-gphoto/85-disable-dslr-automout.rules
+  - libmallincam/99-mallincam.rules
+  - libinovasdk/99-inovaplx.rules
+  - indi-qsi/99-qsi.rules
+  - indi-dsi/99-meadedsi.rules
+  - libatik/99-atik.rules
+  - libfli/99-fli.rules
+  - indi-mgen/80-LacertaMgen.rules
+#  - libpktriggercord/src/samsung.rules
+#  - libpktriggercord/src/pentax.rules
