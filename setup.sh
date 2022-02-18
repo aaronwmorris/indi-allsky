@@ -686,7 +686,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 echo "**** Disabling competing web servers (ignore errors) ****"
 sudo systemctl stop nginx || true
-sudo systemctl disable nnginx || true
+sudo systemctl disable nginx || true
 sudo systemctl stop lighttpd || true
 sudo systemctl disable lighttpd || true
 
