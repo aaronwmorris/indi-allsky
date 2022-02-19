@@ -48,6 +48,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
+| Astroberry Server 2.0 | armv6l         | |
 
 MacOS support is theoretically possible, but not tested.  Not all INDI cameras have Mac firmwares available.
 
