@@ -76,7 +76,7 @@ systemctl --user start indiserver
 systemctl --user start indi-allsky
 ```
 1. Login to the indi-allsky web application
-https://raspberrypi/
+https://raspberrypi.local/
  * Note: The web server is configured with a self-signed certificate.
 
 ### Manual operation
