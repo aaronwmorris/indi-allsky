@@ -63,7 +63,7 @@ git clone https://github.com/aaronwmorris/indi-allsky.git
 ```
 1. Navigate to the indi-allky sub-directory
 ```
-cd indi-allsky.git
+cd indi-allsky/
 ```
 1. Run setup.sh to install the relevant software
 ```
