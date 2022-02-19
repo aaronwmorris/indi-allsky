@@ -1,0 +1,45 @@
+upstream indi_allsky_server {
+    server unix:%DB_FOLDER%/%GUNICORN_SERVICE_NAME%.sock fail_timeout=0;
+}
+
+server {
+    listen 444;
+
+    ssl_certificate           /etc/ssl/astroberry.crt;
+    ssl_certificate_key       /etc/ssl/astroberry.key;
+
+    ssl on;
+    ssl_session_cache  builtin:1000  shared:SSL:10m;
+    ssl_protocols  TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+    ssl_prefer_server_ciphers on;
+
+
+    rewrite ^/$ /indi-allsky;
+
+    auth_basic "Allsky";
+    auth_basic_user_file %ALLSKY_ETC%/nginx.passwd;
+
+
+    location /indi-allsky/images {
+        alias /var/www/html/allsky/images;
+        autoindex off;
+    }
+
+    location /indi-allsky/static {
+        alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
+        autoindex off;
+    }
+
+    location /indi-allsky {
+        try_files $uri @proxy_to_indi_allsky;
+    }
+
+    location @proxy_to_indi_allsky {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
+      proxy_redirect off;
+      proxy_pass http://indi_allsky_server;
+    }
+}
