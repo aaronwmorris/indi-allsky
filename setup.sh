@@ -64,6 +64,19 @@ if [ -f "/usr/local/bin/indiserver" ]; then
 fi
 
 
+if [[ -f "/etc/astroberry.version" ]]; then
+    ASTROBERRY="true"
+    echo
+    echo
+    echo "Detected Astroberry server"
+    echo
+    echo
+    sleep 3
+else
+    ASTROBERRY="false"
+fi
+
+
 echo
 echo
 echo "Distribution: $DISTRO_NAME"
@@ -684,53 +697,92 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 
-echo "**** Disabling competing web servers (ignore errors) ****"
-sudo systemctl stop nginx || true
-sudo systemctl disable nnginx || true
-sudo systemctl stop lighttpd || true
-sudo systemctl disable lighttpd || true
+if [[ "$ASTROBERRY" == "true" ]]; then
+    echo "**** Disabling competing web servers (ignore errors) ****"
+    sudo systemctl stop lighttpd || true
+    sudo systemctl disable lighttpd || true
+    sudo systemctl stop apache2 || true
+    sudo systemctl disable apache2 || true
 
 
-echo "**** Start apache2 service ****"
-TMP3=$(mktemp)
-sed \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
- -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+    echo "**** Setup astroberry nginx ****"
+    TMP3=$(mktemp)
+    sed \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     ${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl > $TMP3
 
 
-if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
-    sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
-fi
+    if [[ ! -f "${ALLSKY_ETC}/nginx.passwd" ]]; then
+        # nginx does not like bcrypt
+        sudo htpasswd -cbm "${ALLSKY_ETC}/nginx.passwd" admin secret
+    fi
 
-sudo chmod 664 "${ALLSKY_ETC}/apache.passwd"
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
+    sudo chmod 664 "${ALLSKY_ETC}/nginx.passwd"
+    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/nginx.passwd"
 
 
-if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
-    sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
-    sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
-    sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+    #sudo cp -f /etc/nginx/sites-available/astroberry_ssl "/etc/nginx/sites-available/astroberry_ssl_$(date +%Y%m%d_%H%M%S)"
+    sudo cp -f "$TMP3" /etc/nginx/sites-available/indi-allsky_ssl
+    sudo chown root:root /etc/nginx/sites-available/indi-allsky_ssl
+    sudo chmod 644 /etc/nginx/sites-available/indi-allsky_ssl
+    sudo ln -s -f /etc/nginx/sites-available/indi-allsky_ssl /etc/nginx/sites-enabled/indi-allsky_ssl
 
-    sudo a2enmod rewrite
-    sudo a2enmod headers
-    sudo a2enmod ssl
-    sudo a2enmod proxy
-    sudo a2enmod proxy_http
-    sudo a2dissite 000-default
-    sudo a2dissite default-ssl
-    sudo a2ensite indi-allsky
-    sudo systemctl enable apache2
-    sudo systemctl restart apache2
-elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
-    sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
-    sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
-    sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
+    sudo systemctl enable nginx
+    sudo systemctl restart nginx
 
-    sudo systemctl enable httpd
-    sudo systemctl restart httpd
+else
+    echo "**** Disabling competing web servers (ignore errors) ****"
+    sudo systemctl stop nginx || true
+    sudo systemctl disable nginx || true
+    sudo systemctl stop lighttpd || true
+    sudo systemctl disable lighttpd || true
+
+
+    echo "**** Start apache2 service ****"
+    TMP3=$(mktemp)
+    sed \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+     -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+
+
+    if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
+        sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
+    fi
+
+    sudo chmod 664 "${ALLSKY_ETC}/apache.passwd"
+    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
+
+
+    if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+        sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
+        sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
+        sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+        sudo a2enmod rewrite
+        sudo a2enmod headers
+        sudo a2enmod ssl
+        sudo a2enmod proxy
+        sudo a2enmod proxy_http
+        sudo a2dissite 000-default
+        sudo a2dissite default-ssl
+        sudo a2ensite indi-allsky
+        sudo systemctl enable apache2
+        sudo systemctl restart apache2
+    elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+        sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
+        sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
+        sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
+
+        sudo systemctl enable httpd
+        sudo systemctl restart httpd
+    fi
+
 fi
 
 [[ -f "$TMP3" ]] && rm -f "$TMP3"
@@ -848,6 +900,12 @@ echo
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
-echo "    https://$(hostname -s)/"
+
+if [[ "$ASTROBERRY" == "true" ]]; then
+    echo "    https://$(hostname -s):444/"
+else
+    echo "    https://$(hostname -s)/"
+fi
+
 echo
 echo "Enjoy!"
