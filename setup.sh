@@ -33,9 +33,13 @@ HTDOCS_FILES="
     js/settings_latestDb.js
     js/settings_loop.js
     .htaccess
-    images/.htaccess
-    images/darks/.htaccess
 "
+
+IMAGE_FOLDER_FILES="
+    .htaccess
+    darks/.htaccess
+"
+
 
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
@@ -827,6 +831,10 @@ sudo chown -R "$USER":"$PGRP" "$IMAGE_FOLDER"
 [[ ! -d "${IMAGE_FOLDER}/darks" ]] && mkdir "${IMAGE_FOLDER}/darks"
 chmod 775 "${IMAGE_FOLDER}/darks"
 
+for F in $IMAGE_FOLDER_FILES; do
+    cp -f "${ALLSKY_DIRECTORY}/html/images/${F}" "${IMAGE_FOLDER}/${F}"
+    chmod 664 "${IMAGE_FOLDER}/${F}"
+done
 
 
 echo "**** Setup DB ****"
