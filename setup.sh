@@ -85,6 +85,7 @@ echo
 echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
+echo "Arch: $CPU_ARCH"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
