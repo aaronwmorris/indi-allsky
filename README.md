@@ -63,7 +63,7 @@ git clone https://github.com/aaronwmorris/indi-allsky.git
 ```
 1. Navigate to the indi-allky sub-directory
 ```
-cd indi-allsky.git
+cd indi-allsky/
 ```
 1. Run setup.sh to install the relevant software
 ```
@@ -76,7 +76,7 @@ systemctl --user start indiserver
 systemctl --user start indi-allsky
 ```
 1. Login to the indi-allsky web application
-https://raspberrypi/
+https://raspberrypi.local/
  * Note: The web server is configured with a self-signed certificate.
 
 ### Manual operation
@@ -243,8 +243,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | IMAGE_GRAYSCALE     | false       | Convert image to grayscale |
-| IMAGE_FLIP_V        | false       | (bool) Flip images vertically |
-| IMAGE_FLIP_H        | false       | (bool) Flip images horizontally |
+| IMAGE_FLIP_V        | true        | (bool) Flip images vertically |
+| IMAGE_FLIP_H        | true        | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |
 | IMAGE_CROP_ROI      | []          | (array) Region of interest to crop image (x1, y1, x2, y2) |
 | IMAGE_SAVE_RAW      | false       | (bool) Save raw image file |

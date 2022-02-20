@@ -137,8 +137,7 @@ class KeogramGenerator(object):
         keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
         # apply time labels
-        if self.config.get('KEOGRAM_LABEL'):
-            self.applyLabels(keogram_resized)
+        self.applyLabels(keogram_resized)
 
         logger.warning('Creating keogram: %s', outfile)
         cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
@@ -223,6 +222,14 @@ class KeogramGenerator(object):
 
 
     def applyLabels(self, keogram):
+        if not self.config.get('KEOGRAM_LABEL'):
+            logger.warning('Keogram labels disabled')
+            return
+
+        if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
+            logger.warning('Image labels disabled')
+            return
+
         height, width = keogram.shape[:2]
 
         # starting point

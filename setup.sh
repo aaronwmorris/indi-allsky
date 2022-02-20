@@ -168,6 +168,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -228,6 +229,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -299,6 +301,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -352,6 +355,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -407,6 +411,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -463,6 +468,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        avahi-daemon \
         apache2 \
         libapache2-mod-php \
         php-sqlite3 \
@@ -902,9 +908,9 @@ echo " (You may have to manually access by IP)"
 echo
 
 if [[ "$ASTROBERRY" == "true" ]]; then
-    echo "    https://$(hostname -s):444/"
+    echo "    https://$(hostname -s).local:444/"
 else
-    echo "    https://$(hostname -s)/"
+    echo "    https://$(hostname -s).local/"
 fi
 
 echo

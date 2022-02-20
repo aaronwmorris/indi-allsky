@@ -319,6 +319,9 @@ def FFMPEG_BITRATE_validator(form, field):
 
 
 def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
+    if not field.data:
+        return
+
     fonts = (
         'FONT_HERSHEY_SIMPLEX',
         'FONT_HERSHEY_PLAIN',
@@ -508,6 +511,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('FONT_HERSHEY_COMPLEX_SMALL', 'Serif (small)'),
         ('FONT_HERSHEY_SCRIPT_SIMPLEX', 'Script'),
         ('FONT_HERSHEY_SCRIPT_COMPLEX', 'Script (complex)'),
+        ('', 'Disabled'),
     )
 
     FILETRANSFER__CLASSNAME_choices = (
@@ -577,7 +581,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
-    TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
+    TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[TEXT_PROPERTIES__FONT_FACE_validator])
     TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Font Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
     TEXT_PROPERTIES__FONT_X          = IntegerField('Font X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
     TEXT_PROPERTIES__FONT_Y          = IntegerField('Font Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])

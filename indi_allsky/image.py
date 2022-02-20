@@ -584,6 +584,10 @@ class ImageWorker(Process):
 
 
     def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
+        if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
+            logger.warning('Image labels disabled')
+            return
+
         image_height, image_width = data_bytes.shape[:2]
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates

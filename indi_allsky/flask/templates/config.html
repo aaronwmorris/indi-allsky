@@ -475,7 +475,7 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Compression factor for JPEG images</div>
+        <div class="col-sm-8">[1-100] Compression factor for JPEG images.  Higher numbers increase quality and file sizes.  Default: 90</div>
     </div>
 
     <div class="form-group row">
@@ -486,14 +486,14 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Compression factor for PNG images</div>
+        <div class="col-sm-8">[1-9] Compression factor for PNG images. Higher numbers increase quality and file sizes.  Default: 9</div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-6">
             {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
             <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
