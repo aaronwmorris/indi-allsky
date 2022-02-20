@@ -273,8 +273,12 @@ def IMAGE_FOLDER_validator(form, field):
 
     try:
         if not image_folder_p.exists():
-            raise ValidationError('Directory does not exist')
+            image_folder_p.mkdir(mode=755, parents=True)
+    except PermissionError as e:
+        raise ValidationError(str(e))
 
+
+    try:
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
