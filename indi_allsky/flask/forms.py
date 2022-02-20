@@ -269,6 +269,15 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
 
 
 def IMAGE_FOLDER_validator(form, field):
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid folder name')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Directory cannot end with slash')
+
+
     image_folder_p = Path(field.data)
 
     try:
