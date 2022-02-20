@@ -186,6 +186,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -246,6 +247,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -319,6 +321,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -372,6 +375,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -429,6 +433,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -487,6 +492,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         pkg-config \
         ffmpeg \
         gifsicle \
+        jq \
         sqlite3
 
 
@@ -667,6 +673,10 @@ fi
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
 sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
+# Detect IMAGE_FOLDER
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' /etc/indi-allsky/config.json)
+echo "Detected image folder: $IMAGE_FOLDER"
+
 
 echo "**** Flask config ****"
 TMP4=$(mktemp)
@@ -718,6 +728,7 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
      ${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl > $TMP3
 
 
@@ -754,6 +765,7 @@ else
      -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
      ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
 
@@ -795,15 +807,10 @@ fi
 
 
 
-echo "**** Setup image folder ****"
+echo "**** Setup HTDOCS folder ****"
 [[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir "$HTDOCS_FOLDER"
 sudo chmod 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
-
-[[ ! -d "$HTDOCS_FOLDER/images" ]] && mkdir "$HTDOCS_FOLDER/images"
-chmod 775 "$HTDOCS_FOLDER/images"
-[[ ! -d "$HTDOCS_FOLDER/images/darks" ]] && mkdir "$HTDOCS_FOLDER/images/darks"
-chmod 775 "$HTDOCS_FOLDER/images/darks"
 [[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir "$HTDOCS_FOLDER/js"
 chmod 775 "$HTDOCS_FOLDER/js"
 
@@ -811,6 +818,15 @@ for F in $HTDOCS_FILES; do
     cp -f "${ALLSKY_DIRECTORY}/html/${F}" "${HTDOCS_FOLDER}/${F}"
     chmod 664 "${HTDOCS_FOLDER}/${F}"
 done
+
+
+echo "**** Setup image folder ****"
+[[ ! -d "$IMAGE_FOLDER" ]] && sudo mkdir -p "$IMAGE_FOLDER"
+sudo chmod 775 "$IMAGE_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$IMAGE_FOLDER"
+[[ ! -d "${IMAGE_FOLDER}/darks" ]] && mkdir "${IMAGE_FOLDER}/darks"
+chmod 775 "${IMAGE_FOLDER}/darks"
+
 
 
 echo "**** Setup DB ****"

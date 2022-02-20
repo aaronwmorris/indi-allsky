@@ -22,7 +22,7 @@ server {
 
 
     location /indi-allsky/images {
-        alias /var/www/html/allsky/images;
+        alias %IMAGE_FOLDER%;
         autoindex off;
     }
 
