@@ -391,10 +391,15 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             filename_p = Path(i.filename)
-            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            try:
+                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
 
             data = {
-                'file'  : str(rel_filename_p),
+                'file'  : str(Path('images').joinpath(rel_filename_p)),
                 'sqm'   : i.sqm,
                 'stars' : i.stars,
             }

@@ -23,7 +23,7 @@ server {
 
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
-        autoindex off;
+        autoindex on;
     }
 
     location /indi-allsky/static {

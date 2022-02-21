@@ -755,9 +755,14 @@ class IndiAllskyImageViewer(FlaskForm):
         images_choices = []
         for i in images_query:
             filename_p = Path(i.filename)
-            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
 
-            entry = (str(rel_filename_p), str(i.createDate.strftime('%H:%M:%S')))
+            try:
+                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+            entry = (str(Path('images').joinpath(rel_filename_p)), str(i.createDate.strftime('%H:%M:%S')))
             images_choices.append(entry)
 
 
@@ -878,10 +883,15 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             filename_p = Path(v.filename)
-            rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_DOCROOT'])
+
+            try:
+                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
 
             entry = {
-                'url'        : str(rel_filename_p),
+                'url'        : str(Path('images').joinpath(rel_filename_p)),
                 'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
                 'night'      : v.night,
             }
@@ -902,8 +912,16 @@ class IndiAllskyVideoViewer(FlaskForm):
                 .order_by(IndiAllSkyDbKeogramTable.createDate.asc())\
                 .first()  # use the oldest (asc)
 
+
             if keogram_entry:
-                keogram_url = str(Path(keogram_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
+                keogram_p = Path(keogram_entry.filename)
+
+                try:
+                    rel_keogram_p = keogram_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+                    keogram_url = str(Path('images').joinpath(rel_keogram_p))
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    keogram_url = None
             else:
                 keogram_url = None
 
@@ -918,7 +936,14 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             if startrail_entry:
-                startrail_url = str(Path(startrail_entry.filename).relative_to(app.config['INDI_ALLSKY_DOCROOT']))
+                startrail_p = Path(startrail_entry.filename)
+
+                try:
+                    rel_startrail_p = startrail_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+                    startrail_url = str(Path('images').joinpath(rel_startrail_p))
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    startrail_url = None
             else:
                 startrail_url = None
 
