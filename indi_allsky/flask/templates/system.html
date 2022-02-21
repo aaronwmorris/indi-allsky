@@ -348,6 +348,14 @@ $("#button_system_reboot").on("click", function() {
 */
 
 
+function reloadPage() {
+    console.log('Reload page');
+    location.reload();
+}
+
+$( document ).ready(function() {
+    setTimeout(reloadPage, 15000);
+});
 
 </script>
 {% endblock %}
