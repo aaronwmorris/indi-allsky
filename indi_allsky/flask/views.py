@@ -271,11 +271,7 @@ class CamerasView(TemplateView):
         context = super(CamerasView, self).get_context()
 
         #connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
-        context['camera_list'] = db.session.query(
-            IndiAllSkyDbCameraTable.id,
-            IndiAllSkyDbCameraTable.name,
-            IndiAllSkyDbCameraTable.connectDate,
-        )\
+        context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
 
         return context
@@ -286,17 +282,8 @@ class DarkFramesView(TemplateView):
         context = super(DarkFramesView, self).get_context()
 
         #createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        darkframe_list = db.session.query(
-            IndiAllSkyDbDarkFrameTable.id,
-            IndiAllSkyDbCameraTable.name.label('camera_name'),
-            IndiAllSkyDbCameraTable.createDate,
-            IndiAllSkyDbDarkFrameTable.bitdepth,
-            IndiAllSkyDbDarkFrameTable.exposure,
-            IndiAllSkyDbDarkFrameTable.gain,
-            IndiAllSkyDbDarkFrameTable.binmode,
-            IndiAllSkyDbDarkFrameTable.temp,
-        )\
-            .join(IndiAllSkyDbDarkFrameTable.camera)\
+        darkframe_list = IndiAllSkyDbDarkFrameTable.query\
+            .join(IndiAllSkyDbCameraTable)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
@@ -316,12 +303,13 @@ class ImageLagView(TemplateView):
         now_minus_3h = datetime.now() - timedelta(hours=3)
 
         createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
-        image_lag_list = db.session.query(
-            IndiAllSkyDbImageTable.id,
-            IndiAllSkyDbImageTable.createDate,
-            IndiAllSkyDbImageTable.exposure,
-            (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
-        )\
+        image_lag_list = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                IndiAllSkyDbImageTable.id,
+                IndiAllSkyDbImageTable.createDate,
+                IndiAllSkyDbImageTable.exposure,
+                (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+            )\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(50)

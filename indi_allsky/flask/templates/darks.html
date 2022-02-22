@@ -26,7 +26,7 @@ table, th, td {
 {% for dark in darkframe_list %}
 <tr>
     <td>{{ dark.id }}</td>
-    <td>{{ dark.camera_name }}</td>
+    <td>{{ dark.camera.name }}</td>
     <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ dark.bitdepth }}</td>
     <td>{{ dark.gain }}</td>
