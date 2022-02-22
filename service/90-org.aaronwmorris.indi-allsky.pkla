@@ -1,0 +1,5 @@
+[Allow indi-allsky user to shutdown]
+Identity=unix-user:%ALLSKY_USER%
+Action=org.freedesktop.login1.power-off;org.freedesktop.login1.power-off-multiple-sessions;org.freedesktop.login1.reboot;org.freedesktop.login1.reboot-multiple-sessions
+ResultActive=yes
+ResultAny=yes

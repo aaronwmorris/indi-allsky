@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from sqlalchemy.sql import expression
+
+from flask import current_app as app
 
 from . import db
 
@@ -49,6 +53,36 @@ class IndiAllSkyDbImageTable(db.Model):
         return '<Image {0:s}>'.format(self.filename)
 
 
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbDarkFrameTable(db.Model):
     __tablename__ = 'darkframe'
 
@@ -85,6 +119,36 @@ class IndiAllSkyDbVideoTable(db.Model):
         return '<Video {0:s}>'.format(self.filename)
 
 
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbKeogramTable(db.Model):
     __tablename__ = 'keogram'
 
@@ -102,6 +166,36 @@ class IndiAllSkyDbKeogramTable(db.Model):
         return '<Keogram {0:s}>'.format(self.filename)
 
 
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbStarTrailsTable(db.Model):
     __tablename__ = 'startrail'
 
@@ -117,4 +211,34 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
     def __repr__(self):
         return '<StarTrails {0:s}>'.format(self.filename)
+
+
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
 

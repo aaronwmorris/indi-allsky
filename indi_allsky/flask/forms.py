@@ -742,10 +742,7 @@ class IndiAllskyImageViewer(FlaskForm):
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
-        images_query = db.session.query(
-            IndiAllSkyDbImageTable.filename,
-            IndiAllSkyDbImageTable.createDate,
-        )\
+        images_query = IndiAllSkyDbImageTable.query\
             .filter(createDate_year == year)\
             .filter(createDate_month == month)\
             .filter(createDate_day == day)\
@@ -754,15 +751,13 @@ class IndiAllskyImageViewer(FlaskForm):
 
         images_choices = []
         for i in images_query:
-            filename_p = Path(i.filename)
-
             try:
-                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+                uri = i.getUri()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
-            entry = (str(Path('images').joinpath(rel_filename_p)), str(i.createDate.strftime('%H:%M:%S')))
+            entry = (str(uri), str(i.createDate.strftime('%H:%M:%S')))
             images_choices.append(entry)
 
 
@@ -775,11 +770,21 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = db.session.query(
-            IndiAllSkyDbImageTable.createDate,
-        )\
+        last_image = IndiAllSkyDbImageTable.query\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
+
+        if not last_image:
+            app.logger.warning('No images found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+            self.DAY_SELECT.choices = (('', 'None'),)
+            self.HOUR_SELECT.choices = (('', 'None'),)
+            self.IMG_SELECT.choices = (('', 'None'),)
+
+            return
+
 
         year = last_image.createDate.strftime('%Y')
         month = last_image.createDate.strftime('%m')
@@ -858,11 +863,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
 
-        videos_query = db.session.query(
-            IndiAllSkyDbVideoTable.filename,
-            IndiAllSkyDbVideoTable.dayDate,
-            IndiAllSkyDbVideoTable.night,
-        )\
+        videos_query = IndiAllSkyDbVideoTable.query\
             .filter(createDate_year == year)\
             .filter(createDate_month == month)
 
@@ -882,16 +883,14 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         videos_data = []
         for v in videos_query:
-            filename_p = Path(v.filename)
-
             try:
-                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+                uri = v.getUri()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
             entry = {
-                'url'        : str(Path('images').joinpath(rel_filename_p)),
+                'url'        : str(uri),
                 'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
                 'night'      : v.night,
             }
@@ -904,9 +903,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Querying the oldest due to a bug where regeneated files are added with the wrong dayDate
             # fix is inbound
 
-            keogram_entry = db.session.query(
-                IndiAllSkyDbKeogramTable.filename,
-            )\
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
                 .order_by(IndiAllSkyDbKeogramTable.createDate.asc())\
@@ -914,11 +911,8 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             if keogram_entry:
-                keogram_p = Path(keogram_entry.filename)
-
                 try:
-                    rel_keogram_p = keogram_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-                    keogram_url = str(Path('images').joinpath(rel_keogram_p))
+                    keogram_url = keogram_entry.getUri()
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -926,9 +920,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 keogram_url = None
 
 
-            startrail_entry = db.session.query(
-                IndiAllSkyDbStarTrailsTable.filename,
-            )\
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
                 .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())\
@@ -936,11 +928,8 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             if startrail_entry:
-                startrail_p = Path(startrail_entry.filename)
-
                 try:
-                    rel_startrail_p = startrail_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-                    startrail_url = str(Path('images').joinpath(rel_startrail_p))
+                    startrail_url = startrail_entry.getUri()
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -948,8 +937,8 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_url = None
 
 
-            entry['keogram']    = keogram_url
-            entry['startrail']  = startrail_url
+            entry['keogram']    = str(keogram_url)
+            entry['startrail']  = str(startrail_url)
 
 
         return videos_data
@@ -960,11 +949,18 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
 
-        last_video = db.session.query(
-            IndiAllSkyDbVideoTable.createDate,
-        )\
+        last_video = IndiAllSkyDbVideoTable.query\
             .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
             .first()
+
+        if not last_video:
+            app.logger.warning('No timelapses found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+
+            return
+
 
         year = last_video.createDate.strftime('%Y')
 

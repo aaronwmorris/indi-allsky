@@ -164,7 +164,7 @@ class VideoWorker(Process):
 
         timelapse_files = list()
         for entry in timelapse_files_entries:
-            p_entry = Path(entry.filename)
+            p_entry = Path(entry.getFilesystemPath())
 
             if not p_entry.exists():
                 logger.error('File not found: %s', p_entry)
@@ -333,7 +333,7 @@ class VideoWorker(Process):
             if i % 100 == 0:
                 logger.info('Processed %d of %d images', i, image_count)
 
-            p_entry = Path(entry.filename)
+            p_entry = Path(entry.getFilesystemPath())
 
             if not p_entry.exists():
                 logger.error('File not found: %s', p_entry)
@@ -506,14 +506,15 @@ class VideoWorker(Process):
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
 
-        old_images = IndiAllSkyDbImageTable.query.filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
+        old_images = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
         for file_entry in old_images:
             #logger.info('Removing old image: %s', file_entry.filename)
 
-            file_p = Path(file_entry.filename)
+            file_p = Path(file_entry.getFilesystemPath())
 
             try:
                 file_p.unlink()
@@ -539,6 +540,8 @@ class VideoWorker(Process):
             try:
                 d.rmdir()
             except OSError as e:
+                logger.error('Cannot remove folder: %s', str(e))
+            except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
 

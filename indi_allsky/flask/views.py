@@ -27,7 +27,7 @@ from flask.views import View
 
 from flask import current_app as app
 
-from . import db
+#from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -271,11 +271,7 @@ class CamerasView(TemplateView):
         context = super(CamerasView, self).get_context()
 
         #connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
-        context['camera_list'] = db.session.query(
-            IndiAllSkyDbCameraTable.id,
-            IndiAllSkyDbCameraTable.name,
-            IndiAllSkyDbCameraTable.connectDate,
-        )\
+        context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
 
         return context
@@ -286,17 +282,8 @@ class DarkFramesView(TemplateView):
         context = super(DarkFramesView, self).get_context()
 
         #createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        darkframe_list = db.session.query(
-            IndiAllSkyDbDarkFrameTable.id,
-            IndiAllSkyDbCameraTable.name.label('camera_name'),
-            IndiAllSkyDbCameraTable.createDate,
-            IndiAllSkyDbDarkFrameTable.bitdepth,
-            IndiAllSkyDbDarkFrameTable.exposure,
-            IndiAllSkyDbDarkFrameTable.gain,
-            IndiAllSkyDbDarkFrameTable.binmode,
-            IndiAllSkyDbDarkFrameTable.temp,
-        )\
-            .join(IndiAllSkyDbDarkFrameTable.camera)\
+        darkframe_list = IndiAllSkyDbDarkFrameTable.query\
+            .join(IndiAllSkyDbCameraTable)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
@@ -316,12 +303,13 @@ class ImageLagView(TemplateView):
         now_minus_3h = datetime.now() - timedelta(hours=3)
 
         createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
-        image_lag_list = db.session.query(
-            IndiAllSkyDbImageTable.id,
-            IndiAllSkyDbImageTable.createDate,
-            IndiAllSkyDbImageTable.exposure,
-            (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
-        )\
+        image_lag_list = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                IndiAllSkyDbImageTable.id,
+                IndiAllSkyDbImageTable.createDate,
+                IndiAllSkyDbImageTable.exposure,
+                (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+            )\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(50)
@@ -390,16 +378,14 @@ class JsonImageLoopView(JsonView):
 
         image_list = list()
         for i in latest_images:
-            filename_p = Path(i.filename)
-
             try:
-                rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+                uri = i.getUri()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
             data = {
-                'file'  : str(Path('images').joinpath(rel_filename_p)),
+                'file'  : str(uri),
                 'sqm'   : i.sqm,
                 'stars' : i.stars,
             }
@@ -413,13 +399,13 @@ class JsonImageLoopView(JsonView):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        sqm_images = db.session\
-            .query(
+        sqm_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
                 func.min(IndiAllSkyDbImageTable.sqm).label('image_min_sqm'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
             )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
@@ -438,13 +424,13 @@ class JsonImageLoopView(JsonView):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        stars_images = db.session\
-            .query(
+        stars_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.min(IndiAllSkyDbImageTable.stars).label('image_min_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
             )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
@@ -501,15 +487,16 @@ class JsonChartView(JsonView):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        chart_query = db.session.query(
-            IndiAllSkyDbImageTable.createDate,
-            IndiAllSkyDbImageTable.sqm,
-            func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
-            IndiAllSkyDbImageTable.temp,
-            IndiAllSkyDbImageTable.exposure,
-            (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
+        chart_query = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                IndiAllSkyDbImageTable.createDate,
+                IndiAllSkyDbImageTable.sqm,
+                func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
+                IndiAllSkyDbImageTable.temp,
+                IndiAllSkyDbImageTable.exposure,
+                (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
@@ -1289,6 +1276,18 @@ class AjaxSystemInfoView(BaseView):
                 return jsonify(errors_data), 400
 
 
+        elif service == 'system':
+            if command == 'reboot':
+                r = self.rebootSystemd()
+            elif command == 'poweroff':
+                r = self.poweroffSystemd()
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
         else:
             errors_data = {
                 'SERVICE_HIDDEN' : ['Unhandled service'],
@@ -1331,6 +1330,23 @@ class AjaxSystemInfoView(BaseView):
 
         return r
 
+
+    def rebootSystemd(self):
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        r = manager.Reboot(False)
+
+        return r
+
+
+    def poweroffSystemd(self):
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        r = manager.PowerOff(False)
+
+        return r
 
 
 
