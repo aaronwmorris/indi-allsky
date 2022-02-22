@@ -1289,6 +1289,18 @@ class AjaxSystemInfoView(BaseView):
                 return jsonify(errors_data), 400
 
 
+        elif service == 'system':
+            if command == 'reboot':
+                r = self.rebootSystemd()
+            elif command == 'poweroff':
+                r = self.poweroffSystemd()
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+
         else:
             errors_data = {
                 'SERVICE_HIDDEN' : ['Unhandled service'],
@@ -1331,6 +1343,23 @@ class AjaxSystemInfoView(BaseView):
 
         return r
 
+
+    def rebootSystemd(self):
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        r = manager.Reboot(False)
+
+        return r
+
+
+    def poweroffSystemd(self):
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        r = manager.PowerOff(False)
+
+        return r
 
 
 

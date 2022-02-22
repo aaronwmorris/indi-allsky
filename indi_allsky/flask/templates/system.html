@@ -230,13 +230,31 @@
 
 <hr />
 
-<!--
 <div class="row">
-    <div class="col-sm-4">
-        <button class="btn btn-primary" id="button_system_reboot">Reboot system</button>
+    <div class="col-sm-2">System</div>
+    <div class="col-sm-2">Reboot</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="REBOOT_CONFIRM" name="REBOOT_CONFIRM" type="checkbox" value="y"> Confirm
     </div>
--->
+    <div class="col-sm-2">
+        <button class="btn btn-warning" id="button_system_reboot">Reboot system</button>
+    </div>
 </div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Shutdown</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="SHUTDOWN_CONFIRM" name="SHUTDOWN_CONFIRM" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="button_system_shutdown">Shutdown system</button>
+    </div>
+</div>
+
+<hr />
 
 
 <script>
@@ -341,11 +359,31 @@ $("#button_gunicorn_indi_allsky_start").on("click", function() {
 });
 
 
-/*
+
 $("#button_system_reboot").on("click", function() {
+    if (! $("#REBOOT_CONFIRM").prop('checked')) {
+        console.log('Reboot checkbox not checked');
+        return;
+    }
+
+    $("#REBOOT_CONFIRM").prop('checked', false);
+
     button_click('system', 'reboot');
 });
-*/
+
+
+$("#button_system_shutdown").on("click", function() {
+    if (! $("#SHUTDOWN_CONFIRM").prop('checked')) {
+        console.log('Shutdown checkbox not checked');
+        return;
+    }
+
+    $("#SHUTDOWN_CONFIRM").prop('checked', false);
+
+    button_click('system', 'poweroff');
+});
+
+
 
 
 function reloadPage() {
@@ -354,6 +392,10 @@ function reloadPage() {
 }
 
 $( document ).ready(function() {
+    // Uncheck checkboxes
+    $("#REBOOT_CONFIRM").prop('checked', false);
+    $("#SHUTDOWN_CONFIRM").prop('checked', false);
+
     setTimeout(reloadPage, 15000);
 });
 
