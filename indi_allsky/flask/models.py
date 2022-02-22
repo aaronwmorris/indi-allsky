@@ -66,6 +66,18 @@ class IndiAllSkyDbImageTable(db.Model):
         return Path('images').joinpath(rel_filename_p)
 
 
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbDarkFrameTable(db.Model):
     __tablename__ = 'darkframe'
 
@@ -115,6 +127,18 @@ class IndiAllSkyDbVideoTable(db.Model):
         return Path('images').joinpath(rel_filename_p)
 
 
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbKeogramTable(db.Model):
     __tablename__ = 'keogram'
 
@@ -145,6 +169,18 @@ class IndiAllSkyDbKeogramTable(db.Model):
         return Path('images').joinpath(rel_filename_p)
 
 
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 class IndiAllSkyDbStarTrailsTable(db.Model):
     __tablename__ = 'startrail'
 
@@ -173,4 +209,16 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
         rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
 
         return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
 
