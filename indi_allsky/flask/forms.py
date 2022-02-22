@@ -774,6 +774,18 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
+        if not last_image:
+            app.logger.warning('No images found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+            self.DAY_SELECT.choices = (('', 'None'),)
+            self.HOUR_SELECT.choices = (('', 'None'),)
+            self.IMG_SELECT.choices = (('', 'None'),)
+
+            return
+
+
         year = last_image.createDate.strftime('%Y')
         month = last_image.createDate.strftime('%m')
         day = last_image.createDate.strftime('%d')
@@ -940,6 +952,15 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
         last_video = IndiAllSkyDbVideoTable.query\
             .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
             .first()
+
+        if not last_video:
+            app.logger.warning('No timelapses found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+
+            return
+
 
         year = last_video.createDate.strftime('%Y')
 
