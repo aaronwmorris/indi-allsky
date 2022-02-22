@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from sqlalchemy.sql import expression
+
+from flask import current_app as app
 
 from . import db
 
@@ -49,6 +53,19 @@ class IndiAllSkyDbImageTable(db.Model):
         return '<Image {0:s}>'.format(self.filename)
 
 
+    def getUri(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return Path('images').joinpath(filename_p)
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return Path('images').joinpath(rel_filename_p)
+
+
 class IndiAllSkyDbDarkFrameTable(db.Model):
     __tablename__ = 'darkframe'
 
@@ -85,6 +102,19 @@ class IndiAllSkyDbVideoTable(db.Model):
         return '<Video {0:s}>'.format(self.filename)
 
 
+    def getUri(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return Path('images').joinpath(filename_p)
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return Path('images').joinpath(rel_filename_p)
+
+
 class IndiAllSkyDbKeogramTable(db.Model):
     __tablename__ = 'keogram'
 
@@ -102,6 +132,19 @@ class IndiAllSkyDbKeogramTable(db.Model):
         return '<Keogram {0:s}>'.format(self.filename)
 
 
+    def getUri(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return Path('images').joinpath(filename_p)
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return Path('images').joinpath(rel_filename_p)
+
+
 class IndiAllSkyDbStarTrailsTable(db.Model):
     __tablename__ = 'startrail'
 
@@ -117,4 +160,17 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
     def __repr__(self):
         return '<StarTrails {0:s}>'.format(self.filename)
+
+
+    def getUri(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return Path('images').joinpath(filename_p)
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return Path('images').joinpath(rel_filename_p)
 
