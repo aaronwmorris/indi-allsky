@@ -506,7 +506,8 @@ class VideoWorker(Process):
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
 
-        old_images = IndiAllSkyDbImageTable.query.filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
+        old_images = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
@@ -539,6 +540,8 @@ class VideoWorker(Process):
             try:
                 d.rmdir()
             except OSError as e:
+                logger.error('Cannot remove folder: %s', str(e))
+            except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
 
