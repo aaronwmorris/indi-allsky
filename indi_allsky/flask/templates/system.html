@@ -7,26 +7,24 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-sm-2">Uptime</div>
+    <div class="col-sm-2"><h4>Uptime</h4></div>
     <div class="col-sm-6">{{uptime_str}}</div>
 </div>
 
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">CPU Count</div>
+    <div class="col-sm-2"><h4>CPUs</h4></div>
     <div class="col-sm-1">{{cpu_count}}</div>
     <div class="col-sm-2">{{python_platform}}</div>
 </div>
 
-<hr />
-
 <div class="row">
-    <div class="col-sm-2">CPU Usage</div>
-    <div class="col-sm-1">{{"%.1f"|format(cpu_usage)}}%</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">Usage</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage|int}}%">{{"%.0f"|format(cpu_usage)}}%</div>
         </div>
     </div>
 </div>
@@ -34,7 +32,10 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">Load Average</div>
+    <div class="col-sm-2"><h4>Load Average</h4></div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
     <div class="col-sm-1">5 min</div>
     <div class="col-sm-1">{{"%.2f"|format(cpu_load5)}}</div>
 </div>
@@ -52,28 +53,25 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">Memory</div>
+    <div class="col-sm-2"><h4>Memory</h4></div>
     <div class="col-sm-1">{{mem_total}} MB</div>
 </div>
-
-<hr />
-
 <div class="row">
-    <div class="col-sm-2">Memory Usage</div>
-    <div class="col-sm-1">{{"%.1f"|format(mem_usage)}}%</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">System</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%">{{"%.0f"|format(mem_usage)}}%</div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-sm-2">Swap Usage</div>
-    <div class="col-sm-1">{{"%.1f"|format(swap_usage)}}%</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1">Swap</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%"></div>
+            <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%">{{"%.0f"|format(swap_usage)}}%</div>
         </div>
     </div>
 </div>
@@ -81,50 +79,39 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">Filesystems</div>
+    <div class="col-sm-3"><h4>Filesystems</h4></div>
+<div>
+
+<div class="row">
     {% for fs in fs_data %}
-        {% if loop.index0 != 0 %}
-            <div class="row">
-                <div class="col-sm-2"></div>
-        {% endif %}
-
-        <div class="col-sm-1">{{fs.mountpoint}}</div>
-        <div class="col-sm-1">{{"%.1f"|format(fs.percent)}}%</div>
-        <div class="col-sm-8">
+        <div class="col-sm-3">{{fs.mountpoint}}</div>
+        <div class="col-sm-9">
             <div class="progress">
-                <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{fs.percent|int}}%"></div>
+                <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{fs.percent|int}}%">{{"%.0f"|format(fs.percent)}}%</div>
             </div>
         </div>
-
-        {% if loop.index0 != 0 %}
-            </div>
-        {% endif %}
     {% endfor %}
 </div>
 
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">Environment</div>
+    <div class="col-sm-2"><h4>Environment</h4></div>
+</div>
+<div class="row">
     {% for t in temp_list %}
-        {% if loop.index0 != 0 %}
-            <div class="row">
-                <div class="col-sm-2"></div>
-        {% endif %}
-
-            <div class="col-sm-2">{{t['name']}}</div>
+            <div class="col-sm-3">{{t['name']}}</div>
             <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}c</div>
-
-        {% if loop.index0 != 0 %}
-            </div>
-        {% endif %}
     {% endfor %}
 </div>
 
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">System</div>
+    <div class="col-sm-2"><h4>System</h4></div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
     <div class="col-sm-1">Python</div>
     <div class="col-sm-1">{{python_version}}</div>
 </div>
@@ -183,7 +170,10 @@
 </div>
 
 <div class="row">
-    <div class="col-sm-2">Services</div>
+    <div class="col-sm-2"><h4>Services</h4></div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
     <div class="col-sm-2">indiserver</div>
     <div class="col-sm-2">{{indiserver_service}}</div>
     <div class="col-sm-2"></div>
@@ -231,7 +221,10 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-2">System</div>
+    <div class="col-sm-2"><h4>System</h4></div>
+</div>
+<div class="row">
+    <div class="col-sm-2"></div>
     <div class="col-sm-2">Reboot</div>
     <div class="col-sm-2">
         <input class="form-check-input" id="REBOOT_CONFIRM" name="REBOOT_CONFIRM" type="checkbox" value="y"> Confirm
