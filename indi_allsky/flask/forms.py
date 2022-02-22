@@ -770,9 +770,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = db.session.query(
-            IndiAllSkyDbImageTable.createDate,
-        )\
+        last_image = IndiAllSkyDbImageTable.query\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
@@ -939,9 +937,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
 
-        last_video = db.session.query(
-            IndiAllSkyDbVideoTable.createDate,
-        )\
+        last_video = IndiAllSkyDbVideoTable.query\
             .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
             .first()
 

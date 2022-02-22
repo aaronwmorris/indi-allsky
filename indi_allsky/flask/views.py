@@ -27,7 +27,7 @@ from flask.views import View
 
 from flask import current_app as app
 
-from . import db
+#from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -399,13 +399,13 @@ class JsonImageLoopView(JsonView):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        sqm_images = db.session\
-            .query(
+        sqm_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
                 func.min(IndiAllSkyDbImageTable.sqm).label('image_min_sqm'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
             )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
@@ -424,13 +424,13 @@ class JsonImageLoopView(JsonView):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        stars_images = db.session\
-            .query(
+        stars_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.min(IndiAllSkyDbImageTable.stars).label('image_min_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
             )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
@@ -487,15 +487,16 @@ class JsonChartView(JsonView):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
-        chart_query = db.session.query(
-            IndiAllSkyDbImageTable.createDate,
-            IndiAllSkyDbImageTable.sqm,
-            func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
-            IndiAllSkyDbImageTable.temp,
-            IndiAllSkyDbImageTable.exposure,
-            (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
+        chart_query = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                IndiAllSkyDbImageTable.createDate,
+                IndiAllSkyDbImageTable.sqm,
+                func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
+                IndiAllSkyDbImageTable.temp,
+                IndiAllSkyDbImageTable.exposure,
+                (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
