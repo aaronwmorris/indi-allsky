@@ -67,6 +67,23 @@ bp = Blueprint(
 
 
 class BaseView(View):
+    def __init__(self, **kwargs):
+        super(BaseView, self).__init__(**kwargs)
+
+        self.indi_allsky_config = self.get_indi_allsky_config()
+
+
+    def get_indi_allsky_config(self):
+        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            try:
+                indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError as e:
+                app.logger.error('Error decoding json: %s', str(e))
+                return dict()
+
+        return indi_allsky_config
+
+
     def get_indiallsky_pid(self):
         indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
 
@@ -105,21 +122,16 @@ class BaseView(View):
 
 
     def get_astrometric_info(self):
+        if not self.indi_allsky_config:
+            return dict()
+
         data = dict()
-
-        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-            try:
-                indi_allsky_config = json.loads(f_config_file.read())
-            except json.JSONDecodeError as e:
-                app.logger.error('Error decoding json: %s', str(e))
-                return data
-
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(indi_allsky_config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(indi_allsky_config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.indi_allsky_config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.indi_allsky_config['LOCATION_LATITUDE'])
 
         sun = ephem.Sun()
         moon = ephem.Moon()
@@ -162,7 +174,7 @@ class BaseView(View):
 
 
         # day/night
-        if sun_alt > indi_allsky_config['NIGHT_SUN_ALT_DEG']:
+        if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
         else:
             data['mode'] = 'Night'
@@ -228,7 +240,9 @@ class BaseView(View):
 
 
 class TemplateView(BaseView):
-    def __init__(self, template_name):
+    def __init__(self, template_name, **kwargs):
+        super(TemplateView, self).__init__(**kwargs)
+
         self.template_name = template_name
 
 
@@ -264,7 +278,12 @@ class JsonView(BaseView):
 
 
 class IndexView(TemplateView):
-    pass
+    def get_context(self):
+        context = super(IndexView, self).get_context()
+
+        context['latest_image_uri'] = 'images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))
+
+        return context
 
 
 class CamerasView(TemplateView):
@@ -552,88 +571,81 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
-        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-            try:
-                indi_allsky_config = json.loads(f_config_file.read())
-            except json.JSONDecodeError as e:
-                app.logger.error('Error decoding json: %s', str(e))
-
-
         form_data = {
-            'INDI_SERVER'                    : indi_allsky_config.get('INDI_SERVER', 'localhost'),
-            'INDI_PORT'                      : indi_allsky_config.get('INDI_PORT', 7624),
-            'CCD_CONFIG__NIGHT__GAIN'        : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0),
-            'CCD_CONFIG__NIGHT__BINNING'     : indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
-            'CCD_CONFIG__MOONMODE__GAIN'     : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0),
-            'CCD_CONFIG__MOONMODE__BINNING'  : indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
-            'CCD_CONFIG__DAY__GAIN'          : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0),
-            'CCD_CONFIG__DAY__BINNING'       : indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
-            'CCD_EXPOSURE_MAX'               : indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
-            'CCD_EXPOSURE_DEF'               : indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
-            'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
-            'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
-            'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', False),
-            'TARGET_ADU'                     : indi_allsky_config.get('TARGET_ADU', 75),
-            'TARGET_ADU_DEV'                 : indi_allsky_config.get('TARGET_ADU_DEV', 10),
-            'DETECT_STARS'                   : indi_allsky_config.get('DETECT_STARS', True),
-            'LOCATION_LATITUDE'              : indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
-            'LOCATION_LONGITUDE'             : indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
-            'DAYTIME_CAPTURE'                : indi_allsky_config.get('DAYTIME_CAPTURE', False),
-            'DAYTIME_TIMELAPSE'              : indi_allsky_config.get('DAYTIME_TIMELAPSE', False),
-            'DAYTIME_CONTRAST_ENHANCE'       : indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
-            'NIGHT_CONTRAST_ENHANCE'         : indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
-            'NIGHT_SUN_ALT_DEG'              : indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),
-            'NIGHT_MOONMODE_ALT_DEG'         : indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0),
-            'NIGHT_MOONMODE_PHASE'           : indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
-            'KEOGRAM_ANGLE'                  : indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
-            'KEOGRAM_H_SCALE'                : indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
-            'KEOGRAM_V_SCALE'                : indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
-            'KEOGRAM_LABEL'                  : indi_allsky_config.get('KEOGRAM_LABEL', True),
-            'STARTRAILS_MAX_ADU'             : indi_allsky_config.get('STARTRAILS_MAX_ADU', 50),
-            'STARTRAILS_MASK_THOLD'          : indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
-            'STARTRAILS_PIXEL_THOLD'         : indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
-            'IMAGE_FILE_TYPE'                : indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
-            'IMAGE_FILE_COMPRESSION__JPG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
-            'IMAGE_FILE_COMPRESSION__PNG'    : indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 9),
-            'IMAGE_FOLDER'                   : indi_allsky_config.get('IMAGE_FOLDER', '/var/www/html/allsky/images'),
-            'IMAGE_FLIP_V'                   : indi_allsky_config.get('IMAGE_FLIP_V', True),
-            'IMAGE_FLIP_H'                   : indi_allsky_config.get('IMAGE_FLIP_H', True),
-            'IMAGE_SCALE'                    : indi_allsky_config.get('IMAGE_SCALE', 100),
-            'IMAGE_SAVE_RAW'                 : indi_allsky_config.get('IMAGE_SAVE_RAW', False),
-            'IMAGE_GRAYSCALE'                : indi_allsky_config.get('IMAGE_GRAYSCALE', False),
-            'IMAGE_EXPIRE_DAYS'              : indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
-            'FFMPEG_FRAMERATE'               : indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
-            'FFMPEG_BITRATE'                 : indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
-            'TEXT_PROPERTIES__FONT_FACE'     : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
-            'TEXT_PROPERTIES__FONT_HEIGHT'   : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_HEIGHT', 30),
-            'TEXT_PROPERTIES__FONT_X'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15),
-            'TEXT_PROPERTIES__FONT_Y'        : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30),
-            'TEXT_PROPERTIES__FONT_SCALE'    : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
-            'TEXT_PROPERTIES__FONT_THICKNESS': indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
-            'TEXT_PROPERTIES__FONT_OUTLINE'  : indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
-            'ORB_PROPERTIES__RADIUS'         : indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
-            'FILETRANSFER__CLASSNAME'        : indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
-            'FILETRANSFER__HOST'             : indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
-            'FILETRANSFER__PORT'             : indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
-            'FILETRANSFER__USERNAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('USERNAME', ''),
-            'FILETRANSFER__PASSWORD'         : indi_allsky_config.get('FILETRANSFER', {}).get('PASSWORD', ''),
-            'FILETRANSFER__TIMEOUT'          : indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 5.0),
-            'FILETRANSFER__REMOTE_IMAGE_NAME'         : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{0}'),
-            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/tmp'),
-            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/tmp'),
-            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/tmp'),
-            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/tmp'),
-            'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/tmp'),
-            'FILETRANSFER__UPLOAD_IMAGE'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
-            'FILETRANSFER__UPLOAD_VIDEO'     : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
-            'FILETRANSFER__UPLOAD_KEOGRAM'   : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
-            'FILETRANSFER__UPLOAD_STARTRAIL' : indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
-            'FILETRANSFER__UPLOAD_ENDOFNIGHT': indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
+            'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
+            'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
+            'CCD_CONFIG__NIGHT__GAIN'        : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 0),
+            'CCD_CONFIG__NIGHT__BINNING'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
+            'CCD_CONFIG__MOONMODE__GAIN'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 0),
+            'CCD_CONFIG__MOONMODE__BINNING'  : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
+            'CCD_CONFIG__DAY__GAIN'          : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0),
+            'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
+            'CCD_EXPOSURE_MAX'               : self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
+            'CCD_EXPOSURE_DEF'               : self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
+            'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
+            'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
+            'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
+            'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
+            'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
+            'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
+            'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
+            'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', False),
+            'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', False),
+            'DAYTIME_CONTRAST_ENHANCE'       : self.indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
+            'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
+            'NIGHT_SUN_ALT_DEG'              : self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),
+            'NIGHT_MOONMODE_ALT_DEG'         : self.indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0),
+            'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
+            'KEOGRAM_ANGLE'                  : self.indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
+            'KEOGRAM_H_SCALE'                : self.indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
+            'KEOGRAM_V_SCALE'                : self.indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
+            'KEOGRAM_LABEL'                  : self.indi_allsky_config.get('KEOGRAM_LABEL', True),
+            'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 50),
+            'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
+            'STARTRAILS_PIXEL_THOLD'         : self.indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
+            'IMAGE_FILE_TYPE'                : self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
+            'IMAGE_FILE_COMPRESSION__JPG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
+            'IMAGE_FILE_COMPRESSION__PNG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 9),
+            'IMAGE_FOLDER'                   : self.indi_allsky_config.get('IMAGE_FOLDER', '/var/www/html/allsky/images'),
+            'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
+            'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
+            'IMAGE_SCALE'                    : self.indi_allsky_config.get('IMAGE_SCALE', 100),
+            'IMAGE_SAVE_RAW'                 : self.indi_allsky_config.get('IMAGE_SAVE_RAW', False),
+            'IMAGE_GRAYSCALE'                : self.indi_allsky_config.get('IMAGE_GRAYSCALE', False),
+            'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
+            'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
+            'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
+            'TEXT_PROPERTIES__FONT_FACE'     : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
+            'TEXT_PROPERTIES__FONT_HEIGHT'   : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_HEIGHT', 30),
+            'TEXT_PROPERTIES__FONT_X'        : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15),
+            'TEXT_PROPERTIES__FONT_Y'        : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30),
+            'TEXT_PROPERTIES__FONT_SCALE'    : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
+            'TEXT_PROPERTIES__FONT_THICKNESS': self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
+            'TEXT_PROPERTIES__FONT_OUTLINE'  : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_OUTLINE', True),
+            'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
+            'FILETRANSFER__CLASSNAME'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
+            'FILETRANSFER__HOST'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
+            'FILETRANSFER__PORT'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
+            'FILETRANSFER__USERNAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('USERNAME', ''),
+            'FILETRANSFER__PASSWORD'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('PASSWORD', ''),
+            'FILETRANSFER__TIMEOUT'          : self.indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 5.0),
+            'FILETRANSFER__REMOTE_IMAGE_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{0}'),
+            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/tmp'),
+            'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/tmp'),
+            'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
+            'FILETRANSFER__UPLOAD_VIDEO'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
+            'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
+            'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
+            'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
         }
 
 
         # ADU_ROI
-        ADU_ROI = indi_allsky_config.get('ADU_ROI', [])
+        ADU_ROI = self.indi_allsky_config.get('ADU_ROI', [])
         if ADU_ROI is None:
             ADU_ROI = []
         elif isinstance(ADU_ROI, bool):
@@ -661,7 +673,7 @@ class ConfigView(FormView):
 
 
         # SQM_ROI
-        SQM_ROI = indi_allsky_config.get('SQM_ROI', [])
+        SQM_ROI = self.indi_allsky_config.get('SQM_ROI', [])
         if SQM_ROI is None:
             SQM_ROI = []
         elif isinstance(SQM_ROI, bool):
@@ -689,7 +701,7 @@ class ConfigView(FormView):
 
 
         # IMAGE_CROP_ROI
-        IMAGE_CROP_ROI = indi_allsky_config.get('IMAGE_CROP_ROI', [])
+        IMAGE_CROP_ROI = self.indi_allsky_config.get('IMAGE_CROP_ROI', [])
         if IMAGE_CROP_ROI is None:
             IMAGE_CROP_ROI = []
         elif isinstance(IMAGE_CROP_ROI, bool):
@@ -718,23 +730,23 @@ class ConfigView(FormView):
 
 
         # Font color
-        text_properties__font_color = indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
+        text_properties__font_color = self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
         text_properties__font_color_str = [str(x) for x in text_properties__font_color]
         form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join(text_properties__font_color_str)
 
         # Sun orb color
-        orb_properties__sun_color = indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [255, 255, 255])
+        orb_properties__sun_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [255, 255, 255])
         orb_properties__sun_color_str = [str(x) for x in orb_properties__sun_color]
         form_data['ORB_PROPERTIES__SUN_COLOR'] = ','.join(orb_properties__sun_color_str)
 
         # Moon orb color
-        orb_properties__moon_color = indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
+        orb_properties__moon_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
         orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
 
         # INDI config as json text
-        indi_config_defaults = indi_allsky_config.get('INDI_CONFIG_DEFAULTS', {})
+        indi_config_defaults = self.indi_allsky_config.get('INDI_CONFIG_DEFAULTS', {})
         form_data['INDI_CONFIG_DEFAULTS'] = json.dumps(indi_config_defaults, indent=4)
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
@@ -756,114 +768,109 @@ class AjaxConfigView(BaseView):
 
         # form passed validation
 
-        # no need to catch PermissionError here
-        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-            try:
-                # try to preserve data order
-                indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
-            except json.JSONDecodeError as e:
-                app.logger.error('Error decoding json: %s', str(e))
-                return jsonify({}), 400
+        if not self.indi_allsky_config:
+            return jsonify({}), 400
 
 
         # sanity check
-        if not indi_allsky_config.get('CCD_CONFIG'):
-            indi_allsky_config['CCD_CONFIG'] = {}
+        if not self.indi_allsky_config.get('CCD_CONFIG'):
+            self.indi_allsky_config['CCD_CONFIG'] = {}
 
-        if not indi_allsky_config['CCD_CONFIG'].get('NIGHT'):
-            indi_allsky_config['CCD_CONFIG']['NIGHT'] = {}
+        if not self.indi_allsky_config['CCD_CONFIG'].get('NIGHT'):
+            self.indi_allsky_config['CCD_CONFIG']['NIGHT'] = {}
 
-        if not indi_allsky_config['CCD_CONFIG'].get('MOONMODE'):
-            indi_allsky_config['CCD_CONFIG']['MOONMODE'] = {}
+        if not self.indi_allsky_config['CCD_CONFIG'].get('MOONMODE'):
+            self.indi_allsky_config['CCD_CONFIG']['MOONMODE'] = {}
 
-        if not indi_allsky_config['CCD_CONFIG'].get('DAY'):
-            indi_allsky_config['CCD_CONFIG']['DAY'] = {}
+        if not self.indi_allsky_config['CCD_CONFIG'].get('DAY'):
+            self.indi_allsky_config['CCD_CONFIG']['DAY'] = {}
 
-        if not indi_allsky_config.get('IMAGE_FILE_COMPRESSION'):
-            indi_allsky_config['IMAGE_FILE_COMPRESSION'] = {}
+        if not self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION'):
+            self.indi_allsky_config['IMAGE_FILE_COMPRESSION'] = {}
 
-        if not indi_allsky_config.get('TEXT_PROPERTIES'):
-            indi_allsky_config['TEXT_PROPERTIES'] = {}
+        if not self.indi_allsky_config.get('TEXT_PROPERTIES'):
+            self.indi_allsky_config['TEXT_PROPERTIES'] = {}
 
-        if not indi_allsky_config.get('ORB_PROPERTIES'):
-            indi_allsky_config['ORB_PROPERTIES'] = {}
+        if not self.indi_allsky_config.get('ORB_PROPERTIES'):
+            self.indi_allsky_config['ORB_PROPERTIES'] = {}
 
-        if not indi_allsky_config.get('FILETRANSFER'):
-            indi_allsky_config['FILETRANSFER'] = {}
+        if not self.indi_allsky_config.get('FILETRANSFER'):
+            self.indi_allsky_config['FILETRANSFER'] = {}
 
 
         # update data
-        indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
-        indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
-        indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
-        indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
-        indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = int(request.json['CCD_CONFIG__MOONMODE__GAIN'])
-        indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
-        indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = int(request.json['CCD_CONFIG__DAY__GAIN'])
-        indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
-        indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
-        indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
-        indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
-        indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
-        indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
-        indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
-        indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
-        indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
-        indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
-        indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
-        indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
-        indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
-        indi_allsky_config['DAYTIME_CONTRAST_ENHANCE']             = bool(request.json['DAYTIME_CONTRAST_ENHANCE'])
-        indi_allsky_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
-        indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = float(request.json['NIGHT_SUN_ALT_DEG'])
-        indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = float(request.json['NIGHT_MOONMODE_ALT_DEG'])
-        indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
-        indi_allsky_config['KEOGRAM_ANGLE']                        = float(request.json['KEOGRAM_ANGLE'])
-        indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
-        indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
-        indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
-        indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])
-        indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
-        indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])
-        indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
-        indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
-        indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpeg']       = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])  # duplicate
-        indi_allsky_config['IMAGE_FILE_COMPRESSION']['png']        = int(request.json['IMAGE_FILE_COMPRESSION__PNG'])
-        indi_allsky_config['IMAGE_FOLDER']                         = str(request.json['IMAGE_FOLDER'])
-        indi_allsky_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
-        indi_allsky_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
-        indi_allsky_config['IMAGE_SCALE']                          = int(request.json['IMAGE_SCALE'])
-        indi_allsky_config['IMAGE_SAVE_RAW']                       = bool(request.json['IMAGE_SAVE_RAW'])
-        indi_allsky_config['IMAGE_GRAYSCALE']                      = bool(request.json['IMAGE_GRAYSCALE'])
-        indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
-        indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
-        indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_FACE']         = str(request.json['TEXT_PROPERTIES__FONT_FACE'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_HEIGHT']       = int(request.json['TEXT_PROPERTIES__FONT_HEIGHT'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_X']            = int(request.json['TEXT_PROPERTIES__FONT_X'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_Y']            = int(request.json['TEXT_PROPERTIES__FONT_Y'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_OUTLINE']      = bool(request.json['TEXT_PROPERTIES__FONT_OUTLINE'])
-        indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
-        indi_allsky_config['FILETRANSFER']['CLASSNAME']            = str(request.json['FILETRANSFER__CLASSNAME'])
-        indi_allsky_config['FILETRANSFER']['HOST']                 = str(request.json['FILETRANSFER__HOST'])
-        indi_allsky_config['FILETRANSFER']['PORT']                 = int(request.json['FILETRANSFER__PORT'])
-        indi_allsky_config['FILETRANSFER']['USERNAME']             = str(request.json['FILETRANSFER__USERNAME'])
-        indi_allsky_config['FILETRANSFER']['PASSWORD']             = str(request.json['FILETRANSFER__PASSWORD'])
-        indi_allsky_config['FILETRANSFER']['TIMEOUT']              = float(request.json['FILETRANSFER__TIMEOUT'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_NAME']        = str(request.json['FILETRANSFER__REMOTE_IMAGE_NAME'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_IMAGE_FOLDER'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
-        indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
-        indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])
-        indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
-        indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
-        indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
-        indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
-        indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
+        self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
+        self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
+        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
+        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = int(request.json['CCD_CONFIG__MOONMODE__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
+        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = int(request.json['CCD_CONFIG__DAY__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
+        self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
+        self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
+        self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
+        self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
+        self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
+        self.indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
+        self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
+        self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
+        self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
+        self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
+        self.indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
+        self.indi_allsky_config['DAYTIME_CONTRAST_ENHANCE']             = bool(request.json['DAYTIME_CONTRAST_ENHANCE'])
+        self.indi_allsky_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
+        self.indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = float(request.json['NIGHT_SUN_ALT_DEG'])
+        self.indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = float(request.json['NIGHT_MOONMODE_ALT_DEG'])
+        self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
+        self.indi_allsky_config['KEOGRAM_ANGLE']                        = float(request.json['KEOGRAM_ANGLE'])
+        self.indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
+        self.indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
+        self.indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
+        self.indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])
+        self.indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
+        self.indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])
+        self.indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
+        self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
+        self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpeg']       = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])  # duplicate
+        self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['png']        = int(request.json['IMAGE_FILE_COMPRESSION__PNG'])
+        self.indi_allsky_config['IMAGE_FOLDER']                         = str(request.json['IMAGE_FOLDER'])
+        self.indi_allsky_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
+        self.indi_allsky_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
+        self.indi_allsky_config['IMAGE_SCALE']                          = int(request.json['IMAGE_SCALE'])
+        self.indi_allsky_config['IMAGE_SAVE_RAW']                       = bool(request.json['IMAGE_SAVE_RAW'])
+        self.indi_allsky_config['IMAGE_GRAYSCALE']                      = bool(request.json['IMAGE_GRAYSCALE'])
+        self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
+        self.indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
+        self.indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_FACE']         = str(request.json['TEXT_PROPERTIES__FONT_FACE'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_HEIGHT']       = int(request.json['TEXT_PROPERTIES__FONT_HEIGHT'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_X']            = int(request.json['TEXT_PROPERTIES__FONT_X'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_Y']            = int(request.json['TEXT_PROPERTIES__FONT_Y'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_OUTLINE']      = bool(request.json['TEXT_PROPERTIES__FONT_OUTLINE'])
+        self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
+        self.indi_allsky_config['FILETRANSFER']['CLASSNAME']            = str(request.json['FILETRANSFER__CLASSNAME'])
+        self.indi_allsky_config['FILETRANSFER']['HOST']                 = str(request.json['FILETRANSFER__HOST'])
+        self.indi_allsky_config['FILETRANSFER']['PORT']                 = int(request.json['FILETRANSFER__PORT'])
+        self.indi_allsky_config['FILETRANSFER']['USERNAME']             = str(request.json['FILETRANSFER__USERNAME'])
+        self.indi_allsky_config['FILETRANSFER']['PASSWORD']             = str(request.json['FILETRANSFER__PASSWORD'])
+        self.indi_allsky_config['FILETRANSFER']['TIMEOUT']              = float(request.json['FILETRANSFER__TIMEOUT'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_NAME']        = str(request.json['FILETRANSFER__REMOTE_IMAGE_NAME'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_IMAGE_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
+
+        self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
 
 
         # ADU_ROI
@@ -874,9 +881,9 @@ class AjaxConfigView(BaseView):
 
         # the x2 and y2 values must be positive integers in order to be enabled and valid
         if adu_roi_x2 and adu_roi_y2:
-            indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
+            self.indi_allsky_config['ADU_ROI'] = [adu_roi_x1, adu_roi_y1, adu_roi_x2, adu_roi_y2]
         else:
-            indi_allsky_config['ADU_ROI'] = []
+            self.indi_allsky_config['ADU_ROI'] = []
 
 
         # SQM_ROI
@@ -887,9 +894,9 @@ class AjaxConfigView(BaseView):
 
         # the x2 and y2 values must be positive integers in order to be enabled and valid
         if sqm_roi_x2 and sqm_roi_y2:
-            indi_allsky_config['SQM_ROI'] = [sqm_roi_x1, sqm_roi_y1, sqm_roi_x2, sqm_roi_y2]
+            self.indi_allsky_config['SQM_ROI'] = [sqm_roi_x1, sqm_roi_y1, sqm_roi_x2, sqm_roi_y2]
         else:
-            indi_allsky_config['SQM_ROI'] = []
+            self.indi_allsky_config['SQM_ROI'] = []
 
 
         # IMAGE_CROP_ROI
@@ -900,32 +907,32 @@ class AjaxConfigView(BaseView):
 
         # the x2 and y2 values must be positive integers in order to be enabled and valid
         if image_crop_roi_x2 and image_crop_roi_y2:
-            indi_allsky_config['IMAGE_CROP_ROI'] = [image_crop_roi_x1, image_crop_roi_y1, image_crop_roi_x2, image_crop_roi_y2]
+            self.indi_allsky_config['IMAGE_CROP_ROI'] = [image_crop_roi_x1, image_crop_roi_y1, image_crop_roi_x2, image_crop_roi_y2]
         else:
-            indi_allsky_config['IMAGE_CROP_ROI'] = []
+            self.indi_allsky_config['IMAGE_CROP_ROI'] = []
 
 
 
         # TEXT_PROPERTIES FONT_COLOR
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
         font_r, font_g, font_b = font_color_str.split(',')
-        indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(font_r), int(font_g), int(font_b)]
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(font_r), int(font_g), int(font_b)]
 
         # ORB_PROPERTIES SUN_COLOR
         sun_color_str = str(request.json['ORB_PROPERTIES__SUN_COLOR'])
         sun_r, sun_g, sun_b = sun_color_str.split(',')
-        indi_allsky_config['ORB_PROPERTIES']['SUN_COLOR'] = [int(sun_r), int(sun_g), int(sun_b)]
+        self.indi_allsky_config['ORB_PROPERTIES']['SUN_COLOR'] = [int(sun_r), int(sun_g), int(sun_b)]
 
         # ORB_PROPERTIES MOON_COLOR
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
         moon_r, moon_g, moon_b = moon_color_str.split(',')
-        indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+        self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
 
 
         # save new config
         try:
             with io.open(app.config['INDI_ALLSKY_CONFIG'], 'w') as f_config_file:
-                f_config_file.write(json.dumps(indi_allsky_config, indent=4))
+                f_config_file.write(json.dumps(self.indi_allsky_config, indent=4))
                 f_config_file.flush()
 
             app.logger.info('Wrote new config.json')
