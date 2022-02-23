@@ -23,6 +23,7 @@ from flask import render_template
 from flask import request
 from flask import jsonify
 from flask import Blueprint
+from flask import send_from_directory
 from flask.views import View
 
 from flask import current_app as app
@@ -1347,6 +1348,14 @@ class AjaxSystemInfoView(BaseView):
         r = manager.PowerOff(False)
 
         return r
+
+
+
+# images are normally served directly by the web server, this is a backup method
+@bp.route('/images/<path:path>')
+def images_folder(path):
+    app.logger.warning('Serving image file: %s', path)
+    return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
 
 
 
