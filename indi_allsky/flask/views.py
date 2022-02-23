@@ -571,7 +571,7 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_DEF'               : indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
             'CCD_EXPOSURE_MIN'               : indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
-            'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', True),
+            'AUTO_WB'                        : indi_allsky_config.get('AUTO_WB', False),
             'TARGET_ADU'                     : indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DEV'                 : indi_allsky_config.get('TARGET_ADU_DEV', 10),
             'DETECT_STARS'                   : indi_allsky_config.get('DETECT_STARS', True),
