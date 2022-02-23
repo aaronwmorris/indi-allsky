@@ -140,7 +140,14 @@ class KeogramGenerator(object):
         self.applyLabels(keogram_resized)
 
         logger.warning('Creating keogram: %s', outfile)
-        cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            cv2.imwrite(str(outfile), keogram_resized)
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
 
     def rotate(self, image):
