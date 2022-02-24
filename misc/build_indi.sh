@@ -48,7 +48,7 @@ sleep 10
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
-cd "$SCRIPT_DIR"
+cd "${SCRIPT_DIR}/.."
 ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
@@ -128,7 +128,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/ansible" ]; then
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate
 pip3 install --upgrade pip
-pip3 install -r ansible/requirements.txt
+pip3 install -r ${ALLSKY_DIRECTORY}/ansible/requirements.txt
 
 
 echo
