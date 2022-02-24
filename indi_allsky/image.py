@@ -1,3 +1,4 @@
+import sys
 import io
 import json
 from pathlib import Path
@@ -10,6 +11,7 @@ import shutil
 import copy
 import math
 import logging
+import traceback
 #from pprint import pformat
 
 import ephem
@@ -34,6 +36,27 @@ from .exceptions import CalibrationNotFound
 
 
 logger = logging.getLogger('indi_allsky')
+
+
+def unhandled_exception(exc_type, exc_value, exc_traceback):
+    # Do not print exception when user cancels the program
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    logger.error("An uncaught exception occurred:")
+    logger.error("Type: %s", exc_type)
+    logger.error("Value: %s", exc_value)
+
+    if exc_traceback:
+        format_exception = traceback.format_tb(exc_traceback)
+        for line in format_exception:
+            logger.error(repr(line))
+
+
+#log unhandled exceptions
+sys.excepthook = unhandled_exception
+
 
 
 class ImageWorker(Process):
