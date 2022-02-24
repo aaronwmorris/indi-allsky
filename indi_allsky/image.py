@@ -452,6 +452,8 @@ class ImageWorker(Process):
         tmpfile_name.unlink()  # remove tempfile, will be reused below
 
 
+        write_img_start = time.time()
+
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
             cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
@@ -461,6 +463,9 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), scidata)
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
 
 
         ### Always write the latest file for web access
