@@ -23,11 +23,12 @@ CCD_EXPOSURES = [15 for x in range(1000)]
 
 
 ### rpicam
-CCD_GAIN = 1
+CCD_GAIN = [1]
+#CCD_GAIN = [1, 2, 3]  # loop through these exposures forever
 CCD_BINMODE = 1
 
 ### sv305
-#CCD_GAIN = 250
+#CCD_GAIN = [250]
 #CCD_BINMODE = 1
 
 
@@ -54,7 +55,7 @@ INDI_CONFIG = {
 }
 
 ### simulator
-#CCD_GAIN = 100
+#CCD_GAIN = [100]
 #CCD_BINMODE = 1
 
 #INDI_CONFIG = {
@@ -79,6 +80,13 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 class IndiClient(PyIndi.BaseClient):
+
+    __state_to_str = {
+        PyIndi.IPS_IDLE  : 'IDLE',
+        PyIndi.IPS_OK    : 'OK',
+        PyIndi.IPS_BUSY  : 'BUSY',
+        PyIndi.IPS_ALERT : 'ALERT',
+    }
 
     __indi_interfaces = {
         PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
@@ -373,11 +381,14 @@ class IndiClient(PyIndi.BaseClient):
 
     def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
         if not ctl:
-            return True
+            return True, 'unset'
 
-        ready = ctl.getState() in statuses
+        state = ctl.getState()
 
-        return ready
+        ready = state in statuses
+        state_str = self.__state_to_str.get(state, 'UNKNOWN')
+
+        return ready, state_str
 
 
     def __map_indexes(self, ctl, values):
@@ -416,9 +427,12 @@ class IndiExposureTest(object):
 
         self.indiclient = None
 
+        self.current_gain = None
+        self._gain_index = 0
+
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure', exposure)
+        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.current_gain)
         ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
 
         return ctl
@@ -476,7 +490,9 @@ class IndiExposureTest(object):
         self.indiclient.configureDevice(ccdDevice, INDI_CONFIG)
 
         self.indiclient.setFrameType(ccdDevice, 'FRAME_LIGHT')  # default frame type is light
-        self.indiclient.setCcdGain(ccdDevice, CCD_GAIN)
+        self.indiclient.setCcdGain(ccdDevice, CCD_GAIN[0])
+        self.current_gain = CCD_GAIN[0]
+
         self.indiclient.setCcdBinning(ccdDevice, CCD_BINMODE)
 
         self._pre_run_tasks(ccdDevice)
@@ -486,13 +502,18 @@ class IndiExposureTest(object):
         waiting_for_frame = False
         exposure_ctl = None  # populated later
 
+        camera_ready_time = time.time()
+        camera_ready = False
+        last_camera_ready = False
+        exposure_state = 'unset'
+
         exposure = 0  # populated later
         last_exposure = 0
 
 
         ### main loop starts
         while True:
-            now = time.time()
+            loop_start_time = time.time()
 
             ### Blocking mode ###
 
@@ -504,7 +525,7 @@ class IndiExposureTest(object):
             #    continue
 
 
-            #full_elapsed_s = time.time() - now
+            #full_elapsed_s = time.time() - loop_start_time
             #logger.info('Exposure finished in ######## %0.4f s ########', full_elapsed_s)
 
             ### sleep for the remaining eposure period
@@ -522,40 +543,79 @@ class IndiExposureTest(object):
 
 
             ### Non-blocking mode ###
-            camera_ready = self.indiclient.ctl_ready(exposure_ctl)
 
-            if camera_ready and waiting_for_frame:
-                frame_elapsed = now - frame_start_time
-
-                waiting_for_frame = False
-
-                logger.warning('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - last_exposure)
+            logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
+            logger.info('Exposure state: %s', exposure_state)
 
 
-            if camera_ready and now >= next_frame_time:
-                total_elapsed = now - frame_start_time
+            for x in range(100):
+                now = time.time()
 
-                frame_start_time = now
+                last_camera_ready = camera_ready
+                camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
 
-                last_exposure = exposure
-
-                try:
-                    exposure = CCD_EXPOSURES.pop(0)
-                except IndexError:
-                    logger.info('End of exposures')
-                    sys.exit(0)
-
-                exposure_ctl = self.shoot(ccdDevice, exposure, sync=False)
-                waiting_for_frame = True
-
-                next_frame_time = frame_start_time + exposure
-
-                logger.info('Total time since last exposure %0.4f s', total_elapsed)
+                if camera_ready and not last_camera_ready:
+                    camera_ready_time = now
 
 
-            time.sleep(0.05)
+                if camera_ready and waiting_for_frame:
+                    frame_elapsed = now - frame_start_time
+
+                    waiting_for_frame = False
+
+                    logger.warning('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - last_exposure)
+
+
+                if camera_ready and now >= next_frame_time:
+                    total_elapsed = now - frame_start_time
+
+                    frame_start_time = now
+
+                    last_exposure = exposure
+
+                    try:
+                        exposure = CCD_EXPOSURES.pop(0)
+                    except IndexError:
+                        logger.info('End of exposures')
+                        sys.exit(0)
+
+
+                    new_gain = self.getNextGain()
+                    if new_gain != self.current_gain:
+                        self.indiclient.setCcdGain(ccdDevice, new_gain)
+                        self.current_gain = new_gain
+
+
+                    exposure_ctl = self.shoot(ccdDevice, exposure, sync=False)
+                    waiting_for_frame = True
+
+                    next_frame_time = frame_start_time + exposure
+
+                    logger.info('Total time since last exposure %0.4f s', total_elapsed)
+
+
+                time.sleep(0.05)
 
             ### End Non-blocking mode ###
+
+
+    def getNextGain(self):
+        if type(CCD_GAIN) is int:
+            return CCD_GAIN
+        elif type(CCD_GAIN) in (list, tuple):
+
+            try:
+                gain = CCD_GAIN[self._gain_index]
+            except IndexError:
+                self._gain_index = 0
+                gain = CCD_GAIN[self._gain_index]
+
+            self._gain_index += 1
+
+            return gain
+
+        else:
+            raise Exception('Unknown gain variable type')
 
 
 class TimeOutException(Exception):
