@@ -23,11 +23,12 @@ CCD_EXPOSURES = [15 for x in range(1000)]
 
 
 ### rpicam
-CCD_GAIN = 1
+CCD_GAIN = [1]
+#CCD_GAIN = [1, 2, 3]  # loop through these exposures forever
 CCD_BINMODE = 1
 
 ### sv305
-#CCD_GAIN = 250
+#CCD_GAIN = [250]
 #CCD_BINMODE = 1
 
 
@@ -54,7 +55,7 @@ INDI_CONFIG = {
 }
 
 ### simulator
-#CCD_GAIN = 100
+#CCD_GAIN = [100]
 #CCD_BINMODE = 1
 
 #INDI_CONFIG = {
@@ -426,9 +427,12 @@ class IndiExposureTest(object):
 
         self.indiclient = None
 
+        self.current_gain = None
+        self._gain_index = 0
+
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure', exposure)
+        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.current_gain)
         ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
 
         return ctl
@@ -486,7 +490,9 @@ class IndiExposureTest(object):
         self.indiclient.configureDevice(ccdDevice, INDI_CONFIG)
 
         self.indiclient.setFrameType(ccdDevice, 'FRAME_LIGHT')  # default frame type is light
-        self.indiclient.setCcdGain(ccdDevice, CCD_GAIN)
+        self.indiclient.setCcdGain(ccdDevice, CCD_GAIN[0])
+        self.current_gain = CCD_GAIN[0]
+
         self.indiclient.setCcdBinning(ccdDevice, CCD_BINMODE)
 
         self._pre_run_tasks(ccdDevice)
@@ -542,7 +548,7 @@ class IndiExposureTest(object):
             logger.info('Exposure state: %s', exposure_state)
 
 
-            for x in range(50):
+            for x in range(100):
                 now = time.time()
 
                 last_camera_ready = camera_ready
@@ -573,6 +579,13 @@ class IndiExposureTest(object):
                         logger.info('End of exposures')
                         sys.exit(0)
 
+
+                    new_gain = self.getNextGain()
+                    if new_gain != self.current_gain:
+                        self.indiclient.setCcdGain(ccdDevice, new_gain)
+                        self.current_gain = new_gain
+
+
                     exposure_ctl = self.shoot(ccdDevice, exposure, sync=False)
                     waiting_for_frame = True
 
@@ -584,6 +597,25 @@ class IndiExposureTest(object):
                 time.sleep(0.05)
 
             ### End Non-blocking mode ###
+
+
+    def getNextGain(self):
+        if type(CCD_GAIN) is int:
+            return CCD_GAIN
+        elif type(CCD_GAIN) in (list, tuple):
+
+            try:
+                gain = CCD_GAIN[self._gain_index]
+            except IndexError:
+                self._gain_index = 0
+                gain = CCD_GAIN[self._gain_index]
+
+            self._gain_index += 1
+
+            return gain
+
+        else:
+            raise Exception('Unknown gain variable type')
 
 
 class TimeOutException(Exception):
