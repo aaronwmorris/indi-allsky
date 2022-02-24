@@ -536,7 +536,7 @@ fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
 pip3 uninstall -y opencv-python  # replaced package with opencv-python-headless
-pip3 install -r "$VIRTUALENV_REQ"
+pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 PS3="Select an INDI driver: "
@@ -676,14 +676,14 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
     if [[ -f "config.json" ]]; then
         # copy current config to etc
         cp config.json "${ALLSKY_ETC}/config.json"
-        sudo rm -f config.json
-        ln -s "${ALLSKY_ETC}/config.json" config.json
+        sudo rm -f "${ALLSKY_DIRECTORY}/config.json"
+        ln -s "${ALLSKY_ETC}/config.json" "${ALLSKY_DIRECTORY}/config.json"
     else
         # syntax check
-        cat config.json_template | json_pp >/dev/null
+        cat "${ALLSKY_DIRECTORY}/config.json_template" | json_pp >/dev/null
 
         # create new config
-        cp config.json_template "${ALLSKY_ETC}/config.json"
+        cp "${ALLSKY_DIRECTORY}/config.json_template" "${ALLSKY_ETC}/config.json"
     fi
 fi
 
@@ -708,7 +708,7 @@ sed \
  -e "s|%INDISEVER_SERVICE_NAME%|$INDISEVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- flask.json_template > $TMP4
+ "${ALLSKY_DIRECTORY}/flask.json_template" > $TMP4
 
 # syntax check
 cat $TMP4 | json_pp >/dev/null
