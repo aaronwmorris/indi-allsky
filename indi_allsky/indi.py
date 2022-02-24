@@ -293,6 +293,9 @@ class IndiClient(PyIndi.BaseClient):
             ccdinfo['CCD_FRAME_TYPE'][i.getName()] = i.getState()
 
 
+        gain_info = self.getCcdGain(ccdDevice)
+        ccdinfo['GAIN_INFO'] = gain_info
+
         #logger.info('CCD Info: %s', pformat(ccdinfo))
         return ccdinfo
 
