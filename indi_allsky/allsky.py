@@ -607,6 +607,56 @@ class IndiAllSky(object):
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
+    def cameraInfo(self):
+        # instantiate the client
+        self.indiclient = IndiClient(
+            self.config,
+            self.indiblob_status_send,
+            self.image_q,
+            self.gain_v,
+            self.bin_v,
+        )
+
+        # set indi server localhost and port
+        self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
+
+        # connect to indi server
+        logger.info("Connecting to indiserver")
+        if (not(self.indiclient.connectServer())):
+            logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
+            logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+            sys.exit(1)
+
+        # give devices a chance to register
+        time.sleep(8)
+
+        # connect to all devices
+        ccd_list = self.indiclient.findCcds()
+
+        if len(ccd_list) == 0:
+            logger.error('No CCDs detected')
+            time.sleep(1)
+            sys.exit(1)
+
+        logger.info('Found %d CCDs', len(ccd_list))
+        ccdDevice = ccd_list[0]
+
+        logger.warning('Connecting to device %s', ccdDevice.getDeviceName())
+        self.indiclient.connectDevice(ccdDevice.getDeviceName())
+        self.ccdDevice = ccdDevice
+
+        # set default device in indiclient
+        self.indiclient.device = self.ccdDevice
+
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
+
+        logger.info('Camera Info: %s', json.dumps(ccd_info, indent=4))
+
+        self.indiclient.disconnectServer()
+
+
+
     def reconfigureCcd(self):
 
         if self.night_v.value != int(self.night):
