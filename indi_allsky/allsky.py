@@ -607,7 +607,7 @@ class IndiAllSky(object):
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
-    def cameraInfo(self):
+    def cameraReport(self):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,

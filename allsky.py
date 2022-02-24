@@ -56,7 +56,7 @@ if __name__ == "__main__":
             'run',
             'darks',
             'flushDarks',
-            'cameraInfo',
+            'cameraReport',
             'generateNightTimelapse',
             'generateDayTimelapse',
             'generateNightKeogram',
