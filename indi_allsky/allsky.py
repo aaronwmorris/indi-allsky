@@ -901,6 +901,9 @@ class IndiAllSky(object):
 
 
     def generateDayTimelapse(self, timespec='', camera_id=0):
+        # run from command line
+        self.config['TIMELAPSE_ENABLE'] = True
+
         if camera_id == 0:
             try:
                 camera_id = self._miscDb.getCurrentCameraId()
@@ -916,6 +919,10 @@ class IndiAllSky(object):
 
 
     def _generateDayTimelapse(self, timespec, camera_id, keogram=True):
+        if not self.config.get('TIMELAPSE_ENABLE', True):
+            logger.warning('Timelapse creation disabled')
+            return
+
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -934,6 +941,9 @@ class IndiAllSky(object):
 
 
     def generateNightTimelapse(self, timespec='', camera_id=0):
+        # run from command line
+        self.config['TIMELAPSE_ENABLE'] = True
+
         if camera_id == 0:
             try:
                 camera_id = self._miscDb.getCurrentCameraId()
@@ -949,6 +959,10 @@ class IndiAllSky(object):
 
 
     def _generateNightTimelapse(self, timespec, camera_id, keogram=True):
+        if not self.config.get('TIMELAPSE_ENABLE', True):
+            logger.warning('Timelapse creation disabled')
+            return
+
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -967,6 +981,9 @@ class IndiAllSky(object):
 
 
     def generateNightKeogram(self, timespec='', camera_id=0):
+        # run from command line
+        self.config['TIMELAPSE_ENABLE'] = True
+
         if camera_id == 0:
             try:
                 camera_id = self._miscDb.getCurrentCameraId()
@@ -982,6 +999,10 @@ class IndiAllSky(object):
 
 
     def _generateNightKeogram(self, timespec, camera_id):
+        if not self.config.get('TIMELAPSE_ENABLE', True):
+            logger.warning('Timelapse creation disabled')
+            return
+
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
@@ -1000,6 +1021,9 @@ class IndiAllSky(object):
 
 
     def generateDayKeogram(self, timespec='', camera_id=0):
+        # run from command line
+        self.config['TIMELAPSE_ENABLE'] = True
+
         if camera_id == 0:
             try:
                 camera_id = self._miscDb.getCurrentCameraId()
@@ -1015,6 +1039,10 @@ class IndiAllSky(object):
 
 
     def _generateDayKeogram(self, timespec, camera_id):
+        if not self.config.get('TIMELAPSE_ENABLE', True):
+            logger.warning('Timelapse creation disabled')
+            return
+
         self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
