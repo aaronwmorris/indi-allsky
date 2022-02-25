@@ -56,6 +56,7 @@ class ImageWorker(Process):
                 png_tmp_file.close()
 
                 png_tmp_file_p = Path(png_tmp_file.name)
+                png_tmp_file_p.unlink()
 
 
                 write_img_start = time.time()
@@ -79,6 +80,7 @@ class ImageWorker(Process):
                 jpg_tmp_file.close()
 
                 jpg_tmp_file_p = Path(jpg_tmp_file.name)
+                jpg_tmp_file_p.unlink()
 
                 write_img_start = time.time()
 
