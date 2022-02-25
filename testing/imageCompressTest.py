@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+#import io
 import cv2
 import numpy
 import tempfile
@@ -42,6 +43,8 @@ class ImageWorker(Process):
         logger.info('*** Generating random %d x %d image ***', self.width, self.height)
         self.random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
         #self.random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
+        #with io.open('/tmp/indi_allsky_numpy.npy', 'r+b') as f_numpy:
+        #    self.random_rgb = numpy.load(f_numpy)
 
 
     def run(self):

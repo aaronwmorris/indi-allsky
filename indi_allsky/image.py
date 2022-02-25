@@ -212,6 +212,11 @@ class ImageWorker(Process):
             #scidata_debayered_8 = scidata_debayered
 
 
+            #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
+            #    numpy.save(f_numpy, scidata_debayered_8)
+            #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
+
+
             # adu calculate (before processing)
             adu, adu_average = self.calculate_histogram(scidata_debayered_8, exposure)
 
