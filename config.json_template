@@ -4,7 +4,7 @@
 
     "CCD_CONFIG" : {
         "NIGHT" : {
-            "GAIN"    : 250,
+            "GAIN"    : 100,
             "BINNING" : 1
         },
         "MOONMODE" : {
