@@ -7,12 +7,20 @@ import time
 from pathlib import Path
 import logging
 
+from multiprocessing import Process
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
 class ImageCompressTest(object):
+    def main(self):
+        image_worker = ImageWorker()
+        image_worker.start()
+        image_worker.join()
+
+
+class ImageWorker(Process):
 
     width  = 1920
     height = 1080
@@ -22,11 +30,15 @@ class ImageCompressTest(object):
 
 
     def __init__(self):
+        super(ImageWorker, self).__init__()
+
+        self.name = 'ImageWorker000'
+
         logger.info('*** Generating random %d x %d image ***', self.width, self.height)
         self.random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
 
 
-    def main(self):
+    def run(self):
         #PNG
         logger.info('*** Running png compression tests ***')
 
