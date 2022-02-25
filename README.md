@@ -225,6 +225,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | SQM_ROI             | []          | (array) Region of interest for SQM and Star detection |
 | LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (float) Your longitude for astrometric calculations |
+| TIMELAPSE_ENABLE    | true        | (bool) Enable timelapse, keogram, and star trail creation |
 | DAYTIME_CAPTURE     | false       | (bool) Perform day time image capture |
 | DAYTIME_TIMELAPSE   | false       | (bool) Generate timelapse from day time images |
 | DAYTIME_CONTRAST_ENHANCE | false  | (bool) Perform CLAHE contrast enhancement on day time images |
