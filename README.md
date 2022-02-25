@@ -1,7 +1,8 @@
 # Indi Allsky
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera should be usable.
 
-![](./content/20210421_043940.jpg)
+![](./content/20210930_224951.jpg)
+SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida
 
 ## Features
 * Multiple camera vendor support
