@@ -22,8 +22,13 @@ class ImageCompressTest(object):
 
 class ImageWorker(Process):
 
+    ### 1k
     width  = 1920
     height = 1080
+
+    ### 4k
+    #width  = 3840
+    #height = 2160
 
     jpg_factor_list = (100, 90, 80, 70)
     png_factor_list = (9, 8, 7, 6)
@@ -36,6 +41,7 @@ class ImageWorker(Process):
 
         logger.info('*** Generating random %d x %d image ***', self.width, self.height)
         self.random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
+        #self.random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
 
 
     def run(self):
