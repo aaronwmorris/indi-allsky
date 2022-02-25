@@ -1,3 +1,4 @@
+import sys
 import io
 import json
 from pathlib import Path
@@ -10,6 +11,7 @@ import shutil
 import copy
 import math
 import logging
+import traceback
 #from pprint import pformat
 
 import ephem
@@ -34,6 +36,27 @@ from .exceptions import CalibrationNotFound
 
 
 logger = logging.getLogger('indi_allsky')
+
+
+def unhandled_exception(exc_type, exc_value, exc_traceback):
+    # Do not print exception when user cancels the program
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    logger.error("An uncaught exception occurred:")
+    logger.error("Type: %s", exc_type)
+    logger.error("Value: %s", exc_value)
+
+    if exc_traceback:
+        format_exception = traceback.format_tb(exc_traceback)
+        for line in format_exception:
+            logger.error(repr(line))
+
+
+#log unhandled exceptions
+sys.excepthook = unhandled_exception
+
 
 
 class ImageWorker(Process):
@@ -168,9 +191,6 @@ class ImageWorker(Process):
                 # debayer
                 scidata_debayered = self.debayer(scidata_calibrated)
 
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
-                #scidata_debayered_8 = scidata_debayered
-
             else:
                 # data is probably RGB
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
@@ -183,12 +203,18 @@ class ImageWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
-                scidata_bgr = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
-
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix, image_bit_depth)
+                scidata_debayered_8 = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
 
                 calibrated = False
 
+
+            scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
+            #scidata_debayered_8 = scidata_debayered
+
+
+            #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
+            #    numpy.save(f_numpy, scidata_debayered_8)
+            #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
             # adu calculate (before processing)
@@ -429,6 +455,8 @@ class ImageWorker(Process):
         tmpfile_name.unlink()  # remove tempfile, will be reused below
 
 
+        write_img_start = time.time()
+
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
             cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
@@ -438,6 +466,9 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), scidata)
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
 
 
         ### Always write the latest file for web access

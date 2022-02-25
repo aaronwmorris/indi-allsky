@@ -19,7 +19,7 @@ fi
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
@@ -45,5 +45,5 @@ sleep 10
 
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 uninstall -y pyindi-client
-pip3 install --no-binary :all: --upgrade pyindi-client
+pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@d5dbe80#egg=pyindi-client'
 
