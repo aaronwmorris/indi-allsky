@@ -768,6 +768,12 @@ if [[ "$ASTROBERRY" == "true" ]]; then
     sudo systemctl enable nginx
     sudo systemctl restart nginx
 
+
+    # Allow web server access to mounted media
+    if [[ -d "/media/astroberry" ]]; then
+        sudo chmod o+x /media/astroberry
+    fi
+
 else
     echo "**** Disabling competing web servers (ignore errors) ****"
     sudo systemctl stop nginx || true
