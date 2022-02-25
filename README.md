@@ -300,15 +300,18 @@ The hardware below has at least been plugged in and tested for correct detection
 | Vendor   | Model               | Rating | Notes |
 | -------- | ------------------- | ------ | ----- |
 | Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
+| ZWO      | ASI120MC-S          | A      |       |
 | ZWO      | ASI290MM            | A      |       |
 | ZWO      | ASI178MM            | A      |       |
 | ZWO      | ASI178MC            | A      |       |
+| ZWO      | ASI385MC            | A      |       |
 | ZWO      | ASI071MC Pro        | A      |       |
 | ZWO      | ASI183MM Pro        | A      |       |
 | ZWO      | ASI183MC Pro        | A      |       |
 | QHY      | QHY5LII-M           | A      |       |
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G-1200-KMB          | A      |       |
+| Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Player One   | Mars-C          | A      |       |
 | Raspberry Pi | HQ Camera       | C      | Requires 7+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures, especially when going below 6 seconds when taking long exposures, is not stable. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
