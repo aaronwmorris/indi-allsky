@@ -170,6 +170,32 @@ class IndiAllSky(object):
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
 
+        # Validate gain settings
+        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
+        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+
+        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
+            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_min_gain:
+            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
+
+        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
+            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_min_gain:
+            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
+
+        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
+            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_min_gain:
+            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
+
+
         # set flag for program to restart processes
         self.restart = True
 
@@ -347,6 +373,38 @@ class IndiAllSky(object):
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
         logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
+
+
+        # Validate gain settings
+        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
+        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+
+        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
+            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
+            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
+            time.sleep(3)
+
+        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
+            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
+            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
+            time.sleep(3)
+
+        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
+            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
+            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
+            time.sleep(3)
 
 
     def _startImageWorker(self):
