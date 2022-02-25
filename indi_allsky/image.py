@@ -191,9 +191,6 @@ class ImageWorker(Process):
                 # debayer
                 scidata_debayered = self.debayer(scidata_calibrated)
 
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
-                #scidata_debayered_8 = scidata_debayered
-
             else:
                 # data is probably RGB
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
@@ -206,12 +203,13 @@ class ImageWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
-                scidata_bgr = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
-
-                scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_bgr, image_bitpix, image_bit_depth)
+                scidata_debayered_8 = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
 
                 calibrated = False
 
+
+            scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
+            #scidata_debayered_8 = scidata_debayered
 
 
             # adu calculate (before processing)
