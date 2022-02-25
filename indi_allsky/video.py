@@ -115,8 +115,7 @@ class VideoWorker(Process):
                 self.expireData(img_folder)
 
 
-            if self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
-                self.uploadAllskyEndOfNight(timeofday)
+            self.uploadAllskyEndOfNight(timeofday)
 
 
             if video:
