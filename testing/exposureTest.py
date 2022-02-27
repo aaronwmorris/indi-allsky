@@ -24,35 +24,54 @@ CCD_EXPOSURES = [15 for x in range(1000)]
 
 ### rpicam
 CCD_GAIN = [1]
-#CCD_GAIN = [1, 2, 3]  # loop through these exposures forever
+#CCD_GAIN = [
+#    10,
+#    10,
+#    10,
+#    25,
+#    25,
+#    25,
+#    50,
+#    50,
+#    50,
+#    100,
+#    100,
+#    100
+#]  # loop through these exposures forever
+
 CCD_BINMODE = 1
 
 ### sv305
 #CCD_GAIN = [250]
 #CCD_BINMODE = 1
 
-
 INDI_CONFIG = {
     "PROPERTIES" : {},
-    "SWITCHES" : {
-        "DEBUG" : {
-            "on"  : ["ENABLE"],
-            "off" : ["DISABLE"],
-        },
-        "DEBUG_LEVEL" : {
-            "on"  : ["DBG_ERROR", "DBG_WARNING", "DBG_SESSION", "DBG_DEBUG"],
-            "off" : ["DBG_EXTRA_1"],
-        },
-        "LOGGING_LEVEL" : {
-            "on"  : ["LOG_ERROR", "LOG_WARNING", "LOG_SESSION", "LOG_DEBUG"],
-            "off" : ["LOG_EXTRA_1"],
-        },
-        "LOG_OUTPUT" : {
-            "on"  : ["CLIENT_DEBUG", "FILE_DEBUG"],
-            "off" : [],
-        },
-    }
+    "SWITCHES" : {}
 }
+
+### Debugging
+#INDI_CONFIG = {
+#    "PROPERTIES" : {},
+#    "SWITCHES" : {
+#        "DEBUG" : {
+#            "on"  : ["ENABLE"],
+#            "off" : ["DISABLE"],
+#        },
+#        "DEBUG_LEVEL" : {
+#            "on"  : ["DBG_ERROR", "DBG_WARNING", "DBG_SESSION", "DBG_DEBUG"],
+#            "off" : ["DBG_EXTRA_1"],
+#        },
+#        "LOGGING_LEVEL" : {
+#            "on"  : ["LOG_ERROR", "LOG_WARNING", "LOG_SESSION", "LOG_DEBUG"],
+#            "off" : ["LOG_EXTRA_1"],
+#        },
+#        "LOG_OUTPUT" : {
+#            "on"  : ["CLIENT_DEBUG", "FILE_DEBUG"],
+#            "off" : [],
+#        },
+#    }
+#}
 
 ### simulator
 #CCD_GAIN = [100]
