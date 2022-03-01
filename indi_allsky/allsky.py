@@ -586,10 +586,6 @@ class IndiAllSky(object):
                     self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
-            # reconfigure if needed
-            self.reconfigureCcd()
-
-
             temp = self.indiclient.getCcdTemperature(self.ccdDevice)
             if temp:
                 with self.sensortemp_v.get_lock():
@@ -607,16 +603,24 @@ class IndiAllSky(object):
 
             # every ~10 seconds end this loop and run the code above
             for x in range(200):
+                time.sleep(0.05)
+
                 now = time.time()
 
                 last_camera_ready = camera_ready
                 camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
 
-                if camera_ready and not last_camera_ready:
+                if not camera_ready:
+                    continue
+
+                ###########################################
+                # Camera is ready, not taking an exposure #
+                ###########################################
+                if not last_camera_ready:
                     camera_ready_time = now
 
 
-                if camera_ready and waiting_for_frame:
+                if waiting_for_frame:
                     frame_elapsed = now - frame_start_time
 
                     waiting_for_frame = False
@@ -624,8 +628,12 @@ class IndiAllSky(object):
                     logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
 
 
+                ##########################################################################
+                # Here we know the camera is not busy and we are not waiting for a frame #
+                ##########################################################################
+
                 # shutdown here to ensure camera is not taking images
-                if self.shutdown and not waiting_for_frame:
+                if self.shutdown:
                     logger.warning('Shutting down')
                     self._stopImageWorker(terminate=self.terminate)
                     self._stopVideoWorker(terminate=self.terminate)
@@ -637,16 +645,24 @@ class IndiAllSky(object):
 
 
                 # restart here to ensure camera is not taking images
-                if self.restart and not waiting_for_frame:
+                if self.restart:
                     logger.warning('Restarting processes')
                     self.restart = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
+                    # processes will start at the next loop
 
 
+                # reconfigure if needed
+                self.reconfigureCcd()
 
-                if camera_ready and now >= next_frame_time:
+
+                if now >= next_frame_time:
+                    #######################
+                    # Start next exposure #
+                    #######################
+
                     total_elapsed = now - frame_start_time
 
                     frame_start_time = now
@@ -663,9 +679,6 @@ class IndiAllSky(object):
                 # We do not really care about this for now, just clear it
                 if self.indiblob_status_receive.poll():
                     self.indiblob_status_receive.recv()  # wait until image is received
-
-
-                time.sleep(0.05)
 
 
             loop_elapsed = now - loop_start_time
@@ -729,13 +742,6 @@ class IndiAllSky(object):
         elif self.night and bool(self.moonmode_v.value) != bool(self.moonmode):
             pass
         else:
-            # Update shared values
-            with self.night_v.get_lock():
-                self.night_v.value = int(self.night)
-
-            with self.moonmode_v.get_lock():
-                self.moonmode_v.value = float(self.moonmode)
-
             # No need to reconfigure
             return
 
@@ -763,15 +769,8 @@ class IndiAllSky(object):
             self.moonmode_v.value = float(self.moonmode)
 
 
-        temp = self.indiclient.getCcdTemperature(self.ccdDevice)
-        if temp:
-            with self.sensortemp_v.get_lock():
-                logger.info("Sensor temperature: %0.1f", temp[0].value)
-                self.sensortemp_v.value = temp[0].value
-
-
         # Sleep after reconfiguration
-        time.sleep(1.0)
+        time.sleep(10.0)
 
 
     def detectNight(self):
