@@ -746,6 +746,9 @@ class IndiAllSky(object):
             return
 
 
+        # Sleep before reconfiguration
+        time.sleep(10.0)
+
         if self.night:
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
