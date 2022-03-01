@@ -590,6 +590,13 @@ class IndiAllSky(object):
             self.reconfigureCcd()
 
 
+            temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+            if temp:
+                with self.sensortemp_v.get_lock():
+                    logger.info("Sensor temperature: %0.1f", temp[0].value)
+                    self.sensortemp_v.value = temp[0].value
+
+
             if self.night:
                 # always indicate timelapse generation at night
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
@@ -728,12 +735,6 @@ class IndiAllSky(object):
 
             with self.moonmode_v.get_lock():
                 self.moonmode_v.value = float(self.moonmode)
-
-            temp = self.indiclient.getCcdTemperature(self.ccdDevice)
-            if temp:
-                with self.sensortemp_v.get_lock():
-                    logger.info("Sensor temperature: %0.1f", temp[0].value)
-                    self.sensortemp_v.value = temp[0].value
 
             # No need to reconfigure
             return
