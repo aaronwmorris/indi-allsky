@@ -300,7 +300,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Vendor   | Model               | Rating | Notes |
 | -------- | ------------------- | ------ | ----- |
 | Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
-| ZWO      | ASI120MC-S          | A      |       |
+| ZWO      | ASI120MC-S          | B      | https://github.com/aaronwmorris/indi-allsky/wiki/ASI120MC-S-Camera-Issues |
 | ZWO      | ASI290MM            | A      |       |
 | ZWO      | ASI178MM            | A      |       |
 | ZWO      | ASI178MC            | A      |       |
