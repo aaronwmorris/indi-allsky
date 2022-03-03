@@ -37,6 +37,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
+    periodic_reconfigure_offset = 300.0  # 5 minutes
     DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
@@ -78,6 +79,8 @@ class IndiAllSky(object):
         self.upload_worker = None
         self.upload_q = Queue()
         self.upload_worker_idx = 0
+
+        self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
 
         self._miscDb = miscDb(self.config)
 
@@ -131,10 +134,11 @@ class IndiAllSky(object):
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         # reconfigure if needed
-        self.reconfigureCcd()
+        self.reconfigureCcd(self.ccdDevice)
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
+        self.config['CCD_SERVER'] = self.ccdDevice.getDriverExec()
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
@@ -315,6 +319,7 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
+        self.config['CCD_SERVER'] = self.ccdDevice.getDriverExec()
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
@@ -516,13 +521,31 @@ class IndiAllSky(object):
     def _pre_run_tasks(self, ccdDevice):
         # Tasks that need to be run before the main program loop
 
-        indi_exec = ccdDevice.getDriverExec()
-
-        if indi_exec in ['indi_rpicam']:
+        if self.config['CCD_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
             self.shoot(ccdDevice, 7.0, sync=True)
+
+
+    def periodic_reconfigure(self, ccdDevice):
+        # Tasks that need to be run periodically
+        if self.periodic_reconfigure_time > time.time():
+            return
+
+        # set next reconfigure time
+        self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
+
+        logger.warning('Periodic reconfigure triggered')
+
+        if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
+            # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
+            # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
+            if self.config['CCD_NAME'].startswith('ZWO CCD ASI120'):
+                self.indiclient.configureDevice(ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
+        elif self.config['CCD_SERVER'] in ['indi_asi_single_ccd']:
+            if self.config['CCD_NAME'].startswith('ZWO ASI120'):
+                self.indiclient.configureDevice(ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
 
 
     def run(self):
@@ -655,7 +678,10 @@ class IndiAllSky(object):
 
 
                 # reconfigure if needed
-                self.reconfigureCcd()
+                self.reconfigureCcd(self.ccdDevice)
+
+                # these tasks run every ~5 minutes
+                self.periodic_reconfigure(self.ccdDevice)
 
 
                 if now >= next_frame_time:
@@ -735,7 +761,7 @@ class IndiAllSky(object):
 
 
 
-    def reconfigureCcd(self):
+    def reconfigureCcd(self, ccdDevice):
 
         if self.night_v.value != int(self.night):
             pass
@@ -747,21 +773,21 @@ class IndiAllSky(object):
 
 
         # Sleep before reconfiguration
-        time.sleep(10.0)
+        time.sleep(5.0)
 
         if self.night:
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-                self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+                self.indiclient.setCcdGain(ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+                self.indiclient.setCcdBinning(ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-                self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+                self.indiclient.setCcdGain(ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+                self.indiclient.setCcdBinning(ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
-            self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
-            self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
+            self.indiclient.setCcdGain(ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdBinning(ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         # Update shared values
@@ -773,7 +799,7 @@ class IndiAllSky(object):
 
 
         # Sleep after reconfiguration
-        time.sleep(10.0)
+        time.sleep(5.0)
 
 
     def detectNight(self):
