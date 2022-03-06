@@ -7,7 +7,7 @@ images/**/*.png
 images/**/*.tif
 images/**/*.mp4
 images/**/*.gif
-*.json
+/*.json
 *.py[oc]
 __pycache__/
 log/*.log
