@@ -6,12 +6,13 @@ astropy
 #https://www.piwheels.org/project/numpy/
 numpy==1.21.4
 #https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless==4.5.5.62
+opencv-python-headless==4.5.5.64
 #scikit-image
 python-dateutil
 ephem
 paramiko
-pycurl
+#https://www.piwheels.org/project/pycurl/
+pycurl==7.44.1
 imageio
 imageio-ffmpeg
 pygifsicle

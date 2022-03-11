@@ -8,11 +8,12 @@ numpy==1.22.2
 # Problem with numpy 1.21.4 wheel on Raspbian 11 armv7l
 # RuntimeError: module compiled against API version 0xf but this version of numpy is 0xe
 #https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless==4.5.5.62
+opencv-python-headless==4.5.5.64
 #scikit-image
 python-dateutil
 ephem
 paramiko
+#https://www.piwheels.org/project/pycurl/
 pycurl
 imageio
 imageio-ffmpeg
