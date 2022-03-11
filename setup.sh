@@ -183,6 +183,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
@@ -244,6 +245,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
@@ -318,6 +320,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
@@ -372,6 +375,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
@@ -430,6 +434,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
@@ -487,6 +492,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libilmbase-dev \
         libopenexr-dev \
         libgtk-3-0 \
+        libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
         libnova-dev \
