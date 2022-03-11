@@ -11,7 +11,8 @@ opencv-python-headless==4.5.5.62
 python-dateutil
 ephem
 paramiko
-pycurl
+#https://www.piwheels.org/project/pycurl/
+pycurl==7.44.1
 imageio
 imageio-ffmpeg
 pygifsicle
