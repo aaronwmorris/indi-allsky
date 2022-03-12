@@ -150,13 +150,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
     #if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-    #    echo
-    #    echo
-    #    echo "Raspbian 11 is not yet support in the Astroberry repo"
-    #    echo
-    #    echo
-    #    exit 1
-
     #    # Astroberry repository
     #    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
     #        echo "Installing INDI via Astroberry repository"
@@ -196,12 +189,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         sqlite3
 
 
-    if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
-            indi-full \
-            indi-rpicam \
-            libindi-dev
-    fi
+    #if [[ "$INSTALL_INDI" == "true" ]]; then
+    #    sudo apt-get -y install \
+    #        indi-full \
+    #        indi-rpicam \
+    #        libindi-dev
+    #fi
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
@@ -291,18 +284,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo dpkg-reconfigure tzdata
 
 
-    #if [[ "$CPU_ARCH" == "x86_64" ]]; then
-    #    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-    #        ### Install INDI from Debian testing distro (bookworm)
-    #        echo 'APT::Default-Release "bullseye";' | sudo tee /etc/apt/apt.conf.d/99defaultrelease
-
-    #        echo "deb     http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee /etc/apt/sources.list.d/bookworm.list
-    #        echo "#deb-src http://ftp.us.debian.org/debian/    bookworm main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
-    #        echo "deb     http://security.debian.org/         bookworm-security main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/bookworm.list
-    #    fi
-    #fi
-
-
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -333,15 +314,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         sqlite3
 
 
-    if [[ "$INSTALL_INDI" == "true" ]]; then
-        ### Install INDI from Debian testing distro (bookworm)
-        sudo apt-get -y install -t bookworm \
-            indi-bin \
-            libindi-dev \
-            indi-asi \
-            indi-playerone \
-            indi-webcam
-    fi
+    #if [[ "$INSTALL_INDI" == "true" ]]; then
+    #    sudo apt-get -y install \
+    #        indi-full \
+    #        indi-rpicam \
+    #        libindi-dev
+    #fi
+
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
