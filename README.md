@@ -2,7 +2,7 @@
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera should be usable.
 
 ![](./content/20210930_224951.jpg)
-SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida
+*Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## Features
 * Multiple camera vendor support
@@ -143,8 +143,9 @@ A large cloud passed over significantly increasing the brightness of the sky and
 ![](./content/webui_chart02.png)
 
 ### Image viewer
-Historical images can be browsed.  (A small satellite flare.)
+Historical images browsing.
 ![](./content/webui_images.png)
+*Pictured: A small satellite flare.*
 
 ### Timelapse viewer
 Historical Star trails and Keograms.  The Keogram image is linked directly to the timelapse video for the night.
