@@ -124,7 +124,7 @@ function populate_videos(video_list) {
             'class' : "col-sm-2",
         }).appendTo(row_div);
 
-        if (item['startrail']) {
+        if (item['startrail'] != 'None') {
             var st_a = $('<a />', {
                 'href'   : item['startrail'],
                 'target' : "_blank",
@@ -151,7 +151,7 @@ function populate_videos(video_list) {
         }).appendTo(keogram_div);
 
 
-        if (item['keogram']) {
+        if (item['keogram'] != 'None') {
             $('<img />', {
                 'src'   : item['keogram'],
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
