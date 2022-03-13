@@ -248,7 +248,7 @@ def STARTRAILS_PIXEL_THOLD_validator(form, field):
 
 
 def IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('jpg', 'png'):
+    if field.data not in ('jpg', 'png', 'tif'):
         raise ValidationError('Please select a valid file type')
 
 
@@ -266,6 +266,11 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
 
     if field.data > 9:
         raise ValidationError('PNG compression must be 9 or less')
+
+
+def IMAGE_FILE_COMPRESSION__TIF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
 
 
 def IMAGE_FOLDER_validator(form, field):
@@ -583,6 +588,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
+    IMAGE_FILE_COMPRESSION__TIF      = IntegerField('TIFF Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__TIF_validator])
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')

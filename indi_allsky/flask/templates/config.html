@@ -504,6 +504,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__TIF.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FILE_COMPRESSION__TIF(class='form-control bg-secondary') }}
+            <div id="IMAGE_FILE_COMPRESSION__TIF-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">[int] Compression flag for TIFF images. 5 = LZW - See libtiff.h for valid options</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -1027,6 +1038,7 @@ const field_names = [
     'IMAGE_FILE_TYPE',
     'IMAGE_FILE_COMPRESSION__JPG',
     'IMAGE_FILE_COMPRESSION__PNG',
+    'IMAGE_FILE_COMPRESSION__TIF',
     'IMAGE_FOLDER',
     'IMAGE_SCALE',
     'IMAGE_CROP_ROI_X1',
