@@ -41,8 +41,16 @@ class ImageWorker(Process):
         self.name = 'ImageWorker000'
 
         logger.info('*** Generating random %d x %d image ***', self.width, self.height)
-        self.random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
+
+        # random colors (16bit -> 8bit)
+        random_rgb_16 = numpy.random.randint(((2 ** 16) - 1), size=(self.width, self.height, 3), dtype=numpy.uint16)
+        div_factor = int((2 ** 16) / 255)
+        self.random_rgb = (random_rgb_16 / div_factor).astype('uint8')
+
+        # black
         #self.random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
+
+        # load raw numpy data
         #with io.open('/tmp/indi_allsky_numpy.npy', 'r+b') as f_numpy:
         #    self.random_rgb = numpy.load(f_numpy)
 
