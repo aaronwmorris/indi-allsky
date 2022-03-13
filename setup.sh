@@ -131,7 +131,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_bravo.txt
+    VIRTUALENV_REQ=requirements_debian11.txt
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -205,7 +205,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_alpha.txt
+    VIRTUALENV_REQ=requirements_debian10.txt
 
 
     # reconfigure system timezone
@@ -267,7 +267,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_bravo.txt
+    VIRTUALENV_REQ=requirements_debian11.txt
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -331,7 +331,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_alpha.txt
+    VIRTUALENV_REQ=requirements_debian10.txt
 
 
     # reconfigure system timezone
@@ -382,7 +382,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_bravo.txt
+    VIRTUALENV_REQ=requirements_debian11.txt
 
 
     # reconfigure system timezone
