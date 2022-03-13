@@ -138,7 +138,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./build_indi.sh before running setup.sh"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
         echo
         echo
         exit 1
@@ -274,7 +274,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./build_indi.sh before running setup.sh"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
         echo
         echo
         exit 1
@@ -336,6 +336,17 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
@@ -366,14 +377,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         ffmpeg \
         gifsicle \
         jq \
-        sqlite3
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
 
 
-    if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
-            indi-full \
-            libindi-dev
-    fi
+    #if [[ "$INSTALL_INDI" == "true" ]]; then
+    #    sudo apt-get -y install \
+    #        indi-full \
+    #        libindi-dev
+    #fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     DEBIAN_DISTRO=1
