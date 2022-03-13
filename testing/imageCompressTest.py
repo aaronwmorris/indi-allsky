@@ -47,6 +47,9 @@ class ImageWorker(Process):
         div_factor = int((2 ** 16) / 255)
         self.random_rgb = (random_rgb_16 / div_factor).astype('uint8')
 
+        # grey
+        #self.random_rgb = numpy.full([self.width, self.height, 3], 127, dtype=numpy.uint8)
+
         # black
         #self.random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
 
