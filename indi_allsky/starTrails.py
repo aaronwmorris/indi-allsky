@@ -138,11 +138,11 @@ class StarTrailGenerator(object):
 
         logger.warning('Creating star trail: %s', outfile)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION'][self.config['IMAGE_FILE_TYPE']]])
+            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(outfile), self.trail_image)
+            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
