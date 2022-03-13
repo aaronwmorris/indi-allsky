@@ -441,7 +441,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    VIRTUALENV_REQ=requirements_alpha.txt
+    VIRTUALENV_REQ=requirements_ubuntu18.txt
 
 
     # reconfigure system timezone
@@ -483,7 +483,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         ffmpeg \
         gifsicle \
         jq \
-        sqlite3
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
 
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
