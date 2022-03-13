@@ -38,6 +38,7 @@ echo
 echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
+echo "Arch: $CPU_ARCH"
 echo
 
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
