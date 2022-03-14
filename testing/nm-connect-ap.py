@@ -132,6 +132,10 @@ class ConnectAp(object):
 
         logger.warning("Connection established!")
 
+        # comment this out to remove the connection
+        sys.exit()
+
+
         #
         # Connection is established. Do whatever is necessary.
         # ...
