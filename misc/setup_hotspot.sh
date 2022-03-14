@@ -96,6 +96,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         network-manager
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        network-manager
+
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
     exit 1
