@@ -315,7 +315,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Touptek  | G-1200-KMB          | A      |       |
 | Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Player One   | Mars-C          | A      |       |
-| Raspberry Pi | HQ Camera       | C      | Requires 7+ second throw away exposure to enable long exposures.  https://github.com/indilib/indi-3rdparty/issues/271 <br /> Taking variable length exposures, especially when going below 6 seconds when taking long exposures, is not stable. |
+| Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
