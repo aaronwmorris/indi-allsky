@@ -408,6 +408,18 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
+    elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
     fi
 
 
@@ -807,6 +819,51 @@ else
         sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+
+        if [[ ! -d "/etc/apache2/ssl" ]]; then
+            sudo mkdir /etc/apache2/ssl
+        fi
+
+        sudo chown root:root /etc/apache2/ssl
+        sudo chmod 755 /etc/apache2/ssl
+
+
+        if [[ ! -f "/etc/apache2/ssl/indi-allsky_apache.key" || ! -f "/etc/apache2/ssl/indi-allsky_apache.pem" ]]; then
+            sudo rm -f /etc/apache2/ssl/indi-allsky_apache.key
+            sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
+
+            SHORT_HOSTNAME=$(hostname -s)
+            KEY_TMP=$(mktemp)
+            CRT_TMP=$(mktemp)
+
+            # sudo has problems with process substitution <()
+            openssl req \
+                -new \
+                -newkey rsa:4096 \
+                -sha512 \
+                -days 3650 \
+                -nodes \
+                -x509 \
+                -subj "/CN=${SHORT_HOSTNAME}.local" \
+                -keyout "$KEY_TMP" \
+                -out "$CRT_TMP" \
+                -extensions san \
+                -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+                sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+                sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+
+                rm -f "$KEY_TMP"
+                rm -f "$CRT_TMP"
+        fi
+
+
+        sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.key
+        sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
+        sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
+        sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
+
 
         sudo a2enmod rewrite
         sudo a2enmod headers
