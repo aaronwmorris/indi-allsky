@@ -42,16 +42,17 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ### Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
-| Raspbian 10 (Legacy)  | armv6l         | Indi installed from Astroberry apt repo |
-| Raspbian 11           | armv6l         | Compile indi with build_indi.sh |
-| Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh <br />Some camera support appears to be missing such as Raspberry PI HQ camera <br />ZWO ASI, QHY, and Player One Astronomy cameras work |
-| Debian 10             | x86_64         | Compile indi with build_indi.sh |
+| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
+| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
+| Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
-| Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
+| Debian 10             | x86_64         | Compile indi with build_indi.sh |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Astroberry Server 2.0 | armv6l         | |
+| Ubuntu 20.04          | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
+| Astroberry Server 2.0 | armhf          | |
 
-MacOS support is theoretically possible, but not tested.  Not all INDI cameras have Mac firmwares available.
+MacOS support is theoretically possible, but not tested.
 
 ## Installation
 1. Install git
