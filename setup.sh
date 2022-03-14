@@ -186,7 +186,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         ffmpeg \
         gifsicle \
         jq \
-        sqlite3
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
 
 
     #if [[ "$INSTALL_INDI" == "true" ]]; then
@@ -248,7 +250,9 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         ffmpeg \
         gifsicle \
         jq \
-        sqlite3
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
 
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
@@ -450,7 +454,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         ffmpeg \
         gifsicle \
         jq \
-        sqlite3
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
 
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
