@@ -7,6 +7,7 @@ import time
 import math
 from pathlib import Path
 from collections import OrderedDict
+import socket
 import psutil
 import dbus
 
@@ -1124,6 +1125,8 @@ class SystemInfoView(TemplateView):
 
         context['temp_list'] = self.getTemps()
 
+        context['net_list'] = self.getNetworkIps()
+
         context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
         context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
@@ -1226,6 +1229,35 @@ class SystemInfoView(TemplateView):
                 })
 
         return temp_list
+
+
+    def getNetworkIps(self):
+        net_info = psutil.net_if_addrs()
+
+        net_list = list()
+        for dev, addr_info in net_info.items():
+            if dev == 'lo':
+                # skip loopback
+                continue
+
+
+            dev_info = {
+                'name'  : dev,
+                'inet4' : [],
+                'inet6' : [],
+            }
+
+            for addr in addr_info:
+                if addr.family == socket.AF_INET:
+                    dev_info['inet4'].append(addr.address)
+
+                elif addr.family == socket.AF_INET6:
+                    dev_info['inet6'].append(addr.address)
+
+            net_list.append(dev_info)
+
+
+        return net_list
 
 
     def getSystemdUnitStatus(self, unit):
