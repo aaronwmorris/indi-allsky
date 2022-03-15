@@ -82,16 +82,16 @@
     <div class="col-sm-3"><h4>Filesystems</h4></div>
 <div>
 
-<div class="row">
-    {% for fs in fs_data %}
+{% for fs in fs_data %}
+    <div class="row">
         <div class="col-sm-3">{{fs.mountpoint}}</div>
         <div class="col-sm-9">
             <div class="progress">
                 <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{fs.percent|int}}%">{{"%.0f"|format(fs.percent)}}%</div>
             </div>
         </div>
-    {% endfor %}
-</div>
+    </div>
+{% endfor %}
 
 <hr />
 
@@ -99,8 +99,8 @@
     <div class="col-sm-3"><h4>Network</h4></div>
 <div>
 
-<div class="row">
-    {% for net in net_list %}
+{% for net in net_list %}
+    <div class="row">
         <div class="col-sm-2"></div>
         <div class="col-sm-1">{{net.name}}</div>
         <div class="col-sm-3">
@@ -109,20 +109,25 @@
         <div class="col-sm-6">
             {{ net.inet6 | join('<br />') | safe }}
         </div>
-    {% endfor %}
-</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-2"></div>
+	<div class="col-sm-10"><hr /></div>
+    </div>
+{% endfor %}
 
 <hr />
 
 <div class="row">
     <div class="col-sm-2"><h4>Environment</h4></div>
 </div>
-<div class="row">
-    {% for t in temp_list %}
-            <div class="col-sm-3">{{t['name']}}</div>
-            <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}c</div>
-    {% endfor %}
-</div>
+{% for t in temp_list %}
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2">{{t['name']}}</div>
+        <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}c</div>
+    </div>
+{% endfor %}
 
 <hr />
 
