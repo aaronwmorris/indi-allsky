@@ -96,6 +96,25 @@
 <hr />
 
 <div class="row">
+    <div class="col-sm-3"><h4>Network</h4></div>
+<div>
+
+<div class="row">
+    {% for net in net_list %}
+        <div class="col-sm-2"></div>
+        <div class="col-sm-1">{{net.name}}</div>
+        <div class="col-sm-3">
+            {{ net.inet4 | join('<br />') | safe }}
+        </div>
+        <div class="col-sm-6">
+            {{ net.inet6 | join('<br />') | safe }}
+        </div>
+    {% endfor %}
+</div>
+
+<hr />
+
+<div class="row">
     <div class="col-sm-2"><h4>Environment</h4></div>
 </div>
 <div class="row">
