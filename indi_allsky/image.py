@@ -61,6 +61,8 @@ sys.excepthook = unhandled_exception
 
 class ImageWorker(Process):
 
+    dark_temperature_range = 5.0  # dark must be within this range
+
     line_thickness = 2
 
     __cfa_bgr_map = {
@@ -585,18 +587,49 @@ class ImageWorker(Process):
     def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
         from .flask.models import IndiAllSkyDbDarkFrameTable
 
+        # pick a dark frame that is closest to the exposure and temperature
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
-            .order_by(IndiAllSkyDbDarkFrameTable.exposure.asc())\
+            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensortemp_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .order_by(
+                IndiAllSkyDbDarkFrameTable.exposure.asc(),
+                IndiAllSkyDbDarkFrameTable.temp.asc(),
+            )\
             .first()
 
         if not dark_frame_entry:
-            logger.warning('Dark not found: ccd%d %dbit %0.7fs gain %d bin %d', camera_id, image_bitpix, float(exposure), self.gain_v.value, self.bin_v.value)
-            raise CalibrationNotFound('Dark not found')
+            logger.warning('Temperature matched dark not found: %0.2fc', self.sensortemp_v.value)
+
+            # pick a dark frame that matches the exposure at the hightest temperature found
+            dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
+                .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
+                .order_by(
+                    IndiAllSkyDbDarkFrameTable.exposure.asc(),
+                    IndiAllSkyDbDarkFrameTable.temp.desc(),
+                )\
+                .first()
+
+
+            if not dark_frame_entry:
+                logger.warning('Dark not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
+                    camera_id,
+                    image_bitpix,
+                    float(exposure),
+                    self.gain_v.value,
+                    self.bin_v.value,
+                    self.sensortemp_v.value,
+                )
+
+                raise CalibrationNotFound('Dark not found')
 
         p_dark_frame = Path(dark_frame_entry.filename)
         if not p_dark_frame.exists():
