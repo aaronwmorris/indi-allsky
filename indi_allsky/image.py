@@ -382,12 +382,25 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
 
+        # I do not like this logic.  I am assuming if img_subdirs is defined then it is a dark frame
+        # otherwise, it is just a raw light frame
+
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         if img_subdirs:
-            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(camera_id, 'fit'))
+            # dark frame
+            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(
+                camera_id,
+                date_str,
+                'fit',
+            ))
         else:
+            # raw light
             folder = self.getImageFolder(exp_date)
-            filename = folder.joinpath(self.filename_t.format(camera_id, date_str, 'fit'))
+            filename = folder.joinpath(self.filename_t.format(
+                camera_id,
+                date_str,
+                'fit',
+            ))
 
 
         file_dir = filename.parent
