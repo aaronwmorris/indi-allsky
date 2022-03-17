@@ -868,15 +868,27 @@ class IndiAllSky(object):
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
 
 
+        dark_filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.{7:s}'
+        # 0  = ccd id
+        # 1  = bits
+        # 2  = exposure (seconds)
+        # 3  = gain
+        # 4  = binning
+        # 5  = temperature
+        # 6  = date
+        # 7  = extension
+
         ### take darks
         for exp in dark_exposures:
-            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+            filename_t = dark_filename_t.format(
                 '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1:s}',
+                int(self.sensortemp_v.value),
+                '{1:s}',    # date
+                '{2:s}',    # file extension
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -900,13 +912,15 @@ class IndiAllSky(object):
 
         ### take darks
         for exp in dark_exposures:
-            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+            filename_t = dark_filename_t.format(
                 '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1:s}',
+                int(self.sensortemp_v.value),
+                '{1:s}',    # date
+                '{2:s}',    # file extension
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -932,13 +946,15 @@ class IndiAllSky(object):
         ### take darks
         # day will rarely exceed 1 second
         for exp in dark_exposures:
-            filename_t = 'dark_ccd{0:s}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}.{5:s}'.format(
+            filename_t = dark_filename_t.format(
                 '{0:d}',
                 ccd_bits,
                 int(exp),
                 self.gain_v.value,
                 self.bin_v.value,
-                '{1:s}',
+                int(self.sensortemp_v.value),
+                '{1:s}',    # date
+                '{2:s}',    # file extension
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
@@ -1193,8 +1209,8 @@ class IndiAllSky(object):
         self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darkframes, extension_list=['fit', 'fits'])
 
 
-        #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1.fit
-        re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)\.[a-z]+$')
+        #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1_10c_20210826_020202.fit
+        re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)_(?P<ccdtemp_str>\-?\d+)c_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
 
         darkframe_entries = list()
         for f in file_list_darkframes:
@@ -1211,21 +1227,27 @@ class IndiAllSky(object):
             #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
             #logger.info('Gain string: %s', m.group('gain_str'))
             #logger.info('Binmode string: %s', m.group('binmode_str'))
+            #logger.info('Ccd temp string: %s', m.group('ccdtemp_str'))
 
             ccd_id = int(m.group('ccd_id_str'))
             exposure = int(m.group('exposure_str'))
             bitdepth = int(m.group('bitdepth_str'))
             gain = int(m.group('gain_str'))
             binmode = int(m.group('binmode_str'))
+            ccdtemp = float(m.group('ccdtemp_str'))
 
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             darkframe_dict = {
                 'filename'   : str(f),
+                'createDate' : d_createDate,
                 'bitdepth'   : bitdepth,
                 'exposure'   : exposure,
                 'gain'       : gain,
                 'binmode'    : binmode,
                 'camera_id'  : ccd_id,
+                'temp'       : ccdtemp,
             }
 
             darkframe_entries.append(darkframe_dict)
