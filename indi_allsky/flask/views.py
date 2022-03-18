@@ -620,7 +620,7 @@ class JsonChartView(JsonView):
 
         if len(image_data.shape) == 2:
             # mono
-            h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
+            h_numpy = cv2.calcHist([image_data], [0], None, [256], [0, 256])
             for x, val in enumerate(h_numpy.tolist()):
                 h_data = {
                     'x' : str(x),
