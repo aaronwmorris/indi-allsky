@@ -21,6 +21,12 @@ var json_data = {
         'stars' : [],
         'temp'  : [],
         'exp'   : [],
+        'histogram' : {
+            'red'   : [],
+            'green' : [],
+            'blue'  : [],
+            'gray'  : [],
+        }
     },
 };
 
@@ -245,6 +251,79 @@ function init() {
         }
     });
 
+
+
+    ctx_histogram = $('#histogram-chart')[0].getContext('2d');
+    histogram_chart = new Chart(ctx_histogram, {
+        type: "line",
+        data: {
+            datasets: [
+                {
+                    label: 'red',
+                    pointRadius: 0,
+                    borderColor: "rgba(128, 0, 0, 1)",
+                    tension: 0.1,
+                    data: []
+                },
+                {
+                    label: 'green',
+                    pointRadius: 0,
+                    borderColor: "rgba(0, 128, 0, 1)",
+                    tension: 0.1,
+                    data: []
+                },
+                {
+                    label: 'blue',
+                    pointRadius: 0,
+                    borderColor: "rgba(0, 0, 192, 1)",
+                    tension: 0.1,
+                    data: []
+                },
+                {
+                    label: 'gray',
+                    pointRadius: 0,
+                    borderColor: "rgba(128, 128, 128, 1)",
+                    tension: 0.1,
+                    data: []
+                }
+            ],
+        },
+        options: {
+            plugins: {
+                title: {
+                    text: 'Latest Histogram',
+                    display: true,
+                    color: "rgba(127, 127, 127, 1)"
+                },
+                legend: {
+                    display: false,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                },
+            }
+        }
+    });
+
+
     loop();
 }
 
@@ -271,11 +350,18 @@ function drawChart() {
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
+
+    histogram_chart.data.datasets[0].data = json_data['chart_data']['histogram']['red'];
+    histogram_chart.data.datasets[1].data = json_data['chart_data']['histogram']['green'];
+    histogram_chart.data.datasets[2].data = json_data['chart_data']['histogram']['blue'];
+    histogram_chart.data.datasets[3].data = json_data['chart_data']['histogram']['gray'];
+
     sqm_chart.update();
     sqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
+    histogram_chart.update();
 }
 
 
@@ -349,6 +435,10 @@ $( document ).ready(function() {
 <div class="row bg-dark">
     <div class="col-sm-6">
         <canvas id="temp-chart"></canvas>
+    </div>
+
+    <div class="col-sm-6">
+        <canvas id="histogram-chart"></canvas>
     </div>
 </div>
 
