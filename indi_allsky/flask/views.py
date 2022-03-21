@@ -531,6 +531,12 @@ class JsonChartView(JsonView):
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
+            'histogram' : {
+                'red'   : [],
+                'green' : [],
+                'blue'  : [],
+                'gray'  : [],
+            },
         }
         for i in chart_query:
             sqm_data = {
@@ -563,6 +569,76 @@ class JsonChartView(JsonView):
             }
 
             chart_data['sqm_d'].append(sqm_d_data)
+
+
+
+        # build last image histogram
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+
+        latest_image = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        if not latest_image:
+            return chart_data
+
+
+        latest_image_p = Path(latest_image.filename)
+        if not latest_image_p.exists():
+            app.logger.error('Image does not exist: %s', latest_image_p)
+            return chart_data
+
+
+        image_start = time.time()
+
+        image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+
+        if isinstance(image_data, type(None)):
+            app.logger.error('Unable to read %s', latest_image_p)
+            return chart_data
+
+        image_elapsed_s = time.time() - image_start
+        app.logger.info('Image read in %0.4f s', image_elapsed_s)
+
+
+        image_height, image_width = image_data.shape[:2]
+        app.logger.info('Calculating histogram from RoI')
+
+        mask = numpy.zeros(image_data.shape[:2], numpy.uint8)
+
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
+
+        mask[y1:y2, x1:x2] = 255
+
+
+        if len(image_data.shape) == 2:
+            # mono
+            h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
+            for x, val in enumerate(h_numpy.tolist()):
+                h_data = {
+                    'x' : str(x),
+                    'y' : val[0],
+                }
+                chart_data['histogram']['gray'].append(h_data)
+
+        else:
+            # color
+            color = ('blue', 'green', 'red')
+            for i, col in enumerate(color):
+                h_numpy = cv2.calcHist([image_data], [i], mask, [256], [0, 256])
+                for x, val in enumerate(h_numpy.tolist()):
+                    h_data = {
+                        'x' : str(x),
+                        'y' : val[0],
+                    }
+                    chart_data['histogram'][col].append(h_data)
 
 
         return chart_data

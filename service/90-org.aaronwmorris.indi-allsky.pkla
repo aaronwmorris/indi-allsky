@@ -9,3 +9,9 @@ Identity=unix-user:%ALLSKY_USER%
 Action=org.freedesktop.NetworkManager.enable-disable-wifi;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.settings.modify.system
 ResultActive=yes
 ResultAny=yes
+
+[Allow indi-allsky user to mount USB disks]
+Identity=unix-user:%ALLSKY_USER%
+Action=org.freedesktop.udisks2.filesystem-mount-system;org.freedesktop.udisks2.filesystem-mount;org.freedesktop.udisks2.filesystem-mount-other-seat
+ResultActive=yes
+ResultAny=yes
