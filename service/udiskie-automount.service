@@ -1,0 +1,9 @@
+[Unit]
+Description=Udiskie automount daemon
+
+[Service]
+ExecStart=/usr/bin/udiskie --verbose --automount --no-config --no-notify --no-tray
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
