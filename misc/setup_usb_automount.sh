@@ -108,6 +108,20 @@ ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
 
+
+echo "**** Setup policy kit permissions ****"
+TMP8=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+
+sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+[[ -f "$TMP8" ]] && rm -f "$TMP8"
+
+
+
 # create users systemd folder
 [[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
 
@@ -120,6 +134,17 @@ systemctl --user daemon-reload
 systemctl --user enable udiskie-automount.service
 systemctl --user start udiskie-automount.service
 
+
+
+# Allow web server access to mounted media
+if [[ -d "/media/${USER}" ]]; then
+    sudo chmod o+x "/media/${USER}"
+else
+    echo
+    echo "You may need to run this script again once you insert your media"
+    echo "for the correct access permissions for the web server"
+    echo
+fi
 
 
 echo
