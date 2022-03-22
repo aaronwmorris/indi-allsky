@@ -6,4 +6,4 @@ ExecStart=/usr/bin/udiskie --verbose --automount --no-config --no-notify --no-tr
 RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
