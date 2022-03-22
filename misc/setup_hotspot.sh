@@ -110,6 +110,23 @@ fi
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
+cd "$SCRIPT_DIR/.."
+ALLSKY_DIRECTORY=$PWD
+cd $OLDPWD
+
+
+
+echo "**** Setup policy kit permissions ****"
+TMP8=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+
+sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+[[ -f "$TMP8" ]] && rm -f "$TMP8"
+
 
 
 # disable wifi powersave
@@ -129,13 +146,13 @@ fi
 
 
 sudo rfkill unblock wlan
-sudo nmcli radio wifi on
+nmcli radio wifi on
 
-sudo nmcli connection del HotSpot || true
+nmcli connection del HotSpot || true
 
 sleep 5
 
-sudo nmcli connection add \
+nmcli connection add \
     ifname wlan0 \
     type wifi \
     con-name "HotSpot" \
@@ -146,20 +163,20 @@ sudo nmcli connection add \
     ipv6.method auto
 
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     wifi-sec.key-mgmt wpa-psk
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     wifi-sec.psk "$HOTSPOT_PSK"
 
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     autoconnect yes
 
 
-sudo nmcli connection down HotSpot || true
+nmcli connection down HotSpot || true
 sleep 3
-sudo nmcli connection up HotSpot
+nmcli connection up HotSpot
 
 
 echo
