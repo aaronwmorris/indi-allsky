@@ -110,6 +110,23 @@ fi
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
+cd "$SCRIPT_DIR/.."
+ALLSKY_DIRECTORY=$PWD
+cd $OLDPWD
+
+
+
+echo "**** Setup policy kit permissions ****"
+TMP8=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+
+sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+[[ -f "$TMP8" ]] && rm -f "$TMP8"
+
 
 
 # disable wifi powersave
