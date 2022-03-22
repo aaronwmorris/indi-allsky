@@ -146,13 +146,13 @@ fi
 
 
 sudo rfkill unblock wlan
-sudo nmcli radio wifi on
+nmcli radio wifi on
 
-sudo nmcli connection del HotSpot || true
+nmcli connection del HotSpot || true
 
 sleep 5
 
-sudo nmcli connection add \
+nmcli connection add \
     ifname wlan0 \
     type wifi \
     con-name "HotSpot" \
@@ -163,20 +163,20 @@ sudo nmcli connection add \
     ipv6.method auto
 
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     wifi-sec.key-mgmt wpa-psk
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     wifi-sec.psk "$HOTSPOT_PSK"
 
 
-sudo nmcli connection modify HotSpot \
+nmcli connection modify HotSpot \
     autoconnect yes
 
 
-sudo nmcli connection down HotSpot || true
+nmcli connection down HotSpot || true
 sleep 3
-sudo nmcli connection up HotSpot
+nmcli connection up HotSpot
 
 
 echo
