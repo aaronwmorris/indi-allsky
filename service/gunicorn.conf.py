@@ -1,4 +1,5 @@
-threads            = 3 
+worker_class       = 'gthread'
+threads            = 4
 syslog             = True
 syslog_addr        = 'unix:///dev/log'
 syslog_facility    = 'local7'
