@@ -64,7 +64,7 @@
     "comment_IMAGE_FILE_COMPRESSION" : "0-100 for jpg, 0-9 for png",
     "IMAGE_FILE_COMPRESSION" : {
         "jpg"   : 90,
-        "png"   : 9,
+        "png"   : 5,
         "comment_tif" : "5 is LZW",
         "tif"   : 5
     },
