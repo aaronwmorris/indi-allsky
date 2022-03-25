@@ -16,7 +16,7 @@ pycurl==7.44.1
 imageio
 imageio-ffmpeg
 pygifsicle
-gunicorn
+gunicorn[gthread]
 inotify
 psutil
 Flask
