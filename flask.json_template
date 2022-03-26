@@ -1,7 +1,7 @@
 {
     "SQLALCHEMY_DATABASE_URI" : "sqlite:///%DB_FOLDER%/indi-allsky.sqlite",
     "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
-    "SESSION_COOKIE_SECURE" : true,
+    "SESSION_COOKIE_SECURE" : false,
     "TEMPLATES_AUTO_RELOAD" : true,
     "SECRET_KEY" : "%SECRET_KEY%",
 
