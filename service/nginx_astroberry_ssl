@@ -3,6 +3,42 @@ upstream indi_allsky_server {
 }
 
 server {
+    listen 81;
+
+    ### Comment this section to permit HTTP access to indi-allsky
+    return 302 https://$host:444$request_uri;
+    ###
+
+    rewrite ^/$ /indi-allsky;
+
+    auth_basic "Allsky";
+    auth_basic_user_file %ALLSKY_ETC%/nginx.passwd;
+
+
+    location /indi-allsky/images {
+        alias %IMAGE_FOLDER%;
+        autoindex on;
+    }
+
+    location /indi-allsky/static {
+        alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
+        autoindex off;
+    }
+
+    location /indi-allsky {
+        try_files $uri @proxy_to_indi_allsky;
+    }
+
+    location @proxy_to_indi_allsky {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
+      proxy_redirect off;
+      proxy_pass http://indi_allsky_server;
+    }
+}
+
+server {
     listen 444;
 
     ssl_certificate           /etc/ssl/astroberry.crt;
@@ -14,6 +50,7 @@ server {
     ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
     ssl_prefer_server_ciphers on;
 
+    #add_header Strict-Transport-Security "max-age=604800; includeSubDomains" always;  # 1 week
 
     rewrite ^/$ /indi-allsky;
 
