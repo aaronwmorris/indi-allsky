@@ -163,6 +163,11 @@ nmcli connection modify HotSpot \
 nmcli connection modify HotSpot \
     wifi-sec.psk "$HOTSPOT_PSK"
 
+# force WPA2 (rsn) and AES (ccmp)
+nmcli connection modify HotSpot \
+    802-11-wireless-security.proto rsn \
+    802-11-wireless-security.group ccmp \
+    802-11-wireless-security.pairwise ccmp
 
 nmcli connection modify HotSpot \
     autoconnect yes
@@ -181,7 +186,7 @@ echo
 echo "SSID: $HOTSPOT_SSID"
 echo "PSK:  $HOTSPOT_PSK"
 echo
-echo "Indi-Allsky HotSpot IP:  $HOTSPOT_IP"
+echo "Indi-Allsky HotSpot IP:  $HOTSPOT_IP  (255.255.255.0)"
 echo "URL: https://${HOTSPOT_IP}/"
 echo
 
