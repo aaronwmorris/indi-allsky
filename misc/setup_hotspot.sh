@@ -129,13 +129,6 @@ sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi
 
 
 
-# disable wifi powersave
-sudo cp ${SCRIPT_DIR}/wifi-powersave-off.conf /etc/NetworkManager/conf.d/wifi-powersave-off.conf
-sudo chown root:root /etc/NetworkManager/conf.d/wifi-powersave-off.conf
-sudo chmod 644 /etc/NetworkManager/conf.d/wifi-powersave-off.conf
-
-
-
 if [[ -f "/etc/dhcpcd.conf" ]]; then
     if [[ ! $(grep -e "^denyinterfaces wlan0" /etc/dhcpcd.conf >/dev/null 2>&1) ]]; then
         echo "denyinterfaces wlan0" | sudo tee -a /etc/dhcpcd.conf
@@ -159,6 +152,7 @@ nmcli connection add \
     autoconnect no \
     wifi.mode ap \
     wifi.ssid "$HOTSPOT_SSID" \
+    802-11-wireless.powersave 2 \
     ip4 "${HOTSPOT_IP}/24" \
     ipv6.method auto
 
