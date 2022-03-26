@@ -519,6 +519,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
+        ('tif', 'TIFF'),
     )
 
     TEXT_PROPERTIES__FONT_FACE_choices = (
