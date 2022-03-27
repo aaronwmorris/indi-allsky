@@ -12,8 +12,8 @@ export PATH
 HOTSPOT_IP="10.42.0.1"
 HOTSPOT_SSID="IndiAllsky"
 HOTSPOT_PSK="indiallsky"
-HOTSPOT_BAND="bg"
-#HOTSPOT_BAND="a"
+
+HOTSPOT_BANDS="bg a"
 
 ### Use this if you have multiple cameras
 #HOTSPOT_SSID="IndiAllsky${RANDOM}"
@@ -60,7 +60,6 @@ echo
 echo "SSID: $HOTSPOT_SSID"
 echo "PSK:  $HOTSPOT_PSK"
 echo "IP:   $HOTSPOT_IP"
-echo "Band: $HOTSPOT_BAND"
 echo
 echo
 
@@ -137,6 +136,17 @@ sudo chown root:root /etc/modprobe.d/cfg80211.conf
 sudo chmod 644 /etc/modprobe.d/cfg80211.conf
 
 
+
+echo "*** Setup wifi band ***"
+PS3="Please select a wifi band: "
+select wifi_band in $HOTSPOT_BANDS; do
+    HOTSPOT_BAND=$wifi_band
+    break
+done
+
+
+
+
 echo "**** Setup policy kit permissions ****"
 TMP8=$(mktemp)
 sed \
@@ -207,6 +217,8 @@ echo
 echo
 echo "SSID: $HOTSPOT_SSID"
 echo "PSK:  $HOTSPOT_PSK"
+echo
+echo "Band: $HOTSPOT_BAND"
 echo
 echo "Indi-Allsky HotSpot IP:  $HOTSPOT_IP  (255.255.255.0)"
 echo "URL: https://${HOTSPOT_IP}/"
