@@ -85,25 +85,29 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
-        network-manager
+        network-manager \
+        tzdata
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
-        network-manager
+        network-manager \
+        tzdata
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
-        network-manager
+        network-manager \
+        tzdata
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
-        network-manager
+        network-manager \
+        tzdata
 
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
@@ -117,6 +121,20 @@ cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
+
+echo "*** Setup wifi for specific country ***"
+#COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | sed -e "s/[\t\ ]/_/g")
+COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | awk {'print $1'})
+PS3="Please select your country for proper wifi channel selection: "
+select code_country in $COUNTRIES; do
+    #COUNTRY_CODE=$(echo $code_country | awk -F_ {'print $1'})
+    COUNTRY_CODE=$code_country
+    break
+done
+
+echo "options cfg80211 ieee80211_regdom=${COUNTRY_CODE}" | sudo tee /etc/modprobe.d/cfg80211.conf
+sudo chown root:root /etc/modprobe.d/cfg80211.conf
+sudo chmod 644 /etc/modprobe.d/cfg80211.conf
 
 
 echo "**** Setup policy kit permissions ****"
