@@ -126,9 +126,11 @@ echo "*** Setup wifi for specific country ***"
 COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | awk {'print $1'})
 PS3="Please select your country for proper wifi channel selection: "
 select code_country in $COUNTRIES; do
-    #COUNTRY_CODE=$(echo $code_country | awk -F_ {'print $1'})
-    COUNTRY_CODE=$code_country
-    break
+    if [[ -n "$code_country" ]]; then
+        #COUNTRY_CODE=$(echo $code_country | awk -F_ {'print $1'})
+        COUNTRY_CODE=$code_country
+        break
+    fi
 done
 
 echo "options cfg80211 ieee80211_regdom=${COUNTRY_CODE}" | sudo tee /etc/modprobe.d/cfg80211.conf
@@ -140,8 +142,10 @@ sudo chmod 644 /etc/modprobe.d/cfg80211.conf
 echo "*** Setup wifi band ***"
 PS3="Please select a wifi band: "
 select wifi_band in $HOTSPOT_BANDS; do
-    HOTSPOT_BAND=$wifi_band
-    break
+    if [[ -n "$wifi_band" ]]; then
+        HOTSPOT_BAND=$wifi_band
+        break
+    fi
 done
 
 
