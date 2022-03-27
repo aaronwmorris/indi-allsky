@@ -12,6 +12,8 @@ export PATH
 HOTSPOT_IP="10.42.0.1"
 HOTSPOT_SSID="IndiAllsky"
 HOTSPOT_PSK="indiallsky"
+HOTSPOT_BAND="bg"
+#HOTSPOT_BAND="a"
 
 ### Use this if you have multiple cameras
 #HOTSPOT_SSID="IndiAllsky${RANDOM}"
@@ -58,6 +60,7 @@ echo
 echo "SSID: $HOTSPOT_SSID"
 echo "PSK:  $HOTSPOT_PSK"
 echo "IP:   $HOTSPOT_IP"
+echo "Band: $HOTSPOT_BAND"
 echo
 echo
 
@@ -153,6 +156,7 @@ nmcli connection add \
     wifi.mode ap \
     wifi.ssid "$HOTSPOT_SSID" \
     802-11-wireless.powersave 2 \
+    802-11-wireless.band "$HOTSPOT_BAND" \
     ip4 "${HOTSPOT_IP}/24" \
     ipv6.method auto
 
