@@ -13,10 +13,14 @@ HOTSPOT_IP="10.42.0.1"
 HOTSPOT_SSID="IndiAllsky"
 HOTSPOT_PSK="indiallsky"
 
-HOTSPOT_BANDS="bg a"
-
 ### Use this if you have multiple cameras
 #HOTSPOT_SSID="IndiAllsky${RANDOM}"
+
+
+HOTSPOT_BANDS="bg a"
+
+# Not sure of the possible channel combinations, may need more 5Ghz channels for countries outside US
+HOTSPOT_CHANNELS="1 2 3 4 5 6 7 8 9 10 11 12 13 14 36 40 44 48"
 
 
 DISTRO_NAME=$(lsb_release -s -i)
@@ -133,6 +137,9 @@ select code_country in $COUNTRIES; do
     fi
 done
 
+echo "You selected country $COUNTRY_CODE"
+sleep 3
+
 echo "options cfg80211 ieee80211_regdom=${COUNTRY_CODE}" | sudo tee /etc/modprobe.d/cfg80211.conf
 sudo chown root:root /etc/modprobe.d/cfg80211.conf
 sudo chmod 644 /etc/modprobe.d/cfg80211.conf
@@ -148,7 +155,28 @@ select wifi_band in $HOTSPOT_BANDS; do
     fi
 done
 
+echo "You selected band $HOTSPOT_BAND"
+sleep 3
 
+
+echo "*** Setup wifi channel ***"
+PS3="Please select a wifi channel: "
+select wifi_channel in $HOTSPOT_CHANNELS; do
+    if [[ -n "$wifi_channel" ]]; then
+        if [[ "$HOTSPOT_BAND" == "bg" && "$wifi_channel" -le 14 ]]; then
+            HOTSPOT_CHANNEL=$wifi_channel
+            break
+        elif [[ "$HOTSPOT_BAND" == "a" && "$wifi_channel" -gt 14 ]]; then
+            HOTSPOT_CHANNEL=$wifi_channel
+            break
+        else
+            echo "Invalid channel for band"
+        fi
+    fi
+done
+
+echo "You selected channel $HOTSPOT_CHANNEL"
+sleep 3
 
 
 echo "**** Setup policy kit permissions ****"
@@ -189,6 +217,7 @@ nmcli connection add \
     wifi.ssid "$HOTSPOT_SSID" \
     802-11-wireless.powersave 2 \
     802-11-wireless.band "$HOTSPOT_BAND" \
+    802-11-wireless.channel "$HOTSPOT_CHANNEL" \
     ip4 "${HOTSPOT_IP}/24" \
     ipv6.method auto
 
@@ -222,7 +251,8 @@ echo
 echo "SSID: $HOTSPOT_SSID"
 echo "PSK:  $HOTSPOT_PSK"
 echo
-echo "Band: $HOTSPOT_BAND"
+echo "Band:    $HOTSPOT_BAND"
+echo "Channel: $HOTSPOT_CHANNEL"
 echo
 echo "Indi-Allsky HotSpot IP:  $HOTSPOT_IP  (255.255.255.0)"
 echo "URL: https://${HOTSPOT_IP}/"
