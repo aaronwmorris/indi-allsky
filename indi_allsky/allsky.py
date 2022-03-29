@@ -985,9 +985,9 @@ class IndiAllSky(object):
     def flushDarks(self):
         from .flask.models import IndiAllSkyDbDarkFrameTable
 
-        dark_frames_all = IndiAllSkyDbDarkFrameTable.query.all()
+        dark_frames_all = IndiAllSkyDbDarkFrameTable.query
 
-        logger.warning('Found %s dark frames to flush', dark_frames_all.count())
+        logger.warning('Found %d dark frames to flush', dark_frames_all.count())
 
         time.sleep(5.0)
 
