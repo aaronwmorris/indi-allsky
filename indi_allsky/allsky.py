@@ -14,7 +14,6 @@ import logging
 
 import ephem
 
-from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Value
 
@@ -52,7 +51,6 @@ class IndiAllSky(object):
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
         self.image_q = Queue()
-        self.indiblob_status_receive, self.indiblob_status_send = Pipe(duplex=False)
         self.indiclient = None
         self.ccdDevice = None
         self.exposure_v = Value('f', -1.0)
@@ -280,7 +278,6 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
-            self.indiblob_status_send,
             self.image_q,
             self.gain_v,
             self.bin_v,
@@ -702,11 +699,6 @@ class IndiAllSky(object):
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
 
-                # We do not really care about this for now, just clear it
-                if self.indiblob_status_receive.poll():
-                    self.indiblob_status_receive.recv()  # wait until image is received
-
-
             loop_elapsed = now - loop_start_time
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
@@ -715,7 +707,6 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
-            self.indiblob_status_send,
             self.image_q,
             self.gain_v,
             self.bin_v,
@@ -894,8 +885,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(self.ccdDevice, float(exp))
-            self.indiblob_status_receive.recv()  # wait until image is received
+            self.shoot(self.ccdDevice, float(exp), sync=True)
 
             elapsed_s = time.time() - start
 
@@ -926,8 +916,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(self.ccdDevice, float(exp))
-            self.indiblob_status_receive.recv()  # wait until image is received
+            self.shoot(self.ccdDevice, float(exp), sync=True)
 
             elapsed_s = time.time() - start
 
@@ -960,8 +949,7 @@ class IndiAllSky(object):
 
             start = time.time()
 
-            self.shoot(self.ccdDevice, float(exp))
-            self.indiblob_status_receive.recv()  # wait until image is received
+            self.shoot(self.ccdDevice, float(exp), sync=True)
 
             elapsed_s = time.time() - start
 
