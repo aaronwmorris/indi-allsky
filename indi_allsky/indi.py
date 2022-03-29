@@ -71,11 +71,10 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, indiblob_status_send, image_q, gain_v, bin_v):
+    def __init__(self, config, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
         self.config = config
-        self.indiblob_status_send = indiblob_status_send
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -139,8 +138,6 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("new BLOB %s", bp.name)
 
         exposure_elapsed_s = time.time() - self.exposureStartTime
-
-        self.indiblob_status_send.send(True)  # Notify main process next exposure may begin
 
         #start = time.time()
 
