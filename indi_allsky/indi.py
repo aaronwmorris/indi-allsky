@@ -347,10 +347,15 @@ class IndiClient(PyIndi.BaseClient):
     def getCcdTemperature(self, ccdDevice):
         temp = ccdDevice.getNumber("CCD_TEMPERATURE")
 
-        if temp:
-            with self.sensortemp_v.get_lock():
-                logger.info("Sensor temperature: %0.1f", temp[0].value)
-                self.sensortemp_v.value = temp[0].value
+        if isinstance(temp, type(None)):
+            logger.warning("Sensor temperature: not supported")
+            temp_val = -273.15  # absolute zero  :-)
+        else:
+            logger.info("Sensor temperature: %0.1f", temp_val)
+            temp_val = float(temp[0].value)
+
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val
 
         return temp
 
