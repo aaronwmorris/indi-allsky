@@ -879,6 +879,9 @@ class IndiAllSky(object):
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
 
+
+            self.indiclient.getCcdTemperature(self.ccdDevice)
+
             start = time.time()
 
             self.shoot(self.ccdDevice, float(exp), sync=True)
@@ -909,6 +912,9 @@ class IndiAllSky(object):
                 '{2:s}',    # file extension
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
+
+
+            self.indiclient.getCcdTemperature(self.ccdDevice)
 
             start = time.time()
 
@@ -942,6 +948,9 @@ class IndiAllSky(object):
                 '{2:s}',    # file extension
             )
             self.indiclient.filename_t = filename_t  # override file name for darks
+
+
+            self.indiclient.getCcdTemperature(self.ccdDevice)
 
             start = time.time()
 
