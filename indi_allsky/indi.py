@@ -351,8 +351,8 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning("Sensor temperature: not supported")
             temp_val = -273.15  # absolute zero  :-)
         else:
-            logger.info("Sensor temperature: %0.1f", temp_val)
             temp_val = float(temp[0].value)
+            logger.info("Sensor temperature: %0.1f", temp_val)
 
         with self.sensortemp_v.get_lock():
             self.sensortemp_v.value = temp_val
