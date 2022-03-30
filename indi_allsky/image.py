@@ -599,6 +599,7 @@ class ImageWorker(Process):
             .order_by(
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
+                IndiAllSkyDbDarkFrameTable.createDate.asc(),
             )\
             .first()
 
@@ -615,6 +616,7 @@ class ImageWorker(Process):
                 .order_by(
                     IndiAllSkyDbDarkFrameTable.exposure.asc(),
                     IndiAllSkyDbDarkFrameTable.temp.desc(),
+                    IndiAllSkyDbDarkFrameTable.createDate.asc(),
                 )\
                 .first()
 
