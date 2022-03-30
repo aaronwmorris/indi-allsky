@@ -281,6 +281,7 @@ class IndiAllSky(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
+            self.sensortemp_v,
         )
 
         # set indi server localhost and port
@@ -606,12 +607,7 @@ class IndiAllSky(object):
                     self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
-            temp = self.indiclient.getCcdTemperature(self.ccdDevice)
-            if temp:
-                with self.sensortemp_v.get_lock():
-                    logger.info("Sensor temperature: %0.1f", temp[0].value)
-                    self.sensortemp_v.value = temp[0].value
-
+            self.indiclient.getCcdTemperature(self.ccdDevice)
 
             if self.night:
                 # always indicate timelapse generation at night
