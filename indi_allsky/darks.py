@@ -241,8 +241,8 @@ class IndiAllSkyDarks(object):
                 image_list.append(hdulist[0].data)
 
 
-            #stacked_image = self._average_image(image_list, image_bitpix)
-            stacked_image = self._max_image(image_list, image_bitpix)
+            stacked_image = self._average_image(image_list, image_bitpix)
+            #stacked_image = self._max_image(image_list, image_bitpix)
 
             # replace image data into original fit container
             hdulist[0].data = stacked_image
@@ -291,8 +291,8 @@ class IndiAllSkyDarks(object):
                 image_list.append(hdulist[0].data)
 
 
-            #stacked_image = self._average_image(image_list, image_bitpix)
-            stacked_image = self._max_image(image_list, image_bitpix)
+            stacked_image = self._average_image(image_list, image_bitpix)
+            #stacked_image = self._max_image(image_list, image_bitpix)
 
             # replace image data into original fit container
             hdulist[0].data = stacked_image
@@ -345,8 +345,8 @@ class IndiAllSkyDarks(object):
                 image_list.append(hdulist[0].data)
 
 
-            #stacked_image = self._average_image(image_list, image_bitpix)
-            stacked_image = self._max_image(image_list, image_bitpix)
+            stacked_image = self._average_image(image_list, image_bitpix)
+            #stacked_image = self._max_image(image_list, image_bitpix)
 
             # replace image data into original fit container
             hdulist[0].data = stacked_image
