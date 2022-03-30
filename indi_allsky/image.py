@@ -812,8 +812,8 @@ class ImageWorker(Process):
         )
 
 
-        # Add temp if value is set, will be skipped if the temp is exactly 0
-        if self.sensortemp_v.value:
+        # Add temp if value is set
+        if self.sensortemp_v.value > -100.0:
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
