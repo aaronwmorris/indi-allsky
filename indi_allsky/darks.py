@@ -542,7 +542,7 @@ class IndiAllSkyDarks(object):
 
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
 
-        time.sleep(5.0)
+        time.sleep(10.0)
 
         for dark_frame_entry in dark_frames_all:
             filename = Path(dark_frame_entry.filename)
