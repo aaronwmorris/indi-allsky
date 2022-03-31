@@ -47,7 +47,7 @@ if __name__ == "__main__":
         '-C',
         help='average image count',
         type=int,
-        default=8,
+        default=10,
     )
 
 

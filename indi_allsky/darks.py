@@ -37,7 +37,7 @@ class IndiAllSkyDarks(object):
         self.config = json.loads(f_config.read())
         f_config.close()
 
-        self._count = 3
+        self._count = 10
 
         self.image_q = Queue()
         self.indiclient = None
@@ -179,10 +179,6 @@ class IndiAllSkyDarks(object):
     def average(self):
         self._initialize()
 
-        ### NIGHT MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
-
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
 
@@ -204,50 +200,14 @@ class IndiAllSkyDarks(object):
 
         ### take darks
 
-
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
+        ### NIGHT MODE DARKS ###
+        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
-            image_list = list()
-            image_bitpix = None
-            hdulist = None
+        for exposure in dark_exposures:
+            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
 
-            for c in range(self._count):
-                start = time.time()
-
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-
-                hdulist = self._wait_for_image()
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                image_list.append(hdulist[0].data)
-
-
-            stacked_image = self._average_image(image_list, image_bitpix)
-            #stacked_image = self._max_image(image_list, image_bitpix)
-
-            # replace image data into original fit container
-            hdulist[0].data = stacked_image
-
-            self._write_dark(hdulist, filename, exp)
 
 
         ### NIGHT MOON MODE DARKS ###
@@ -256,51 +216,8 @@ class IndiAllSkyDarks(object):
 
 
         ### take darks
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
-
-
-            image_list = list()
-            image_bitpix = None
-            hdulist = None
-
-            for c in range(self._count):
-                start = time.time()
-
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-
-                hdulist = self._wait_for_image()
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                image_list.append(hdulist[0].data)
-
-
-            stacked_image = self._average_image(image_list, image_bitpix)
-            #stacked_image = self._max_image(image_list, image_bitpix)
-
-            # replace image data into original fit container
-            hdulist[0].data = stacked_image
-
-            self._write_dark(hdulist, filename, exp)
-
-
+        for exposure in dark_exposures:
+            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
 
 
 
@@ -311,49 +228,54 @@ class IndiAllSkyDarks(object):
 
         ### take darks
         # day will rarely exceed 1 second
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
+        for exposure in dark_exposures:
+            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
 
 
-            image_list = list()
-            image_bitpix = None
-            hdulist = None
+    def _take_average_exposures(self, exposure, dark_filename_t, ccd_bits):
+        self.indiclient.getCcdTemperature(self.ccdDevice)
 
-            for c in range(self._count):
-                start = time.time()
-
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-
-                hdulist = self._wait_for_image()
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                image_list.append(hdulist[0].data)
+        exp_date = datetime.now()
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
+        filename = dark_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
 
 
-            stacked_image = self._average_image(image_list, image_bitpix)
-            #stacked_image = self._max_image(image_list, image_bitpix)
+        image_list = list()
+        image_bitpix = None
+        hdulist = None
 
-            # replace image data into original fit container
-            hdulist[0].data = stacked_image
+        for c in range(self._count):
+            start = time.time()
 
-            self._write_dark(hdulist, filename, exp)
+            self.shoot(self.ccdDevice, float(exposure), sync=True)
+
+            elapsed_s = time.time() - start
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+
+            hdulist = self._wait_for_image()
+            image_bitpix = hdulist[0].header['BITPIX']
+
+            image_list.append(hdulist[0].data)
+
+
+        stacked_image = self._average_image(image_list, image_bitpix)
+        #stacked_image = self._max_image(image_list, image_bitpix)
+
+        # replace image data into original fit container
+        hdulist[0].data = stacked_image
+
+        self._write_dark(hdulist, filename, exposure)
+
 
 
     def _wait_for_image(self):
@@ -473,11 +395,6 @@ class IndiAllSkyDarks(object):
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
 
-        ### NIGHT MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
-
-
         # exposures start with 1 and then every 5s until the max exposure
         dark_exposures = [1]
         dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
@@ -496,59 +413,13 @@ class IndiAllSkyDarks(object):
 
         ### take darks
 
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
-
-            full_filename_p = self.darks_dir.joinpath(filename)
+        ### NIGHT MODE DARKS ###
+        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
-            tmp_fit_dir = tempfile.TemporaryDirectory()
-            tmp_fit_dir_p = Path(tmp_fit_dir.name)
-
-            logger.info('Temp folder: %s', tmp_fit_dir_p)
-
-            image_bitpix = None
-            for c in range(self._count):
-                start = time.time()
-
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-
-                hdulist = self._wait_for_image()
-                hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
-
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
-                hdulist.writeto(f_tmp_fit)
-                f_tmp_fit.flush()
-                f_tmp_fit.close()
-
-                logger.info('FIT: %s', f_tmp_fit.name)
-
-
-            self.stack_darks(tmp_fit_dir_p, full_filename_p, exp, image_bitpix)
-            self._log_dark(full_filename_p, exp, image_bitpix)
-
-            tmp_fit_dir.cleanup()
-
-
+        for exposure in dark_exposures:
+            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
 
         ### NIGHT MOON MODE DARKS ###
         self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
@@ -556,58 +427,8 @@ class IndiAllSkyDarks(object):
 
 
         ### take darks
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
-
-            full_filename_p = self.darks_dir.joinpath(filename)
-
-
-            tmp_fit_dir = tempfile.TemporaryDirectory()
-            tmp_fit_dir_p = Path(tmp_fit_dir.name)
-
-            logger.info('Temp folder: %s', tmp_fit_dir_p)
-
-            image_bitpix = None
-            for c in range(self._count):
-                start = time.time()
-
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-                hdulist = self._wait_for_image()
-                hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
-
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
-                hdulist.writeto(f_tmp_fit)
-                f_tmp_fit.flush()
-                f_tmp_fit.close()
-
-                logger.info('FIT: %s', f_tmp_fit.name)
-
-
-            self.stack_darks(tmp_fit_dir_p, full_filename_p, exp, image_bitpix)
-            self._log_dark(full_filename_p, exp, image_bitpix)
-
-            tmp_fit_dir.cleanup()
-
-
+        for exposure in dark_exposures:
+            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
 
 
         ### DAY DARKS ###
@@ -617,61 +438,68 @@ class IndiAllSkyDarks(object):
 
         ### take darks
         # day will rarely exceed 1 second
-        for exp in dark_exposures:
-            self.indiclient.getCcdTemperature(self.ccdDevice)
-
-            exp_date = datetime.now()
-            date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-            filename = dark_filename_t.format(
-                self.camera_id,
-                ccd_bits,
-                int(exp),
-                self.gain_v.value,
-                self.bin_v.value,
-                int(self.sensortemp_v.value),
-                date_str,
-            )
-
-            full_filename_p = self.darks_dir.joinpath(filename)
+        for exposure in dark_exposures:
+            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
 
 
-            tmp_fit_dir = tempfile.TemporaryDirectory()
-            tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
-            logger.info('Temp folder: %s', tmp_fit_dir_p)
+    def _take_sigma_exposures(self, exposure, dark_filename_t, ccd_bits):
+        self.indiclient.getCcdTemperature(self.ccdDevice)
 
-            image_bitpix = None
-            for c in range(self._count):
-                start = time.time()
+        exp_date = datetime.now()
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
+        filename = dark_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
 
-                self.shoot(self.ccdDevice, float(exp), sync=True)
-
-                elapsed_s = time.time() - start
-
-                logger.info('Exposure received in %0.4f s', elapsed_s)
-
-                hdulist = self._wait_for_image()
-                hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
-
-                image_bitpix = hdulist[0].header['BITPIX']
-
-                f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
-                hdulist.writeto(f_tmp_fit)
-                f_tmp_fit.flush()
-                f_tmp_fit.close()
-
-                logger.info('FIT: %s', f_tmp_fit.name)
+        full_filename_p = self.darks_dir.joinpath(filename)
 
 
-            self.stack_darks(tmp_fit_dir_p, full_filename_p, exp, image_bitpix)
-            self._log_dark(full_filename_p, exp, image_bitpix)
+        tmp_fit_dir = tempfile.TemporaryDirectory()
+        tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
-            tmp_fit_dir.cleanup()
+        logger.info('Temp folder: %s', tmp_fit_dir_p)
+
+        image_bitpix = None
+        for c in range(self._count):
+            start = time.time()
+
+            self.shoot(self.ccdDevice, float(exposure), sync=True)
+
+            elapsed_s = time.time() - start
+
+            logger.info('Exposure received in %0.4f s', elapsed_s)
+
+
+            hdulist = self._wait_for_image()
+            hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
+
+            image_bitpix = hdulist[0].header['BITPIX']
+
+            f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
+            hdulist.writeto(f_tmp_fit)
+            f_tmp_fit.flush()
+            f_tmp_fit.close()
+
+            logger.info('FIT: %s', f_tmp_fit.name)
+
+
+        self.stack_darks(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+        self._log_dark(full_filename_p, exposure, image_bitpix)
+
+        tmp_fit_dir.cleanup()
+
 
 
 
     def stack_darks(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
-        logger.info('Stacking dark frames for exposure %0.1fs', exposure)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
