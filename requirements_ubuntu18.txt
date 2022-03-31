@@ -7,7 +7,7 @@ astropy
 numpy==1.18.5
 #https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless==4.5.5.64
-#scikit-image
+ccdproc
 python-dateutil
 ephem
 paramiko

@@ -9,7 +9,7 @@ numpy==1.22.2
 # RuntimeError: module compiled against API version 0xf but this version of numpy is 0xe
 #https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless==4.5.5.64
-#scikit-image
+ccdproc
 python-dateutil
 ephem
 paramiko
