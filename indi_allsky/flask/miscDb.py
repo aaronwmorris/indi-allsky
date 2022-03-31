@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+import logging
 #from pprint import pformat
 
 from . import db
@@ -13,9 +14,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
-import multiprocessing
-
-logger = multiprocessing.get_logger()
+logger = logging.getLogger('indi_allsky')
 
 
 class miscDb(object):
@@ -136,6 +135,7 @@ class miscDb(object):
         if temp:
             temp_val = float(temp)
         else:
+            logger.warning('Temperature is not defined')
             temp_val = None
 
 

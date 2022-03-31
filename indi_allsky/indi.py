@@ -71,13 +71,14 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, image_q, gain_v, bin_v):
+    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
+        self.sensortemp_v = sensortemp_v
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self._img_subdirs = []
@@ -345,6 +346,16 @@ class IndiClient(PyIndi.BaseClient):
 
     def getCcdTemperature(self, ccdDevice):
         temp = ccdDevice.getNumber("CCD_TEMPERATURE")
+
+        if isinstance(temp, type(None)):
+            logger.warning("Sensor temperature: not supported")
+            temp_val = -273.15  # absolute zero  :-)
+        else:
+            temp_val = float(temp[0].value)
+            logger.info("Sensor temperature: %0.1f", temp_val)
+
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val
 
         return temp
 
