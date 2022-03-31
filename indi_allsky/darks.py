@@ -491,7 +491,17 @@ class IndiAllSkyDarks(object):
 
 
         self.stack_darks(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
-        self._log_dark(full_filename_p, exposure, image_bitpix)
+
+        self._miscDb.addDarkFrame(
+            full_filename_p,
+            self.camera_id,
+            image_bitpix,
+            exposure,
+            self.gain_v.value,
+            self.bin_v.value,
+            self.sensortemp_v.value,
+        )
+
 
         tmp_fit_dir.cleanup()
 
@@ -525,18 +535,6 @@ class IndiAllSkyDarks(object):
         combined_dark.meta['combined'] = True
 
         combined_dark.write(filename_p)
-
-
-    def _log_dark(self, filename_p, exposure, image_bitpix):
-        self._miscDb.addDarkFrame(
-            filename_p,
-            self.camera_id,
-            image_bitpix,
-            exposure,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
-        )
 
 
     def flush(self):
