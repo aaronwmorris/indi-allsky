@@ -31,7 +31,8 @@ if __name__ == "__main__":
         help='action',
         choices=(
             'flush',
-            'run',
+            'average',
+            'sigma',
         ),
     )
     argparser.add_argument(
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         '-C',
         help='average image count',
         type=int,
-        default=1,
+        default=10,
     )
 
 
