@@ -32,7 +32,7 @@ if __name__ == "__main__":
         choices=(
             'flush',
             'average',
-            'sigma',
+            'sigmaclip',
         ),
     )
     argparser.add_argument(

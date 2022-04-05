@@ -179,6 +179,12 @@ class IndiAllSkyDarks(object):
     def average(self):
         self._initialize()
 
+        self._average()
+
+
+    def _average(self):
+        self._initialize()
+
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
 
@@ -268,8 +274,8 @@ class IndiAllSkyDarks(object):
             image_list.append(hdulist[0].data)
 
 
-        stacked_image = self._average_image(image_list, image_bitpix)
-        #stacked_image = self._max_image(image_list, image_bitpix)
+        stacked_image = self._average_images(image_list, image_bitpix)
+        #stacked_image = self._max_images(image_list, image_bitpix)
 
         # replace image data into original fit container
         hdulist[0].data = stacked_image
@@ -299,7 +305,7 @@ class IndiAllSkyDarks(object):
 
 
 
-    def _average_image(self, image_list, bitpix):
+    def _average_images(self, image_list, bitpix):
         if bitpix == 16:
             numpy_type = numpy.uint16
         elif bitpix == 8:
@@ -312,7 +318,7 @@ class IndiAllSkyDarks(object):
         return numpy.ceil(avg_image).astype(numpy_type)
 
 
-    def _max_image(self, image_list, bitpix):
+    def _max_images(self, image_list, bitpix):
         if bitpix == 16:
             numpy_type = numpy.uint16
         elif bitpix == 8:
@@ -389,8 +395,13 @@ class IndiAllSkyDarks(object):
         Path(f_tmpfile.name).unlink()  # delete temp file
 
 
-    def sigma(self):
+    def sigmaclip(self):
         self._initialize()
+
+        self._sigmaclip()
+
+
+    def _sigmaclip(self):
 
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
@@ -490,7 +501,7 @@ class IndiAllSkyDarks(object):
             logger.info('FIT: %s', f_tmp_fit.name)
 
 
-        self.stack_darks(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+        self._sigmaclip_darks(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
 
         self._miscDb.addDarkFrame(
             full_filename_p,
@@ -508,7 +519,7 @@ class IndiAllSkyDarks(object):
 
 
 
-    def stack_darks(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+    def _sigmaclip_darks(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
