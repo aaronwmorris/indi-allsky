@@ -4,7 +4,6 @@ import time
 import math
 import tempfile
 import json
-import shutil
 from datetime import datetime
 from pathlib import Path
 import logging
@@ -14,8 +13,6 @@ from astropy.io import fits
 
 import ccdproc
 from astropy.stats import mad_std
-
-from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Queue
 from multiprocessing import Value
@@ -176,114 +173,6 @@ class IndiAllSkyDarks(object):
         return ctl
 
 
-    def average(self):
-        self._initialize()
-
-        self._average()
-
-
-    def _average(self):
-        self._initialize()
-
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-
-
-        # exposures start with 1 and then every 5s until the max exposure
-        dark_exposures = [1]
-        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
-        dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
-
-
-        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
-        # 0  = ccd id
-        # 1  = bits
-        # 2  = exposure (seconds)
-        # 3  = gain
-        # 4  = binning
-        # 5  = temperature
-        # 6  = date
-        # 7  = extension
-
-        ### take darks
-
-        ### NIGHT MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
-
-
-        for exposure in dark_exposures:
-            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
-
-
-
-        ### NIGHT MOON MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
-
-
-        ### take darks
-        for exposure in dark_exposures:
-            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
-
-
-
-        ### DAY DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
-
-
-        ### take darks
-        # day will rarely exceed 1 second
-        for exposure in dark_exposures:
-            self._take_average_exposures(exposure, dark_filename_t, ccd_bits)
-
-
-    def _take_average_exposures(self, exposure, dark_filename_t, ccd_bits):
-        self.indiclient.getCcdTemperature(self.ccdDevice)
-
-        exp_date = datetime.now()
-        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = dark_filename_t.format(
-            self.camera_id,
-            ccd_bits,
-            int(exposure),
-            self.gain_v.value,
-            self.bin_v.value,
-            int(self.sensortemp_v.value),
-            date_str,
-        )
-
-
-        image_list = list()
-        image_bitpix = None
-        hdulist = None
-
-        for c in range(self._count):
-            start = time.time()
-
-            self.shoot(self.ccdDevice, float(exposure), sync=True)
-
-            elapsed_s = time.time() - start
-
-            logger.info('Exposure received in %0.4f s', elapsed_s)
-
-
-            hdulist = self._wait_for_image()
-            image_bitpix = hdulist[0].header['BITPIX']
-
-            image_list.append(hdulist[0].data)
-
-
-        stacked_image = self._average_images(image_list, image_bitpix)
-        #stacked_image = self._max_images(image_list, image_bitpix)
-
-        # replace image data into original fit container
-        hdulist[0].data = stacked_image
-
-        self._write_dark(hdulist, filename, exposure)
-
-
-
     def _wait_for_image(self):
         i_dict = self.image_q.get(timeout=15)
 
@@ -305,103 +194,19 @@ class IndiAllSkyDarks(object):
 
 
 
-    def _average_images(self, image_list, bitpix):
-        if bitpix == 16:
-            numpy_type = numpy.uint16
-        elif bitpix == 8:
-            numpy_type = numpy.uint8
-        else:
-            raise Exception('Unknown bits per pixel')
+    def average(self):
+        self._initialize()
 
-        avg_image = numpy.average(image_list, axis=0)
-
-        return numpy.ceil(avg_image).astype(numpy_type)
-
-
-    def _max_images(self, image_list, bitpix):
-        if bitpix == 16:
-            numpy_type = numpy.uint16
-        elif bitpix == 8:
-            numpy_type = numpy.uint8
-        else:
-            raise Exception('Unknown bits per pixel')
-
-
-        image_height, image_width = image_list[0].shape[:2]
-        max_image = numpy.zeros((image_height, image_width), dtype=numpy_type)
-
-        for i in image_list:
-            max_image = numpy.maximum(max_image, i)
-
-        return max_image
-
-
-    def _write_dark(self, hdulist, filename, exposure):
-        filename_p = self.darks_dir.joinpath(filename)
-
-
-        image_type = hdulist[0].header['IMAGETYP']
-        image_bitpix = hdulist[0].header['BITPIX']
-
-        logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
-
-
-
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
-
-        hdulist.writeto(f_tmpfile)
-
-        f_tmpfile.flush()
-        f_tmpfile.close()
-
-
-        file_dir = filename_p.parent
-        if not file_dir.exists():
-            file_dir.mkdir(mode=0o755, parents=True)
-
-        logger.info('fit filename: %s', filename_p)
-
-
-        try:
-            dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
-                .filter(IndiAllSkyDbDarkFrameTable.filename == str(filename_p))\
-                .one()
-
-            if filename_p.exists():
-                logger.warning('Removing old dark frame: %s', filename_p)
-                filename_p.unlink()
-
-            db.session.delete(dark_frame_entry)
-            db.session.commit()
-        except NoResultFound:
-            pass
-
-
-        shutil.copy2(f_tmpfile.name, str(filename_p))  # copy file in place
-        filename_p.chmod(0o644)
-
-
-        self._miscDb.addDarkFrame(
-            filename_p,
-            self.camera_id,
-            image_bitpix,
-            exposure,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
-        )
-
-
-        Path(f_tmpfile.name).unlink()  # delete temp file
+        self._run(IndiAllSkyDarksAverage)
 
 
     def sigmaclip(self):
         self._initialize()
 
-        self._sigmaclip()
+        self._run(IndiAllSkyDarksSigmaClip)
 
 
-    def _sigmaclip(self):
+    def _run(self, stacking_class):
 
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
@@ -430,7 +235,7 @@ class IndiAllSkyDarks(object):
 
 
         for exposure in dark_exposures:
-            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
+            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
         ### NIGHT MOON MODE DARKS ###
         self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
@@ -439,7 +244,7 @@ class IndiAllSkyDarks(object):
 
         ### take darks
         for exposure in dark_exposures:
-            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
+            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
 
         ### DAY DARKS ###
@@ -450,11 +255,11 @@ class IndiAllSkyDarks(object):
         ### take darks
         # day will rarely exceed 1 second
         for exposure in dark_exposures:
-            self._take_sigma_exposures(exposure, dark_filename_t, ccd_bits)
+            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
 
 
-    def _take_sigma_exposures(self, exposure, dark_filename_t, ccd_bits):
+    def _take_exposures(self, exposure, dark_filename_t, ccd_bits, stacking_class):
         self.indiclient.getCcdTemperature(self.ccdDevice)
 
         exp_date = datetime.now()
@@ -501,7 +306,9 @@ class IndiAllSkyDarks(object):
             logger.info('FIT: %s', f_tmp_fit.name)
 
 
-        self._sigmaclip_darks(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+        s = stacking_class(self.gain_v, self.bin_v)
+        s.stack(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+
 
         self._miscDb.addDarkFrame(
             full_filename_p,
@@ -518,8 +325,68 @@ class IndiAllSkyDarks(object):
 
 
 
+    def flush(self):
+        dark_frames_all = IndiAllSkyDbDarkFrameTable.query
 
-    def _sigmaclip_darks(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        logger.warning('Found %d dark frames to flush', dark_frames_all.count())
+
+        time.sleep(10.0)
+
+        for dark_frame_entry in dark_frames_all:
+            filename = Path(dark_frame_entry.filename)
+
+            if filename.exists():
+                logger.warning('Removing dark frame: %s', filename)
+                filename.unlink()
+
+
+        dark_frames_all.delete()
+        db.session.commit()
+
+
+
+class IndiAllSkyDarksProcessor(object):
+    def __init__(self, gain_v, bin_v):
+        self.gain_v = gain_v
+        self.bin_v = bin_v
+
+    def stack(self):
+        raise Exception('Must be redefined in sub-class')
+
+
+class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
+    def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+
+        if image_bitpix == 16:
+            numpy_type = numpy.uint16
+        elif image_bitpix == 8:
+            numpy_type = numpy.uint8
+        else:
+            raise Exception('Unknown bits per pixel')
+
+        image_data = list()
+        hdulist = None
+        for item in Path(tmp_fit_dir_p).iterdir():
+            #logger.info('Found item: %s', item)
+            if item.is_file() and item.suffix in ('.fit',):
+                #logger.info('Found fit: %s', item)
+                hdulist = fits.open(item)
+                image_data.append(hdulist[0].data)
+
+        avg_image = numpy.average(image_data, axis=0)
+
+        data = numpy.floor(avg_image).astype(numpy_type)
+
+        hdulist[0].data = data
+
+        # reuse the last fits file for the stacked data
+        hdulist.writeto(filename_p)
+
+
+
+class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
+    def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
@@ -546,24 +413,5 @@ class IndiAllSkyDarks(object):
         combined_dark.meta['combined'] = True
 
         combined_dark.write(filename_p)
-
-
-    def flush(self):
-        dark_frames_all = IndiAllSkyDbDarkFrameTable.query
-
-        logger.warning('Found %d dark frames to flush', dark_frames_all.count())
-
-        time.sleep(10.0)
-
-        for dark_frame_entry in dark_frames_all:
-            filename = Path(dark_frame_entry.filename)
-
-            if filename.exists():
-                logger.warning('Removing dark frame: %s', filename)
-                filename.unlink()
-
-
-        dark_frames_all.delete()
-        db.session.commit()
 
 
