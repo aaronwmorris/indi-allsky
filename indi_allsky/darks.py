@@ -30,11 +30,14 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyDarks(object):
+
     def __init__(self, f_config):
         self.config = json.loads(f_config.read())
         f_config.close()
 
         self._count = 10
+        self._temperature_delta = 5.0
+
 
         self.image_q = Queue()
         self.indiclient = None
@@ -57,8 +60,17 @@ class IndiAllSkyDarks(object):
 
     @count.setter
     def count(self, new_count):
-        logger.info('Changing image count to %d', int(new_count))
+        #logger.info('Changing image count to %d', int(new_count))
         self._count = int(new_count)
+
+
+    @property
+    def tdelta(self):
+        return self._temperature_delta
+
+    @tdelta.setter
+    def tdelta(self, new_delta):
+        self._temperature_delta = float(new_delta)
 
 
 
@@ -200,10 +212,62 @@ class IndiAllSkyDarks(object):
         self._run(IndiAllSkyDarksAverage)
 
 
+    def tempaverage(self):
+        self._initialize()
+
+        current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+        next_temp_thold = current_temp - self._temperature_delta
+
+        # get first set of images
+        self._run(IndiAllSkyDarksAverage)
+
+        while True:
+            # This loop will run forever, it is up to the user to cancel
+            current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+
+            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+
+            if current_temp > next_temp_thold:
+                time.sleep(20.0)
+                continue
+
+            logger.warning('Acheived next temperature threshold')
+            next_temp_thold = next_temp_thold - self._temperature_delta
+
+            self._run(IndiAllSkyDarksAverage)
+
+
+
     def sigmaclip(self):
         self._initialize()
 
         self._run(IndiAllSkyDarksSigmaClip)
+
+
+    def tempsigmaclip(self):
+        self._initialize()
+
+        current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+        next_temp_thold = current_temp - self._temperature_delta
+
+        # get first set of images
+        self._run(IndiAllSkyDarksSigmaClip)
+
+        while True:
+            # This loop will run forever, it is up to the user to cancel
+            current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+
+            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+
+            if current_temp > next_temp_thold:
+                time.sleep(20.0)
+                continue
+
+            logger.warning('Acheived next temperature threshold')
+            next_temp_thold = next_temp_thold - self._temperature_delta
+
+            self._run(IndiAllSkyDarksSigmaClip)
+
 
 
     def _run(self, stacking_class):
