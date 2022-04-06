@@ -357,7 +357,7 @@ class IndiClient(PyIndi.BaseClient):
         with self.sensortemp_v.get_lock():
             self.sensortemp_v.value = temp_val
 
-        return temp
+        return temp_val
 
 
     def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):

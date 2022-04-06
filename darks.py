@@ -32,7 +32,9 @@ if __name__ == "__main__":
         choices=(
             'flush',
             'average',
-            'sigma',
+            'tempaverage',
+            'sigmaclip',
+            'tempsigmaclip',
         ),
     )
     argparser.add_argument(
@@ -45,9 +47,16 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--count',
         '-C',
-        help='average image count',
+        help='image count',
         type=int,
         default=10,
+    )
+    argparser.add_argument(
+        '--tdelta',
+        '-t',
+        help='temperature delta between dark frame sets',
+        type=float,
+        default=5.0,
     )
 
 
@@ -56,6 +65,7 @@ if __name__ == "__main__":
 
     iad = IndiAllSkyDarks(args.config)
     iad.count = args.count
+    iad.tdelta = args.tdelta
 
     action_func = getattr(iad, args.action)
     action_func()
