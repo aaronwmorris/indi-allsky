@@ -47,7 +47,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--count',
         '-C',
-        help='average image count',
+        help='image count',
         type=int,
         default=10,
     )
