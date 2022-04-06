@@ -101,17 +101,10 @@ source virtualenv/indi-allsky/bin/activate
 
 
 ### Dark frames
-1. Stop indi-allsky service (above)
-1. Activate the indi-allsky python virtual environment (above)
-1. Start indi-allsky with darks option
-```
-./allsky.py darks
-```
+indi-allsky fully automates the capture and processing of master dark calibration frames. Currently, sigma clipping and average methods are supported.
 
-* Darks will be generated in 5 second increments (offset +1) for the configured gain and binmode for night, moonmode, and day frames.
-* This operation can take a while depending on your maximum exposure.
-    * 15 second maximum exposure:  ~2 minutes
-    * 60 second maximum exposure:  ~15 minutes
+https://github.com/aaronwmorris/indi-allsky/wiki/Dark-Calibration-Frames
+
 
 ## Keograms
 Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.  The rotation parameter in the config is KEOGRAM_ANGLE
