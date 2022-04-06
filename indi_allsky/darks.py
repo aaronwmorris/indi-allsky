@@ -70,7 +70,7 @@ class IndiAllSkyDarks(object):
 
     @tdelta.setter
     def tdelta(self, new_delta):
-        self._temperature_delta = float(new_delta)
+        self._temperature_delta = float(abs(new_delta))
 
 
 
