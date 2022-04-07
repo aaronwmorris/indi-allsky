@@ -5,6 +5,7 @@ import math
 import tempfile
 import json
 from datetime import datetime
+from collections import OrderedDict
 from pathlib import Path
 import logging
 
@@ -293,33 +294,41 @@ class IndiAllSkyDarks(object):
 
         ### take darks
 
-        ### NIGHT MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+
+        night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only are about keys
+
+        # if NIGHT and MOONMODE have the same parameters, no need to double the work
+        night_darks_odict.update(
+            {
+                (self.config['CCD_CONFIG']['NIGHT']['GAIN'], self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+            }
+        )
+        night_darks_odict.update(
+            {
+                (self.config['CCD_CONFIG']['MOONMODE']['GAIN'], self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
+            }
+        )
 
 
-        for exposure in dark_exposures:
-            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+        ### NIGHT DARKS ###
+        for gain, binmode in night_darks_odict.keys():
+            self.indiclient.setCcdGain(self.ccdDevice, gain)
+            self.indiclient.setCcdBinning(self.ccdDevice, binmode)
 
-        ### NIGHT MOON MODE DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+            for exposure in dark_exposures:
+                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
-
-        ### take darks
-        for exposure in dark_exposures:
-            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
 
         ### DAY DARKS ###
-        self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
-        self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
+        day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
+        if day_params not in night_darks_odict.keys():
+            self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
-
-        ### take darks
-        # day will rarely exceed 1 second
-        for exposure in dark_exposures:
-            self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+            # day will rarely exceed 1 second
+            for exposure in (1, 5):
+                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
 
 
 
