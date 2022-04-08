@@ -37,7 +37,8 @@ class IndiAllSkyDarks(object):
         f_config.close()
 
         self._count = 10
-        self._temperature_delta = 5.0
+        self._temp_delta = 5.0
+        self._time_delta = 5
 
 
         self.image_q = Queue()
@@ -66,12 +67,21 @@ class IndiAllSkyDarks(object):
 
 
     @property
-    def tdelta(self):
-        return self._temperature_delta
+    def temp_delta(self):
+        return self._temp_delta
 
-    @tdelta.setter
-    def tdelta(self, new_delta):
-        self._temperature_delta = float(abs(new_delta))
+    @temp_delta.setter
+    def temp_delta(self, new_temp_delta):
+        self._temp_delta = float(abs(new_temp_delta))
+
+
+    @property
+    def time_delta(self):
+        return self._time_delta
+
+    @time_delta.setter
+    def time_delta(self, new_time_delta):
+        self._time_delta = int(abs(new_time_delta))
 
 
 
@@ -217,7 +227,7 @@ class IndiAllSkyDarks(object):
         self._initialize()
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
-        next_temp_thold = current_temp - self._temperature_delta
+        next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
@@ -233,7 +243,7 @@ class IndiAllSkyDarks(object):
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self._temperature_delta
+            next_temp_thold = next_temp_thold - self._temp_delta
 
             self._run(IndiAllSkyDarksAverage)
 
@@ -249,7 +259,7 @@ class IndiAllSkyDarks(object):
         self._initialize()
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
-        next_temp_thold = current_temp - self._temperature_delta
+        next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
@@ -265,7 +275,7 @@ class IndiAllSkyDarks(object):
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self._temperature_delta
+            next_temp_thold = next_temp_thold - self._temp_delta
 
             self._run(IndiAllSkyDarksSigmaClip)
 
@@ -278,7 +288,15 @@ class IndiAllSkyDarks(object):
 
         # exposures start with 1 and then every 5s until the max exposure
         dark_exposures = [1]
-        dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
+        dark_exposures.extend(
+            list(
+                range(
+                    self._time_delta,
+                    math.ceil(self.config['CCD_EXPOSURE_MAX'] / self._time_delta) * self._time_delta,
+                    self._time_delta,
+                )
+            )
+        )
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
         dark_exposures.reverse()  # take longer exposures first
 
@@ -296,7 +314,8 @@ class IndiAllSkyDarks(object):
         ### take darks
 
 
-        night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only are about keys
+        night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only care about keys
+        # keys are a tuple of (gain, binmode)
 
         # if NIGHT and MOONMODE have the same parameters, no need to double the work
         night_darks_odict.update(
