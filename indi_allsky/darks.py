@@ -467,9 +467,15 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
                 hdulist = fits.open(item)
                 image_data.append(hdulist[0].data)
 
-        avg_image = numpy.average(image_data, axis=0)
 
+        start = time.time()
+
+        avg_image = numpy.average(image_data, axis=0)
         data = numpy.floor(avg_image).astype(numpy_type)
+
+        elapsed_s = time.time() - start
+        logger.info('Exposure average stacked in %0.4f s', elapsed_s)
+
 
         hdulist[0].data = data
 
@@ -491,6 +497,9 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         cal_darks = dark_images.files_filtered(imagetyp='Dark Frame', exptime=exposure, include_path=True)
 
+
+        start = time.time()
+
         combined_dark = ccdproc.combine(
             cal_darks,
             method='average',
@@ -502,6 +511,10 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             dtype=numpy_type,
             mem_limit=350000000,
         )
+
+        elapsed_s = time.time() - start
+        logger.info('Exposure sigma clip stacked in %0.4f s', elapsed_s)
+
 
         combined_dark.meta['combined'] = True
 
