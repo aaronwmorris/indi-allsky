@@ -52,11 +52,18 @@ if __name__ == "__main__":
         default=10,
     )
     argparser.add_argument(
-        '--tdelta',
+        '--temp_delta',
         '-t',
         help='temperature delta between dark frame sets',
         type=float,
         default=5.0,
+    )
+    argparser.add_argument(
+        '--time_delta',
+        '-T',
+        help='time delta between dark frame exposures',
+        type=int,
+        default=5,
     )
 
 
@@ -65,7 +72,8 @@ if __name__ == "__main__":
 
     iad = IndiAllSkyDarks(args.config)
     iad.count = args.count
-    iad.tdelta = args.tdelta
+    iad.temp_delta = args.temp_delta
+    iad.time_delta = args.time_delta
 
     action_func = getattr(iad, args.action)
     action_func()

@@ -622,7 +622,8 @@ class ImageWorker(Process):
 
 
             if not dark_frame_entry:
-                logger.warning('Dark not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
+                logger.warning(
+                    'Dark not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
                     camera_id,
                     image_bitpix,
                     float(exposure),
