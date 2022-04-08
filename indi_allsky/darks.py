@@ -396,7 +396,10 @@ class IndiAllSkyDarks(object):
             f_tmp_fit.flush()
             f_tmp_fit.close()
 
-            logger.info('FIT: %s', f_tmp_fit.name)
+            #logger.info('FIT: %s', f_tmp_fit.name)
+
+            m_avg = numpy.mean(hdulist[0].data, axis=1)[0]
+            logger.info('Image average adu: %0.2f', m_avg)
 
 
         s = stacking_class(self.gain_v, self.bin_v)
