@@ -280,6 +280,7 @@ class IndiAllSkyDarks(object):
         dark_exposures = [1]
         dark_exposures.extend(list(range(5, math.ceil(self.config['CCD_EXPOSURE_MAX'] / 5) * 5, 5)))
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
+        dark_exposures.reverse()  # take longer exposures first
 
 
         dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
