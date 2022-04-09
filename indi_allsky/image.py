@@ -588,6 +588,7 @@ class ImageWorker(Process):
         from .flask.models import IndiAllSkyDbDarkFrameTable
 
         # pick a dark frame that is closest to the exposure and temperature
+        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
