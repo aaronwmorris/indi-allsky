@@ -10,6 +10,11 @@
     - always
 
 
+#- name: Print all available facts
+#  debug:
+#    var: ansible_facts
+
+
 - set_fact:
     dist_ver: "{{ ansible_facts['distribution'] }}_{{ ansible_facts['distribution_major_version'] }}"
   tags:
@@ -18,6 +23,18 @@
 
 - debug:
     msg: "Detected: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_major_version'] }} ({{ ansible_facts['architecture'] }})"
+  tags:
+    - always
+
+
+- set_fact:
+    parallel_processes: 1
+  when:
+    - ansible_facts['memory_mb']['real']['total'] < 1536
+
+
+- debug:
+    msg: "Configured processes for make: {{ parallel_processes }}"
   tags:
     - always
 
