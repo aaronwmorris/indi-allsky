@@ -55,7 +55,6 @@ if __name__ == "__main__":
         choices=(
             'run',
             'darks',
-            'flushDarks',
             'cameraReport',
             'generateNightTimelapse',
             'generateDayTimelapse',

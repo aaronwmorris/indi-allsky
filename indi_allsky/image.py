@@ -27,10 +27,10 @@ import numpy
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 
-from .flask import db
+#from .flask import db
 from .flask.miscDb import miscDb
 
-from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
 
@@ -139,7 +139,6 @@ class ImageWorker(Process):
             exp_elapsed = i_dict['exp_elapsed']
             camera_id = i_dict['camera_id']
             filename_t = i_dict.get('filename_t')
-            img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
 
             if filename_t:
                 self.filename_t = filename_t
@@ -172,12 +171,7 @@ class ImageWorker(Process):
                 # gray scale or bayered
 
                 if self.config.get('IMAGE_SAVE_RAW'):
-                    self.write_fit(hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix)
-
-                if image_type == 'Dark Frame':
-                    # if the image is a dark frame, no reason to proceed with processing
-                    continue
-
+                    self.write_fit(hdulist, camera_id, exposure, exp_date, image_type, image_bitpix)
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
@@ -288,7 +282,7 @@ class ImageWorker(Process):
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
             if self.save_images:
-                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id, img_subdirs)
+                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id)
 
                 image_entry = self._miscDb.addImage(
                     new_filename,
@@ -360,20 +354,17 @@ class ImageWorker(Process):
         return image_bit_depth
 
 
-    def write_fit(self, hdulist, camera_id, exposure, exp_date, img_subdirs, image_type, image_bitpix):
+    def write_fit(self, hdulist, camera_id, exposure, exp_date, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_RAW'):
             return
 
-        from .flask.models import IndiAllSkyDbDarkFrameTable
 
-
-        if image_type == 'Light Frame':
-            try:
-                calibrated_data = self.calibrate(hdulist[0].data, exposure, camera_id, image_bitpix)
-                hdulist[0].data = calibrated_data
-            except CalibrationNotFound:
-                pass
+        try:
+            calibrated_data = self.calibrate(hdulist[0].data, exposure, camera_id, image_bitpix)
+            hdulist[0].data = calibrated_data
+        except CalibrationNotFound:
+            pass
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
@@ -384,25 +375,14 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
 
-        # I do not like this logic.  I am assuming if img_subdirs is defined then it is a dark frame
-        # otherwise, it is just a raw light frame
-
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        if img_subdirs:
-            # dark frame
-            filename = self.image_dir.joinpath(*img_subdirs).joinpath(self.filename_t.format(
-                camera_id,
-                date_str,
-                'fit',
-            ))
-        else:
-            # raw light
-            folder = self.getImageFolder(exp_date)
-            filename = folder.joinpath(self.filename_t.format(
-                camera_id,
-                date_str,
-                'fit',
-            ))
+        # raw light
+        folder = self.getImageFolder(exp_date)
+        filename = folder.joinpath(self.filename_t.format(
+            camera_id,
+            date_str,
+            'fit',
+        ))
 
 
         file_dir = filename.parent
@@ -412,43 +392,12 @@ class ImageWorker(Process):
         logger.info('fit filename: %s', filename)
 
 
-        if image_type == 'Dark Frame':
-            try:
-                dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
-                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(filename))\
-                    .one()
+        if filename.exists():
+            logger.error('File exists: %s (skipping)', filename)
+            return
 
-                if filename.exists():
-                    logger.warning('Removing old dark frame: %s', filename)
-                    filename.unlink()
-
-                db.session.delete(dark_frame_entry)
-                db.session.commit()
-            except NoResultFound:
-                pass
-
-
-            shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
-            filename.chmod(0o644)
-
-
-            self._miscDb.addDarkFrame(
-                filename,
-                camera_id,
-                image_bitpix,
-                exposure,
-                self.gain_v.value,
-                self.bin_v.value,
-                self.sensortemp_v.value,
-            )
-
-        else:
-            if filename.exists():
-                logger.error('File exists: %s (skipping)', filename)
-                return
-
-            shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
-            filename.chmod(0o644)
+        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+        filename.chmod(0o644)
 
 
         Path(f_tmpfile.name).unlink()  # delete temp file
@@ -457,7 +406,7 @@ class ImageWorker(Process):
 
 
 
-    def write_img(self, scidata, exp_date, camera_id, img_subdirs):
+    def write_img(self, scidata, exp_date, camera_id):
         ### Do not write image files if fits are enabled
         if not self.save_images:
             return None, None
@@ -510,7 +459,7 @@ class ImageWorker(Process):
         folder = self.getImageFolder(exp_date)
 
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(*img_subdirs).joinpath(self.filename_t.format(camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
+        filename = folder.joinpath(self.filename_t.format(camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
 
         logger.info('Image filename: %s', filename)
 
