@@ -161,6 +161,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_DISPLAY(class='form-control bg-secondary') }}
+            <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Temperature system for display</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TARGET_ADU.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1014,6 +1027,7 @@ const field_names = [
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
     'EXPOSURE_PERIOD',
+    'TEMP_DISPLAY',
     'TARGET_ADU',
     'TARGET_ADU_DEV',
     'ADU_ROI_X1',
