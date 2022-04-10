@@ -81,7 +81,6 @@ class IndiClient(PyIndi.BaseClient):
         self.sensortemp_v = sensortemp_v
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
-        self._img_subdirs = []
 
         self._timeout = 65.0
         self._exposure = 0.0
@@ -114,14 +113,6 @@ class IndiClient(PyIndi.BaseClient):
     @filename_t.setter
     def filename_t(self, new_filename_t):
         self._filename_t = new_filename_t
-
-    @property
-    def img_subdirs(self):
-        return self._img_subdirs
-
-    @img_subdirs.setter
-    def img_subdirs(self, new_img_subdirs):
-        self._img_subdirs = new_img_subdirs
 
 
     def newDevice(self, d):
@@ -158,7 +149,6 @@ class IndiClient(PyIndi.BaseClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.config['DB_CCD_ID'],
             'filename_t'  : self._filename_t,
-            'img_subdirs' : self._img_subdirs,
         })
 
 
