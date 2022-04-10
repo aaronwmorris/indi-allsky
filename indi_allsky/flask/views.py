@@ -309,7 +309,7 @@ class DarkFramesView(TemplateView):
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
-        )
+            )
 
 
         context['darkframe_list'] = darkframe_list
@@ -361,7 +361,9 @@ class ViewerView(TemplateView):
 
 
 class JsonImageLoopView(JsonView):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(JsonImageLoopView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
         self.history_seconds = 900
         self.sqm_history_minutes = 30
@@ -476,7 +478,9 @@ class ChartView(TemplateView):
 
 
 class JsonChartView(JsonView):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(JsonChartView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
         self.chart_history_seconds = 900
 
@@ -516,7 +520,7 @@ class JsonChartView(JsonView):
                 IndiAllSkyDbImageTable.temp,
                 IndiAllSkyDbImageTable.exposure,
                 (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
-        )\
+            )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
@@ -551,9 +555,17 @@ class JsonChartView(JsonView):
             }
             chart_data['stars'].append(star_data)
 
+
+            if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
+                sensortemp = ((i.temp * 9.0) / 5.0) + 32
+            elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
+                sensortemp = i.temp + 273.15
+            else:
+                sensortemp = i.temp
+
             temp_data = {
                 'x' : i.createDate.strftime('%H:%M:%S'),
-                'y' : i.temp,
+                'y' : sensortemp,
             }
             chart_data['temp'].append(temp_data)
 
@@ -662,6 +674,7 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
             'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
@@ -891,6 +904,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         self.indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
         self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
@@ -1299,9 +1313,20 @@ class SystemInfoView(TemplateView):
         temp_list = list()
         for t_key in temp_info.keys():
             for i in temp_info[t_key]:
+                if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
+                    current_temp = ((i.current * 9.0 ) / 5.0) + 32
+                    temp_sys = 'F'
+                elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
+                    current_temp = i.current + 273.15
+                    temp_sys = 'K'
+                else:
+                    current_temp = float(i.current)
+                    temp_sys = 'C'
+
                 temp_list.append({
                     'name' : t_key,
-                    'temp' : float(i.current),
+                    'temp' : current_temp,
+                    'sys'  : temp_sys,
                 })
 
         return temp_list

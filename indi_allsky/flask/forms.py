@@ -105,6 +105,11 @@ def EXPOSURE_PERIOD_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def TEMP_DISPLAY_validator(form, field):
+    if field.data not in ('c', 'f', 'k'):
+        raise ValidationError('Please select the temperature system for display')
+
+
 def TARGET_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Target ADU must be greater than 0')
@@ -516,6 +521,12 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 
 class IndiAllskyConfigForm(FlaskForm):
+    TEMP_DISPLAY_choices = (
+        ('c', 'Celcius'),
+        ('f', 'Fahrenheit'),
+        ('k', 'Kelvin'),
+    )
+
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
@@ -558,6 +569,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
     TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation', validators=[DataRequired(), TARGET_ADU_DEV_validator])
     ADU_ROI_X1                       = IntegerField('ADU ROI x1', validators=[ADU_ROI_validator])

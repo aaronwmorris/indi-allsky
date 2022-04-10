@@ -28,6 +28,9 @@
     "EXPOSURE_PERIOD"  : 15.00000,
     "AUTO_WB"          : false,
 
+    "comment_TEMP_DISPLAY" : "c = celcius, f = fahrenheit, k = kelvin",
+    "TEMP_DISPLAY"     : "c",
+
     "comment_TARGET_ADU" : "Average channel brightness target",
     "TARGET_ADU" : 75,
     "comment_TARGET_ADU_DEV" : "Allowed deviation from the mean before recalculating",

@@ -816,10 +816,20 @@ class ImageWorker(Process):
 
         # Add temp if value is set
         if self.sensortemp_v.value > -100.0:
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+                temp_sys = 'F'
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                sensortemp = self.sensortemp_v.value + 273.15
+                temp_sys = 'K'
+            else:
+                sensortemp = self.sensortemp_v.value
+                temp_sys = 'C'
+
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
-                'Temp {0:0.1f}'.format(self.sensortemp_v.value),
+                'Temp {0:0.1f}{1:s}'.format(sensortemp, temp_sys),  # hershey fonts do not support degree symbol
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             )
