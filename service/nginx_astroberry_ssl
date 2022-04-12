@@ -3,10 +3,10 @@ upstream indi_allsky_server {
 }
 
 server {
-    listen 81;
+    listen %HTTP_PORT%;
 
     ### Comment this section to permit HTTP access to indi-allsky
-    return 302 https://$host:444$request_uri;
+    return 302 https://$host:%HTTPS_PORT%$request_uri;
     ###
 
     rewrite ^/$ /indi-allsky;
@@ -39,7 +39,7 @@ server {
 }
 
 server {
-    listen 444;
+    listen %HTTPS_PORT%;
 
     ssl_certificate           /etc/ssl/astroberry.crt;
     ssl_certificate_key       /etc/ssl/astroberry.key;
