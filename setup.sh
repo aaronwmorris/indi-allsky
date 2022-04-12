@@ -17,6 +17,8 @@ ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 INSTALL_INDI="true"
+HTTP_PORT="80"
+HTTPS_PORT="443"
 #### end config ####
 
 
@@ -74,6 +76,19 @@ if [[ -f "/etc/astroberry.version" ]]; then
     echo
     echo "Detected Astroberry server"
     echo
+
+    # Astroberry already has services on 80/443
+    if [ "$HTTP_PORT" -eq 80 ]; then
+        HTTP_PORT="81"
+        echo "Changing HTTP_PORT to 81"
+    fi
+
+    if [ "$HTTPS_PORT" -eq 443 ]; then
+        HTTPS_PORT="444"
+        echo "Changing HTTPS_PORT to 444"
+    fi
+
+    echo
     echo
     sleep 3
 else
@@ -95,6 +110,8 @@ echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo "INSTALL_INDI: $INSTALL_INDI"
+echo "HTTP_PORT: $HTTP_PORT"
+echo "HTTPS_PORT: $HTTPS_PORT"
 echo
 echo
 
@@ -767,6 +784,8 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
      -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      ${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl > $TMP3
 
 
@@ -810,6 +829,8 @@ else
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
      -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
 
 
@@ -879,8 +900,25 @@ else
         sudo a2dissite 000-default
         sudo a2dissite default-ssl
         sudo a2ensite indi-allsky
+
+        if [[ ! -f "/etc/apache2/ports.conf_pre_indiallsky" ]]; then
+            sudo cp /etc/apache2/ports.conf /etc/apache2/ports.conf_pre_indiallsky
+
+            # Comment out the Listen directives
+            TMP9=$(mktemp)
+            sed \
+             -e 's|^\(.*\)[^#]\?\(listen.*\)|\1#\2|i' \
+             /etc/apache2/ports.conf_pre_indiallsky > $TMP9
+
+            sudo cp -f "$TMP9" /etc/apache2/ports.conf
+            sudo chown root:root /etc/apache2/ports.conf
+            sudo chmod 644 /etc/apache2/ports.conf
+            [[ -f "$TMP9" ]] && rm -f "$TMP9"
+        fi
+
         sudo systemctl enable apache2
         sudo systemctl restart apache2
+
     elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
         sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
         sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
@@ -1016,10 +1054,10 @@ echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
 
-if [[ "$ASTROBERRY" == "true" ]]; then
-    echo "    https://$(hostname -s).local:444/"
-else
+if [[ "$HTTPS_PORT" -eq 443 ]]; then
     echo "    https://$(hostname -s).local/"
+else
+    echo "    https://$(hostname -s).local:$HTTPS_PORT/"
 fi
 
 echo
