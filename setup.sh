@@ -769,9 +769,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 if [[ "$ASTROBERRY" == "true" ]]; then
-    echo "**** Disabling competing web servers (ignore errors) ****"
-    sudo systemctl stop lighttpd || true
-    sudo systemctl disable lighttpd || true
+    echo "**** Disabling apache web server (Astroberry) ****"
     sudo systemctl stop apache2 || true
     sudo systemctl disable apache2 || true
 
@@ -814,12 +812,15 @@ if [[ "$ASTROBERRY" == "true" ]]; then
     fi
 
 else
-    echo "**** Disabling competing web servers (ignore errors) ****"
-    sudo systemctl stop nginx || true
-    sudo systemctl disable nginx || true
-    sudo systemctl stop lighttpd || true
-    sudo systemctl disable lighttpd || true
+    if systemctl -q is-active nginx; then
+        echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
+        sleep 3
+    fi
 
+    if systemctl -q is-active lighttpd; then
+        echo "!!! WARNING - lighttpd is active - This might interfere with apache !!!"
+        sleep 3
+    fi
 
     echo "**** Start apache2 service ****"
     TMP3=$(mktemp)
