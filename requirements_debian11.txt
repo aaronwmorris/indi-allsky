@@ -27,3 +27,4 @@ Flask-Migrate
 Flask-WTF
 cryptography
 dbus-python
+paho-mqtt
