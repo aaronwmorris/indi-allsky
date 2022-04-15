@@ -1,3 +1,4 @@
+from pathlib import Path
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -30,5 +31,9 @@ class GenericFileTransfer(object):
 
     def put(self, localfile, remotefile):
         logger.info('Uploading %s to %s', localfile, remotefile)
-        self._put(localfile, remotefile)
+
+        localfile_p = Path(localfile)
+        remotefile_p = Path(remotefile)
+
+        self._put(localfile_p, remotefile_p)
 

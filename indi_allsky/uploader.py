@@ -60,13 +60,12 @@ class FileUploader(Process):
 
 
             local_file = u_dict['local_file']
-            remote_file = u_dict['remote_file']
+            remote_file = u_dict.get('remote_file')
 
             remove_local = u_dict.get('remove_local')
 
 
             local_file_p = Path(local_file)
-            remote_file_p = Path(remote_file)
 
 
             try:
@@ -100,7 +99,7 @@ class FileUploader(Process):
 
             # Upload file
             try:
-                client.put(local_file_p, remote_file_p)
+                client.put(local_file_p, remote_file)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
