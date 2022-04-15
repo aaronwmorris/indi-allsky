@@ -59,23 +59,32 @@ class FileUploader(Process):
                 return
 
 
-            local_file = u_dict['local_file']
+            action = u_dict['action']
+            local_file = u_dict.get('local_file')
             remote_file = u_dict.get('remote_file')
 
             remove_local = u_dict.get('remove_local')
 
 
-            local_file_p = Path(local_file)
+            # Build parameters
+            if action == 'upload':
+                kwargs = {
+                    'local_file'  : Path(local_file),
+                    'remote_file' : Path(remote_file),
+                }
+
+                try:
+                    client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
+                    return
 
 
-            try:
-                client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
-            except AttributeError:
-                logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
-                return
+                client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
 
+            else:
+                raise Exception('Invalid transfer action')
 
-            client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
 
 
             start = time.time()
@@ -99,7 +108,7 @@ class FileUploader(Process):
 
             # Upload file
             try:
-                client.put(local_file_p, remote_file)
+                client.put(**kwargs)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
@@ -126,6 +135,8 @@ class FileUploader(Process):
 
 
             if remove_local:
+                local_file_p = Path(local_file)
+
                 try:
                     local_file_p.unlink()
                 except PermissionError as e:

@@ -29,11 +29,19 @@ class GenericFileTransfer(object):
         self._close()
 
 
-    def put(self, localfile, remotefile):
-        logger.info('Uploading %s to %s', localfile, remotefile)
+    def put(self, local_file=None, remote_file=None):
+        if not local_file:
+            raise Exception('local_file not set')
 
-        localfile_p = Path(localfile)
-        remotefile_p = Path(remotefile)
+        if not remote_file:
+            raise Exception('remote_file not set')
+
+        logger.info('Uploading %s to %s', local_file, remote_file)
+
+
+        localfile_p = Path(local_file)
+        remotefile_p = Path(remote_file)
+
 
         self._put(localfile_p, remotefile_p)
 

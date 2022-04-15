@@ -318,7 +318,8 @@ class ImageWorker(Process):
 
                 # tell worker to upload file
                 self.upload_q.put({
-                    'local_file' : latest_file,
+                    'action'      : 'upload',
+                    'local_file'  : latest_file,
                     'remote_file' : remote_file,
                 })
 
