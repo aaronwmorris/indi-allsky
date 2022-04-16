@@ -183,12 +183,6 @@ sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 
 
 
-#if [[ -f "/etc/mosquitto/passwd" ]]; then
-#    sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
-#else
-#    # create the file
-#    sudo mosquitto_passwd -bc /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
-#fi
 sudo touch /etc/mosquitto/passwd
 sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
 
