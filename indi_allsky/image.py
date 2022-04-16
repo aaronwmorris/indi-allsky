@@ -341,7 +341,7 @@ class ImageWorker(Process):
         logger.info('Publishing data to MQ broker')
 
         mq_data = {
-            'sqm'    : self.sqm_value,
+            'sqm'    : round(self.sqm_value, 1),
             'stars'  : stars,
         }
 
