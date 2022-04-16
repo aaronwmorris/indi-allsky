@@ -95,6 +95,7 @@ class FileUploader(Process):
                     'hostname' : self.config['MQTTPUBLISH']['HOST'],
                     'username' : self.config['MQTTPUBLISH']['USERNAME'],
                     'password' : self.config['MQTTPUBLISH']['PASSWORD'],
+                    'tls'      : self.config['MQTTPUBLISH']['TLS'],
                 }
 
                 put_kwargs = {
