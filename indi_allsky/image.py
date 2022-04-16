@@ -302,28 +302,56 @@ class ImageWorker(Process):
                     stars=len(blob_stars),
                 )
 
-                ### upload images
-                if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
-                    logger.warning('Image uploading disabled')
-                    continue
 
-                if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-                    next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
-                    logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
-                    continue
+                self.upload_image(latest_file, image_entry)
+                self.mqtt_publish(latest_file, self.sqm_value, len(blob_stars))
 
 
-                remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
-                remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
-                # tell worker to upload file
-                self.upload_q.put({
-                    'action'      : 'upload',
-                    'local_file'  : latest_file,
-                    'remote_file' : remote_file,
-                })
+    def upload_image(self, latest_file, image_entry):
+        ### upload images
+        if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
+            logger.warning('Image uploading disabled')
+            return
 
-                self._miscDb.addUploadedFlag(image_entry)
+        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+            logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
+        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
+
+        # tell worker to upload file
+        self.upload_q.put({
+            'action'      : 'upload',
+            'local_file'  : latest_file,
+            'remote_file' : remote_file,
+        })
+
+        self._miscDb.addUploadedFlag(image_entry)
+
+
+    def mqtt_publish(self, latest_file, sqm, stars):
+        if not self.config['MQPUBLISH']['HOST']:
+            logger.warning('MQ publishing disabled')
+            return
+
+        logger.info('Publishing data to MQ broker')
+
+        mq_data = {
+            'sqm'    : self.sqm_value,
+            'stars'  : stars,
+        }
+
+        # publish data to mq broker
+        self.upload_q.put({
+            'action'      : 'mqttpub',
+            'local_file'  : latest_file,
+            'mq_data'     : mq_data,
+        })
+
 
 
     def detectBitDepth(self, data):

@@ -62,8 +62,9 @@ class FileUploader(Process):
             action = u_dict['action']
             local_file = u_dict.get('local_file')
             remote_file = u_dict.get('remote_file')
-
             remove_local = u_dict.get('remove_local')
+
+            mq_data = u_dict.get('mq_data')
 
 
             # Build parameters
@@ -88,6 +89,28 @@ class FileUploader(Process):
                 client = client_class()
                 client.timeout = self.config['FILETRANSFER']['TIMEOUT']
                 client.port = self.config['FILETRANSFER']['PORT']
+
+            elif action == 'mqttpub':
+                connect_kwargs = {
+                    'hostname' : self.config['MQPUBLISH']['HOST'],
+                    'username' : self.config['MQPUBLISH']['USERNAME'],
+                    'password' : self.config['MQPUBLISH']['PASSWORD'],
+                }
+
+                put_kwargs = {
+                    'local_file'  : Path(local_file),
+                    'base_topic'  : self.config['MQPUBLISH']['BASE_TOPIC'],
+                    'mq_data'     : mq_data,
+                }
+
+                try:
+                    client_class = getattr(filetransfer, 'paho_mqtt')
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', 'paho_mqtt')
+                    return
+
+                client = client_class()
+                client.port = self.config['MQPUBLISH']['PORT']
 
             else:
                 raise Exception('Invalid transfer action')
