@@ -123,5 +123,15 @@
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,
         "UPLOAD_ENDOFNIGHT"      : false
+    },
+
+    "MQPUBLISH" : {
+        "HOST"                   : "",
+        "comment_PORT"           : "1883 = mqtt, 8883 = TLS (default)",
+        "PORT"                   : 0,
+        "USERNAME"               : "",
+        "PASSWORD"               : "",
+        "BASE_TOPIC"             : "indi-allsky",
+        "TLS"                    : true
     }
 }
