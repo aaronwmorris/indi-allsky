@@ -994,6 +994,89 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__ENABLE(class='form-check-input') }}
+                <div id="MQTTPUBLISH__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable MQTT Publishing</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__HOST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__HOST(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT hostname</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PORT(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__USERNAME(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Username</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PASSWORD(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Password</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__BASE_TOPIC.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__BASE_TOPIC(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__BASE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Base Topic</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__TLS(class='form-check-input') }}
+                <div id="MQTTPUBLISH__TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
@@ -1085,6 +1168,11 @@ const field_names = [
     'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
     'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER',
     'FILETRANSFER__UPLOAD_IMAGE',
+    'MQTTPUBLISH__HOST',
+    'MQTTPUBLISH__PORT',
+    'MQTTPUBLISH__USERNAME',
+    'MQTTPUBLISH__PASSWORD',
+    'MQTTPUBLISH__BASE_TOPIC',
     'INDI_CONFIG_DEFAULTS',
 ];
 
@@ -1106,6 +1194,8 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_KEOGRAM',
     'FILETRANSFER__UPLOAD_STARTRAIL',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
+    'MQTTPUBLISH__ENABLE',
+    'MQTTPUBLISH__TLS',
 ];
 
 var fields = {};
