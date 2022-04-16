@@ -13,7 +13,7 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
-M_USERNAME="admin"
+M_USERNAME="indi-allsky"
 M_PASSWORD="secret"
 
 echo
