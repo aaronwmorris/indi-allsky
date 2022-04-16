@@ -3,6 +3,7 @@ from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 from .exceptions import TransferFailure
 
+from pathlib import Path
 import paramiko
 import socket
 import time
@@ -15,21 +16,23 @@ class paramiko_sftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(paramiko_sftp, self).__init__(*args, **kwargs)
 
-        self.port = 22
+        self._port = 22
         self.sftp = None
 
 
-    def __del__(self):
-        super(paramiko_sftp, self).__del__()
+    def connect(self, *args, **kwargs):
+        super(paramiko_sftp, self).connect(*args, **kwargs)
 
+        hostname = kwargs['hostname']
+        username = kwargs['username']
+        password = kwargs['password']
 
-    def _connect(self, hostname, username, password):
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            client.connect(hostname, port=self.port, username=username, password=password, timeout=self.timeout)
+            client.connect(hostname, port=self._port, username=username, password=password, timeout=self._timeout)
         except paramiko.ssh_exception.AuthenticationException as e:
             raise AuthenticationFailure(str(e)) from e
         except paramiko.ssh_exception.NoValidConnectionsError as e:
@@ -44,7 +47,9 @@ class paramiko_sftp(GenericFileTransfer):
         return client
 
 
-    def _close(self):
+    def close(self):
+        super(paramiko_sftp, self).close()
+
         if self.sftp:
             self.sftp.close()
 
@@ -52,10 +57,18 @@ class paramiko_sftp(GenericFileTransfer):
             self.client.close()
 
 
-    def _put(self, localfile, remotefile):
+    def put(self, *args, **kwargs):
+        super(paramiko_sftp, self).put(*args, **kwargs)
+
+        local_file = kwargs['local_file']
+        remote_file = kwargs['remote_file']
+
+        local_file_p = Path(local_file)
+        remote_file_p = Path(remote_file)
+
         # Try to create remote folder
         try:
-            self.sftp.mkdir(str(remotefile.parent))
+            self.sftp.mkdir(str(remote_file_p.parent))
         except OSError as e:
             # will return an error if the directory already exists
             #logger.warning('SFTP error creating directory: %s', str(e))
@@ -63,7 +76,7 @@ class paramiko_sftp(GenericFileTransfer):
 
 
         try:
-            self.sftp.chmod(str(remotefile.parent), 0o755)
+            self.sftp.chmod(str(remote_file_p.parent), 0o755)
         except OSError as e:
             logger.warning('SFTP unable to chmod dir: %s', str(e))
 
@@ -71,16 +84,16 @@ class paramiko_sftp(GenericFileTransfer):
         start = time.time()
 
         try:
-            self.sftp.put(str(localfile), str(remotefile))
+            self.sftp.put(str(local_file_p), str(remote_file_p))
         except PermissionError as e:
             raise TransferFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
-        local_file_size = localfile.stat().st_size
+        local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
         try:
-            self.sftp.chmod(str(remotefile), 0o644)
+            self.sftp.chmod(str(remote_file_p), 0o644)
         except OSError as e:
             logger.warning('SFTP unable to chmod file: %s', str(e))
 

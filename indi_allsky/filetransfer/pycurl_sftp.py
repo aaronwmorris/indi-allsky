@@ -3,6 +3,7 @@ from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 #from .exceptions import PermissionFailure
 
+from pathlib import Path
 import pycurl
 import io
 import time
@@ -15,48 +16,61 @@ class pycurl_sftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(pycurl_sftp, self).__init__(*args, **kwargs)
 
-        self.port = 22
+        self._port = 22
         self.url = None
 
 
-    def __del__(self):
-        super(pycurl_sftp, self).__del__()
+    def connect(self, *args, **kwargs):
+        super(pycurl_sftp, self).connect(*args, **kwargs)
 
-
-    def _connect(self, hostname, username, password):
-        ### The full connect and transfer happens under the _put() function
+        ### The full connect and transfer happens under the put() function
         ### The curl instance is just setup here
-        self.url = 'sftp://{0:s}:{1:d}'.format(hostname, self.port)
+
+        hostname = kwargs['hostname']
+        username = kwargs['username']
+        password = kwargs['password']
+
+        self.url = 'sftp://{0:s}:{1:d}'.format(hostname, self._port)
 
         client = pycurl.Curl()
         #client.setopt(pycurl.VERBOSE, 1)
-        client.setopt(pycurl.CONNECTTIMEOUT, int(self.timeout))
+        client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
         client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
         return client
 
 
-    def _close(self):
+    def close(self):
+        super(pycurl_sftp, self).close()
+
         if self.client:
             self.client.close()
 
 
-    def _put(self, localfile, remotefile):
+    def put(self, *args, **kwargs):
+        super(pycurl_sftp, self).put(*args, **kwargs)
+
+        local_file = kwargs['local_file']
+        remote_file = kwargs['remote_file']
+
+        local_file_p = Path(local_file)
+        remote_file_p = Path(remote_file)
+
         pre_commands = [
-            'chmod 755 {0:s}'.format(str(remotefile.parent)),
+            'chmod 755 {0:s}'.format(str(remote_file_p.parent)),
         ]
 
         post_commands = [
-            'chmod 644 {0:s}'.format(str(remotefile)),
+            'chmod 644 {0:s}'.format(str(remote_file_p)),
         ]
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remotefile))
+        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
         logger.info('pycurl URL: %s', url)
 
 
         start = time.time()
-        f_localfile = io.open(str(localfile), 'rb')
+        f_localfile = io.open(str(local_file_p), 'rb')
 
         self.client.setopt(pycurl.URL, url)
         self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
@@ -85,7 +99,7 @@ class pycurl_sftp(GenericFileTransfer):
         f_localfile.close()
 
         upload_elapsed_s = time.time() - start
-        local_file_size = localfile.stat().st_size
+        local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
 

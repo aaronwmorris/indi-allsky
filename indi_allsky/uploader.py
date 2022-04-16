@@ -68,7 +68,13 @@ class FileUploader(Process):
 
             # Build parameters
             if action == 'upload':
-                kwargs = {
+                connect_kwargs = {
+                    'hostname' : self.config['FILETRANSFER']['HOST'],
+                    'username' : self.config['FILETRANSFER']['USERNAME'],
+                    'password' : self.config['FILETRANSFER']['PASSWORD'],
+                }
+
+                put_kwargs = {
                     'local_file'  : Path(local_file),
                     'remote_file' : Path(remote_file),
                 }
@@ -79,8 +85,9 @@ class FileUploader(Process):
                     logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
                     return
 
-
-                client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
+                client = client_class()
+                client.timeout = self.config['FILETRANSFER']['TIMEOUT']
+                client.port = self.config['FILETRANSFER']['PORT']
 
             else:
                 raise Exception('Invalid transfer action')
@@ -90,12 +97,7 @@ class FileUploader(Process):
             start = time.time()
 
             try:
-                client.connect(
-                    self.config['FILETRANSFER']['HOST'],
-                    self.config['FILETRANSFER']['USERNAME'],
-                    self.config['FILETRANSFER']['PASSWORD'],
-                    port=self.config['FILETRANSFER']['PORT'],
-                )
+                client.connect(**connect_kwargs)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
@@ -108,7 +110,7 @@ class FileUploader(Process):
 
             # Upload file
             try:
-                client.put(**kwargs)
+                client.put(**put_kwargs)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
