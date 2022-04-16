@@ -126,6 +126,7 @@
     },
 
     "MQTTPUBLISH" : {
+        "ENABLE"                 : false,
         "HOST"                   : "",
         "comment_PORT"           : "1883 = mqtt, 8883 = TLS",
         "PORT"                   : 1883,

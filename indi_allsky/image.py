@@ -334,7 +334,7 @@ class ImageWorker(Process):
 
 
     def mqtt_publish(self, latest_file, sqm, stars):
-        if not self.config['MQTTPUBLISH']['HOST']:
+        if not self.config['MQTTPUBLISH']['ENABLE']:
             logger.warning('MQ publishing disabled')
             return
 
