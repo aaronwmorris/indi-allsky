@@ -894,6 +894,9 @@ else
                 sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
                 sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
+                # system certificate store
+                sudo cp -f "$CRT_TMP" /usr/local/share/ca-certificates/indi-allsky_apache.crt
+
                 rm -f "$KEY_TMP"
                 rm -f "$CRT_TMP"
         fi
@@ -903,6 +906,10 @@ else
         sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
         sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
         sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
+
+        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo update-ca-certificates
 
 
         sudo a2enmod rewrite
