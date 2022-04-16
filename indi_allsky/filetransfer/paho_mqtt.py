@@ -5,7 +5,7 @@ from .generic import GenericFileTransfer
 
 from pathlib import Path
 import paho.mqtt.publish as publish
-#import ssl
+import ssl
 import io
 import time
 import logging
@@ -38,7 +38,7 @@ class paho_mqtt(GenericFileTransfer):
         if tls:
             self.mq_tls = {
                 'ca_certs'    : '/etc/ssl/certs/ca-certificates.crt',
-                #'cert_reqs'   : ssl.CERT_NONE,
+                'cert_reqs'   : ssl.CERT_NONE,
                 #'tls_version' : ssl.PROTOCOL_TLS_CLIENT,
                 'insecure'    : True,
             }
