@@ -13,6 +13,8 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
+M_USERNAME="admin"
+M_PASSWORD="secret"
 
 echo
 echo "#########################################################"
@@ -123,6 +125,7 @@ ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
 
+echo "**** Setup certificate ****"
 
 if [[ ! -d "/etc/mosquitto/certs" ]]; then
     sudo mkdir /etc/mosquitto/certs
@@ -169,7 +172,7 @@ sudo chmod 644 /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
 
 
-echo "**** Setup policy kit permissions ****"
+echo "**** Setup mosquitto config ****"
 TMP1=$(mktemp)
 cat ${ALLSKY_DIRECTORY}/misc/mosquitto_indi-allsky.conf > $TMP1
 
@@ -178,6 +181,19 @@ sudo chown root:root "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
+
+
+#if [[ -f "/etc/mosquitto/passwd" ]]; then
+#    sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
+#else
+#    # create the file
+#    sudo mosquitto_passwd -bc /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
+#fi
+sudo touch /etc/mosquitto/passwd
+sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
+
+sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/passwd
+sudo chmod 644 /etc/mosquitto/passwd
 
 
 sudo systemctl enable mosquitto
@@ -190,6 +206,9 @@ echo
 echo
 echo "mosquitto is now installed... enjoy"
 echo
+echo "mosquitto credentials:"
+echo "user: $M_USERNAME"
+echo "pass: $M_PASSWORD"
 echo
-
+echo
 
