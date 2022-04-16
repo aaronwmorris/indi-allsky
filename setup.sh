@@ -183,6 +183,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -248,6 +250,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -312,6 +316,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -379,6 +385,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -451,6 +459,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -512,6 +522,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \

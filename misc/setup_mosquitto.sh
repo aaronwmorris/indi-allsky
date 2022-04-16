@@ -70,7 +70,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         mosquitto \
         mosquitto-clients \
-        mosquitto-dev
+        mosquitto-dev \
+        ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     MOSQUITTO_USER=mosquitto
@@ -80,7 +81,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         mosquitto \
         mosquitto-clients \
-        mosquitto-dev
+        mosquitto-dev \
+        ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     MOSQUITTO_USER=mosquitto
@@ -90,7 +92,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         mosquitto \
         mosquitto-clients \
-        mosquitto-dev
+        mosquitto-dev \
+        ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     MOSQUITTO_USER=mosquitto
@@ -100,7 +103,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         mosquitto \
         mosquitto-clients \
-        mosquitto-dev
+        mosquitto-dev \
+        ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     MOSQUITTO_USER=mosquitto
@@ -110,7 +114,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get -y install \
         mosquitto \
         mosquitto-clients \
-        mosquitto-dev
+        mosquitto-dev \
+        ca-certificates
 
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
