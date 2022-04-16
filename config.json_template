@@ -127,11 +127,11 @@
 
     "MQTTPUBLISH" : {
         "HOST"                   : "",
-        "comment_PORT"           : "1883 = mqtt, 8883 = TLS (default)",
-        "PORT"                   : 8883,
+        "comment_PORT"           : "1883 = mqtt, 8883 = TLS",
+        "PORT"                   : 1883,
         "USERNAME"               : "",
         "PASSWORD"               : "",
         "BASE_TOPIC"             : "indi-allsky",
-        "TLS"                    : true
+        "TLS"                    : false
     }
 }

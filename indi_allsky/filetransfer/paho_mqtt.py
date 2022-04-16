@@ -37,9 +37,10 @@ class paho_mqtt(GenericFileTransfer):
 
         if tls:
             self.mq_tls = {
-                #'ca_certs'    : None,
-                'cert_reqs'   : 'ssl.CERT_NONE',
-                'tls_version' : 'ssl.PROTOCOL_TLS_CLIENT',
+                'ca_certs'    : '/etc/ssl/certs/ca-certificates.crt',
+                #'cert_reqs'   : ssl.CERT_NONE,
+                #'tls_version' : ssl.PROTOCOL_TLS_CLIENT,
+                'insecure'    : True,
             }
 
         if username:
