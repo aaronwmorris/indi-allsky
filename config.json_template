@@ -125,7 +125,7 @@
         "UPLOAD_ENDOFNIGHT"      : false
     },
 
-    "MQPUBLISH" : {
+    "MQTTPUBLISH" : {
         "HOST"                   : "",
         "comment_PORT"           : "1883 = mqtt, 8883 = TLS (default)",
         "PORT"                   : 8883,

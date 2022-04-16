@@ -92,14 +92,14 @@ class FileUploader(Process):
 
             elif action == 'mqttpub':
                 connect_kwargs = {
-                    'hostname' : self.config['MQPUBLISH']['HOST'],
-                    'username' : self.config['MQPUBLISH']['USERNAME'],
-                    'password' : self.config['MQPUBLISH']['PASSWORD'],
+                    'hostname' : self.config['MQTTPUBLISH']['HOST'],
+                    'username' : self.config['MQTTPUBLISH']['USERNAME'],
+                    'password' : self.config['MQTTPUBLISH']['PASSWORD'],
                 }
 
                 put_kwargs = {
                     'local_file'  : Path(local_file),
-                    'base_topic'  : self.config['MQPUBLISH']['BASE_TOPIC'],
+                    'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                     'mq_data'     : mq_data,
                 }
 
@@ -110,7 +110,7 @@ class FileUploader(Process):
                     return
 
                 client = client_class()
-                client.port = self.config['MQPUBLISH']['PORT']
+                client.port = self.config['MQTTPUBLISH']['PORT']
 
             else:
                 raise Exception('Invalid transfer action')
