@@ -14,7 +14,6 @@ DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
 M_USERNAME="indi-allsky"
-M_PASSWORD="secret"
 
 echo
 echo "#########################################################"
@@ -143,12 +142,10 @@ sudo chmod 755 /etc/mosquitto/certs
 if [[ ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.crt" ]]; then
     sudo rm -f /etc/mosquitto/certs/indi-allsky_mosquitto.key
     sudo rm -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt
-    sudo rm -f /etc/mosquitto/certs/dh.pem
 
     SHORT_HOSTNAME=$(hostname -s)
     KEY_TMP=$(mktemp)
     CRT_TMP=$(mktemp)
-    DH_TMP=$(mktemp)
 
     # sudo has problems with process substitution <()
     openssl req \
@@ -165,25 +162,19 @@ if [[ ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -f "/etc/mosqui
         -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
 
-    openssl dhparam -out "$DH_TMP" 2048
-
     sudo cp -f "$KEY_TMP" /etc/mosquitto/certs/indi-allsky_mosquitto.key
     sudo cp -f "$CRT_TMP" /etc/mosquitto/certs/indi-allsky_mosquitto.crt
-    sudo cp -f "$DH_TMP" /etc/mosquitto/certs/dh.pem
 
     # system certificate store
     sudo cp -f "$CRT_TMP" /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
 
     rm -f "$KEY_TMP"
     rm -f "$CRT_TMP"
-    rm -f "$DH_TMP"
 fi
 
 
 sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/indi-allsky_mosquitto.key
 sudo chmod 640 /etc/mosquitto/certs/indi-allsky_mosquitto.key
-sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/dh.pem
-sudo chmod 640 /etc/mosquitto/certs/dh.pem
 sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 sudo chmod 644 /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
@@ -202,14 +193,24 @@ sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
 
+echo
+echo "Please enter a password for the $M_USERNAME mqtt user"
+echo
 
-sudo touch /etc/mosquitto/passwd
-# had trouble with a single user defined
-sudo mosquitto_passwd -b /etc/mosquitto/passwd admin "$M_PASSWORD"
-sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USERNAME" "$M_PASSWORD"
+if [[ -f "/etc/mosquitto/passwd" ]]; then
+    sudo mosquitto_passwd /etc/mosquitto/passwd "$M_USERNAME"
+else
+    sudo mosquitto_passwd -c /etc/mosquitto/passwd "$M_USERNAME"
+fi
+
 
 sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/passwd
-sudo chmod 644 /etc/mosquitto/passwd
+sudo chmod 640 /etc/mosquitto/passwd
+
+
+echo
+echo "Use this password in the indi-allsky configuration"
+echo
 
 
 sudo systemctl enable mosquitto
@@ -221,10 +222,6 @@ sudo systemctl restart mosquitto
 echo
 echo
 echo "mosquitto is now installed... enjoy"
-echo
-echo "mosquitto credentials:"
-echo "user: $M_USERNAME"
-echo "pass: $M_PASSWORD"
 echo
 echo
 
