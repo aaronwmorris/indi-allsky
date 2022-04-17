@@ -34,7 +34,6 @@ class MqttTest(object):
                 'username' : self.config['MQTTPUBLISH']['USERNAME'],
                 'password' : self.config['MQTTPUBLISH']['PASSWORD'],
             }
-        pass
 
         message_list = list()
         message_list.append({
