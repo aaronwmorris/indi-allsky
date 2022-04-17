@@ -25,9 +25,14 @@ class MqttTest(object):
         if self.config['MQTTPUBLISH']['TLS']:
             self.mq_tls = {
                 'ca_certs'    : '/etc/ssl/certs/ca-certificates.crt',
-                'cert_reqs'   : ssl.CERT_NONE,
-                'insecure'    : True,
+                'cert_reqs'   : ssl.CERT_REQUIRED,
+                'insecure'    : False,
             }
+
+            if self.config['MQTTPUBLISH']['CERT_BYPASS']:
+                self.mq_tls['cert_reqs'] = ssl.CERT_NONE
+                self.mq_tls['insecure']  = True
+
 
         if self.config['MQTTPUBLISH']['USERNAME']:
             self.mq_auth = {

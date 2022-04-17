@@ -58,18 +58,6 @@ class paho_mqtt(GenericFileTransfer):
             }
 
 
-        #except paramiko.ssh_exception.AuthenticationException as e:
-        #    raise AuthenticationFailure(str(e)) from e
-        #except paramiko.ssh_exception.NoValidConnectionsError as e:
-        #    raise ConnectionFailure(str(e)) from e
-        #except socket.gaierror as e:
-        #    raise ConnectionFailure(str(e)) from e
-        #except socket.timeout as e:
-        #    raise ConnectionFailure(str(e)) from e
-
-        return
-
-
     def close(self):
         super(paho_mqtt, self).close()
 
@@ -121,6 +109,8 @@ class paho_mqtt(GenericFileTransfer):
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except ssl.SSLCertVerificationError as e:
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
