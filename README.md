@@ -295,6 +295,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD            |             | (str) MQTT password |
 | > BASE_TOPIC          | indi-allsky | (str) Base topic for MQ messages |
 | > TLS                 | true        | (bool) Use TLS for MQTT connection |
+| > CERT_BYPASS         | true        | (bool) Bypass certificate validation for MQTT connection |
 
 ## Tested Hardware
 
