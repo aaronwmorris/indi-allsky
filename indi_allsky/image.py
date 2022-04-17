@@ -303,7 +303,20 @@ class ImageWorker(Process):
                 )
 
 
-                self.mqtt_publish(latest_file, self.sqm_value, len(blob_stars))
+                # build mqtt data
+                mqtt_data = {
+                    'exposure' : round(exposure, 6),
+                    'gain'     : self.gain_v.value,
+                    'bin'      : self.bin_v.value,
+                    'temp'     : round(self.sensortemp_v.value, 1),
+                    'moonmode' : round(self.moonmode_v.value, 1),
+                    'night'    : bool(self.night_v.value),
+                    'sqm'      : round(self.sqm_value, 1),
+                    'stars'    : len(blob_stars),
+                }
+
+                self.mqtt_publish(latest_file, mqtt_data)
+
 
                 self.upload_image(latest_file, image_entry)
 
@@ -334,17 +347,12 @@ class ImageWorker(Process):
         self._miscDb.addUploadedFlag(image_entry)
 
 
-    def mqtt_publish(self, latest_file, sqm, stars):
+    def mqtt_publish(self, latest_file, mq_data):
         if not self.config['MQTTPUBLISH']['ENABLE']:
             logger.warning('MQ publishing disabled')
             return
 
         logger.info('Publishing data to MQ broker')
-
-        mq_data = {
-            'sqm'    : round(self.sqm_value, 1),
-            'stars'  : stars,
-        }
 
         # publish data to mq broker
         self.upload_q.put({

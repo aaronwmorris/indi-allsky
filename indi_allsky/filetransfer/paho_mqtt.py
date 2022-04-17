@@ -88,18 +88,13 @@ class paho_mqtt(GenericFileTransfer):
             })
 
 
-        message_list.append({
-            'topic'    : '/'.join((base_topic, 'sqm')),
-            'payload'  : mq_data['sqm'],
-            'qos'      : 0,
-            'retain'   : True,
-        })
-        message_list.append({
-            'topic'    : '/'.join((base_topic, 'stars')),
-            'payload'  : mq_data['stars'],
-            'qos'      : 0,
-            'retain'   : True,
-        })
+        for k, v in mq_data.items():
+            message_list.append({
+                'topic'    : '/'.join((base_topic, k)),
+                'payload'  : v,
+                'qos'      : 0,
+                'retain'   : True,
+            })
 
 
         start = time.time()
