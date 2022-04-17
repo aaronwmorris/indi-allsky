@@ -36,8 +36,14 @@ class pycurl_sftp(GenericFileTransfer):
         self.client = pycurl.Curl()
         #self.client.setopt(pycurl.VERBOSE, 1)
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        #self.client.setopt(pycurl.SSH_KNOWNHOSTS, '/dev/null')
+        #self.client.setopt(pycurl.SSH_KEYFUNCTION, self.accept_new_hosts)
 
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+
+
+    #def accept_new_hosts(known_key, found_key, match):
+    #    return pycurl.KHSTAT_FINE
 
 
     def close(self):
