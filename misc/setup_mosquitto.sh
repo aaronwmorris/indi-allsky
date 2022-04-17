@@ -29,15 +29,6 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
-if [[ -f "/etc/astroberry.version" ]]; then
-    echo "Please do not run this script on an Astroberry server"
-    echo "Astroberry has native automount support"
-    echo
-    echo
-    exit 1
-fi
-
-
 echo
 echo
 echo "This script sets up mosquitto MQTT server"
