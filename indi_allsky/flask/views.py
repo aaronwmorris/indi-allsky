@@ -10,6 +10,8 @@ from collections import OrderedDict
 import socket
 import psutil
 import dbus
+import paho.mqtt
+import ccdproc
 
 import ephem
 
@@ -1247,6 +1249,8 @@ class SystemInfoView(TemplateView):
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['pyindi_version'] = '.'.join((
             str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
             str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
