@@ -10,6 +10,10 @@ from collections import OrderedDict
 import socket
 import psutil
 import dbus
+import pycurl
+import paramiko
+import paho.mqtt
+import ccdproc
 
 import ephem
 
@@ -733,6 +737,14 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
+            'MQTTPUBLISH__ENABLE'            : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('ENABLE', False),
+            'MQTTPUBLISH__HOST'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('HOST', 'localhost'),
+            'MQTTPUBLISH__PORT'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('PORT', 8883),
+            'MQTTPUBLISH__USERNAME'          : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('USERNAME', 'indi-allsky'),
+            'MQTTPUBLISH__PASSWORD'          : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('PASSWORD', ''),
+            'MQTTPUBLISH__BASE_TOPIC'        : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('BASE_TOPIC', 'indi-allsky'),
+            'MQTTPUBLISH__TLS'               : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('TLS', True),
+            'MQTTPUBLISH__CERT_BYPASS'       : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('CERT_BYPASS', True),
         }
 
 
@@ -889,6 +901,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('FILETRANSFER'):
             self.indi_allsky_config['FILETRANSFER'] = {}
 
+        if not self.indi_allsky_config.get('MQTTPUBLISH'):
+            self.indi_allsky_config['MQTTPUBLISH'] = {}
+
 
         # update data
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
@@ -965,6 +980,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
+        self.indi_allsky_config['MQTTPUBLISH']['ENABLE']                = bool(request.json['MQTTPUBLISH__ENABLE'])
+        self.indi_allsky_config['MQTTPUBLISH']['HOST']                  = str(request.json['MQTTPUBLISH__HOST'])
+        self.indi_allsky_config['MQTTPUBLISH']['PORT']                  = int(request.json['MQTTPUBLISH__PORT'])
+        self.indi_allsky_config['MQTTPUBLISH']['USERNAME']              = str(request.json['MQTTPUBLISH__USERNAME'])
+        self.indi_allsky_config['MQTTPUBLISH']['PASSWORD']              = str(request.json['MQTTPUBLISH__PASSWORD'])
+        self.indi_allsky_config['MQTTPUBLISH']['BASE_TOPIC']            = str(request.json['MQTTPUBLISH__BASE_TOPIC'])
+        self.indi_allsky_config['MQTTPUBLISH']['TLS']                   = bool(request.json['MQTTPUBLISH__TLS'])
+        self.indi_allsky_config['MQTTPUBLISH']['CERT_BYPASS']           = bool(request.json['MQTTPUBLISH__CERT_BYPASS'])
 
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
 
@@ -1230,6 +1253,10 @@ class SystemInfoView(TemplateView):
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
+        context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
+        context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['pyindi_version'] = '.'.join((
             str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
             str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),

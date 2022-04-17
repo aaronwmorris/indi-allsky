@@ -123,5 +123,17 @@
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,
         "UPLOAD_ENDOFNIGHT"      : false
+    },
+
+    "MQTTPUBLISH" : {
+        "ENABLE"                 : false,
+        "HOST"                   : "localhost",
+        "comment_PORT"           : "1883 = mqtt, 8883 = TLS",
+        "PORT"                   : 8883,
+        "USERNAME"               : "indi-allsky",
+        "PASSWORD"               : "",
+        "BASE_TOPIC"             : "indi-allsky",
+        "TLS"                    : true,
+        "CERT_BYPASS"            : true
     }
 }

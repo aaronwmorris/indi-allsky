@@ -259,7 +259,8 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : video_file,
+            'action'      : 'upload',
+            'local_file'  : video_file,
             'remote_file' : remote_file,
         })
 
@@ -425,7 +426,8 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : keogram_file,
+            'action'      : 'upload',
+            'local_file'  : keogram_file,
             'remote_file' : remote_file,
         })
 
@@ -440,7 +442,8 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : startrail_file,
+            'action'      : 'upload',
+            'local_file'  : startrail_file,
             'remote_file' : remote_file,
         })
 
@@ -514,6 +517,7 @@ class VideoWorker(Process):
         remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
 
         self.upload_q.put({
+            'action'         : 'upload',
             'local_file'     : data_json_p,
             'remote_file'    : remote_file_p,
             'remove_local'   : True,

@@ -106,6 +106,11 @@ indi-allsky fully automates the capture and processing of master dark calibratio
 https://github.com/aaronwmorris/indi-allsky/wiki/Dark-Calibration-Frames
 
 
+### Moon mode
+
+This is a special night time operating mode intended to reduce gain when the moon is more illuminated and above the horizon
+
+
 ## Keograms
 Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.  The rotation parameter in the config is KEOGRAM_ANGLE
 
@@ -223,8 +228,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (float) Your longitude for astrometric calculations |
 | TIMELAPSE_ENABLE    | true        | (bool) Enable timelapse, keogram, and star trail creation |
-| DAYTIME_CAPTURE     | false       | (bool) Perform day time image capture |
-| DAYTIME_TIMELAPSE   | false       | (bool) Generate timelapse from day time images |
+| DAYTIME_CAPTURE     | true        | (bool) Perform day time image capture |
+| DAYTIME_TIMELAPSE   | true        | (bool) Generate timelapse from day time images |
 | DAYTIME_CONTRAST_ENHANCE | false  | (bool) Perform CLAHE contrast enhancement on day time images |
 | NIGHT_CONTRAST_ENHANCE   | false  | (bool) Perform CLAHE contrast enhancement on night time images |
 | NIGHT_SUN_ALT_DEG   | -6          | (degrees) Altitude of Sun to calculate beginning and end of night |
@@ -272,21 +277,25 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD          |             | (str) Password for file tranfer |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
-| REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
-| REMOTE_VIDEO_FOLDER        |      | (str) Remote folder to upload time lapse videos |
-| REMOTE_KEOGRAM_FOLDER      |      | (str) Remote folder to upload keograms |
-| REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |
-| REMOTE_ENDOFNIGHT_FOLDER   |      | (str) Remote folder to upload Allsky EndOfNight data |
-| UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
-| UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
-| UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
-| UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
-| UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload.  This is the data.json file for https://github.com/thomasjacquin/allsky-website |
-
-### Moon mode
-
-This is a special night time operating mode intended to reduce gain when the moon is more illuminated and above the horizon
-
+| > REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
+| > REMOTE_VIDEO_FOLDER        |      | (str) Remote folder to upload time lapse videos |
+| > REMOTE_KEOGRAM_FOLDER      |      | (str) Remote folder to upload keograms |
+| > REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |
+| > REMOTE_ENDOFNIGHT_FOLDER   |      | (str) Remote folder to upload Allsky EndOfNight data |
+| > UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
+| > UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
+| > UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
+| > UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
+| > UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload.  This is the data.json file for https://github.com/thomasjacquin/allsky-website |
+| MQTTPUBLISH           |             | (dict) MQTT configuration |
+| > ENABLE              | false       | (bool) Enable MQTT publishing |
+| > HOST                |             | (str) MQTT/Mosquitto server |
+| > PORT                | 8883        | (int) MQTT port, 1883 = standard, 8883 = TLS |
+| > USERNAME            |             | (str) MQTT user |
+| > PASSWORD            |             | (str) MQTT password |
+| > BASE_TOPIC          | indi-allsky | (str) Base topic for MQ messages |
+| > TLS                 | true        | (bool) Use TLS for MQTT connection |
+| > CERT_BYPASS         | true        | (bool) Bypass certificate validation for MQTT connection |
 
 ## Tested Hardware
 

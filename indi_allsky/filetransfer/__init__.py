@@ -9,6 +9,7 @@ from .pycurl_ftps import pycurl_ftps
 from .pycurl_ftps import ftps
 from .pycurl_ftpes import pycurl_ftpes
 from .pycurl_ftpes import ftpes
+from .paho_mqtt import paho_mqtt
 
 __all__ = (
     'paramiko_sftp',
@@ -21,4 +22,5 @@ __all__ = (
     'ftp',
     'ftps',
     'ftpes',
+    'paho_mqtt',
 )

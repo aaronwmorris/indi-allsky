@@ -82,7 +82,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
-        network-manager
+        network-manager \
+        tzdata
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 

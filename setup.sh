@@ -183,6 +183,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -248,6 +250,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -312,6 +316,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -379,6 +385,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -451,6 +459,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -512,6 +522,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -882,6 +894,9 @@ else
                 sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
                 sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
+                # system certificate store
+                sudo cp -f "$CRT_TMP" /usr/local/share/ca-certificates/indi-allsky_apache.crt
+
                 rm -f "$KEY_TMP"
                 rm -f "$CRT_TMP"
         fi
@@ -891,6 +906,10 @@ else
         sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
         sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
         sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
+
+        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo update-ca-certificates
 
 
         sudo a2enmod rewrite
