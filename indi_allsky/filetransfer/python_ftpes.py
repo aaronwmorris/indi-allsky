@@ -18,6 +18,7 @@ class python_ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(python_ftpes, self).__init__(*args, **kwargs)
 
+        self.client = None
         self._port = 21
 
 
@@ -29,10 +30,10 @@ class python_ftpes(GenericFileTransfer):
         password = kwargs['password']
 
 
-        client = ftplib.FTP_TLS()
+        self.client = ftplib.FTP_TLS()
 
         try:
-            client.connect(host=hostname, port=self._port, timeout=self._timeout)
+            self.client.connect(host=hostname, port=self._port, timeout=self._timeout)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:
@@ -40,17 +41,15 @@ class python_ftpes(GenericFileTransfer):
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
 
-        client.auth()
-        client.prot_p()  # setup encypted channel
+        self.client.auth()
+        self.client.prot_p()  # setup encypted channel
 
         try:
-            client.login(user=username, passwd=password)
+            self.client.login(user=username, passwd=password)
         except ftplib.error_perm as e:
             raise AuthenticationFailure(str(e)) from e
 
-        client.set_pasv(True)
-
-        return client
+        self.client.set_pasv(True)
 
 
     def close(self):

@@ -16,6 +16,7 @@ class paramiko_sftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(paramiko_sftp, self).__init__(*args, **kwargs)
 
+        self.client = None
         self._port = 22
         self.sftp = None
 
@@ -28,11 +29,11 @@ class paramiko_sftp(GenericFileTransfer):
         password = kwargs['password']
 
 
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            client.connect(hostname, port=self._port, username=username, password=password, timeout=self._timeout)
+            self.client.connect(hostname, port=self._port, username=username, password=password, timeout=self._timeout)
         except paramiko.ssh_exception.AuthenticationException as e:
             raise AuthenticationFailure(str(e)) from e
         except paramiko.ssh_exception.NoValidConnectionsError as e:
@@ -42,9 +43,7 @@ class paramiko_sftp(GenericFileTransfer):
         except socket.timeout as e:
             raise ConnectionFailure(str(e)) from e
 
-        self.sftp = client.open_sftp()
-
-        return client
+        self.sftp = self.client.open_sftp()
 
 
     def close(self):

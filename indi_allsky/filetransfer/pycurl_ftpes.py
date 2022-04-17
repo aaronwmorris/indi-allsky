@@ -16,6 +16,7 @@ class pycurl_ftpes(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(pycurl_ftpes, self).__init__(*args, **kwargs)
 
+        self.client = None
         self._port = 21
         self.url = None
 
@@ -32,19 +33,17 @@ class pycurl_ftpes(GenericFileTransfer):
 
         self.url = 'ftp://{0:s}:{1:d}'.format(hostname, self._port)  # ftp:// is correct for FTPES
 
-        client = pycurl.Curl()
-        #client.setopt(pycurl.VERBOSE, 1)
-        client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client = pycurl.Curl()
+        #self.client.setopt(pycurl.VERBOSE, 1)
+        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
-        client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
-        client.setopt(pycurl.FTP_SSL, pycurl.FTPSSL_ALL)
-        client.setopt(pycurl.FTPSSLAUTH, pycurl.FTPAUTH_DEFAULT)
+        self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+        self.client.setopt(pycurl.FTP_SSL, pycurl.FTPSSL_ALL)
+        self.client.setopt(pycurl.FTPSSLAUTH, pycurl.FTPAUTH_DEFAULT)
 
-        #client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
-        client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
-        client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
-
-        return client
+        #self.client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
+        self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
+        self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
 
     def close(self):

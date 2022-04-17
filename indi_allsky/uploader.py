@@ -88,7 +88,9 @@ class FileUploader(Process):
 
                 client = client_class()
                 client.timeout = self.config['FILETRANSFER']['TIMEOUT']
-                client.port = self.config['FILETRANSFER']['PORT']
+
+                if self.config['FILETRANSFER']['PORT']:
+                    client.port = self.config['FILETRANSFER']['PORT']
 
             elif action == 'mqttpub':
                 connect_kwargs = {
@@ -111,7 +113,9 @@ class FileUploader(Process):
                     return
 
                 client = client_class()
-                client.port = self.config['MQTTPUBLISH']['PORT']
+
+                if self.config['MQTTPUBLISH']['PORT']:
+                    client.port = self.config['MQTTPUBLISH']['PORT']
 
             else:
                 raise Exception('Invalid transfer action')

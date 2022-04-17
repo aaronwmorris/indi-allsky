@@ -16,6 +16,7 @@ class pycurl_ftp(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(pycurl_ftp, self).__init__(*args, **kwargs)
 
+        self.client = None
         self._port = 21
         self.url = None
 
@@ -32,13 +33,11 @@ class pycurl_ftp(GenericFileTransfer):
 
         self.url = 'ftp://{0:s}:{1:d}'.format(hostname, self._port)
 
-        client = pycurl.Curl()
-        #client.setopt(pycurl.VERBOSE, 1)
-        client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client = pycurl.Curl()
+        #self.client.setopt(pycurl.VERBOSE, 1)
+        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
-        client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
-
-        return client
+        self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
 
     def close(self):
