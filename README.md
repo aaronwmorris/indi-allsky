@@ -106,6 +106,11 @@ indi-allsky fully automates the capture and processing of master dark calibratio
 https://github.com/aaronwmorris/indi-allsky/wiki/Dark-Calibration-Frames
 
 
+### Moon mode
+
+This is a special night time operating mode intended to reduce gain when the moon is more illuminated and above the horizon
+
+
 ## Keograms
 Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.  The rotation parameter in the config is KEOGRAM_ANGLE
 
@@ -290,11 +295,6 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD            |             | (str) MQTT password |
 | > BASE_TOPIC          | indi-allsky | (str) Base topic for MQ messages |
 | > TLS                 | true        | (bool) Use TLS for MQTT connection |
-
-### Moon mode
-
-This is a special night time operating mode intended to reduce gain when the moon is more illuminated and above the horizon
-
 
 ## Tested Hardware
 
