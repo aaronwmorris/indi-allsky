@@ -10,6 +10,8 @@ from collections import OrderedDict
 import socket
 import psutil
 import dbus
+import pycurl
+import paramiko
 import paho.mqtt
 import ccdproc
 
@@ -1251,6 +1253,8 @@ class SystemInfoView(TemplateView):
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
+        context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
         context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
         context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['pyindi_version'] = '.'.join((
