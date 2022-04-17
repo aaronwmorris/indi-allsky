@@ -33,6 +33,7 @@ class paho_mqtt(GenericFileTransfer):
         username = kwargs['username']
         password = kwargs.get('password') if kwargs.get('password') else None
         tls = kwargs.get('tls')
+        cert_bypass = kwargs.get('cert_bypass')
 
 
         self.mq_hostname = hostname
@@ -40,9 +41,15 @@ class paho_mqtt(GenericFileTransfer):
         if tls:
             self.mq_tls = {
                 'ca_certs'    : '/etc/ssl/certs/ca-certificates.crt',
-                'cert_reqs'   : ssl.CERT_NONE,
-                'insecure'    : True,
+                'cert_reqs'   : ssl.CERT_REQUIRED,
+                'insecure'    : False,
             }
+
+            if cert_bypass:
+                self.mq_tls['cert_reqs'] = ssl.CERT_NONE
+                self.mq_tls['insecure'] = True
+
+
 
         if username:
             self.mq_auth = {

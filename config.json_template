@@ -133,6 +133,7 @@
         "USERNAME"               : "indi-allsky",
         "PASSWORD"               : "",
         "BASE_TOPIC"             : "indi-allsky",
-        "TLS"                    : true
+        "TLS"                    : true,
+        "CERT_BYPASS"            : true
     }
 }
