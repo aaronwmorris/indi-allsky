@@ -1,12 +1,14 @@
 from .generic import GenericFileTransfer
-#from .exceptions import AuthenticationFailure
-#from .exceptions import ConnectionFailure
+from .exceptions import AuthenticationFailure
+from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
 from pathlib import Path
 import paho.mqtt.publish as publish
+from paho.mqtt import MQTTException
 import ssl
 import io
+import socket
 import time
 import logging
 
@@ -99,15 +101,24 @@ class paho_mqtt(GenericFileTransfer):
 
         start = time.time()
 
-        publish.multiple(
-            message_list,
-            hostname=self.mq_hostname,
-            port=self._port,
-            client_id='',
-            keepalive=60,
-            auth=self.mq_auth,
-            tls=self.mq_tls,
-        )
+        try:
+            publish.multiple(
+                message_list,
+                hostname=self.mq_hostname,
+                port=self._port,
+                client_id='',
+                keepalive=60,
+                auth=self.mq_auth,
+                tls=self.mq_tls,
+            )
+        except socket.gaierror as e:
+            raise ConnectionFailure(str(e)) from e
+        except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
+        except MQTTException as e:
+            raise AuthenticationFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
