@@ -303,8 +303,9 @@ class ImageWorker(Process):
                 )
 
 
-                self.upload_image(latest_file, image_entry)
                 self.mqtt_publish(latest_file, self.sqm_value, len(blob_stars))
+
+                self.upload_image(latest_file, image_entry)
 
 
 
