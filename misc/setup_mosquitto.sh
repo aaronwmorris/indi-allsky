@@ -156,9 +156,6 @@ if [[ ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -f "/etc/mosqui
     sudo cp -f "$KEY_TMP" /etc/mosquitto/certs/indi-allsky_mosquitto.key
     sudo cp -f "$CRT_TMP" /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
-    # system certificate store
-    sudo cp -f "$CRT_TMP" /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
-
     rm -f "$KEY_TMP"
     rm -f "$CRT_TMP"
 fi
@@ -169,6 +166,8 @@ sudo chmod 640 /etc/mosquitto/certs/indi-allsky_mosquitto.key
 sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 sudo chmod 644 /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
+# system certificate store
+sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
 sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
 sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
 sudo update-ca-certificates
