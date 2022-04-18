@@ -99,8 +99,8 @@
 
     "ORB_PROPERTIES" : {
         "RADIUS"      : 9,
-        "SUN_COLOR"   : [0, 255, 255],
-        "MOON_COLOR"  : [255, 255, 255]
+        "SUN_COLOR"   : [255, 255, 255],
+        "MOON_COLOR"  : [128, 128, 128]
     },
 
     "FILETRANSFER" : {
