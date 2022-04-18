@@ -584,7 +584,6 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
-pip3 uninstall -y opencv-python  # replaced package with opencv-python-headless
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
@@ -597,24 +596,6 @@ select indi_driver_path in $INDI_DRIVERS; do
 done
 
 #echo $CCD_DRIVER
-
-echo "**** Remove old services (ignore errors) ****"
-sudo systemctl stop ${INDISEVER_SERVICE_NAME}.service || true
-sudo systemctl stop ${ALLSKY_SERVICE_NAME}.service || true
-sudo systemctl stop ${GUNICORN_SERVICE_NAME}.socket || true
-sudo systemctl stop ${GUNICORN_SERVICE_NAME}.service || true
-sudo systemctl disable ${INDISEVER_SERVICE_NAME}.service || true
-sudo systemctl disable ${ALLSKY_SERVICE_NAME}.service || true
-sudo systemctl disable ${GUNICORN_SERVICE_NAME}.socket || true
-sudo systemctl disable ${GUNICORN_SERVICE_NAME}.service || true
-
-[[ -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service"
-[[ -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" 
-[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket"
-[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service"
-
-sudo systemctl daemon-reload
-
 
 
 # create users systemd folder
