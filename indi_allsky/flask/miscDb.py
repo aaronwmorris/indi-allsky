@@ -45,7 +45,7 @@ class miscDb(object):
         return camera
 
 
-    def addImage(self, filename, camera_id, createDate, exposure, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
+    def addImage(self, filename, camera_id, createDate, exposure, exp_elapsed, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
         if not filename:
             return
 
@@ -92,6 +92,7 @@ class miscDb(object):
             createDate=createDate,
             dayDate=dayDate,
             exposure=exposure,
+            exp_elapsed=exp_elapsed,
             gain=gain,
             binmode=binmode,
             temp=temp_val,

@@ -32,6 +32,7 @@ class IndiAllSkyDbImageTable(db.Model):
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
+    exp_elapsed = db.Column(db.Float, nullable=True)
     gain = db.Column(db.Integer, nullable=False)
     binmode = db.Column(db.Integer, server_default='1', nullable=False)
     temp = db.Column(db.Float, nullable=True)

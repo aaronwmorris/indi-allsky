@@ -289,6 +289,7 @@ class ImageWorker(Process):
                     camera_id,
                     exp_date,
                     exposure,
+                    exp_elapsed,
                     self.gain_v.value,
                     self.bin_v.value,
                     self.sensortemp_v.value,
