@@ -325,7 +325,7 @@ class ImageWorker(Process):
 
     def upload_image(self, latest_file, image_entry):
         ### upload images
-        if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             logger.warning('Image uploading disabled')
             return
 
@@ -349,7 +349,7 @@ class ImageWorker(Process):
 
 
     def mqtt_publish(self, latest_file, mq_data):
-        if not self.config['MQTTPUBLISH']['ENABLE']:
+        if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             logger.warning('MQ publishing disabled')
             return
 

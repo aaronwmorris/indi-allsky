@@ -250,7 +250,7 @@ class VideoWorker(Process):
 
     def uploadVideo(self, video_file):
         ### Upload video
-        if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
             return
 
@@ -417,7 +417,7 @@ class VideoWorker(Process):
 
     def uploadKeogram(self, keogram_file):
         ### Upload video
-        if not self.config['FILETRANSFER'].get('UPLOAD_KEOGRAM'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
             return
 
@@ -433,7 +433,7 @@ class VideoWorker(Process):
 
 
     def uploadStarTrail(self, startrail_file):
-        if not self.config['FILETRANSFER'].get('UPLOAD_STARTRAIL'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
 
@@ -453,11 +453,11 @@ class VideoWorker(Process):
             # Only upload at end of night
             return
 
-        if not self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT'):
             logger.warning('End of Night uploading disabled')
             return
 
-        if not self.config['FILETRANSFER'].get('REMOTE_ENDOFNIGHT_FOLDER'):
+        if not self.config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER'):
             logger.error('End of Night folder not configured')
             return
 
