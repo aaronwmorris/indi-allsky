@@ -21,6 +21,7 @@ class paho_mqtt(GenericFileTransfer):
 
         self._port = 1883
 
+        self.mq_transport = None
         self.mq_hostname = None
         self.mq_auth = None
         self.mq_tls = None
@@ -29,6 +30,7 @@ class paho_mqtt(GenericFileTransfer):
     def connect(self, *args, **kwargs):
         super(paho_mqtt, self).connect(*args, **kwargs)
 
+        transport = kwargs['transport']
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs.get('password') if kwargs.get('password') else None
@@ -36,6 +38,7 @@ class paho_mqtt(GenericFileTransfer):
         cert_bypass = kwargs.get('cert_bypass')
 
 
+        self.mq_transport = transport
         self.mq_hostname = hostname
 
         if tls:
@@ -100,6 +103,7 @@ class paho_mqtt(GenericFileTransfer):
         try:
             publish.multiple(
                 message_list,
+                transport=self.mq_transport,
                 hostname=self.mq_hostname,
                 port=self._port,
                 client_id='',

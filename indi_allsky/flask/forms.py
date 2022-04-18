@@ -436,6 +436,16 @@ def FILETRANSFER__HOST_validator(form, field):
         raise ValidationError('Invalid host name')
 
 
+def MQTTPUBLISH__TRANSPORT_validator(form, field):
+    valid_transports = (
+        'tcp',
+        'websockets',
+    )
+
+    if field.data not in valid_transports:
+        raise ValidationError('Invalid transport')
+
+
 def MQTTPUBLISH__HOST_validator(form, field):
     if not field.data:
         return
@@ -611,6 +621,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('python_ftpes', 'Python FTPS (explicit)'),
     )
 
+    MQTTPUBLISH__TRANSPORT_choices = (
+        ('tcp', 'tcp'),
+        ('websockets', 'websockets'),
+    )
+
 
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
@@ -701,6 +716,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
+    MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     MQTTPUBLISH__PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator])

@@ -43,8 +43,8 @@ class MqttTest(object):
         message_list = list()
         message_list.append({
             'topic'    : '/'.join((self.config['MQTTPUBLISH']['BASE_TOPIC'], 'test')),
-            'payload'  : 'foobar',
-            'qos'      : 0,
+            'payload'  : int(time.time()),
+            'qos'      : self.config['MQTTPUBLISH']['QOS'],
             'retain'   : True,
         })
 
@@ -53,6 +53,7 @@ class MqttTest(object):
 
         publish.multiple(
             message_list,
+            transport=self.config['MQTTPUBLISH']['TRANSPORT'],
             hostname=self.config['MQTTPUBLISH']['HOST'],
             port=self.config['MQTTPUBLISH']['PORT'],
             client_id='',

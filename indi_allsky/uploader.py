@@ -94,6 +94,7 @@ class FileUploader(Process):
 
             elif action == 'mqttpub':
                 connect_kwargs = {
+                    'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
                     'hostname'    : self.config['MQTTPUBLISH']['HOST'],
                     'username'    : self.config['MQTTPUBLISH']['USERNAME'],
                     'password'    : self.config['MQTTPUBLISH']['PASSWORD'],

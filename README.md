@@ -289,11 +289,13 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > UPLOAD_ENDOFNIGHT   | false       | (bool) Enable EndOfNight data upload.  This is the data.json file for https://github.com/thomasjacquin/allsky-website |
 | MQTTPUBLISH           |             | (dict) MQTT configuration |
 | > ENABLE              | false       | (bool) Enable MQTT publishing |
+| > TRANSPORT           | tcp         | (str) MQTT Transport - tcp or websockets |
 | > HOST                |             | (str) MQTT/Mosquitto server |
 | > PORT                | 8883        | (int) MQTT port, 1883 = standard, 8883 = TLS |
 | > USERNAME            |             | (str) MQTT user |
 | > PASSWORD            |             | (str) MQTT password |
 | > BASE_TOPIC          | indi-allsky | (str) Base topic for MQ messages |
+| > QOS                 | 0           | (int) MQTT QoS for messages |
 | > TLS                 | true        | (bool) Use TLS for MQTT connection |
 | > CERT_BYPASS         | true        | (bool) Bypass certificate validation for MQTT connection |
 
