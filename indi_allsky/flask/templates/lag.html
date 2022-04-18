@@ -18,6 +18,7 @@ table, th, td {
     <th>Date</th>
     <th>Exposure</th>
     <th>Diff</th>
+    <th>Elapsed</th>
 </tr>
 {% for image in image_lag_list %}
 <tr>
@@ -25,6 +26,7 @@ table, th, td {
     <td>{{ image.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ "%0.7f"|format(image.exposure) }}</td>
     <td>{{ image.lag_diff }}</td>
+    <td>{{ "%0.2f"|format(image.exp_elapsed | float) }}</td>
 </tr>
 {% endfor %}
 </table>
