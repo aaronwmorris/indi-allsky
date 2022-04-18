@@ -706,7 +706,7 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator])
     MQTTPUBLISH__PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator])
     MQTTPUBLISH__BASE_TOPIC          = StringField('MQTT Base Topic', validators=[DataRequired(), MQTTPUBLISH__BASE_TOPIC_validator])
-    MQTTPUBLISH__QOS                 = IntegerField('MQTT OoS', validators=[MQTTPUBLISH__QOS_validator])
+    MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
