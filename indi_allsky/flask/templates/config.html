@@ -1062,6 +1062,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__QOS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__QOS(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.MQTTPUBLISH__TLS.label }}
         </div>
         <div class="col-sm-2">
@@ -1186,6 +1197,7 @@ const field_names = [
     'MQTTPUBLISH__USERNAME',
     'MQTTPUBLISH__PASSWORD',
     'MQTTPUBLISH__BASE_TOPIC',
+    'MQTTPUBLISH__QOS',
     'INDI_CONFIG_DEFAULTS',
 ];
 

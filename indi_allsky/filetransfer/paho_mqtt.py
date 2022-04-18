@@ -67,7 +67,8 @@ class paho_mqtt(GenericFileTransfer):
 
         local_file = kwargs['local_file']
         base_topic = kwargs['base_topic']
-        mq_data = kwargs['mq_data']
+        qos        = kwargs['qos']
+        mq_data    = kwargs['mq_data']
 
         local_file_p = Path(local_file)
 
@@ -80,7 +81,7 @@ class paho_mqtt(GenericFileTransfer):
             message_list.append({
                 'topic'    : '/'.join((base_topic, 'latest')),
                 'payload'  : bytearray(image_data),
-                'qos'      : 0,
+                'qos'      : qos,
                 'retain'   : True,
             })
 
@@ -89,7 +90,7 @@ class paho_mqtt(GenericFileTransfer):
             message_list.append({
                 'topic'    : '/'.join((base_topic, k)),
                 'payload'  : v,
-                'qos'      : 0,
+                'qos'      : qos,
                 'retain'   : True,
             })
 

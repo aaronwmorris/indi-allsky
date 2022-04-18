@@ -539,6 +539,14 @@ def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
         raise ValidationError('Base topic cannot end with slash')
 
 
+def MQTTPUBLISH__QOS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data not in (0, 1, 2):
+        raise ValidationError('Invalid QoS')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -698,6 +706,7 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator])
     MQTTPUBLISH__PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator])
     MQTTPUBLISH__BASE_TOPIC          = StringField('MQTT Base Topic', validators=[DataRequired(), MQTTPUBLISH__BASE_TOPIC_validator])
+    MQTTPUBLISH__QOS                 = IntegerField('MQTT OoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])

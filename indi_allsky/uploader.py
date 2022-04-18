@@ -104,6 +104,7 @@ class FileUploader(Process):
                 put_kwargs = {
                     'local_file'  : Path(local_file),
                     'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
+                    'qos'         : self.config['MQTTPUBLISH']['QOS'],
                     'mq_data'     : mq_data,
                 }
 

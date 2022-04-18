@@ -133,6 +133,8 @@
         "USERNAME"               : "indi-allsky",
         "PASSWORD"               : "",
         "BASE_TOPIC"             : "indi-allsky",
+        "comment_QOS"            : "0, 1, or 2",
+        "QOS"                    : 0,
         "TLS"                    : true,
         "CERT_BYPASS"            : true
     }
