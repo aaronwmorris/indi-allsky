@@ -80,7 +80,21 @@ class ImageWorker(Process):
     }
 
 
-    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
+    def __init__(
+        self,
+        idx,
+        config,
+        image_q,
+        upload_q,
+        exposure_v,
+        gain_v,
+        bin_v,
+        sensortemp_v,
+        night_v,
+        moonmode_v,
+        moon_phase_v,
+        save_images=True,
+    ):
         super(ImageWorker, self).__init__()
 
         #self.threadID = idx
@@ -95,6 +109,10 @@ class ImageWorker(Process):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
         self.moonmode_v = moonmode_v
+
+        self.sun_alt = 0.0
+        self.moon_alt = 0.0
+        self.moon_phase = 0.0
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self.save_images = save_images
@@ -310,6 +328,9 @@ class ImageWorker(Process):
                     'gain'     : self.gain_v.value,
                     'bin'      : self.bin_v.value,
                     'temp'     : round(self.sensortemp_v.value, 1),
+                    'sunalt'   : round(self.sun_alt, 1),
+                    'moonalt'  : round(self.moon_alt, 1),
+                    'moonphase': round(self.moon_phase, 1),
                     'moonmode' : bool(self.moonmode_v.value),
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(self.sqm_value, 1),
@@ -665,15 +686,23 @@ class ImageWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
         obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
-        obs.date = utcnow
 
 
         sun = ephem.Sun()
+        obs.date = utcnow
         sun.compute(obs)
+        self.sun_alt = math.degrees(sun.alt)
+
         sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
 
+
+
         moon = ephem.Moon()
+        obs.date = utcnow
         moon.compute(obs)
+        self.moon_alt = math.degrees(moon.alt)
+        self.moon_phase = moon.moon_phase * 100.0
+
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 

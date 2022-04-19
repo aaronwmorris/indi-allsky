@@ -59,7 +59,7 @@ class IndiAllSky(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
         self.night = None
-        self.moonmode_v = Value('f', 0.0)  # contains moon phase %
+        self.moonmode_v = Value('f', 0.0)  # contains moon phase % if moonmode
         self.moonmode = None
 
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
