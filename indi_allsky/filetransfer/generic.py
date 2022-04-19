@@ -1,34 +1,50 @@
+#from pathlib import Path
 import logging
 
 logger = logging.getLogger('indi_allsky')
 
 
 class GenericFileTransfer(object):
-    def __init__(self, timeout=5.0):
-        self.timeout = float(timeout)
+    def __init__(self):
 
-        self.port = 0
-        self.client = None
+        self._port = 0
+        self._timeout = 5.0
 
-
-    def __del__(self):
-        pass
+        self._client = None
 
 
-    def connect(self, hostname, username, password, port=None):
-        if port:
-            logger.info('Port override to %d', port)
-            self.port = port
+    @property
+    def port(self):
+        return self._port
 
-        logger.info('Connecting to %s as %s with %s', hostname, username, self.__class__.__name__)
-        self.client = self._connect(hostname, username, password)
+    @port.setter
+    def port(self, new_port):
+        self._port = int(new_port)
+
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, new_timeout):
+        self._timeout = float(new_timeout)
+
+
+    def connect(self, *args, **kwargs):
+        hostname = kwargs['hostname']
+        username = kwargs['username']
+        #password = kwargs['password']
+
+        logger.info('Connecting to %s:%d as %s with %s', hostname, self._port, username, self.__class__.__name__)
 
 
     def close(self):
-        self._close()
+        pass
 
 
-    def put(self, localfile, remotefile):
-        logger.info('Uploading %s to %s', localfile, remotefile)
-        self._put(localfile, remotefile)
+    def put(self, *args, **kwargs):
+        local_file = kwargs['local_file']
+
+        logger.info('Uploading %s', local_file)
 

@@ -32,7 +32,7 @@ table, th, td {
     <td>{{ dark.gain }}</td>
     <td>{{ dark.exposure }}</td>
     <td>{{ dark.binmode }}</td>
-    <td>{{ dark.temp }}</td>
+    <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
 </tr>
 {% endfor %}
 </table>

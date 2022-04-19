@@ -436,12 +436,43 @@ def FILETRANSFER__HOST_validator(form, field):
         raise ValidationError('Invalid host name')
 
 
+def MQTTPUBLISH__TRANSPORT_validator(form, field):
+    valid_transports = (
+        'tcp',
+        'websockets',
+    )
+
+    if field.data not in valid_transports:
+        raise ValidationError('Invalid transport')
+
+
+def MQTTPUBLISH__HOST_validator(form, field):
+    if not field.data:
+        return
+
+    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid host name')
+
+
 def FILETRANSFER__PORT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
     if field.data < 0:
         raise ValidationError('Port must be 0 or greater')
+
+    if field.data > 65535:
+        raise ValidationError('Port must be less than 65535')
+
+
+def MQTTPUBLISH__PORT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Port must be 1 or greater')
 
     if field.data > 65535:
         raise ValidationError('Port must be less than 65535')
@@ -457,7 +488,21 @@ def FILETRANSFER__USERNAME_validator(form, field):
         raise ValidationError('Invalid username')
 
 
+def MQTTPUBLISH__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
+    username_regex = r'^[a-zA-Z0-9_\@\.\-\\]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
 def FILETRANSFER__PASSWORD_validator(form, field):
+    pass
+
+
+def MQTTPUBLISH__PASSWORD_validator(form, field):
     pass
 
 
@@ -489,6 +534,27 @@ def UPLOAD_IMAGE_validator(form, field):
 
     if field.data < 0:
         raise ValidationError('Image Upload must be 0 or greater')
+
+
+def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
+    topic_regex = r'^[a-zA-Z0-9_\-\/]+$'
+
+    if not re.search(topic_regex, field.data):
+        raise ValidationError('Invalid characters in base topic')
+
+    if re.search(r'^\/', field.data):
+        raise ValidationError('Base topic cannot begin with slash')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Base topic cannot end with slash')
+
+
+def MQTTPUBLISH__QOS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data not in (0, 1, 2):
+        raise ValidationError('Invalid QoS')
 
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
@@ -553,6 +619,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('pycurl_ftp', 'Curl FTP'),
         ('python_ftp', 'Python FTP'),
         ('python_ftpes', 'Python FTPS (explicit)'),
+    )
+
+    MQTTPUBLISH__TRANSPORT_choices = (
+        ('tcp', 'tcp'),
+        ('websockets', 'websockets'),
     )
 
 
@@ -644,6 +715,16 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
+    MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
+    MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
+    MQTTPUBLISH__PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
+    MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator])
+    MQTTPUBLISH__PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator])
+    MQTTPUBLISH__BASE_TOPIC          = StringField('MQTT Base Topic', validators=[DataRequired(), MQTTPUBLISH__BASE_TOPIC_validator])
+    MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
+    MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
+    MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
 

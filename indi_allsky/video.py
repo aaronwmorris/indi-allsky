@@ -250,7 +250,7 @@ class VideoWorker(Process):
 
     def uploadVideo(self, video_file):
         ### Upload video
-        if not self.config['FILETRANSFER']['UPLOAD_VIDEO']:
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
             return
 
@@ -259,7 +259,8 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : video_file,
+            'action'      : 'upload',
+            'local_file'  : video_file,
             'remote_file' : remote_file,
         })
 
@@ -416,7 +417,7 @@ class VideoWorker(Process):
 
     def uploadKeogram(self, keogram_file):
         ### Upload video
-        if not self.config['FILETRANSFER'].get('UPLOAD_KEOGRAM'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
             return
 
@@ -425,13 +426,14 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : keogram_file,
+            'action'      : 'upload',
+            'local_file'  : keogram_file,
             'remote_file' : remote_file,
         })
 
 
     def uploadStarTrail(self, startrail_file):
-        if not self.config['FILETRANSFER'].get('UPLOAD_STARTRAIL'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
 
@@ -440,7 +442,8 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         self.upload_q.put({
-            'local_file' : startrail_file,
+            'action'      : 'upload',
+            'local_file'  : startrail_file,
             'remote_file' : remote_file,
         })
 
@@ -450,11 +453,11 @@ class VideoWorker(Process):
             # Only upload at end of night
             return
 
-        if not self.config['FILETRANSFER'].get('UPLOAD_ENDOFNIGHT'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT'):
             logger.warning('End of Night uploading disabled')
             return
 
-        if not self.config['FILETRANSFER'].get('REMOTE_ENDOFNIGHT_FOLDER'):
+        if not self.config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER'):
             logger.error('End of Night folder not configured')
             return
 
@@ -514,6 +517,7 @@ class VideoWorker(Process):
         remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
 
         self.upload_q.put({
+            'action'         : 'upload',
             'local_file'     : data_json_p,
             'remote_file'    : remote_file_p,
             'remove_local'   : True,

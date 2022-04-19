@@ -99,8 +99,8 @@
 
     "ORB_PROPERTIES" : {
         "RADIUS"      : 9,
-        "SUN_COLOR"   : [0, 255, 255],
-        "MOON_COLOR"  : [255, 255, 255]
+        "SUN_COLOR"   : [255, 255, 255],
+        "MOON_COLOR"  : [128, 128, 128]
     },
 
     "FILETRANSFER" : {
@@ -123,5 +123,21 @@
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,
         "UPLOAD_ENDOFNIGHT"      : false
+    },
+
+    "MQTTPUBLISH" : {
+        "ENABLE"                 : false,
+        "comment_TRANSPORT"      : "tcp or websockets",
+        "TRANSPORT"              : "tcp",
+        "HOST"                   : "localhost",
+        "comment_PORT"           : "1883 = mqtt, 8883 = TLS",
+        "PORT"                   : 8883,
+        "USERNAME"               : "indi-allsky",
+        "PASSWORD"               : "",
+        "BASE_TOPIC"             : "indi-allsky",
+        "comment_QOS"            : "0, 1, or 2",
+        "QOS"                    : 0,
+        "TLS"                    : true,
+        "CERT_BYPASS"            : true
     }
 }

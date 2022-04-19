@@ -59,35 +59,76 @@ class FileUploader(Process):
                 return
 
 
-            local_file = u_dict['local_file']
-            remote_file = u_dict['remote_file']
-
+            action = u_dict['action']
+            local_file = u_dict.get('local_file')
+            remote_file = u_dict.get('remote_file')
             remove_local = u_dict.get('remove_local')
 
-
-            local_file_p = Path(local_file)
-            remote_file_p = Path(remote_file)
+            mq_data = u_dict.get('mq_data')
 
 
-            try:
-                client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
-            except AttributeError:
-                logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
-                return
+            # Build parameters
+            if action == 'upload':
+                connect_kwargs = {
+                    'hostname' : self.config['FILETRANSFER']['HOST'],
+                    'username' : self.config['FILETRANSFER']['USERNAME'],
+                    'password' : self.config['FILETRANSFER']['PASSWORD'],
+                }
 
+                put_kwargs = {
+                    'local_file'  : Path(local_file),
+                    'remote_file' : Path(remote_file),
+                }
 
-            client = client_class(timeout=self.config['FILETRANSFER']['TIMEOUT'])
+                try:
+                    client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
+                    return
+
+                client = client_class()
+                client.timeout = self.config['FILETRANSFER']['TIMEOUT']
+
+                if self.config['FILETRANSFER']['PORT']:
+                    client.port = self.config['FILETRANSFER']['PORT']
+
+            elif action == 'mqttpub':
+                connect_kwargs = {
+                    'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
+                    'hostname'    : self.config['MQTTPUBLISH']['HOST'],
+                    'username'    : self.config['MQTTPUBLISH']['USERNAME'],
+                    'password'    : self.config['MQTTPUBLISH']['PASSWORD'],
+                    'tls'         : self.config['MQTTPUBLISH']['TLS'],
+                    'cert_bypass' : self.config['MQTTPUBLISH']['CERT_BYPASS'],
+                }
+
+                put_kwargs = {
+                    'local_file'  : Path(local_file),
+                    'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
+                    'qos'         : self.config['MQTTPUBLISH']['QOS'],
+                    'mq_data'     : mq_data,
+                }
+
+                try:
+                    client_class = getattr(filetransfer, 'paho_mqtt')
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', 'paho_mqtt')
+                    return
+
+                client = client_class()
+
+                if self.config['MQTTPUBLISH']['PORT']:
+                    client.port = self.config['MQTTPUBLISH']['PORT']
+
+            else:
+                raise Exception('Invalid transfer action')
+
 
 
             start = time.time()
 
             try:
-                client.connect(
-                    self.config['FILETRANSFER']['HOST'],
-                    self.config['FILETRANSFER']['USERNAME'],
-                    self.config['FILETRANSFER']['PASSWORD'],
-                    port=self.config['FILETRANSFER']['PORT'],
-                )
+                client.connect(**connect_kwargs)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
@@ -100,7 +141,7 @@ class FileUploader(Process):
 
             # Upload file
             try:
-                client.put(local_file_p, remote_file_p)
+                client.put(**put_kwargs)
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
@@ -127,6 +168,8 @@ class FileUploader(Process):
 
 
             if remove_local:
+                local_file_p = Path(local_file)
+
                 try:
                     local_file_p.unlink()
                 except PermissionError as e:

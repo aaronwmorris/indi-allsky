@@ -183,6 +183,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -248,6 +250,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -312,6 +316,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -379,6 +385,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -451,6 +459,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -512,6 +522,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3-pip \
         virtualenv \
         git \
+        tzdata \
+        ca-certificates \
         avahi-daemon \
         apache2 \
         libapache2-mod-php \
@@ -572,7 +584,6 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip
-pip3 uninstall -y opencv-python  # replaced package with opencv-python-headless
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
@@ -585,24 +596,6 @@ select indi_driver_path in $INDI_DRIVERS; do
 done
 
 #echo $CCD_DRIVER
-
-echo "**** Remove old services (ignore errors) ****"
-sudo systemctl stop ${INDISEVER_SERVICE_NAME}.service || true
-sudo systemctl stop ${ALLSKY_SERVICE_NAME}.service || true
-sudo systemctl stop ${GUNICORN_SERVICE_NAME}.socket || true
-sudo systemctl stop ${GUNICORN_SERVICE_NAME}.service || true
-sudo systemctl disable ${INDISEVER_SERVICE_NAME}.service || true
-sudo systemctl disable ${ALLSKY_SERVICE_NAME}.service || true
-sudo systemctl disable ${GUNICORN_SERVICE_NAME}.socket || true
-sudo systemctl disable ${GUNICORN_SERVICE_NAME}.service || true
-
-[[ -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${INDISEVER_SERVICE_NAME}.service"
-[[ -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${ALLSKY_SERVICE_NAME}.service" 
-[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.socket"
-[[ -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service" ]] && sudo rm -f "/etc/systemd/system/${GUNICORN_SERVICE_NAME}.service"
-
-sudo systemctl daemon-reload
-
 
 
 # create users systemd folder
@@ -891,6 +884,12 @@ else
         sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
         sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
         sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
+
+        # system certificate store
+        sudo cp -f /etc/apache2/ssl/indi-allsky_apache.pem /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
+        sudo update-ca-certificates
 
 
         sudo a2enmod rewrite

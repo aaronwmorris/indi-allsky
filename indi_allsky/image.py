@@ -80,7 +80,20 @@ class ImageWorker(Process):
     }
 
 
-    def __init__(self, idx, config, image_q, upload_q, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, save_images=True):
+    def __init__(
+        self,
+        idx,
+        config,
+        image_q,
+        upload_q,
+        exposure_v,
+        gain_v,
+        bin_v,
+        sensortemp_v,
+        night_v,
+        moonmode_v,
+        save_images=True,
+    ):
         super(ImageWorker, self).__init__()
 
         #self.threadID = idx
@@ -95,6 +108,10 @@ class ImageWorker(Process):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
         self.moonmode_v = moonmode_v
+
+        self.sun_alt = 0.0
+        self.moon_alt = 0.0
+        self.moon_phase = 0.0
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
         self.save_images = save_images
@@ -289,6 +306,7 @@ class ImageWorker(Process):
                     camera_id,
                     exp_date,
                     exposure,
+                    exp_elapsed,
                     self.gain_v.value,
                     self.bin_v.value,
                     self.sensortemp_v.value,
@@ -302,27 +320,68 @@ class ImageWorker(Process):
                     stars=len(blob_stars),
                 )
 
-                ### upload images
-                if not self.config['FILETRANSFER']['UPLOAD_IMAGE']:
-                    logger.warning('Image uploading disabled')
-                    continue
 
-                if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-                    next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
-                    logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
-                    continue
+                # build mqtt data
+                mqtt_data = {
+                    'exposure' : round(exposure, 6),
+                    'gain'     : self.gain_v.value,
+                    'bin'      : self.bin_v.value,
+                    'temp'     : round(self.sensortemp_v.value, 1),
+                    'sunalt'   : round(self.sun_alt, 1),
+                    'moonalt'  : round(self.moon_alt, 1),
+                    'moonphase': round(self.moon_phase, 1),
+                    'moonmode' : bool(self.moonmode_v.value),
+                    'night'    : bool(self.night_v.value),
+                    'sqm'      : round(self.sqm_value, 1),
+                    'stars'    : len(blob_stars),
+                }
+
+                self.mqtt_publish(latest_file, mqtt_data)
 
 
-                remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
-                remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
+                self.upload_image(latest_file, image_entry)
 
-                # tell worker to upload file
-                self.upload_q.put({
-                    'local_file' : latest_file,
-                    'remote_file' : remote_file,
-                })
 
-                self._miscDb.addUploadedFlag(image_entry)
+
+    def upload_image(self, latest_file, image_entry):
+        ### upload images
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
+            logger.warning('Image uploading disabled')
+            return
+
+        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+            logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
+        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
+
+        # tell worker to upload file
+        self.upload_q.put({
+            'action'      : 'upload',
+            'local_file'  : latest_file,
+            'remote_file' : remote_file,
+        })
+
+        self._miscDb.addUploadedFlag(image_entry)
+
+
+    def mqtt_publish(self, latest_file, mq_data):
+        if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
+            logger.warning('MQ publishing disabled')
+            return
+
+        logger.info('Publishing data to MQ broker')
+
+        # publish data to mq broker
+        self.upload_q.put({
+            'action'      : 'mqttpub',
+            'local_file'  : latest_file,
+            'mq_data'     : mq_data,
+        })
+
 
 
     def detectBitDepth(self, data):
@@ -626,15 +685,23 @@ class ImageWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
         obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
-        obs.date = utcnow
 
 
         sun = ephem.Sun()
+        obs.date = utcnow
         sun.compute(obs)
+        self.sun_alt = math.degrees(sun.alt)
+
         sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
 
+
+
         moon = ephem.Moon()
+        obs.date = utcnow
         moon.compute(obs)
+        self.moon_alt = math.degrees(moon.alt)
+        self.moon_phase = moon.moon_phase * 100.0
+
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 
