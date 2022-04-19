@@ -92,7 +92,6 @@ class ImageWorker(Process):
         sensortemp_v,
         night_v,
         moonmode_v,
-        moon_phase_v,
         save_images=True,
     ):
         super(ImageWorker, self).__init__()
