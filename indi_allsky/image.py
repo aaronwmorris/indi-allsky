@@ -310,7 +310,7 @@ class ImageWorker(Process):
                     'gain'     : self.gain_v.value,
                     'bin'      : self.bin_v.value,
                     'temp'     : round(self.sensortemp_v.value, 1),
-                    'moonmode' : round(self.moonmode_v.value, 1),
+                    'moonmode' : bool(self.moonmode_v.value),
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(self.sqm_value, 1),
                     'stars'    : len(blob_stars),
