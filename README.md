@@ -1,5 +1,5 @@
 # Indi Allsky
-indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera should be usable.
+indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera can be functional.
 
 ![](./content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
@@ -49,7 +49,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04          | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Ubuntu 20.04<br />inc. Ubuntu Mate | arm64 | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
 | Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Astroberry Server 2.0 | armhf          | |
 
@@ -60,25 +60,25 @@ MacOS support is theoretically possible, but not tested.
 ```
 apt-get install git
 ```
-1. Clone the indi-allsky git repository
+2. Clone the indi-allsky git repository
 ```
 git clone https://github.com/aaronwmorris/indi-allsky.git
 ```
-1. Navigate to the indi-allky sub-directory
+3. Navigate to the indi-allky sub-directory
 ```
 cd indi-allsky/
 ```
-1. Run setup.sh to install the relevant software
+4. Run setup.sh to install the relevant software
 ```
 ./setup.sh
 ```
  * Note:  You may be prompted for a password for sudo
-1. Start the software
+5. Start the software
 ```
 systemctl --user start indiserver
 systemctl --user start indi-allsky
 ```
-1. Login to the indi-allsky web application
+6. Login to the indi-allsky web application
 https://raspberrypi.local/
  * Note: The web server is configured with a self-signed certificate.
 
@@ -87,11 +87,11 @@ https://raspberrypi.local/
 ```
 systemctl --user stop indi-allsky
 ```
-1. Activate the indi-allsky python virtual environment
+2. Activate the indi-allsky python virtual environment
 ```
 source virtualenv/indi-allsky/bin/activate
 ```
-1. Start indi-allsky
+3. Start indi-allsky
 ```
 ./allsky.py run
 ```
@@ -355,6 +355,12 @@ indi-allsky supports several file transfer methods.  Additional file transfer me
 | ftps     | pycurl_ftps   | 990  | FTPS (implicit) via pycurl |
 | sftp     | pycurl_sftp   | 22   | SFTP via pycurl |
 |          | paramiko_sftp | 22   | SFTP via paramiko |
+
+## MQTT Publishing
+
+indi-allsky supports publishing all sky data to an MQTT service for monitoring.
+
+For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing
 
 ## To Do
 
