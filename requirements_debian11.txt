@@ -4,9 +4,7 @@ git+https://github.com/indilib/pyindi-client.git@d5dbe80#egg=pyindi-client
 #https://www.piwheels.org/project/astropy/
 astropy
 #https://www.piwheels.org/project/numpy/
-numpy==1.22.2
-# Problem with numpy 1.21.4 wheel on Raspbian 11 armv7l
-# RuntimeError: module compiled against API version 0xf but this version of numpy is 0xe
+numpy==1.22.3
 #https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless==4.5.5.64
 ccdproc
