@@ -183,6 +183,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | Astrometry        | pyephem       | https://rhodesmill.org/pyephem/ |
 | File transfer     | pycurl        | http://pycurl.io/ |
 |                   | paramiko      | http://www.paramiko.org/ |
+|                   | paho-mqtt     | https://www.eclipse.org/paho/ |
 | Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
