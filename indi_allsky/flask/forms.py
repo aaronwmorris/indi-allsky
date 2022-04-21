@@ -322,19 +322,13 @@ def IMAGE_EXTRA_TEXT_validator(form, field):
         if not image_extra_text_p.exists():
             raise ValidationError('File does not exist')
 
-    except PermissionError as e:
-        raise ValidationError(str(e))
-
-
-    try:
         if not image_extra_text_p.is_file():
             raise ValidationError('Not a file')
 
-    except PermissionError as e:
-        raise ValidationError(str(e))
+        # Sanity check
+        if image_extra_text_p.stat().st_size > 10000:
+            raise ValidationError('File is too large')
 
-
-    try:
         with io.open(str(image_extra_text_p), 'r'):
             pass
     except PermissionError as e:

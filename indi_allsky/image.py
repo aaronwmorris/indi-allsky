@@ -862,6 +862,22 @@ class ImageWorker(Process):
             )
 
 
+
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for extra_text_line in extra_text_lines:
+                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+                self.drawText(
+                    data_bytes,
+                    extra_text_line,
+                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                )
+
+
     def drawText(self, data_bytes, text, pt, color):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
@@ -947,6 +963,46 @@ class ImageWorker(Process):
             thickness=self.line_thickness,
             lineType=lineType,
         )
+
+
+    def get_extra_text(self):
+        if not self.config.get('IMAGE_EXTRA_TEXT'):
+            return list()
+
+
+        image_extra_text_p = Path(self.config['IMAGE_EXTRA_TEXT'])
+
+        try:
+            if not image_extra_text_p.exists():
+                logger.error('%s does not exist', image_extra_text_p)
+                return list()
+
+
+            if not image_extra_text_p.is_file():
+                logger.error('%s is not a file', image_extra_text_p)
+                return list()
+
+
+            # Sanity check
+            if image_extra_text_p.stat().st_size > 10000:
+                logger.error('%s is too large', image_extra_text_p)
+                return list()
+
+        except PermissionError as e:
+            logger.error(str(e))
+            return list()
+
+
+        try:
+            with io.open(str(image_extra_text_p), 'r') as image_extra_text_f:
+                extra_lines = [x.rstrip() for x in image_extra_text_f.readlines()]
+                image_extra_text_f.close()
+        except PermissionError as e:
+            logger.error(str(e))
+            return list()
+
+
+        return extra_lines
 
 
     def calculate_histogram(self, data_bytes, exposure):
