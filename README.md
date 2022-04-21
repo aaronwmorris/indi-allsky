@@ -247,6 +247,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
+| IMAGE_EXTRA_TEXT    |             | (string) Filename containing extra text for image |
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | IMAGE_GRAYSCALE     | false       | Convert image to grayscale |
 | IMAGE_FLIP_V        | true        | (bool) Flip images vertically |

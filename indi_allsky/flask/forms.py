@@ -1,4 +1,5 @@
 from pathlib import Path
+import io
 import re
 import json
 import time
@@ -301,6 +302,35 @@ def IMAGE_FOLDER_validator(form, field):
     try:
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def IMAGE_EXTRA_TEXT_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    image_extra_text_p = Path(field.data)
+
+    try:
+        if not image_extra_text_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not image_extra_text_p.is_file():
+            raise ValidationError('Not a file')
+
+        # Sanity check
+        if image_extra_text_p.stat().st_size > 10000:
+            raise ValidationError('File is too large')
+
+        with io.open(str(image_extra_text_p), 'r'):
+            pass
     except PermissionError as e:
         raise ValidationError(str(e))
 
@@ -674,6 +704,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
     IMAGE_FILE_COMPRESSION__TIF      = IntegerField('TIFF Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__TIF_validator])
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
+    IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])
