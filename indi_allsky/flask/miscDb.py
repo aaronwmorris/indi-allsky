@@ -45,7 +45,7 @@ class miscDb(object):
         return camera
 
 
-    def addImage(self, filename, camera_id, createDate, exposure, exp_elapsed, gain, binmode, temp, adu, stable, moonmode, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
+    def addImage(self, filename, camera_id, createDate, exposure, exp_elapsed, gain, binmode, temp, adu, stable, moonmode, moonphase, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
         if not filename:
             return
 
@@ -69,9 +69,9 @@ class miscDb(object):
 
         # if moonmode is 0, moonphase is Null
         if moonmode:
-            moonphase = float(moonmode)
+            moonphase_val = float(moonphase)
         else:
-            moonphase = None
+            moonphase_val = None
 
         moonmode_val = bool(moonmode)
 
@@ -102,7 +102,7 @@ class miscDb(object):
             adu_roi=adu_roi_val,
             stable=stable,
             moonmode=moonmode_val,
-            moonphase=moonphase,
+            moonphase=moonphase_val,
             sqm=sqm,
             stars=stars,
         )
