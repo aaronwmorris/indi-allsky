@@ -59,7 +59,7 @@ class IndiAllSky(object):
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
         self.night = None
-        self.moonmode_v = Value('f', 0.0)  # contains moon phase % if moonmode
+        self.moonmode_v = Value('i', -1)  # bogus initial value
         self.moonmode = None
 
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -578,10 +578,8 @@ class IndiAllSky(object):
             self._startFileUploadWorker()
 
 
-            self.night = self.detectNight()
-            #logger.info('self.night_v.value: %r', self.night_v.value)
-            #logger.info('is night: %r', self.night)
-            self.moonmode = self.detectMoonMode()
+            self.detectNight()
+            self.detectMoonMode()
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
@@ -782,7 +780,7 @@ class IndiAllSky(object):
             self.night_v.value = int(self.night)
 
         with self.moonmode_v.get_lock():
-            self.moonmode_v.value = float(self.moonmode)
+            self.moonmode_v.value = int(self.moonmode)
 
 
         # Sleep after reconfiguration
@@ -799,13 +797,12 @@ class IndiAllSky(object):
         sun.compute(obs)
 
         logger.info('Sun altitude: %s', sun.alt)
-        return sun.alt < self.night_sun_radians
+
+        self.night = sun.alt < self.night_sun_radians  # boolean
 
 
     def detectMoonMode(self):
-        if not type(self.night) is bool:
-            self.night = self.detectNight()
-
+        # detectNight() should be run first
         obs = ephem.Observer()
         obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
         obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
@@ -821,9 +818,9 @@ class IndiAllSky(object):
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
                     logger.info('Moon Mode conditions detected')
-                    return moon_phase
+                    self.moonmode = True
 
-        return 0.0
+        self.moonmode = False
 
 
     def darks(self):

@@ -312,8 +312,9 @@ class ImageWorker(Process):
                     self.sensortemp_v.value,
                     adu,
                     self.target_adu_found,  # stable
-                    self.moonmode_v.value,
-                    night=self.night_v.value,
+                    bool(self.moonmode_v.value),
+                    self.moon_phase,
+                    night=bool(self.night_v.value),
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=calibrated,
                     sqm=self.sqm_value,
@@ -856,7 +857,7 @@ class ImageWorker(Process):
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
-                '* Moon {0:0.1f}% *'.format(self.moonmode_v.value),
+                '* Moon {0:0.1f}% *'.format(self.moon_phase),
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             )
