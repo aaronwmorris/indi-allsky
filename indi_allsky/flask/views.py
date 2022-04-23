@@ -1399,7 +1399,12 @@ class SystemInfoView(TemplateView):
         session_bus = dbus.SessionBus()
         systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit))
+
+        try:
+            service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit))
+        except dbus.exceptions.DBusException:
+            return 'UNKNOWN'
+
         interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
         unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
 
