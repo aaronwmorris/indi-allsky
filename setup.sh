@@ -181,7 +181,11 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
@@ -248,7 +252,11 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
@@ -314,7 +322,11 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
@@ -383,7 +395,11 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
@@ -457,7 +473,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
@@ -520,7 +540,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         build-essential \
         python3 \
         python3-pip \
+        python3-dev \
         virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
         git \
         tzdata \
         ca-certificates \
