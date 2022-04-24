@@ -134,8 +134,10 @@ sleep 10
 sudo true
 
 
-echo "Fixing git checkout ownership"
-sudo chown -R "$USER":"$PGRP" "$(dirname $0)"
+echo "Fixing git checkout permissions"
+sudo find "$(dirname $0)" ! -user "$USER" -exec chown "$USER" {} \;
+sudo find "$(dirname $0)" -type d ! -perm -555 -exec chmod ugo+rx {} \;
+sudo find "$(dirname $0)" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 echo "**** Installing packages... ****"
