@@ -433,6 +433,78 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     #        libindi-dev
     #fi
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
+
+    VIRTUALENV_REQ=requirements_debian11.txt
+
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        python3-dev \
+        virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
+        git \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        apache2 \
+        libapache2-mod-php \
+        php-sqlite3 \
+        libgnutls28-dev \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
+
+
+    #if [[ "$INSTALL_INDI" == "true" ]]; then
+    #    sudo apt-get -y install \
+    #        indi-full \
+    #        libindi-dev
+    #fi
+
+
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
