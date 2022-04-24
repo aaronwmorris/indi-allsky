@@ -96,6 +96,17 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         mosquitto-dev \
         ca-certificates
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+    MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        mosquitto \
+        mosquitto-clients \
+        mosquitto-dev \
+        ca-certificates
+
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
