@@ -37,7 +37,7 @@ indi_3rdparty_packages:
   - libftdi-dev
   - libgps-dev
   - libraw-dev
-  - libdc1394-22-dev
+  - libdc1394-dev
   - libgphoto2-dev
   - libboost-dev
   - libboost-regex-dev
