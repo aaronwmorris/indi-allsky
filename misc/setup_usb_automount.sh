@@ -142,12 +142,19 @@ systemctl --user enable udiskie-automount.service
 systemctl --user start udiskie-automount.service
 
 
+echo
+echo "Please insert your USB media now"
+echo
+read -n1 -r -p "Press any key to continue..." anykey
+
 
 # Allow web server access to mounted media
 if [[ -d "/media/${USER}" ]]; then
     sudo chmod ugo+x "/media/${USER}"
 else
     echo
+    echo
+    echo "Media not detected..."
     echo "You may need to run this script again once you insert your media"
     echo "for the correct access permissions for the web server"
     echo
