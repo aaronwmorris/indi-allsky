@@ -145,7 +145,7 @@ systemctl --user start udiskie-automount.service
 
 # Allow web server access to mounted media
 if [[ -d "/media/${USER}" ]]; then
-    sudo chmod o+x "/media/${USER}"
+    sudo chmod ugo+x "/media/${USER}"
 else
     echo
     echo "You may need to run this script again once you insert your media"

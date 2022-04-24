@@ -912,12 +912,6 @@ if [[ "$ASTROBERRY" == "true" ]]; then
     sudo systemctl enable nginx
     sudo systemctl restart nginx
 
-
-    # Allow web server access to mounted media
-    if [[ -d "/media/astroberry" ]]; then
-        sudo chmod ugo+x /media/astroberry
-    fi
-
 else
     if systemctl -q is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
@@ -1045,6 +1039,12 @@ else
 fi
 
 [[ -f "$TMP3" ]] && rm -f "$TMP3"
+
+
+# Allow web server access to mounted media
+if [[ -d "/media/${USER}" ]]; then
+    sudo chmod ugo+x "/media/${USER}"
+fi
 
 
 echo "**** Setup HTDOCS folder ****"
