@@ -97,6 +97,15 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-apt \
         virtualenv
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        python3-apt \
+        virtualenv
+
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
