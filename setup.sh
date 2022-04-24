@@ -671,6 +671,22 @@ ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
 
+echo "**** Ensure path to git folder is traversable ****"
+# Web servers running as www-data or nobody need to be able to read files in the git checkout
+PARENT_DIR="$ALLSKY_DIRECTORY"
+while [ 1 ]; do
+    if [ "$PARENT_DIR" == "/" ]; then
+        break
+    elif [ "$PARENT_DIR" == "." ]; then
+        break
+    fi
+
+    echo "Setting other execute bit on $PARENT_DIR"
+    sudo chmod ugo+x "$PARENT_DIR"
+
+    PARENT_DIR=$(dirname "$PARENT_DIR")
+done
+
 
 echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
@@ -897,7 +913,7 @@ if [[ "$ASTROBERRY" == "true" ]]; then
 
     # Allow web server access to mounted media
     if [[ -d "/media/astroberry" ]]; then
-        sudo chmod o+x /media/astroberry
+        sudo chmod ugo+x /media/astroberry
     fi
 
 else
@@ -1027,7 +1043,6 @@ else
 fi
 
 [[ -f "$TMP3" ]] && rm -f "$TMP3"
-
 
 
 echo "**** Setup HTDOCS folder ****"
