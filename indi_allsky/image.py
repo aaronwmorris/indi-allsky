@@ -187,7 +187,7 @@ class ImageWorker(Process):
             if len(scidata_uncalibrated.shape) == 2:
                 # gray scale or bayered
 
-                if self.config.get('IMAGE_SAVE_RAW'):
+                if self.config.get('IMAGE_SAVE_FITS'):
                     self.write_fit(hdulist, camera_id, exposure, exp_date, image_type, image_bitpix)
 
                 try:
@@ -416,7 +416,7 @@ class ImageWorker(Process):
 
     def write_fit(self, hdulist, camera_id, exposure, exp_date, image_type, image_bitpix):
         ### Do not write image files if fits are enabled
-        if not self.config.get('IMAGE_SAVE_RAW'):
+        if not self.config.get('IMAGE_SAVE_FITS'):
             return
 
 

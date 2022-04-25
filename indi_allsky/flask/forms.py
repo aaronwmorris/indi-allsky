@@ -712,7 +712,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y1                = IntegerField('Image Crop ROI y1', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_X2                = IntegerField('Image Crop ROI x2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
-    IMAGE_SAVE_RAW                   = BooleanField('Save RAW frames')
+    IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     IMAGE_GRAYSCALE                  = BooleanField('Save in Grayscale')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
