@@ -69,7 +69,7 @@
     "IMAGE_FLIP_H"     : false,
     "comment_IMAGE_SCALE" : "x264 codec limited to 4096×2304 resolution",
     "IMAGE_SCALE"      : 75,
-    "IMAGE_SAVE_RAW"   : false,
+    "IMAGE_SAVE_FITS"  : false,
     "IMAGE_GRAYSCALE"  : false,
 
     "IMAGE_EXPIRE_DAYS" : 30,
