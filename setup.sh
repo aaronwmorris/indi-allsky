@@ -134,8 +134,10 @@ sleep 10
 sudo true
 
 
-echo "Fixing git checkout ownership"
-sudo chown -R "$USER":"$PGRP" "$(dirname $0)"
+echo "Fixing git checkout permissions"
+sudo find "$(dirname $0)" ! -user "$USER" -exec chown "$USER" {} \;
+sudo find "$(dirname $0)" -type d ! -perm -555 -exec chmod ugo+rx {} \;
+sudo find "$(dirname $0)" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 echo "**** Installing packages... ****"
@@ -433,6 +435,78 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     #        libindi-dev
     #fi
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+    APACHE_USER=www-data
+    APACHE_GROUP=www-data
+
+    VIRTUALENV_REQ=requirements_debian11.txt
+
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
+
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-pip \
+        python3-dev \
+        virtualenv \
+        whiptail \
+        rsyslog \
+        cron \
+        git \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        apache2 \
+        libapache2-mod-php \
+        php-sqlite3 \
+        libgnutls28-dev \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        pkg-config \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
+
+
+    #if [[ "$INSTALL_INDI" == "true" ]]; then
+    #    sudo apt-get -y install \
+    #        indi-full \
+    #        libindi-dev
+    #fi
+
+
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
@@ -598,6 +672,22 @@ cd "$SCRIPT_DIR"
 ALLSKY_DIRECTORY=$PWD
 cd $OLDPWD
 
+
+echo "**** Ensure path to git folder is traversable ****"
+# Web servers running as www-data or nobody need to be able to read files in the git checkout
+PARENT_DIR="$ALLSKY_DIRECTORY"
+while [ 1 ]; do
+    if [ "$PARENT_DIR" == "/" ]; then
+        break
+    elif [ "$PARENT_DIR" == "." ]; then
+        break
+    fi
+
+    echo "Setting other execute bit on $PARENT_DIR"
+    sudo chmod ugo+x "$PARENT_DIR"
+
+    PARENT_DIR=$(dirname "$PARENT_DIR")
+done
 
 
 echo "**** Python virtualenv setup ****"
@@ -822,12 +912,6 @@ if [[ "$ASTROBERRY" == "true" ]]; then
     sudo systemctl enable nginx
     sudo systemctl restart nginx
 
-
-    # Allow web server access to mounted media
-    if [[ -d "/media/astroberry" ]]; then
-        sudo chmod o+x /media/astroberry
-    fi
-
 else
     if systemctl -q is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
@@ -956,6 +1040,11 @@ fi
 
 [[ -f "$TMP3" ]] && rm -f "$TMP3"
 
+
+# Allow web server access to mounted media
+if [[ -d "/media/${USER}" ]]; then
+    sudo chmod ugo+x "/media/${USER}"
+fi
 
 
 echo "**** Setup HTDOCS folder ****"

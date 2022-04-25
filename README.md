@@ -48,6 +48,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
+| Ubuntu 22.04          | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04<br />inc. Ubuntu Mate | arm64 | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
 | Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |

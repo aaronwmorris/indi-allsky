@@ -88,6 +88,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         udisks2 \
         udiskie
 
+elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        udisks2 \
+        udiskie
+
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     sudo apt-get update
@@ -135,12 +142,19 @@ systemctl --user enable udiskie-automount.service
 systemctl --user start udiskie-automount.service
 
 
+echo
+echo "Please insert your USB media now"
+echo
+read -n1 -r -p "Press any key to continue..." anykey
+
 
 # Allow web server access to mounted media
 if [[ -d "/media/${USER}" ]]; then
-    sudo chmod o+x "/media/${USER}"
+    sudo chmod ugo+x "/media/${USER}"
 else
     echo
+    echo
+    echo "Media not detected..."
     echo "You may need to run this script again once you insert your media"
     echo "for the correct access permissions for the web server"
     echo
