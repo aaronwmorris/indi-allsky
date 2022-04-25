@@ -622,6 +622,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_GRAYSCALE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
+                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Save images in grayscale</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_SAVE_FITS.label }}
         </div>
         <div class="col-sm-2">
@@ -635,15 +648,26 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_GRAYSCALE.label }}
+            {{ form_config.IMAGE_EXPORT_RAW.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
-                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.IMAGE_EXPORT_RAW(class='form-check-input') }}
+                <div id="IMAGE_EXPORT_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Save images in grayscale</div>
+        <div class="col-sm-8">Enable saving raw TIF images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_EXPORT_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPORT_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">Folder to save raw TIF images</div>
     </div>
 
     <div class="form-group row">
@@ -1191,6 +1215,7 @@ const field_names = [
     'IMAGE_CROP_ROI_Y1',
     'IMAGE_CROP_ROI_X2',
     'IMAGE_CROP_ROI_Y2',
+    'IMAGE_EXPORT_FOLDER',
     'IMAGE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_BITRATE',
@@ -1240,6 +1265,7 @@ const checkbox_field_names = [
     'IMAGE_FLIP_H',
     'IMAGE_SAVE_FITS',
     'IMAGE_GRAYSCALE',
+    'IMAGE_EXPORT_RAW',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'FILETRANSFER__UPLOAD_VIDEO',
     'FILETRANSFER__UPLOAD_KEOGRAM',
