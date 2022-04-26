@@ -1384,6 +1384,7 @@ class ImageWorker(Process):
 
         write_img_start = time.time()
 
+        #cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
 
         write_img_elapsed_s = time.time() - write_img_start
