@@ -1311,15 +1311,35 @@ class ImageWorker(Process):
 
 
         if image_bitpix == 8:
+            # nothing to scale
             scaled_data = scidata
         elif image_bitpix == 16:
-            if image_bit_depth == 10:
+            if image_bit_depth == 8:
+                logger.info('Upscaling data from 8 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 8)
+            elif image_bit_depth == 9:
+                logger.info('Upscaling data from 9 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 7)
+            elif image_bit_depth == 10:
+                logger.info('Upscaling data from 10 to 16 bit')
                 scaled_data = numpy.left_shift(scidata, 6)
+            elif image_bit_depth == 11:
+                logger.info('Upscaling data from 11 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 5)
             elif image_bit_depth == 12:
+                logger.info('Upscaling data from 12 to 16 bit')
                 scaled_data = numpy.left_shift(scidata, 4)
+            elif image_bit_depth == 13:
+                logger.info('Upscaling data from 13 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 3)
             elif image_bit_depth == 14:
+                logger.info('Upscaling data from 14 to 16 bit')
                 scaled_data = numpy.left_shift(scidata, 2)
+            elif image_bit_depth == 15:
+                logger.info('Upscaling data from 15 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 1)
             elif image_bit_depth == 16:
+                # nothing to scale
                 scaled_data = scidata
             else:
                 # assume 16 bit
