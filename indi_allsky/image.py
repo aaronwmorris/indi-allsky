@@ -222,7 +222,7 @@ class ImageWorker(Process):
 
 
             ### IMAGE IS CALIBRATED ###
-            self._export_raw_tif(scidata_debayered, exp_date, camera_id, image_bit_depth)
+            self._export_raw_tif(scidata_debayered, exp_date, camera_id, image_bitpix, image_bit_depth)
 
             scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
             #scidata_debayered_8 = scidata_debayered
@@ -1301,7 +1301,7 @@ class ImageWorker(Process):
         return (data_bytes_16 / div_factor).astype('uint8')
 
 
-    def _export_raw_tif(self, scidata, exp_date, camera_id, image_bit_depth):
+    def _export_raw_tif(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1310,16 +1310,22 @@ class ImageWorker(Process):
             return
 
 
-        if image_bit_depth <= 8:
+        if image_bitpix == 8:
             scaled_data = scidata
-        if image_bit_depth == 10:
-            scaled_data = numpy.left_shift(scidata, 6)
-        if image_bit_depth == 12:
-            scaled_data = numpy.left_shift(scidata, 4)
-        if image_bit_depth == 14:
-            scaled_data = numpy.left_shift(scidata, 2)
-        if image_bit_depth == 16:
-            scaled_data = scidata
+        elif image_bitpix == 16:
+            if image_bit_depth == 10:
+                scaled_data = numpy.left_shift(scidata, 6)
+            elif image_bit_depth == 12:
+                scaled_data = numpy.left_shift(scidata, 4)
+            elif image_bit_depth == 14:
+                scaled_data = numpy.left_shift(scidata, 2)
+            elif image_bit_depth == 16:
+                scaled_data = scidata
+            else:
+                # assume 16 bit
+                scaled_data = scidata
+        else:
+            raise Exception('Unsupported bit depth')
 
 
         export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
