@@ -323,6 +323,14 @@ def IMAGE_EXPORT_FOLDER_validator(form, field):
         raise ValidationError(str(e))
 
 
+def IMAGE_EXPORT_RAW_validator(form, field):
+    if not field.data:
+        return
+
+    if field.data not in ('png', 'tif'):
+        raise ValidationError('Please select a valid file type')
+
+
 def IMAGE_EXTRA_TEXT_validator(form, field):
     if not field.data:
         return
@@ -646,6 +654,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    IMAGE_EXPORT_RAW_choices = (
+        ('', 'Disabled'),
+        ('png', 'PNG'),
+        ('tif', 'TIFF'),
+    )
+
     TEXT_PROPERTIES__FONT_FACE_choices = (
         ('FONT_HERSHEY_SIMPLEX', 'Sans-Serif'),
         ('FONT_HERSHEY_PLAIN', 'Sans-Serif (small)'),
@@ -731,7 +745,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     IMAGE_GRAYSCALE                  = BooleanField('Save in Grayscale')
-    IMAGE_EXPORT_RAW                 = BooleanField('Export raw images')
+    IMAGE_EXPORT_RAW                 = SelectField('Export raw image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])

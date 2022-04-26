@@ -222,7 +222,7 @@ class ImageWorker(Process):
 
 
             ### IMAGE IS CALIBRATED ###
-            self._export_raw_tif(scidata_debayered, exp_date, camera_id, image_bitpix, image_bit_depth)
+            self._export_raw_image(scidata_debayered, exp_date, camera_id, image_bitpix, image_bit_depth)
 
             scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
             #scidata_debayered_8 = scidata_debayered
@@ -1301,7 +1301,7 @@ class ImageWorker(Process):
         return (data_bytes_16 / div_factor).astype('uint8')
 
 
-    def _export_raw_tif(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
+    def _export_raw_image(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1376,16 +1376,20 @@ class ImageWorker(Process):
         filename = hour_folder.joinpath(self.filename_t.format(
             camera_id,
             date_str,
-            'tif',
+            self.config['IMAGE_EXPORT_RAW'],  # file suffix
         ))
 
 
-        logger.info('RAW tif filename: %s', filename)
+        logger.info('RAW filename: %s', filename)
 
         write_img_start = time.time()
 
-        #cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
-        cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
