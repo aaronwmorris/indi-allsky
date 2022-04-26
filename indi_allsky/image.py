@@ -1386,7 +1386,7 @@ class ImageWorker(Process):
 
         if self.config['IMAGE_EXPORT_RAW'] in ('png',):
             cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
-        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+        elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
