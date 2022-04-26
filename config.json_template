@@ -79,8 +79,13 @@
     "IMAGE_FLIP_V"     : true,
     "IMAGE_FLIP_H"     : true,
     "IMAGE_SCALE"      : 100,
-    "IMAGE_SAVE_FITS"  : false,
     "IMAGE_GRAYSCALE"  : false,
+
+    "IMAGE_SAVE_FITS"     : false,
+
+    "comment_IMAGE_EXPORT_RAW" : "png or tif (or empty)",
+    "IMAGE_EXPORT_RAW"    : "",
+    "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
 
     "IMAGE_EXPIRE_DAYS" : 30,
 

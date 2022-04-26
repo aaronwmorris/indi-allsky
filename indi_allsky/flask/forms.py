@@ -295,15 +295,40 @@ def IMAGE_FOLDER_validator(form, field):
         if not image_folder_p.exists():
             image_folder_p.mkdir(mode=0o755, parents=True)
 
-    except PermissionError as e:
-        raise ValidationError(str(e))
-
-
-    try:
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
         raise ValidationError(str(e))
+
+
+def IMAGE_EXPORT_FOLDER_validator(form, field):
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid folder name')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Directory cannot end with slash')
+
+
+    image_folder_p = Path(field.data)
+
+    try:
+        if not image_folder_p.exists():
+            image_folder_p.mkdir(mode=0o755, parents=True)
+
+        if not image_folder_p.is_dir():
+            raise ValidationError('Path is not a directory')
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def IMAGE_EXPORT_RAW_validator(form, field):
+    if not field.data:
+        return
+
+    if field.data not in ('png', 'tif'):
+        raise ValidationError('Please select a valid file type')
 
 
 def IMAGE_EXTRA_TEXT_validator(form, field):
@@ -629,6 +654,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    IMAGE_EXPORT_RAW_choices = (
+        ('', 'Disabled'),
+        ('png', 'PNG'),
+        ('tif', 'TIFF'),
+    )
+
     TEXT_PROPERTIES__FONT_FACE_choices = (
         ('FONT_HERSHEY_SIMPLEX', 'Sans-Serif'),
         ('FONT_HERSHEY_PLAIN', 'Sans-Serif (small)'),
@@ -714,6 +745,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     IMAGE_GRAYSCALE                  = BooleanField('Save in Grayscale')
+    IMAGE_EXPORT_RAW                 = SelectField('Export raw image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
+    IMAGE_EXPORT_FOLDER              = StringField('Export folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])

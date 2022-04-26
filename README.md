@@ -256,6 +256,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |
 | IMAGE_CROP_ROI      | []          | (array) Region of interest to crop image (x1, y1, x2, y2) |
 | IMAGE_SAVE_FITS     | false       | (bool) Save raw FITS image data |
+| IMAGE_EXPORT_RAW    | ""          | (string) Export raw images this file format |
+| IMAGE_EXPORT_FOLDER |             | (string) Folder to export raw tiff files |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
 | FFMPEG_BITRATE      | 2500k       | (kilobytes) Target data rate for timelapse video compression |

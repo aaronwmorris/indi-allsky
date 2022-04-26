@@ -131,7 +131,7 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
 
-        if self.config['IMAGE_FOLDER']:
+        if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
@@ -220,6 +220,9 @@ class ImageWorker(Process):
 
                 calibrated = False
 
+
+            ### IMAGE IS CALIBRATED ###
+            self._export_raw_image(scidata_debayered, exp_date, camera_id, image_bitpix, image_bit_depth)
 
             scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
             #scidata_debayered_8 = scidata_debayered
@@ -1296,6 +1299,100 @@ class ImageWorker(Process):
         div_factor = int((2 ** image_bit_depth) / 255)
 
         return (data_bytes_16 / div_factor).astype('uint8')
+
+
+    def _export_raw_image(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
+        if not self.config.get('IMAGE_EXPORT_RAW'):
+            return
+
+        if not self.config.get('IMAGE_EXPORT_FOLDER'):
+            logger.error('IMAGE_EXPORT_FOLDER not defined')
+            return
+
+
+        if image_bitpix == 8:
+            # nothing to scale
+            scaled_data = scidata
+        elif image_bitpix == 16:
+            if image_bit_depth == 8:
+                logger.info('Upscaling data from 8 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 8)
+            elif image_bit_depth == 9:
+                logger.info('Upscaling data from 9 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 7)
+            elif image_bit_depth == 10:
+                logger.info('Upscaling data from 10 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 6)
+            elif image_bit_depth == 11:
+                logger.info('Upscaling data from 11 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 5)
+            elif image_bit_depth == 12:
+                logger.info('Upscaling data from 12 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 4)
+            elif image_bit_depth == 13:
+                logger.info('Upscaling data from 13 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 3)
+            elif image_bit_depth == 14:
+                logger.info('Upscaling data from 14 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 2)
+            elif image_bit_depth == 15:
+                logger.info('Upscaling data from 15 to 16 bit')
+                scaled_data = numpy.left_shift(scidata, 1)
+            elif image_bit_depth == 16:
+                # nothing to scale
+                scaled_data = scidata
+            else:
+                # assume 16 bit
+                scaled_data = scidata
+        else:
+            raise Exception('Unsupported bit depth')
+
+
+        export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
+
+        if self.night_v.value:
+            # images should be written to previous day's folder until noon
+            day_ref = exp_date - timedelta(hours=12)
+            timeofday_str = 'night'
+        else:
+            # daytime
+            # images should be written to current day's folder
+            day_ref = exp_date
+            timeofday_str = 'day'
+
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
+
+        hour_str = exp_date.strftime('%d_%H')
+
+        day_folder = export_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        if not day_folder.exists():
+            day_folder.mkdir(mode=0o755, parents=True)
+
+        hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
+        if not hour_folder.exists():
+            hour_folder.mkdir(mode=0o755)
+
+
+        filename = hour_folder.joinpath(self.filename_t.format(
+            camera_id,
+            date_str,
+            self.config['IMAGE_EXPORT_RAW'],  # file suffix
+        ))
+
+
+        logger.info('RAW filename: %s', filename)
+
+        write_img_start = time.time()
+
+        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
 
 
     def getOrbXY(self, skyObj, obs, image_size):
