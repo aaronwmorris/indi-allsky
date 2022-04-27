@@ -704,6 +704,7 @@ class IndiAllSky(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
+            self.sensortemp_v,
         )
 
         # set indi server localhost and port
