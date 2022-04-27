@@ -11,7 +11,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
 
-from .views import bp
+from .views import bp  # noqa: E402
 
 ### This causes problems with indi-allsky logging
 dictConfig({
@@ -55,6 +55,11 @@ dictConfig({
 })
 
 
+def _sqlite_pragma_on_connect(dbapi_con, con_record):
+    dbapi_con.execute('PRAGMA journal_mode=WAL')
+    #dbapi_con.execute('PRAGMA foreign_keys=ON')
+
+
 def create_app():
     """Construct the core application."""
     app = Flask(
@@ -73,7 +78,11 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        from . import views  # noqa
+        from flask_sqlalchemy import event
+        event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
+
+        from . import views  # noqa: F401
+
         db.create_all()  # Create sql tables for our data models
 
         return app
