@@ -1315,7 +1315,7 @@ class SystemInfoView(TemplateView):
         #memory_free = memory_info[1]
         memory_percent = memory_info[2]
 
-        memory_total_mb = int(memory_total / 1024 / 1024)
+        memory_total_mb = int(memory_total / 1024.0 / 1024.0)
 
         #memory_percent = 100 - ((memory_free * 100) / memory_total)
 
@@ -1336,8 +1336,9 @@ class SystemInfoView(TemplateView):
             disk_usage = psutil.disk_usage(fs.mountpoint)
 
             data = {
+                'total_gb'   : disk_usage.total / 1024.0 / 1024.0 / 1024.0,
                 'mountpoint' : fs.mountpoint,
-                'percent' : disk_usage.percent,
+                'percent'    : disk_usage.percent,
             }
 
             fs_data.append(data)
