@@ -961,7 +961,7 @@ class ImageWorker(Process):
             )  # black outline
         cv2.line(
             img=data_bytes,
-            pt1=(x1, y2),
+            pt1=(x1, y1),
             pt2=(x2, y2),
             color=color,
             thickness=self.line_thickness,
