@@ -622,15 +622,28 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_GRAYSCALE.label }}
+            {{ form_config.NIGHT_GRAYSCALE.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.IMAGE_GRAYSCALE(class='form-check-input') }}
-                <div id="IMAGE_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.NIGHT_GRAYSCALE(class='form-check-input') }}
+                <div id="NIGHT_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Save images in grayscale</div>
+        <div class="col-sm-8">Save images in grayscale at night</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_GRAYSCALE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_GRAYSCALE(class='form-check-input') }}
+                <div id="DAYTIME_GRAYSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Save images in grayscale during day time</div>
     </div>
 
     <div class="form-group row">
@@ -1263,7 +1276,8 @@ const checkbox_field_names = [
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
     'IMAGE_SAVE_FITS',
-    'IMAGE_GRAYSCALE',
+    'NIGHT_GRAYSCALE',
+    'DAYTIME_GRAYSCALE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'FILETRANSFER__UPLOAD_VIDEO',
     'FILETRANSFER__UPLOAD_KEOGRAM',

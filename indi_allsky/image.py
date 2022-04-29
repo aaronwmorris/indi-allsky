@@ -666,7 +666,9 @@ class ImageWorker(Process):
         if not self.config['CFA_PATTERN']:
             return scidata
 
-        if self.config.get('IMAGE_GRAYSCALE'):
+        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
+            debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
+        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
             debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
         else:
             debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
