@@ -250,7 +250,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
 | IMAGE_EXTRA_TEXT    |             | (string) Filename containing extra text for image |
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
-| IMAGE_GRAYSCALE     | false       | Convert image to grayscale |
+| NIGHT_GRAYSCALE     | false       | Convert image to grayscale at night|
+| DAYTIME_GRAYSCALE   | false       | Convert image to grayscale during day |
 | IMAGE_FLIP_V        | true        | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | true        | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |

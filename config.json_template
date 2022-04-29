@@ -79,7 +79,8 @@
     "IMAGE_FLIP_V"     : true,
     "IMAGE_FLIP_H"     : true,
     "IMAGE_SCALE"      : 100,
-    "IMAGE_GRAYSCALE"  : false,
+    "NIGHT_GRAYSCALE"  : false,
+    "DAYTIME_GRAYSCALE": false,
 
     "IMAGE_SAVE_FITS"     : false,
 
