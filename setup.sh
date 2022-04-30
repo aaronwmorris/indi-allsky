@@ -207,6 +207,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -277,6 +278,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -348,6 +350,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -420,6 +423,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -491,6 +495,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -571,6 +576,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libnova-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
@@ -639,6 +645,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libgnutls28-dev \
         libdbus-1-dev \
         libglib2.0-dev \
+        libffi-dev \
         pkg-config \
         ffmpeg \
         gifsicle \
