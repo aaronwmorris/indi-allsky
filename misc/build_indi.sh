@@ -66,6 +66,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -75,6 +76,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -84,6 +86,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -93,6 +96,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -102,6 +106,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -111,6 +116,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
@@ -120,6 +126,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
+        python3-dev \
         python3-pip \
         python3-apt \
         virtualenv
