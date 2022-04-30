@@ -69,7 +69,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get update
@@ -79,7 +80,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get update
@@ -89,7 +91,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get update
@@ -99,7 +102,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get update
@@ -109,7 +113,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get update
@@ -119,7 +124,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get update
@@ -129,7 +135,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3-dev \
         python3-pip \
         python3-apt \
-        virtualenv
+        virtualenv \
+        libffi-dev
 
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
