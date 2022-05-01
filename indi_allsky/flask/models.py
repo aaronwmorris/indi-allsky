@@ -243,3 +243,40 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
         return full_filename_p
 
+
+
+class IndiAllSkyDbTaskQueueTable(db.Model):
+    __tablename__ = 'task'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    state = db.Column(db.String(length=30), nullable=False, index=True, server_default=db.text("init"))
+    jobtype = db.Column(db.String(length=30), nullable=False, index=True)
+    jobdata = db.Column(db.JSON)
+
+
+    ### states
+    # init
+    # queued
+    # running
+    # success
+    # failed
+
+
+    def setQueued(self, session):
+        self.state = 'queued'
+        session.commit()
+
+    def setRunning(self, session):
+        self.state = 'running'
+        session.commit()
+
+    def setSuccess(self, session):
+        self.state = 'success'
+        session.commit()
+
+    def setFailed(self, session):
+        self.state = 'failed'
+        session.commit()
+
+
