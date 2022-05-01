@@ -1,3 +1,4 @@
+import enum
 from pathlib import Path
 
 from sqlalchemy.sql import expression
@@ -245,42 +246,44 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
 
 
+class TaskQueueState(enum.Enum):
+    INIT    = 'Init'
+    QUEUED  = 'Queued'
+    RUNNING = 'Running'
+    SUCCESS = 'Success'
+    FAILED  = 'Failed'
+
+
+class TaskQueueQueue(enum.Enum):
+    IMAGE   = 'image_q'
+    VIDEO   = 'video_q'
+    UPLOAD  = 'upload_q'
+
+
 class IndiAllSkyDbTaskQueueTable(db.Model):
     __tablename__ = 'task'
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    state = db.Column(db.String(length=20), nullable=False, index=True, server_default=db.text("init"))
-    queue = db.Column(db.String(length=20), nullable=False, index=True)
+    state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True, server_default=TaskQueueState.INIT.name)
+    queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
     data = db.Column(db.JSON)
-
-    ### states
-    # init
-    # queued
-    # running
-    # success
-    # failed
-
-    ### queues
-    # image
-    # video
-    # upload
 
 
     def setQueued(self):
-        self.state = 'queued'
+        self.state = TaskQueueState.INIT
         db.session.commit()
 
     def setRunning(self):
-        self.state = 'running'
+        self.state = TaskQueueState.RUNNING
         db.session.commit()
 
     def setSuccess(self):
-        self.state = 'success'
+        self.state = TaskQueueState.SUCCESS
         db.session.commit()
 
     def setFailed(self):
-        self.state = 'failed'
+        self.state = TaskQueueState.FAILED
         db.session.commit()
 
 

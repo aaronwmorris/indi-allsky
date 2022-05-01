@@ -29,6 +29,8 @@ from .stars import IndiAllSkyStars
 #from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
@@ -142,8 +144,8 @@ class ImageWorker(Process):
             time.sleep(5)  # sleep every loop
 
             task = IndiAllSkyDbTaskQueueTable.query\
-                .filter(IndiAllSkyDbTaskQueueTable.state == 'init')\
-                .filter(IndiAllSkyDbTaskQueueTable.queue == 'image')\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
                 .order_by(
                     IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
                 )\

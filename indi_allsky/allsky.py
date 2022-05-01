@@ -27,6 +27,7 @@ from .exceptions import TimeOutException
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -447,7 +448,7 @@ class IndiAllSky(object):
         logger.info('Stopping ImageWorker process')
 
         task = IndiAllSkyDbTaskQueueTable(
-            queue='image',
+            queue=TaskQueueQueue.IMAGE,
             data={'stop' : True},
         )
         db.session.add(task)
