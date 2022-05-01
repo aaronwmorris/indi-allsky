@@ -45,10 +45,16 @@ class FileUploader(Process):
 
         self.config = config
 
+        self.shutdown = False
+        self.terminate = False
+
 
     def run(self):
         while True:
-            time.sleep(5.7)  # sleep every loop
+            if self.shutdown:
+                    return
+
+            time.sleep(4.3)  # sleep every loop
 
 
             task = IndiAllSkyDbTaskQueueTable.query\

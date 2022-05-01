@@ -131,6 +131,9 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
 
+        self.shutdown = False
+        self.terminate = False
+
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -139,7 +142,10 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(4.1)  # sleep every loop
+            if self.shutdown:
+                return
+
+            time.sleep(3.7)  # sleep every loop
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\

@@ -72,6 +72,9 @@ class VideoWorker(Process):
 
         self.config = config
 
+        self.shutdown = False
+        self.terminate = False
+
         self._miscDb = miscDb(self.config)
 
         self.f_lock = None
@@ -79,7 +82,10 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(5.3)  # sleep every loop
+            if self.shutdown:
+                return
+
+            time.sleep(5.9)  # sleep every loop
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
