@@ -261,7 +261,7 @@ class TaskQueueQueue(enum.Enum):
 
 
 class IndiAllSkyDbTaskQueueTable(db.Model):
-    __tablename__ = 'task'
+    __tablename__ = 'taskqueue'
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
