@@ -254,7 +254,6 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     jobtype = db.Column(db.String(length=30), nullable=False, index=True)
     jobdata = db.Column(db.JSON)
 
-
     ### states
     # init
     # queued
@@ -262,21 +261,24 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     # success
     # failed
 
+    ### job types
+    # newframe
 
-    def setQueued(self, session):
+
+    def setQueued(self):
         self.state = 'queued'
-        session.commit()
+        db.session.commit()
 
-    def setRunning(self, session):
+    def setRunning(self):
         self.state = 'running'
-        session.commit()
+        db.session.commit()
 
-    def setSuccess(self, session):
+    def setSuccess(self):
         self.state = 'success'
-        session.commit()
+        db.session.commit()
 
-    def setFailed(self, session):
+    def setFailed(self):
         self.state = 'failed'
-        session.commit()
+        db.session.commit()
 
 

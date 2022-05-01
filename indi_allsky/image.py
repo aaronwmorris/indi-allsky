@@ -18,7 +18,6 @@ import ephem
 
 from multiprocessing import Process
 #from threading import Thread
-import queue
 
 from astropy.io import fits
 import cv2
@@ -29,6 +28,9 @@ from .stars import IndiAllSkyStars
 
 #from .flask import db
 from .flask.miscDb import miscDb
+
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
 
 #from sqlalchemy.orm.exc import NoResultFound
 
@@ -84,7 +86,6 @@ class ImageWorker(Process):
         self,
         idx,
         config,
-        image_q,
         upload_q,
         exposure_v,
         gain_v,
@@ -100,7 +101,6 @@ class ImageWorker(Process):
         self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
-        self.image_q = image_q
         self.upload_q = upload_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
@@ -139,32 +139,49 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(0.5)  # sleep every loop
+            time.sleep(5)  # sleep every loop
 
-            try:
-                i_dict = self.image_q.get_nowait()
-            except queue.Empty:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.state == 'init')\
+                .filter(IndiAllSkyDbTaskQueueTable.jobtype == 'newframe')\
+                .order_by(
+                    IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
+                )\
+                .first()
+
+            if not task:
                 continue
 
 
-            if i_dict.get('stop'):
+            task.setQueued()
+
+
+            if task.jobdata.get('stop'):
+                task.setSuccess()
                 return
 
-            imgdata = i_dict['imgdata']
-            exposure = i_dict['exposure']
-            exp_date = i_dict['exp_date']
-            exp_elapsed = i_dict['exp_elapsed']
-            camera_id = i_dict['camera_id']
-            filename_t = i_dict.get('filename_t')
+
+            filename = task.jobdata['filename']
+            exposure = task.jobdata['exposure']
+            exp_date = datetime.fromtimestamp(task.jobdata['exp_time'])
+            exp_elapsed = task.jobdata['exp_elapsed']
+            camera_id = task.jobdata['camera_id']
+            filename_t = task.jobdata.get('filename_t')
 
             if filename_t:
                 self.filename_t = filename_t
 
             self.image_count += 1
 
-            ### OpenCV ###
-            blobfile = io.BytesIO(imgdata)
-            hdulist = fits.open(blobfile)
+
+            filename_p = Path(filename)
+
+            if not filename_p.exists():
+                logger.error('Frame not found: %s', filename_p)
+                task.setFailed()
+
+
+            hdulist = fits.open(filename_p)
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
             image_type = hdulist[0].header['IMAGETYP']
@@ -297,6 +314,9 @@ class ImageWorker(Process):
 
             processing_elapsed_s = time.time() - processing_start
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
+
+            task.setSuccess()
 
 
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
@@ -597,8 +617,6 @@ class ImageWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
-        from .flask.models import IndiAllSkyDbDarkFrameTable
-
         # pick a dark frame that is closest to the exposure and temperature
         logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\

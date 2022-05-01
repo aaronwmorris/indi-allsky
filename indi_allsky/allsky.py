@@ -27,6 +27,8 @@ from .exceptions import TimeOutException
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
@@ -50,7 +52,6 @@ class IndiAllSky(object):
 
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
-        self.image_q = Queue()
         self.indiclient = None
         self.ccdDevice = None
         self.exposure_v = Value('f', -1.0)
@@ -278,7 +279,6 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
-            self.image_q,
             self.gain_v,
             self.bin_v,
             self.sensortemp_v,
@@ -421,7 +421,6 @@ class IndiAllSky(object):
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
-            self.image_q,
             self.upload_q,
             self.exposure_v,
             self.gain_v,
@@ -446,7 +445,14 @@ class IndiAllSky(object):
             self.image_worker.terminate()
 
         logger.info('Stopping ImageWorker process')
-        self.image_q.put({ 'stop' : True })
+
+        task = IndiAllSkyDbTaskQueueTable(
+            jobtype='newframe',
+            jobdata={'stop' : True},
+        )
+        db.session.add(task)
+        db.session.commit()
+
         self.image_worker.join()
 
 
@@ -701,7 +707,6 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
-            self.image_q,
             self.gain_v,
             self.bin_v,
             self.sensortemp_v,
