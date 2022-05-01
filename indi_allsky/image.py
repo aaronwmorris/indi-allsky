@@ -141,7 +141,7 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(5)  # sleep every loop
+            time.sleep(4.1)  # sleep every loop
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
@@ -155,15 +155,15 @@ class ImageWorker(Process):
                 continue
 
 
-            task.setQueued()
-
-
             if task.data.get('stop'):
                 task.setSuccess()
                 return
 
 
-            filename = task.data['filename']
+            task.setQueued()
+
+
+            filename = Path(task.data['filename'])
             exposure = task.data['exposure']
             exp_date = datetime.fromtimestamp(task.data['exp_time'])
             exp_elapsed = task.data['exp_elapsed']
@@ -176,14 +176,13 @@ class ImageWorker(Process):
             self.image_count += 1
 
 
-            filename_p = Path(filename)
-
-            if not filename_p.exists():
-                logger.error('Frame not found: %s', filename_p)
+            if not filename.exists():
+                logger.error('Frame not found: %s', filename)
                 task.setFailed()
+                continue
 
 
-            hdulist = fits.open(filename_p)
+            hdulist = fits.open(filename)
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
             image_type = hdulist[0].header['IMAGETYP']
@@ -192,6 +191,9 @@ class ImageWorker(Process):
             logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
 
             scidata_uncalibrated = hdulist[0].data
+
+
+            task.setRunning()
 
 
             processing_start = time.time()

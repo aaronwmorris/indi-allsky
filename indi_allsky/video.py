@@ -26,10 +26,13 @@ from .exceptions import InsufficentData
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
-import queue
 #from threading import Thread
 
 logger = logging.getLogger('indi_allsky')
@@ -61,14 +64,13 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, video_q, upload_q):
+    def __init__(self, idx, config, upload_q):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
         self.name = 'VideoWorker{0:03d}'.format(idx)
 
         self.config = config
-        self.video_q = video_q
         self.upload_q = upload_q
 
         self._miscDb = miscDb(self.config)
@@ -78,37 +80,54 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(1.0)  # sleep every loop
+            time.sleep(5.3)  # sleep every loop
 
-            try:
-                v_dict = self.video_q.get_nowait()
-            except queue.Empty:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                .order_by(
+                    IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
+                )\
+                .first()
+
+            if not task:
                 continue
 
-            if v_dict.get('stop'):
+
+            if task.data.get('stop'):
+                task.setSuccess()
                 return
+
+
+            task.setQueued()
+
 
             try:
                 self._getLock()  # get lock to prevent multiple videos from being concurrently generated
             except BlockingIOError as e:
                 if e.errno == errno.EAGAIN:
                     logger.error('Failed to get exclusive lock: %s', str(e))
+                    task.setFailed()
                     return
 
 
-            timespec = v_dict['timespec']
-            img_folder = v_dict['img_folder']
-            timeofday = v_dict['timeofday']
-            camera_id = v_dict['camera_id']
-            video = v_dict.get('video', True)
-            keogram = v_dict.get('keogram', True)
-            #startrail = v_dict.get('startrail', True)
-            expireData = v_dict.get('expireData', False)
+            timespec = task.data['timespec']
+            img_folder = Path(task.data['img_folder'])
+            timeofday = task.data['timeofday']
+            camera_id = task.data['camera_id']
+            video = task.data.get('video', True)
+            keogram = task.data.get('keogram', True)
+            #startrail = task.data.get('startrail', True)
+            expireData = task.data.get('expireData', False)
 
 
             if not img_folder.exists():
                 logger.error('Image folder does not exist: %s', img_folder)
+                task.setFailed()
                 continue
+
+
+            task.setRunning()
 
 
             if expireData:
@@ -125,6 +144,8 @@ class VideoWorker(Process):
             if keogram:
                 self.generateKeogramStarTrails(timespec, img_folder, timeofday, camera_id)
 
+
+            task.setSuccess()
 
             self._releaseLock()
 

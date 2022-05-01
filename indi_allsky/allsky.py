@@ -71,7 +71,6 @@ class IndiAllSky(object):
         self.image_worker_idx = 0
 
         self.video_worker = None
-        self.video_q = Queue()
         self.video_worker_idx = 0
 
         self.save_images = True
@@ -468,7 +467,6 @@ class IndiAllSky(object):
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
-            self.video_q,
             self.upload_q,
         )
         self.video_worker.start()
@@ -486,7 +484,14 @@ class IndiAllSky(object):
             self.video_worker.terminate()
 
         logger.info('Stopping VideoWorker process')
-        self.video_q.put({ 'stop' : True })
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data={'stop' : True},
+        )
+        db.session.add(task)
+        db.session.commit()
+
         self.video_worker.join()
 
 
@@ -866,14 +871,21 @@ class IndiAllSky(object):
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def generateNightTimelapse(self, timespec='', camera_id=0):
@@ -906,14 +918,21 @@ class IndiAllSky(object):
         logger.warning('Generating night time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def generateNightKeogram(self, timespec='', camera_id=0):
@@ -946,14 +965,21 @@ class IndiAllSky(object):
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def generateDayKeogram(self, timespec='', camera_id=0):
@@ -986,14 +1012,21 @@ class IndiAllSky(object):
         logger.warning('Generating day time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
             'img_folder'  : img_day_folder,
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
@@ -1012,7 +1045,7 @@ class IndiAllSky(object):
     def _expireData(self):
         # This will delete old images from the filesystem and DB
         self._startVideoWorker()
-        self.video_q.put({
+        jobdata = {
             'expireData'   : True,
             'img_folder'   : self.image_dir,
             'timespec'     : None,  # Not needed
@@ -1020,7 +1053,14 @@ class IndiAllSky(object):
             'camera_id'    : None,  # Not needed
             'video'        : False,
             'keogram'      : False,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def dbImportImages(self):
