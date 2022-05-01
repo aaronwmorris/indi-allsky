@@ -250,9 +250,9 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    state = db.Column(db.String(length=30), nullable=False, index=True, server_default=db.text("init"))
-    jobtype = db.Column(db.String(length=30), nullable=False, index=True)
-    jobdata = db.Column(db.JSON)
+    state = db.Column(db.String(length=20), nullable=False, index=True, server_default=db.text("init"))
+    queue = db.Column(db.String(length=20), nullable=False, index=True)
+    data = db.Column(db.JSON)
 
     ### states
     # init
@@ -261,8 +261,10 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     # success
     # failed
 
-    ### job types
-    # newframe
+    ### queues
+    # image
+    # video
+    # upload
 
 
     def setQueued(self):

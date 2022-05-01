@@ -447,8 +447,8 @@ class IndiAllSky(object):
         logger.info('Stopping ImageWorker process')
 
         task = IndiAllSkyDbTaskQueueTable(
-            jobtype='newframe',
-            jobdata={'stop' : True},
+            queue='image',
+            data={'stop' : True},
         )
         db.session.add(task)
         db.session.commit()

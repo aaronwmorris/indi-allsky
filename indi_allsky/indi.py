@@ -163,7 +163,7 @@ class IndiClient(PyIndi.BaseClient):
         exp_date = datetime.now()
 
         ### process data in worker
-        jobdata = {
+        taskdata = {
             'filename'    : f_tmpfile.name,
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
@@ -174,8 +174,8 @@ class IndiClient(PyIndi.BaseClient):
 
         with app.app_context():
             task = IndiAllSkyDbTaskQueueTable(
-                jobtype='newframe',
-                jobdata=jobdata,
+                queue='image',
+                data=taskdata,
             )
 
             db.session.add(task)

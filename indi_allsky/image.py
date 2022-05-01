@@ -143,7 +143,7 @@ class ImageWorker(Process):
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == 'init')\
-                .filter(IndiAllSkyDbTaskQueueTable.jobtype == 'newframe')\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == 'image')\
                 .order_by(
                     IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
                 )\
@@ -156,17 +156,17 @@ class ImageWorker(Process):
             task.setQueued()
 
 
-            if task.jobdata.get('stop'):
+            if task.data.get('stop'):
                 task.setSuccess()
                 return
 
 
-            filename = task.jobdata['filename']
-            exposure = task.jobdata['exposure']
-            exp_date = datetime.fromtimestamp(task.jobdata['exp_time'])
-            exp_elapsed = task.jobdata['exp_elapsed']
-            camera_id = task.jobdata['camera_id']
-            filename_t = task.jobdata.get('filename_t')
+            filename = task.data['filename']
+            exposure = task.data['exposure']
+            exp_date = datetime.fromtimestamp(task.data['exp_time'])
+            exp_elapsed = task.data['exp_elapsed']
+            camera_id = task.data['camera_id']
+            filename_t = task.data.get('filename_t')
 
             if filename_t:
                 self.filename_t = filename_t
