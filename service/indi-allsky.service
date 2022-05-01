@@ -9,6 +9,7 @@ ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/python3 allsky.py --conf
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
+PrivateTmp=true
  
 [Install]
 WantedBy=default.target
