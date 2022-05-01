@@ -14,7 +14,6 @@ import logging
 
 import ephem
 
-from multiprocessing import Queue
 from multiprocessing import Value
 
 from .indi import IndiClient
@@ -76,7 +75,6 @@ class IndiAllSky(object):
         self.save_images = True
 
         self.upload_worker = None
-        self.upload_q = Queue()
         self.upload_worker_idx = 0
 
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
@@ -421,7 +419,6 @@ class IndiAllSky(object):
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
-            self.upload_q,
             self.exposure_v,
             self.gain_v,
             self.bin_v,
@@ -467,7 +464,6 @@ class IndiAllSky(object):
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
-            self.upload_q,
         )
         self.video_worker.start()
 
@@ -506,7 +502,6 @@ class IndiAllSky(object):
         self.upload_worker = FileUploader(
             self.upload_worker_idx,
             self.config,
-            self.upload_q,
         )
 
         self.upload_worker.start()
@@ -524,7 +519,14 @@ class IndiAllSky(object):
             self.upload_worker.terminate()
 
         logger.info('Stopping FileUploadWorker process')
-        self.upload_q.put({ 'stop' : True })
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data={'stop' : True},
+        )
+        db.session.add(task)
+        db.session.commit()
+
         self.upload_worker.join()
 
 

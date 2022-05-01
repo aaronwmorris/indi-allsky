@@ -26,7 +26,7 @@ import numpy
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 
-#from .flask import db
+from .flask import db
 from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
@@ -88,7 +88,6 @@ class ImageWorker(Process):
         self,
         idx,
         config,
-        upload_q,
         exposure_v,
         gain_v,
         bin_v,
@@ -103,7 +102,6 @@ class ImageWorker(Process):
         self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
-        self.upload_q = upload_q
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -387,11 +385,18 @@ class ImageWorker(Process):
         remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : latest_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(latest_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
         self._miscDb.addUploadedFlag(image_entry)
 
@@ -404,12 +409,18 @@ class ImageWorker(Process):
         logger.info('Publishing data to MQ broker')
 
         # publish data to mq broker
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'mqttpub',
-            'local_file'  : latest_file,
+            'local_file'  : str(latest_file),
             'mq_data'     : mq_data,
-        })
+        }
 
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def detectBitDepth(self, data):

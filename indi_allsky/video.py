@@ -64,14 +64,13 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, upload_q):
+    def __init__(self, idx, config):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
         self.name = 'VideoWorker{0:03d}'.format(idx)
 
         self.config = config
-        self.upload_q = upload_q
 
         self._miscDb = miscDb(self.config)
 
@@ -279,11 +278,18 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(video_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : video_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(video_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def generateKeogramStarTrails(self, timespec, img_folder, timeofday, camera_id):
@@ -446,11 +452,18 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(keogram_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : keogram_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(keogram_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def uploadStarTrail(self, startrail_file):
@@ -462,11 +475,18 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(startrail_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : startrail_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(startrail_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def uploadAllskyEndOfNight(self, timeofday):
@@ -537,13 +557,19 @@ class VideoWorker(Process):
         data_json_p = Path(data_tempfile_f.name)
         remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
 
-        self.upload_q.put({
+        jobdata = {
             'action'         : 'upload',
-            'local_file'     : data_json_p,
-            'remote_file'    : remote_file_p,
+            'local_file'     : str(data_json_p),
+            'remote_file'    : str(remote_file_p),
             'remove_local'   : True,
-        })
+        }
 
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
 
     def expireData(self, img_folder):
