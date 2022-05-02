@@ -878,7 +878,7 @@ class IndiAllSky(object):
 
         jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : True,
@@ -925,7 +925,7 @@ class IndiAllSky(object):
 
         jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : True,
@@ -972,7 +972,7 @@ class IndiAllSky(object):
 
         jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : False,
@@ -1019,7 +1019,7 @@ class IndiAllSky(object):
 
         jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : False,
@@ -1052,7 +1052,7 @@ class IndiAllSky(object):
         self._startVideoWorker()
         jobdata = {
             'expireData'   : True,
-            'img_folder'   : self.image_dir,
+            'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'timeofday'    : None,  # Not needed
             'camera_id'    : None,  # Not needed
