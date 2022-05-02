@@ -82,8 +82,7 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
-            if self.shutdown:
-                return
+            db.session.commit()  # ensure cache is flushed
 
             time.sleep(5.9)  # sleep every loop
 

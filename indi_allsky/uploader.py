@@ -6,6 +6,8 @@ from multiprocessing import Process
 import logging
 import traceback
 
+from .flask import db
+
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbTaskQueueTable
@@ -51,11 +53,9 @@ class FileUploader(Process):
 
     def run(self):
         while True:
-            if self.shutdown:
-                    return
+            db.session.commit()  # ensure cache is flushed
 
             time.sleep(4.3)  # sleep every loop
-
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\

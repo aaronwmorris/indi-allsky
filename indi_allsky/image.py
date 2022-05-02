@@ -142,8 +142,7 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            if self.shutdown:
-                return
+            db.session.commit()  # ensure cache is flushed
 
             time.sleep(3.7)  # sleep every loop
 
