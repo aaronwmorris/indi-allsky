@@ -1367,8 +1367,14 @@ class IndiAllSky(object):
 
 
     def expireOrphanedTasks(self):
+        orphaned_statuses = (
+            TaskQueueState.INIT,
+            TaskQueueState.QUEUED,
+            TaskQueueState.RUNNING,
+        )
+
         old_task_list = IndiAllSkyDbTaskQueueTable.query\
-            .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(orphaned_statuses))
 
         for task in old_task_list:
             logger.warning('Expiring orphaned task %d', task.id)
