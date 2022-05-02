@@ -131,40 +131,37 @@ class VideoWorker(Process):
                 continue
 
 
-            task.setRunning()
-
-
             if expireData:
-                self.expireData(img_folder)
+                self.expireData(task, img_folder)
 
 
             self.uploadAllskyEndOfNight(timeofday)
 
 
             if video:
-                self.generateVideo(timespec, img_folder, timeofday, camera_id)
+                self.generateVideo(task, timespec, img_folder, timeofday, camera_id)
 
 
             if keogram:
-                self.generateKeogramStarTrails(timespec, img_folder, timeofday, camera_id)
+                self.generateKeogramStarTrails(task, timespec, img_folder, timeofday, camera_id)
 
-
-            task.setSuccess()
 
             self._releaseLock()
 
 
 
-    def generateVideo(self, timespec, img_folder, timeofday, camera_id):
+    def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
         from .flask.models import IndiAllSkyDbCameraTable
         from .flask.models import IndiAllSkyDbImageTable
         from .flask.models import IndiAllSkyDbVideoTable
 
+        task.setRunning()
 
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
+            task.setFailed()
             return
 
 
@@ -178,6 +175,7 @@ class VideoWorker(Process):
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
+            task.setFailed()
             return
 
 
@@ -266,6 +264,9 @@ class VideoWorker(Process):
             timeofday,
         )
 
+
+        task.setSuccess()
+
         ### Upload ###
         self.uploadVideo(video_file)
 
@@ -297,17 +298,19 @@ class VideoWorker(Process):
         db.session.commit()
 
 
-    def generateKeogramStarTrails(self, timespec, img_folder, timeofday, camera_id):
+    def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
         from .flask.models import IndiAllSkyDbCameraTable
         from .flask.models import IndiAllSkyDbImageTable
         from .flask.models import IndiAllSkyDbKeogramTable
         from .flask.models import IndiAllSkyDbStarTrailsTable
 
+        task.setRunning()
 
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
+            task.setFailed()
             return
 
 
@@ -323,10 +326,12 @@ class VideoWorker(Process):
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
+            task.setFailed()
             return
 
         if startrail_file.exists():
             logger.warning('Star trail is already generated: %s', startrail_file)
+            task.setFailed()
             return
 
 
@@ -445,6 +450,9 @@ class VideoWorker(Process):
 
             self.uploadStarTrail(startrail_file)
             self._miscDb.addUploadedFlag(startrail_entry)
+
+
+        task.setSuccess()
 
 
     def uploadKeogram(self, keogram_file):
@@ -577,9 +585,10 @@ class VideoWorker(Process):
         db.session.commit()
 
 
-    def expireData(self, img_folder):
+    def expireData(self, task, img_folder):
         from .flask.models import IndiAllSkyDbImageTable
 
+        task.setRunning()
 
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
@@ -621,6 +630,8 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
+
+        task.setSuccess()
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):

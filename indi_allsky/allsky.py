@@ -440,7 +440,8 @@ class IndiAllSky(object):
 
         if terminate:
             logger.info('Terminating ImageWorker process')
-            self.image_worker.terminate()
+            if self.image_worker:
+                self.image_worker.terminate()
 
         logger.info('Stopping ImageWorker process')
 
@@ -478,7 +479,8 @@ class IndiAllSky(object):
 
         if terminate:
             logger.info('Terminating VideoWorker process')
-            self.video_worker.terminate()
+            if self.video_worker:
+                self.video_worker.terminate()
 
         logger.info('Stopping VideoWorker process')
 
@@ -517,7 +519,8 @@ class IndiAllSky(object):
 
         if terminate:
             logger.info('Terminating FileUploadWorker process')
-            self.upload_worker.terminate()
+            if self.upload_worker:
+                self.upload_worker.terminate()
 
         logger.info('Stopping FileUploadWorker process')
 
