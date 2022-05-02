@@ -186,6 +186,7 @@ class ImageWorker(Process):
 
 
             hdulist = fits.open(filename)
+            filename.unlink()  # no longer need the original file
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
             image_type = hdulist[0].header['IMAGETYP']
