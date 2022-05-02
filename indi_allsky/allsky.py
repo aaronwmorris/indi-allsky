@@ -861,15 +861,12 @@ class IndiAllSky(object):
 
 
         self._generateDayTimelapse(timespec, camera_id, keogram=False)
-        self._stopVideoWorker()
 
 
     def _generateDayTimelapse(self, timespec, camera_id, keogram=True):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -908,15 +905,12 @@ class IndiAllSky(object):
 
 
         self._generateNightTimelapse(timespec, camera_id, keogram=False)
-        self._stopVideoWorker()
 
 
     def _generateNightTimelapse(self, timespec, camera_id, keogram=True):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -955,15 +949,12 @@ class IndiAllSky(object):
 
 
         self._generateNightKeogram(timespec, camera_id)
-        self._stopVideoWorker()
 
 
     def _generateNightKeogram(self, timespec, camera_id):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -1002,15 +993,12 @@ class IndiAllSky(object):
 
 
         self._generateDayKeogram(timespec, camera_id)
-        self._stopVideoWorker()
 
 
     def _generateDayKeogram(self, timespec, camera_id):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
@@ -1044,12 +1032,10 @@ class IndiAllSky(object):
 
     def expireData(self):
         self._expireData()
-        self._stopVideoWorker()
 
 
     def _expireData(self):
         # This will delete old images from the filesystem and DB
-        self._startVideoWorker()
         jobdata = {
             'expireData'   : True,
             'img_folder'   : str(self.image_dir),
