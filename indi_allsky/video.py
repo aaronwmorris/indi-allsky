@@ -84,7 +84,7 @@ class VideoWorker(Process):
         while True:
             db.session.commit()  # ensure cache is flushed
 
-            time.sleep(51.0)  # sleep every loop
+            time.sleep(5.7)  # sleep every loop
 
             task = IndiAllSkyDbTaskQueueTable.query\
                 .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\

@@ -564,7 +564,7 @@ class IndiAllSky(object):
     def run(self):
         self.write_pid()
 
-        self.expireOldTasks()
+        self.expireOrphanedTasks()
 
         self._initialize()
 
@@ -1377,12 +1377,24 @@ class IndiAllSky(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def expireOldTasks(self):
+    def expireOrphanedTasks(self):
         old_task_list = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)
 
         for task in old_task_list:
-            logger.warning('Expiring old task %d', task.id)
+            logger.warning('Expiring orphaned task %d', task.id)
             task.state = TaskQueueState.EXPIRED
 
         db.session.commit()
+
+
+    def flushOldTasks(self):
+        now_minus_3d = datetime.now() - timedelta(days=3)
+
+        flush_old_tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate < now_minus_3d)
+
+        logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
+        flush_old_tasks.delete()
+        db.session.commit()
+
