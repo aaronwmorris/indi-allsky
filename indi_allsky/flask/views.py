@@ -1430,10 +1430,15 @@ class TaskQueueView(TemplateView):
             TaskQueueState.INIT,
             TaskQueueState.QUEUED,
             TaskQueueState.RUNNING,
+            #TaskQueueState.SUCCESS,
+            TaskQueueState.FAILED,
         )
+
+        now_minus_1h = datetime.now() - timedelta(hours=1)
 
         tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_1h)\
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
 
         task_list = list()
