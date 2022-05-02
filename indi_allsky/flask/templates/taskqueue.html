@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Task Queue{% endblock %}
+
+{% block head %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<table>
+<tr>
+    <th>ID</th>
+    <th>Date</th>
+    <th>Queue</th>
+    <th>State</th>
+</tr>
+{% for task in task_list %}
+<tr>
+    <td>{{ task.id }}</td>
+    <td>{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+    <td>{{ task.queue }}</td>
+    <td>{{ task.state }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

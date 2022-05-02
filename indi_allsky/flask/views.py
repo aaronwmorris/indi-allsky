@@ -38,6 +38,9 @@ from flask import current_app as app
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
+from .models import IndiAllSkyDbTaskQueueTable
+
+from .models import TaskQueueState
 
 from sqlalchemy import func
 #from sqlalchemy import extract
@@ -1418,6 +1421,37 @@ class SystemInfoView(TemplateView):
         return str(unit_state)
 
 
+
+class TaskQueueView(TemplateView):
+    def get_context(self):
+        context = super(TaskQueueView, self).get_context()
+
+        state_list = (
+            TaskQueueState.INIT,
+            TaskQueueState.QUEUED,
+            TaskQueueState.RUNNING,
+        )
+
+        tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+
+        task_list = list()
+        for task in tasks:
+            t = {
+                'id'         : task.id,
+                'createDate' : task.createDate,
+                'queue'      : task.queue.name,
+                'state'      : task.state.name,
+            }
+
+            task_list.append(t)
+
+        context['task_list'] = task_list
+
+        return context
+
+
 class AjaxSystemInfoView(BaseView):
     methods = ['POST']
 
@@ -1563,6 +1597,7 @@ bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_na
 bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
