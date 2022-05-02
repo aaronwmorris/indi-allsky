@@ -252,6 +252,7 @@ class TaskQueueState(enum.Enum):
     RUNNING = 'Running'
     SUCCESS = 'Success'
     FAILED  = 'Failed'
+    EXPIRED = 'Expired'
 
 
 class TaskQueueQueue(enum.Enum):
@@ -286,4 +287,7 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
         self.state = TaskQueueState.FAILED
         db.session.commit()
 
+    def setExpired(self):
+        self.state = TaskQueueState.FAILED
+        db.session.commit()
 

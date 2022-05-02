@@ -27,6 +27,7 @@ from .flask import db
 from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
+from .flask.models import TaskQueueState
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -562,6 +563,8 @@ class IndiAllSky(object):
 
     def run(self):
         self.write_pid()
+
+        self.expireOldTasks()
 
         self._initialize()
 
@@ -1373,3 +1376,13 @@ class IndiAllSky(object):
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
+
+    def expireOldTasks(self):
+        old_task_list = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)
+
+        for task in old_task_list:
+            logger.warning('Expiring old task %d', task.id)
+            task.state = TaskQueueState.EXPIRED
+
+        db.session.commit()
