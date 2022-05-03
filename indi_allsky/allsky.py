@@ -627,6 +627,10 @@ class IndiAllSky(object):
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
 
+            # Queue externally defined tasks
+            self.queueManualTasks()
+
+
             # every ~10 seconds end this loop and run the code above
             for x in range(200):
                 time.sleep(0.05)
@@ -1400,4 +1404,18 @@ class IndiAllSky(object):
         logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
         flush_old_tasks.delete()
         db.session.commit()
+
+
+    def queueManualTasks(self):
+        logger.info('Checking for manually submitted tasks')
+        manual_video_tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+            .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.MANUAL)\
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+
+
+        for video_task in manual_video_tasks:
+            logger.info('Queuing manual task %d', video_task.id)
+            video_task.setQueued()
+            self.video_q.put({'task_id' : video_task.id})
 
