@@ -151,7 +151,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/ansible" ]; then
     virtualenv -p python3 --system-site-packages ${ALLSKY_DIRECTORY}/virtualenv/ansible
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate
-pip3 install --upgrade pip
+pip3 install --upgrade pip setuptools wheel
 pip3 install -r ${ALLSKY_DIRECTORY}/ansible/requirements.txt
 
 

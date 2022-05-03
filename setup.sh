@@ -704,7 +704,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
-pip3 install --upgrade pip
+pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
