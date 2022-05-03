@@ -14,6 +14,7 @@ from .flask import db
 from .flask import create_app
 
 from .flask.models import TaskQueueQueue
+from .flask.models import TaskQueueState
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from .exceptions import TimeOutException
@@ -177,6 +178,7 @@ class IndiClient(PyIndi.BaseClient):
         with app.app_context():
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.IMAGE,
+                state=TaskQueueState.QUEUED,
                 data=jobdata,
             )
 

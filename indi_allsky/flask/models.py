@@ -247,7 +247,7 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
 
 class TaskQueueState(enum.Enum):
-    INIT    = 'Init'
+    MANUAL  = 'Manual'
     QUEUED  = 'Queued'
     RUNNING = 'Running'
     SUCCESS = 'Success'
@@ -266,13 +266,13 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True, server_default=TaskQueueState.INIT.name)
+    state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True)
     queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
     data = db.Column(db.JSON)
 
 
     def setQueued(self):
-        self.state = TaskQueueState.INIT
+        self.state = TaskQueueState.QUEUED
         db.session.commit()
 
     def setRunning(self):
@@ -288,6 +288,6 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
         db.session.commit()
 
     def setExpired(self):
-        self.state = TaskQueueState.FAILED
+        self.state = TaskQueueState.EXPIRED
         db.session.commit()
 

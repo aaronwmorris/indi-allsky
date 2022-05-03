@@ -880,6 +880,7 @@ class IndiAllSky(object):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -926,6 +927,7 @@ class IndiAllSky(object):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -972,6 +974,7 @@ class IndiAllSky(object):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -1018,6 +1021,7 @@ class IndiAllSky(object):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -1052,6 +1056,7 @@ class IndiAllSky(object):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -1371,7 +1376,7 @@ class IndiAllSky(object):
 
     def expireOrphanedTasks(self):
         orphaned_statuses = (
-            TaskQueueState.INIT,
+            TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
             TaskQueueState.RUNNING,
         )

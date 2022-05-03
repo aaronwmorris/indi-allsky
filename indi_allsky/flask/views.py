@@ -1427,7 +1427,7 @@ class TaskQueueView(TemplateView):
         context = super(TaskQueueView, self).get_context()
 
         state_list = (
-            TaskQueueState.INIT,
+            TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
             TaskQueueState.RUNNING,
             #TaskQueueState.SUCCESS,

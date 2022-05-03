@@ -165,7 +165,7 @@ class ImageWorker(Process):
             try:
                 task = IndiAllSkyDbTaskQueueTable.query\
                     .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
                     .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
                     .one()
 
@@ -173,7 +173,8 @@ class ImageWorker(Process):
                 logger.error('Task ID %d not found', task_id)
                 continue
 
-            task.setQueued()
+
+            task.setRunning()
 
 
             filename = Path(task.data['filename'])
@@ -205,9 +206,6 @@ class ImageWorker(Process):
             logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
 
             scidata_uncalibrated = hdulist[0].data
-
-
-            task.setRunning()
 
 
             processing_start = time.time()
@@ -409,6 +407,7 @@ class ImageWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -435,6 +434,7 @@ class ImageWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)

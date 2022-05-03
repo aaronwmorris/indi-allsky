@@ -76,7 +76,7 @@ class FileUploader(Process):
             try:
                 task = IndiAllSkyDbTaskQueueTable.query\
                     .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
                     .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD)\
                     .one()
 
@@ -85,7 +85,7 @@ class FileUploader(Process):
                 continue
 
 
-            task.setQueued()
+            task.setRunning()
 
 
             action = task.data['action']
@@ -155,8 +155,6 @@ class FileUploader(Process):
                 task.setFailed()
                 raise Exception('Invalid transfer action')
 
-
-            task.setRunning()
 
             start = time.time()
 

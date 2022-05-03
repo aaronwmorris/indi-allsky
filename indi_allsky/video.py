@@ -102,7 +102,7 @@ class VideoWorker(Process):
             try:
                 task = IndiAllSkyDbTaskQueueTable.query\
                     .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
                     .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
                     .one()
 
@@ -111,7 +111,7 @@ class VideoWorker(Process):
                 continue
 
 
-            task.setQueued()
+            task.setRunning()
 
 
             try:
@@ -162,8 +162,6 @@ class VideoWorker(Process):
         from .flask.models import IndiAllSkyDbCameraTable
         from .flask.models import IndiAllSkyDbImageTable
         from .flask.models import IndiAllSkyDbVideoTable
-
-        task.setRunning()
 
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
@@ -300,6 +298,7 @@ class VideoWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -313,8 +312,6 @@ class VideoWorker(Process):
         from .flask.models import IndiAllSkyDbImageTable
         from .flask.models import IndiAllSkyDbKeogramTable
         from .flask.models import IndiAllSkyDbStarTrailsTable
-
-        task.setRunning()
 
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
@@ -483,6 +480,7 @@ class VideoWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -508,6 +506,7 @@ class VideoWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -593,6 +592,7 @@ class VideoWorker(Process):
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
             data=jobdata,
         )
         db.session.add(task)
@@ -603,8 +603,6 @@ class VideoWorker(Process):
 
     def expireData(self, task, img_folder):
         from .flask.models import IndiAllSkyDbImageTable
-
-        task.setRunning()
 
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
