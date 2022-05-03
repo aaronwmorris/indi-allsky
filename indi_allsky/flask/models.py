@@ -280,12 +280,14 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
         self.state = TaskQueueState.RUNNING
         db.session.commit()
 
-    def setSuccess(self):
+    def setSuccess(self, result):
         self.state = TaskQueueState.SUCCESS
+        self.result = result
         db.session.commit()
 
-    def setFailed(self):
+    def setFailed(self, result):
         self.state = TaskQueueState.FAILED
+        self.result = result
         db.session.commit()
 
     def setExpired(self):

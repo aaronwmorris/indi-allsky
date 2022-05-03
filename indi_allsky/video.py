@@ -119,7 +119,7 @@ class VideoWorker(Process):
             except BlockingIOError as e:
                 if e.errno == errno.EAGAIN:
                     logger.error('Failed to get exclusive lock: %s', str(e))
-                    task.setFailed()
+                    task.setFailed('Failed to get exclusive lock')
                     return
 
 
@@ -135,7 +135,7 @@ class VideoWorker(Process):
 
             if not img_folder.exists():
                 logger.error('Image folder does not exist: %s', img_folder)
-                task.setFailed()
+                task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
                 continue
 
 
@@ -167,7 +167,7 @@ class VideoWorker(Process):
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
-            task.setFailed()
+            task.setFailed('Invalid time spec')
             return
 
 
@@ -181,7 +181,7 @@ class VideoWorker(Process):
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
-            task.setFailed()
+            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
             return
 
 
@@ -271,7 +271,7 @@ class VideoWorker(Process):
         )
 
 
-        task.setSuccess()
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
         self.uploadVideo(video_file)
@@ -317,7 +317,7 @@ class VideoWorker(Process):
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
-            task.setFailed()
+            task.setFailed('Invalid time spec')
             return
 
 
@@ -333,12 +333,12 @@ class VideoWorker(Process):
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
-            task.setFailed()
+            task.setFailed('Keogram is already generated: {0:s}'.format(str(keogram_file)))
             return
 
         if startrail_file.exists():
             logger.warning('Star trail is already generated: %s', startrail_file)
-            task.setFailed()
+            task.setFailed('Star trail is already generated: {0:s}'.format(str(startrail_file)))
             return
 
 
@@ -459,7 +459,7 @@ class VideoWorker(Process):
             self._miscDb.addUploadedFlag(startrail_entry)
 
 
-        task.setSuccess()
+        task.setSuccess('Generated keogram and/or star trail')
 
 
     def uploadKeogram(self, keogram_file):
@@ -645,7 +645,7 @@ class VideoWorker(Process):
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
-        task.setSuccess()
+        task.setSuccess('Expired images')
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):

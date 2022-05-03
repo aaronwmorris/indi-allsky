@@ -113,7 +113,7 @@ class FileUploader(Process):
                     client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
                 except AttributeError:
                     logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
-                    task.setFailed()
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['FILETRANSFER']['CLASSNAME']))
                     return
 
                 client = client_class()
@@ -143,7 +143,7 @@ class FileUploader(Process):
                     client_class = getattr(filetransfer, 'paho_mqtt')
                 except AttributeError:
                     logger.error('Unknown filetransfer class: %s', 'paho_mqtt')
-                    task.setFailed()
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format('paho_mqtt'))
                     return
 
                 client = client_class()
@@ -152,7 +152,7 @@ class FileUploader(Process):
                     client.port = self.config['MQTTPUBLISH']['PORT']
 
             else:
-                task.setFailed()
+                task.setFailed('Invalid transfer action')
                 raise Exception('Invalid transfer action')
 
 
@@ -163,12 +163,12 @@ class FileUploader(Process):
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Connection failure')
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Authentication failure')
                 return
 
 
@@ -178,22 +178,22 @@ class FileUploader(Process):
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Connection failure')
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Authentication failure')
                 return
             except filetransfer.exceptions.TransferFailure as e:
                 logger.error('Tranfer failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Tranfer failure')
                 return
             except filetransfer.exceptions.PermissionFailure as e:
                 logger.error('Permission failure: %s', e)
                 client.close()
-                task.setFailed()
+                task.setFailed('Permission failure')
                 return
 
 
@@ -204,7 +204,7 @@ class FileUploader(Process):
             logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
 
 
-            task.setSuccess()
+            task.setSuccess('File uploaded')
 
 
             if remove_local:

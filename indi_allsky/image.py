@@ -192,7 +192,7 @@ class ImageWorker(Process):
 
             if not filename.exists():
                 logger.error('Frame not found: %s', filename)
-                task.setFailed()
+                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
                 continue
 
 
@@ -332,7 +332,7 @@ class ImageWorker(Process):
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
-            task.setSuccess()
+            task.setSuccess('Image processed')
 
 
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
