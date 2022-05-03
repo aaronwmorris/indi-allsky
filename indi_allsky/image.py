@@ -18,6 +18,7 @@ import ephem
 
 from multiprocessing import Process
 #from threading import Thread
+import queue
 
 from astropy.io import fits
 import cv2
@@ -34,7 +35,7 @@ from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
 
@@ -88,6 +89,8 @@ class ImageWorker(Process):
         self,
         idx,
         config,
+        image_q,
+        upload_q,
         exposure_v,
         gain_v,
         bin_v,
@@ -102,6 +105,9 @@ class ImageWorker(Process):
         self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
+        self.image_q = image_q
+        self.upload_q = upload_q
+
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -142,26 +148,30 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            db.session.commit()  # ensure cache is flushed
+            time.sleep(1.1)  # sleep every loop
 
-            time.sleep(4.3)  # sleep every loop
-
-            task = IndiAllSkyDbTaskQueueTable.query\
-                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
-                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
-                .order_by(
-                    IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
-                )\
-                .first()
-
-            if not task:
+            try:
+                i_dict = self.image_q.get_nowait()
+            except queue.Empty:
                 continue
 
-
-            if task.data.get('stop'):
-                task.setSuccess()
+            if i_dict.get('stop'):
                 return
 
+
+            task_id = i_dict['task_id']
+
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
 
             task.setQueued()
 
@@ -404,6 +414,8 @@ class ImageWorker(Process):
         db.session.add(task)
         db.session.commit()
 
+        self.upload_q.put({'task_id' : task.id})
+
         self._miscDb.addUploadedFlag(image_entry)
 
 
@@ -427,6 +439,8 @@ class ImageWorker(Process):
         )
         db.session.add(task)
         db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def detectBitDepth(self, data):

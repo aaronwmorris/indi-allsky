@@ -14,6 +14,7 @@ import logging
 
 import ephem
 
+from multiprocessing import Queue
 from multiprocessing import Value
 
 from .indi import IndiClient
@@ -67,14 +68,17 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
+        self.image_q = Queue()
         self.image_worker = None
         self.image_worker_idx = 0
 
+        self.video_q = Queue()
         self.video_worker = None
         self.video_worker_idx = 0
 
         self.save_images = True
 
+        self.upload_q = Queue()
         self.upload_worker = None
         self.upload_worker_idx = 0
 
@@ -278,6 +282,7 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
+            self.image_q,
             self.gain_v,
             self.bin_v,
             self.sensortemp_v,
@@ -420,6 +425,8 @@ class IndiAllSky(object):
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
+            self.image_q,
+            self.upload_q,
             self.exposure_v,
             self.gain_v,
             self.bin_v,
@@ -445,13 +452,7 @@ class IndiAllSky(object):
 
         logger.info('Stopping ImageWorker process')
 
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.IMAGE,
-            data={'stop' : True},
-        )
-        db.session.add(task)
-        db.session.commit()
-
+        self.image_q.put({'stop' : True})
         self.image_worker.join()
 
 
@@ -466,6 +467,8 @@ class IndiAllSky(object):
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
+            self.video_q,
+            self.upload_q,
         )
         self.video_worker.start()
 
@@ -484,13 +487,7 @@ class IndiAllSky(object):
 
         logger.info('Stopping VideoWorker process')
 
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            data={'stop' : True},
-        )
-        db.session.add(task)
-        db.session.commit()
-
+        self.video_q.put({'stop' : True})
         self.video_worker.join()
 
 
@@ -505,6 +502,7 @@ class IndiAllSky(object):
         self.upload_worker = FileUploader(
             self.upload_worker_idx,
             self.config,
+            self.upload_q,
         )
 
         self.upload_worker.start()
@@ -524,13 +522,7 @@ class IndiAllSky(object):
 
         logger.info('Stopping FileUploadWorker process')
 
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            data={'stop' : True},
-        )
-        db.session.add(task)
-        db.session.commit()
-
+        self.upload_q.put({'stop' : True})
         self.upload_worker.join()
 
 
@@ -721,6 +713,7 @@ class IndiAllSky(object):
         # instantiate the client
         self.indiclient = IndiClient(
             self.config,
+            self.image_q,
             self.gain_v,
             self.bin_v,
             self.sensortemp_v,
@@ -892,6 +885,8 @@ class IndiAllSky(object):
         db.session.add(task)
         db.session.commit()
 
+        self.video_q.put({'task_id' : task.id})
+
 
     def generateNightTimelapse(self, timespec='', camera_id=0):
         # run from command line
@@ -935,6 +930,8 @@ class IndiAllSky(object):
         )
         db.session.add(task)
         db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def generateNightKeogram(self, timespec='', camera_id=0):
@@ -980,6 +977,8 @@ class IndiAllSky(object):
         db.session.add(task)
         db.session.commit()
 
+        self.video_q.put({'task_id' : task.id})
+
 
     def generateDayKeogram(self, timespec='', camera_id=0):
         # run from command line
@@ -1024,6 +1023,8 @@ class IndiAllSky(object):
         db.session.add(task)
         db.session.commit()
 
+        self.video_q.put({'task_id' : task.id})
+
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
@@ -1055,6 +1056,8 @@ class IndiAllSky(object):
         )
         db.session.add(task)
         db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def dbImportImages(self):

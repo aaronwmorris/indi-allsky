@@ -83,10 +83,11 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, gain_v, bin_v, sensortemp_v):
+    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
         super(IndiClient, self).__init__()
 
         self.config = config
+        self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensortemp_v = sensortemp_v
@@ -164,7 +165,7 @@ class IndiClient(PyIndi.BaseClient):
         exp_date = datetime.now()
 
         ### process data in worker
-        taskdata = {
+        jobdata = {
             'filename'    : f_tmpfile.name,
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
@@ -176,11 +177,13 @@ class IndiClient(PyIndi.BaseClient):
         with app.app_context():
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.IMAGE,
-                data=taskdata,
+                data=jobdata,
             )
 
             db.session.add(task)
             db.session.commit()
+
+            self.image_q.put({'task_id' : task.id})
 
 
     def newSwitch(self, svp):

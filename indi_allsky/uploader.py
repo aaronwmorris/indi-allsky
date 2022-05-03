@@ -1,18 +1,22 @@
 import sys
 import time
 from pathlib import Path
-from multiprocessing import Process
-#from threading import Thread
 import logging
 import traceback
 
-from .flask import db
+from multiprocessing import Process
+#from threading import Thread
+import queue
+
+#from .flask import db
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from . import filetransfer
+
+from sqlalchemy.orm.exc import NoResultFound
 
 logger = logging.getLogger('indi_allsky')
 
@@ -39,13 +43,14 @@ sys.excepthook = unhandled_exception
 
 
 class FileUploader(Process):
-    def __init__(self, idx, config):
+    def __init__(self, idx, config, upload_q):
         super(FileUploader, self).__init__()
 
         #self.threadID = idx
         self.name = 'FileUploader{0:03d}'.format(idx)
 
         self.config = config
+        self.upload_q = upload_q
 
         self.shutdown = False
         self.terminate = False
@@ -53,25 +58,31 @@ class FileUploader(Process):
 
     def run(self):
         while True:
-            db.session.commit()  # ensure cache is flushed
+            time.sleep(1.3)  # sleep every loop
 
-            time.sleep(4.7)  # sleep every loop
-
-            task = IndiAllSkyDbTaskQueueTable.query\
-                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
-                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD)\
-                .order_by(
-                    IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
-                )\
-                .first()
-
-            if not task:
+            try:
+                u_dict = self.upload_q.get_nowait()
+            except queue.Empty:
                 continue
 
 
-            if task.data.get('stop'):
-                task.setSuccess()
+            if u_dict.get('stop'):
                 return
+
+
+            task_id = u_dict['task_id']
+
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
 
 
             task.setQueued()

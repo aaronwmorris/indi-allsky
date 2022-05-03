@@ -34,6 +34,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
 #from threading import Thread
+import queue
 
 logger = logging.getLogger('indi_allsky')
 
@@ -64,13 +65,15 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config):
+    def __init__(self, idx, config, video_q, upload_q):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
         self.name = 'VideoWorker{0:03d}'.format(idx)
 
         self.config = config
+        self.video_q = video_q
+        self.upload_q = upload_q
 
         self.shutdown = False
         self.terminate = False
@@ -82,25 +85,30 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
-            db.session.commit()  # ensure cache is flushed
+            time.sleep(1.9)  # sleep every loop
 
-            time.sleep(5.7)  # sleep every loop
-
-            task = IndiAllSkyDbTaskQueueTable.query\
-                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
-                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
-                .order_by(
-                    IndiAllSkyDbTaskQueueTable.createDate.asc(),  # oldest first
-                )\
-                .first()
-
-            if not task:
+            try:
+                v_dict = self.video_q.get_nowait()
+            except queue.Empty:
                 continue
 
-
-            if task.data.get('stop'):
-                task.setSuccess()
+            if v_dict.get('stop'):
                 return
+
+
+            task_id = v_dict['task_id']
+
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.INIT)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
 
 
             task.setQueued()
@@ -297,6 +305,8 @@ class VideoWorker(Process):
         db.session.add(task)
         db.session.commit()
 
+        self.upload_q.put({'task_id' : task.id})
+
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
         from .flask.models import IndiAllSkyDbCameraTable
@@ -478,6 +488,8 @@ class VideoWorker(Process):
         db.session.add(task)
         db.session.commit()
 
+        self.upload_q.put({'task_id' : task.id})
+
 
     def uploadStarTrail(self, startrail_file):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
@@ -500,6 +512,8 @@ class VideoWorker(Process):
         )
         db.session.add(task)
         db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def uploadAllskyEndOfNight(self, timeofday):
@@ -583,6 +597,8 @@ class VideoWorker(Process):
         )
         db.session.add(task)
         db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def expireData(self, task, img_folder):
