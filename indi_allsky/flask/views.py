@@ -1456,6 +1456,7 @@ class TaskQueueView(TemplateView):
                 'createDate' : task.createDate,
                 'queue'      : task.queue.name,
                 'state'      : task.state.name,
+                'result'     : task.result,
             }
 
             task_list.append(t)
