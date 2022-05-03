@@ -74,6 +74,7 @@ class GetImageData {
 
     private function _dbConnect() {
         $conn = new PDO($this->db_uri);
+        $conn->exec('PRAGMA journal_mode=WAL');
         return($conn);
     }
 
