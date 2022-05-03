@@ -40,6 +40,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbTaskQueueTable
 
+from .models import TaskQueueQueue
 from .models import TaskQueueState
 
 from sqlalchemy import func
@@ -1430,16 +1431,23 @@ class TaskQueueView(TemplateView):
             TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
             TaskQueueState.RUNNING,
-            #TaskQueueState.SUCCESS,
+            TaskQueueState.SUCCESS,
             TaskQueueState.FAILED,
+        )
+
+        exclude_queues = (
+            TaskQueueQueue.IMAGE,
+            TaskQueueQueue.UPLOAD,
         )
 
         now_minus_1h = datetime.now() - timedelta(hours=1)
 
         tasks = IndiAllSkyDbTaskQueueTable.query\
-            .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
             .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_1h)\
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+            .filter(~IndiAllSkyDbTaskQueueTable.queue.in_(exclude_queues))\
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+
 
         task_list = list()
         for task in tasks:
