@@ -269,6 +269,7 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True)
     queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
     data = db.Column(db.JSON)
+    result = db.Column(db.String(length=255), nullable=True)
 
 
     def setQueued(self):
