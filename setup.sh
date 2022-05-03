@@ -4,7 +4,7 @@
 set -o errexit
 #set -o nounset
 
-PATH=/bin:/usr/bin
+PATH=/usr/bin:/bin
 export PATH
 
 
@@ -150,6 +150,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
@@ -182,8 +184,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -233,6 +236,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
@@ -254,8 +259,9 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -304,6 +310,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
@@ -325,8 +333,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -377,6 +386,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
@@ -399,8 +410,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -448,6 +460,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
@@ -470,8 +484,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -521,6 +536,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3.9
+
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
@@ -550,9 +567,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
-        python3 \
+        python3.9 \
+        python3.9-dev \
+        python3.9-venv \
         python3-pip \
-        python3-dev \
         virtualenv \
         whiptail \
         rsyslog \
@@ -601,6 +619,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
+    PYTHON_BIN=python3
+
     VIRTUALENV_REQ=requirements_ubuntu18.txt
 
 
@@ -619,8 +639,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get -y install \
         build-essential \
         python3 \
-        python3-pip \
         python3-dev \
+        python3-venv \
+        python3-pip \
         virtualenv \
         whiptail \
         rsyslog \
@@ -701,7 +722,7 @@ echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
 chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
-    virtualenv -p python3 ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky
+    virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky"
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 install --upgrade pip setuptools wheel
@@ -849,7 +870,7 @@ echo "Detected image folder: $IMAGE_FOLDER"
 echo "**** Flask config ****"
 TMP4=$(mktemp)
 #if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
-SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
+SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
