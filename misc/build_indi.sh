@@ -67,6 +67,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -78,6 +79,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -89,6 +91,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -100,6 +103,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -111,6 +115,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -122,6 +127,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
@@ -133,6 +139,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         build-essential \
         python3 \
         python3-dev \
+        python3-venv \
         python3-pip \
         python3-apt \
         virtualenv \
