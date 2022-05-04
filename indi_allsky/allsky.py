@@ -559,7 +559,7 @@ class IndiAllSky(object):
     def run(self):
         self.write_pid()
 
-        self.expireOrphanedTasks()
+        self._expireOrphanedTasks()
 
         self._initialize()
 
@@ -603,6 +603,7 @@ class IndiAllSky(object):
             if self.night_v.value != int(self.night):
                 if self.generate_timelapse_flag:
                     self._expireData()  # cleanup old images and folders
+                    self._flushOldTasks()  # cleanup old tasks in DB
 
                 if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
@@ -628,7 +629,7 @@ class IndiAllSky(object):
 
 
             # Queue externally defined tasks
-            self.queueManualTasks()
+            self._queueManualTasks()
 
 
             # every ~10 seconds end this loop and run the code above
@@ -1378,7 +1379,7 @@ class IndiAllSky(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def expireOrphanedTasks(self):
+    def _expireOrphanedTasks(self):
         orphaned_statuses = (
             TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
@@ -1395,7 +1396,7 @@ class IndiAllSky(object):
         db.session.commit()
 
 
-    def flushOldTasks(self):
+    def _flushOldTasks(self):
         now_minus_3d = datetime.now() - timedelta(days=3)
 
         flush_old_tasks = IndiAllSkyDbTaskQueueTable.query\
@@ -1406,7 +1407,7 @@ class IndiAllSky(object):
         db.session.commit()
 
 
-    def queueManualTasks(self):
+    def _queueManualTasks(self):
         logger.info('Checking for manually submitted tasks')
         manual_video_tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
