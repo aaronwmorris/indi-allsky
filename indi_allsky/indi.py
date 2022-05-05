@@ -366,6 +366,17 @@ class IndiClient(PyIndi.BaseClient):
     def getCcdGain(self, ccdDevice):
         indi_exec = ccdDevice.getDriverExec()
 
+
+        # for cameras that do not support gain
+        fake_gain_info = {
+            'current' : -1,
+            'min'     : -1,
+            'max'     : -1,
+            'step'    : 1,
+            'format'  : '',
+        }
+
+
         if indi_exec in [
             'indi_asi_ccd',
             'indi_asi_single_ccd',
@@ -387,16 +398,16 @@ class IndiClient(PyIndi.BaseClient):
             index = gain_index_dict['GAIN']
         elif indi_exec in ['indi_sx_ccd']:
             logger.warning('indi_sx_ccd does not support gain settings')
-            return {}
+            return fake_gain_info
         elif indi_exec in ['indi_canon_ccd']:
             logger.warning('indi_canon_ccd does not support gain settings')
-            return {}
+            return fake_gain_info
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
-            return {}
+            return fake_gain_info
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
-            return {}
+            return fake_gain_info
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 

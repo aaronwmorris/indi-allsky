@@ -216,7 +216,7 @@ class ImageWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
-                scidata_debayered_8 = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+                scidata_debayered = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
 
                 calibrated = False
 
@@ -827,13 +827,15 @@ class ImageWorker(Process):
         #)
 
 
-        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-        self.drawText(
-            data_bytes,
-            'Gain {0:d}'.format(self.gain_v.value),
-            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
-        )
+        # Add if gain is supported
+        if self.gain_v.value > -1:
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                'Gain {0:d}'.format(self.gain_v.value),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
 
 
         # Add temp if value is set
