@@ -216,7 +216,7 @@ class ImageWorker(Process):
                 # sqm calculation
                 self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
 
-                scidata_debayered_8 = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+                scidata_debayered = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
 
                 calibrated = False
 
