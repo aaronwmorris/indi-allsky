@@ -820,6 +820,7 @@ class IndiAllSky(object):
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
                     logger.info('Moon Mode conditions detected')
                     self.moonmode = True
+                    return
 
         self.moonmode = False
 
