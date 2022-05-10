@@ -633,9 +633,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    PYTHON_BIN=python3
+    PYTHON_BIN=python3.8
 
-    VIRTUALENV_REQ=requirements_ubuntu18.txt
+    VIRTUALENV_REQ=requirements_debian11.txt
 
 
     # reconfigure system timezone
@@ -652,9 +652,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
+        python3.8 \
+        python3.8-dev \
+        python3.8-venv \
         python3-pip \
         virtualenv \
         whiptail \
