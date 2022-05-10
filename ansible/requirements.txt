@@ -1,1 +1,2 @@
+git+https://salsa.debian.org/apt-team/python-apt.git@6145b648#egg=python-apt
 ansible==4.10.0
