@@ -155,20 +155,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libapt-pkg-dev \
         libffi-dev
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
-    PYTHON_BIN=python3
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
-        python3-pip \
-        virtualenv \
-        libapt-pkg-dev \
-        libffi-dev
-
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
     exit 1
