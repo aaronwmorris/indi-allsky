@@ -9,8 +9,18 @@ export PATH
 
 
 if [[ "$(id -u)" == "0" ]]; then
+    echo
     echo "Please do not run $(basename $0) as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo
+    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1

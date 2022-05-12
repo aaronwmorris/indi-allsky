@@ -27,8 +27,18 @@ echo "######################################################"
 
 
 if [[ "$(id -u)" == "0" ]]; then
+    echo
     echo "Please do not run $(basename $0) as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo
+    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1
@@ -62,6 +72,8 @@ sudo true
 
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+    PYTHON_BIN=python3
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -69,11 +81,13 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-dev \
         python3-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+    PYTHON_BIN=python3
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -81,11 +95,13 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-dev \
         python3-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
+    PYTHON_BIN=python3
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -93,11 +109,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-dev \
         python3-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
+    PYTHON_BIN=python3
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -105,11 +123,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-dev \
         python3-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+    PYTHON_BIN=python3
+
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -117,32 +137,22 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         python3-dev \
         python3-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
-    sudo apt-get update
-    sudo apt-get -y install \
-        build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
-        python3-pip \
-        python3-apt \
-        virtualenv \
-        libffi-dev
+    PYTHON_BIN=python3.9
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
+        python3.9 \
+        python3.9-dev \
+        python3.9-venv \
         python3-pip \
-        python3-apt \
         virtualenv \
+        libapt-pkg-dev \
         libffi-dev
 
 else
@@ -155,7 +165,7 @@ echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
 chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/ansible" ]; then
-    virtualenv -p python3 --system-site-packages ${ALLSKY_DIRECTORY}/virtualenv/ansible
+    virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/ansible"
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate
 pip3 install --upgrade pip setuptools wheel

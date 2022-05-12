@@ -116,8 +116,16 @@ echo
 echo
 
 if [[ "$(id -u)" == "0" ]]; then
-    echo "Please do not run setup.sh as root"
+    echo "Please do not run $(basename $0) as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1
@@ -625,9 +633,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     APACHE_USER=www-data
     APACHE_GROUP=www-data
 
-    PYTHON_BIN=python3
+    PYTHON_BIN=python3.8
 
-    VIRTUALENV_REQ=requirements_ubuntu18.txt
+    VIRTUALENV_REQ=requirements_debian11.txt
 
 
     # reconfigure system timezone
@@ -644,9 +652,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
+        python3.8 \
+        python3.8-dev \
+        python3.8-venv \
         python3-pip \
         virtualenv \
         whiptail \
