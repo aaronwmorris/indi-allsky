@@ -14,6 +14,7 @@ canvas {
 <script type="text/javascript">
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
+var page_settings;  // set later
 var rock;  // set later
 var json_data = {
     'image_list' : [],
@@ -156,6 +157,30 @@ function closeFullscreen() {
 }
 
 $( document ).ready(function() {
+    if(localStorage) {
+        loop_settings = localStorage.getItem("loop_settings");
+        if(loop_settings) {
+            page_settings = JSON.parse(loop_settings);
+        } else {
+            page_settings = new Object();
+            page_settings["history_seconds"] = 900;
+            page_settings["frame_delay_ms"] = 75;
+            page_settings["rock"] = true;
+
+            localStorage.setItem("loop_settings", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["history_seconds"] !== "undefined") {
+        $("#HISTORY_SELECT").val(page_settings["history_seconds"]);
+    }
+    if(typeof page_settings["frame_delay_ms"] !== "undefined") {
+        $("#FRAMEDELAY_SELECT").val(page_settings["frame_delay_ms"]);
+    }
+    if(typeof page_settings["rock"] !== "undefined") {
+        $("#ROCK_CHECKBOX").prop("checked", page_settings["rock"]);
+    }
+
     history_seconds = $('#HISTORY_SELECT').val();
     frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
     rock = $('#ROCK_CHECKBOX').prop('checked');
@@ -209,16 +234,31 @@ $( document ).ready(function() {
 $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
     console.log('Changing loop history: ' + history_seconds);
+
+    if(localStorage) {
+        page_settings["history_seconds"] = history_seconds;
+        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
+    }
 });
 
 $("#FRAMEDELAY_SELECT").on("change", function() {
     frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
     console.log('Changing frame delay: ' + frame_delay_ms);
+
+    if(localStorage) {
+        page_settings["frame_delay_ms"] = frame_delay_ms;
+        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
+    }
 });
 
 $("#ROCK_CHECKBOX").on("change", function() {
     rock = $('#ROCK_CHECKBOX').prop('checked');
     console.log('Changing rock: ' + rock);
+
+    if(localStorage) {
+        page_settings["rock"] = rock;
+        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
+    }
 });
 
 </script>
