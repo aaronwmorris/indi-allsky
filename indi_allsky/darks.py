@@ -1,5 +1,4 @@
 import sys
-import io
 import time
 import math
 import tempfile
@@ -24,7 +23,12 @@ from .indi import IndiClient
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
+from sqlalchemy.orm.exc import NoResultFound
 
 
 logger = logging.getLogger('indi_allsky')
@@ -199,19 +203,34 @@ class IndiAllSkyDarks(object):
     def _wait_for_image(self):
         i_dict = self.image_q.get(timeout=15)
 
-        imgdata = i_dict['imgdata']
-        #exposure = i_dict['exposure']
-        #exp_date = i_dict['exp_date']
-        #exp_elapsed = i_dict['exp_elapsed']
-        #camera_id = i_dict['camera_id']
-        #filename_t = i_dict.get('filename_t')
-        #img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
+        task_id = i_dict['task_id']
+
+        try:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                .one()
+
+        except NoResultFound:
+            logger.error('Task ID %d not found', task_id)
+            raise
 
 
+        # go ahead and set complete
+        task.setSuccess('Dark frame processed')
 
-        ### OpenCV ###
-        blobfile = io.BytesIO(imgdata)
-        hdulist = fits.open(blobfile)
+
+        filename = Path(task.data['filename'])
+
+        if not filename.exists():
+            task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+            raise Exception('Frame not found {0:s}'.format(str(filename)))
+
+
+        hdulist = fits.open(filename)
+        filename.unlink()  # no longer need the original file
+
 
         return hdulist
 
