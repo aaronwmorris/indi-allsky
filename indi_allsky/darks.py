@@ -238,12 +238,14 @@ class IndiAllSkyDarks(object):
 
     def average(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         self._run(IndiAllSkyDarksAverage)
 
 
     def tempaverage(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
         next_temp_thold = current_temp - self._temp_delta
@@ -270,12 +272,14 @@ class IndiAllSkyDarks(object):
 
     def sigmaclip(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         self._run(IndiAllSkyDarksSigmaClip)
 
 
     def tempsigmaclip(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
         next_temp_thold = current_temp - self._temp_delta
@@ -298,6 +302,45 @@ class IndiAllSkyDarks(object):
 
             self._run(IndiAllSkyDarksSigmaClip)
 
+
+    def _pre_run_tasks(self, ccdDevice):
+        # Tasks that need to be run before the main program loop
+
+        if self.config['CCD_SERVER'] in ['indi_rpicam']:
+            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
+            # in order to take exposures longer than 7s
+            logger.info('Taking throw away exposure for rpicam')
+            self.shoot(ccdDevice, 7.0, sync=True)
+
+
+            i_dict = self.image_q.get(timeout=15)
+
+            task_id = i_dict['task_id']
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                raise
+
+
+            # go ahead and set complete
+            task.setSuccess('Throw away frame')
+
+
+            filename = Path(task.data['filename'])
+
+            if not filename.exists():
+                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+                raise Exception('Frame not found {0:s}'.format(str(filename)))
+
+
+            filename.unlink()  # no longer need the original file
 
 
     def _run(self, stacking_class):
