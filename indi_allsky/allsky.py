@@ -100,9 +100,9 @@ class IndiAllSky(object):
         signal.signal(signal.SIGTERM, self.sigterm_handler)
         signal.signal(signal.SIGINT, self.sigint_handler)
 
-        self.restart = False
-        self.shutdown = False
-        self.terminate = False
+        self._restart = False
+        self._shutdown = False
+        self._terminate = False
 
 
     @property
@@ -203,22 +203,22 @@ class IndiAllSky(object):
 
 
         # set flag for program to restart processes
-        self.restart = True
+        self._restart = True
 
 
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
         # set flag for program to stop processes
-        self.shutdown = True
-        self.terminate = True
+        self._shutdown = True
+        self._terminate = True
 
 
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
         # set flag for program to stop processes
-        self.shutdown = True
+        self._shutdown = True
 
 
     def sigalarm_handler(self, signum, frame):
@@ -661,11 +661,11 @@ class IndiAllSky(object):
                 ##########################################################################
 
                 # shutdown here to ensure camera is not taking images
-                if self.shutdown:
+                if self._shutdown:
                     logger.warning('Shutting down')
-                    self._stopImageWorker(terminate=self.terminate)
-                    self._stopVideoWorker(terminate=self.terminate)
-                    self._stopFileUploadWorker(terminate=self.terminate)
+                    self._stopImageWorker(terminate=self._terminate)
+                    self._stopVideoWorker(terminate=self._terminate)
+                    self._stopFileUploadWorker(terminate=self._terminate)
 
                     self.indiclient.disconnectServer()
 
@@ -673,9 +673,9 @@ class IndiAllSky(object):
 
 
                 # restart here to ensure camera is not taking images
-                if self.restart:
+                if self._restart:
                     logger.warning('Restarting processes')
-                    self.restart = False
+                    self._restart = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()

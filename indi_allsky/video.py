@@ -75,9 +75,6 @@ class VideoWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
-        self.shutdown = False
-        self.terminate = False
-
         self._miscDb = miscDb(self.config)
 
         self.f_lock = None

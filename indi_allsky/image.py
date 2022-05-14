@@ -137,9 +137,6 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
 
-        self.shutdown = False
-        self.terminate = False
-
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:

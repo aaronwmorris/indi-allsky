@@ -52,9 +52,6 @@ class FileUploader(Process):
         self.config = config
         self.upload_q = upload_q
 
-        self.shutdown = False
-        self.terminate = False
-
 
     def run(self):
         while True:
