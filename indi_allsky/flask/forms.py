@@ -1044,7 +1044,10 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
         # set order
-        videos_query = videos_query.order_by(IndiAllSkyDbVideoTable.dayDate.desc())
+        videos_query = videos_query.order_by(
+            IndiAllSkyDbVideoTable.dayDate.desc(),
+            IndiAllSkyDbVideoTable.night.desc(),
+        )
 
 
         videos_data = []
