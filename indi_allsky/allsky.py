@@ -29,6 +29,11 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
+from .flask.models import IndiAllSkyDbImageTable
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbVideoTable
+from .flask.models import IndiAllSkyDbKeogramTable
+from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -1068,12 +1073,6 @@ class IndiAllSky(object):
 
 
     def dbImportImages(self):
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbDarkFrameTable
-        from .flask.models import IndiAllSkyDbVideoTable
-        from .flask.models import IndiAllSkyDbKeogramTable
-        from .flask.models import IndiAllSkyDbStarTrailsTable
-
         try:
             camera_id = self._miscDb.getCurrentCameraId()
         except NoResultFound:

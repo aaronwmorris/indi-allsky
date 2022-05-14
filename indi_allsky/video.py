@@ -28,6 +28,11 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbImageTable
+from .flask.models import IndiAllSkyDbVideoTable
+from .flask.models import IndiAllSkyDbKeogramTable
+from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -156,10 +161,6 @@ class VideoWorker(Process):
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
-        from .flask.models import IndiAllSkyDbCameraTable
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbVideoTable
-
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -305,11 +306,6 @@ class VideoWorker(Process):
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
-        from .flask.models import IndiAllSkyDbCameraTable
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbKeogramTable
-        from .flask.models import IndiAllSkyDbStarTrailsTable
-
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -599,8 +595,6 @@ class VideoWorker(Process):
 
 
     def expireData(self, task, img_folder):
-        from .flask.models import IndiAllSkyDbImageTable
-
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
 
