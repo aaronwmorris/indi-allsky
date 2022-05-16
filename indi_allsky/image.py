@@ -779,6 +779,24 @@ class ImageWorker(Process):
             pass
 
 
+        # Nautical dawn
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nauticalDawn_date
+            sun.compute(obs)
+            sunNauticalDawnX, sunNauticalDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
         # Astronomical dawn
         try:
             obs.horizon = math.radians(-18)
@@ -808,6 +826,24 @@ class ImageWorker(Process):
             sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Nautical twilight
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_nauticalTwilight_date
+            sun.compute(obs)
+            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
