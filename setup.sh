@@ -9,6 +9,7 @@ export PATH
 
 
 #### config ####
+INDI_ALLSKY_VERSION="3.0"
 INDI_DRIVER_PATH="/usr/bin"
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
@@ -878,7 +879,7 @@ sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
 sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
 # Detect IMAGE_FOLDER
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' /etc/indi-allsky/config.json)
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
 echo "Detected image folder: $IMAGE_FOLDER"
 
 
@@ -1192,6 +1193,17 @@ sudo systemctl disable allsky || true
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 # this needs to happen after creating the $DB_FOLDER
 systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+
+
+
+echo "**** Update config version ****"
+TMP_CONFIG2=$(mktemp)
+jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > $TMP_CONFIG2
+cp -f "$TMP_CONFIG2" "${ALLSKY_ETC}/config.json"
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
+sudo chmod 660 "${ALLSKY_ETC}/config.json"
+[[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
+
 
 
 echo
