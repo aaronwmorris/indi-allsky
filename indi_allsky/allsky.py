@@ -45,6 +45,8 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
+    _version = 3.0
+
     periodic_reconfigure_offset = 300.0  # 5 minutes
     DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
@@ -245,6 +247,11 @@ class IndiAllSky(object):
 
     def _parseConfig(self, json_config):
         c = json.loads(json_config)
+
+        config_version = float(c.get('VERSION', 0.0))
+        if self._version != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            sys.exit(1)
 
         # set any new config defaults which might not be in the config
 
