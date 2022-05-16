@@ -761,6 +761,10 @@ class ImageWorker(Process):
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 
+        # separation of 1-3 degrees means a possible eclipse
+        sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
+
+
         # Civil dawn
         try:
             obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -955,6 +959,26 @@ class ImageWorker(Process):
                 self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             )
 
+
+        # Add eclipse indicator
+        if self.moon_phase > 50.0 and sun_moon_sep < 2.0:
+            # Lunar eclipse (earth's penumbra is large)
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* LUNAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
+        elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
+            # Solar eclipse
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* SOLAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
 
 
         # add extra text to image
