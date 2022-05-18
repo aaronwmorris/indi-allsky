@@ -411,7 +411,7 @@ class IndiAllSkyDarks(object):
             self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
             # day will rarely exceed 1 second
-            for exposure in (1, 5):
+            for exposure in dark_exposures:
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
 
