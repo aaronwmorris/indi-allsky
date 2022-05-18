@@ -22,6 +22,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
     startrails = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='camera')
     darkframes = db.relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
+    badpixelmaps = db.relationship('IndiAllSkyDbBadPixelMapTable', back_populates='camera')
 
 
 class IndiAllSkyDbImageTable(db.Model):
@@ -102,6 +103,25 @@ class IndiAllSkyDbDarkFrameTable(db.Model):
 
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbBadPixelMapTable(db.Model):
+    __tablename__ = 'badpixelmap'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    bitdepth = db.Column(db.Integer, nullable=False, index=True)
+    exposure = db.Column(db.Integer, nullable=False, index=True)
+    gain = db.Column(db.Integer, nullable=False, index=True)
+    binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
+    temp = db.Column(db.Float, nullable=True, index=True)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
+
+    def __repr__(self):
+        return '<BadPixelMap {0:s}>'.format(self.filename)
 
 
 class IndiAllSkyDbVideoTable(db.Model):
