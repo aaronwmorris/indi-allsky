@@ -65,6 +65,13 @@ if __name__ == "__main__":
         type=int,
         default=5,
     )
+    argparser.add_argument(
+        '--bitmax',
+        '-b',
+        help='max bits returned by camera if different than container',
+        type=int,
+        default=0,
+    )
 
 
     args = argparser.parse_args()
@@ -74,6 +81,7 @@ if __name__ == "__main__":
     iad.count = args.count
     iad.temp_delta = args.temp_delta
     iad.time_delta = args.time_delta
+    iad.bitmax = args.bitmax
 
     action_func = getattr(iad, args.action)
     action_func()

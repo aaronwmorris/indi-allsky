@@ -45,6 +45,9 @@ class IndiAllSkyDarks(object):
         self._temp_delta = 5.0
         self._time_delta = 5
 
+        # this is used to set a max value of data returned by the camera
+        self._bitmax = 0
+
 
         self.image_q = Queue()
         self.indiclient = None
@@ -87,6 +90,16 @@ class IndiAllSkyDarks(object):
     @time_delta.setter
     def time_delta(self, new_time_delta):
         self._time_delta = int(abs(new_time_delta))
+
+
+    @property
+    def bitmax(self):
+        return self._bitmax
+
+    @bitmax.setter
+    def bitmax(self, new_bitmax):
+        self._bitmax = int(new_bitmax)
+        assert(self._bitmax in (0, 8, 10, 12, 14, 16))
 
 
 
@@ -571,7 +584,11 @@ class IndiAllSkyDarksProcessor(object):
         max_val = numpy.amax(bpm)
         logger.info('Image max value: %d', int(max_val))
 
-        bitmax_95p = (2 ** image_bitpix) * 0.95
+        if self._bitmax:
+            bitmax_95p = (2 ** self._bitmax) * 0.95
+        else:
+            bitmax_95p = (2 ** image_bitpix) * 0.95
+
         bpm[bpm < bitmax_95p] = 0  # filter all values less than max value
 
         hdulist[0].data = bpm
