@@ -490,6 +490,7 @@ class IndiAllSkyDarks(object):
 
 
         s = stacking_class(self.gain_v, self.bin_v)
+        s.bitmax = self._bitmax
         s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
         s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
 
@@ -551,6 +552,18 @@ class IndiAllSkyDarksProcessor(object):
     def __init__(self, gain_v, bin_v):
         self.gain_v = gain_v
         self.bin_v = bin_v
+
+        self._bitmax = 0
+
+
+    @property
+    def bitmax(self):
+        return self._bitmax
+
+    @bitmax.setter
+    def bitmax(self, new_bitmax):
+        self._bitmax = int(new_bitmax)
+
 
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         logger.info('Building bad pixel map for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
