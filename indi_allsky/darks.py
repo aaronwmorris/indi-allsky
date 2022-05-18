@@ -26,6 +26,7 @@ from .flask.miscDb import miscDb
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -363,6 +364,7 @@ class IndiAllSkyDarks(object):
         dark_exposures.reverse()  # take longer exposures first
 
 
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         # 0  = ccd id
         # 1  = bits
@@ -398,7 +400,7 @@ class IndiAllSkyDarks(object):
             self.indiclient.setCcdBinning(self.ccdDevice, binmode)
 
             for exposure in dark_exposures:
-                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
 
 
@@ -410,16 +412,25 @@ class IndiAllSkyDarks(object):
 
             # day will rarely exceed 1 second
             for exposure in (1, 5):
-                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
 
 
-    def _take_exposures(self, exposure, dark_filename_t, ccd_bits, stacking_class):
+    def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
         self.indiclient.getCcdTemperature(self.ccdDevice)
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = dark_filename_t.format(
+        dark_filename = dark_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
+        bpm_filename = bpm_filename_t.format(
             self.camera_id,
             ccd_bits,
             int(exposure),
@@ -429,7 +440,8 @@ class IndiAllSkyDarks(object):
             date_str,
         )
 
-        full_filename_p = self.darks_dir.joinpath(filename)
+        full_dark_filename_p = self.darks_dir.joinpath(dark_filename)
+        full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
 
 
         tmp_fit_dir = tempfile.TemporaryDirectory()
@@ -465,11 +477,11 @@ class IndiAllSkyDarks(object):
 
 
         s = stacking_class(self.gain_v, self.bin_v)
-        s.stack(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
+        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
 
-
-        self._miscDb.addDarkFrame(
-            full_filename_p,
+        self._miscDb.addBadPixelMap(
+            full_bpm_filename_p,
             self.camera_id,
             image_bitpix,
             exposure,
@@ -478,17 +490,35 @@ class IndiAllSkyDarks(object):
             self.sensortemp_v.value,
         )
 
+        self._miscDb.addDarkFrame(
+            full_dark_filename_p,
+            self.camera_id,
+            image_bitpix,
+            exposure,
+            self.gain_v.value,
+            self.bin_v.value,
+            self.sensortemp_v.value,
+        )
 
         tmp_fit_dir.cleanup()
 
 
 
     def flush(self):
+        badpixelmaps_all = IndiAllSkyDbBadPixelMapTable.query
         dark_frames_all = IndiAllSkyDbDarkFrameTable.query
 
+        logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
 
         time.sleep(10.0)
+
+        for bpm_entry in badpixelmaps_all:
+            filename = Path(bpm_entry.filename)
+
+            if filename.exists():
+                logger.warning('Removing bad pixel map: %s', filename)
+                filename.unlink()
 
         for dark_frame_entry in dark_frames_all:
             filename = Path(dark_frame_entry.filename)
@@ -498,6 +528,7 @@ class IndiAllSkyDarks(object):
                 filename.unlink()
 
 
+        badpixelmaps_all.delete()
         dark_frames_all.delete()
         db.session.commit()
 
@@ -508,7 +539,48 @@ class IndiAllSkyDarksProcessor(object):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
-    def stack(self):
+    def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+
+        if image_bitpix == 16:
+            numpy_type = numpy.uint16
+        elif image_bitpix == 8:
+            numpy_type = numpy.uint8
+        else:
+            raise Exception('Unknown bits per pixel')
+
+
+        image_data = list()
+        hdulist = None
+        for item in Path(tmp_fit_dir_p).iterdir():
+            #logger.info('Found item: %s', item)
+            if item.is_file() and item.suffix in ('.fit',):
+                #logger.info('Found fit: %s', item)
+                hdulist = fits.open(item)
+                image_data.append(hdulist[0].data)
+
+
+        image_height, image_width = image_data[0].shape[:2]
+        bpm = numpy.zeros((image_height, image_width), dtype=numpy_type)
+
+        # take the max values of each pixel from each image
+        for image in image_data:
+            bpm = numpy.maximum(bpm, image)
+
+
+        max_val = numpy.amax(bpm)
+        logger.info('Image max value: %d', int(max_val))
+
+        bitmax = (2 ** image_bitpix) - 1
+        bpm[bpm < bitmax] = 0  # filter all values less than max value
+
+        hdulist[0].data = bpm
+
+        # reuse the last fits file for the stacked data
+        hdulist.writeto(filename_p)
+
+
+    def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         raise Exception('Must be redefined in sub-class')
 
 
