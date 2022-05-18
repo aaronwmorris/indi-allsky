@@ -32,6 +32,7 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
@@ -649,6 +650,53 @@ class ImageWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
+        # pick a bad pixel map that is closest to the exposure and temperature
+        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
+            .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+            .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensortemp_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .order_by(
+                IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                IndiAllSkyDbBadPixelMapTable.temp.asc(),
+                IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+            )\
+            .first()
+
+        if not bpm_entry:
+            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensortemp_v.value)
+
+            # pick a bad pixel map that matches the exposure at the hightest temperature found
+            bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
+                .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                .order_by(
+                    IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                    IndiAllSkyDbBadPixelMapTable.temp.desc(),
+                    IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                )\
+                .first()
+
+
+            if not bpm_entry:
+                logger.warning(
+                    'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
+                    camera_id,
+                    image_bitpix,
+                    float(exposure),
+                    self.gain_v.value,
+                    self.bin_v.value,
+                    self.sensortemp_v.value,
+                )
+
+
         # pick a dark frame that is closest to the exposure and temperature
         logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -697,6 +745,19 @@ class ImageWorker(Process):
 
                 raise CalibrationNotFound('Dark not found')
 
+
+        if bpm_entry:
+            p_bpm = Path(bpm_entry.filename)
+            if p_bpm.exists():
+                logger.info('Matched bad pixel map: %s', p_bpm)
+                with fits.open(p_bpm) as bpm:
+                    scidata_bpm = cv2.subtract(scidata_uncalibrated, bpm[0].data)
+                    del bpm[0].data   # make sure memory is freed
+            else:
+                logger.error('Bad Pixel Map missing: %s', bpm_entry.filename)
+                scidata_bpm = scidata_uncalibrated
+
+
         p_dark_frame = Path(dark_frame_entry.filename)
         if not p_dark_frame.exists():
             logger.error('Dark file missing: %s', dark_frame_entry.filename)
@@ -706,7 +767,7 @@ class ImageWorker(Process):
         logger.info('Matched dark: %s', p_dark_frame)
 
         with fits.open(p_dark_frame) as dark:
-            scidata = cv2.subtract(scidata_uncalibrated, dark[0].data)
+            scidata = cv2.subtract(scidata_bpm, dark[0].data)
             del dark[0].data   # make sure memory is freed
 
         return scidata
