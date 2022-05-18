@@ -571,8 +571,8 @@ class IndiAllSkyDarksProcessor(object):
         max_val = numpy.amax(bpm)
         logger.info('Image max value: %d', int(max_val))
 
-        bitmax = (2 ** image_bitpix) - 1
-        bpm[bpm < bitmax] = 0  # filter all values less than max value
+        bitmax_80p = (2 ** image_bitpix) * 0.80
+        bpm[bpm < bitmax_80p] = 0  # filter all values less than max value
 
         hdulist[0].data = bpm
 
