@@ -769,7 +769,7 @@ class ImageWorker(Process):
             dark = dark_f[0].data
 
 
-        if bpm:
+        if not isinstance(bpm, type(None)):
             # merge bad pixel map and dark
             master_dark = numpy.maximum(bpm, dark)
         else:
