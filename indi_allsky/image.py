@@ -750,12 +750,11 @@ class ImageWorker(Process):
             p_bpm = Path(bpm_entry.filename)
             if p_bpm.exists():
                 logger.info('Matched bad pixel map: %s', p_bpm)
-                with fits.open(p_bpm) as bpm:
-                    scidata_bpm = cv2.subtract(scidata_uncalibrated, bpm[0].data)
-                    del bpm[0].data   # make sure memory is freed
+                with fits.open(p_bpm) as bpm_f:
+                    bpm = bpm_f[0].data
             else:
                 logger.error('Bad Pixel Map missing: %s', bpm_entry.filename)
-                scidata_bpm = scidata_uncalibrated
+                bpm = None
 
 
         p_dark_frame = Path(dark_frame_entry.filename)
@@ -766,11 +765,20 @@ class ImageWorker(Process):
 
         logger.info('Matched dark: %s', p_dark_frame)
 
-        with fits.open(p_dark_frame) as dark:
-            scidata = cv2.subtract(scidata_bpm, dark[0].data)
-            del dark[0].data   # make sure memory is freed
+        with fits.open(p_dark_frame) as dark_f:
+            dark = dark_f[0].data
 
-        return scidata
+
+        if bpm:
+            # merge bad pixel map and dark
+            master_dark = numpy.maximum(bpm, dark)
+        else:
+            master_dark = dark
+
+
+        scidata_calibrated = cv2.subtract(scidata_uncalibrated, master_dark)
+
+        return scidata_calibrated
 
 
     def debayer(self, scidata):
