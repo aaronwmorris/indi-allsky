@@ -598,11 +598,11 @@ class IndiAllSkyDarksProcessor(object):
         logger.info('Image max value: %d', int(max_val))
 
         if self._bitmax:
-            bitmax_95p = (2 ** self._bitmax) * 0.95
+            bitmax_75p = (2 ** self._bitmax) * 0.75
         else:
-            bitmax_95p = (2 ** image_bitpix) * 0.95
+            bitmax_75p = (2 ** image_bitpix) * 0.75
 
-        bpm[bpm < bitmax_95p] = 0  # filter all values less than max value
+        bpm[bpm < bitmax_75p] = 0  # filter all values less than max value
 
         hdulist[0].data = bpm
 
