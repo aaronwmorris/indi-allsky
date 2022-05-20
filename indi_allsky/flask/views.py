@@ -1342,7 +1342,7 @@ class SystemInfoView(TemplateView):
             disk_usage = psutil.disk_usage(fs.mountpoint)
 
             data = {
-                'total_gb'   : disk_usage.total / 1024.0 / 1024.0 / 1024.0,
+                'total_mb'   : disk_usage.total / 1024.0 / 1024.0,
                 'mountpoint' : fs.mountpoint,
                 'percent'    : disk_usage.percent,
             }
