@@ -45,6 +45,8 @@ class IndiAllSkyDarks(object):
         self._temp_delta = 5.0
         self._time_delta = 5
 
+        self._hotpixel_adu_percent = 85
+
         # this is used to set a max value of data returned by the camera
         self._bitmax = 0
 
@@ -598,11 +600,11 @@ class IndiAllSkyDarksProcessor(object):
         logger.info('Image max value: %d', int(max_val))
 
         if self._bitmax:
-            bitmax_75p = (2 ** self._bitmax) * 0.75
+            bitmax_percent = (2 ** self._bitmax) * (self._hotpixel_adu_percent / 100.0)
         else:
-            bitmax_75p = (2 ** image_bitpix) * 0.75
+            bitmax_percent = (2 ** image_bitpix) * (self._hotpixel_adu_percent / 100.0)
 
-        bpm[bpm < bitmax_75p] = 0  # filter all values less than max value
+        bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
 
         hdulist[0].data = bpm
 
