@@ -11,6 +11,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * QHY
     * Altair
     * ToupTek
+    * Starlight Xpress
     * Player One Astronomy
     * Raspberry Pi HQ Camera
     * Canon DSLRs
@@ -46,6 +47,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
 | Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
 | Ubuntu 22.04          | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
@@ -326,8 +328,9 @@ The hardware below has at least been plugged in and tested for correct detection
 | QHY      | QHY5LII-M           | A      |       |
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G-1200-KMB          | A      |       |
-| Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
+| Starlight Xpress | Superstar   | A      |       |
 | Player One   | Mars-C          | A      |       |
+| Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
