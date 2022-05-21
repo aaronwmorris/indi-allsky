@@ -45,7 +45,7 @@ class IndiAllSkyDarks(object):
         self._temp_delta = 5.0
         self._time_delta = 5
 
-        self._hotpixel_adu_percent = 85
+        self._hotpixel_adu_percent = 90
 
         # this is used to set a max value of data returned by the camera
         self._bitmax = 0
