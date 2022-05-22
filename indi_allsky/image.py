@@ -755,6 +755,8 @@ class ImageWorker(Process):
             else:
                 logger.error('Bad Pixel Map missing: %s', bpm_entry.filename)
                 bpm = None
+        else:
+            bpm = None
 
 
         p_dark_frame = Path(dark_frame_entry.filename)
