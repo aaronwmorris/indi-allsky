@@ -13,6 +13,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
+var page_settings;  // set later
 var history_seconds;  // set later
 var json_data = {
     'chart_data' : {
@@ -390,6 +391,22 @@ function loadJS(url, data, onDone, onError) {
 
 
 $( document ).ready(function() {
+    if(localStorage) {
+        chart_settings = localStorage.getItem("chart_settings");
+        if(chart_settings) {
+            page_settings = JSON.parse(chart_settings);
+        } else {
+            page_settings = new Object();
+            page_settings["history_seconds"] = 900;
+
+            localStorage.setItem("chart_settings", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["history_seconds"] !== "undefined") {
+        $("#HISTORY_SELECT").val(page_settings["history_seconds"]);
+    }
+
     history_seconds = $('#HISTORY_SELECT').val();
 
     init();
@@ -447,6 +464,11 @@ $( document ).ready(function() {
 $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
     console.log('Changing chart history: ' + history_seconds);
+
+    if(localStorage) {
+        page_settings["history_seconds"] = history_seconds;
+        localStorage.setItem("chart_settings", JSON.stringify(page_settings));
+    }
 });
 
 </script>

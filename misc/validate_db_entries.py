@@ -16,6 +16,7 @@ app.app_context().push()
 
 from indi_allsky.flask import db
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
+from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
 from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
@@ -55,6 +56,23 @@ class ValidateDatabaseEntries(object):
             except NotFound:
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
+
+
+        ### Bad Pixel Maps
+        badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
+            .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
+
+
+        logger.info('Searching %d bad pixel maps...', badpixelmap_entries.count())
+
+        badpixelmap_notfound_list = list()
+        for b in badpixelmap_entries:
+            try:
+                self.validate_entry(b)
+                continue
+            except NotFound:
+                #logger.warning('Entry not found on filesystem: %s', b.filename)
+                badpixelmap_notfound_list.append(b)
 
 
         ### Dark frames
@@ -126,6 +144,7 @@ class ValidateDatabaseEntries(object):
 
 
         logger.warning('Images not found: %d', len(image_notfound_list))
+        logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         logger.warning('Videos not found: %d', len(video_notfound_list))
         logger.warning('Keograms not found: %d', len(keogram_notfound_list))
@@ -144,6 +163,11 @@ class ValidateDatabaseEntries(object):
         if len(image_notfound_list):
             logger.warning('Removing %d missing image entries', len(image_notfound_list))
             [db.session.delete(i) for i in image_notfound_list]
+
+
+        if len(badpixelmap_notfound_list):
+            logger.warning('Removing %d missing bad pixel map entries', len(badpixelmap_notfound_list))
+            [db.session.delete(b) for b in badpixelmap_notfound_list]
 
 
         if len(darkframe_notfound_list):

@@ -27,6 +27,15 @@ from .exceptions import TimeOutException
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueQueue
+from .flask.models import TaskQueueState
+from .flask.models import IndiAllSkyDbImageTable
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbVideoTable
+from .flask.models import IndiAllSkyDbKeogramTable
+from .flask.models import IndiAllSkyDbStarTrailsTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
@@ -35,6 +44,8 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSky(object):
+
+    _version = 3.0
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
     DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
@@ -50,7 +61,6 @@ class IndiAllSky(object):
 
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
-        self.image_q = Queue()
         self.indiclient = None
         self.ccdDevice = None
         self.exposure_v = Value('f', -1.0)
@@ -65,17 +75,18 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
+        self.image_q = Queue()
         self.image_worker = None
         self.image_worker_idx = 0
 
-        self.video_worker = None
         self.video_q = Queue()
+        self.video_worker = None
         self.video_worker_idx = 0
 
         self.save_images = True
 
-        self.upload_worker = None
         self.upload_q = Queue()
+        self.upload_worker = None
         self.upload_worker_idx = 0
 
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
@@ -96,9 +107,9 @@ class IndiAllSky(object):
         signal.signal(signal.SIGTERM, self.sigterm_handler)
         signal.signal(signal.SIGINT, self.sigint_handler)
 
-        self.restart = False
-        self.shutdown = False
-        self.terminate = False
+        self._restart = False
+        self._shutdown = False
+        self._terminate = False
 
 
     @property
@@ -199,22 +210,22 @@ class IndiAllSky(object):
 
 
         # set flag for program to restart processes
-        self.restart = True
+        self._restart = True
 
 
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
         # set flag for program to stop processes
-        self.shutdown = True
-        self.terminate = True
+        self._shutdown = True
+        self._terminate = True
 
 
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
         # set flag for program to stop processes
-        self.shutdown = True
+        self._shutdown = True
 
 
     def sigalarm_handler(self, signum, frame):
@@ -236,6 +247,11 @@ class IndiAllSky(object):
 
     def _parseConfig(self, json_config):
         c = json.loads(json_config)
+
+        config_version = float(c.get('VERSION', 0.0))
+        if self._version != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            sys.exit(1)
 
         # set any new config defaults which might not be in the config
 
@@ -446,7 +462,8 @@ class IndiAllSky(object):
             self.image_worker.terminate()
 
         logger.info('Stopping ImageWorker process')
-        self.image_q.put({ 'stop' : True })
+
+        self.image_q.put({'stop' : True})
         self.image_worker.join()
 
 
@@ -479,7 +496,8 @@ class IndiAllSky(object):
             self.video_worker.terminate()
 
         logger.info('Stopping VideoWorker process')
-        self.video_q.put({ 'stop' : True })
+
+        self.video_q.put({'stop' : True})
         self.video_worker.join()
 
 
@@ -512,7 +530,8 @@ class IndiAllSky(object):
             self.upload_worker.terminate()
 
         logger.info('Stopping FileUploadWorker process')
-        self.upload_q.put({ 'stop' : True })
+
+        self.upload_q.put({'stop' : True})
         self.upload_worker.join()
 
 
@@ -548,6 +567,8 @@ class IndiAllSky(object):
 
     def run(self):
         self.write_pid()
+
+        self._expireOrphanedTasks()
 
         self._initialize()
 
@@ -591,6 +612,7 @@ class IndiAllSky(object):
             if self.night_v.value != int(self.night):
                 if self.generate_timelapse_flag:
                     self._expireData()  # cleanup old images and folders
+                    self._flushOldTasks()  # cleanup old tasks in DB
 
                 if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
@@ -613,6 +635,10 @@ class IndiAllSky(object):
             elif self.config['DAYTIME_TIMELAPSE']:
                 # must be day time
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+
+
+            # Queue externally defined tasks
+            self._queueManualTasks()
 
 
             # every ~10 seconds end this loop and run the code above
@@ -647,11 +673,11 @@ class IndiAllSky(object):
                 ##########################################################################
 
                 # shutdown here to ensure camera is not taking images
-                if self.shutdown:
+                if self._shutdown:
                     logger.warning('Shutting down')
-                    self._stopImageWorker(terminate=self.terminate)
-                    self._stopVideoWorker(terminate=self.terminate)
-                    self._stopFileUploadWorker(terminate=self.terminate)
+                    self._stopImageWorker(terminate=self._terminate)
+                    self._stopVideoWorker(terminate=self._terminate)
+                    self._stopFileUploadWorker(terminate=self._terminate)
 
                     self.indiclient.disconnectServer()
 
@@ -659,9 +685,9 @@ class IndiAllSky(object):
 
 
                 # restart here to ensure camera is not taking images
-                if self.restart:
+                if self._restart:
                     logger.warning('Restarting processes')
-                    self.restart = False
+                    self._restart = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
@@ -844,30 +870,37 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateDayTimelapse(timespec, camera_id, keogram=False)
-        self._stopVideoWorker()
+        self._generateDayTimelapse(timespec, camera_id, keogram=False, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateDayTimelapse(self, timespec, camera_id, keogram=True):
+    def _generateDayTimelapse(self, timespec, camera_id, keogram=True, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def generateNightTimelapse(self, timespec='', camera_id=0):
@@ -884,30 +917,37 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateNightTimelapse(timespec, camera_id, keogram=False)
-        self._stopVideoWorker()
+        self._generateNightTimelapse(timespec, camera_id, keogram=False, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateNightTimelapse(self, timespec, camera_id, keogram=True):
+    def _generateNightTimelapse(self, timespec, camera_id, keogram=True, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating night time timelapse for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : True,
             'keogram'     : keogram,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def generateNightKeogram(self, timespec='', camera_id=0):
@@ -924,30 +964,37 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateNightKeogram(timespec, camera_id)
-        self._stopVideoWorker()
+        self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateNightKeogram(self, timespec, camera_id):
+    def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('night')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def generateDayKeogram(self, timespec='', camera_id=0):
@@ -964,30 +1011,37 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateDayKeogram(timespec, camera_id)
-        self._stopVideoWorker()
+        self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateDayKeogram(self, timespec, camera_id):
+    def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
-
-        self._startVideoWorker()
 
         img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
 
         logger.warning('Generating day time keogram for %s camera %d', timespec, camera_id)
         img_day_folder = img_base_folder.joinpath('day')
 
-        self.video_q.put({
+        jobdata = {
             'timespec'    : timespec,
-            'img_folder'  : img_day_folder,
+            'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
             'video'       : False,
             'keogram'     : True,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
@@ -999,31 +1053,33 @@ class IndiAllSky(object):
 
 
     def expireData(self):
-        self._expireData()
-        self._stopVideoWorker()
+        self._expireData(TaskQueueState.MANUAL)
 
 
-    def _expireData(self):
+    def _expireData(self, task_state=TaskQueueState.QUEUED):
         # This will delete old images from the filesystem and DB
-        self._startVideoWorker()
-        self.video_q.put({
+        jobdata = {
             'expireData'   : True,
-            'img_folder'   : self.image_dir,
+            'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'timeofday'    : None,  # Not needed
             'camera_id'    : None,  # Not needed
             'video'        : False,
             'keogram'      : False,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def dbImportImages(self):
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbDarkFrameTable
-        from .flask.models import IndiAllSkyDbVideoTable
-        from .flask.models import IndiAllSkyDbKeogramTable
-        from .flask.models import IndiAllSkyDbStarTrailsTable
-
         try:
             camera_id = self._miscDb.getCurrentCameraId()
         except NoResultFound:
@@ -1324,4 +1380,46 @@ class IndiAllSky(object):
                 file_list.append(item)
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+
+
+    def _expireOrphanedTasks(self):
+        orphaned_statuses = (
+            TaskQueueState.MANUAL,
+            TaskQueueState.QUEUED,
+            TaskQueueState.RUNNING,
+        )
+
+        old_task_list = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(orphaned_statuses))
+
+        for task in old_task_list:
+            logger.warning('Expiring orphaned task %d', task.id)
+            task.state = TaskQueueState.EXPIRED
+
+        db.session.commit()
+
+
+    def _flushOldTasks(self):
+        now_minus_3d = datetime.now() - timedelta(days=3)
+
+        flush_old_tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate < now_minus_3d)
+
+        logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
+        flush_old_tasks.delete()
+        db.session.commit()
+
+
+    def _queueManualTasks(self):
+        logger.info('Checking for manually submitted tasks')
+        manual_video_tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+            .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.MANUAL)\
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+
+
+        for video_task in manual_video_tasks:
+            logger.info('Queuing manual task %d', video_task.id)
+            video_task.setQueued()
+            self.video_q.put({'task_id' : video_task.id})
 

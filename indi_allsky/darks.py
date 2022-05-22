@@ -1,5 +1,4 @@
 import sys
-import io
 import time
 import math
 import tempfile
@@ -24,7 +23,13 @@ from .indi import IndiClient
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbBadPixelMapTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
+from sqlalchemy.orm.exc import NoResultFound
 
 
 logger = logging.getLogger('indi_allsky')
@@ -39,6 +44,11 @@ class IndiAllSkyDarks(object):
         self._count = 10
         self._temp_delta = 5.0
         self._time_delta = 5
+
+        self._hotpixel_adu_percent = 90
+
+        # this is used to set a max value of data returned by the camera
+        self._bitmax = 0
 
 
         self.image_q = Queue()
@@ -82,6 +92,16 @@ class IndiAllSkyDarks(object):
     @time_delta.setter
     def time_delta(self, new_time_delta):
         self._time_delta = int(abs(new_time_delta))
+
+
+    @property
+    def bitmax(self):
+        return self._bitmax
+
+    @bitmax.setter
+    def bitmax(self, new_bitmax):
+        self._bitmax = int(new_bitmax)
+        assert(self._bitmax in (0, 8, 10, 12, 14, 16))
 
 
 
@@ -199,19 +219,34 @@ class IndiAllSkyDarks(object):
     def _wait_for_image(self):
         i_dict = self.image_q.get(timeout=15)
 
-        imgdata = i_dict['imgdata']
-        #exposure = i_dict['exposure']
-        #exp_date = i_dict['exp_date']
-        #exp_elapsed = i_dict['exp_elapsed']
-        #camera_id = i_dict['camera_id']
-        #filename_t = i_dict.get('filename_t')
-        #img_subdirs = i_dict.get('img_subdirs', [])  # we only use this for fits/darks
+        task_id = i_dict['task_id']
+
+        try:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                .one()
+
+        except NoResultFound:
+            logger.error('Task ID %d not found', task_id)
+            raise
 
 
+        # go ahead and set complete
+        task.setSuccess('Dark frame processed')
 
-        ### OpenCV ###
-        blobfile = io.BytesIO(imgdata)
-        hdulist = fits.open(blobfile)
+
+        filename = Path(task.data['filename'])
+
+        if not filename.exists():
+            task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+            raise Exception('Frame not found {0:s}'.format(str(filename)))
+
+
+        hdulist = fits.open(filename)
+        filename.unlink()  # no longer need the original file
+
 
         return hdulist
 
@@ -219,12 +254,14 @@ class IndiAllSkyDarks(object):
 
     def average(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         self._run(IndiAllSkyDarksAverage)
 
 
     def tempaverage(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
         next_temp_thold = current_temp - self._temp_delta
@@ -251,12 +288,14 @@ class IndiAllSkyDarks(object):
 
     def sigmaclip(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         self._run(IndiAllSkyDarksSigmaClip)
 
 
     def tempsigmaclip(self):
         self._initialize()
+        self._pre_run_tasks(self.ccdDevice)
 
         current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
         next_temp_thold = current_temp - self._temp_delta
@@ -280,6 +319,45 @@ class IndiAllSkyDarks(object):
             self._run(IndiAllSkyDarksSigmaClip)
 
 
+    def _pre_run_tasks(self, ccdDevice):
+        # Tasks that need to be run before the main program loop
+
+        if self.config['CCD_SERVER'] in ['indi_rpicam']:
+            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
+            # in order to take exposures longer than 7s
+            logger.info('Taking throw away exposure for rpicam')
+            self.shoot(ccdDevice, 7.0, sync=True)
+
+
+            i_dict = self.image_q.get(timeout=15)
+
+            task_id = i_dict['task_id']
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                raise
+
+
+            # go ahead and set complete
+            task.setSuccess('Throw away frame')
+
+
+            filename = Path(task.data['filename'])
+
+            if not filename.exists():
+                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+                raise Exception('Frame not found {0:s}'.format(str(filename)))
+
+
+            filename.unlink()  # no longer need the original file
+
 
     def _run(self, stacking_class):
 
@@ -301,6 +379,7 @@ class IndiAllSkyDarks(object):
         dark_exposures.reverse()  # take longer exposures first
 
 
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         # 0  = ccd id
         # 1  = bits
@@ -336,7 +415,7 @@ class IndiAllSkyDarks(object):
             self.indiclient.setCcdBinning(self.ccdDevice, binmode)
 
             for exposure in dark_exposures:
-                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
 
 
@@ -347,17 +426,26 @@ class IndiAllSkyDarks(object):
             self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
 
             # day will rarely exceed 1 second
-            for exposure in (1, 5):
-                self._take_exposures(exposure, dark_filename_t, ccd_bits, stacking_class)
+            for exposure in dark_exposures:
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
 
 
-    def _take_exposures(self, exposure, dark_filename_t, ccd_bits, stacking_class):
+    def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
         self.indiclient.getCcdTemperature(self.ccdDevice)
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = dark_filename_t.format(
+        dark_filename = dark_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
+        bpm_filename = bpm_filename_t.format(
             self.camera_id,
             ccd_bits,
             int(exposure),
@@ -367,7 +455,8 @@ class IndiAllSkyDarks(object):
             date_str,
         )
 
-        full_filename_p = self.darks_dir.joinpath(filename)
+        full_dark_filename_p = self.darks_dir.joinpath(dark_filename)
+        full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
 
 
         tmp_fit_dir = tempfile.TemporaryDirectory()
@@ -403,11 +492,12 @@ class IndiAllSkyDarks(object):
 
 
         s = stacking_class(self.gain_v, self.bin_v)
-        s.stack(tmp_fit_dir_p, full_filename_p, exposure, image_bitpix)
+        s.bitmax = self._bitmax
+        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
+        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
 
-
-        self._miscDb.addDarkFrame(
-            full_filename_p,
+        self._miscDb.addBadPixelMap(
+            full_bpm_filename_p,
             self.camera_id,
             image_bitpix,
             exposure,
@@ -416,17 +506,35 @@ class IndiAllSkyDarks(object):
             self.sensortemp_v.value,
         )
 
+        self._miscDb.addDarkFrame(
+            full_dark_filename_p,
+            self.camera_id,
+            image_bitpix,
+            exposure,
+            self.gain_v.value,
+            self.bin_v.value,
+            self.sensortemp_v.value,
+        )
 
         tmp_fit_dir.cleanup()
 
 
 
     def flush(self):
+        badpixelmaps_all = IndiAllSkyDbBadPixelMapTable.query
         dark_frames_all = IndiAllSkyDbDarkFrameTable.query
 
+        logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
 
         time.sleep(10.0)
+
+        for bpm_entry in badpixelmaps_all:
+            filename = Path(bpm_entry.filename)
+
+            if filename.exists():
+                logger.warning('Removing bad pixel map: %s', filename)
+                filename.unlink()
 
         for dark_frame_entry in dark_frames_all:
             filename = Path(dark_frame_entry.filename)
@@ -436,6 +544,7 @@ class IndiAllSkyDarks(object):
                 filename.unlink()
 
 
+        badpixelmaps_all.delete()
         dark_frames_all.delete()
         db.session.commit()
 
@@ -446,7 +555,64 @@ class IndiAllSkyDarksProcessor(object):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
-    def stack(self):
+        self._bitmax = 0
+
+
+    @property
+    def bitmax(self):
+        return self._bitmax
+
+    @bitmax.setter
+    def bitmax(self, new_bitmax):
+        self._bitmax = int(new_bitmax)
+
+
+    def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+
+        if image_bitpix == 16:
+            numpy_type = numpy.uint16
+        elif image_bitpix == 8:
+            numpy_type = numpy.uint8
+        else:
+            raise Exception('Unknown bits per pixel')
+
+
+        image_data = list()
+        hdulist = None
+        for item in Path(tmp_fit_dir_p).iterdir():
+            #logger.info('Found item: %s', item)
+            if item.is_file() and item.suffix in ('.fit',):
+                #logger.info('Found fit: %s', item)
+                hdulist = fits.open(item)
+                image_data.append(hdulist[0].data)
+
+
+        image_height, image_width = image_data[0].shape[:2]
+        bpm = numpy.zeros((image_height, image_width), dtype=numpy_type)
+
+        # take the max values of each pixel from each image
+        for image in image_data:
+            bpm = numpy.maximum(bpm, image)
+
+
+        max_val = numpy.amax(bpm)
+        logger.info('Image max value: %d', int(max_val))
+
+        if self._bitmax:
+            bitmax_percent = (2 ** self._bitmax) * (self._hotpixel_adu_percent / 100.0)
+        else:
+            bitmax_percent = (2 ** image_bitpix) * (self._hotpixel_adu_percent / 100.0)
+
+        bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
+
+        hdulist[0].data = bpm
+
+        # reuse the last fits file for the stacked data
+        hdulist.writeto(filename_p)
+
+
+    def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         raise Exception('Must be redefined in sub-class')
 
 

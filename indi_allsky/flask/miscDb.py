@@ -7,6 +7,7 @@ from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -154,6 +155,49 @@ class miscDb(object):
         db.session.commit()
 
         return dark
+
+
+    def addBadPixelMap(self, filename, camera_id, bitdepth, exposure, gain, binmode, temp):
+        if not filename:
+            return
+
+        #logger.info('####### Exposure: %s', pformat(exposure))
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.error('File not found: %s', p_filename)
+            return
+
+        logger.info('Adding bad pixel map %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+        exposure_int = int(exposure)
+
+
+        # If temp is 0, write null
+        if temp:
+            temp_val = float(temp)
+        else:
+            logger.warning('Temperature is not defined')
+            temp_val = None
+
+
+        bpm = IndiAllSkyDbBadPixelMapTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            bitdepth=bitdepth,
+            exposure=exposure_int,
+            gain=gain,
+            binmode=binmode,
+            temp=temp_val,
+        )
+
+        db.session.add(bpm)
+        db.session.commit()
+
+        return bpm
 
 
     def addVideo(self, filename, camera_id, dayDate, timeofday):

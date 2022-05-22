@@ -984,17 +984,17 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getYears(self):
-        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
+        dayDate_year = extract('year', IndiAllSkyDbVideoTable.dayDate).label('dayDate_year')
 
         years_query = db.session.query(
-            createDate_year,
+            dayDate_year,
         )\
             .distinct()\
-            .order_by(createDate_year.desc())
+            .order_by(dayDate_year.desc())
 
         year_choices = []
         for y in years_query:
-            entry = (y.createDate_year, str(y.createDate_year))
+            entry = (y.dayDate_year, str(y.dayDate_year))
             year_choices.append(entry)
 
 
@@ -1002,22 +1002,22 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
-        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+        dayDate_year = extract('year', IndiAllSkyDbVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbVideoTable.dayDate).label('dayDate_month')
 
         months_query = db.session.query(
-            createDate_year,
-            createDate_month,
+            dayDate_year,
+            dayDate_month,
         )\
-            .filter(createDate_year == year)\
+            .filter(dayDate_year == year)\
             .distinct()\
-            .order_by(createDate_month.desc())
+            .order_by(dayDate_month.desc())
 
         month_choices = []
         for m in months_query:
-            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
                 .strftime('%B')
-            entry = (m.createDate_month, month_name)
+            entry = (m.dayDate_month, month_name)
             month_choices.append(entry)
 
 
@@ -1026,12 +1026,12 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getVideos(self, year, month, timeofday):
-        createDate_year = extract('year', IndiAllSkyDbVideoTable.createDate).label('createDate_year')
-        createDate_month = extract('month', IndiAllSkyDbVideoTable.createDate).label('createDate_month')
+        dayDate_year = extract('year', IndiAllSkyDbVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbVideoTable.dayDate).label('dayDate_month')
 
         videos_query = IndiAllSkyDbVideoTable.query\
-            .filter(createDate_year == year)\
-            .filter(createDate_month == month)
+            .filter(dayDate_year == year)\
+            .filter(dayDate_month == month)
 
 
         # add time of day filter
@@ -1044,7 +1044,10 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
         # set order
-        videos_query = videos_query.order_by(IndiAllSkyDbVideoTable.createDate.desc())
+        videos_query = videos_query.order_by(
+            IndiAllSkyDbVideoTable.dayDate.desc(),
+            IndiAllSkyDbVideoTable.night.desc(),
+        )
 
 
         videos_data = []
@@ -1072,7 +1075,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
-                .order_by(IndiAllSkyDbKeogramTable.createDate.asc())\
+                .order_by(IndiAllSkyDbKeogramTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
 
@@ -1089,7 +1092,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
-                .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())\
+                .order_by(IndiAllSkyDbStarTrailsTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
 
@@ -1116,7 +1119,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
         super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
 
         last_video = IndiAllSkyDbVideoTable.query\
-            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+            .order_by(IndiAllSkyDbVideoTable.dayDate.desc())\
             .first()
 
         if not last_video:
@@ -1128,7 +1131,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
             return
 
 
-        year = last_video.createDate.strftime('%Y')
+        year = last_video.dayDate.strftime('%Y')
 
 
         dates_start = time.time()
@@ -1186,15 +1189,13 @@ class IndiAllskyHistoryForm(FlaskForm):
     )
 
     FRAMEDELAY_SELECT_choices = (
-        ('25', '25ms'),
-        ('50', '50ms'),
-        ('75', '75ms'),
-        ('150', '150ms'),
-        ('300', '300ms'),
-        ('1000', '1000ms'),
+        ('25', 'Fast'),
+        ('50', 'Medium'),
+        ('75', 'Slow'),
+        ('150', 'Very Slow'),
     )
 
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
-    FRAMEDELAY_SELECT    = SelectField('Delay', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[2][0], validators=[])
-    ROCK_CHECKBOX        = BooleanField('Rock', default=True)
+    FRAMEDELAY_SELECT    = SelectField('Speed', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[2][0], validators=[])
+    ROCK_CHECKBOX        = BooleanField('Rock', default=False)
 

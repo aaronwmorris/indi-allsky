@@ -1,13 +1,22 @@
 import sys
 import time
 from pathlib import Path
-from multiprocessing import Process
-#from threading import Thread
-import queue
 import logging
 import traceback
 
+from multiprocessing import Process
+#from threading import Thread
+import queue
+
+#from .flask import db
+
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
 from . import filetransfer
+
+from sqlalchemy.orm.exc import NoResultFound
 
 logger = logging.getLogger('indi_allsky')
 
@@ -41,13 +50,12 @@ class FileUploader(Process):
         self.name = 'FileUploader{0:03d}'.format(idx)
 
         self.config = config
-
         self.upload_q = upload_q
 
 
     def run(self):
         while True:
-            time.sleep(1.0)  # sleep every loop
+            time.sleep(1.3)  # sleep every loop
 
             try:
                 u_dict = self.upload_q.get_nowait()
@@ -59,12 +67,30 @@ class FileUploader(Process):
                 return
 
 
-            action = u_dict['action']
-            local_file = u_dict.get('local_file')
-            remote_file = u_dict.get('remote_file')
-            remove_local = u_dict.get('remove_local')
+            task_id = u_dict['task_id']
 
-            mq_data = u_dict.get('mq_data')
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
+
+
+            task.setRunning()
+
+
+            action = task.data['action']
+            local_file = task.data.get('local_file')
+            remote_file = task.data.get('remote_file')
+            remove_local = task.data.get('remove_local')
+
+            mq_data = task.data.get('mq_data')
 
 
             # Build parameters
@@ -84,6 +110,7 @@ class FileUploader(Process):
                     client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
                 except AttributeError:
                     logger.error('Unknown filetransfer class: %s', self.config['FILETRANSFER']['CLASSNAME'])
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['FILETRANSFER']['CLASSNAME']))
                     return
 
                 client = client_class()
@@ -113,6 +140,7 @@ class FileUploader(Process):
                     client_class = getattr(filetransfer, 'paho_mqtt')
                 except AttributeError:
                     logger.error('Unknown filetransfer class: %s', 'paho_mqtt')
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format('paho_mqtt'))
                     return
 
                 client = client_class()
@@ -121,8 +149,8 @@ class FileUploader(Process):
                     client.port = self.config['MQTTPUBLISH']['PORT']
 
             else:
+                task.setFailed('Invalid transfer action')
                 raise Exception('Invalid transfer action')
-
 
 
             start = time.time()
@@ -132,10 +160,12 @@ class FileUploader(Process):
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
+                task.setFailed('Connection failure')
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
+                task.setFailed('Authentication failure')
                 return
 
 
@@ -145,18 +175,22 @@ class FileUploader(Process):
             except filetransfer.exceptions.ConnectionFailure as e:
                 logger.error('Connection failure: %s', e)
                 client.close()
+                task.setFailed('Connection failure')
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
+                task.setFailed('Authentication failure')
                 return
             except filetransfer.exceptions.TransferFailure as e:
                 logger.error('Tranfer failure: %s', e)
                 client.close()
+                task.setFailed('Tranfer failure')
                 return
             except filetransfer.exceptions.PermissionFailure as e:
                 logger.error('Permission failure: %s', e)
                 client.close()
+                task.setFailed('Permission failure')
                 return
 
 
@@ -165,6 +199,9 @@ class FileUploader(Process):
 
             upload_elapsed_s = time.time() - start
             logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
+
+
+            task.setSuccess('File uploaded')
 
 
             if remove_local:

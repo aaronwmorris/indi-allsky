@@ -27,10 +27,16 @@ import numpy
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 
-#from .flask import db
+from .flask import db
 from .flask.miscDb import miscDb
 
-#from sqlalchemy.orm.exc import NoResultFound
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbBadPixelMapTable
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
 
@@ -102,6 +108,7 @@ class ImageWorker(Process):
         self.config = config
         self.image_q = image_q
         self.upload_q = upload_q
+
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -139,32 +146,56 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(0.5)  # sleep every loop
+            time.sleep(1.1)  # sleep every loop
 
             try:
                 i_dict = self.image_q.get_nowait()
             except queue.Empty:
                 continue
 
-
             if i_dict.get('stop'):
                 return
 
-            imgdata = i_dict['imgdata']
-            exposure = i_dict['exposure']
-            exp_date = i_dict['exp_date']
-            exp_elapsed = i_dict['exp_elapsed']
-            camera_id = i_dict['camera_id']
-            filename_t = i_dict.get('filename_t')
+
+            task_id = i_dict['task_id']
+
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
+
+
+            task.setRunning()
+
+
+            filename = Path(task.data['filename'])
+            exposure = task.data['exposure']
+            exp_date = datetime.fromtimestamp(task.data['exp_time'])
+            exp_elapsed = task.data['exp_elapsed']
+            camera_id = task.data['camera_id']
+            filename_t = task.data.get('filename_t')
 
             if filename_t:
                 self.filename_t = filename_t
 
             self.image_count += 1
 
-            ### OpenCV ###
-            blobfile = io.BytesIO(imgdata)
-            hdulist = fits.open(blobfile)
+
+            if not filename.exists():
+                logger.error('Frame not found: %s', filename)
+                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+                continue
+
+
+            hdulist = fits.open(filename)
+            filename.unlink()  # no longer need the original file
 
             #logger.info('HDU Header = %s', pformat(hdulist[0].header))
             image_type = hdulist[0].header['IMAGETYP']
@@ -299,6 +330,9 @@ class ImageWorker(Process):
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
+            task.setSuccess('Image processed')
+
+
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
             if self.save_images:
@@ -363,11 +397,21 @@ class ImageWorker(Process):
         remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : latest_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(latest_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
         self._miscDb.addUploadedFlag(image_entry)
 
@@ -380,12 +424,21 @@ class ImageWorker(Process):
         logger.info('Publishing data to MQ broker')
 
         # publish data to mq broker
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'mqttpub',
-            'local_file'  : latest_file,
+            'local_file'  : str(latest_file),
             'mq_data'     : mq_data,
-        })
+        }
 
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def detectBitDepth(self, data):
@@ -597,7 +650,52 @@ class ImageWorker(Process):
 
 
     def calibrate(self, scidata_uncalibrated, exposure, camera_id, image_bitpix):
-        from .flask.models import IndiAllSkyDbDarkFrameTable
+        # pick a bad pixel map that is closest to the exposure and temperature
+        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
+            .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+            .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensortemp_v.value)\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .order_by(
+                IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                IndiAllSkyDbBadPixelMapTable.temp.asc(),
+                IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+            )\
+            .first()
+
+        if not bpm_entry:
+            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensortemp_v.value)
+
+            # pick a bad pixel map that matches the exposure at the hightest temperature found
+            bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
+                .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                .order_by(
+                    IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                    IndiAllSkyDbBadPixelMapTable.temp.desc(),
+                    IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                )\
+                .first()
+
+
+            if not bpm_entry:
+                logger.warning(
+                    'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
+                    camera_id,
+                    image_bitpix,
+                    float(exposure),
+                    self.gain_v.value,
+                    self.bin_v.value,
+                    self.sensortemp_v.value,
+                )
+
 
         # pick a dark frame that is closest to the exposure and temperature
         logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
@@ -647,6 +745,20 @@ class ImageWorker(Process):
 
                 raise CalibrationNotFound('Dark not found')
 
+
+        if bpm_entry:
+            p_bpm = Path(bpm_entry.filename)
+            if p_bpm.exists():
+                logger.info('Matched bad pixel map: %s', p_bpm)
+                with fits.open(p_bpm) as bpm_f:
+                    bpm = bpm_f[0].data
+            else:
+                logger.error('Bad Pixel Map missing: %s', bpm_entry.filename)
+                bpm = None
+        else:
+            bpm = None
+
+
         p_dark_frame = Path(dark_frame_entry.filename)
         if not p_dark_frame.exists():
             logger.error('Dark file missing: %s', dark_frame_entry.filename)
@@ -655,11 +767,20 @@ class ImageWorker(Process):
 
         logger.info('Matched dark: %s', p_dark_frame)
 
-        with fits.open(p_dark_frame) as dark:
-            scidata = cv2.subtract(scidata_uncalibrated, dark[0].data)
-            del dark[0].data   # make sure memory is freed
+        with fits.open(p_dark_frame) as dark_f:
+            dark = dark_f[0].data
 
-        return scidata
+
+        if not isinstance(bpm, type(None)):
+            # merge bad pixel map and dark
+            master_dark = numpy.maximum(bpm, dark)
+        else:
+            master_dark = dark
+
+
+        scidata_calibrated = cv2.subtract(scidata_uncalibrated, master_dark)
+
+        return scidata_calibrated
 
 
     def debayer(self, scidata):
@@ -711,6 +832,10 @@ class ImageWorker(Process):
         moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 
+        # separation of 1-3 degrees means a possible eclipse
+        sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
+
+
         # Civil dawn
         try:
             obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -721,6 +846,24 @@ class ImageWorker(Process):
             sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+        # Nautical dawn
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nauticalDawn_date
+            sun.compute(obs)
+            sunNauticalDawnX, sunNauticalDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -758,6 +901,24 @@ class ImageWorker(Process):
             sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Nautical twilight
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_nauticalTwilight_date
+            sun.compute(obs)
+            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -869,6 +1030,26 @@ class ImageWorker(Process):
                 self.config['TEXT_PROPERTIES']['FONT_COLOR'],
             )
 
+
+        # Add eclipse indicator
+        if self.moon_phase > 50.0 and sun_moon_sep < 2.0:
+            # Lunar eclipse (earth's penumbra is large)
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* LUNAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
+        elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
+            # Solar eclipse
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* SOLAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            )
 
 
         # add extra text to image

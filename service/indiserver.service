@@ -7,6 +7,7 @@ After=network.target
 ExecStart=%INDI_DRIVER_PATH%/indiserver indi_simulator_telescope %INDI_CCD_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
+PrivateTmp=true
  
 [Install]
 WantedBy=default.target

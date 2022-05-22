@@ -1,3 +1,4 @@
+import enum
 from pathlib import Path
 
 from sqlalchemy.sql import expression
@@ -21,6 +22,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
     startrails = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='camera')
     darkframes = db.relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
+    badpixelmaps = db.relationship('IndiAllSkyDbBadPixelMapTable', back_populates='camera')
 
 
 class IndiAllSkyDbImageTable(db.Model):
@@ -101,6 +103,25 @@ class IndiAllSkyDbDarkFrameTable(db.Model):
 
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbBadPixelMapTable(db.Model):
+    __tablename__ = 'badpixelmap'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    bitdepth = db.Column(db.Integer, nullable=False, index=True)
+    exposure = db.Column(db.Integer, nullable=False, index=True)
+    gain = db.Column(db.Integer, nullable=False, index=True)
+    binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
+    temp = db.Column(db.Float, nullable=True, index=True)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
+
+    def __repr__(self):
+        return '<BadPixelMap {0:s}>'.format(self.filename)
 
 
 class IndiAllSkyDbVideoTable(db.Model):
@@ -242,4 +263,54 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
         full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
 
         return full_filename_p
+
+
+
+class TaskQueueState(enum.Enum):
+    MANUAL  = 'Manual'
+    QUEUED  = 'Queued'
+    RUNNING = 'Running'
+    SUCCESS = 'Success'
+    FAILED  = 'Failed'
+    EXPIRED = 'Expired'
+
+
+class TaskQueueQueue(enum.Enum):
+    IMAGE   = 'image_q'
+    VIDEO   = 'video_q'
+    UPLOAD  = 'upload_q'
+
+
+class IndiAllSkyDbTaskQueueTable(db.Model):
+    __tablename__ = 'taskqueue'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True)
+    queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
+    data = db.Column(db.JSON)
+    result = db.Column(db.String(length=255), nullable=True)
+
+
+    def setQueued(self):
+        self.state = TaskQueueState.QUEUED
+        db.session.commit()
+
+    def setRunning(self):
+        self.state = TaskQueueState.RUNNING
+        db.session.commit()
+
+    def setSuccess(self, result):
+        self.state = TaskQueueState.SUCCESS
+        self.result = result
+        db.session.commit()
+
+    def setFailed(self, result):
+        self.state = TaskQueueState.FAILED
+        self.result = result
+        db.session.commit()
+
+    def setExpired(self):
+        self.state = TaskQueueState.EXPIRED
+        db.session.commit()
 

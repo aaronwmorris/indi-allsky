@@ -26,11 +26,20 @@ from .exceptions import InsufficentData
 from .flask import db
 from .flask.miscDb import miscDb
 
+from .flask.models import TaskQueueState
+from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbImageTable
+from .flask.models import IndiAllSkyDbVideoTable
+from .flask.models import IndiAllSkyDbKeogramTable
+from .flask.models import IndiAllSkyDbStarTrailsTable
+from .flask.models import IndiAllSkyDbTaskQueueTable
+
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
-import queue
 #from threading import Thread
+import queue
 
 logger = logging.getLogger('indi_allsky')
 
@@ -78,7 +87,7 @@ class VideoWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(1.0)  # sleep every loop
+            time.sleep(1.9)  # sleep every loop
 
             try:
                 v_dict = self.video_q.get_nowait()
@@ -88,58 +97,75 @@ class VideoWorker(Process):
             if v_dict.get('stop'):
                 return
 
+
+            task_id = v_dict['task_id']
+
+
+            try:
+                task = IndiAllSkyDbTaskQueueTable.query\
+                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                    .one()
+
+            except NoResultFound:
+                logger.error('Task ID %d not found', task_id)
+                continue
+
+
+            task.setRunning()
+
+
             try:
                 self._getLock()  # get lock to prevent multiple videos from being concurrently generated
             except BlockingIOError as e:
                 if e.errno == errno.EAGAIN:
                     logger.error('Failed to get exclusive lock: %s', str(e))
+                    task.setFailed('Failed to get exclusive lock')
                     return
 
 
-            timespec = v_dict['timespec']
-            img_folder = v_dict['img_folder']
-            timeofday = v_dict['timeofday']
-            camera_id = v_dict['camera_id']
-            video = v_dict.get('video', True)
-            keogram = v_dict.get('keogram', True)
-            #startrail = v_dict.get('startrail', True)
-            expireData = v_dict.get('expireData', False)
+            timespec = task.data['timespec']
+            img_folder = Path(task.data['img_folder'])
+            timeofday = task.data['timeofday']
+            camera_id = task.data['camera_id']
+            video = task.data.get('video', True)
+            keogram = task.data.get('keogram', True)
+            #startrail = task.data.get('startrail', True)
+            expireData = task.data.get('expireData', False)
 
 
             if not img_folder.exists():
                 logger.error('Image folder does not exist: %s', img_folder)
+                task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
                 continue
 
 
             if expireData:
-                self.expireData(img_folder)
+                self.expireData(task, img_folder)
 
 
             self.uploadAllskyEndOfNight(timeofday)
 
 
             if video:
-                self.generateVideo(timespec, img_folder, timeofday, camera_id)
+                self.generateVideo(task, timespec, img_folder, timeofday, camera_id)
 
 
             if keogram:
-                self.generateKeogramStarTrails(timespec, img_folder, timeofday, camera_id)
+                self.generateKeogramStarTrails(task, timespec, img_folder, timeofday, camera_id)
 
 
             self._releaseLock()
 
 
 
-    def generateVideo(self, timespec, img_folder, timeofday, camera_id):
-        from .flask.models import IndiAllSkyDbCameraTable
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbVideoTable
-
-
+    def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
+            task.setFailed('Invalid time spec')
             return
 
 
@@ -153,6 +179,7 @@ class VideoWorker(Process):
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
+            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
             return
 
 
@@ -241,6 +268,9 @@ class VideoWorker(Process):
             timeofday,
         )
 
+
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
         ### Upload ###
         self.uploadVideo(video_file)
 
@@ -258,24 +288,29 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(video_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : video_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(video_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
-    def generateKeogramStarTrails(self, timespec, img_folder, timeofday, camera_id):
-        from .flask.models import IndiAllSkyDbCameraTable
-        from .flask.models import IndiAllSkyDbImageTable
-        from .flask.models import IndiAllSkyDbKeogramTable
-        from .flask.models import IndiAllSkyDbStarTrailsTable
-
-
+    def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
             logger.error('Invalid time spec')
+            task.setFailed('Invalid time spec')
             return
 
 
@@ -291,10 +326,12 @@ class VideoWorker(Process):
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
+            task.setFailed('Keogram is already generated: {0:s}'.format(str(keogram_file)))
             return
 
         if startrail_file.exists():
             logger.warning('Star trail is already generated: %s', startrail_file)
+            task.setFailed('Star trail is already generated: {0:s}'.format(str(startrail_file)))
             return
 
 
@@ -415,6 +452,9 @@ class VideoWorker(Process):
             self._miscDb.addUploadedFlag(startrail_entry)
 
 
+        task.setSuccess('Generated keogram and/or star trail')
+
+
     def uploadKeogram(self, keogram_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
@@ -425,11 +465,21 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(keogram_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : keogram_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(keogram_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def uploadStarTrail(self, startrail_file):
@@ -441,11 +491,21 @@ class VideoWorker(Process):
         remote_file = remote_path.joinpath(startrail_file.name)
 
         # tell worker to upload file
-        self.upload_q.put({
+        jobdata = {
             'action'      : 'upload',
-            'local_file'  : startrail_file,
-            'remote_file' : remote_file,
-        })
+            'local_file'  : str(startrail_file),
+            'remote_file' : str(remote_file),
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def uploadAllskyEndOfNight(self, timeofday):
@@ -516,19 +576,25 @@ class VideoWorker(Process):
         data_json_p = Path(data_tempfile_f.name)
         remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
 
-        self.upload_q.put({
+        jobdata = {
             'action'         : 'upload',
-            'local_file'     : data_json_p,
-            'remote_file'    : remote_file_p,
+            'local_file'     : str(data_json_p),
+            'remote_file'    : str(remote_file_p),
             'remove_local'   : True,
-        })
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
-
-    def expireData(self, img_folder):
-        from .flask.models import IndiAllSkyDbImageTable
-
-
+    def expireData(self, task, img_folder):
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
 
@@ -569,6 +635,8 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
+
+        task.setSuccess('Expired images')
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):

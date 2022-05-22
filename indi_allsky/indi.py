@@ -1,15 +1,28 @@
 import time
+import io
+import tempfile
 import ctypes
 from datetime import datetime
 import logging
 #from pprint import pformat
 
+from astropy.io import fits
+
 import PyIndi
+
+from .flask import db
+from .flask import create_app
+
+from .flask.models import TaskQueueQueue
+from .flask.models import TaskQueueState
+from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from .exceptions import TimeOutException
 
-
 logger = logging.getLogger('indi_allsky')
+
+
+app = create_app()
 
 
 class IndiClient(PyIndi.BaseClient):
@@ -136,20 +149,43 @@ class IndiClient(PyIndi.BaseClient):
         ### get image data
         imgdata = bp.getblobdata()
 
+        blobfile = io.BytesIO(imgdata)
+        hdulist = fits.open(blobfile)
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+
+        hdulist.writeto(f_tmpfile)
+
+        f_tmpfile.flush()
+        f_tmpfile.close()
+
+
         #elapsed_s = time.time() - start
         #logger.info('Blob downloaded in %0.4f s', elapsed_s)
 
         exp_date = datetime.now()
 
         ### process data in worker
-        self.image_q.put({
-            'imgdata'     : imgdata,
+        jobdata = {
+            'filename'    : f_tmpfile.name,
             'exposure'    : self._exposure,
-            'exp_date'    : exp_date,
+            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.config['DB_CCD_ID'],
             'filename_t'  : self._filename_t,
-        })
+        }
+
+        with app.app_context():
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.IMAGE,
+                state=TaskQueueState.QUEUED,
+                data=jobdata,
+            )
+
+            db.session.add(task)
+            db.session.commit()
+
+            self.image_q.put({'task_id' : task.id})
 
 
     def newSwitch(self, svp):
