@@ -157,6 +157,10 @@ class IndiAllSkyDarks(object):
         # Disable debugging
         self.indiclient.disableDebug(self.ccdDevice)
 
+        # Get Properties (this might be needed to initialize some cameras)
+        ccd_properties = self.indiclient.getDeviceProperties(self.ccdDevice)
+        self.config['CCD_PROPERTIES'] = ccd_properties
+
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode(self.ccdDevice)
 
