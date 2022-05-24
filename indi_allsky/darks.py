@@ -154,7 +154,6 @@ class IndiAllSkyDarks(object):
         self.config['DB_CCD_ID'] = db_camera.id
         self.camera_id = db_camera.id
 
-
         # Disable debugging
         self.indiclient.disableDebug(self.ccdDevice)
 

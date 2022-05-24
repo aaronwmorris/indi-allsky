@@ -27,11 +27,16 @@ app = create_app()
 
 class IndiClient(PyIndi.BaseClient):
 
-    __state_to_str = {
+    __state_to_str_p = {
         PyIndi.IPS_IDLE  : 'IDLE',
         PyIndi.IPS_OK    : 'OK',
         PyIndi.IPS_BUSY  : 'BUSY',
         PyIndi.IPS_ALERT : 'ALERT',
+    }
+
+    __state_to_str_s = {
+        PyIndi.ISS_OFF : 'OFF',
+        PyIndi.ISS_ON  : 'ON',
     }
 
     __switch_types = {
@@ -251,6 +256,34 @@ class IndiClient(PyIndi.BaseClient):
         }
 
         self.configureDevice(ccd_device, frame_config)
+
+
+    def getDeviceProperties(self, device):
+        properties = dict()
+        for p in device.getProperties():
+            name = p.getName()
+            properties[name] = dict()
+
+            if p.getType() == PyIndi.INDI_TEXT:
+                for t in p.getText():
+                    properties[name][t.name] = t.text
+            elif p.getType() == PyIndi.INDI_NUMBER:
+                for t in p.getNumber():
+                    properties[name][t.name] = t.value
+            elif p.getType() == PyIndi.INDI_SWITCH:
+                for t in p.getSwitch():
+                    properties[name][t.name] = self.__state_to_str_s[t.s]
+            elif p.getType() == PyIndi.INDI_LIGHT:
+                for t in p.getLight():
+                    properties[name][t.name] = self.__state_to_str_p[t.s]
+            elif p.getType() == PyIndi.INDI_BLOB:
+                pass
+                #for t in p.getBLOB():
+                #    logger.info("       %s(%s) = %d bytes", t.name, t.label, t.size)
+
+            #logger.warning('%s', pformat(properties))
+
+        return properties
 
 
     def getCcdInfo(self, ccdDevice):
@@ -679,7 +712,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def light_values(self, device, name, ctl=None):
-        return self.__control2dict(device, name, 'light', lambda c: {'value': self.__state_to_str[c.getState()]}, ctl)
+        return self.__control2dict(device, name, 'light', lambda c: {'value': self.__state_to_str_p[c.getState()]}, ctl)
 
 
     def ctl_ready(self, ctl, statuses=[PyIndi.IPS_OK, PyIndi.IPS_IDLE]):
@@ -689,7 +722,7 @@ class IndiClient(PyIndi.BaseClient):
         state = ctl.getState()
 
         ready = state in statuses
-        state_str = self.__state_to_str.get(state, 'UNKNOWN')
+        state_str = self.__state_to_str_p.get(state, 'UNKNOWN')
 
         return ready, state_str
 
@@ -701,14 +734,14 @@ class IndiClient(PyIndi.BaseClient):
             timeout = self._timeout
 
         while ctl.getState() not in statuses:
-            #logger.info('%s/%s/%s: %s', ctl.getDeviceName(), ctl.getGroupName(), ctl.getName(), self.__state_to_str[ctl.getState()])
+            #logger.info('%s/%s/%s: %s', ctl.getDeviceName(), ctl.getGroupName(), ctl.getName(), self.__state_to_str_p[ctl.getState()])
             if ctl.getState() == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
                 raise RuntimeError('Error while changing property {0}'.format(ctl.getName()))
 
             elapsed = time.time() - started
 
             if 0 < timeout < elapsed:
-                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.getName(), elapsed, timeout, self.__state_to_str[ctl.getState()] ))
+                raise TimeOutException('Timeout error while changing property {0}: elapsed={1}, timeout={2}, status={3}'.format(ctl.getName(), elapsed, timeout, self.__state_to_str_p[ctl.getState()] ))
 
             time.sleep(0.15)
 

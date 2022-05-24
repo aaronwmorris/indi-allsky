@@ -45,7 +45,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 3.0
+    _version = 3.1
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
     DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
@@ -63,6 +63,7 @@ class IndiAllSky(object):
 
         self.indiclient = None
         self.ccdDevice = None
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -151,6 +152,10 @@ class IndiAllSky(object):
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
+
+        # Get Properties
+        ccd_properties = self.indiclient.getDeviceProperties(self.ccdDevice)
+        self.config['CCD_PROPERTIES'] = ccd_properties
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
@@ -340,6 +345,10 @@ class IndiAllSky(object):
 
         # Disable debugging
         self.indiclient.disableDebug(self.ccdDevice)
+
+        # Get Properties (this might be needed to initialize some cameras)
+        ccd_properties = self.indiclient.getDeviceProperties(self.ccdDevice)
+        self.config['CCD_PROPERTIES'] = ccd_properties
 
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode(self.ccdDevice)
@@ -764,9 +773,14 @@ class IndiAllSky(object):
         # set default device in indiclient
         self.indiclient.device = self.ccdDevice
 
+        # Get Properties
+        ccd_properties = self.indiclient.getDeviceProperties(self.ccdDevice)
+
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
 
+
+        logger.info('Camera Properties: %s', json.dumps(ccd_properties, indent=4))
         logger.info('Camera Info: %s', json.dumps(ccd_info, indent=4))
 
         self.indiclient.disconnectServer()

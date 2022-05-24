@@ -55,5 +55,6 @@ sleep 10
 
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 uninstall -y pyindi-client
-pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@a4bbe7d66cffd91f4b940a719705716acc9e1617#egg=pyindi-client'
+pip3 install --no-binary :all: --upgrade 'pyindi-client==1.9.1'
+#pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@xxxxxxx#egg=pyindi-client'
 
