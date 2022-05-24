@@ -45,7 +45,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 3.0
+    _version = 3.1
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
     DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
