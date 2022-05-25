@@ -127,6 +127,7 @@
         "REMOTE_STARTRAIL_FOLDER"    : "/tmp",
         "REMOTE_ENDOFNIGHT_FOLDER"   : "/tmp",
         "UPLOAD_IMAGE"           : 0,
+        "UPLOAD_METADATA"        : false,
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,

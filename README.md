@@ -292,6 +292,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |
 | > REMOTE_ENDOFNIGHT_FOLDER   |      | (str) Remote folder to upload Allsky EndOfNight data |
 | > UPLOAD_IMAGE        | 0           | (int) Upload latest image every X frames |
+| > UPLOAD_METADATA     | false       | (bool) Enable upload of image metadata |
 | > UPLOAD_VIDEO        | false       | (bool) Enable timelapse video uploads |
 | > UPLOAD_KEOGRAM      | false       | (bool) Enable keogram uploads |
 | > UPLOAD_STARTRAIL    | false       | (bool) Enable star trail upload |
