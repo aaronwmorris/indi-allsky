@@ -287,6 +287,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
 | > REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
+| > REMOTE_METADATA_NAME       | latest_metadata.json | (str) Filename for remote metadata upload |
+| > REMOTE_METADATA_FOLDER     |      | (str) Remote folder to upload metadata |
 | > REMOTE_VIDEO_FOLDER        |      | (str) Remote folder to upload time lapse videos |
 | > REMOTE_KEOGRAM_FOLDER      |      | (str) Remote folder to upload keograms |
 | > REMOTE_STARTRAIL_FOLDER    |      | (str) Remote folder to upload star trails |

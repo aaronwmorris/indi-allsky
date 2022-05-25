@@ -576,6 +576,13 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
+    metadata_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+
+    if not re.search(metadata_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
 def REMOTE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
@@ -771,6 +778,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__REMOTE_IMAGE_NAME  = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
     FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_METADATA_NAME     = StringField('Remote Metadata Name', validators=[DataRequired(), FILETRANSFER__REMOTE_METADATA_NAME_validator])
+    FILETRANSFER__REMOTE_METADATA_FOLDER   = StringField('Remote Metadata Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])

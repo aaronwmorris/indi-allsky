@@ -122,6 +122,8 @@
         "TIMEOUT"                : 5.0,
         "REMOTE_IMAGE_NAME"      : "image-resize.{0}",
         "REMOTE_IMAGE_FOLDER"        : "/tmp",
+        "REMOTE_METADATA_NAME"       : "latest_metadata.json",
+        "REMOTE_METADATA_FOLDER"     : "/tmp",
         "REMOTE_VIDEO_FOLDER"        : "/tmp",
         "REMOTE_KEOGRAM_FOLDER"      : "/tmp",
         "REMOTE_STARTRAIL_FOLDER"    : "/tmp",
