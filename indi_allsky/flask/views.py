@@ -389,21 +389,21 @@ class JsonImageLoopView(JsonView):
             history_seconds = 86400
 
         data = {
-            'image_list' : self.getLatestImages(history_seconds),
-            'sqm_data'   : self.getSqmData(),
-            'stars_data' : self.getStarsData(),
+            'image_list' : self.getLatestImages(self.camera_id, history_seconds),
+            'sqm_data'   : self.getSqmData(self.camera_id),
+            'stars_data' : self.getStarsData(self.camera_id),
         }
 
         return data
 
 
-    def getLatestImages(self, history_seconds):
+    def getLatestImages(self, camera_id, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
@@ -427,7 +427,7 @@ class JsonImageLoopView(JsonView):
         return image_list
 
 
-    def getSqmData(self):
+    def getSqmData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
@@ -438,7 +438,7 @@ class JsonImageLoopView(JsonView):
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
             )\
             .join(IndiAllSkyDbCameraTable)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
@@ -452,7 +452,7 @@ class JsonImageLoopView(JsonView):
         return sqm_data
 
 
-    def getStarsData(self):
+    def getStarsData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
         #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
@@ -463,7 +463,7 @@ class JsonImageLoopView(JsonView):
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
             )\
             .join(IndiAllSkyDbCameraTable)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
             .first()
 
