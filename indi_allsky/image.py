@@ -378,7 +378,7 @@ class ImageWorker(Process):
 
 
                 self.upload_image(latest_file, image_entry)
-
+                self.upload_metadata(exposure, exp_date, adu, adu_average, blob_stars)
 
 
     def upload_image(self, latest_file, image_entry):
@@ -414,6 +414,71 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : task.id})
 
         self._miscDb.addUploadedFlag(image_entry)
+
+
+    def upload_metadata(self, exposure, exp_date, adu, adu_average, blob_stars):
+        ### upload images
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
+            logger.warning('Metadata uploading disabled')
+            return
+
+
+        ### Only uploading metadata if image uploading is enabled
+        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+            #logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        metadata = {
+            'device'              : self.config['CCD_NAME'],
+            'night'               : self.night_v.value,
+            'temp'                : self.sensortemp_v.value,
+            'gain'                : self.gain_v.value,
+            'exposure'            : exposure,
+            'stable_exposure'     : int(self.target_adu_found),
+            'target_adu'          : self.target_adu,
+            'current_adu_target'  : self.current_adu_target,
+            'current_adu'         : adu,
+            'adu_average'         : adu_average,
+            'sqm'                 : self.sqm_value,
+            'stars'               : len(blob_stars),
+            'time'                : exp_date.strftime('%s'),
+        }
+
+
+        f_tmp_metadata = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+
+        json.dump(metadata, f_tmp_metadata, indent=4)
+
+        f_tmp_metadata.flush()
+        f_tmp_metadata.close()
+
+        tmp_metadata_name_p = Path(f_tmp_metadata.name)
+        tmp_metadata_name_p.chmod(0o644)
+
+
+
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_METADATA_FOLDER'])
+        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_METADATA_NAME'])
+
+        # tell worker to upload file
+        jobdata = {
+            'action'       : 'upload',
+            'local_file'   : str(tmp_metadata_name_p),
+            'remote_file'  : str(remote_file),
+            'remove_local' : True,
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
 
 
     def mqtt_publish(self, latest_file, mq_data):
