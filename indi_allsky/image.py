@@ -32,10 +32,13 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
@@ -70,6 +73,9 @@ class ImageWorker(Process):
     dark_temperature_range = 5.0  # dark must be within this range
 
     line_thickness = 2
+
+    sqm_history_minutes = 30
+    stars_history_minutes = 30
 
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
@@ -378,7 +384,7 @@ class ImageWorker(Process):
 
 
                 self.upload_image(latest_file, image_entry)
-
+                self.upload_metadata(exposure, exp_date, adu, adu_average, blob_stars, camera_id)
 
 
     def upload_image(self, latest_file, image_entry):
@@ -416,6 +422,73 @@ class ImageWorker(Process):
         self._miscDb.addUploadedFlag(image_entry)
 
 
+    def upload_metadata(self, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
+        ### upload images
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
+            logger.warning('Metadata uploading disabled')
+            return
+
+
+        ### Only uploading metadata if image uploading is enabled
+        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
+            #next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+            #logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        metadata = {
+            'device'              : self.config['CCD_NAME'],
+            'night'               : self.night_v.value,
+            'temp'                : self.sensortemp_v.value,
+            'gain'                : self.gain_v.value,
+            'exposure'            : exposure,
+            'stable_exposure'     : int(self.target_adu_found),
+            'target_adu'          : self.target_adu,
+            'current_adu_target'  : self.current_adu_target,
+            'current_adu'         : adu,
+            'adu_average'         : adu_average,
+            'sqm'                 : self.sqm_value,
+            'stars'               : len(blob_stars),
+            'time'                : exp_date.strftime('%s'),
+            'sqm_data'            : self.getSqmData(camera_id),
+            'stars_data'          : self.getStarsData(camera_id),
+        }
+
+
+        f_tmp_metadata = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+
+        json.dump(metadata, f_tmp_metadata, indent=4)
+
+        f_tmp_metadata.flush()
+        f_tmp_metadata.close()
+
+        tmp_metadata_name_p = Path(f_tmp_metadata.name)
+        tmp_metadata_name_p.chmod(0o644)
+
+
+
+        remote_path = Path(self.config['FILETRANSFER']['REMOTE_METADATA_FOLDER'])
+        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_METADATA_NAME'])
+
+        # tell worker to upload file
+        jobdata = {
+            'action'       : 'upload',
+            'local_file'   : str(tmp_metadata_name_p),
+            'remote_file'  : str(remote_file),
+            'remove_local' : True,
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : task.id})
+
+
     def mqtt_publish(self, latest_file, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             logger.warning('MQ publishing disabled')
@@ -439,6 +512,56 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : task.id})
+
+
+    def getSqmData(self, camera_id):
+        now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
+
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        sqm_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
+                func.min(IndiAllSkyDbImageTable.sqm).label('image_min_sqm'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+            )\
+            .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .first()
+
+
+        sqm_data = {
+            'max' : sqm_images.image_max_sqm,
+            'min' : sqm_images.image_min_sqm,
+            'avg' : sqm_images.image_avg_sqm,
+        }
+
+        return sqm_data
+
+
+    def getStarsData(self, camera_id):
+        now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
+
+        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
+        stars_images = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
+                func.min(IndiAllSkyDbImageTable.stars).label('image_min_stars'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+            )\
+            .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_minutes)\
+            .first()
+
+
+        stars_data = {
+            'max' : stars_images.image_max_stars,
+            'min' : stars_images.image_min_stars,
+            'avg' : stars_images.image_avg_stars,
+        }
+
+        return stars_data
 
 
     def detectBitDepth(self, data):
