@@ -1223,6 +1223,10 @@ sudo chmod 660 "${ALLSKY_ETC}/config.json"
 [[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
 
 
+# final config syntax check
+cat "${ALLSKY_ETC}/config.json" | json_pp >/dev/null
+cat "${ALLSKY_ETC}/flask.json" | json_pp >/dev/null
+
 
 echo
 echo
