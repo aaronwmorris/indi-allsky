@@ -14,6 +14,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.SQLALCHEMY_DATABASE_URI.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.SQLALCHEMY_DATABASE_URI(class='form-control bg-secondary') }}
+            <div id="SQLALCHEMY_DATABASE_URI-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">READ ONLY - Must be manually configured in config.json</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.INDI_SERVER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1216,6 +1229,7 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
+    'SQLALCHEMY_DATABASE_URI',
     'INDI_SERVER',
     'INDI_PORT',
     'CCD_CONFIG__NIGHT__GAIN',

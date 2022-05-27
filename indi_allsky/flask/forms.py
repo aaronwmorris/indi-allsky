@@ -34,6 +34,13 @@ from .models import IndiAllSkyDbStarTrailsTable
 from . import db
 
 
+def SQLALCHEMY_DATABASE_URI_validator(form, field):
+    host_regex = r'^[a-zA-Z0-9_\.\-\:\/\@]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid URI')
+
+
 def INDI_SERVER_validator(form, field):
     if not field.data:
         return
@@ -695,6 +702,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    SQLALCHEMY_DATABASE_URI          = StringField('Database URI', render_kw={'readonly' : True}, validators=[DataRequired(), SQLALCHEMY_DATABASE_URI_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
