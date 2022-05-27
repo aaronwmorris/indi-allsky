@@ -17,6 +17,8 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 HTDOCS_FOLDER="/var/www/html/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
+DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
+DB_URI_DEFAULT="sqlite:///${DB_FILE}"
 INSTALL_INDI="true"
 HTTP_PORT="80"
 HTTPS_PORT="443"
@@ -110,6 +112,7 @@ echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
+echo "DB_FILE: $DB_FILE"
 echo "INSTALL_INDI: $INSTALL_INDI"
 echo "HTTP_PORT: $HTTP_PORT"
 echo "HTTPS_PORT: $HTTPS_PORT"
@@ -878,6 +881,20 @@ fi
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
 sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
+# Setup Database URI in config
+SQLALCHEMY_DATABASE_URI=$(jq -r '.SQLALCHEMY_DATABASE_URI' "${ALLSKY_ETC}/config.json")
+if [[ "$SQLALCHEMY_DATABASE_URI" == "null" ]]; then
+    TMP_CONFIG1=$(mktemp)
+    jq --argjson db_uri "\"$DB_URI_DEFAULT\"" '.SQLALCHEMY_DATABASE_URI = $db_uri' "${ALLSKY_ETC}/config.json" > $TMP_CONFIG1
+    cp -f "$TMP_CONFIG1" "${ALLSKY_ETC}/config.json"
+    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
+    sudo chmod 660 "${ALLSKY_ETC}/config.json"
+    [[ -f "$TMP_CONFIG1" ]] && rm -f "$TMP_CONFIG1"
+
+    # use default
+    SQLALCHEMY_DATABASE_URI="$DB_URI_DEFAULT"
+fi
+
 # Detect IMAGE_FOLDER
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
 echo "Detected image folder: $IMAGE_FOLDER"
@@ -888,6 +905,7 @@ TMP4=$(mktemp)
 #if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
+ -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
  -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
@@ -1124,13 +1142,13 @@ sudo chown "$USER":"$PGRP" "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
 sudo chmod 775 "$DB_FOLDER/backup"
 sudo chown "$USER":"$PGRP" "$DB_FOLDER/backup"
-if [[ -f "${DB_FOLDER}/indi-allsky.sqlite" ]]; then
-    sudo chmod 664 "$DB_FOLDER/indi-allsky.sqlite"
-    sudo chown "$USER":"$PGRP" "$DB_FOLDER/indi-allsky.sqlite"
+if [[ -f "${DB_FILE}" ]]; then
+    sudo chmod 664 "${DB_FILE}"
+    sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
-    sqlite3 "${DB_FOLDER}/indi-allsky.sqlite" .dump > $DB_BACKUP
+    sqlite3 "${DB_FILE}" .dump > $DB_BACKUP
     gzip $DB_BACKUP
 fi
 
@@ -1145,7 +1163,7 @@ if [[ -d "alembic" ]]; then
     echo
     sleep 5
 
-    sqlite3 ${DB_FOLDER}/indi-allsky.sqlite "DELETE FROM alembic_version;"
+    sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
 
     rm -fR alembic
 fi
@@ -1154,8 +1172,8 @@ flask db revision --autogenerate
 flask db upgrade head
 
 
-sudo chmod 664 "$DB_FOLDER/indi-allsky.sqlite"
-sudo chown "$USER":"$PGRP" "$DB_FOLDER/indi-allsky.sqlite"
+sudo chmod 664 "${DB_FILE}"
+sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
 
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
