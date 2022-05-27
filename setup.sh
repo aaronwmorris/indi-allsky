@@ -9,7 +9,7 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="3.1"
+INDI_ALLSKY_VERSION="3.2"
 INDI_DRIVER_PATH="/usr/bin"
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"

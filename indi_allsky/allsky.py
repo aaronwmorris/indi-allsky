@@ -45,7 +45,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 3.1
+    _version = 3.2
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
