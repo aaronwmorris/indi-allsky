@@ -67,7 +67,7 @@
                             <img src="{{ url_for('indi_allsky.static', filename='svg/wrench.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">System</span> </a>
                     </li>
                 </ul>
-                <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
+                <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Mode: {{astrometric_data.mode}}</div>
                     <div>Sun: {{"%.0f"|format(astrometric_data.sun_alt)}}&deg; {{ astrometric_data.sun_rising_sign|safe }}</div>
