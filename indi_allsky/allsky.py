@@ -45,17 +45,14 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 3.1
+    _version = 3.2
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
-    DB_URI = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
 
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
-
-        self.config['DB_URI'] = self.DB_URI
 
         self.config_file = f_config_file.name
 
@@ -136,8 +133,6 @@ class IndiAllSky(object):
 
         # overwrite config
         self.config = c
-
-        self.config['DB_URI'] = self.DB_URI
 
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])

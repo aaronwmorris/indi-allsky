@@ -2,6 +2,8 @@
     "INDI_SERVER" : "localhost",
     "INDI_PORT"   : 7624,
 
+    "SQLALCHEMY_DATABASE_URI" : null,
+
     "CCD_CONFIG" : {
         "NIGHT" : {
             "GAIN"    : 100,

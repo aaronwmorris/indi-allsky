@@ -670,6 +670,7 @@ class ConfigView(FormView):
         context = super(ConfigView, self).get_context()
 
         form_data = {
+            'SQLALCHEMY_DATABASE_URI'        : self.indi_allsky_config.get('SQLALCHEMY_DATABASE_URI', 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'),
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
             'CCD_CONFIG__NIGHT__GAIN'        : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100),
@@ -920,6 +921,7 @@ class AjaxConfigView(BaseView):
 
 
         # update data
+        self.indi_allsky_config['SQLALCHEMY_DATABASE_URI']              = str(request.json['SQLALCHEMY_DATABASE_URI'])
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
