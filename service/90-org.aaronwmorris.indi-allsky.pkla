@@ -15,3 +15,9 @@ Identity=unix-user:%ALLSKY_USER%
 Action=org.freedesktop.udisks2.filesystem-mount-system;org.freedesktop.udisks2.filesystem-mount;org.freedesktop.udisks2.filesystem-mount-other-seat
 ResultActive=yes
 ResultAny=yes
+
+[Allow indi-allsky user to set system time]
+Identity=unix-user:%ALLSKY_USER%
+Action=org.freedesktop.timedate1.set-time;org.freedesktop.timedate1.set-timezone
+ResultActive=yes
+ResultAny=yes
