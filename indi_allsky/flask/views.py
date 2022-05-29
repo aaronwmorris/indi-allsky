@@ -1101,7 +1101,7 @@ class AjaxSetTimeView(BaseView):
     methods = ['POST']
 
     def dispatch_request(self):
-        form_settime = IndiAllskySetTimeForm(data=request.json)
+        form_settime = IndiAllskySetDateTimeForm(data=request.json)
 
         if not form_settime.validate():
             form_errors = form_settime.errors  # this must be a property
