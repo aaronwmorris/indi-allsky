@@ -1311,6 +1311,7 @@ class SystemInfoView(TemplateView):
         ))
 
 
+        context['now'] = datetime.now()
         context['form_settime'] = IndiAllskySetDateTimeForm()
 
         return context
