@@ -14,6 +14,7 @@ from wtforms import StringField
 from wtforms import PasswordField
 from wtforms import TextAreaField
 from wtforms import HiddenField
+from wtforms import DateTimeLocalField
 from wtforms.widgets import PasswordInput
 from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
@@ -1216,4 +1217,10 @@ class IndiAllskyHistoryForm(FlaskForm):
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
     FRAMEDELAY_SELECT    = SelectField('Speed', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[2][0], validators=[])
     ROCK_CHECKBOX        = BooleanField('Rock', default=False)
+
+
+
+class IndiAllskySetDateTimeForm(FlaskForm):
+
+    NEW_DATETIME = DateTimeLocalField('New Datetime', format='%Y-%m-%d %H:%M:%S', validators=[DataRequired()])
 

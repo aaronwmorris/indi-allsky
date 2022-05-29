@@ -56,6 +56,7 @@ from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
+from .forms import IndiAllskySetDateTimeForm
 
 
 bp = Blueprint(
@@ -1287,6 +1288,9 @@ class SystemInfoView(TemplateView):
             str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
+
+
+        context['form_settime'] = IndiAllskySetDateTimeForm()
 
         return context
 
