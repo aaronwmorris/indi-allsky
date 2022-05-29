@@ -1109,6 +1109,12 @@ class AjaxSetTimeView(BaseView):
             return jsonify(form_errors), 400
 
 
+        new_datetime_str = str(request.json['NEW_DATETIME'])
+        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+
+        app.logger.warning('Setting system time to %s', new_datetime)
+
+
         # form passed validation
         message = {
             'success-message' : 'System time updated',
