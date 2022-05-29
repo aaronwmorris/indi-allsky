@@ -1110,6 +1110,11 @@ class AjaxSetTimeView(BaseView):
 
 
         # form passed validation
+        message = {
+            'success-message' : 'System time updated',
+        }
+
+        return jsonify(message)
 
 
 class ImageViewerView(FormView):
