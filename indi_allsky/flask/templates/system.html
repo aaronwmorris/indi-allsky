@@ -6,6 +6,22 @@
 {% endblock %}
 
 {% block content %}
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link active" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" role="tab" aria-controls="nav-info" aria-selected="true">Info</button>
+    <button class="nav-link" id="nav-services-tab" data-bs-toggle="tab" data-bs-target="#nav-services" type="button" role="tab" aria-controls="nav-services" aria-selected="false">Services</button>
+    <button class="nav-link" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Shutdown</button>
+  </div>
+</nav>
+
+
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-info" role="tabpanel" aria-labelledby="nav-info-tab">
+
+
+<hr />
+
 <div class="row">
     <div class="col-sm-2"><h4>Uptime</h4></div>
     <div class="col-sm-6">{{uptime_str}}</div>
@@ -208,6 +224,10 @@
     <div class="col-sm-1">{{pycurl_version}}</div>
 </div>
 
+
+</div><!-- end tab -->
+<div class="tab-pane fade" id="nav-services" role="tabpanel" aria-labelledby="nav-services-tab">
+
 <hr />
 
 <div class="row">
@@ -268,6 +288,11 @@
     </div>
 </div>
 
+
+</div><!-- end tab -->
+<div class="tab-pane fade" id="nav-powercontrol" role="tabpanel" aria-labelledby="nav-powercontrol-tab">
+
+
 <hr />
 
 <div class="row">
@@ -298,6 +323,10 @@
 </div>
 
 <hr />
+
+
+</div><!-- end tab -->
+</div>
 
 
 <script>
