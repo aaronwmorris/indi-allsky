@@ -257,7 +257,7 @@ const form_settime_successMessage = $('#form_settime_success-message');
 const form_settime_failureMessage = $('#form_settime_failure-message');
 const form_settime_field_names = [
     'csrf_token',
-    'SQLALCHEMY_DATABASE_URI',
+    'NEW_DATETIME',
 ];
 const form_settime_checkbox_field_names = [];
 
@@ -279,11 +279,7 @@ form_settime_checkbox_field_names.forEach(item => {
 });
 
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
+// ajax setup later
 
 
 $('#form_settime').on('submit', function() {
