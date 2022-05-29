@@ -577,6 +577,10 @@ $( document ).ready(function() {
     $("#REBOOT_CONFIRM").prop('checked', false);
     $("#SHUTDOWN_CONFIRM").prop('checked', false);
 
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 16));
+
     setTimeout(reloadPage, 90000);
 });
 
