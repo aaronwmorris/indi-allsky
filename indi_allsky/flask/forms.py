@@ -1222,5 +1222,5 @@ class IndiAllskyHistoryForm(FlaskForm):
 
 class IndiAllskySetDateTimeForm(FlaskForm):
 
-    NEW_DATETIME = DateTimeLocalField('New Datetime', format='%Y-%m-%d %H:%M:%S', validators=[DataRequired()])
+    NEW_DATETIME = DateTimeLocalField('New Datetime', render_kw={'step' : '1'}, format='%Y-%m-%dT%H:%M:%S', validators=[DataRequired()])
 

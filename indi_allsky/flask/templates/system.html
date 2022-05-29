@@ -240,7 +240,7 @@
         <div class="col-sm-2">
             {{ form_settime.NEW_DATETIME.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_settime.NEW_DATETIME(class='form-control bg-secondary') }}
             <div id="NEW_DATETIME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -579,7 +579,7 @@ $( document ).ready(function() {
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 16));
+    form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 19));
 
     setTimeout(reloadPage, 90000);
 });
