@@ -232,6 +232,11 @@
 
 <hr />
 
+<div class="row">
+    <div class="col-sm-2">System time</div>
+    <div class="col-sm-4">&nbsp;&nbsp;&nbsp;{{ now.strftime('%m / %d / %Y, %I : %M : %S %P') }}</div>
+</div>
+
 <form id="form_settime" onSubmit="return false;">
     {{ form_settime.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
@@ -244,6 +249,7 @@
             {{ form_settime.NEW_DATETIME(class='form-control bg-secondary') }}
             <div id="NEW_DATETIME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-6">Field populated by browser</div>
     </div>
 
     <div id="form_settime_success-message" class="text-success" style="display: none;"></div>
