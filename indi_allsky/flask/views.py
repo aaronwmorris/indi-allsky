@@ -1131,8 +1131,8 @@ class AjaxSetTimeView(BaseView):
         epoch_msec = epoch * 1000000
 
         system_bus = dbus.SystemBus()
-        systemd1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.timedate1')
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
 
         app.logger.warning('Disabling NTP time sync')
         r1 = manager.SetNTP(False, False)  # disable time sync
@@ -1340,6 +1340,7 @@ class SystemInfoView(TemplateView):
 
         context['now'] = datetime.now()
         context['form_settime'] = IndiAllskySetDateTimeForm()
+        context['timedate1_dict'] = self.getSystemdTimeDate()
 
         return context
 
@@ -1481,6 +1482,24 @@ class SystemInfoView(TemplateView):
         unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
 
         return str(unit_state)
+
+
+    def getSystemdTimeDate(self):
+        session_bus = dbus.SystemBus()
+        timedate1 = session_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.DBus.Properties')
+
+        timedate1_dict = dict()
+        timedate1_dict['Timezone'] = str(manager.Get('org.freedesktop.timedate1', 'Timezone'))
+        timedate1_dict['CanNTP'] = bool(manager.Get('org.freedesktop.timedate1', 'CanNTP'))
+        timedate1_dict['NTP'] = bool(manager.Get('org.freedesktop.timedate1', 'NTP'))
+        timedate1_dict['NTPSynchronized'] = bool(manager.Get('org.freedesktop.timedate1', 'NTPSynchronized'))
+        timedate1_dict['LocalRTC'] = bool(manager.Get('org.freedesktop.timedate1', 'LocalRTC'))
+        timedate1_dict['TimeUSec'] = int(manager.Get('org.freedesktop.timedate1', 'TimeUSec'))
+
+        app.logger.info('timedate1: %s', timedate1_dict)
+
+        return timedate1_dict
 
 
 
