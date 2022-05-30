@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #set -x  # command tracing
-set -o errexit
-#set -o nounset
+#set -o errexit  # replace by trapping ERR
+#set -o nounset  # problems with python virtualenvs
 
 PATH=/usr/bin:/bin
 export PATH
@@ -23,6 +23,19 @@ INSTALL_INDI="true"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 #### end config ####
+
+
+
+function catch_error() {
+    echo
+    echo
+    echo "The script exited abnormally, please try to run again..."
+    echo
+    echo
+    exit 1
+}
+trap catch_error ERR
+
 
 
 HTDOCS_FILES="
