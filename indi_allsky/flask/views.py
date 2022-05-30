@@ -1497,7 +1497,7 @@ class SystemInfoView(TemplateView):
         timedate1_dict['LocalRTC'] = bool(manager.Get('org.freedesktop.timedate1', 'LocalRTC'))
         timedate1_dict['TimeUSec'] = int(manager.Get('org.freedesktop.timedate1', 'TimeUSec'))
 
-        app.logger.info('timedate1: %s', timedate1_dict)
+        #app.logger.info('timedate1: %s', timedate1_dict)
 
         return timedate1_dict
 
