@@ -36,6 +36,16 @@ function catch_error() {
 }
 trap catch_error ERR
 
+function catch_sigint() {
+    echo
+    echo
+    echo "The setup script was interrupted, please run the script again to finish..."
+    echo
+    echo
+    exit 1
+}
+trap catch_sigint SIGINT
+
 
 
 HTDOCS_FILES="
