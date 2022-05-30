@@ -18,6 +18,6 @@ ResultAny=yes
 
 [Allow indi-allsky user to set system time]
 Identity=unix-user:%ALLSKY_USER%
-Action=org.freedesktop.timedate1.set-time;org.freedesktop.timedate1.set-timezone
+Action=org.freedesktop.timedate1.set-time;org.freedesktop.timedate1.set-timezone;org.freedesktop.timedate1.set-ntp
 ResultActive=yes
 ResultAny=yes
