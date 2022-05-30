@@ -1,6 +1,7 @@
 import platform
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 import io
 import json
 import time
@@ -56,6 +57,7 @@ from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
+from .forms import IndiAllskySetDateTimeForm
 
 
 bp = Blueprint(
@@ -1095,6 +1097,53 @@ class AjaxConfigView(BaseView):
         return jsonify(message)
 
 
+
+class AjaxSetTimeView(BaseView):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_settime = IndiAllskySetDateTimeForm(data=request.json)
+
+        if not form_settime.validate():
+            form_errors = form_settime.errors  # this must be a property
+            form_errors['form_settime_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+        new_datetime_str = str(request.json['NEW_DATETIME'])
+        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+        new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
+
+        app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
+
+        self.setTimeSystemd(new_datetime_utc)
+
+        # form passed validation
+        message = {
+            'success-message' : 'System time updated',
+        }
+
+        return jsonify(message)
+
+
+    def setTimeSystemd(self, new_datetime_utc):
+        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
+        epoch_msec = epoch * 1000000
+
+        system_bus = dbus.SystemBus()
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        app.logger.warning('Disabling NTP time sync')
+        r1 = manager.SetNTP(False, False)  # disable time sync
+        time.sleep(5.0)  # give enough time for time sync to diable
+
+        r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
+
+
+
 class ImageViewerView(FormView):
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
@@ -1288,6 +1337,11 @@ class SystemInfoView(TemplateView):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
 
+
+        context['now'] = datetime.now()
+        context['form_settime'] = IndiAllskySetDateTimeForm()
+        context['timedate1_dict'] = self.getSystemdTimeDate()
+
         return context
 
 
@@ -1428,6 +1482,24 @@ class SystemInfoView(TemplateView):
         unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
 
         return str(unit_state)
+
+
+    def getSystemdTimeDate(self):
+        session_bus = dbus.SystemBus()
+        timedate1 = session_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.DBus.Properties')
+
+        timedate1_dict = dict()
+        timedate1_dict['Timezone'] = str(manager.Get('org.freedesktop.timedate1', 'Timezone'))
+        timedate1_dict['CanNTP'] = bool(manager.Get('org.freedesktop.timedate1', 'CanNTP'))
+        timedate1_dict['NTP'] = bool(manager.Get('org.freedesktop.timedate1', 'NTP'))
+        timedate1_dict['NTPSynchronized'] = bool(manager.Get('org.freedesktop.timedate1', 'NTPSynchronized'))
+        timedate1_dict['LocalRTC'] = bool(manager.Get('org.freedesktop.timedate1', 'LocalRTC'))
+        timedate1_dict['TimeUSec'] = int(manager.Get('org.freedesktop.timedate1', 'TimeUSec'))
+
+        #app.logger.info('timedate1: %s', timedate1_dict)
+
+        return timedate1_dict
 
 
 
@@ -1607,19 +1679,21 @@ def images_folder(path):
 
 bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
-bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
-bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
-bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
-bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
+
+bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
+bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
