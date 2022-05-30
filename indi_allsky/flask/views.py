@@ -1,6 +1,7 @@
 import platform
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 import io
 import json
 import time
@@ -1111,9 +1112,11 @@ class AjaxSetTimeView(BaseView):
 
         new_datetime_str = str(request.json['NEW_DATETIME'])
         new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+        new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
-        app.logger.warning('Setting system time to %s', new_datetime)
+        app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
 
+        self.setTimeSystemd(new_datetime_utc)
 
         # form passed validation
         message = {
@@ -1121,6 +1124,24 @@ class AjaxSetTimeView(BaseView):
         }
 
         return jsonify(message)
+
+
+    def setTimeSystemd(self, new_datetime_utc):
+        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
+        epoch_msec = epoch * 1000000
+
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.timedate1')
+
+        app.logger.warning('Disabling NTP time sync')
+        r1 = manager.SetNTP(False, False)  # disable time sync
+        time.sleep(5.0)  # give enough time for time sync to diable
+
+        r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
+
 
 
 class ImageViewerView(FormView):
