@@ -104,6 +104,15 @@ class IndiAllSkyDarks(object):
         assert(self._bitmax in (0, 8, 10, 12, 14, 16))
 
 
+    @property
+    def hotpixel_adu_percent(self):
+        return self._hotpixel_adu_percent
+
+    @hotpixel_adu_percent.setter
+    def hotpixel_adu_percent(self, new_hotpixel_adu_percent):
+        self._hotpixel_adu_percent = int(new_hotpixel_adu_percent)
+
+
 
     def _initialize(self):
         # instantiate the client
@@ -496,6 +505,8 @@ class IndiAllSkyDarks(object):
 
         s = stacking_class(self.gain_v, self.bin_v)
         s.bitmax = self._bitmax
+        s.hotpixel_adu_percent = self._hotpixel_adu_percent
+
         s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
         s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
 
@@ -558,6 +569,8 @@ class IndiAllSkyDarksProcessor(object):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
+        self._hotpixel_adu_percent = 90
+
         self._bitmax = 0
 
 
@@ -568,6 +581,16 @@ class IndiAllSkyDarksProcessor(object):
     @bitmax.setter
     def bitmax(self, new_bitmax):
         self._bitmax = int(new_bitmax)
+
+
+    @property
+    def hotpixel_adu_percent(self):
+        return self._hotpixel_adu_percent
+
+    @hotpixel_adu_percent.setter
+    def hotpixel_adu_percent(self, new_hotpixel_adu_percent):
+        self._hotpixel_adu_percent = int(new_hotpixel_adu_percent)
+
 
 
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
