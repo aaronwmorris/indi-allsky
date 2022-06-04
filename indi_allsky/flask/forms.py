@@ -207,6 +207,35 @@ def NIGHT_MOONMODE_PHASE_validator(form, field):
         raise ValidationError('Moon illumination must be 100 or less')
 
 
+def WEB_EXTRA_TEXT_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    web_extra_text_p = Path(field.data)
+
+    try:
+        if not web_extra_text_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not web_extra_text_p.is_file():
+            raise ValidationError('Not a file')
+
+        # Sanity check
+        if web_extra_text_p.stat().st_size > 10000:
+            raise ValidationError('File is too large')
+
+        with io.open(str(web_extra_text_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
 def KEOGRAM_ANGLE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -739,6 +768,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
     NIGHT_MOONMODE_ALT_DEG           = FloatField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
+    WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])

@@ -240,6 +240,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | NIGHT_SUN_ALT_DEG   | -6          | (degrees) Altitude of Sun to calculate beginning and end of night |
 | NIGHT_MOONMODE_ALT_DEG   | 0      | (degrees) Altitude of Moon to enable night time "moon mode" |
 | NIGHT_MOONMODE_PHASE     | 33     | (percent) Minimum illumination of Moon to enable night time "moon mode" |
+| WEB_EXTRA_TEXT      |             | (str) File to include in web info box |
 | KEOGRAM_ANGLE       | 0           | (float) Angle of image rotation for keogram generation |
 | KEOGRAM_H_SCALE     | 100         | (int) Horizontal scaling of keograms |
 | KEOGRAM_V_SCALE     | 33          | (int) Vertical scaling of keograms |
