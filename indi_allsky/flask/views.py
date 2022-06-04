@@ -270,8 +270,57 @@ class TemplateView(BaseView):
         context = {
             'indi_allsky_status' : self.get_indi_allsky_status(),
             'astrometric_data'   : self.get_astrometric_info(),
+            'web_extra_text'     : self.get_web_extra_text(),
         }
         return context
+
+
+    def get_web_extra_text(self):
+        if not self.indi_allsky_config.get('WEB_EXTRA_TEXT'):
+            return str()
+
+
+        web_extra_text_p = Path(self.indi_allsky_config['WEB_EXTRA_TEXT'])
+
+        try:
+            if not web_extra_text_p.exists():
+                app.logger.error('%s does not exist', web_extra_text_p)
+                return str()
+
+
+            if not web_extra_text_p.is_file():
+                app.logger.error('%s is not a file', web_extra_text_p)
+                return str()
+
+
+            # Sanity check
+            if web_extra_text_p.stat().st_size > 10000:
+                app.logger.error('%s is too large', web_extra_text_p)
+                return str()
+
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        try:
+            with io.open(str(web_extra_text_p), 'r') as web_extra_text_f:
+                extra_lines_raw = [x.rstrip() for x in web_extra_text_f.readlines()]
+                web_extra_text_f.close()
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        extra_lines = list()
+        for line in extra_lines_raw:
+            # encapsulate each line in a div
+            extra_lines.append('<div>{0:s}</div>'.format(line))
+
+        extra_text = ''.join(extra_lines)
+        #app.logger.info('Extra Text: %s', extra_text)
+
+        return  extra_text
 
 
 class FormView(TemplateView):
