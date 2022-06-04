@@ -414,6 +414,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.WEB_EXTRA_TEXT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WEB_EXTRA_TEXT(class='form-control bg-secondary') }}
+            <div id="WEB_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File containing extra text to be included in info box</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1258,6 +1271,7 @@ const field_names = [
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
+    'WEB_EXTRA_TEXT',
     'KEOGRAM_ANGLE',
     'KEOGRAM_H_SCALE',
     'KEOGRAM_V_SCALE',

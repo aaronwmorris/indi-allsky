@@ -73,6 +73,7 @@
                     <div>Sun: {{"%.0f"|format(astrometric_data.sun_alt)}}&deg; {{ astrometric_data.sun_rising_sign|safe }}</div>
                     <div>Moon: {{"%.0f"|format(astrometric_data.moon_alt)}}&deg; {{ astrometric_data.moon_rising_sign|safe }}</div>
                     <div data-bs-toggle="tooltip" data-bs-placement="right" title="{{"%.0f"|format(astrometric_data.moon_phase_percent)}}%">Phase: {{astrometric_data.moon_phase}} {{ astrometric_data.moon_phase_sign|safe }}</div>
+                    {{ web_extra_text|safe }}
                 </div>
                 <!--
                 <div class="dropdown py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">

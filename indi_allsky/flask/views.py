@@ -270,8 +270,57 @@ class TemplateView(BaseView):
         context = {
             'indi_allsky_status' : self.get_indi_allsky_status(),
             'astrometric_data'   : self.get_astrometric_info(),
+            'web_extra_text'     : self.get_web_extra_text(),
         }
         return context
+
+
+    def get_web_extra_text(self):
+        if not self.indi_allsky_config.get('WEB_EXTRA_TEXT'):
+            return str()
+
+
+        web_extra_text_p = Path(self.indi_allsky_config['WEB_EXTRA_TEXT'])
+
+        try:
+            if not web_extra_text_p.exists():
+                app.logger.error('%s does not exist', web_extra_text_p)
+                return str()
+
+
+            if not web_extra_text_p.is_file():
+                app.logger.error('%s is not a file', web_extra_text_p)
+                return str()
+
+
+            # Sanity check
+            if web_extra_text_p.stat().st_size > 10000:
+                app.logger.error('%s is too large', web_extra_text_p)
+                return str()
+
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        try:
+            with io.open(str(web_extra_text_p), 'r') as web_extra_text_f:
+                extra_lines_raw = [x.rstrip() for x in web_extra_text_f.readlines()]
+                web_extra_text_f.close()
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        extra_lines = list()
+        for line in extra_lines_raw:
+            # encapsulate each line in a div
+            extra_lines.append('<div>{0:s}</div>'.format(line))
+
+        extra_text = ''.join(extra_lines)
+        #app.logger.info('Extra Text: %s', extra_text)
+
+        return  extra_text
 
 
 class FormView(TemplateView):
@@ -700,6 +749,7 @@ class ConfigView(FormView):
             'NIGHT_SUN_ALT_DEG'              : self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),
             'NIGHT_MOONMODE_ALT_DEG'         : self.indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0),
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
+            'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'KEOGRAM_ANGLE'                  : self.indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
             'KEOGRAM_H_SCALE'                : self.indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
             'KEOGRAM_V_SCALE'                : self.indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
@@ -951,6 +1001,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = float(request.json['NIGHT_SUN_ALT_DEG'])
         self.indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = float(request.json['NIGHT_MOONMODE_ALT_DEG'])
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
+        self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['KEOGRAM_ANGLE']                        = float(request.json['KEOGRAM_ANGLE'])
         self.indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
         self.indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
