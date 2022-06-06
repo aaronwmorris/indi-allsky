@@ -167,6 +167,39 @@
                 <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
+        <div class="col-sm-8">This setting disables the manual settings below</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_R.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_R(class='form-control bg-secondary') }}
+            <div id="BALANCE_R-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_G.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_G(class='form-control bg-secondary') }}
+            <div id="BALANCE_G-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_B.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BALANCE_B(class='form-control bg-secondary') }}
+            <div id="BALANCE_B-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
         <div class="col-sm-8"></div>
     </div>
 
@@ -1255,6 +1288,9 @@ const field_names = [
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
     'EXPOSURE_PERIOD',
+    'BALANCE_R',
+    'BALANCE_G',
+    'BALANCE_B',
     'TEMP_DISPLAY',
     'TARGET_ADU',
     'TARGET_ADU_DEV',

@@ -735,6 +735,9 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'BALANCE_R'                      : self.indi_allsky_config.get('BALANCE_R', 1.0),
+            'BALANCE_G'                      : self.indi_allsky_config.get('BALANCE_G', 1.0),
+            'BALANCE_B'                      : self.indi_allsky_config.get('BALANCE_B', 1.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
@@ -987,6 +990,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['BALANCE_R']                            = float(request.json['BALANCE_R'])
+        self.indi_allsky_config['BALANCE_G']                            = float(request.json['BALANCE_G'])
+        self.indi_allsky_config['BALANCE_B']                            = float(request.json['BALANCE_B'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         self.indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])

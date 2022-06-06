@@ -224,6 +224,9 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | CCD_EXPOSURE_DEF    | CCD_EXPOSURE_MIN | (seconds) Default/starting exposure |
 | EXPOSURE_PERIOD     | 15          | (seconds) Time between beginning of each exposure |
 | AUTO_WB             | false       | (bool) Automatic white balance adjustment |
+| BALANCE_R           | 1.0         | (float) Red Balance Adjustment Factor |
+| BALANCE_G           | 1.0         | (float) Green Balance Adjustment Factor |
+| BALANCE_B           | 1.0         | (float) Blue Balance Adjustment Factor |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
 | TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time |
