@@ -283,7 +283,8 @@ class ImageWorker(Process):
 
             # white balance
             #scidata_balanced = self.equalizeHistogram(scidata_debayered_8)
-            scidata_balanced = self.white_balance_bgr(scidata_debayered_8)
+            scidata_balanced = self.white_balance_auto_bgr(scidata_debayered_8)
+            scidata_balanced = self.white_balance_manual_bgr(scidata_debayered_8)
             #scidata_balanced = self.white_balance_bgr_2(scidata_debayered_8)
             #scidata_balanced = scidata_debayered_8
 
@@ -1497,12 +1498,12 @@ class ImageWorker(Process):
         return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
 
 
-    def white_balance_bgr(self, data_bytes):
+    def white_balance_auto_bgr(self, data_bytes):
         if len(data_bytes.shape) == 2:
             # mono
             return data_bytes
 
-        if not self.config['AUTO_WB']:
+        if not self.config.get('AUTO_WB'):
             return data_bytes
 
         ### This seems to work
@@ -1534,6 +1535,42 @@ class ImageWorker(Process):
         r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
 
         return cv2.merge([b, g, r])
+
+
+    def white_balance_manual_bgr(self, data_bytes):
+        if len(data_bytes.shape) == 2:
+            # mono
+            return data_bytes
+
+        if self.config.get('AUTO_WB'):
+            # auto white balance disables manual balance
+            return data_bytes
+
+
+        if not self.config.get('BALANCE_R'):
+            logger.error('Missing BALANCE_R setting')
+            return data_bytes
+
+        if not self.config.get('BALANCE_G'):
+            logger.error('Missing BALANCE_G setting')
+            return data_bytes
+
+        if not self.config.get('BALANCE_B'):
+            logger.error('Missing BALANCE_B setting')
+            return data_bytes
+
+        B_FACTOR = float(self.config.get('BALANCE_B'))
+        G_FACTOR = float(self.config.get('BALANCE_G'))
+        R_FACTOR = float(self.config.get('BALANCE_R'))
+
+        b, g, r = cv2.split(data_bytes)
+
+        logger.info('Applying manual color balance settings')
+        bal_b = cv2.multiply(b, B_FACTOR)
+        bal_g = cv2.multiply(g, G_FACTOR)
+        bal_r = cv2.multiply(r, B_FACTOR)
+
+        return cv2.merge([bal_b, bal_g, bal_r])
 
 
     def white_balance_bgr_2(self, data_bytes):
