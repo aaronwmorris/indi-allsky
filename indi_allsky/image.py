@@ -1547,30 +1547,30 @@ class ImageWorker(Process):
             return data_bytes
 
 
-        if not self.config.get('BALANCE_R'):
-            logger.error('Missing BALANCE_R setting')
+        if not self.config.get('WBB_FACTOR'):
+            logger.error('Missing WBB_FACTOR setting')
             return data_bytes
 
-        if not self.config.get('BALANCE_G'):
-            logger.error('Missing BALANCE_G setting')
+        if not self.config.get('WBG_FACTOR'):
+            logger.error('Missing WBG_FACTOR setting')
             return data_bytes
 
-        if not self.config.get('BALANCE_B'):
-            logger.error('Missing BALANCE_B setting')
+        if not self.config.get('WBR_FACTOR'):
+            logger.error('Missing WBR_FACTOR setting')
             return data_bytes
 
-        B_FACTOR = float(self.config.get('BALANCE_B'))
-        G_FACTOR = float(self.config.get('BALANCE_G'))
-        R_FACTOR = float(self.config.get('BALANCE_R'))
+        WBB_FACTOR = float(self.config.get('WBB_FACTOR'))
+        WBG_FACTOR = float(self.config.get('WBG_FACTOR'))
+        WBR_FACTOR = float(self.config.get('WBR_FACTOR'))
 
         b, g, r = cv2.split(data_bytes)
 
         logger.info('Applying manual color balance settings')
-        bal_b = cv2.multiply(b, B_FACTOR)
-        bal_g = cv2.multiply(g, G_FACTOR)
-        bal_r = cv2.multiply(r, B_FACTOR)
+        wbb = cv2.multiply(b, WBB_FACTOR)
+        wbg = cv2.multiply(g, WBG_FACTOR)
+        wbr = cv2.multiply(r, WBR_FACTOR)
 
-        return cv2.merge([bal_b, bal_g, bal_r])
+        return cv2.merge([wbb, wbg, wbr])
 
 
     def white_balance_bgr_2(self, data_bytes):
