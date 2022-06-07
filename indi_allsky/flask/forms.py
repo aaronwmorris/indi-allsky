@@ -119,10 +119,10 @@ def WB_FACTOR_validator(form, field):
         raise ValidationError('Please enter valid number')
 
     if field.data < 0.0:
-        raise ValidationError('Balance factor must be between 0-2')
+        raise ValidationError('Balance factor must be 0 or greater')
 
     if field.data > 2.0:
-        raise ValidationError('Balance factor must be between 0-2')
+        raise ValidationError('Balance factor must be less than 2.0')
 
 
 def TEMP_DISPLAY_validator(form, field):
