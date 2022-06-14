@@ -114,6 +114,17 @@ def EXPOSURE_PERIOD_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def WB_FACTOR_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Balance factor must be 0 or greater')
+
+    if field.data > 2.0:
+        raise ValidationError('Balance factor must be less than 2.0')
+
+
 def TEMP_DISPLAY_validator(form, field):
     if field.data not in ('c', 'f', 'k'):
         raise ValidationError('Please select the temperature system for display')
@@ -746,6 +757,9 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
     TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation', validators=[DataRequired(), TARGET_ADU_DEV_validator])

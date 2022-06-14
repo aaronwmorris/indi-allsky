@@ -735,6 +735,9 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('CCD_EXPOSURE_PERIOD', 15.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
+            'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
+            'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
@@ -987,6 +990,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
+        self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
+        self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         self.indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
