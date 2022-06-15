@@ -30,13 +30,13 @@
 - set_fact:
     parallel_processes: 2
   when:
-    - ansible_facts['memory_mb']['real']['total'] < 1536
+    - ansible_facts['memory_mb']['real']['total'] < 2560
 
 
 - set_fact:
     parallel_processes: 1
   when:
-    - ansible_facts['memory_mb']['real']['total'] < 768
+    - ansible_facts['memory_mb']['real']['total'] < 1536
 
 
 - debug:

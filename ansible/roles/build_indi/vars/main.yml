@@ -23,7 +23,7 @@ indi_udev_rules:
   - libsv305/90-svbonyusb.rules
   - indi-nightscape/99-nightscape.rules
   - libsbig/51-sbig-debian.rules
-  - indi-fli/99-fli.rules
+  - libfli/99-fli.rules
   - indi-sx/99-sx.rules
   - indi-gphoto/85-disable-dslr-automout.rules
   - libmallincam/99-mallincam.rules
