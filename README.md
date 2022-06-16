@@ -278,6 +278,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > FONT_SCALE        | 0.8         | (float) Font scaling factor |
 | > FONT_THICKNESS    | 1           | (int) Font weight |
 | > FONT_OUTLINE      | true        | (bool) Enable black outline of text |
+| > DATE_FORMAT       | %Y%m%d %H:%M:%S | (str) Date string format |
 | ORB_PROPERTIES      |             | (dict) Sun and moon org drawing properties |
 | > RADIUS            | 9           | (pixels) Radius of orbs |
 | > SUN_COLOR         | [0, 255, 255]   | (array) R, G, B Color of sun orb |

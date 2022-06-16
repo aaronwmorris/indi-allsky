@@ -1085,10 +1085,13 @@ class ImageWorker(Process):
         #    thickness=cv2.FILLED,
         #)
 
+        datetime_format = self.config['TEXT_PROPERTIES']['DATE_FORMAT']
+        exp_date_str = exp_date.strftime(datetime_format)
+
         line_offset = 0
         self.drawText(
             data_bytes,
-            exp_date.strftime('%Y%m%d %H:%M:%S'),
+            exp_date_str,
             (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
             self.config['TEXT_PROPERTIES']['FONT_COLOR'],
         )

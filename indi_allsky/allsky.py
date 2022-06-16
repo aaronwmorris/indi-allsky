@@ -156,7 +156,6 @@ class IndiAllSky(object):
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
 
-
         # set minimum exposure
         ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
@@ -285,6 +284,11 @@ class IndiAllSky(object):
         # enable star detection by default
         if not c.get('DETECT_STARS'):
             c['DETECT_STARS'] = True
+
+
+        # set default date format for image label
+        if not c['TEXT_PROPERTIES'].get('DATE_FORMAT'):
+            c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'
 
 
         return c
