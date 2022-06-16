@@ -509,6 +509,17 @@ def TEXT_PROPERTIES__FONT_THICKNESS_validator(form, field):
         raise ValidationError('Font thickness must be less than 20')
 
 
+def TEXT_PROPERTIES__DATE_FORMAT_validator(form, field):
+    format_regex = r'^[a-zA-Z0-9_,\%\.\-\/\\\:\ ]+$'
+
+    if not re.search(format_regex, field.data):
+        raise ValidationError('Invalid datetime format')
+
+    # test the format
+    now = datetime.now()
+    now.strftime(field.data)
+
+
 def ORB_PROPERTIES__RADIUS_validator(form, field):
     if field.data < 1:
         raise ValidationError('Orb radius must be 1 or more')
@@ -820,6 +831,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
     TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
+    TEXT_PROPERTIES__DATE_FORMAT     = StringField('Date Format', validators=[DataRequired(), TEXT_PROPERTIES__DATE_FORMAT_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])

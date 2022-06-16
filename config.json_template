@@ -102,6 +102,7 @@
     "FFMPEG_BITRATE"   : "2500k",
 
     "TEXT_PROPERTIES" : {
+        "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
         "FONT_HEIGHT"    : 30,
         "FONT_X"         : 15,
