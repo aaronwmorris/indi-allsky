@@ -1,5 +1,4 @@
 import sys
-import os
 import io
 import time
 import math
@@ -9,7 +8,6 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
-import subprocess
 import tempfile
 import fcntl
 import errno
@@ -18,6 +16,7 @@ import traceback
 
 import ephem
 
+from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 
@@ -196,10 +195,6 @@ class VideoWorker(Process):
             pass
 
 
-        seqfolder = tempfile.TemporaryDirectory()
-        p_seqfolder = Path(seqfolder.name)
-
-
         # find all files
         timelapse_files_entries = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
@@ -225,40 +220,9 @@ class VideoWorker(Process):
             timelapse_files.append(p_entry)
 
 
-        for i, f in enumerate(timelapse_files):
-            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
-            p_symlink.symlink_to(f)
 
-
-        start = time.time()
-
-        cmd = [
-            'ffmpeg',
-            '-y',
-            '-f', 'image2',
-            '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
-            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), self.config['IMAGE_FILE_TYPE']),
-            '-vcodec', 'libx264',
-            '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
-            '-pix_fmt', 'yuv420p',
-            '-movflags', '+faststart',
-            '{0:s}'.format(str(video_file)),
-        ]
-
-        ffmpeg_subproc = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            preexec_fn=lambda: os.nice(19),
-        )
-
-        elapsed_s = time.time() - start
-        logger.info('Timelapse generated in %0.4f s', elapsed_s)
-
-        logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
-
-        # delete all existing symlinks and sequence folder
-        seqfolder.cleanup()
+        tg = TimelapseGenerator(self.config)
+        tg.generate(video_file, timelapse_files)
 
 
         video_entry = self._miscDb.addVideo(
