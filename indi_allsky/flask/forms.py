@@ -515,9 +515,12 @@ def TEXT_PROPERTIES__DATE_FORMAT_validator(form, field):
     if not re.search(format_regex, field.data):
         raise ValidationError('Invalid datetime format')
 
-    # test the format
-    now = datetime.now()
-    now.strftime(field.data)
+    try:
+        # test the format
+        now = datetime.now()
+        now.strftime(field.data)
+    except ValueError as e:
+        raise ValidationError(str(e))
 
 
 def ORB_PROPERTIES__RADIUS_validator(form, field):
