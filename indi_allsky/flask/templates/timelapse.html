@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Generate Timelapse{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+
+<hr />
+
+<form id="form_timelapsegen" onSubmit="return false;">
+    {{ form_timelapsegen.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_timelapsegen.DAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_timelapsegen.DAY_SELECT(class='form-control bg-secondary') }}
+            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div id="form_timelapsegen_success-message" class="text-success" style="display: none;"></div>
+    <div id="form_timelapsegen_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+    <button class="btn btn-primary">Generate</button>
+</form>
+
+
+<script>
+const form_timelapsegen_successMessage = $('#form_timelapsegen_success-message');
+const form_timelapsegen_failureMessage = $('#form_timelapsegen_failure-message');
+const form_timelapsegen_field_names = [
+    'csrf_token',
+    'DAY_SELECT',
+];
+const form_timelapsegen_checkbox_field_names = [];
+
+var form_timelapsegen_fields = {};
+// Populate fields object
+form_timelapsegen_field_names.forEach(item => {
+    form_timelapsegen_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// Checkboxes
+form_timelapsegen_checkbox_field_names.forEach(item => {
+    form_timelapsegen_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+
+// ajax setup later
+
+
+$('#form_timelapsegen').on('submit', function() {
+
+    // hide all errors
+    form_timelapsegen_successMessage.css({'display' : 'none'});
+    Object.keys(form_timelapsegen_fields).forEach((key) => {
+        form_timelapsegen_fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    form_timelapsegen_field_names.forEach(item => {
+        json_data[item] = form_timelapsegen_fields[item].input.val();
+    });
+
+    // checkboxes
+    form_timelapsegen_checkbox_field_names.forEach(item => {
+        json_data[item] = form_timelapsegen_fields[item].input.prop('checked');
+    });
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_timelapse_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            form_timelapsegen_successMessage.html(data['success-message']);
+            form_timelapsegen_successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                form_timelapsegen_successMessage.css({'display' : 'none'});
+            }, 5000);
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                form_timelapsegen_fields[key].input.addClass('is-invalid');
+                form_timelapsegen_fields[key].error.html(errors[key][0]);
+                form_timelapsegen_fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+
+});
+
+</script>
+
+{% endblock %}
