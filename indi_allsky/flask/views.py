@@ -133,6 +133,14 @@ class BaseView(View):
         return '<span class="text-danger">DOWN</span>'
 
 
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera.id
+
+
     def get_astrometric_info(self):
         if not self.indi_allsky_config:
             return dict()
@@ -241,14 +249,6 @@ class BaseView(View):
         #app.logger.info('Astrometric data: %s', data)
 
         return data
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
 
 
 class TemplateView(BaseView):
@@ -559,14 +559,6 @@ class JsonChartView(JsonView):
         }
 
         return data
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
 
 
     def getChartData(self, history_seconds):
