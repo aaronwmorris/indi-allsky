@@ -58,6 +58,7 @@ from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
+from .forms import IndiAllskyTimelapseGeneratorForm
 
 
 bp = Blueprint(
@@ -1194,7 +1195,7 @@ class AjaxSetTimeView(BaseView):
         manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
 
         app.logger.warning('Disabling NTP time sync')
-        r1 = manager.SetNTP(False, False)  # disable time sync
+        manager.SetNTP(False, False)  # disable time sync
         time.sleep(5.0)  # give enough time for time sync to diable
 
         r2 = manager.SetTime(epoch_msec, False, False)
@@ -1728,8 +1729,30 @@ class AjaxSystemInfoView(BaseView):
         return r
 
 
+
+class TimelapseGeneratorView(TemplateView):
+    def get_context(self):
+        context = super(TimelapseGeneratorView, self).get_context()
+
+        return context
+
+
+
+class AjaxTimelapseGeneratorView(BaseView):
+    methods = ['POST']
+
+    def dispatch_request(self):
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json)
+
+        if not form_timelapsegen.validate():
+            form_errors = form_timelapsegen.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+
+
 # images are normally served directly by the web server, this is a backup method
-@bp.route('/images/<path:path>')
+@bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
     app.logger.warning('Serving image file: %s', path)
     return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
@@ -1747,12 +1770,14 @@ bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_na
 bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
+bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
 
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
