@@ -1250,7 +1250,12 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 
 class IndiAllskyTimelapseGeneratorForm(FlaskForm):
+    ACTION_SELECT_choices = (
+        ('generate', 'Generate'),
+        ('delete', 'Delete'),
+    )
 
+    ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
     DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
 
 

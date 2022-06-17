@@ -16,6 +16,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_timelapsegen.ACTION_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_timelapsegen.ACTION_SELECT(class='form-control bg-secondary') }}
+            <div id="ACTION_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_timelapsegen.DAY_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -28,7 +39,7 @@
     <div id="form_timelapsegen_success-message" class="text-success" style="display: none;"></div>
     <div id="form_timelapsegen_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
 
-    <button class="btn btn-primary">Generate</button>
+    <button class="btn btn-primary">Execute</button>
 </form>
 
 
@@ -37,6 +48,7 @@ const form_timelapsegen_successMessage = $('#form_timelapsegen_success-message')
 const form_timelapsegen_failureMessage = $('#form_timelapsegen_failure-message');
 const form_timelapsegen_field_names = [
     'csrf_token',
+    'ACTION_SELECT',
     'DAY_SELECT',
 ];
 const form_timelapsegen_checkbox_field_names = [];
