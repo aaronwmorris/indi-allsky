@@ -1303,51 +1303,56 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
             day_night_str = '{0:s} Night'.format(day_str)
             day_day_str = '{0:s} Day'.format(day_str)
 
-            video_query_night = IndiAllSkyDbVideoTable.query\
+            video_entry_night = IndiAllSkyDbVideoTable.query\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbVideoTable.night == true)
+                .filter(IndiAllSkyDbVideoTable.night == true)\
+                .first()
 
-            if video_query_night.first():
+            if video_entry_night:
                 day_night_str = '{0:s} [T]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
 
-            video_query_day = IndiAllSkyDbVideoTable.query\
+            video_entry_day = IndiAllSkyDbVideoTable.query\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbVideoTable.night == false)
+                .filter(IndiAllSkyDbVideoTable.night == false)\
+                .first()
 
-            if video_query_day.first():
+            if video_entry_day:
                 day_day_str = '{0:s} [T]'.format(day_day_str)
             else:
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
 
-            keogram_query_night = IndiAllSkyDbKeogramTable.query\
+            keogram_entry_night = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbKeogramTable.night == true)
+                .filter(IndiAllSkyDbKeogramTable.night == true)\
+                .first()
 
-            if keogram_query_night.first():
+            if keogram_entry_night:
                 day_night_str = '{0:s} [K]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
 
-            keogram_query_day = IndiAllSkyDbKeogramTable.query\
+            keogram_entry_day = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbKeogramTable.night == false)
+                .filter(IndiAllSkyDbKeogramTable.night == false)\
+                .first()
 
-            if keogram_query_day.first():
+            if keogram_entry_day:
                 day_day_str = '{0:s} [K]'.format(day_day_str)
             else:
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
 
-            startrail_query_night = IndiAllSkyDbStarTrailsTable.query\
+            startrail_entry_night = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbStarTrailsTable.night == true)
+                .filter(IndiAllSkyDbStarTrailsTable.night == true)\
+                .first()
 
-            if startrail_query_night.first():
+            if startrail_entry_night:
                 day_night_str = '{0:s} [S]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
