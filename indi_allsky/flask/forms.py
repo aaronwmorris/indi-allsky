@@ -1279,14 +1279,23 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbImageTable.dayDate.desc())
 
-        day_choices = []
-        for d in days_query:
-            day_date = datetime.strptime(d.day, '%Y-%m-%d')
+
+        day_list = list()
+        for entry in days_query:
+            # cannot query from inside a query
+            day_list.append(entry.day)
+
+
+        day_choices = list()
+        for d in day_list:
+            day_date = datetime.strptime(d, '%Y-%m-%d')
             day_str = day_date.strftime('%Y-%m-%d')
 
-            entry = (day_str, day_str)
-            day_choices.append(entry)
+            entry_night = ('{0:s}_night'.format(day_str), '{0:s} Night'.format(day_str))
+            day_choices.append(entry_night)
 
+            entry_day = ('{0:s}_day'.format(day_str), '{0:s} Day'.format(day_str))
+            day_choices.append(entry_day)
 
         return day_choices
 
