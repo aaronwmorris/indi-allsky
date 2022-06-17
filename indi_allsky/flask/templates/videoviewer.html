@@ -48,6 +48,9 @@ $( document ).ready(function() {
             {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-control bg-secondary') }}
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-3">
+            <a href="{{ url_for('indi_allsky.timelapse_view') }}">Generate</a>
+        </div>
 
     </div>
 
