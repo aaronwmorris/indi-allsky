@@ -1830,11 +1830,50 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
 
-        message = {
-            'success-message' : 'Done',
-        }
+        elif action == 'generate':
+            timespec = day_date.strftime('%Y%m%d')
 
-        return jsonify(message)
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : True,
+                'keogram'     : True,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+        else:
+            # this should never happen
+            message = {
+                'error-message' : 'Invalid'
+            }
+            return jsonify(message), 400
 
 
 
