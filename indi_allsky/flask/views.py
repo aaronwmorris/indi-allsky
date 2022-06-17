@@ -34,10 +34,13 @@ from flask.views import View
 
 from flask import current_app as app
 
-#from . import db
+from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbTaskQueueTable
 
@@ -1754,6 +1757,78 @@ class AjaxTimelapseGeneratorView(BaseView):
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
             return jsonify(form_errors), 400
+
+        action = request.json['ACTION_SELECT']
+        day_select_str = request.json['DAY_SELECT']
+
+        day_str, night_str = day_select_str.split('_')
+
+        day_date = datetime.strptime(day_str, '%Y-%m-%d').date()
+
+        if night_str == 'night':
+            night = True
+        else:
+            night = False
+
+
+
+        if action == 'delete':
+            video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == night)\
+                .first()
+
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == night)\
+                .first()
+
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == night)\
+                .first()
+
+
+            if video_entry:
+                video_filename = video_entry.getFilesystemPath()
+                video_filename_p = Path(video_filename)
+
+                if video_filename_p.exists():
+                    app.logger.info('Deleting %s', video_filename_p)
+                    video_filename_p.unlink()
+
+                db.session.delete(video_entry)
+
+            if keogram_entry:
+                keogram_filename = keogram_entry.getFilesystemPath()
+                keogram_filename_p = Path(keogram_filename)
+
+                if keogram_filename_p.exists():
+                    app.logger.info('Deleting %s', keogram_filename_p)
+                    keogram_filename_p.unlink()
+
+                db.session.delete(keogram_entry)
+
+            if startrail_entry:
+                startrail_filename = startrail_entry.getFilesystemPath()
+                startrail_filename_p = Path(startrail_filename)
+
+                if startrail_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_filename_p)
+                    startrail_filename_p.unlink()
+
+                db.session.delete(startrail_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Files deleted',
+            }
+
+            return jsonify(message)
+
 
         message = {
             'success-message' : 'Done',
