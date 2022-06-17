@@ -1288,13 +1288,70 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
         day_choices = list()
         for d in day_list:
-            day_date = datetime.strptime(d, '%Y-%m-%d')
+            day_date = datetime.strptime(d, '%Y-%m-%d').date()
             day_str = day_date.strftime('%Y-%m-%d')
 
-            entry_night = ('{0:s}_night'.format(day_str), '{0:s} Night'.format(day_str))
+            # syntastic does not like booleans in queries directly
+            true = True
+            false = False
+
+            day_night_str = '{0:s} Night'.format(day_str)
+            day_day_str = '{0:s} Day'.format(day_str)
+
+            video_query_night = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == true)
+
+            if video_query_night.first():
+                day_night_str = '{0:s} [T]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            video_query_day = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == false)
+
+            if video_query_day.first():
+                day_day_str = '{0:s} [T]'.format(day_day_str)
+            else:
+                day_day_str = '{0:s} [ ]'.format(day_day_str)
+
+
+            keogram_query_night = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == true)
+
+            if keogram_query_night.first():
+                day_night_str = '{0:s} [K]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            keogram_query_day = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == false)
+
+            if keogram_query_day.first():
+                day_day_str = '{0:s} [K]'.format(day_day_str)
+            else:
+                day_day_str = '{0:s} [ ]'.format(day_day_str)
+
+
+            startrail_query_night = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == true)
+
+            if startrail_query_night.first():
+                day_night_str = '{0:s} [S]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            entry_night = ('{0:s}_night'.format(day_str), day_night_str)
             day_choices.append(entry_night)
 
-            entry_day = ('{0:s}_day'.format(day_str), '{0:s} Day'.format(day_str))
+            entry_day = ('{0:s}_day'.format(day_str), day_day_str)
             day_choices.append(entry_day)
 
         return day_choices
