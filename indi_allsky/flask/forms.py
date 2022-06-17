@@ -1273,9 +1273,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
     def getDistinctDays(self, camera_id):
-        dayDate_day = func.distinct(
-            func.date(IndiAllSkyDbImageTable.dayDate, type_=Date)
-        ).label('day')
+        dayDate_day = func.distinct(IndiAllSkyDbImageTable.dayDate).label('day')
 
         days_query = db.session.query(
             dayDate_day
