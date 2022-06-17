@@ -1737,6 +1737,43 @@ class TimelapseGeneratorView(TemplateView):
 
         context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera_id)
 
+        # Lookup tasks
+        state_list = (
+            TaskQueueState.MANUAL,
+            TaskQueueState.QUEUED,
+            TaskQueueState.RUNNING,
+            TaskQueueState.SUCCESS,
+            TaskQueueState.FAILED,
+        )
+
+        queue_list = (
+            TaskQueueQueue.VIDEO,
+        )
+
+        now_minus_12h = datetime.now() - timedelta(hours=12)
+
+        tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_12h)\
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+            .filter(IndiAllSkyDbTaskQueueTable.queue.in_(queue_list))\
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.desc())
+
+
+        task_list = list()
+        for task in tasks:
+            t = {
+                'id'         : task.id,
+                'createDate' : task.createDate,
+                'queue'      : task.queue.name,
+                'state'      : task.state.name,
+                'result'     : task.result,
+            }
+
+            task_list.append(t)
+
+        context['task_list'] = task_list
+
+
         return context
 
 
