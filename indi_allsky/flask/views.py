@@ -1755,6 +1755,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             form_errors = form_timelapsegen.errors  # this must be a property
             return jsonify(form_errors), 400
 
+        message = {
+            'success-message' : 'Done',
+        }
+
+        return jsonify(message)
 
 
 

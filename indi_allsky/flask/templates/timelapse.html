@@ -107,6 +107,14 @@ $('#form_timelapsegen').on('submit', function() {
 
 });
 
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
 </script>
 
 {% endblock %}
