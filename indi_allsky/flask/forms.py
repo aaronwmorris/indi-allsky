@@ -21,12 +21,13 @@ from wtforms.validators import ValidationError
 
 from sqlalchemy import extract
 #from sqlalchemy import asc
-#from sqlalchemy import func
+from sqlalchemy import func
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app
 
+from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -1244,6 +1245,45 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 #
 #    if field.data not in commands:
 #        raise ValidationError('Invalid command')
+
+
+
+class IndiAllskyTimelapseGeneratorForm(FlaskForm):
+
+    DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyTimelapseGeneratorForm, self).__init__(*args, **kwargs)
+
+        self.camera_id = kwargs['camera_id']
+
+        dates_start = time.time()
+
+        self.DAY_SELECT.choices = self.getDistinctDays(self.camera_id)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+    def getDistinctDays(self, camera_id):
+        dayDate_day = func.distinct(IndiAllSkyDbImageTable.dayDate).label('day')
+
+        days_query = db.session.query(
+            dayDate_day
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.dayDate.desc())
+
+        day_choices = []
+        for d in days_query:
+            day_str = d.day.strfrtime('%Y-%m-%d')
+            entry = (day_str, day_str)
+            day_choices.append(entry)
+
+
+        return day_choices
 
 
 
