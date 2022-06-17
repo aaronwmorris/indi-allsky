@@ -23,6 +23,7 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
+from sqlalchemy.types import Date
 #from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app
@@ -1267,7 +1268,9 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
     def getDistinctDays(self, camera_id):
-        dayDate_day = func.distinct(IndiAllSkyDbImageTable.dayDate).label('day')
+        dayDate_day = func.distinct(
+            func.date(IndiAllSkyDbImageTable.dayDate, type_=Date)
+        ).label('day')
 
         days_query = db.session.query(
             dayDate_day
@@ -1278,7 +1281,9 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
         day_choices = []
         for d in days_query:
-            day_str = d.day.strfrtime('%Y-%m-%d')
+            day_date = datetime.strptime(d.day, '%Y-%m-%d')
+            day_str = day_date.strftime('%Y-%m-%d')
+
             entry = (day_str, day_str)
             day_choices.append(entry)
 

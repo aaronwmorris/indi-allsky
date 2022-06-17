@@ -1723,8 +1723,16 @@ class AjaxSystemInfoView(BaseView):
 
 
 class TimelapseGeneratorView(TemplateView):
+    def __init__(self, **kwargs):
+        super(TimelapseGeneratorView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+
+
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
+
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera_id)
 
         return context
 
@@ -1733,8 +1741,15 @@ class TimelapseGeneratorView(TemplateView):
 class AjaxTimelapseGeneratorView(BaseView):
     methods = ['POST']
 
+
+    def __init__(self, **kwargs):
+        super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+
+
     def dispatch_request(self):
-        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json)
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera_id)
 
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
