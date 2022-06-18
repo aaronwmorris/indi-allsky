@@ -1656,6 +1656,13 @@ class AjaxSystemInfoView(BaseView):
                 r = self.rebootSystemd()
             elif command == 'poweroff':
                 r = self.poweroffSystemd()
+            elif command == 'flush_images':
+                image_count = self.flushImages()
+
+                json_data = {
+                    'success-message' : '{0:d} Images Deleted'.format(image_count),
+                }
+                return jsonify(json_data)
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -1723,6 +1730,24 @@ class AjaxSystemInfoView(BaseView):
 
         return r
 
+
+    def flushImages(self):
+        image_query = IndiAllSkyDbImageTable.query
+
+        image_count = image_query.count()
+
+        for image in image_query:
+            image_filename = image.getFilesystemPath()
+            image_filename_p = Path(image_filename)
+
+            if image_filename_p.exists():
+                app.logger.info('Deleting %s', image_filename_p)
+                image_filename_p.unlink()
+
+        image_query.delete()
+        db.session.commit()
+
+        return image_count
 
 
 class TimelapseGeneratorView(TemplateView):
