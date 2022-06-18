@@ -455,15 +455,33 @@ $('#form_settime').on('submit', function() {
     <div class="col-sm-2"></div>
     <div class="col-sm-2">Shutdown</div>
     <div class="col-sm-2">
-        <input class="form-check-input" id="SHUTDOWN_CONFIRM" name="SHUTDOWN_CONFIRM" type="checkbox" value="y"> Confirm
+        <input class="form-check-input" id="SHUTDOWN_CONFIRM1" name="SHUTDOWN_CONFIRM1" type="checkbox" value="y"> Confirm
     </div>
     <div class="col-sm-2">
         <button class="btn btn-danger" id="button_system_shutdown">Shutdown system</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="SHUTDOWN_CONFIRM2" name="SHUTDOWN_CONFIRM2" type="checkbox" value="y"> Confirm
     </div>
 </div>
 
 <hr />
 
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Flush Images</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM1" name="FLUSH_IMAGES_CONFIRM1" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="button_flush_images">Flush Images</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM2" name="FLUSH_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm
+    </div>
+</div>
+
+<hr />
 
 </div><!-- end tab -->
 </div>
@@ -606,6 +624,22 @@ $("#button_system_shutdown").on("click", function() {
     button_click('system', 'poweroff');
 });
 
+$("#button_flush_images").on("click", function() {
+    if (! $("#FLUSH_IMAGES_CONFIRM1").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    if (! $("#FLUSH_IMAGES_CONFIRM2").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
+
+    button_click('system', 'flush_images');
+});
 
 
 
@@ -618,6 +652,8 @@ $( document ).ready(function() {
     // Uncheck checkboxes
     $("#REBOOT_CONFIRM").prop('checked', false);
     $("#SHUTDOWN_CONFIRM").prop('checked', false);
+    $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
