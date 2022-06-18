@@ -614,12 +614,17 @@ $("#button_system_reboot").on("click", function() {
 
 
 $("#button_system_shutdown").on("click", function() {
-    if (! $("#SHUTDOWN_CONFIRM").prop('checked')) {
+    if (! $("#SHUTDOWN_CONFIRM1").prop('checked')) {
+        console.log('Shutdown checkbox not checked');
+        return;
+    }
+    if (! $("#SHUTDOWN_CONFIRM2").prop('checked')) {
         console.log('Shutdown checkbox not checked');
         return;
     }
 
-    $("#SHUTDOWN_CONFIRM").prop('checked', false);
+    $("#SHUTDOWN_CONFIRM1").prop('checked', false);
+    $("#SHUTDOWN_CONFIRM2").prop('checked', false);
 
     button_click('system', 'poweroff');
 });
@@ -651,7 +656,8 @@ function reloadPage() {
 $( document ).ready(function() {
     // Uncheck checkboxes
     $("#REBOOT_CONFIRM").prop('checked', false);
-    $("#SHUTDOWN_CONFIRM").prop('checked', false);
+    $("#SHUTDOWN_CONFIRM1").prop('checked', false);
+    $("#SHUTDOWN_CONFIRM2").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
 
