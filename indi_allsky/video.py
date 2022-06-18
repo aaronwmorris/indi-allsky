@@ -148,10 +148,12 @@ class VideoWorker(Process):
 
 
             if video:
+                task.setRunning()
                 self.generateVideo(task, timespec, img_folder, timeofday, camera_id)
 
 
             if keogram:
+                task.setRunning()
                 self.generateKeogramStarTrails(task, timespec, img_folder, timeofday, camera_id)
 
 

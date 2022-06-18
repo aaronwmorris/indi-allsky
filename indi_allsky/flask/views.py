@@ -34,10 +34,13 @@ from flask.views import View
 
 from flask import current_app as app
 
-#from . import db
+from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbTaskQueueTable
 
@@ -58,6 +61,7 @@ from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
+from .forms import IndiAllskyTimelapseGeneratorForm
 
 
 bp = Blueprint(
@@ -130,6 +134,14 @@ class BaseView(View):
 
 
         return '<span class="text-danger">DOWN</span>'
+
+
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera.id
 
 
     def get_astrometric_info(self):
@@ -240,14 +252,6 @@ class BaseView(View):
         #app.logger.info('Astrometric data: %s', data)
 
         return data
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
 
 
 class TemplateView(BaseView):
@@ -558,14 +562,6 @@ class JsonChartView(JsonView):
         }
 
         return data
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera.id
 
 
     def getChartData(self, history_seconds):
@@ -1194,7 +1190,7 @@ class AjaxSetTimeView(BaseView):
         manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
 
         app.logger.warning('Disabling NTP time sync')
-        r1 = manager.SetNTP(False, False)  # disable time sync
+        manager.SetNTP(False, False)  # disable time sync
         time.sleep(5.0)  # give enough time for time sync to diable
 
         r2 = manager.SetTime(epoch_msec, False, False)
@@ -1728,8 +1724,198 @@ class AjaxSystemInfoView(BaseView):
         return r
 
 
+
+class TimelapseGeneratorView(TemplateView):
+    def __init__(self, **kwargs):
+        super(TimelapseGeneratorView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+
+
+    def get_context(self):
+        context = super(TimelapseGeneratorView, self).get_context()
+
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera_id)
+
+        # Lookup tasks
+        state_list = (
+            TaskQueueState.MANUAL,
+            TaskQueueState.QUEUED,
+            TaskQueueState.RUNNING,
+            TaskQueueState.SUCCESS,
+            TaskQueueState.FAILED,
+        )
+
+        queue_list = (
+            TaskQueueQueue.VIDEO,
+        )
+
+        now_minus_12h = datetime.now() - timedelta(hours=12)
+
+        tasks = IndiAllSkyDbTaskQueueTable.query\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_12h)\
+            .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+            .filter(IndiAllSkyDbTaskQueueTable.queue.in_(queue_list))\
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.desc())
+
+
+        task_list = list()
+        for task in tasks:
+            t = {
+                'id'         : task.id,
+                'createDate' : task.createDate,
+                'queue'      : task.queue.name,
+                'state'      : task.state.name,
+                'result'     : task.result,
+            }
+
+            task_list.append(t)
+
+        context['task_list'] = task_list
+
+
+        return context
+
+
+
+class AjaxTimelapseGeneratorView(BaseView):
+    methods = ['POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera_id)
+
+        if not form_timelapsegen.validate():
+            form_errors = form_timelapsegen.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+        action = request.json['ACTION_SELECT']
+        day_select_str = request.json['DAY_SELECT']
+
+        day_str, night_str = day_select_str.split('_')
+
+        day_date = datetime.strptime(day_str, '%Y-%m-%d').date()
+
+        if night_str == 'night':
+            night = True
+        else:
+            night = False
+
+
+
+        if action == 'delete':
+            video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == night)\
+                .first()
+
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == night)\
+                .first()
+
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == night)\
+                .first()
+
+
+            if video_entry:
+                video_filename = video_entry.getFilesystemPath()
+                video_filename_p = Path(video_filename)
+
+                if video_filename_p.exists():
+                    app.logger.info('Deleting %s', video_filename_p)
+                    video_filename_p.unlink()
+
+                db.session.delete(video_entry)
+
+            if keogram_entry:
+                keogram_filename = keogram_entry.getFilesystemPath()
+                keogram_filename_p = Path(keogram_filename)
+
+                if keogram_filename_p.exists():
+                    app.logger.info('Deleting %s', keogram_filename_p)
+                    keogram_filename_p.unlink()
+
+                db.session.delete(keogram_entry)
+
+            if startrail_entry:
+                startrail_filename = startrail_entry.getFilesystemPath()
+                startrail_filename_p = Path(startrail_filename)
+
+                if startrail_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_filename_p)
+                    startrail_filename_p.unlink()
+
+                db.session.delete(startrail_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Files deleted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : True,
+                'keogram'     : True,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+        else:
+            # this should never happen
+            message = {
+                'error-message' : 'Invalid'
+            }
+            return jsonify(message), 400
+
+
+
 # images are normally served directly by the web server, this is a backup method
-@bp.route('/images/<path:path>')
+@bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
     app.logger.warning('Serving image file: %s', path)
     return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
@@ -1747,12 +1933,14 @@ bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_na
 bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
+bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
 
 bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))

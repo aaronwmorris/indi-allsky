@@ -21,12 +21,14 @@ from wtforms.validators import ValidationError
 
 from sqlalchemy import extract
 #from sqlalchemy import asc
-#from sqlalchemy import func
+from sqlalchemy import func
 #from sqlalchemy.types import DateTime
+from sqlalchemy.types import Date
 #from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app
 
+from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -1244,6 +1246,123 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 #
 #    if field.data not in commands:
 #        raise ValidationError('Invalid command')
+
+
+
+class IndiAllskyTimelapseGeneratorForm(FlaskForm):
+    ACTION_SELECT_choices = (
+        ('generate', 'Generate'),
+        ('delete', 'Delete'),
+    )
+
+    ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
+    DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyTimelapseGeneratorForm, self).__init__(*args, **kwargs)
+
+        self.camera_id = kwargs['camera_id']
+
+        dates_start = time.time()
+
+        self.DAY_SELECT.choices = self.getDistinctDays(self.camera_id)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+    def getDistinctDays(self, camera_id):
+        dayDate_day = func.distinct(IndiAllSkyDbImageTable.dayDate).label('day')
+
+        days_query = db.session.query(
+            dayDate_day
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.dayDate.desc())
+
+
+        day_list = list()
+        for entry in days_query:
+            # cannot query from inside a query
+            day_list.append(entry.day)
+
+
+        day_choices = list()
+        for d in day_list:
+            day_date = datetime.strptime(d, '%Y-%m-%d').date()
+            day_str = day_date.strftime('%Y-%m-%d')
+
+            # syntastic does not like booleans in queries directly
+            true = True
+            false = False
+
+            day_night_str = '{0:s} Night'.format(day_str)
+            day_day_str = '{0:s} Day'.format(day_str)
+
+            video_entry_night = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == true)\
+                .first()
+
+            if video_entry_night:
+                day_night_str = '{0:s} [T]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            video_entry_day = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == false)\
+                .first()
+
+            if video_entry_day:
+                day_day_str = '{0:s} [T]'.format(day_day_str)
+            else:
+                day_day_str = '{0:s} [ ]'.format(day_day_str)
+
+
+            keogram_entry_night = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == true)\
+                .first()
+
+            if keogram_entry_night:
+                day_night_str = '{0:s} [K]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            keogram_entry_day = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == false)\
+                .first()
+
+            if keogram_entry_day:
+                day_day_str = '{0:s} [K]'.format(day_day_str)
+            else:
+                day_day_str = '{0:s} [ ]'.format(day_day_str)
+
+
+            startrail_entry_night = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == true)\
+                .first()
+
+            if startrail_entry_night:
+                day_night_str = '{0:s} [S]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            entry_night = ('{0:s}_night'.format(day_str), day_night_str)
+            day_choices.append(entry_night)
+
+            entry_day = ('{0:s}_day'.format(day_str), day_day_str)
+            day_choices.append(entry_day)
+
+        return day_choices
 
 
 
