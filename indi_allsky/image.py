@@ -39,7 +39,7 @@ from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
-from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
 
@@ -163,30 +163,39 @@ class ImageWorker(Process):
                 return
 
 
-            task_id = i_dict['task_id']
+            ### Not using DB task queue for image processing to reduce database I/O
+            #task_id = i_dict['task_id']
+
+            #try:
+            #    task = IndiAllSkyDbTaskQueueTable.query\
+            #        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+            #        .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+            #        .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+            #        .one()
+
+            #except NoResultFound:
+            #    logger.error('Task ID %d not found', task_id)
+            #    continue
 
 
-            try:
-                task = IndiAllSkyDbTaskQueueTable.query\
-                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
-                    .one()
-
-            except NoResultFound:
-                logger.error('Task ID %d not found', task_id)
-                continue
+            #task.setRunning()
 
 
-            task.setRunning()
+            #filename = Path(task.data['filename'])
+            #exposure = task.data['exposure']
+            #exp_date = datetime.fromtimestamp(task.data['exp_time'])
+            #exp_elapsed = task.data['exp_elapsed']
+            #camera_id = task.data['camera_id']
+            #filename_t = task.data.get('filename_t')
+            ###
 
+            filename = Path(i_dict['filename'])
+            exposure = i_dict['exposure']
+            exp_date = datetime.fromtimestamp(i_dict['exp_time'])
+            exp_elapsed = i_dict['exp_elapsed']
+            camera_id = i_dict['camera_id']
+            filename_t = i_dict.get('filename_t')
 
-            filename = Path(task.data['filename'])
-            exposure = task.data['exposure']
-            exp_date = datetime.fromtimestamp(task.data['exp_time'])
-            exp_elapsed = task.data['exp_elapsed']
-            camera_id = task.data['camera_id']
-            filename_t = task.data.get('filename_t')
 
             if filename_t:
                 self.filename_t = filename_t
@@ -196,7 +205,7 @@ class ImageWorker(Process):
 
             if not filename.exists():
                 logger.error('Frame not found: %s', filename)
-                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+                #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
                 continue
 
 
@@ -337,7 +346,7 @@ class ImageWorker(Process):
             logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
-            task.setSuccess('Image processed')
+            #task.setSuccess('Image processed')
 
 
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file

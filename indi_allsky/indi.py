@@ -10,12 +10,12 @@ from astropy.io import fits
 
 import PyIndi
 
-from .flask import db
+#from .flask import db
 from .flask import create_app
 
-from .flask.models import TaskQueueQueue
-from .flask.models import TaskQueueState
-from .flask.models import IndiAllSkyDbTaskQueueTable
+#from .flask.models import TaskQueueQueue
+#from .flask.models import TaskQueueState
+#from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from .exceptions import TimeOutException
 
@@ -180,17 +180,21 @@ class IndiClient(PyIndi.BaseClient):
             'filename_t'  : self._filename_t,
         }
 
-        with app.app_context():
-            task = IndiAllSkyDbTaskQueueTable(
-                queue=TaskQueueQueue.IMAGE,
-                state=TaskQueueState.QUEUED,
-                data=jobdata,
-            )
+        ### Not using DB task queue to reduce DB I/O
+        #with app.app_context():
+        #    task = IndiAllSkyDbTaskQueueTable(
+        #        queue=TaskQueueQueue.IMAGE,
+        #        state=TaskQueueState.QUEUED,
+        #        data=jobdata,
+        #    )
 
-            db.session.add(task)
-            db.session.commit()
+        #    db.session.add(task)
+        #    db.session.commit()
 
-            self.image_q.put({'task_id' : task.id})
+        #    self.image_q.put({'task_id' : task.id})
+        ###
+
+        self.image_q.put(jobdata)
 
 
     def newSwitch(self, svp):
