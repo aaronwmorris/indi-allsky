@@ -933,7 +933,13 @@ class ImageWorker(Process):
 
 
     def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
+        # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
+            logger.warning('Image labels disabled')
+            return
+
+        # Image labels are enabled by default
+        if not self.config.get('IMAGE_LABEL', True):
             logger.warning('Image labels disabled')
             return
 
