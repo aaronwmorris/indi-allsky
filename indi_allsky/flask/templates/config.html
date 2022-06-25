@@ -602,6 +602,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_LABEL(class='form-check-input') }}
+                <div id="IMAGE_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Add image time labels</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXTRA_TEXT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -1388,6 +1401,7 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'KEOGRAM_LABEL',
+    'IMAGE_LABEL',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
     'IMAGE_SAVE_FITS',

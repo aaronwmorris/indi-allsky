@@ -81,6 +81,7 @@
     },
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
     "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
+    "IMAGE_LABEL"      : true,
     "comment_IMAGE_EXTRA_TEXT" : "File containing extra text to add to image",
     "IMAGE_EXTRA_TEXT" : "",
     "IMAGE_CROP_ROI"   : [],
