@@ -235,10 +235,12 @@ class KeogramGenerator(object):
 
 
     def applyLabels(self, keogram):
-        if not self.config.get('KEOGRAM_LABEL'):
+        # Keogram labels enabled by default
+        if not self.config.get('KEOGRAM_LABEL', True):
             logger.warning('Keogram labels disabled')
             return
 
+        # Legacy setting, code to be removed
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
             return
