@@ -157,23 +157,23 @@ class KeogramGenerator(object):
 
 
     def rotate(self, image):
-            height, width = image.shape[:2]
-            center = (width / 2, height / 2)
+        height, width = image.shape[:2]
+        center = (width / 2, height / 2)
 
-            rot = cv2.getRotationMatrix2D(center, self._angle, 1.0)
+        rot = cv2.getRotationMatrix2D(center, self._angle, 1.0)
 
-            abs_cos = abs(rot[0, 0])
-            abs_sin = abs(rot[0, 1])
+        abs_cos = abs(rot[0, 0])
+        abs_sin = abs(rot[0, 1])
 
-            bound_w = int(height * abs_sin + width * abs_cos)
-            bound_h = int(height * abs_cos + width * abs_sin)
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
 
-            rot[0, 2] += bound_w / 2 - center[0]
-            rot[1, 2] += bound_h / 2 - center[1]
+        rot[0, 2] += bound_w / 2 - center[0]
+        rot[1, 2] += bound_h / 2 - center[1]
 
-            rotated = cv2.warpAffine(image, rot, (bound_w, bound_h))
+        rotated = cv2.warpAffine(image, rot, (bound_w, bound_h))
 
-            return rotated
+        return rotated
 
 
     def trimEdges(self, image):
