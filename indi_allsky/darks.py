@@ -23,13 +23,13 @@ from .indi import IndiClient
 from .flask import db
 from .flask.miscDb import miscDb
 
-from .flask.models import TaskQueueState
-from .flask.models import TaskQueueQueue
+#from .flask.models import TaskQueueState
+#from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbBadPixelMapTable
-from .flask.models import IndiAllSkyDbTaskQueueTable
+#from .flask.models import IndiAllSkyDbTaskQueueTable
 
-from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.orm.exc import NoResultFound
 
 
 logger = logging.getLogger('indi_allsky')
@@ -231,28 +231,32 @@ class IndiAllSkyDarks(object):
     def _wait_for_image(self):
         i_dict = self.image_q.get(timeout=15)
 
-        task_id = i_dict['task_id']
+        ### Not using DB task queue for image processing to reduce database I/O
+        #task_id = i_dict['task_id']
 
-        try:
-            task = IndiAllSkyDbTaskQueueTable.query\
-                .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
-                .one()
+        #try:
+        #    task = IndiAllSkyDbTaskQueueTable.query\
+        #        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+        #        .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+        #        .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+        #        .one()
 
-        except NoResultFound:
-            logger.error('Task ID %d not found', task_id)
-            raise
+        #except NoResultFound:
+        #    logger.error('Task ID %d not found', task_id)
+        #    raise
 
 
         # go ahead and set complete
-        task.setSuccess('Dark frame processed')
+        #task.setSuccess('Dark frame processed')
+
+        #filename = Path(task.data['filename'])
+        ###
 
 
-        filename = Path(task.data['filename'])
+        filename = Path(i_dict['filename'])
 
         if not filename.exists():
-            task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+            #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
             raise Exception('Frame not found {0:s}'.format(str(filename)))
 
 
@@ -343,28 +347,32 @@ class IndiAllSkyDarks(object):
 
             i_dict = self.image_q.get(timeout=15)
 
-            task_id = i_dict['task_id']
+            ### Not using DB task queue for image processing to reduce database I/O
+            #task_id = i_dict['task_id']
 
-            try:
-                task = IndiAllSkyDbTaskQueueTable.query\
-                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
-                    .one()
+            #try:
+            #    task = IndiAllSkyDbTaskQueueTable.query\
+            #        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+            #        .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+            #        .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+            #        .one()
 
-            except NoResultFound:
-                logger.error('Task ID %d not found', task_id)
-                raise
-
-
-            # go ahead and set complete
-            task.setSuccess('Throw away frame')
+            #except NoResultFound:
+            #    logger.error('Task ID %d not found', task_id)
+            #    raise
 
 
-            filename = Path(task.data['filename'])
+            ### go ahead and set complete
+            #task.setSuccess('Throw away frame')
+
+            #filename = Path(task.data['filename'])
+            ###
+
+
+            filename = Path(i_dict['filename'])
 
             if not filename.exists():
-                task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+                #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
                 raise Exception('Frame not found {0:s}'.format(str(filename)))
 
 
