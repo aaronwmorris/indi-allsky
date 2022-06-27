@@ -116,10 +116,24 @@ function populate_videos(video_list) {
             'style' : "height:100;",
         });
 
-        $('<div />', {
+
+        var datetime_div = $('<div />', {
             'class' : "col-sm-2",
-            'text'  : item['dayDate'],
         }).appendTo(row_div);
+
+        $('<div />', {
+            'text'  : item['dayDate'],
+        }).appendTo(datetime_div);
+
+        if (item['night']) {
+            $('<div />', {
+                'text'  : "Night",
+            }).appendTo(datetime_div);
+        } else {
+            $('<div />', {
+                'text'  : "Day",
+            }).appendTo(datetime_div);
+        }
 
 
         // star trail
@@ -127,18 +141,21 @@ function populate_videos(video_list) {
             'class' : "col-sm-2",
         }).appendTo(row_div);
 
-        if (item['startrail'] != 'None') {
-            var st_a = $('<a />', {
-                'href'   : item['startrail'],
-                'target' : "_blank",
-            }).appendTo(startrail_div);
+        // star trails only valid for night
+        if (item['night']) {
+            if (item['startrail'] != 'None') {
+                var st_a = $('<a />', {
+                    'href'   : item['startrail'],
+                    'target' : "_blank",
+                }).appendTo(startrail_div);
 
-            $('<img />', {
-                'src'   : item['startrail'],
-                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-            }).appendTo(st_a);
-        } else {
-            startrail_div.append('None');
+                $('<img />', {
+                    'src'   : item['startrail'],
+                    'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                }).appendTo(st_a);
+            } else {
+                startrail_div.append('None');
+            }
         }
         
 
