@@ -269,6 +269,13 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     #        libplayerone \
     #        indi-sv305 \
     #        libsv305 \
+    #        libaltaircam \
+    #        libmallincam \
+    #        libmicam \
+    #        libnncam \
+    #        indi-toupbase \
+    #        libtoupcam \
+    #        indi-gphoto \
     #        indi-sx
     #fi
 
@@ -353,6 +360,13 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
             libplayerone \
             indi-sv305 \
             libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
             indi-sx
     fi
 
@@ -438,6 +452,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     #        libplayerone \
     #        indi-sv305 \
     #        libsv305 \
+    #        libaltaircam \
+    #        libmallincam \
+    #        libmicam \
+    #        libnncam \
+    #        indi-toupbase \
+    #        libtoupcam \
+    #        indi-gphoto \
     #        indi-sx
     #fi
 
@@ -523,6 +544,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     #        libplayerone \
     #        indi-sv305 \
     #        libsv305 \
+    #        libaltaircam \
+    #        libmallincam \
+    #        libmicam \
+    #        libnncam \
+    #        indi-toupbase \
+    #        libtoupcam \
+    #        indi-gphoto \
     #        indi-sx
     #fi
 
@@ -608,6 +636,13 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     #        libplayerone \
     #        indi-sv305 \
     #        libsv305 \
+    #        libaltaircam \
+    #        libmallincam \
+    #        libmicam \
+    #        libnncam \
+    #        indi-toupbase \
+    #        libtoupcam \
+    #        indi-gphoto \
     #        indi-sx
     #fi
 
@@ -702,6 +737,13 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
             libplayerone \
             indi-sv305 \
             libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
             indi-sx
     fi
 
@@ -784,6 +826,13 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
             libplayerone \
             indi-sv305 \
             libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
             indi-sx
     fi
 
