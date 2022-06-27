@@ -222,17 +222,17 @@ class VideoWorker(Process):
             timelapse_files.append(p_entry)
 
 
-
-        tg = TimelapseGenerator(self.config)
-        tg.generate(video_file, timelapse_files)
-
-
+        # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
             video_file,
             camera_id,
             d_dayDate,
             timeofday,
         )
+
+
+        tg = TimelapseGenerator(self.config)
+        tg.generate(video_file, timelapse_files)
 
 
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
@@ -348,6 +348,24 @@ class VideoWorker(Process):
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
 
 
+
+        # Add DB entries before creating files
+        keogram_entry = self._miscDb.addKeogram(
+            keogram_file,
+            camera_id,
+            d_dayDate,
+            timeofday,
+        )
+
+        if night:
+            startrail_entry = self._miscDb.addStarTrail(
+                startrail_file,
+                camera_id,
+                d_dayDate,
+                timeofday=timeofday,
+            )
+
+
         stg = StarTrailGenerator(self.config)
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
@@ -395,25 +413,11 @@ class VideoWorker(Process):
 
 
         if keogram_file.exists():
-            keogram_entry = self._miscDb.addKeogram(
-                keogram_file,
-                camera_id,
-                d_dayDate,
-                timeofday,
-            )
-
             self.uploadKeogram(keogram_file)
             self._miscDb.addUploadedFlag(keogram_entry)
 
 
         if night and startrail_file.exists():
-            startrail_entry = self._miscDb.addStarTrail(
-                startrail_file,
-                camera_id,
-                d_dayDate,
-                timeofday=timeofday,
-            )
-
             self.uploadStarTrail(startrail_file)
             self._miscDb.addUploadedFlag(startrail_entry)
 
