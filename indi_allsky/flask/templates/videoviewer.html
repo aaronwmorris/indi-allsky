@@ -117,7 +117,7 @@ function populate_videos(video_list) {
         });
 
         $('<div />', {
-            'class' : "col-sm-1",
+            'class' : "col-sm-2",
             'text'  : item['dayDate'],
         }).appendTo(row_div);
 
@@ -144,7 +144,7 @@ function populate_videos(video_list) {
 
         // keogram
         var keogram_div = $('<div />', {
-            'class' : "col-sm-9",
+            'class' : "col-sm-8",
         }).appendTo(row_div);
 
 
@@ -164,6 +164,8 @@ function populate_videos(video_list) {
         }
         
         row_div.appendTo($("#videos_div"));
+
+        $('<hr />').appendTo($("#videos_div"));
     });
 
 };
