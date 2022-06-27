@@ -260,7 +260,16 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     #    sudo apt-get -y install \
     #        indi-full \
     #        indi-rpicam \
-    #        libindi-dev
+    #        libindi-dev \
+    #        indi-asi \
+    #        libasi \
+    #        indi-qhy \
+    #        libqhy \
+    #        indi-playerone \
+    #        libplayerone \
+    #        indi-sv305 \
+    #        libsv305 \
+    #        indi-sx
     #fi
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -335,7 +344,16 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         sudo apt-get -y install \
             indi-full \
             indi-rpicam \
-            libindi-dev
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            indi-sx
     fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -411,7 +429,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     #    sudo apt-get -y install \
     #        indi-full \
     #        indi-rpicam \
-    #        libindi-dev
+    #        libindi-dev \
+    #        indi-asi \
+    #        libasi \
+    #        indi-qhy \
+    #        libqhy \
+    #        indi-playerone \
+    #        libplayerone \
+    #        indi-sv305 \
+    #        libsv305 \
+    #        indi-sx
     #fi
 
 
@@ -487,7 +514,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     #if [[ "$INSTALL_INDI" == "true" ]]; then
     #    sudo apt-get -y install \
     #        indi-full \
-    #        libindi-dev
+    #        libindi-dev \
+    #        indi-asi \
+    #        libasi \
+    #        indi-qhy \
+    #        libqhy \
+    #        indi-playerone \
+    #        libplayerone \
+    #        indi-sv305 \
+    #        libsv305 \
+    #        indi-sx
     #fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
@@ -563,7 +599,16 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     #if [[ "$INSTALL_INDI" == "true" ]]; then
     #    sudo apt-get -y install \
     #        indi-full \
-    #        libindi-dev
+    #        libindi-dev \
+    #        indi-asi \
+    #        libasi \
+    #        indi-qhy \
+    #        libqhy \
+    #        indi-playerone \
+    #        libplayerone \
+    #        indi-sv305 \
+    #        libsv305 \
+    #        indi-sx
     #fi
 
 
@@ -648,7 +693,16 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
-            libindi-dev
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            indi-sx
     fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
@@ -721,7 +775,16 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
-            libindi-dev
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            indi-sx
     fi
 
 else
