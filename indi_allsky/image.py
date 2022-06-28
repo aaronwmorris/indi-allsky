@@ -1209,9 +1209,12 @@ class ImageWorker(Process):
                 )
 
 
-    def drawText(self, data_bytes, text, pt, color):
+    def drawText(self, data_bytes, text, pt, color_rgb):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        color_bgr = copy.copy(color_rgb)
+        color_bgr = color_bgr.reverse()
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
@@ -1229,14 +1232,17 @@ class ImageWorker(Process):
             text=text,
             org=pt,
             fontFace=fontFace,
-            color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            color=color_bgr,
             lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
 
-    def drawEdgeCircle(self, data_bytes, pt, color):
+    def drawEdgeCircle(self, data_bytes, pt, color_rgb):
+        color_bgr = copy.copy(color_rgb)
+        color_bgr = color_bgr.reverse()
+
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.circle(
                 img=data_bytes,
@@ -1250,13 +1256,16 @@ class ImageWorker(Process):
             img=data_bytes,
             center=pt,
             radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
-            color=color,
+            color=color_bgr,
             thickness=cv2.FILLED,
         )
 
 
-    def drawEdgeLine(self, data_bytes, pt, color):
+    def drawEdgeLine(self, data_bytes, pt, color_rgb):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        color_bgr = copy.copy(color_rgb)
+        color_bgr = color_bgr.reverse()
 
         image_height, image_width = data_bytes.shape[:2]
 
@@ -1290,7 +1299,7 @@ class ImageWorker(Process):
             img=data_bytes,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=color,
+            color=color_bgr,
             thickness=self.line_thickness,
             lineType=lineType,
         )

@@ -2,6 +2,7 @@ import cv2
 import numpy
 import math
 import time
+import copy
 from datetime import datetime
 import logging
 from pprint import pformat
@@ -254,6 +255,9 @@ class KeogramGenerator(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
+        color_bgr = copy.copy(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
         for i, u_ts in enumerate(self.timestamps_list):
             ts = datetime.fromtimestamp(u_ts)
             hour_str = ts.strftime('%H')
@@ -282,7 +286,7 @@ class KeogramGenerator(object):
                 img=keogram,
                 pt1=line_start,
                 pt2=line_end,
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                color=color_bgr,
                 thickness=self.line_thickness,
                 lineType=lineType,
             )
@@ -304,7 +308,7 @@ class KeogramGenerator(object):
                 text=hour_str,
                 org=(line_x + 5, height - 5),
                 fontFace=fontFace,
-                color=self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                color=color_bgr,
                 lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
