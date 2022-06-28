@@ -52,8 +52,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding image %s to DB', filename)
 
@@ -122,8 +122,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding dark frame %s to DB', filename)
 
@@ -165,8 +165,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding bad pixel map %s to DB', filename)
 
@@ -206,8 +206,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding video %s to DB', filename)
 
@@ -240,8 +240,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding keogram %s to DB', filename)
 
@@ -274,8 +274,8 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
-            logger.error('File not found: %s', p_filename)
-            return
+            logger.warning('File not found: %s', p_filename)
+
 
         logger.info('Adding star trail %s to DB', filename)
 
