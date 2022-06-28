@@ -36,11 +36,11 @@ server {
         auth_basic "off";
     }
 
-    location /allsky/images/latest.jpg {
+    location /indi-allsky/images/latest.jpg {
         auth_basic "off";
     }
 
-    location /allsky/images/latest.png {
+    location /indi-allsky/images/latest.png {
         auth_basic "off";
     }
 
@@ -95,11 +95,11 @@ server {
         auth_basic "off";
     }
 
-    location /allsky/images/latest.jpg {
+    location /indi-allsky/images/latest.jpg {
         auth_basic "off";
     }
 
-    location /allsky/images/latest.png {
+    location /indi-allsky/images/latest.png {
         auth_basic "off";
     }
 
