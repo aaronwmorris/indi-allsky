@@ -135,6 +135,8 @@ The indi-allsky web interface is built on the Flask MVC framework.  It is design
 
 The default credentials for accessing the web interface are user `admin` and password `secret`
 
+An unauthenticated public access URL is also available at https://raspberrypi.local/indi-allsky/public  (actual hostname may vary)
+
 ### Home Page
 ![](./content/webui_home.png)
 
