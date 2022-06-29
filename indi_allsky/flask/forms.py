@@ -23,7 +23,7 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
-from sqlalchemy.types import Date
+#from sqlalchemy.types import Date
 #from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app
@@ -112,6 +112,17 @@ def CCD_EXPOSURE_MIN_validator(form, field):
 
 
 def EXPOSURE_PERIOD_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1.0:
+        raise ValidationError('Exposure period must be 1.0 or more')
+
+
+def EXPOSURE_PERIOD_DAY_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
     if field.data < 1.0:
         raise ValidationError('Exposure period must be 1.0 or more')
 
@@ -767,7 +778,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
-    EXPOSURE_PERIOD                  = FloatField('Exposure Period', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
+    EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
+    EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])

@@ -24,10 +24,11 @@
         "SWITCHES" : {}
     },
 
-    "CCD_EXPOSURE_MAX" : 15.00000,
-    "CCD_EXPOSURE_DEF" : 0.0,
-    "CCD_EXPOSURE_MIN" : 0.0,
-    "EXPOSURE_PERIOD"  : 15.00000,
+    "CCD_EXPOSURE_MAX"     : 15.00000,
+    "CCD_EXPOSURE_DEF"     : 0.0,
+    "CCD_EXPOSURE_MIN"     : 0.0,
+    "EXPOSURE_PERIOD"      : 15.00000,
+    "EXPOSURE_PERIOD_DAY"  : 15.00000,
 
     "AUTO_WB"          : false,
     "WBR_FACTOR"       : 1.0,

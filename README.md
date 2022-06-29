@@ -219,10 +219,11 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | INDI_CONFIG_DEFAULTS |            | (dict) Indi default configuration parameters |
 | > PROPERTIES        |             | (dict) Indi properties |
 | > SWITCHES          |             | (dict) Indi switches |
-| CCD_EXPOSURE_MAX    | 15          | (seconds) Maximum exposure time |
-| CCD_EXPOSURE_MIN    | Auto detected | (seconds) Minimum exposure time |
-| CCD_EXPOSURE_DEF    | CCD_EXPOSURE_MIN | (seconds) Default/starting exposure |
-| EXPOSURE_PERIOD     | 15          | (seconds) Time between beginning of each exposure |
+| CCD_EXPOSURE_MAX    | 15.0        | (float) Maximum exposure time |
+| CCD_EXPOSURE_MIN    | Auto detected | (float) Minimum exposure time |
+| CCD_EXPOSURE_DEF    | CCD_EXPOSURE_MIN | (float) Default/starting exposure |
+| EXPOSURE_PERIOD     | 15.0        | (float) Seconds between beginning of each exposure (Night) |
+| EXPOSURE_PERIOD_DAY | 15.0        | (float) Seconds between beginning of each exposure (Day) |
 | AUTO_WB             | false       | (bool) Automatic white balance adjustment |
 | WBR_FACTOR          | 1.0         | (float) Red Balance Adjustment Factor |
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |
