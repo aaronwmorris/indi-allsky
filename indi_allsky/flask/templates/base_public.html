@@ -19,7 +19,10 @@
                 <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
                     <li class="nav-item">
                         <a href="{{ url_for('indi_allsky.public_index_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Latest</span>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Public</span>
+                        </a>
+                        <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Latest (login)</span>
                         </a>
                     </li>
                     <!--
