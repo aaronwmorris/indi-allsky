@@ -15,8 +15,8 @@ INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
-WEBROOT_FOLDER="/var/www/html"
-HTDOCS_FOLDER="${WEBROOT_FOLDER}/allsky"
+DOCROOT_FOLDER="/var/www/html"
+HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 DB_URI_DEFAULT="sqlite:///${DB_FILE}"
@@ -1086,7 +1086,7 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
      -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-     -e "s|%WEBROOT_FOLDER%|$WEBROOT_FOLDER|g" \
+     -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
      -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \

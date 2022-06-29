@@ -5,7 +5,7 @@ upstream indi_allsky_server {
 server {
     listen %HTTP_PORT%;
 
-    root %WEBROOT_FOLDER%;
+    root %DOCROOT_FOLDER%;
 
     ### Comment this section to permit HTTP access to indi-allsky
     return 302 https://$host:%HTTPS_PORT%$request_uri;
@@ -63,7 +63,7 @@ server {
 server {
     listen %HTTPS_PORT%;
 
-    root %WEBROOT_FOLDER%;
+    root %DOCROOT_FOLDER%;
 
     ssl_certificate           /etc/ssl/astroberry.crt;
     ssl_certificate_key       /etc/ssl/astroberry.key;
