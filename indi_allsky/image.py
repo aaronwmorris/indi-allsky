@@ -1232,7 +1232,7 @@ class ImageWorker(Process):
             text=text,
             org=pt,
             fontFace=fontFace,
-            color=color_bgr,
+            color=tuple(color_bgr),
             lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
@@ -1256,7 +1256,7 @@ class ImageWorker(Process):
             img=data_bytes,
             center=pt,
             radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
-            color=color_bgr,
+            color=tuple(color_bgr),
             thickness=cv2.FILLED,
         )
 
@@ -1299,7 +1299,7 @@ class ImageWorker(Process):
             img=data_bytes,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=color_bgr,
+            color=tuple(color_bgr),
             thickness=self.line_thickness,
             lineType=lineType,
         )
