@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var refreshInterval = {{ refreshInterval | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
 var page_settings;  // set later
