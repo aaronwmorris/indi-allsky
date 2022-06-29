@@ -152,7 +152,11 @@
             {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
             <div id="EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Seconds between start of each frame (Night)</div>
+        <div class="col-sm-8">
+            <div>Seconds between start of each frame (Night)</div>
+            <div>Setting this below the maximum exposure will cause each new frame to begin immediately after the last ends</div>
+            <div>It is not recommended to set this below 5.0</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -163,7 +167,10 @@
             {{ form_config.EXPOSURE_PERIOD_DAY(class='form-control bg-secondary') }}
             <div id="EXPOSURE_PERIOD_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Seconds between start of each frame (Day)</div>
+        <div class="col-sm-8">
+            <div>Seconds between start of each frame (Day)</div>
+            <div>It is not recommended to set this below 5.0</div>
+        </div>
     </div>
 
     <hr />
