@@ -5,6 +5,8 @@ upstream indi_allsky_server {
 server {
     listen %HTTP_PORT%;
 
+    root %WEBROOT_FOLDER%;
+
     ### Comment this section to permit HTTP access to indi-allsky
     return 302 https://$host:%HTTPS_PORT%$request_uri;
     ###
@@ -33,14 +35,17 @@ server {
 
     # Allow non-authenticated access to latest image
     location /indi-allsky/public {
+        try_files $uri @proxy_to_indi_allsky;
         auth_basic "off";
     }
 
     location /indi-allsky/images/latest.jpg {
+        alias %IMAGE_FOLDER%/latest.jpg;
         auth_basic "off";
     }
 
     location /indi-allsky/images/latest.png {
+        alias %IMAGE_FOLDER%/latest.png;
         auth_basic "off";
     }
 
@@ -56,6 +61,8 @@ server {
 
 server {
     listen %HTTPS_PORT%;
+
+    root %WEBROOT_FOLDER%;
 
     ssl_certificate           /etc/ssl/astroberry.crt;
     ssl_certificate_key       /etc/ssl/astroberry.key;
@@ -92,14 +99,17 @@ server {
 
     # Allow non-authenticated access to latest image
     location /indi-allsky/public {
+        try_files $uri @proxy_to_indi_allsky;
         auth_basic "off";
     }
 
     location /indi-allsky/images/latest.jpg {
+        alias %IMAGE_FOLDER%/latest.jpg;
         auth_basic "off";
     }
 
     location /indi-allsky/images/latest.png {
+        alias %IMAGE_FOLDER%/latest.png;
         auth_basic "off";
     }
 
