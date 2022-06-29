@@ -56,6 +56,7 @@ server {
       proxy_set_header Host $http_host;
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
+      auth_basic "off";
     }
 }
 
@@ -120,5 +121,6 @@ server {
       proxy_set_header Host $http_host;
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
+      auth_basic "off";
     }
 }
