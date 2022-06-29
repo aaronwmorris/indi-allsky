@@ -345,6 +345,9 @@ class IndexView(TemplateView):
     def get_context(self):
         context = super(IndexView, self).get_context()
 
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
+        context['refreshInterval'] = refreshInterval_ms
+
         context['latest_image_uri'] = 'images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))
 
         return context
@@ -408,7 +411,13 @@ class ImageLagView(TemplateView):
 
 
 class SqmView(TemplateView):
-    pass
+    def get_context(self):
+        context = super(SqmView, self).get_context()
+
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
+        context['refreshInterval'] = refreshInterval_ms
+
+        return context
 
 
 class ImageLoopView(TemplateView):
