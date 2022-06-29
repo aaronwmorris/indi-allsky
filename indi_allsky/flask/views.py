@@ -548,6 +548,9 @@ class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
 
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
+        context['refreshInterval'] = refreshInterval_ms
+
         context['form_history'] = IndiAllskyHistoryForm()
 
         return context
