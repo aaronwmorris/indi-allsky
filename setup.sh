@@ -123,6 +123,15 @@ else
 fi
 
 
+if systemctl --user -q is-active indi-allsky >/dev/null 2>&1; then
+    echo
+    echo
+    echo "WARNING: indi-allsky is running.  It is recommended to stop the service before running this script."
+    echo
+    sleep 5
+fi
+
+
 echo
 echo
 echo "Distribution: $DISTRO_NAME"
