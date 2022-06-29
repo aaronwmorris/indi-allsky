@@ -16,6 +16,19 @@
                 <a href="{{ url_for('indi_allsky.index_view') }}" class="d-flex align-items-center pb-sm-3 mb-md-0 me-md-auto text-white text-decoration-none">
                     <span class="fs-5 d-none d-sm-inline">INDI-</span><span class="fs-5">AllSky</span>
                 </a>
+                <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('indi_allsky.public_index_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Latest</span>
+                        </a>
+                    </li>
+                    <!--
+                    <li>
+                        <a href="{{ url_for('indi_allsky.public_image_loop_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
+                    </li>
+                    -->
+                </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Mode: {{astrometric_data.mode}}</div>
