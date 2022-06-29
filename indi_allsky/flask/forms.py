@@ -23,7 +23,7 @@ from sqlalchemy import extract
 #from sqlalchemy import asc
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
-from sqlalchemy.types import Date
+#from sqlalchemy.types import Date
 #from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app

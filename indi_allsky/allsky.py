@@ -267,12 +267,6 @@ class IndiAllSky(object):
             c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
 
 
-        # normalize exposure period
-        if c['EXPOSURE_PERIOD'] < c['CCD_EXPOSURE_MAX']:
-            logger.warning('Exposure period is less than maximum exposure, correcting')
-            c['EXPOSURE_PERIOD'] = c['CCD_EXPOSURE_MAX']
-
-
         # set keogram scale factor
         if not c.get('KEOGRAM_V_SCALE'):
             c['KEOGRAM_V_SCALE'] = 33
@@ -722,7 +716,10 @@ class IndiAllSky(object):
                     camera_ready = False
                     waiting_for_frame = True
 
-                    next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
+                    if self.night:
+                        next_frame_time = frame_start_time + self.config.get('EXPOSURE_PERIOD', 15.0)
+                    else:
+                        next_frame_time = frame_start_time + self.config.get('EXPOSURE_PERIOD_DAY', 15.0)
 
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
