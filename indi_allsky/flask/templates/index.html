@@ -13,6 +13,7 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
 var img;
+var refreshInterval = {{ refreshInterval | int }};
 var url = '{{ latest_image_uri }}';
 var fullscreen = false;  //initial state
 
