@@ -286,7 +286,7 @@ class KeogramGenerator(object):
                 img=keogram,
                 pt1=line_start,
                 pt2=line_end,
-                color=color_bgr,
+                color=tuple(color_bgr),
                 thickness=self.line_thickness,
                 lineType=lineType,
             )
@@ -308,7 +308,7 @@ class KeogramGenerator(object):
                 text=hour_str,
                 org=(line_x + 5, height - 5),
                 fontFace=fontFace,
-                color=color_bgr,
+                color=tuple(color_bgr),
                 lineType=lineType,
                 fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
