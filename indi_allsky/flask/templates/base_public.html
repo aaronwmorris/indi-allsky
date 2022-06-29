@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<title>{% block title %}{% endblock %}</title>
+  <head>
+<link href="{{ url_for('indi_allsky.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.6.0.min.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    {% block head %}{% endblock %}
+  </head>
+  <body class="bg-dark bg-opacity-75">
+<div class="container-fluid overflow-hidden">
+    <div class="row vh-100 overflow-auto">
+        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 px-0 bg-dark d-flex sticky-top">
+            <div class="d-flex flex-sm-column flex-row flex-grow-1 align-items-center align-items-sm-start px-3 pt-2 text-white">
+                <a href="{{ url_for('indi_allsky.index_view') }}" class="d-flex align-items-center pb-sm-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <span class="fs-5 d-none d-sm-inline">INDI-</span><span class="fs-5">AllSky</span>
+                </a>
+                <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('indi_allsky.public_index_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Public</span>
+                        </a>
+                        <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Latest (login)</span>
+                        </a>
+                    </li>
+                    <!--
+                    <li>
+                        <a href="{{ url_for('indi_allsky.public_image_loop_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
+                    </li>
+                    -->
+                </ul>
+                <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
+                    <div>Status: {{ indi_allsky_status|safe }}</div>
+                    <div>Mode: {{astrometric_data.mode}}</div>
+                    <div>Sun: {{"%.0f"|format(astrometric_data.sun_alt)}}&deg; {{ astrometric_data.sun_rising_sign|safe }}</div>
+                    <div>Moon: {{"%.0f"|format(astrometric_data.moon_alt)}}&deg; {{ astrometric_data.moon_rising_sign|safe }}</div>
+                    <div data-bs-toggle="tooltip" data-bs-placement="right" title="{{"%.0f"|format(astrometric_data.moon_phase_percent)}}%">Phase: {{astrometric_data.moon_phase}} {{ astrometric_data.moon_phase_sign|safe }}</div>
+                    {{ web_extra_text|safe }}
+                </div>
+            </div>
+        </div>
+        <div class="col d-flex flex-column h-sm-100">
+            <main class="row vh-100 overflow-auto">
+                <div class="col pt-4">
+                  {% block content %}{% endblock %}
+                </div>
+            </main>
+            <!---
+            <footer class="row bg-light py-4 mt-auto">
+                <div class="col"> Footer content here... </div>
+            </footer>
+            -->
+        </div>
+    </div>
+</div>
+<script>
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+</script>
+  </body>
+</html>
