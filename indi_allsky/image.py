@@ -1214,7 +1214,7 @@ class ImageWorker(Process):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
         color_bgr = list(color_rgb)
-        color_bgr = color_bgr.reverse()
+        color_bgr.reverse()
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
@@ -1241,7 +1241,7 @@ class ImageWorker(Process):
 
     def drawEdgeCircle(self, data_bytes, pt, color_rgb):
         color_bgr = list(color_rgb)
-        color_bgr = color_bgr.reverse()
+        color_bgr.reverse()
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.circle(
@@ -1265,7 +1265,7 @@ class ImageWorker(Process):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
         color_bgr = list(color_rgb)
-        color_bgr = color_bgr.reverse()
+        color_bgr.reverse()
 
         image_height, image_width = data_bytes.shape[:2]
 
