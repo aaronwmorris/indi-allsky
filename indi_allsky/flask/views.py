@@ -1849,13 +1849,17 @@ class AjaxSystemInfoView(BaseView):
 
 
     def validateDbEntries(self):
+        message_list = list()
+
         ### Images
         image_entries = IndiAllSkyDbImageTable.query\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
-        app.logger.info('Searching %d images...', image_entries.count())
+        image_entries_count = image_entries.count()
+        message_list.append('<p>Images: {0:d}</p>'.format(image_entries_count))
 
+        app.logger.info('Searching %d images...', image_entries_count)
         image_notfound_list = list()
         for i in image_entries:
             try:
@@ -1871,8 +1875,10 @@ class AjaxSystemInfoView(BaseView):
             .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
 
 
-        app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries.count())
+        badpixelmap_entries_count = badpixelmap_entries.count()
+        message_list.append('<p>Bad pixel maps: {0:d}</p>'.format(badpixelmap_entries_count))
 
+        app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries_count)
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
             try:
@@ -1887,9 +1893,10 @@ class AjaxSystemInfoView(BaseView):
         darkframe_entries = IndiAllSkyDbDarkFrameTable.query\
             .order_by(IndiAllSkyDbDarkFrameTable.createDate.asc())
 
+        darkframe_entries_count = darkframe_entries.count()
+        message_list.append('<p>Dark Frames: {0:d}</p>'.format(darkframe_entries_count))
 
-        app.logger.info('Searching %d dark frames...', darkframe_entries.count())
-
+        app.logger.info('Searching %d dark frames...', darkframe_entries_count)
         darkframe_notfound_list = list()
         for d in darkframe_entries:
             try:
@@ -1904,9 +1911,10 @@ class AjaxSystemInfoView(BaseView):
         video_entries = IndiAllSkyDbVideoTable.query\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
+        video_entries_count = video_entries.count()
+        message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
 
-        app.logger.info('Searching %d videos...', video_entries.count())
-
+        app.logger.info('Searching %d videos...', video_entries_count)
         video_notfound_list = list()
         for v in video_entries:
             try:
@@ -1921,9 +1929,10 @@ class AjaxSystemInfoView(BaseView):
         keogram_entries = IndiAllSkyDbKeogramTable.query\
             .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
 
+        keogram_entries_count = keogram_entries.count()
+        message_list.append('<p>Keograms: {0:d}</p>'.format(keogram_entries_count))
 
-        app.logger.info('Searching %d keograms...', keogram_entries.count())
-
+        app.logger.info('Searching %d keograms...', keogram_entries_count)
         keogram_notfound_list = list()
         for k in keogram_entries:
             try:
@@ -1938,9 +1947,10 @@ class AjaxSystemInfoView(BaseView):
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
             .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
+        startrail_entries_count = startrail_entries.count()
+        message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
 
-        app.logger.info('Searching %d star trails...', startrail_entries.count())
-
+        app.logger.info('Searching %d star trails...', startrail_entries_count)
         startrail_notfound_list = list()
         for s in startrail_entries:
             try:
@@ -1958,8 +1968,6 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
 
-
-        message_list = list()
 
         ### DELETE ###
         message_list.append('<p>Removed {0:d} missing image entries</p>'.format(len(image_notfound_list)))
