@@ -371,7 +371,7 @@ $('#form_settime').on('submit', function() {
             form_settime_successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 form_settime_successMessage.css({'display' : 'none'});
-            }, 5000);
+            }, 60000);
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -617,7 +617,7 @@ function button_click(service, command) {
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
-            }, 10000);
+            }, 30000);
 
             $("#button_validate_db").prop('disabled', false);
             $("#button_flush_images").prop('disabled', false);
