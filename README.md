@@ -270,6 +270,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_EXPORT_RAW    | ""          | (string) Export raw images this file format |
 | IMAGE_EXPORT_FOLDER |             | (string) Folder to export raw tiff files |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
+| TIMELAPSE_EXPIRE_DAYS    | 365    | (days) Number of days to keep timelapse, keogram, and star trails before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
 | FFMPEG_BITRATE      | 2500k       | (kilobytes) Target data rate for timelapse video compression |
 | TEXT_PROPERTIES     |             | (dict) Default text properties (font, size, etc) |
