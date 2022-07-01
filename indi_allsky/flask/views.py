@@ -1684,6 +1684,13 @@ class AjaxSystemInfoView(BaseView):
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
                 }
                 return jsonify(json_data)
+            elif command == 'flush_timelapses':
+                file_count = self.flushTimelapses()
+
+                json_data = {
+                    'success-message' : '{0:d} Files Deleted'.format(file_count),
+                }
+                return jsonify(json_data)
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -1769,6 +1776,60 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
         return image_count
+
+
+    def flushTimelapses(self):
+        video_query = IndiAllSkyDbVideoTable.query
+        keogram_query = IndiAllSkyDbKeogramTable.query
+        startrail_query = IndiAllSkyDbStarTrailsTable.query
+
+        video_count = video_query.count()
+        keogram_count = keogram_query.count()
+        startrail_count = startrail_query.count()
+
+        file_count = video_count + keogram_count + startrail_count
+
+
+        # videos
+        for v in video_query:
+            video_filename = v.getFilesystemPath()
+            video_filename_p = Path(video_filename)
+
+            if video_filename_p.exists():
+                app.logger.info('Deleting %s', video_filename_p)
+                video_filename_p.unlink()
+
+        video_query.delete()
+        db.session.commit()
+
+
+        # keograms
+        for k in keogram_query:
+            keogram_filename = k.getFilesystemPath()
+            keogram_filename_p = Path(keogram_filename)
+
+            if keogram_filename_p.exists():
+                app.logger.info('Deleting %s', keogram_filename_p)
+                keogram_filename_p.unlink()
+
+        keogram_query.delete()
+        db.session.commit()
+
+
+        # startrails
+        for s in startrail_query:
+            startrail_filename = s.getFilesystemPath()
+            startrail_filename_p = Path(startrail_filename)
+
+            if startrail_filename_p.exists():
+                app.logger.info('Deleting %s', startrail_filename_p)
+                startrail_filename_p.unlink()
+
+        startrail_query.delete()
+        db.session.commit()
+
+
+        return file_count
 
 
 class TimelapseGeneratorView(TemplateView):

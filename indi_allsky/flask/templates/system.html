@@ -472,7 +472,7 @@ $('#form_settime').on('submit', function() {
 </div>
 
 <div class="row">
-    <div class="col-sm-6">There is no way to recover from this action</div>
+    <div class="col-sm-6">There is no way to recover from these actions.  Files are permanently deleted.</div>
 </div>
 
 <hr />
@@ -488,6 +488,22 @@ $('#form_settime').on('submit', function() {
     </div>
     <div class="col-sm-2">
         <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM2" name="FLUSH_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Flush Timelapses, Keograms, Startrails</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM1" name="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="button_flush_timelapses">Flush Timelapses</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM2" name="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox" value="y"> Confirm 2
     </div>
 </div>
 
@@ -656,6 +672,23 @@ $("#button_flush_images").on("click", function() {
     button_click('system', 'flush_images');
 });
 
+$("#button_flush_timelapses").on("click", function() {
+    if (! $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    if (! $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
+
+    button_click('system', 'flush_timelapses');
+});
+
 
 
 function reloadPage() {
@@ -670,12 +703,14 @@ $( document ).ready(function() {
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 19));
 
-    setTimeout(reloadPage, 90000);
+    setTimeout(reloadPage, 300000);
 });
 
 </script>
