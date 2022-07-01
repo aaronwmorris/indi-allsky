@@ -1678,6 +1678,10 @@ class AjaxSystemInfoView(BaseView):
             elif command == 'poweroff':
                 r = self.poweroffSystemd()
             elif command == 'flush_images':
+                ### testing
+                #time.sleep(5.0)
+                #return jsonify({'success-message' : 'Test'})
+
                 image_count = self.flushImages()
 
                 json_data = {
@@ -1685,6 +1689,10 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(json_data)
             elif command == 'flush_timelapses':
+                ### testing
+                #time.sleep(5.0)
+                #return jsonify({'success-message' : 'Test'})
+
                 file_count = self.flushTimelapses()
 
                 json_data = {

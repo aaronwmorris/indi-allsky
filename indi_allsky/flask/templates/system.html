@@ -3,6 +3,22 @@
 {% block title %}indi-allsky: System Info{% endblock %}
 
 {% block head %}
+<style>
+.loader {
+  display: none;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -473,6 +489,7 @@ $('#form_settime').on('submit', function() {
 
 <div class="row">
     <div class="col-sm-6">There is no way to recover from these actions.  Files are permanently deleted.</div>
+    <div class="col-sm-1 loader" id="loader_shutdown"></div>
 </div>
 
 <hr />
@@ -585,6 +602,9 @@ function button_click(service, command) {
                 successMessage.css({'display' : 'none'});
             }, 10000);
 
+            $("#button_flush_images").prop('disabled', false);
+            $("#button_flush_timelapses").prop('disabled', false);
+            $("#loader_shutdown").css({'display' : 'none'});
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -666,6 +686,9 @@ $("#button_flush_images").on("click", function() {
         return;
     }
 
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_flush_images").prop('disabled', true);
+
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
 
@@ -682,6 +705,9 @@ $("#button_flush_timelapses").on("click", function() {
         console.log('Flush checkbox not checked');
         return;
     }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_flush_timelapses").prop('disabled', true);
 
     $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
