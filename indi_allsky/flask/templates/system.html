@@ -484,6 +484,23 @@ $('#form_settime').on('submit', function() {
 <hr />
 
 <div class="row">
+    <div class="col-sm-2"><h4>Validation</h4></div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Validate DB Entries</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="VALIDATE_DB_CONFIRM" name="VALIDATE_DB_CONFIRM" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_validate_db">Validate DB</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
     <div class="col-sm-2"><h4>DANGER</h4></div>
 </div>
 
@@ -602,6 +619,7 @@ function button_click(service, command) {
                 successMessage.css({'display' : 'none'});
             }, 10000);
 
+            $("#button_validate_db").prop('disabled', false);
             $("#button_flush_images").prop('disabled', false);
             $("#button_flush_timelapses").prop('disabled', false);
             $("#loader_shutdown").css({'display' : 'none'});
@@ -675,6 +693,20 @@ $("#button_system_shutdown").on("click", function() {
     button_click('system', 'poweroff');
 });
 
+$("#button_validate_db").on("click", function() {
+    if (! $("#VALIDATE_DB_CONFIRM").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_validate_db").prop('disabled', true);
+
+    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
+
+    button_click('system', 'validate_db');
+});
+
 $("#button_flush_images").on("click", function() {
     if (! $("#FLUSH_IMAGES_CONFIRM1").prop('checked')) {
         console.log('Flush checkbox not checked');
@@ -727,6 +759,7 @@ $( document ).ready(function() {
     $("#REBOOT_CONFIRM").prop('checked', false);
     $("#SHUTDOWN_CONFIRM1").prop('checked', false);
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
+    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);

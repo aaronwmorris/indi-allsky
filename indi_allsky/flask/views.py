@@ -42,6 +42,7 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbDarkFrameTable
+from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbTaskQueueTable
 
 from .models import TaskQueueQueue
@@ -1677,6 +1678,13 @@ class AjaxSystemInfoView(BaseView):
                 r = self.rebootSystemd()
             elif command == 'poweroff':
                 r = self.poweroffSystemd()
+            elif command == 'validate_db':
+                message_list = self.validateDbEntries()
+
+                json_data = {
+                    'success-message' : ''.join(message_list),
+                }
+                return jsonify(json_data)
             elif command == 'flush_images':
                 ### testing
                 #time.sleep(5.0)
@@ -1838,6 +1846,158 @@ class AjaxSystemInfoView(BaseView):
 
 
         return file_count
+
+
+    def validateDbEntries(self):
+        ### Images
+        image_entries = IndiAllSkyDbImageTable.query\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+
+        app.logger.info('Searching %d images...', image_entries.count())
+
+        image_notfound_list = list()
+        for i in image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                image_notfound_list.append(i)
+
+
+        ### Bad Pixel Maps
+        badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
+            .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
+
+
+        app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries.count())
+
+        badpixelmap_notfound_list = list()
+        for b in badpixelmap_entries:
+            try:
+                self._validate_entry(b)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', b.filename)
+                badpixelmap_notfound_list.append(b)
+
+
+        ### Dark frames
+        darkframe_entries = IndiAllSkyDbDarkFrameTable.query\
+            .order_by(IndiAllSkyDbDarkFrameTable.createDate.asc())
+
+
+        app.logger.info('Searching %d dark frames...', darkframe_entries.count())
+
+        darkframe_notfound_list = list()
+        for d in darkframe_entries:
+            try:
+                self._validate_entry(d)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', d.filename)
+                darkframe_notfound_list.append(d)
+
+
+        ### Videos
+        video_entries = IndiAllSkyDbVideoTable.query\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+
+
+        app.logger.info('Searching %d videos...', video_entries.count())
+
+        video_notfound_list = list()
+        for v in video_entries:
+            try:
+                self._validate_entry(v)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', v.filename)
+                video_notfound_list.append(v)
+
+
+        ### Keograms
+        keogram_entries = IndiAllSkyDbKeogramTable.query\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
+
+
+        app.logger.info('Searching %d keograms...', keogram_entries.count())
+
+        keogram_notfound_list = list()
+        for k in keogram_entries:
+            try:
+                self._validate_entry(k)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                keogram_notfound_list.append(k)
+
+
+        ### Startrails
+        startrail_entries = IndiAllSkyDbStarTrailsTable.query\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
+
+
+        app.logger.info('Searching %d star trails...', startrail_entries.count())
+
+        startrail_notfound_list = list()
+        for s in startrail_entries:
+            try:
+                self._validate_entry(s)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                keogram_notfound_list.append(s)
+
+
+        app.logger.warning('Images not found: %d', len(image_notfound_list))
+        app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
+        app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
+        app.logger.warning('Videos not found: %d', len(video_notfound_list))
+        app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
+        app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
+
+
+        message_list = list()
+
+        ### DELETE ###
+        message_list.append('<p>Removed {0:d} missing image entries</p>'.format(len(image_notfound_list)))
+        [db.session.delete(i) for i in image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))
+        [db.session.delete(b) for b in badpixelmap_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing dark frame entries</p>'.format(len(darkframe_notfound_list)))
+        [db.session.delete(d) for d in darkframe_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing video entries</p>'.format(len(video_notfound_list)))
+        [db.session.delete(v) for v in video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing keogram entries</p>'.format(len(keogram_notfound_list)))
+        [db.session.delete(k) for k in keogram_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing star trail entries</p>'.format(len(startrail_notfound_list)))
+        [db.session.delete(s) for s in startrail_notfound_list]
+
+
+        # finalize transaction
+        db.session.commit()
+
+        return message_list
+
+
+    def _validate_entry(self, entry):
+        file_p = Path(entry.filename)
+
+        if not file_p.exists():
+            raise FileNotFoundError('File not found')
+
 
 
 class TimelapseGeneratorView(TemplateView):
