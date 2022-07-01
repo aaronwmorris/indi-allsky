@@ -51,9 +51,9 @@ class ValidateDatabaseEntries(object):
         image_notfound_list = list()
         for i in image_entries:
             try:
-                self.validate_entry(i)
+                self._validate_entry(i)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
 
@@ -68,9 +68,9 @@ class ValidateDatabaseEntries(object):
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
             try:
-                self.validate_entry(b)
+                self._validate_entry(b)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
                 badpixelmap_notfound_list.append(b)
 
@@ -85,9 +85,9 @@ class ValidateDatabaseEntries(object):
         darkframe_notfound_list = list()
         for d in darkframe_entries:
             try:
-                self.validate_entry(d)
+                self._validate_entry(d)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
                 darkframe_notfound_list.append(d)
 
@@ -102,9 +102,9 @@ class ValidateDatabaseEntries(object):
         video_notfound_list = list()
         for v in video_entries:
             try:
-                self.validate_entry(v)
+                self._validate_entry(v)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
                 video_notfound_list.append(v)
 
@@ -119,9 +119,9 @@ class ValidateDatabaseEntries(object):
         keogram_notfound_list = list()
         for k in keogram_entries:
             try:
-                self.validate_entry(k)
+                self._validate_entry(k)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
                 keogram_notfound_list.append(k)
 
@@ -136,9 +136,9 @@ class ValidateDatabaseEntries(object):
         startrail_notfound_list = list()
         for s in startrail_entries:
             try:
-                self.validate_entry(s)
+                self._validate_entry(s)
                 continue
-            except NotFound:
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 keogram_notfound_list.append(s)
 
@@ -194,18 +194,12 @@ class ValidateDatabaseEntries(object):
         db.session.commit()
 
 
-
-
-    def validate_entry(self, entry):
+    def _validate_entry(self, entry):
         file_p = Path(entry.filename)
 
         if not file_p.exists():
-            raise NotFound('File not found')
+            raise FileNotFoundError('File not found')
 
-
-
-class NotFound(Exception):
-    pass
 
 
 if __name__ == "__main__":

@@ -3,6 +3,22 @@
 {% block title %}indi-allsky: System Info{% endblock %}
 
 {% block head %}
+<style>
+.loader {
+  display: none;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +28,7 @@
     <button class="nav-link active" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" role="tab" aria-controls="nav-info" aria-selected="true">Info</button>
     <button class="nav-link" id="nav-time-tab" data-bs-toggle="tab" data-bs-target="#nav-time" type="button" role="tab" aria-controls="nav-time" aria-selected="false">Time</button>
     <button class="nav-link" id="nav-services-tab" data-bs-toggle="tab" data-bs-target="#nav-services" type="button" role="tab" aria-controls="nav-services" aria-selected="false">Services</button>
-    <button class="nav-link" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Shutdown</button>
+    <button class="nav-link" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Utilities</button>
   </div>
 </nav>
 
@@ -355,7 +371,7 @@ $('#form_settime').on('submit', function() {
             form_settime_successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 form_settime_successMessage.css({'display' : 'none'});
-            }, 5000);
+            }, 60000);
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -468,11 +484,29 @@ $('#form_settime').on('submit', function() {
 <hr />
 
 <div class="row">
+    <div class="col-sm-2"><h4>Validation</h4></div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Validate DB Entries</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="VALIDATE_DB_CONFIRM" name="VALIDATE_DB_CONFIRM" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_validate_db">Validate DB</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
     <div class="col-sm-2"><h4>DANGER</h4></div>
 </div>
 
 <div class="row">
-    <div class="col-sm-6">There is no way to recover from this action</div>
+    <div class="col-sm-6">There is no way to recover from these actions.  Files are permanently deleted.</div>
+    <div class="col-sm-1 loader" id="loader_shutdown"></div>
 </div>
 
 <hr />
@@ -488,6 +522,22 @@ $('#form_settime').on('submit', function() {
     </div>
     <div class="col-sm-2">
         <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM2" name="FLUSH_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Flush Timelapses, Keograms, Startrails</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM1" name="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="button_flush_timelapses">Flush Timelapses</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM2" name="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox" value="y"> Confirm 2
     </div>
 </div>
 
@@ -567,8 +617,14 @@ function button_click(service, command) {
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
-            }, 10000);
+            }, 30000);
 
+            $("#button_system_reboot").prop('disabled', false);
+            $("#button_system_shutdown").prop('disabled', false);
+            $("#button_validate_db").prop('disabled', false);
+            $("#button_flush_images").prop('disabled', false);
+            $("#button_flush_timelapses").prop('disabled', false);
+            $("#loader_shutdown").css({'display' : 'none'});
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -617,6 +673,10 @@ $("#button_system_reboot").on("click", function() {
         return;
     }
 
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_system_reboot").prop('disabled', true);
+    $("#button_system_shutdown").prop('disabled', true);
+
     $("#REBOOT_CONFIRM").prop('checked', false);
 
     button_click('system', 'reboot');
@@ -633,10 +693,28 @@ $("#button_system_shutdown").on("click", function() {
         return;
     }
 
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_system_reboot").prop('disabled', true);
+    $("#button_system_shutdown").prop('disabled', true);
+
     $("#SHUTDOWN_CONFIRM1").prop('checked', false);
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
 
     button_click('system', 'poweroff');
+});
+
+$("#button_validate_db").on("click", function() {
+    if (! $("#VALIDATE_DB_CONFIRM").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_validate_db").prop('disabled', true);
+
+    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
+
+    button_click('system', 'validate_db');
 });
 
 $("#button_flush_images").on("click", function() {
@@ -650,10 +728,33 @@ $("#button_flush_images").on("click", function() {
         return;
     }
 
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_flush_images").prop('disabled', true);
+
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
 
     button_click('system', 'flush_images');
+});
+
+$("#button_flush_timelapses").on("click", function() {
+    if (! $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    if (! $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_flush_timelapses").prop('disabled', true);
+
+    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
+
+    button_click('system', 'flush_timelapses');
 });
 
 
@@ -668,14 +769,17 @@ $( document ).ready(function() {
     $("#REBOOT_CONFIRM").prop('checked', false);
     $("#SHUTDOWN_CONFIRM1").prop('checked', false);
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
+    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 19));
 
-    setTimeout(reloadPage, 90000);
+    setTimeout(reloadPage, 300000);
 });
 
 </script>

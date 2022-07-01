@@ -42,6 +42,7 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbDarkFrameTable
+from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbTaskQueueTable
 
 from .models import TaskQueueQueue
@@ -1677,11 +1678,33 @@ class AjaxSystemInfoView(BaseView):
                 r = self.rebootSystemd()
             elif command == 'poweroff':
                 r = self.poweroffSystemd()
+            elif command == 'validate_db':
+                message_list = self.validateDbEntries()
+
+                json_data = {
+                    'success-message' : ''.join(message_list),
+                }
+                return jsonify(json_data)
             elif command == 'flush_images':
+                ### testing
+                #time.sleep(5.0)
+                #return jsonify({'success-message' : 'Test'})
+
                 image_count = self.flushImages()
 
                 json_data = {
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
+                }
+                return jsonify(json_data)
+            elif command == 'flush_timelapses':
+                ### testing
+                #time.sleep(5.0)
+                #return jsonify({'success-message' : 'Test'})
+
+                file_count = self.flushTimelapses()
+
+                json_data = {
+                    'success-message' : '{0:d} Files Deleted'.format(file_count),
                 }
                 return jsonify(json_data)
             else:
@@ -1769,6 +1792,220 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
         return image_count
+
+
+    def flushTimelapses(self):
+        video_query = IndiAllSkyDbVideoTable.query
+        keogram_query = IndiAllSkyDbKeogramTable.query
+        startrail_query = IndiAllSkyDbStarTrailsTable.query
+
+        video_count = video_query.count()
+        keogram_count = keogram_query.count()
+        startrail_count = startrail_query.count()
+
+        file_count = video_count + keogram_count + startrail_count
+
+
+        # videos
+        for v in video_query:
+            video_filename = v.getFilesystemPath()
+            video_filename_p = Path(video_filename)
+
+            if video_filename_p.exists():
+                app.logger.info('Deleting %s', video_filename_p)
+                video_filename_p.unlink()
+
+        video_query.delete()
+        db.session.commit()
+
+
+        # keograms
+        for k in keogram_query:
+            keogram_filename = k.getFilesystemPath()
+            keogram_filename_p = Path(keogram_filename)
+
+            if keogram_filename_p.exists():
+                app.logger.info('Deleting %s', keogram_filename_p)
+                keogram_filename_p.unlink()
+
+        keogram_query.delete()
+        db.session.commit()
+
+
+        # startrails
+        for s in startrail_query:
+            startrail_filename = s.getFilesystemPath()
+            startrail_filename_p = Path(startrail_filename)
+
+            if startrail_filename_p.exists():
+                app.logger.info('Deleting %s', startrail_filename_p)
+                startrail_filename_p.unlink()
+
+        startrail_query.delete()
+        db.session.commit()
+
+
+        return file_count
+
+
+    def validateDbEntries(self):
+        message_list = list()
+
+        ### Images
+        image_entries = IndiAllSkyDbImageTable.query\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+
+        image_entries_count = image_entries.count()
+        message_list.append('<p>Images: {0:d}</p>'.format(image_entries_count))
+
+        app.logger.info('Searching %d images...', image_entries_count)
+        image_notfound_list = list()
+        for i in image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                image_notfound_list.append(i)
+
+
+        ### Bad Pixel Maps
+        badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
+            .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
+
+
+        badpixelmap_entries_count = badpixelmap_entries.count()
+        message_list.append('<p>Bad pixel maps: {0:d}</p>'.format(badpixelmap_entries_count))
+
+        app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries_count)
+        badpixelmap_notfound_list = list()
+        for b in badpixelmap_entries:
+            try:
+                self._validate_entry(b)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', b.filename)
+                badpixelmap_notfound_list.append(b)
+
+
+        ### Dark frames
+        darkframe_entries = IndiAllSkyDbDarkFrameTable.query\
+            .order_by(IndiAllSkyDbDarkFrameTable.createDate.asc())
+
+        darkframe_entries_count = darkframe_entries.count()
+        message_list.append('<p>Dark Frames: {0:d}</p>'.format(darkframe_entries_count))
+
+        app.logger.info('Searching %d dark frames...', darkframe_entries_count)
+        darkframe_notfound_list = list()
+        for d in darkframe_entries:
+            try:
+                self._validate_entry(d)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', d.filename)
+                darkframe_notfound_list.append(d)
+
+
+        ### Videos
+        video_entries = IndiAllSkyDbVideoTable.query\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+
+        video_entries_count = video_entries.count()
+        message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
+
+        app.logger.info('Searching %d videos...', video_entries_count)
+        video_notfound_list = list()
+        for v in video_entries:
+            try:
+                self._validate_entry(v)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', v.filename)
+                video_notfound_list.append(v)
+
+
+        ### Keograms
+        keogram_entries = IndiAllSkyDbKeogramTable.query\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
+
+        keogram_entries_count = keogram_entries.count()
+        message_list.append('<p>Keograms: {0:d}</p>'.format(keogram_entries_count))
+
+        app.logger.info('Searching %d keograms...', keogram_entries_count)
+        keogram_notfound_list = list()
+        for k in keogram_entries:
+            try:
+                self._validate_entry(k)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                keogram_notfound_list.append(k)
+
+
+        ### Startrails
+        startrail_entries = IndiAllSkyDbStarTrailsTable.query\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
+
+        startrail_entries_count = startrail_entries.count()
+        message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
+
+        app.logger.info('Searching %d star trails...', startrail_entries_count)
+        startrail_notfound_list = list()
+        for s in startrail_entries:
+            try:
+                self._validate_entry(s)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                keogram_notfound_list.append(s)
+
+
+        app.logger.warning('Images not found: %d', len(image_notfound_list))
+        app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
+        app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
+        app.logger.warning('Videos not found: %d', len(video_notfound_list))
+        app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
+        app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
+
+
+        ### DELETE ###
+        message_list.append('<p>Removed {0:d} missing image entries</p>'.format(len(image_notfound_list)))
+        [db.session.delete(i) for i in image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))
+        [db.session.delete(b) for b in badpixelmap_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing dark frame entries</p>'.format(len(darkframe_notfound_list)))
+        [db.session.delete(d) for d in darkframe_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing video entries</p>'.format(len(video_notfound_list)))
+        [db.session.delete(v) for v in video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing keogram entries</p>'.format(len(keogram_notfound_list)))
+        [db.session.delete(k) for k in keogram_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing star trail entries</p>'.format(len(startrail_notfound_list)))
+        [db.session.delete(s) for s in startrail_notfound_list]
+
+
+        # finalize transaction
+        db.session.commit()
+
+        return message_list
+
+
+    def _validate_entry(self, entry):
+        file_p = Path(entry.filename)
+
+        if not file_p.exists():
+            raise FileNotFoundError('File not found')
+
 
 
 class TimelapseGeneratorView(TemplateView):
