@@ -779,7 +779,18 @@
             {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
             <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Maximum age of timelapse image files before deletion</div>
+        <div class="col-sm-8">Maximum age of original image files before deletion</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Maximum age of timelapse, keogram, and star trails before deletion</div>
     </div>
 
     <hr />
@@ -1373,6 +1384,7 @@ const field_names = [
     'IMAGE_EXPORT_RAW',
     'IMAGE_EXPORT_FOLDER',
     'IMAGE_EXPIRE_DAYS',
+    'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_BITRATE',
     'TEXT_PROPERTIES__FONT_FACE',

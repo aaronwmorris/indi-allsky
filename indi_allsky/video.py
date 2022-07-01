@@ -572,6 +572,18 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
 
 
+        cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
+        cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
+
+        old_videos = IndiAllSkyDbVideoTable.query\
+            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
+        old_keograms = IndiAllSkyDbKeogramTable.query\
+            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
+        old_startrails = IndiAllSkyDbStarTrailsTable.query\
+            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+
+
+        # images
         logger.warning('Found %d expired images to delete', old_images.count())
         for file_entry in old_images:
             #logger.info('Removing old image: %s', file_entry.filename)
@@ -589,6 +601,67 @@ class VideoWorker(Process):
 
         old_images.delete()  # mass delete
         db.session.commit()
+
+
+        # videos
+        logger.warning('Found %d expired videos to delete', old_videos.count())
+        for file_entry in old_videos:
+            #logger.info('Removing old video: %s', file_entry.filename)
+
+            file_p = Path(file_entry.getFilesystemPath())
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+
+        old_videos.delete()  # mass delete
+        db.session.commit()
+
+
+        # keograms
+        logger.warning('Found %d expired keograms to delete', old_keograms.count())
+        for file_entry in old_keograms:
+            #logger.info('Removing old keogram: %s', file_entry.filename)
+
+            file_p = Path(file_entry.getFilesystemPath())
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+
+        old_keograms.delete()  # mass delete
+        db.session.commit()
+
+
+        # star trails
+        logger.warning('Found %d expired star trails to delete', old_startrails.count())
+        for file_entry in old_startrails:
+            #logger.info('Removing old star trails: %s', file_entry.filename)
+
+            file_p = Path(file_entry.getFilesystemPath())
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+
+        old_startrails.delete()  # mass delete
+        db.session.commit()
+
 
 
         # Remove empty folders

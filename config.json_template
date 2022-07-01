@@ -98,7 +98,8 @@
     "IMAGE_EXPORT_RAW"    : "",
     "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
 
-    "IMAGE_EXPIRE_DAYS" : 30,
+    "IMAGE_EXPIRE_DAYS"     : 30,
+    "TIMELAPSE_EXPIRE_DAYS" : 365,
 
     "FFMPEG_FRAMERATE" : 25,
     "FFMPEG_BITRATE"   : "2500k",
