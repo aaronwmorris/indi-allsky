@@ -619,6 +619,8 @@ function button_click(service, command) {
                 successMessage.css({'display' : 'none'});
             }, 30000);
 
+            $("#button_system_reboot").prop('disabled', false);
+            $("#button_system_shutdown").prop('disabled', false);
             $("#button_validate_db").prop('disabled', false);
             $("#button_flush_images").prop('disabled', false);
             $("#button_flush_timelapses").prop('disabled', false);
@@ -671,6 +673,10 @@ $("#button_system_reboot").on("click", function() {
         return;
     }
 
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_system_reboot").prop('disabled', true);
+    $("#button_system_shutdown").prop('disabled', true);
+
     $("#REBOOT_CONFIRM").prop('checked', false);
 
     button_click('system', 'reboot');
@@ -686,6 +692,10 @@ $("#button_system_shutdown").on("click", function() {
         console.log('Shutdown checkbox not checked');
         return;
     }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_system_reboot").prop('disabled', true);
+    $("#button_system_shutdown").prop('disabled', true);
 
     $("#SHUTDOWN_CONFIRM1").prop('checked', false);
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
