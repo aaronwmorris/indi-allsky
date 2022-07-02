@@ -1024,7 +1024,13 @@ class IndiAllskyImageViewer(FlaskForm):
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
-            entry = (str(uri), str(i.createDate.strftime('%H:%M:%S')))
+            if i.detections:
+                entry_str = '{0:s} [{1:d}]'.format(i.createDate.strftime('%H:%M:%S'), i.detections)
+            else:
+                entry_str = i.createDate.strftime('%H:%M:%S')
+
+            entry = (str(uri), entry_str)
+
             images_choices.append(entry)
 
 
