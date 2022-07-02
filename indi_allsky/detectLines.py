@@ -95,7 +95,7 @@ class IndiAllskyDetectLines(object):
 
         logger.info('Detected %d lines', len(lines))
 
-        self._drawLines(img, lines, (x1, y1, x2, y2))
+        #self._drawLines(img, lines, (x1, y1, x2, y2))
 
         return lines
 
