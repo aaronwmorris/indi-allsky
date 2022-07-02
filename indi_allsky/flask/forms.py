@@ -803,6 +803,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
     ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
     DETECT_STARS                     = BooleanField('Star Detection')
+    DETECT_METEORS                   = BooleanField('Meteor Detection')
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])

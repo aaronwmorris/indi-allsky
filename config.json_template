@@ -46,6 +46,8 @@
     "ADU_ROI" : [],
     "comment_DETECT_STARS" : "Enable Star detection",
     "DETECT_STARS" : true,
+    "comment_DETECT_METEORS" : "Enable Meteor detection",
+    "DETECT_METEORS" : true,
     "comment_SQM_ROI" : "Region of Interest for SQM and Star detection",
     "SQM_ROI" : [],
 
