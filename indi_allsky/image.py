@@ -286,13 +286,13 @@ class ImageWorker(Process):
 
 
             # source extraction
-            if self.night_v.value and self.config['DETECT_STARS']:
+            if self.night_v.value and self.config.get('DETECT_STARS', True):
                 blob_stars = self._stars.detectObjects(scidata_debayered_8)
             else:
                 blob_stars = list()
 
 
-            if self.night_v.value:
+            if self.night_v.value and self.config.get('DETECT_METEORS'):
                 image_lines = self._lineDetect.detectLines(scidata_debayered_8)
             else:
                 image_lines = list()
