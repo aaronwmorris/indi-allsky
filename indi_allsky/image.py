@@ -380,6 +380,7 @@ class ImageWorker(Process):
                     calibrated=calibrated,
                     sqm=self.sqm_value,
                     stars=len(blob_stars),
+                    detections=len(image_lines),
                 )
 
 
