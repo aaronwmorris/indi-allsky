@@ -25,6 +25,9 @@ class IndiAllskyDetectLines(object):
     def __init__(self, config):
         self.config = config
 
+        self.x_offset = 0
+        self.y_offset = 0
+
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -32,10 +35,33 @@ class IndiAllskyDetectLines(object):
 
 
     def detectLines(self, img):
+        image_height, image_width = img.shape[:2]
+
+        sqm_roi = self.config.get('SQM_ROI', [])
+
+        try:
+            x1, y1, x2, y2 = sqm_roi
+        except ValueError:
+            logger.warning('Using central ROI for line detection')
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
+
+
+        self.x_offset = x1
+        self.y_offset = y1
+
+        roi_img = img[
+            y1:y2,
+            x1:x2,
+        ]
+
         if len(img.shape) == 2:
-            img_gray = img
+            img_gray = roi_img
         else:
-            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img_gray = cv2.cvtColor(roi_img, cv2.COLOR_BGR2GRAY)
+
 
 
         lines_start = time.time()
@@ -68,22 +94,32 @@ class IndiAllskyDetectLines(object):
 
         logger.info('Detected %d lines', len(lines))
 
-        self._drawLines(img, lines)
+        self._drawLines(img, lines, (x1, y1, x2, y2))
 
         return lines
 
 
-    def _drawLines(self, img, lines):
+    def _drawLines(self, img, lines, box):
         line_image = img.copy()
+
+        logger.info('Draw box around ROI')
+        cv2.rectangle(
+            img=line_image,
+            pt1=(box[0], box[1]),
+            pt2=(box[2], box[3]),
+            color=(128, 128, 128),
+            thickness=1,
+        )
+
 
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(
                     line_image,
-                    (x1, y1),
-                    (x2, y2),
+                    (x1 + self.x_offset, y1 + self.y_offset),
+                    (x2 + self.x_offset, y2 + self.y_offset),
                     (255, 0, 0),
-                    5,
+                    3,
                 )
 
 
