@@ -26,6 +26,7 @@ import numpy
 
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
+from .detectLines import IndiAllskyDetectLines
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -141,6 +142,7 @@ class ImageWorker(Process):
         self.sqm_value = 0
 
         self._stars = IndiAllSkyStars(self.config)
+        self._lineDetect = IndiAllskyDetectLines(self.config)
 
         self._miscDb = miscDb(self.config)
 
@@ -288,6 +290,12 @@ class ImageWorker(Process):
                 blob_stars = self._stars.detectObjects(scidata_debayered_8)
             else:
                 blob_stars = list()
+
+
+            if self.night_v.value:
+                image_lines = self._lineDetect.detectLines(scidata_debayered_8)
+            else:
+                image_lines = list()
 
 
             # white balance
