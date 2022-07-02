@@ -16,6 +16,8 @@ class IndiAllskyDetectLines(object):
     canny_low_threshold = 50
     canny_high_threshold = 150
 
+    blur_kernel_size = 5
+
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = numpy.pi / 180  # angular resolution in radians of the Hough grid
     threshold = 15  # minimum number of votes (intersections in Hough grid cell)
@@ -66,8 +68,7 @@ class IndiAllskyDetectLines(object):
 
         lines_start = time.time()
 
-        kernel_size = 5
-        blur_gray = cv2.GaussianBlur(img_gray, (kernel_size, kernel_size), 0)
+        blur_gray = cv2.GaussianBlur(img_gray, (self.blur_kernel_size, self.blur_kernel_size), 0)
 
 
         edges = cv2.Canny(blur_gray, self.canny_low_threshold, self.canny_high_threshold)
