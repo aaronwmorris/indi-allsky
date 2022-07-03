@@ -13,14 +13,14 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyDetectLines(object):
 
-    canny_low_threshold = 50
-    canny_high_threshold = 150
+    canny_low_threshold = 15
+    canny_high_threshold = 50
 
     blur_kernel_size = 5
 
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = numpy.pi / 180  # angular resolution in radians of the Hough grid
-    threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+    threshold = 125  # minimum number of votes (intersections in Hough grid cell)
     min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
 
