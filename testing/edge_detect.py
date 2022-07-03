@@ -32,7 +32,7 @@ class EdgeDetector(object):
         #blur_gray = img_gray
         blur_gray = cv2.GaussianBlur(
             img_gray,
-            (3, 3),
+            (5, 5),
             0,
         )
 
@@ -47,8 +47,6 @@ class EdgeDetector(object):
         #lap_elapsed_s = time.time() - lap_start
         #logger.info('Laplacian processed in %0.1f s', lap_elapsed_s)
 
-        #cv2.imwrite('edge_laplacian.jpg', lap_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
-
 
         canny_start = time.time()
 
@@ -61,8 +59,6 @@ class EdgeDetector(object):
 
         canny_elapsed_s = time.time() - canny_start
         logger.info('Canny processed in %0.1f s', canny_elapsed_s)
-
-        cv2.imwrite('edge_canny.jpg', canny_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
         #lines_lap = cv2.HoughLinesP(
@@ -88,16 +84,30 @@ class EdgeDetector(object):
             theta=numpy.pi / 180,
             threshold=125,
             lines=None,
-            minLineLength=20,
-            maxLineGap=10,
+            minLineLength=40,
+            maxLineGap=20,
         )
 
 
-        if lines_canny is not None:
-            logger.warning(' Canny detected %d lines', len(lines_canny))
-        else:
-            pass
+        if lines_canny is None:
             logger.warning(' Canny No lines')
+            sys.exit()
+
+
+        logger.warning(' Canny detected %d lines', len(lines_canny))
+        for line in lines_canny:
+            for x1, y1, x2, y2 in line:
+                cv2.line(
+                    canny_img,
+                    (x1, y1),
+                    (x2, y2),
+                    (255, 0, 0),
+                    3,
+                )
+
+
+        cv2.imwrite('edge_canny.jpg', canny_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite('edge_laplacian.jpg', lap_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
 
