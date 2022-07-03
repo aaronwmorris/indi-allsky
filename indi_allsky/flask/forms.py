@@ -1026,7 +1026,7 @@ class IndiAllskyImageViewer(FlaskForm):
                 continue
 
             if i.detections:
-                entry_str = '{0:s} [{1:d}]'.format(i.createDate.strftime('%H:%M:%S'), i.detections)
+                entry_str = '{0:s} [*]'.format(i.createDate.strftime('%H:%M:%S'))
             else:
                 entry_str = i.createDate.strftime('%H:%M:%S')
 
