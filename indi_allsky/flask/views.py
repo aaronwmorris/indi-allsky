@@ -485,9 +485,10 @@ class JsonImageLoopView(JsonView):
                 continue
 
             data = {
-                'file'  : str(uri),
-                'sqm'   : i.sqm,
-                'stars' : i.stars,
+                'file'       : str(uri),
+                'sqm'        : i.sqm,
+                'stars'      : i.stars,
+                'detections' : i.detections,
             }
 
             image_list.append(data)
