@@ -129,6 +129,12 @@ Star trail images stack the stars from each frame to show their progression acro
 
 ![](./content/startrails_example.jpg)
 
+## Star Detection
+indi-allsky utilizes OpenCV pattern matching to detect and count the number of stars in the view.  Star counts are a good objective measurement of sky conditions.
+
+## Meteor Detection
+Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able to perform basic line detection to detect meteor and fireball trails in the view.  Airplane and satellite trails are also detected using this method.  Images are tagged with an asterisk in the image viewer if a trail has been detected.
+
 ## Web Interface
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
@@ -235,6 +241,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time |
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | DETECT_STARS        | true        | (bool) Enable star detection |
+| DETECT_METEORS      | false       | (bool) Enable meteor detection |
 | SQM_ROI             | []          | (array) Region of interest for SQM and Star detection |
 | LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (float) Your longitude for astrometric calculations |

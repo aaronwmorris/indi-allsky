@@ -67,6 +67,18 @@ function showImage(entry) {
         var y = canvas.height-150;
 
 
+        // Lines
+        if (entry["detections"] > 0) {
+            context.font = '20px serif';
+
+            var sqm_text = "*** Detection ***";
+            context.strokeStyle = 'black';
+            context.strokeText(sqm_text, x-110, y-40, maxWidth);
+            context.fillStyle = 'lightgrey';
+            context.fillText(sqm_text, x-110, y-40, maxWidth);
+        }
+
+
         // Stars
         context.font = '32px serif';
 

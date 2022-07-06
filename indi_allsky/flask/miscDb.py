@@ -46,7 +46,27 @@ class miscDb(object):
         return camera
 
 
-    def addImage(self, filename, camera_id, createDate, exposure, exp_elapsed, gain, binmode, temp, adu, stable, moonmode, moonphase, night=True, sqm=None, adu_roi=False, calibrated=False, stars=None):
+    def addImage(
+        self,
+        filename,
+        camera_id,
+        createDate,
+        exposure,
+        exp_elapsed,
+        gain,
+        binmode,
+        temp,
+        adu,
+        stable,
+        moonmode,
+        moonphase,
+        night=True,
+        sqm=None,
+        adu_roi=False,
+        calibrated=False,
+        stars=None,
+        detections=0,
+    ):
         if not filename:
             return
 
@@ -106,6 +126,7 @@ class miscDb(object):
             moonphase=moonphase_val,
             sqm=sqm,
             stars=stars,
+            detections=detections,
         )
 
         db.session.add(image)
