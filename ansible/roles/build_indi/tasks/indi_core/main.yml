@@ -1,6 +1,6 @@
 ---
 
-- include: "install/main.yml"
+- include_tasks: "install/main.yml"
 
 
 - debug:
