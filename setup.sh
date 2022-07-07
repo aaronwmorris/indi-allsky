@@ -50,17 +50,6 @@ trap catch_sigint SIGINT
 
 
 HTDOCS_FILES="
-    latest.html
-    latestDb.html
-    loop.html
-    loop_realtime.html
-    sqm.html
-    chart.html
-    js/js_loop.php
-    js/js_chart.php
-    js/settings_latest.js
-    js/settings_latestDb.js
-    js/settings_loop.js
     .htaccess
 "
 
@@ -241,8 +230,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
@@ -333,8 +320,6 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -424,8 +409,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
@@ -518,8 +501,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -609,8 +590,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
@@ -710,8 +689,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         libgnutls28-dev \
         swig \
         libatlas-base-dev \
@@ -798,8 +775,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libapache2-mod-php \
-        php-sqlite3 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \

@@ -10,7 +10,7 @@
     - ansible_facts['distribution'] == 'CentOS'
 
 
-- include: rpmfusion/main.yml
+- include_tasks: rpmfusion/main.yml
 
 
 - name: Install indi_3rdparty development packages

@@ -78,17 +78,17 @@
     - always
 
 
-- include: "common/main_pre.yml"
+- include_tasks: "common/main_pre.yml"
   tags:
     - common
 
 
-- include: "indi_core/main.yml"
+- include_tasks: "indi_core/main.yml"
   tags:
     - indi_core
 
 
-- include: "indi_3rdparty/main.yml"
+- include_tasks: "indi_3rdparty/main.yml"
   tags:
     - indi_3rdparty
 
