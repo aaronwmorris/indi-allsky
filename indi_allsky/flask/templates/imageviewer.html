@@ -297,10 +297,11 @@ $("#HOUR_SELECT").on("change", function() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT' : fields["MONTH_SELECT"].input.val(),
-        'DAY_SELECT'   : fields["DAY_SELECT"].input.val(),
-        'HOUR_SELECT'  : fields["HOUR_SELECT"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
     $.ajax({
@@ -339,9 +340,10 @@ $("#DAY_SELECT").on("change", function() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT' : fields["MONTH_SELECT"].input.val(),
-        'DAY_SELECT'   : fields["DAY_SELECT"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
     $.ajax({
@@ -384,8 +386,9 @@ $("#MONTH_SELECT").on("change", function() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT' : fields["MONTH_SELECT"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
     $.ajax({
@@ -432,7 +435,8 @@ $("#YEAR_SELECT").on("change", function() {
     });
 
     var json_data = {
-        'YEAR_SELECT'  : fields["YEAR_SELECT"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
     $.ajax({
