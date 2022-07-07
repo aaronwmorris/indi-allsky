@@ -1233,6 +1233,7 @@ class ImageViewerView(FormView):
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
             'HOUR_SELECT'  : None,
+            'FILTER_DETECTIONS' : None,
         }
 
         context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
@@ -1249,13 +1250,18 @@ class AjaxImageViewerView(BaseView):
 
 
     def dispatch_request(self):
-        form_viewer = IndiAllskyImageViewer(data=request.json)
-
-
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
+        form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
+
+        if form_filter_detections:
+            # filter images that have a detection
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1)
+        else:
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0)
+
 
         json_data = {}
 

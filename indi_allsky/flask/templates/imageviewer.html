@@ -191,6 +191,19 @@ $( document ).ready(function() {
         </div>
 
     </div>
+    <div class="form-group row">
+        <div class="col-sm-9"></div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.FILTER_DETECTIONS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
+                <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
 
     <div id="success-message" class="text-success" style="display: none;"></div>
     <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
@@ -218,6 +231,7 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'FILTER_DETECTIONS',
 ];
 
 var fields = {};
@@ -461,6 +475,63 @@ $("#YEAR_SELECT").on("change", function() {
     });
 
 });
+
+$("#FILTER_DETECTIONS").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    var json_data = {
+        'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#YEAR_SELECT").empty()
+            data['YEAR_SELECT'].forEach(item => {
+                $("#YEAR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#IMG_SELECT").empty()
+            data['IMG_SELECT'].forEach(item => {
+                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            img.src = fields['IMG_SELECT'].input.val();
+
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+
+});
+
 
 </script>
 
