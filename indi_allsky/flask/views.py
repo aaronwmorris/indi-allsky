@@ -1233,6 +1233,7 @@ class ImageViewerView(FormView):
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
             'HOUR_SELECT'  : None,
+            'FILTER_DETECTIONS' : None,
         }
 
         context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
@@ -1249,13 +1250,18 @@ class AjaxImageViewerView(BaseView):
 
 
     def dispatch_request(self):
-        form_viewer = IndiAllskyImageViewer(data=request.json)
-
-
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
+        form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
+
+        if form_filter_detections:
+            # filter images that have a detection
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1)
+        else:
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0)
+
 
         json_data = {}
 
@@ -1312,6 +1318,35 @@ class AjaxImageViewerView(BaseView):
             hour = json_data['HOUR_SELECT'][0][0]
 
             json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+        else:
+            # this happens when filtering images on detections
+            json_data['YEAR_SELECT'] = form_viewer.getYears()
+
+            if not json_data['YEAR_SELECT']:
+                # No images returned
+                json_data['YEAR_SELECT'] = (('', None),)
+                json_data['MONTH_SELECT'] = (('', None),)
+                json_data['DAY_SELECT'] = (('', None),)
+                json_data['HOUR_SELECT'] = (('', None),)
+                json_data['IMG_SELECT'] = (('', None),)
+
+                return json_data
+
+
+            year = json_data['YEAR_SELECT'][0][0]
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
 
         return jsonify(json_data)
 

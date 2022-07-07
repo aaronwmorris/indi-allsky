@@ -905,6 +905,13 @@ class IndiAllskyImageViewer(FlaskForm):
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     IMG_SELECT           = SelectField('Image', choices=[], validators=[])
+    FILTER_DETECTIONS    = BooleanField('Detections')
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyImageViewer, self).__init__(*args, **kwargs)
+
+        self.detections_count = kwargs.get('detections_count', 0)
 
 
     def getYears(self):
@@ -914,6 +921,7 @@ class IndiAllskyImageViewer(FlaskForm):
         years_query = db.session.query(
             createDate_year,
         )\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .distinct()\
             .order_by(createDate_year.desc())
 
@@ -935,6 +943,7 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_year,
             createDate_month,
         )\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .filter(createDate_year == year)\
             .distinct()\
             .order_by(createDate_month.desc())
@@ -961,6 +970,7 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_month,
             createDate_day,
         )\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .filter(createDate_year == year)\
             .filter(createDate_month == month)\
             .distinct()\
@@ -988,6 +998,7 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_day,
             createDate_hour,
         )\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .filter(createDate_year == year)\
             .filter(createDate_month == month)\
             .filter(createDate_day == day)\
@@ -1011,6 +1022,7 @@ class IndiAllskyImageViewer(FlaskForm):
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
         images_query = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .filter(createDate_year == year)\
             .filter(createDate_month == month)\
             .filter(createDate_day == day)\
@@ -1045,6 +1057,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
         last_image = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
