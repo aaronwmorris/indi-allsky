@@ -533,6 +533,11 @@ $("#FILTER_DETECTIONS").on("change", function() {
 });
 
 
+$( document ).ready(function() {
+    // Uncheck checkboxes
+    $("#FILTER_DETECTIONS").prop('checked', false);
+});
+
 </script>
 
 {% endblock %}
