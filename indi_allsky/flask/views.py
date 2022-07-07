@@ -1319,6 +1319,35 @@ class AjaxImageViewerView(BaseView):
 
             json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
 
+        else:
+            # this happens when filtering images on detections
+            json_data['YEAR_SELECT'] = form_viewer.getYears()
+
+            if not json_data['YEAR_SELECT']:
+                # No images returned
+                json_data['YEAR_SELECT'] = (('', None),)
+                json_data['MONTH_SELECT'] = (('', None),)
+                json_data['DAY_SELECT'] = (('', None),)
+                json_data['HOUR_SELECT'] = (('', None),)
+                json_data['IMG_SELECT'] = (('', None),)
+
+                return json_data
+
+
+            year = json_data['YEAR_SELECT'][0][0]
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+
+
         return jsonify(json_data)
 
 
