@@ -55,7 +55,7 @@ class FileUploader(Process):
 
     def run(self):
         while True:
-            time.sleep(1.3)  # sleep every loop
+            time.sleep(0.7)  # sleep every loop
 
             try:
                 u_dict = self.upload_q.get_nowait()
