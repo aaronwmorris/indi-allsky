@@ -281,29 +281,50 @@ class ImageWorker(Process):
             #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
+            # verticle flip
+            if self.config['IMAGE_FLIP_V']:
+                scidata_cal_flip_v = cv2.flip(scidata_debayered_8, 0)
+            else:
+                scidata_cal_flip_v = scidata_debayered_8
+
+            # horizontal flip
+            if self.config['IMAGE_FLIP_H']:
+                scidata_cal_flip = cv2.flip(scidata_cal_flip_v, 1)
+            else:
+                scidata_cal_flip = scidata_cal_flip_v
+
+
+            # crop
+            if self.config.get('IMAGE_CROP_ROI'):
+                scidata_cropped = self.crop_image(scidata_cal_flip)
+            else:
+                scidata_cropped = scidata_cal_flip
+
+
             # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_debayered_8, exposure)
+            adu, adu_average = self.calculate_histogram(scidata_cropped, exposure)
+
 
 
             # source extraction
             if self.night_v.value and self.config.get('DETECT_STARS', True):
-                blob_stars = self._stars.detectObjects(scidata_debayered_8)
+                blob_stars = self._stars.detectObjects(scidata_cropped)
             else:
                 blob_stars = list()
 
 
             if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self._lineDetect.detectLines(scidata_debayered_8)
+                image_lines = self._lineDetect.detectLines(scidata_cropped)
             else:
                 image_lines = list()
 
 
             # white balance
-            #scidata_balanced = self.equalizeHistogram(scidata_debayered_8)
-            scidata_balanced = self.white_balance_auto_bgr(scidata_debayered_8)
-            scidata_balanced = self.white_balance_manual_bgr(scidata_debayered_8)
-            #scidata_balanced = self.white_balance_bgr_2(scidata_debayered_8)
-            #scidata_balanced = scidata_debayered_8
+            #scidata_balanced = self.equalizeHistogram(scidata_cropped)
+            scidata_balanced = self.white_balance_auto_bgr(scidata_cropped)
+            scidata_balanced = self.white_balance_manual_bgr(scidata_cropped)
+            #scidata_balanced = self.white_balance_bgr_2(scidata_cropped)
+            #scidata_balanced = scidata_cropped
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
@@ -316,36 +337,17 @@ class ImageWorker(Process):
                 scidata_contrast = scidata_balanced
 
 
-            # crop
-            if self.config.get('IMAGE_CROP_ROI'):
-                scidata_cropped = self.crop_image(scidata_contrast)
-            else:
-                scidata_cropped = scidata_contrast
-
-
-            # verticle flip
-            if self.config['IMAGE_FLIP_V']:
-                scidata_cal_flip_v = cv2.flip(scidata_cropped, 0)
-            else:
-                scidata_cal_flip_v = scidata_cropped
-
-            # horizontal flip
-            if self.config['IMAGE_FLIP_H']:
-                scidata_cal_flip = cv2.flip(scidata_cal_flip_v, 1)
-            else:
-                scidata_cal_flip = scidata_cal_flip_v
-
-
             if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                scidata_scaled = self.scale_image(scidata_cal_flip)
+                scidata_scaled = self.scale_image(scidata_contrast)
             else:
-                scidata_scaled = scidata_cal_flip
+                scidata_scaled = scidata_contrast
+
 
             # blur
-            #scidata_blur = self.median_blur(scidata_cal_flip)
+            #scidata_blur = self.median_blur(scidata_scaled)
 
             # denoise
-            #scidata_denoise = self.fastDenoise(scidata_sci_cal_flip)
+            #scidata_denoise = self.fastDenoise(scidata_scaled)
 
             self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed)
 
