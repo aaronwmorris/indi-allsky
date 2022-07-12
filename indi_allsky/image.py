@@ -294,29 +294,30 @@ class ImageWorker(Process):
                 scidata_cal_flip = scidata_cal_flip_v
 
 
+            # adu calculate (before processing)
+            adu, adu_average = self.calculate_histogram(scidata_cal_flip, exposure)
+
+
+
+            # source extraction
+            if self.night_v.value and self.config.get('DETECT_STARS', True):
+                blob_stars = self._stars.detectObjects(scidata_cal_flip)
+            else:
+                blob_stars = list()
+
+
+            if self.night_v.value and self.config.get('DETECT_METEORS'):
+                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
+            else:
+                image_lines = list()
+
+
             # crop
             if self.config.get('IMAGE_CROP_ROI'):
                 scidata_cropped = self.crop_image(scidata_cal_flip)
             else:
                 scidata_cropped = scidata_cal_flip
 
-
-            # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_cropped, exposure)
-
-
-
-            # source extraction
-            if self.night_v.value and self.config.get('DETECT_STARS', True):
-                blob_stars = self._stars.detectObjects(scidata_cropped)
-            else:
-                blob_stars = list()
-
-
-            if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self._lineDetect.detectLines(scidata_cropped)
-            else:
-                image_lines = list()
 
 
             # white balance
