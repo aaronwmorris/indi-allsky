@@ -375,15 +375,16 @@ Common problems you might run into.
 
 indi-allsky supports several file transfer methods.  Additional file transfer methods are planned such as direct to YouTube uploads.
 
-| Protocol | Class Name    | Port | Description |
-| -------- | ------------- | ---- | ----------- |
-| ftp      | pycurl_ftp    | 21   | FTP via pycurl |
-|          | python_ftp    | 21   | FTP via ftplib |
-| ftpes    | pycurl_ftpes  | 21   | FTPS (explicit) via pycurl |
-|          | python_ftpes  | 21   | FTPS (explicit) via ftplib |
-| ftps     | pycurl_ftps   | 990  | FTPS (implicit) via pycurl |
-| sftp     | pycurl_sftp   | 22   | SFTP via pycurl |
-|          | paramiko_sftp | 22   | SFTP via paramiko |
+| Protocol       | Class Name          | Port | Description |
+| -------------- | ------------------- | ---- | ----------- |
+| ftp            | pycurl_ftp          | 21   | FTP via pycurl |
+|                | python_ftp          | 21   | FTP via ftplib |
+| ftpes          | pycurl_ftpes        | 21   | FTPS (explicit) via pycurl |
+|                | python_ftpes        | 21   | FTPS (explicit) via ftplib |
+| ftps           | pycurl_ftps         | 990  | FTPS (implicit) via pycurl |
+| sftp           | pycurl_sftp         | 22   | SFTP via pycurl |
+|                | paramiko_sftp       | 22   | SFTP via paramiko |
+| webdav (https) | pycurl_webdav_https | 443  | HTTPS PUT via pycurl |
 
 ## MQTT Publishing
 
