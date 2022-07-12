@@ -558,6 +558,7 @@ def FILETRANSFER__CLASSNAME_validator(form, field):
         'pycurl_ftp',
         'python_ftp',
         'python_ftpes',
+        'python_webdav_https',
     )
 
     if field.data not in class_names:
@@ -769,6 +770,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('pycurl_ftp', 'Curl FTP'),
         ('python_ftp', 'Python FTP'),
         ('python_ftpes', 'Python FTPS (explicit)'),
+        ('python_webdav_https', 'WebDAV HTTPS'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (
