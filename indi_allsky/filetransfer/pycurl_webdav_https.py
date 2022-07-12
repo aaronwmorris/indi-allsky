@@ -71,7 +71,7 @@ class pycurl_webdav_https(GenericFileTransfer):
         self.client.setopt(pycurl.UPLOAD, 1)
         self.client.setopt(pycurl.FOLLOWLOCATION, 1)
         #self.client.setopt(pycurl.HTTPHEADER, ['Transfer-Encoding: chunked'])
-        self.client.setopt(pycurl.HTTPAUTH, pycurl.CURLAUTH_ANY)
+        self.client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
         self.client.setopt(pycurl.READDATA, f_localfile)
         self.client.setopt(
             pycurl.INFILESIZE_LARGE,
