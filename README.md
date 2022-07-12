@@ -239,7 +239,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | WBB_FACTOR          | 1.0         | (float) Blue Balance Adjustment Factor |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
-| TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time |
+| TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time (night) |
+| TARGET_ADU_DEV_DAY  | 20          | (int) Deviation +/- from target ADU to recalculate exposure time (day) |
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | DETECT_STARS        | true        | (bool) Enable star detection |
 | DETECT_METEORS      | false       | (bool) Enable meteor detection |

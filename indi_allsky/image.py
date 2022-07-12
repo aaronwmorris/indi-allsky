@@ -134,7 +134,6 @@ class ImageWorker(Process):
         self.current_adu_target = 0
         self.hist_adu = []
         self.target_adu = float(self.config['TARGET_ADU'])
-        self.target_adu_dev = float(self.config['TARGET_ADU_DEV'])
 
         self.image_count = 0
 
@@ -1406,21 +1405,31 @@ class ImageWorker(Process):
         logger.info('Brightness average: %0.2f', adu)
 
 
+        # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
+        # Setting a deviation that is too short can cause exposure flapping
         if exposure < 0.001000:
-            # expand the allowed deviation for very short exposures to prevent flashing effect due to exposure flapping
-            target_adu_min = self.target_adu - (self.target_adu_dev * 2.0)
-            target_adu_max = self.target_adu + (self.target_adu_dev * 2.0)
-            current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 1.5)
-            current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 1.5)
+            # DAY
+            adu_dev = float(self.config.get('TARGET_ADU_DEV_DAY', 20))
+
+            target_adu_min = self.target_adu - adu_dev
+            target_adu_max = self.target_adu + adu_dev
+            current_adu_target_min = self.current_adu_target - adu_dev
+            current_adu_target_max = self.current_adu_target + adu_dev
+
             exp_scale_factor = 0.50  # scale exposure calculation
-            history_max_vals = 6  # number of entries to use to calculate average
+            history_max_vals = 6     # number of entries to use to calculate average
         else:
-            target_adu_min = self.target_adu - (self.target_adu_dev * 1.0)
-            target_adu_max = self.target_adu + (self.target_adu_dev * 1.0)
-            current_adu_target_min = self.current_adu_target - (self.target_adu_dev * 1.0)
-            current_adu_target_max = self.current_adu_target + (self.target_adu_dev * 1.0)
+            # NIGHT
+            adu_dev = float(self.config.get('TARGET_ADU_DEV', 10))
+
+            target_adu_min = self.target_adu - adu_dev
+            target_adu_max = self.target_adu + adu_dev
+            current_adu_target_min = self.current_adu_target - adu_dev
+            current_adu_target_max = self.current_adu_target + adu_dev
+
             exp_scale_factor = 1.0  # scale exposure calculation
-            history_max_vals = 6  # number of entries to use to calculate average
+            history_max_vals = 6    # number of entries to use to calculate average
+
 
 
         if not self.target_adu_found:

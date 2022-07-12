@@ -159,6 +159,14 @@ def TARGET_ADU_DEV_validator(form, field):
         raise ValidationError('Target ADU must be less than 100')
 
 
+def TARGET_ADU_DEV_DAY_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Target ADU Deviation must be greater than 0')
+
+    if field.data > 100 :
+        raise ValidationError('Target ADU must be less than 100')
+
+
 def ADU_ROI_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -799,7 +807,8 @@ class IndiAllskyConfigForm(FlaskForm):
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
-    TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation', validators=[DataRequired(), TARGET_ADU_DEV_validator])
+    TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation (night)', validators=[DataRequired(), TARGET_ADU_DEV_validator])
+    TARGET_ADU_DEV_DAY               = IntegerField('Target ADU Deviation (day)', validators=[DataRequired(), TARGET_ADU_DEV_DAY_validator])
     ADU_ROI_X1                       = IntegerField('ADU ROI x1', validators=[ADU_ROI_validator])
     ADU_ROI_Y1                       = IntegerField('ADU ROI y1', validators=[ADU_ROI_validator])
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
