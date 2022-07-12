@@ -320,10 +320,8 @@ class ImageWorker(Process):
 
 
             # white balance
-            #scidata_balanced = self.equalizeHistogram(scidata_cropped)
-            scidata_balanced = self.white_balance_auto_bgr(scidata_cropped)
-            scidata_balanced = self.white_balance_manual_bgr(scidata_cropped)
-            #scidata_balanced = self.white_balance_bgr_2(scidata_cropped)
+            scidata_balanced_auto = self.white_balance_auto_bgr(scidata_cropped)
+            scidata_balanced = self.white_balance_manual_bgr(scidata_balanced_auto)
             #scidata_balanced = scidata_cropped
 
 
