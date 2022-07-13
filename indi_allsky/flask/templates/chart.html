@@ -23,6 +23,7 @@ var json_data = {
         'stars' : [],
         'temp'  : [],
         'exp'   : [],
+        'detection' : [],
         'histogram' : {
             'red'   : [],
             'green' : [],
@@ -254,6 +255,50 @@ function init() {
     });
 
 
+    ctx_detection = $('#detection-chart')[0].getContext('2d');
+    detection_chart = new Chart(ctx_detection, {
+        type: "bar",
+        data: {
+            datasets: [{
+                label: 'Detection',
+                backgroundColor: "rgba(128, 0, 128, 1)",
+                //borderColor: "rgba(92, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMax: 1,
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
 
     ctx_histogram = $('#histogram-chart')[0].getContext('2d');
     histogram_chart = new Chart(ctx_histogram, {
@@ -352,6 +397,7 @@ function drawChart() {
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
+    detection_chart.data.datasets[0].data = json_data['chart_data']['detection'].reverse();
 
     histogram_chart.data.datasets[0].data = json_data['chart_data']['histogram']['red'];
     histogram_chart.data.datasets[1].data = json_data['chart_data']['histogram']['green'];
@@ -363,6 +409,7 @@ function drawChart() {
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
+    detection_chart.update();
     histogram_chart.update();
 }
 
@@ -455,6 +502,12 @@ $( document ).ready(function() {
         <canvas id="temp-chart"></canvas>
     </div>
 
+    <div class="col-sm-6">
+        <canvas id="detection-chart"></canvas>
+    </div>
+</div>
+
+<div class="row bg-dark">
     <div class="col-sm-6">
         <canvas id="histogram-chart"></canvas>
     </div>

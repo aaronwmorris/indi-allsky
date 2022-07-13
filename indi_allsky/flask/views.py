@@ -592,6 +592,7 @@ class JsonChartView(JsonView):
                 func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
                 IndiAllSkyDbImageTable.temp,
                 IndiAllSkyDbImageTable.exposure,
+                IndiAllSkyDbImageTable.detections,
                 (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
             )\
             .join(IndiAllSkyDbCameraTable)\
@@ -608,6 +609,7 @@ class JsonChartView(JsonView):
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
+            'detection': [],
             'histogram' : {
                 'red'   : [],
                 'green' : [],
@@ -652,8 +654,19 @@ class JsonChartView(JsonView):
                 'x' : i.createDate.strftime('%H:%M:%S'),
                 'y' : i.sqm_diff,
             }
-
             chart_data['sqm_d'].append(sqm_d_data)
+
+
+            if i.detections > 0:
+                detection = 1
+            else:
+                detection = 0
+
+            detection_data = {
+                'x' : i.createDate.strftime('%H:%M:%S'),
+                'y' : detection,
+            }
+            chart_data['detection'].append(detection_data)
 
 
 
