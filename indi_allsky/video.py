@@ -20,8 +20,6 @@ from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 
-from .exceptions import InsufficentData
-
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -402,10 +400,7 @@ class VideoWorker(Process):
         kg.finalize(keogram_file)
 
         if night:
-            try:
-                stg.finalize(startrail_file)
-            except InsufficentData as e:
-                logger.error('Error generating star trail: %s', str(e))
+            stg.finalize(startrail_file)
 
 
         processing_elapsed_s = time.time() - processing_start

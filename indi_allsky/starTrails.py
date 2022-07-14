@@ -3,8 +3,6 @@ import numpy
 import time
 import logging
 
-from .exceptions import InsufficentData
-
 logger = logging.getLogger('indi_allsky')
 
 
@@ -24,6 +22,10 @@ class StarTrailGenerator(object):
         self.excluded_images = 0
 
         self.image_processing_elapsed_s = 0
+
+        # this is a default image that is used in case all images are excluded
+        self.placeholder_image = None
+        self.placeholder_adu = 255
 
 
     @property
@@ -72,10 +74,7 @@ class StarTrailGenerator(object):
             self.processImage(filename, image)
 
 
-        try:
-            self.finalize(outfile)
-        except InsufficentData as e:
-            logger.error('Error generating star trail: %s', str(e))
+        self.finalize(outfile)
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -104,6 +103,14 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         m_avg = cv2.mean(image_gray)[0]
+
+
+        if m_avg < self.placeholder_adu:
+            # placeholder should be the image with the lowest calculated ADU
+            self.placeholder_image = image
+            self.placeholder_adu = m_avg
+
+
         if m_avg > self._max_brightness:
             #logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
@@ -130,8 +137,9 @@ class StarTrailGenerator(object):
         logger.warning('Excluded %d images', self.excluded_images)
 
 
-        if self.trail_count < 20:
-            raise InsufficentData('Not enough images found to build star trail')
+        if self.trail_count == 0:
+            logger.warning('Not enough images found to build star trail, using placeholder image')
+            self.trail_image = self.place_holder_image
 
 
         write_img_start = time.time()
