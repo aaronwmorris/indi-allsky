@@ -827,6 +827,19 @@ else
 fi
 
 
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    echo
+    echo
+    echo "The DBUS user session is not defined"
+    echo
+    echo "Now that the dbus package has been installed..."
+    echo "Please logout and log back in and re-run this script to continue"
+    echo
+    exit 1
+fi
+
+
+
 # get list of drivers
 cd $INDI_DRIVER_PATH
 INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
