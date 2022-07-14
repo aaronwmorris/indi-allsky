@@ -6,6 +6,3 @@ class TimeOutException(Exception):
 class CalibrationNotFound(Exception):
     pass
 
-
-class InsufficentData(Exception):
-    pass
