@@ -833,7 +833,7 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     echo "The DBUS user session is not defined"
     echo
     echo "Now that the dbus package has been installed..."
-    echo "Please logout and log back in and re-run this script to continue"
+    echo "Please reboot your system and re-run this script to continue"
     echo
     exit 1
 fi
