@@ -139,7 +139,7 @@ class StarTrailGenerator(object):
 
         if self.trail_count == 0:
             logger.warning('Not enough images found to build star trail, using placeholder image')
-            self.trail_image = self.place_holder_image
+            self.trail_image = self.placeholder_image
 
 
         write_img_start = time.time()
