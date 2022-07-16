@@ -110,6 +110,9 @@ class IndiAllSkyStars(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
         logger.info('Draw box around ROI')
         cv2.rectangle(
             img=sep_data,
@@ -132,7 +135,7 @@ class IndiAllSkyStars(object):
                 img=sep_data,
                 center=center,
                 radius=6,
-                color=(192, 192, 192),
+                color=tuple(color_bgr),
                 #thickness=cv2.FILLED,
                 thickness=1,
             )

@@ -96,6 +96,9 @@ class IndiAllskyDetectLines(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
         ### box drawn in star detection
         #logger.info('Draw box around ROI')
         #cv2.rectangle(
@@ -113,7 +116,7 @@ class IndiAllskyDetectLines(object):
                     img,
                     (x1 + self.x_offset, y1 + self.y_offset),
                     (x2 + self.x_offset, y2 + self.y_offset),
-                    (192, 192, 192),
+                    tuple(color_bgr),
                     3,
                 )
 
