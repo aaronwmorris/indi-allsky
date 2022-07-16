@@ -49,6 +49,8 @@
     "DETECT_STARS" : true,
     "comment_DETECT_METEORS" : "Enable Meteor detection",
     "DETECT_METEORS" : false,
+    "comment_DETECT_DRAW" : "Enable drawing detections on original image",
+    "DETECT_DRAW" : false,
     "comment_SQM_ROI" : "Region of Interest for SQM and Star detection",
     "SQM_ROI" : [],
 

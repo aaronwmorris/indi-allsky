@@ -1,9 +1,6 @@
 import time
-import tempfile
-import shutil
 import cv2
 import numpy
-from pathlib import Path
 import logging
 
 
@@ -29,11 +26,6 @@ class IndiAllskyDetectLines(object):
 
         self.x_offset = 0
         self.y_offset = 0
-
-        if self.config['IMAGE_FOLDER']:
-            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
-        else:
-            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
     def detectLines(self, img):
@@ -95,17 +87,18 @@ class IndiAllskyDetectLines(object):
 
         logger.info('Detected %d lines', len(lines))
 
-        #self._drawLines(img, lines, (x1, y1, x2, y2))
+        self._drawLines(img, lines, (x1, y1, x2, y2))
 
         return lines
 
 
     def _drawLines(self, img, lines, box):
-        line_image = img.copy()
+        if not self.config.get('DETECT_DRAW'):
+            return
 
         logger.info('Draw box around ROI')
         cv2.rectangle(
-            img=line_image,
+            img=img,
             pt1=(box[0], box[1]),
             pt2=(box[2], box[3]),
             color=(128, 128, 128),
@@ -116,27 +109,10 @@ class IndiAllskyDetectLines(object):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(
-                    line_image,
+                    img,
                     (x1 + self.x_offset, y1 + self.y_offset),
                     (x2 + self.x_offset, y2 + self.y_offset),
-                    (255, 0, 0),
+                    (192, 192, 192),
                     3,
                 )
-
-
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.jpg')
-        f_tmpfile.close()
-
-        tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
-
-
-        cv2.imwrite(str(tmpfile_name), line_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
-
-        lines_file = self.image_dir.joinpath('lines.jpg')
-
-        shutil.copy2(f_tmpfile.name, str(lines_file))  # copy file in place
-        lines_file.chmod(0o644)
-
-        tmpfile_name.unlink()  # cleanup
 

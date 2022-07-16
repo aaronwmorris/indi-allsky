@@ -1,6 +1,4 @@
 import time
-import tempfile
-import shutil
 from pathlib import Path
 import cv2
 import numpy
@@ -105,13 +103,14 @@ class IndiAllSkyStars(object):
 
         logger.info('Found %d objects', len(blobs))
 
-        #self.drawCircles(original_data, blobs, (x1, y1, x2, y2))
+        self._drawCircles(original_data, blobs, (x1, y1, x2, y2))
 
         return blobs
 
 
-    def drawCircles(self, original_data, blob_list, box):
-        sep_data = original_data.copy()
+    def _drawCircles(self, sep_data, blob_list, box):
+        if not self.config.get('DETECT_DRAW'):
+            return
 
         logger.info('Draw box around ROI')
         cv2.rectangle(
@@ -135,25 +134,9 @@ class IndiAllSkyStars(object):
                 img=sep_data,
                 center=center,
                 radius=6,
-                color=(0, 0, 255),
+                color=(192, 192, 192),
                 #thickness=cv2.FILLED,
                 thickness=1,
             )
 
-
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.jpg')
-        f_tmpfile.close()
-
-        tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
-
-
-        cv2.imwrite(str(tmpfile_name), sep_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
-
-        sep_file = self.image_dir.joinpath('stars.jpg')
-
-        shutil.copy2(f_tmpfile.name, str(sep_file))  # copy file in place
-        sep_file.chmod(0o644)
-
-        tmpfile_name.unlink()  # cleanup
 
