@@ -110,10 +110,12 @@ class IndiAllSkyStars(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
+        image_height, image_width = sep_data.shape[:2]
+
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
 
-        logger.info('Draw box around ROI')
+        logger.info('Draw box around SQM_ROI')
         cv2.rectangle(
             img=sep_data,
             pt1=(box[0], box[1]),
@@ -121,6 +123,7 @@ class IndiAllSkyStars(object):
             color=(128, 128, 128),
             thickness=1,
         )
+
 
         logger.info('Draw circles around objects')
         for blob in blob_list:
@@ -140,4 +143,26 @@ class IndiAllSkyStars(object):
                 thickness=1,
             )
 
+
+        ### Draw ADU ROI
+        ###  Make sure the box calculation matches sqm.py
+        sqm_roi = self.config.get('ADU_ROI', [])
+
+        try:
+            sqm_x1, sqm_y1, sqm_x2, sqm_y2 = sqm_roi
+        except ValueError:
+            sqm_x1 = int((image_width / 2) - (image_width / 5))
+            sqm_y1 = int((image_height / 2) - (image_height / 5))
+            sqm_x2 = int((image_width / 2) + (image_width / 5))
+            sqm_y2 = int((image_height / 2) + (image_height / 5))
+
+
+        logger.info('Draw box around ADU_ROI')
+        cv2.rectangle(
+            img=sep_data,
+            pt1=(sqm_x1, sqm_y1),
+            pt2=(sqm_x2, sqm_y2),
+            color=(92, 92, 92),
+            thickness=1,
+        )
 
