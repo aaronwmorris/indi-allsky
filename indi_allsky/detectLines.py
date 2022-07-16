@@ -96,14 +96,15 @@ class IndiAllskyDetectLines(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
-        logger.info('Draw box around ROI')
-        cv2.rectangle(
-            img=img,
-            pt1=(box[0], box[1]),
-            pt2=(box[2], box[3]),
-            color=(128, 128, 128),
-            thickness=1,
-        )
+        ### box already drawn in star detection
+        #logger.info('Draw box around ROI')
+        #cv2.rectangle(
+        #    img=img,
+        #    pt1=(box[0], box[1]),
+        #    pt2=(box[2], box[3]),
+        #    color=(128, 128, 128),
+        #    thickness=1,
+        #)
 
 
         for line in lines:
