@@ -76,9 +76,7 @@ class IndiAllSkyStars(object):
             sep_data = roi_data
         else:
             # assume color
-            lab = cv2.cvtColor(roi_data, cv2.COLOR_BGR2LAB)
-            l, a, b = cv2.split(lab)
-            sep_data = l
+            sep_data = cv2.cvtColor(roi_data, cv2.COLOR_BGR2GRAY)
 
 
         sep_start = time.time()
