@@ -244,6 +244,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | DETECT_STARS        | true        | (bool) Enable star detection |
 | DETECT_METEORS      | false       | (bool) Enable meteor detection |
+| DETECT_DRAW         | false       | (bool) Draw detected objects on original image |
 | SQM_ROI             | []          | (array) Region of interest for SQM and Star detection |
 | LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
 | LOCATION_LONGITUDE  |             | (float) Your longitude for astrometric calculations |

@@ -298,17 +298,19 @@ class ImageWorker(Process):
 
 
 
-            # source extraction
+            # line detection
+            if self.night_v.value and self.config.get('DETECT_METEORS'):
+                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
+            else:
+                image_lines = list()
+
+
+            # star detection
             if self.night_v.value and self.config.get('DETECT_STARS', True):
                 blob_stars = self._stars.detectObjects(scidata_cal_flip)
             else:
                 blob_stars = list()
 
-
-            if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
-            else:
-                image_lines = list()
 
 
             # crop
@@ -954,6 +956,9 @@ class ImageWorker(Process):
 
         image_height, image_width = data_bytes.shape[:2]
 
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
@@ -993,7 +998,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), color_bgr)
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -1048,7 +1053,7 @@ class ImageWorker(Process):
             sun.compute(obs)
             sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), color_bgr)
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -1117,7 +1122,7 @@ class ImageWorker(Process):
             data_bytes,
             exp_date_str,
             (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            tuple(color_bgr),
         )
 
 
@@ -1126,7 +1131,7 @@ class ImageWorker(Process):
             data_bytes,
             'Exposure {0:0.6f}'.format(exposure),
             (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+            tuple(color_bgr),
         )
 
 
@@ -1135,7 +1140,7 @@ class ImageWorker(Process):
         #    data_bytes,
         #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
         #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-        #    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+        #    tuple(color_bgr),
         #)
 
 
@@ -1146,7 +1151,7 @@ class ImageWorker(Process):
                 data_bytes,
                 'Gain {0:d}'.format(self.gain_v.value),
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                tuple(color_bgr),
             )
 
 
@@ -1167,7 +1172,7 @@ class ImageWorker(Process):
                 data_bytes,
                 'Temp {0:0.1f}{1:s}'.format(sensortemp, temp_sys),  # hershey fonts do not support degree symbol
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                tuple(color_bgr),
             )
 
 
@@ -1178,7 +1183,7 @@ class ImageWorker(Process):
                 data_bytes,
                 '* Moon {0:0.1f}% *'.format(self.moon_phase),
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                tuple(color_bgr),
             )
 
 
@@ -1190,7 +1195,7 @@ class ImageWorker(Process):
                 data_bytes,
                 '* LUNAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                tuple(color_bgr),
             )
         elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
             # Solar eclipse
@@ -1199,7 +1204,7 @@ class ImageWorker(Process):
                 data_bytes,
                 '* SOLAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                tuple(color_bgr),
             )
 
 
@@ -1214,16 +1219,13 @@ class ImageWorker(Process):
                     data_bytes,
                     extra_text_line,
                     (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    self.config['TEXT_PROPERTIES']['FONT_COLOR'],
+                    tuple(color_bgr),
                 )
 
 
-    def drawText(self, data_bytes, text, pt, color_rgb):
+    def drawText(self, data_bytes, text, pt, color_bgr):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-
-        color_bgr = list(color_rgb)
-        color_bgr.reverse()
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
@@ -1248,10 +1250,7 @@ class ImageWorker(Process):
         )
 
 
-    def drawEdgeCircle(self, data_bytes, pt, color_rgb):
-        color_bgr = list(color_rgb)
-        color_bgr.reverse()
-
+    def drawEdgeCircle(self, data_bytes, pt, color_bgr):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.circle(
                 img=data_bytes,
@@ -1270,11 +1269,8 @@ class ImageWorker(Process):
         )
 
 
-    def drawEdgeLine(self, data_bytes, pt, color_rgb):
+    def drawEdgeLine(self, data_bytes, pt, color_bgr):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-
-        color_bgr = list(color_rgb)
-        color_bgr.reverse()
 
         image_height, image_width = data_bytes.shape[:2]
 

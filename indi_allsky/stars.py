@@ -1,6 +1,4 @@
 import time
-import tempfile
-import shutil
 from pathlib import Path
 import cv2
 import numpy
@@ -78,9 +76,7 @@ class IndiAllSkyStars(object):
             sep_data = roi_data
         else:
             # assume color
-            lab = cv2.cvtColor(roi_data, cv2.COLOR_BGR2LAB)
-            l, a, b = cv2.split(lab)
-            sep_data = l
+            sep_data = cv2.cvtColor(roi_data, cv2.COLOR_BGR2GRAY)
 
 
         sep_start = time.time()
@@ -105,15 +101,21 @@ class IndiAllSkyStars(object):
 
         logger.info('Found %d objects', len(blobs))
 
-        #self.drawCircles(original_data, blobs, (x1, y1, x2, y2))
+        self._drawCircles(original_data, blobs, (x1, y1, x2, y2))
 
         return blobs
 
 
-    def drawCircles(self, original_data, blob_list, box):
-        sep_data = original_data.copy()
+    def _drawCircles(self, sep_data, blob_list, box):
+        if not self.config.get('DETECT_DRAW'):
+            return
 
-        logger.info('Draw box around ROI')
+        image_height, image_width = sep_data.shape[:2]
+
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
+        logger.info('Draw box around SQM_ROI')
         cv2.rectangle(
             img=sep_data,
             pt1=(box[0], box[1]),
@@ -121,6 +123,7 @@ class IndiAllSkyStars(object):
             color=(128, 128, 128),
             thickness=1,
         )
+
 
         logger.info('Draw circles around objects')
         for blob in blob_list:
@@ -135,25 +138,31 @@ class IndiAllSkyStars(object):
                 img=sep_data,
                 center=center,
                 radius=6,
-                color=(0, 0, 255),
+                color=tuple(color_bgr),
                 #thickness=cv2.FILLED,
                 thickness=1,
             )
 
 
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.jpg')
-        f_tmpfile.close()
+        ### Draw ADU ROI
+        ###  Make sure the box calculation matches sqm.py
+        sqm_roi = self.config.get('ADU_ROI', [])
 
-        tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
+        try:
+            sqm_x1, sqm_y1, sqm_x2, sqm_y2 = sqm_roi
+        except ValueError:
+            sqm_x1 = int((image_width / 2) - (image_width / 5))
+            sqm_y1 = int((image_height / 2) - (image_height / 5))
+            sqm_x2 = int((image_width / 2) + (image_width / 5))
+            sqm_y2 = int((image_height / 2) + (image_height / 5))
 
 
-        cv2.imwrite(str(tmpfile_name), sep_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
-
-        sep_file = self.image_dir.joinpath('stars.jpg')
-
-        shutil.copy2(f_tmpfile.name, str(sep_file))  # copy file in place
-        sep_file.chmod(0o644)
-
-        tmpfile_name.unlink()  # cleanup
+        logger.info('Draw box around ADU_ROI')
+        cv2.rectangle(
+            img=sep_data,
+            pt1=(sqm_x1, sqm_y1),
+            pt2=(sqm_x2, sqm_y2),
+            color=(92, 92, 92),
+            thickness=1,
+        )
 
