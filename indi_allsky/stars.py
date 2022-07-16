@@ -110,15 +110,14 @@ class IndiAllSkyStars(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
-        ### Wait for line detection before drawing box
-        #logger.info('Draw box around ROI')
-        #cv2.rectangle(
-        #    img=sep_data,
-        #    pt1=(box[0], box[1]),
-        #    pt2=(box[2], box[3]),
-        #    color=(128, 128, 128),
-        #    thickness=1,
-        #)
+        logger.info('Draw box around ROI')
+        cv2.rectangle(
+            img=sep_data,
+            pt1=(box[0], box[1]),
+            pt2=(box[2], box[3]),
+            color=(128, 128, 128),
+            thickness=1,
+        )
 
         logger.info('Draw circles around objects')
         for blob in blob_list:

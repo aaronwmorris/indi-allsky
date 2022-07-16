@@ -298,17 +298,19 @@ class ImageWorker(Process):
 
 
 
-            # source extraction
+            # line detection
+            if self.night_v.value and self.config.get('DETECT_METEORS'):
+                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
+            else:
+                image_lines = list()
+
+
+            # star detection
             if self.night_v.value and self.config.get('DETECT_STARS', True):
                 blob_stars = self._stars.detectObjects(scidata_cal_flip)
             else:
                 blob_stars = list()
 
-
-            if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
-            else:
-                image_lines = list()
 
 
             # crop
