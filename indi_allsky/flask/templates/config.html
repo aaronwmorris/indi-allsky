@@ -327,6 +327,19 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_DRAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DETECT_DRAW(class='form-check-input') }}
+                <div id="DETECT_DRAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Mark detections on image for calibration</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -1452,6 +1465,7 @@ const checkbox_field_names = [
     'AUTO_WB',
     'DETECT_STARS',
     'DETECT_METEORS',
+    'DETECT_DRAW',
     'TIMELAPSE_ENABLE',
     'DAYTIME_CAPTURE',
     'DAYTIME_TIMELAPSE',
