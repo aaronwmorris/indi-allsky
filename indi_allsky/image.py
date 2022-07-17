@@ -137,11 +137,11 @@ class ImageWorker(Process):
 
         self.image_count = 0
 
-        self._sqm = IndiAllskySqm(self.config)
+        self._sqm = IndiAllskySqm(self.config, self.bin_v)
         self.sqm_value = 0
 
-        self._stars = IndiAllSkyStars(self.config)
-        self._lineDetect = IndiAllskyDetectLines(self.config)
+        self._stars = IndiAllSkyStars(self.config, self.bin_v)
+        self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v)
 
         self._miscDb = miscDb(self.config)
 

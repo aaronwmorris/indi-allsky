@@ -21,8 +21,9 @@ class IndiAllskyDetectLines(object):
     min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
 
-    def __init__(self, config):
+    def __init__(self, config, bin_v):
         self.config = config
+        self.bin_v = bin_v
 
         self.x_offset = 0
         self.y_offset = 0
@@ -34,8 +35,11 @@ class IndiAllskyDetectLines(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1, y1, x2, y2 = sqm_roi
-        except ValueError:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
             logger.warning('Using central ROI for line detection')
             x1 = int((image_width / 2) - (image_width / 3))
             y1 = int((image_height / 2) - (image_height / 3))

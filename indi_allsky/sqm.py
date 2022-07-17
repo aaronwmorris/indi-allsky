@@ -11,8 +11,9 @@ class IndiAllskySqm(object):
     #mask_percentile = 99
 
 
-    def __init__(self, config):
+    def __init__(self, config, bin_v):
         self.config = config
+        self.bin_v = bin_v
 
 
     def calculate(self, img, exposure, gain):
@@ -37,8 +38,11 @@ class IndiAllskySqm(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1, y1, x2, y2 = sqm_roi
-        except ValueError:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
             logger.warning('Using central 20% ROI for SQM calculations')
             x1 = int((image_width / 2) - (image_width / 5))
             y1 = int((image_height / 2) - (image_height / 5))
