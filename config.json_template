@@ -47,6 +47,7 @@
     "ADU_ROI" : [],
     "comment_DETECT_STARS" : "Enable Star detection",
     "DETECT_STARS" : true,
+    "DETECT_STARS_THOLD" : 0.6,
     "comment_DETECT_METEORS" : "Enable Meteor detection",
     "DETECT_METEORS" : false,
     "comment_DETECT_DRAW" : "Enable drawing detections on original image",

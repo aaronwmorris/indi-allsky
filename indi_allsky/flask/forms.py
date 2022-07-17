@@ -183,6 +183,17 @@ def SQM_ROI_validator(form, field):
         raise ValidationError('SQM Region of Interest must be 0 or greater')
 
 
+def DETECT_STARS_THOLD_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0.0:
+        raise ValidationError('Threshold must be greater than 0')
+
+    if field.data > 1.0:
+        raise ValidationError('Threshold must be 1.0 or less')
+
+
 def LOCATION_LATITUDE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -814,6 +825,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
     ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
     DETECT_STARS                     = BooleanField('Star Detection')
+    DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DataRequired(), DETECT_STARS_THOLD_validator])
     DETECT_METEORS                   = BooleanField('Meteor Detection')
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])

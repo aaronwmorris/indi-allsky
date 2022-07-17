@@ -243,6 +243,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | TARGET_ADU_DEV_DAY  | 20          | (int) Deviation +/- from target ADU to recalculate exposure time (day) |
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | DETECT_STARS        | true        | (bool) Enable star detection |
+| DETECT_STARS_THOLD  | 0.6         | (float) Star detection threshold |
 | DETECT_METEORS      | false       | (bool) Enable meteor detection |
 | DETECT_DRAW         | false       | (bool) Draw detected objects on original image |
 | SQM_ROI             | []          | (array) Region of interest for SQM and Star detection |
