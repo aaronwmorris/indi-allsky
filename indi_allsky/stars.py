@@ -10,13 +10,14 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyStars(object):
 
-    _detectionThreshold = 0.55
     _distanceThreshold = 10
 
 
     def __init__(self, config, bin_v):
         self.config = config
         self.bin_v = bin_v
+
+        self._detectionThreshold = self.config.get('DETECT_STARS_THOLD', 0.6)
 
         self.x_offset = 0
         self.y_offset = 0
