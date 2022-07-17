@@ -157,7 +157,7 @@ class IndiAllSkyStars(object):
             adu_y1 = int(adu_roi[1] / self.bin_v.value)
             adu_x2 = int(adu_roi[2] / self.bin_v.value)
             adu_y2 = int(adu_roi[3] / self.bin_v.value)
-        except ValueError:
+        except IndexError:
             adu_x1 = int((image_width / 2) - (image_width / 3))
             adu_y1 = int((image_height / 2) - (image_height / 3))
             adu_x2 = int((image_width / 2) + (image_width / 3))
