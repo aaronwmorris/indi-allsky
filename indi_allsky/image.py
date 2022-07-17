@@ -1353,15 +1353,18 @@ class ImageWorker(Process):
     def calculate_histogram(self, data_bytes, exposure):
         image_height, image_width = data_bytes.shape[:2]
 
-        if self.config['ADU_ROI']:
+
+        adu_roi = self.config.get('ADU_ROI', [])
+
+        try:
             logger.warning('Calculating ADU from RoI')
             # divide the coordinates by binning value
-            x1 = int(self.config['ADU_ROI'][0] / self.bin_v.value)
-            y1 = int(self.config['ADU_ROI'][1] / self.bin_v.value)
-            x2 = int(self.config['ADU_ROI'][2] / self.bin_v.value)
-            y2 = int(self.config['ADU_ROI'][3] / self.bin_v.value)
+            x1 = int(adu_roi[0] / self.bin_v.value)
+            y1 = int(adu_roi[1] / self.bin_v.value)
+            x2 = int(adu_roi[2] / self.bin_v.value)
+            y2 = int(adu_roi[3] / self.bin_v.value)
 
-        else:
+        except IndexError:
             logger.warning('Using central ROI for ADU calculations')
             x1 = int((image_width / 2) - (image_width / 3))
             y1 = int((image_height / 2) - (image_height / 3))

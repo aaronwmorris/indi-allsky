@@ -19,8 +19,6 @@ class IndiAllskySqm(object):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
         roidata = self.getRoi(img)
 
-        #masked = self.maskStars(roidata)
-
         sqm_avg = numpy.mean(roidata)
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
@@ -54,18 +52,4 @@ class IndiAllskySqm(object):
         ]
 
         return roidata
-
-
-    def maskStars(self, img):
-        p = numpy.percentile(img, self.mask_percentile)
-
-        logger.info('SQM %d%% percentile: %d', self.mask_percentile, p)
-
-        # find values less than mask percentile
-        # assuming max values are saturated pixels due to stars
-        masked = img[img < p]
-
-        return masked
-
-
 

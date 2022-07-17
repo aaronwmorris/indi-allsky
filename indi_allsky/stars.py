@@ -145,24 +145,24 @@ class IndiAllSkyStars(object):
 
 
         ### Draw ADU ROI
-        ###  Make sure the box calculation matches sqm.py
-        sqm_roi = self.config.get('ADU_ROI', [])
+        ###  Make sure the box calculation matches image.py
+        adu_roi = self.config.get('ADU_ROI', [])
 
         try:
-            sqm_x1, sqm_y1, sqm_x2, sqm_y2 = sqm_roi
+            adu_x1, adu_y1, adu_x2, adu_y2 = adu_roi
         except ValueError:
-            sqm_x1 = int((image_width / 2) - (image_width / 5))
-            sqm_y1 = int((image_height / 2) - (image_height / 5))
-            sqm_x2 = int((image_width / 2) + (image_width / 5))
-            sqm_y2 = int((image_height / 2) + (image_height / 5))
+            adu_x1 = int((image_width / 2) - (image_width / 3))
+            adu_y1 = int((image_height / 2) - (image_height / 3))
+            adu_x2 = int((image_width / 2) + (image_width / 3))
+            adu_y2 = int((image_height / 2) + (image_height / 3))
 
 
         logger.info('Draw box around ADU_ROI')
         cv2.rectangle(
             img=sep_data,
-            pt1=(sqm_x1, sqm_y1),
-            pt2=(sqm_x2, sqm_y2),
-            color=(92, 92, 92),
+            pt1=(adu_x1, adu_y1),
+            pt2=(adu_x2, adu_y2),
+            color=(128, 128, 128),
             thickness=1,
         )
 
