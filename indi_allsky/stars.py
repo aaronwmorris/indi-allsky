@@ -14,8 +14,9 @@ class IndiAllSkyStars(object):
     _distanceThreshold = 10
 
 
-    def __init__(self, config):
+    def __init__(self, config, bin_v):
         self.config = config
+        self.bin_v = bin_v
 
         self.x_offset = 0
         self.y_offset = 0
@@ -53,8 +54,11 @@ class IndiAllSkyStars(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1, y1, x2, y2 = sqm_roi
-        except ValueError:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
             logger.warning('Using central ROI for blob calculations')
             x1 = int((image_width / 2) - (image_width / 3))
             y1 = int((image_height / 2) - (image_height / 3))
@@ -145,24 +149,27 @@ class IndiAllSkyStars(object):
 
 
         ### Draw ADU ROI
-        ###  Make sure the box calculation matches sqm.py
-        sqm_roi = self.config.get('ADU_ROI', [])
+        ###  Make sure the box calculation matches image.py
+        adu_roi = self.config.get('ADU_ROI', [])
 
         try:
-            sqm_x1, sqm_y1, sqm_x2, sqm_y2 = sqm_roi
-        except ValueError:
-            sqm_x1 = int((image_width / 2) - (image_width / 5))
-            sqm_y1 = int((image_height / 2) - (image_height / 5))
-            sqm_x2 = int((image_width / 2) + (image_width / 5))
-            sqm_y2 = int((image_height / 2) + (image_height / 5))
+            adu_x1 = int(adu_roi[0] / self.bin_v.value)
+            adu_y1 = int(adu_roi[1] / self.bin_v.value)
+            adu_x2 = int(adu_roi[2] / self.bin_v.value)
+            adu_y2 = int(adu_roi[3] / self.bin_v.value)
+        except IndexError:
+            adu_x1 = int((image_width / 2) - (image_width / 3))
+            adu_y1 = int((image_height / 2) - (image_height / 3))
+            adu_x2 = int((image_width / 2) + (image_width / 3))
+            adu_y2 = int((image_height / 2) + (image_height / 3))
 
 
         logger.info('Draw box around ADU_ROI')
         cv2.rectangle(
             img=sep_data,
-            pt1=(sqm_x1, sqm_y1),
-            pt2=(sqm_x2, sqm_y2),
-            color=(92, 92, 92),
+            pt1=(adu_x1, adu_y1),
+            pt2=(adu_x2, adu_y2),
+            color=(128, 128, 128),
             thickness=1,
         )
 

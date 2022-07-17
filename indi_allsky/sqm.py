@@ -11,15 +11,14 @@ class IndiAllskySqm(object):
     #mask_percentile = 99
 
 
-    def __init__(self, config):
+    def __init__(self, config, bin_v):
         self.config = config
+        self.bin_v = bin_v
 
 
     def calculate(self, img, exposure, gain):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
         roidata = self.getRoi(img)
-
-        #masked = self.maskStars(roidata)
 
         sqm_avg = numpy.mean(roidata)
         logger.info('Raw SQM average: %0.2f', sqm_avg)
@@ -39,8 +38,11 @@ class IndiAllskySqm(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1, y1, x2, y2 = sqm_roi
-        except ValueError:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
             logger.warning('Using central 20% ROI for SQM calculations')
             x1 = int((image_width / 2) - (image_width / 5))
             y1 = int((image_height / 2) - (image_height / 5))
@@ -54,18 +56,4 @@ class IndiAllskySqm(object):
         ]
 
         return roidata
-
-
-    def maskStars(self, img):
-        p = numpy.percentile(img, self.mask_percentile)
-
-        logger.info('SQM %d%% percentile: %d', self.mask_percentile, p)
-
-        # find values less than mask percentile
-        # assuming max values are saturated pixels due to stars
-        masked = img[img < p]
-
-        return masked
-
-
 
