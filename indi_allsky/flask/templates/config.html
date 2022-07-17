@@ -316,6 +316,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0.6 is a good value for color images, 0.55 for mono</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DETECT_METEORS.label }}
         </div>
         <div class="col-sm-2">
@@ -1396,6 +1407,7 @@ const field_names = [
     'SQM_ROI_Y1',
     'SQM_ROI_X2',
     'SQM_ROI_Y2',
+    'DETECT_STARS_THOLD',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
     'NIGHT_SUN_ALT_DEG',
