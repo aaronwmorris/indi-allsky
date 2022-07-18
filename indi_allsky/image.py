@@ -138,11 +138,12 @@ class ImageWorker(Process):
 
         self.image_count = 0
 
-        self._sqm = IndiAllskySqm(self.config, self.bin_v)
+        self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self.sqm_value = 0
 
-        self._stars = IndiAllSkyStars(self.config, self.bin_v)
-        self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v)
+        self._detection_mask = self._load_detection_mask()
+        self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
+        self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
 
         self._miscDb = miscDb(self.config)
 
@@ -1860,4 +1861,37 @@ class ImageWorker(Process):
         )
 
         self._adu_mask = mask
+
+
+    def _load_detection_mask(self):
+        detect_mask = self.config.get('DETECT_MASK', '')
+
+        if not detect_mask:
+            logger.warning('No detection mask defined')
+            return
+
+
+        detect_mask_p = Path(detect_mask)
+
+        try:
+            if not detect_mask_p.exists():
+                logger.error('%s does not exist', detect_mask_p)
+                return
+
+
+            if not detect_mask_p.is_file():
+                logger.error('%s is not a file', detect_mask_p)
+                return
+
+        except PermissionError as e:
+            logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+        if isinstance(mask_data, type(None)):
+            logger.error('%s is not a valid image', detect_mask_p)
+            return
+
+
+        return mask_data
 

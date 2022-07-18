@@ -469,8 +469,8 @@ def DETECT_MASK_validator(form, field):
         raise ValidationError(str(e))
 
 
-    image_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
-    if isinstance(image_data, type(None)):
+    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+    if isinstance(mask_data, type(None)):
         raise ValidationError('File is not a valid image')
 
 
