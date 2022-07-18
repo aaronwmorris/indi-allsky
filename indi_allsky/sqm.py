@@ -1,4 +1,4 @@
-#import cv2
+import cv2
 import numpy
 import logging
 
@@ -11,29 +11,38 @@ class IndiAllskySqm(object):
     #mask_percentile = 99
 
 
-    def __init__(self, config, bin_v):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
+
+        self._mask = mask
 
 
     def calculate(self, img, exposure, gain):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
-        roidata = self.getRoi(img)
 
-        sqm_avg = numpy.mean(roidata)
-        logger.info('Raw SQM average: %0.2f', sqm_avg)
+        if isinstance(self._mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateMask(img)
+
+        sqm_avg = cv2.mean(src=img, mask=self._mask)
+        logger.info('Raw SQM average: %0.2f', sqm_avg[0])
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10) + 1))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg[0] * (((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10) + 1))
 
         logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
 
         return weighted_sqm_avg
 
 
+    def _generateMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
 
-    def getRoi(self, img):
         image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
         sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -49,11 +58,14 @@ class IndiAllskySqm(object):
             x2 = int((image_width / 2) + (image_width / 5))
             y2 = int((image_height / 2) + (image_height / 5))
 
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
 
-        roidata = img[
-            y1:y2,
-            x1:x2,
-        ]
-
-        return roidata
+        self._mask = mask
 
