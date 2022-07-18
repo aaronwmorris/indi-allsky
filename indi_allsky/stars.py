@@ -124,7 +124,7 @@ class IndiAllSkyStars(object):
         self._mask = mask
 
 
-    def _drawCircles(self, sep_data, blob_list, box):
+    def _drawCircles(self, sep_data, blob_list):
         if not self.config.get('DETECT_DRAW'):
             return
 
