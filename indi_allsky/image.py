@@ -134,6 +134,7 @@ class ImageWorker(Process):
         self.current_adu_target = 0
         self.hist_adu = []
         self.target_adu = float(self.config['TARGET_ADU'])
+        self._adu_mask = None
 
         self.image_count = 0
 
@@ -1351,44 +1352,22 @@ class ImageWorker(Process):
 
 
     def calculate_histogram(self, data_bytes, exposure):
-        image_height, image_width = data_bytes.shape[:2]
+        if isinstance(self._adu_mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateAduMask(data_bytes)
 
 
-        adu_roi = self.config.get('ADU_ROI', [])
-
-        try:
-            logger.warning('Calculating ADU from RoI')
-            # divide the coordinates by binning value
-            x1 = int(adu_roi[0] / self.bin_v.value)
-            y1 = int(adu_roi[1] / self.bin_v.value)
-            x2 = int(adu_roi[2] / self.bin_v.value)
-            y2 = int(adu_roi[3] / self.bin_v.value)
-
-        except IndexError:
-            logger.warning('Using central ROI for ADU calculations')
-            x1 = int((image_width / 2) - (image_width / 3))
-            y1 = int((image_height / 2) - (image_height / 3))
-            x2 = int((image_width / 2) + (image_width / 3))
-            y2 = int((image_height / 2) + (image_height / 3))
-
-
-        scidata = data_bytes[
-            y1:y2,
-            x1:x2,
-        ]
-
-
-        if len(scidata.shape) == 2:
+        if len(data_bytes.shape) == 2:
             # mono
-            m_avg = cv2.mean(scidata)[0]
+            m_avg = cv2.mean(src=data_bytes, mask=self._adu_mask)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
 
             adu = m_avg
         else:
-            scidata_mono = cv2.cvtColor(scidata, cv2.COLOR_BGR2GRAY)
+            scidata_mono = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2GRAY)
 
-            m_avg = cv2.mean(scidata_mono)[0]
+            m_avg = cv2.mean(src=scidata_mono, mask=self._adu_mask)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
 
@@ -1847,4 +1826,38 @@ class ImageWorker(Process):
     def calculateSqm(self, data, exposure):
         sqm_value = self._sqm.calculate(data, exposure, self.gain_v.value)
         return sqm_value
+
+
+    def _generateAduMask(self, img):
+        logger.info('Generating mask based on ADU_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        adu_roi = self.config.get('ADU_ROI', [])
+
+        try:
+            x1 = int(adu_roi[0] / self.bin_v.value)
+            y1 = int(adu_roi[1] / self.bin_v.value)
+            x2 = int(adu_roi[2] / self.bin_v.value)
+            y2 = int(adu_roi[3] / self.bin_v.value)
+        except IndexError:
+            logger.warning('Using central ROI for ADU calculations')
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
+
+        self._adu_mask = mask
 
