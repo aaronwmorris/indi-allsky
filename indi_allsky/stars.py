@@ -17,7 +17,7 @@ class IndiAllSkyStars(object):
         self.config = config
         self.bin_v = bin_v
 
-        self._mask = mask
+        self._sqm_mask = mask
 
         self._detectionThreshold = self.config.get('DETECT_STARS_THOLD', 0.6)
 
@@ -49,11 +49,11 @@ class IndiAllSkyStars(object):
 
 
     def detectObjects(self, original_data):
-        if isinstance(self._mask, type(None)):
+        if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateMask(original_data)
+            self._generateSqmMask(original_data)
 
-        masked_img = cv2.bitwise_and(original_data, original_data, mask=self._mask)
+        masked_img = cv2.bitwise_and(original_data, original_data, mask=self._sqm_mask)
 
         if len(original_data.shape) == 2:
             # gray scale or bayered
@@ -90,7 +90,7 @@ class IndiAllSkyStars(object):
         return blobs
 
 
-    def _generateMask(self, img):
+    def _generateSqmMask(self, img):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -106,7 +106,7 @@ class IndiAllSkyStars(object):
             x2 = int(sqm_roi[2] / self.bin_v.value)
             y2 = int(sqm_roi[3] / self.bin_v.value)
         except IndexError:
-            logger.warning('Using central ROI for blob calculations')
+            logger.warning('Using central ROI for star detection')
             x1 = int((image_width / 2) - (image_width / 3))
             y1 = int((image_height / 2) - (image_height / 3))
             x2 = int((image_width / 2) + (image_width / 3))
@@ -121,7 +121,7 @@ class IndiAllSkyStars(object):
             thickness=cv2.FILLED,
         )
 
-        self._mask = mask
+        self._sqm_mask = mask
 
 
     def _drawCircles(self, sep_data, blob_list):

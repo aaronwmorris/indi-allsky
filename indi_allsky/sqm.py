@@ -8,24 +8,21 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskySqm(object):
 
-    #mask_percentile = 99
-
-
     def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
 
-        self._mask = mask
+        self._sqm_mask = mask
 
 
     def calculate(self, img, exposure, gain):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
 
-        if isinstance(self._mask, type(None)):
+        if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateMask(img)
+            self._generateSqmMask(img)
 
-        sqm_avg = cv2.mean(src=img, mask=self._mask)[0]
+        sqm_avg = cv2.mean(src=img, mask=self._sqm_mask)[0]
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
@@ -36,7 +33,7 @@ class IndiAllskySqm(object):
         return weighted_sqm_avg
 
 
-    def _generateMask(self, img):
+    def _generateSqmMask(self, img):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -67,5 +64,5 @@ class IndiAllskySqm(object):
             thickness=cv2.FILLED,
         )
 
-        self._mask = mask
+        self._sqm_mask = mask
 

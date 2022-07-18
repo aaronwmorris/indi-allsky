@@ -28,15 +28,15 @@ class IndiAllskyDetectLines(object):
         self.config = config
         self.bin_v = bin_v
 
-        self._mask = mask
+        self._sqm_mask = mask
 
 
     def detectLines(self, original_img):
-        if isinstance(self._mask, type(None)):
+        if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateMask(original_img)
+            self._generateSqmMask(original_img)
 
-        masked_img = cv2.bitwise_and(original_img, original_img, mask=self._mask)
+        masked_img = cv2.bitwise_and(original_img, original_img, mask=self._sqm_mask)
 
 
         if len(original_img.shape) == 2:
@@ -80,7 +80,7 @@ class IndiAllskyDetectLines(object):
         return lines
 
 
-    def _generateMask(self, img):
+    def _generateSqmMask(self, img):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -112,7 +112,7 @@ class IndiAllskyDetectLines(object):
         )
 
         # mask needs to be blurred so that we do not detect it as an edge
-        self._mask = cv2.blur(src=mask, ksize=(self.mask_blur_kernel_size, self.mask_blur_kernel_size))
+        self._sqm_mask = cv2.blur(src=mask, ksize=(self.mask_blur_kernel_size, self.mask_blur_kernel_size))
 
 
     def _drawLines(self, img, lines):
