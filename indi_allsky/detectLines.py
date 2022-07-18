@@ -21,7 +21,7 @@ class IndiAllskyDetectLines(object):
     min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
 
-    mask_blur_kernel_size = 7
+    mask_blur_kernel_size = 75
 
 
     def __init__(self, config, bin_v, mask=None):
@@ -29,6 +29,7 @@ class IndiAllskyDetectLines(object):
         self.bin_v = bin_v
 
         self._sqm_mask = mask
+        self._sqm_gradient_mask = None
 
 
     def detectLines(self, original_img):
@@ -36,7 +37,13 @@ class IndiAllskyDetectLines(object):
             # This only needs to be done once if a mask is not provided
             self._generateSqmMask(original_img)
 
-        masked_img = cv2.bitwise_and(original_img, original_img, mask=self._sqm_mask)
+        if isinstance(self._sqm_gradient_mask, type(None)):
+            # This only needs to be done once
+            self._generateSqmGradientMask(original_img)
+
+
+        # apply the gradient to the image
+        masked_img = original_img * self._sqm_gradient_mask
 
 
         if len(original_img.shape) == 2:
@@ -48,7 +55,7 @@ class IndiAllskyDetectLines(object):
 
         lines_start = time.time()
 
-        blur_gray = cv2.GaussianBlur(img_gray, (self.blur_kernel_size, self.blur_kernel_size), 0)
+        blur_gray = cv2.GaussianBlur(img_gray, (self.blur_kernel_size, self.blur_kernel_size), cv2.BORDER_DEFAULT)
 
 
         edges = cv2.Canny(blur_gray, self.canny_low_threshold, self.canny_high_threshold)
@@ -112,7 +119,21 @@ class IndiAllskyDetectLines(object):
         )
 
         # mask needs to be blurred so that we do not detect it as an edge
-        self._sqm_mask = cv2.blur(src=mask, ksize=(self.mask_blur_kernel_size, self.mask_blur_kernel_size))
+        self._sqm_mask = mask
+
+
+    def _generateSqmGradientMask(self, img):
+        # blur the mask to prevent mask edges from being detected as lines
+        blur_mask = cv2.blur(self._sqm_mask, (self.mask_blur_kernel_size, self.mask_blur_kernel_size), cv2.BORDER_DEFAULT)
+
+        if len(img.shape) == 2:
+            # mono
+            mask = blur_mask
+        else:
+            # color
+            mask = cv2.cvtColor(blur_mask, cv2.COLOR_GRAY2BGR)
+
+        self._sqm_gradient_mask = mask / 255
 
 
     def _drawLines(self, img, lines):
