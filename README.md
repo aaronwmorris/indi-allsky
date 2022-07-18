@@ -245,6 +245,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | DETECT_STARS        | true        | (bool) Enable star detection |
 | DETECT_STARS_THOLD  | 0.6         | (float) Star detection threshold |
 | DETECT_METEORS      | false       | (bool) Enable meteor detection |
+| DETECT_MASK         |             | (str) PNG file to use for detection mask |
 | DETECT_DRAW         | false       | (bool) Draw detected objects on original image |
 | SQM_ROI             | []          | (array) Region of interest for SQM and Star detection |
 | LOCATION_LATITUDE   |             | (float) Your latitude for astrometric calculations |
