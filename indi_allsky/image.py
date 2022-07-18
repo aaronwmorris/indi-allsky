@@ -1887,7 +1887,7 @@ class ImageWorker(Process):
             logger.error(str(e))
             return
 
-        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)
         if isinstance(mask_data, type(None)):
             logger.error('%s is not a valid image', detect_mask_p)
             return
