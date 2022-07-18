@@ -21,44 +21,28 @@ class IndiAllskyDetectLines(object):
     min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
 
-    def __init__(self, config, bin_v):
+    mask_blur_kernel_size = 7
+
+
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
 
-        self.x_offset = 0
-        self.y_offset = 0
+        self._mask = mask
 
 
-    def detectLines(self, img):
-        image_height, image_width = img.shape[:2]
+    def detectLines(self, original_img):
+        if isinstance(self._mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateMask(original_img)
 
-        sqm_roi = self.config.get('SQM_ROI', [])
-
-        try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
-        except IndexError:
-            logger.warning('Using central ROI for line detection')
-            x1 = int((image_width / 2) - (image_width / 3))
-            y1 = int((image_height / 2) - (image_height / 3))
-            x2 = int((image_width / 2) + (image_width / 3))
-            y2 = int((image_height / 2) + (image_height / 3))
+        masked_img = cv2.bitwise_and(original_img, original_img, mask=self._mask)
 
 
-        self.x_offset = x1
-        self.y_offset = y1
-
-        roi_img = img[
-            y1:y2,
-            x1:x2,
-        ]
-
-        if len(img.shape) == 2:
-            img_gray = roi_img
+        if len(original_img.shape) == 2:
+            img_gray = masked_img
         else:
-            img_gray = cv2.cvtColor(roi_img, cv2.COLOR_BGR2GRAY)
+            img_gray = cv2.cvtColor(masked_img, cv2.COLOR_BGR2GRAY)
 
 
 
@@ -91,35 +75,60 @@ class IndiAllskyDetectLines(object):
 
         logger.info('Detected %d lines', len(lines))
 
-        self._drawLines(img, lines, (x1, y1, x2, y2))
+        self._drawLines(original_img, lines)
 
         return lines
 
 
-    def _drawLines(self, img, lines, box):
+    def _generateMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        sqm_roi = self.config.get('SQM_ROI', [])
+
+        try:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
+            logger.warning('Using central ROI for blob calculations')
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
+
+        # mask needs to be blurred so that we do not detect it as an edge
+        self._mask = cv2.blur(src=mask, ksize=(self.mask_blur_kernel_size, self.mask_blur_kernel_size))
+
+
+    def _drawLines(self, img, lines):
         if not self.config.get('DETECT_DRAW'):
             return
 
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
 
-        ### box drawn in star detection
-        #logger.info('Draw box around ROI')
-        #cv2.rectangle(
-        #    img=img,
-        #    pt1=(box[0], box[1]),
-        #    pt2=(box[2], box[3]),
-        #    color=(128, 128, 128),
-        #    thickness=1,
-        #)
-
 
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(
                     img,
-                    (x1 + self.x_offset, y1 + self.y_offset),
-                    (x2 + self.x_offset, y2 + self.y_offset),
+                    (x1, y1),
+                    (x2, y2),
                     tuple(color_bgr),
                     3,
                 )
