@@ -22,7 +22,16 @@ class IndiAllskySqm(object):
             # This only needs to be done once if a mask is not provided
             self._generateSqmMask(img)
 
-        sqm_avg = cv2.mean(src=img, mask=self._sqm_mask)[0]
+
+        if len(img.shape) == 2:
+            # mono
+            img_gray = img
+        else:
+            # color
+            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
