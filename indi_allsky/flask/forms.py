@@ -449,10 +449,6 @@ def DETECT_MASK_validator(form, field):
     if not re.search(folder_regex, field.data):
         raise ValidationError('Invalid file name')
 
-    png_regex = r'\.png$'
-    if not re.search(png_regex, field.data, re.IGNORECASE):
-        raise ValidationError('Mask must be a PNG')
-
 
     detect_mask_p = Path(field.data)
 
@@ -469,7 +465,7 @@ def DETECT_MASK_validator(form, field):
         raise ValidationError(str(e))
 
 
-    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)
     if isinstance(mask_data, type(None)):
         raise ValidationError('File is not a valid image')
 
