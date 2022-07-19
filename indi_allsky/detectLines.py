@@ -43,7 +43,7 @@ class IndiAllskyDetectLines(object):
 
 
         # apply the gradient to the image
-        masked_img = original_img * self._sqm_gradient_mask
+        masked_img = (original_img * self._sqm_gradient_mask).astype(numpy.uint8)
 
 
         if len(original_img.shape) == 2:
