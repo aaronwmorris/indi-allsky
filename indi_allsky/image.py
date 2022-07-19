@@ -1668,7 +1668,7 @@ class ImageWorker(Process):
 
         div_factor = int((2 ** image_bit_depth) / 255)
 
-        return (data_bytes_16 / div_factor).astype('uint8')
+        return (data_bytes_16 / div_factor).astype(numpy.uint8)
 
 
     def _export_raw_image(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
