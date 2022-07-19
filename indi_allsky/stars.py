@@ -13,14 +13,13 @@ class IndiAllSkyStars(object):
     _distanceThreshold = 10
 
 
-    def __init__(self, config, bin_v):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
 
-        self._detectionThreshold = self.config.get('DETECT_STARS_THOLD', 0.6)
+        self._sqm_mask = mask
 
-        self.x_offset = 0
-        self.y_offset = 0
+        self._detectionThreshold = self.config.get('DETECT_STARS_THOLD', 0.6)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -50,44 +49,24 @@ class IndiAllSkyStars(object):
 
 
     def detectObjects(self, original_data):
-        image_height, image_width = original_data.shape[:2]
+        if isinstance(self._sqm_mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateSqmMask(original_data)
 
-        sqm_roi = self.config.get('SQM_ROI', [])
-
-        try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
-        except IndexError:
-            logger.warning('Using central ROI for blob calculations')
-            x1 = int((image_width / 2) - (image_width / 3))
-            y1 = int((image_height / 2) - (image_height / 3))
-            x2 = int((image_width / 2) + (image_width / 3))
-            y2 = int((image_height / 2) + (image_height / 3))
-
-
-        self.x_offset = x1
-        self.y_offset = y1
-
-        roi_data = original_data[
-            y1:y2,
-            x1:x2,
-        ]
-
+        masked_img = cv2.bitwise_and(original_data, original_data, mask=self._sqm_mask)
 
         if len(original_data.shape) == 2:
             # gray scale or bayered
-            sep_data = roi_data
+            grey_img = masked_img
         else:
             # assume color
-            sep_data = cv2.cvtColor(roi_data, cv2.COLOR_BGR2GRAY)
+            grey_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2GRAY)
 
 
         sep_start = time.time()
 
 
-        result = cv2.matchTemplate(sep_data, self.star_template, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(grey_img, self.star_template, cv2.TM_CCOEFF_NORMED)
         result_filter = numpy.where(result >= self._detectionThreshold)
 
         blobs = list()
@@ -106,12 +85,46 @@ class IndiAllSkyStars(object):
 
         logger.info('Found %d objects', len(blobs))
 
-        self._drawCircles(original_data, blobs, (x1, y1, x2, y2))
+        self._drawCircles(original_data, blobs)
 
         return blobs
 
 
-    def _drawCircles(self, sep_data, blob_list, box):
+    def _generateSqmMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        sqm_roi = self.config.get('SQM_ROI', [])
+
+        try:
+            x1 = int(sqm_roi[0] / self.bin_v.value)
+            y1 = int(sqm_roi[1] / self.bin_v.value)
+            x2 = int(sqm_roi[2] / self.bin_v.value)
+            y2 = int(sqm_roi[3] / self.bin_v.value)
+        except IndexError:
+            logger.warning('Using central ROI for star detection')
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
+
+        self._sqm_mask = mask
+
+
+    def _drawCircles(self, sep_data, blob_list):
         if not self.config.get('DETECT_DRAW'):
             return
 
@@ -120,23 +133,13 @@ class IndiAllSkyStars(object):
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
 
-        logger.info('Draw box around SQM_ROI')
-        cv2.rectangle(
-            img=sep_data,
-            pt1=(box[0], box[1]),
-            pt2=(box[2], box[3]),
-            color=(128, 128, 128),
-            thickness=1,
-        )
-
-
         logger.info('Draw circles around objects')
         for blob in blob_list:
             x, y = blob
 
             center = (
-                int(x + (self.star_template_w / 2)) + self.x_offset + 1,
-                int(y + (self.star_template_h / 2)) + self.y_offset + 1,
+                int(x + (self.star_template_w / 2)) + 1,
+                int(y + (self.star_template_h / 2)) + 1,
             )
 
             cv2.circle(

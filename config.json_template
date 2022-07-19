@@ -50,6 +50,7 @@
     "DETECT_STARS_THOLD" : 0.6,
     "comment_DETECT_METEORS" : "Enable Meteor detection",
     "DETECT_METEORS" : false,
+    "DETECT_MASK" : "",
     "comment_DETECT_DRAW" : "Enable drawing detections on original image",
     "DETECT_DRAW" : false,
     "comment_SQM_ROI" : "Region of Interest for SQM and Star detection",

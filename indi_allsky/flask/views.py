@@ -772,6 +772,7 @@ class ConfigView(FormView):
             'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
             'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
             'DETECT_METEORS'                 : self.indi_allsky_config.get('DETECT_METEORS', False),
+            'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'DETECT_DRAW'                    : self.indi_allsky_config.get('DETECT_DRAW', False),
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
@@ -1035,6 +1036,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
         self.indi_allsky_config['DETECT_STARS_THOLD']                   = float(request.json['DETECT_STARS_THOLD'])
         self.indi_allsky_config['DETECT_METEORS']                       = bool(request.json['DETECT_METEORS'])
+        self.indi_allsky_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
         self.indi_allsky_config['DETECT_DRAW']                          = bool(request.json['DETECT_DRAW'])
         self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
         self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])

@@ -4,6 +4,7 @@ import re
 import json
 import time
 from datetime import datetime
+import cv2
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -440,6 +441,35 @@ def IMAGE_EXTRA_TEXT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def DETECT_MASK_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    detect_mask_p = Path(field.data)
+
+    try:
+        if not detect_mask_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not detect_mask_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(detect_mask_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)
+    if isinstance(mask_data, type(None)):
+        raise ValidationError('File is not a valid image')
+
+
 def IMAGE_SCALE_validator(form, field):
     if field.data < 1:
         raise ValidationError('Image Scaling must be 1 or greater')
@@ -827,6 +857,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_STARS                     = BooleanField('Star Detection')
     DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DataRequired(), DETECT_STARS_THOLD_validator])
     DETECT_METEORS                   = BooleanField('Meteor Detection')
+    DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])

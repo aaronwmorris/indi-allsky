@@ -340,6 +340,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DETECT_MASK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.DETECT_MASK(class='form-control bg-secondary') }}
+            <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Image mask file for detection area.  PNG or JPEG</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DETECT_DRAW.label }}
         </div>
         <div class="col-sm-2">
@@ -1408,6 +1421,7 @@ const field_names = [
     'SQM_ROI_X2',
     'SQM_ROI_Y2',
     'DETECT_STARS_THOLD',
+    'DETECT_MASK',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
     'NIGHT_SUN_ALT_DEG',

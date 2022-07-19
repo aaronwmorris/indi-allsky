@@ -1,4 +1,4 @@
-#import cv2
+import cv2
 import numpy
 import logging
 
@@ -8,19 +8,30 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskySqm(object):
 
-    #mask_percentile = 99
-
-
-    def __init__(self, config, bin_v):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
+
+        self._sqm_mask = mask
 
 
     def calculate(self, img, exposure, gain):
         logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
-        roidata = self.getRoi(img)
 
-        sqm_avg = numpy.mean(roidata)
+        if isinstance(self._sqm_mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateSqmMask(img)
+
+
+        if len(img.shape) == 2:
+            # mono
+            img_gray = img
+        else:
+            # color
+            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
         logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
@@ -31,9 +42,13 @@ class IndiAllskySqm(object):
         return weighted_sqm_avg
 
 
+    def _generateSqmMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
 
-    def getRoi(self, img):
         image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
         sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -49,11 +64,14 @@ class IndiAllskySqm(object):
             x2 = int((image_width / 2) + (image_width / 5))
             y2 = int((image_height / 2) + (image_height / 5))
 
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
 
-        roidata = img[
-            y1:y2,
-            x1:x2,
-        ]
-
-        return roidata
+        self._sqm_mask = mask
 
