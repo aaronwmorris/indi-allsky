@@ -449,6 +449,9 @@ def DETECT_MASK_validator(form, field):
     if not re.search(folder_regex, field.data):
         raise ValidationError('Invalid file name')
 
+    ext_regex = r'\.png$'
+    if not re.search(ext_regex, field.data, re.IGNORECASE):
+        raise ValidationError('Mask file must be a PNG')
 
     detect_mask_p = Path(field.data)
 
