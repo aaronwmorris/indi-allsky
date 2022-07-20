@@ -119,6 +119,8 @@ This is a special night time operating mode intended to reduce gain when the moo
 ## Keograms
 Keograms are a visual representation of the entire timelapse video in a single frame.  Every image is rotated so that the vertical aligns to the meridian and then the center-vertical column is extraced from each frame and compiled into the keogram.  The rotation parameter in the config is KEOGRAM_ANGLE
 
+https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation
+
 Below you can see perodic clouds passed over between 8-9pm and again between 4-5am.  If you look closely enough, you can see the Pleiades star cluster and the Orion constellation as it passed through the meridian in this example keogram.
 
 ![](./content/keogram_example.jpg)
