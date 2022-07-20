@@ -52,8 +52,6 @@ class MaskBlur(object):
         #    thickness=cv2.FILLED,
         #)
 
-        #cv2.bitwise_and(image, image, mask=mask)
-
         blur_mask = cv2.blur(mask, (75, 75), cv2.BORDER_DEFAULT)
 
         color_mask = cv2.cvtColor(blur_mask, cv2.COLOR_GRAY2BGR)
@@ -64,6 +62,8 @@ class MaskBlur(object):
 
         masked_image = (image * gradient_mask).astype(numpy.uint8)
         #masked_image = cv2.multiply(image, gradient_mask)
+        #masked_image = cv2.bitwise_and(image, image, mask=mask)
+
 
         elapsed_s = time.time() - start
         logger.warning('Time: %0.4fs', elapsed_s)
