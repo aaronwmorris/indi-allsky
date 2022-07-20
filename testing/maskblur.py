@@ -33,6 +33,10 @@ class MaskBlur(object):
         #mask = cv2.imread(str(mask_file_p), cv2.IMREAD_COLOR)
 
 
+        ### set all compression artifacts to black
+        #mask[mask < 255] = 0  # did not quite work
+
+
         start = time.time()
 
         #image_height, image_width = image.shape[:2]
@@ -43,7 +47,7 @@ class MaskBlur(object):
         #y1 = int((image_height / 2) - (image_height / 3))
         #x2 = int((image_width / 2) + (image_width / 3))
         #y2 = int((image_height / 2) + (image_height / 3))
-        #
+
         #cv2.rectangle(
         #    img=mask,
         #    pt1=(x1, y1),

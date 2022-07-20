@@ -1893,5 +1893,9 @@ class ImageWorker(Process):
             return
 
 
+        ### any compression artifacts will be set to black
+        #mask_data[mask_data < 255] = 0  # did not quite work
+
+
         return mask_data
 
