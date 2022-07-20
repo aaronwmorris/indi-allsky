@@ -133,6 +133,9 @@ Star trail images stack the stars from each frame to show their progression acro
 ## Star Detection
 indi-allsky utilizes OpenCV pattern matching to detect and count the number of stars in the view.  Star counts are a good objective measurement of sky conditions.
 
+Star and meteor detection support using detection masks to customize your Region of Interest if there are obstructions in your view.
+https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks
+
 ## Meteor Detection
 Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able to perform basic line detection to detect meteor and fireball trails in the view.  Airplane and satellite trails are also detected using this method.  Images are tagged with an asterisk in the image viewer if a trail has been detected.
 
