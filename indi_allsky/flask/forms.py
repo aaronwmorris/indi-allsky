@@ -5,6 +5,7 @@ import json
 import time
 from datetime import datetime
 import cv2
+import numpy
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -471,6 +472,9 @@ def DETECT_MASK_validator(form, field):
     mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)
     if isinstance(mask_data, type(None)):
         raise ValidationError('File is not a valid image')
+
+    if numpy.count_nonzero(mask_data == 255) == 0:
+        raise ValidationError('Mask image is all black')
 
 
 def IMAGE_SCALE_validator(form, field):
