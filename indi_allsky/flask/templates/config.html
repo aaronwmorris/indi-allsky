@@ -282,7 +282,10 @@
             {{ form_config.ADU_ROI_Y1(class='form-control bg-secondary') }}
             <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x1, y1</div>
+        <div class="col-sm-6">
+            <div>x1, y1</div>
+            <div>* Not used if Detection Mask is defined *</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -311,7 +314,9 @@
                 <div id="DETECT_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">SQM Region of Interest used for detection area</div>
+        <div class="col-sm-8">
+            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -335,7 +340,9 @@
                 <div id="DETECT_METEORS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">
+            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -379,7 +386,10 @@
             {{ form_config.SQM_ROI_Y1(class='form-control bg-secondary') }}
             <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x1, y1</div>
+        <div class="col-sm-6">
+            <div>x1, y1</div>
+            <div>* Not used if Detection Mask is defined *</div>
+        </div>
     </div>
 
     <div class="form-group row">
