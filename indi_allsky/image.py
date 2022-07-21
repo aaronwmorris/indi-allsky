@@ -134,7 +134,6 @@ class ImageWorker(Process):
         self.current_adu_target = 0
         self.hist_adu = []
         self.target_adu = float(self.config['TARGET_ADU'])
-        self._adu_mask = None
 
         self.image_count = 0
 
@@ -142,6 +141,8 @@ class ImageWorker(Process):
         self.sqm_value = 0
 
         self._detection_mask = self._load_detection_mask()
+        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
+
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
 
