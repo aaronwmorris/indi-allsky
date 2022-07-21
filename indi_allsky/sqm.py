@@ -12,7 +12,9 @@ class IndiAllskySqm(object):
         self.config = config
         self.bin_v = bin_v
 
-        self._sqm_mask = mask
+        # both masks will be combined
+        self._external_mask = mask
+        self._sqm_mask = None
 
 
     def calculate(self, img, exposure, gain):
@@ -72,6 +74,13 @@ class IndiAllskySqm(object):
             color=(255),  # mono
             thickness=cv2.FILLED,
         )
+
+
+        # combine masks in case there is overlapping regions
+        if not isinstance(self._external_mask, type(None)):
+            self._sqm_mask = cv2.bitwise_and(mask, mask, mask=self._external_mask)
+            return
+
 
         self._sqm_mask = mask
 
