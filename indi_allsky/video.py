@@ -67,7 +67,7 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, video_q, upload_q):
+    def __init__(self, idx, config, video_q, upload_q, bin_v):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
@@ -76,6 +76,7 @@ class VideoWorker(Process):
         self.config = config
         self.video_q = video_q
         self.upload_q = upload_q
+        self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)
 
@@ -364,7 +365,7 @@ class VideoWorker(Process):
             )
 
 
-        stg = StarTrailGenerator(self.config)
+        stg = StarTrailGenerator(self.config, self.bin_v)
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']

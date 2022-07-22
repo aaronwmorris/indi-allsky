@@ -27,6 +27,8 @@ class StarTrailGenerator(object):
 
         self.image_processing_elapsed_s = 0
 
+        self._adu_mask = None
+
 
     @property
     def max_brightness(self):
@@ -90,6 +92,7 @@ class StarTrailGenerator(object):
     def processImage(self, filename, image):
         image_processing_start = time.time()
 
+
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
 
@@ -102,13 +105,18 @@ class StarTrailGenerator(object):
                 self.trail_image = numpy.zeros((image_height, image_width, 3), dtype=numpy.uint8)
 
 
+        if isinstance(self._adu_mask, type(None)):
+            self._generateAduMask(image)
+
+
         # need grayscale image for mask generation
         if len(image.shape) == 2:
             image_gray = image.copy()
         else:
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        m_avg = cv2.mean(image_gray)[0]
+
+        m_avg = cv2.mean(image_gray, mask=self._adu_mask)[0]
         if m_avg > self._max_brightness:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
@@ -156,6 +164,32 @@ class StarTrailGenerator(object):
                 file_list.append(item)
             elif item.is_dir():
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+
+
+    def _generateAduMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        logger.warning('Using central ROI for ADU mask')
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
+
+        self._adu_mask = mask
 
 
 class InsufficentData(Exception):
