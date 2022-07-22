@@ -492,6 +492,7 @@ class IndiAllSky(object):
             self.config,
             self.video_q,
             self.upload_q,
+            self.bin_v,
         )
         self.video_worker.start()
 

@@ -9,8 +9,9 @@ logger = logging.getLogger('indi_allsky')
 
 class StarTrailGenerator(object):
 
-    def __init__(self, config):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
+        self.bin_v = bin_v
 
         self._max_brightness = 50
         self._mask_threshold = 190
@@ -22,6 +23,8 @@ class StarTrailGenerator(object):
         self.excluded_images = 0
 
         self.image_processing_elapsed_s = 0
+
+        self._adu_mask = mask
 
         # this is a default image that is used in case all images are excluded
         self.placeholder_image = None
@@ -96,13 +99,18 @@ class StarTrailGenerator(object):
                 self.trail_image = numpy.zeros((image_height, image_width, 3), dtype=numpy.uint8)
 
 
+        if isinstance(self._adu_mask, type(None)):
+            self._generateAduMask(image)
+
+
         # need grayscale image for mask generation
         if len(image.shape) == 2:
             image_gray = image.copy()
         else:
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        m_avg = cv2.mean(image_gray)[0]
+
+        m_avg = cv2.mean(image_gray, mask=self._adu_mask)[0]
 
 
         if m_avg < self.placeholder_adu:
@@ -156,4 +164,40 @@ class StarTrailGenerator(object):
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+
+
+    def _generateAduMask(self, img):
+        logger.info('Generating mask based on SQM_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        ### Not going to use the user defined ADU_ROI for now
+        #adu_roi = self.config.get('ADU_ROI', [])
+
+        #try:
+        #    x1 = int(adu_roi[0] / self.bin_v.value)
+        #    y1 = int(adu_roi[1] / self.bin_v.value)
+        #    x2 = int(adu_roi[2] / self.bin_v.value)
+        #    y2 = int(adu_roi[3] / self.bin_v.value)
+        #except IndexError:
+
+        logger.warning('Using central ROI for ADU mask')
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
+
+        self._adu_mask = mask
 

@@ -67,7 +67,7 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, video_q, upload_q):
+    def __init__(self, idx, config, video_q, upload_q, bin_v):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
@@ -76,10 +76,14 @@ class VideoWorker(Process):
         self.config = config
         self.video_q = video_q
         self.upload_q = upload_q
+        self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)
 
         self.f_lock = None
+
+        self._detection_mask = self._load_detection_mask()
+        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
 
     def run(self):
@@ -364,7 +368,7 @@ class VideoWorker(Process):
             )
 
 
-        stg = StarTrailGenerator(self.config)
+        stg = StarTrailGenerator(self.config, self.bin_v, mask=self._adu_mask)
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
@@ -697,6 +701,43 @@ class VideoWorker(Process):
             if item.is_dir():
                 dir_list.append(item)
                 self.getFolderFolders(item, dir_list)  # recursion
+
+
+    def _load_detection_mask(self):
+        detect_mask = self.config.get('DETECT_MASK', '')
+
+        if not detect_mask:
+            logger.warning('No detection mask defined')
+            return
+
+
+        detect_mask_p = Path(detect_mask)
+
+        try:
+            if not detect_mask_p.exists():
+                logger.error('%s does not exist', detect_mask_p)
+                return
+
+
+            if not detect_mask_p.is_file():
+                logger.error('%s is not a file', detect_mask_p)
+                return
+
+        except PermissionError as e:
+            logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
+        if isinstance(mask_data, type(None)):
+            logger.error('%s is not a valid image', detect_mask_p)
+            return
+
+
+        ### any compression artifacts will be set to black
+        #mask_data[mask_data < 255] = 0  # did not quite work
+
+
+        return mask_data
 
 
     def _getLock(self):
