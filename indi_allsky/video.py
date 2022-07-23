@@ -83,7 +83,6 @@ class VideoWorker(Process):
         self.f_lock = None
 
         self._detection_mask = self._load_detection_mask()
-        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
 
     def run(self):
@@ -368,7 +367,7 @@ class VideoWorker(Process):
             )
 
 
-        stg = StarTrailGenerator(self.config, self.bin_v, mask=self._adu_mask)
+        stg = StarTrailGenerator(self.config, self.bin_v, mask=self._detection_mask)
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
