@@ -27,7 +27,7 @@ class StarTrailGenerator(object):
 
         self.image_processing_elapsed_s = 0
 
-        self._adu_mask = None
+        self._sqm_mask = None
 
 
     @property
@@ -105,8 +105,8 @@ class StarTrailGenerator(object):
                 self.trail_image = numpy.zeros((image_height, image_width, 3), dtype=numpy.uint8)
 
 
-        if isinstance(self._adu_mask, type(None)):
-            self._generateAduMask(image)
+        if isinstance(self._sqm_mask, type(None)):
+            self._generateSqmMask(image)
 
 
         # need grayscale image for mask generation
@@ -116,7 +116,7 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-        m_avg = cv2.mean(image_gray, mask=self._adu_mask)[0]
+        m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
         if m_avg > self._max_brightness:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
@@ -166,7 +166,7 @@ class StarTrailGenerator(object):
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def _generateAduMask(self, img):
+    def _generateSqmMask(self, img):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -189,7 +189,7 @@ class StarTrailGenerator(object):
             thickness=cv2.FILLED,
         )
 
-        self._adu_mask = mask
+        self._sqm_mask = mask
 
 
 class InsufficentData(Exception):
