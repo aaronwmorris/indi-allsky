@@ -5,6 +5,21 @@
 {% block head %}
 <meta charset="UTF-8"/>
 <style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 canvas {
     width: 100%;
     height: auto;
@@ -191,17 +206,20 @@ $( document ).ready(function() {
         </div>
 
     </div>
+
     <div class="form-group row">
         <div class="col-sm-9"></div>
-
         <div class="col-sm-1">
             {{ form_viewer.FILTER_DETECTIONS.label }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
                 <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_filter"></div>
         </div>
     </div>
 
@@ -296,6 +314,8 @@ $("#HOUR_SELECT").on("change", function() {
         fields[key].error.css({'display' : 'none'});
     });
 
+    $("#loader_filter").css({'display' : 'block'});
+
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
@@ -318,6 +338,7 @@ $("#HOUR_SELECT").on("change", function() {
 
             img.src = fields['IMG_SELECT'].input.val();
 
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -327,7 +348,6 @@ $("#HOUR_SELECT").on("change", function() {
             });
         },
     });
-
 });
 
 
@@ -338,6 +358,8 @@ $("#DAY_SELECT").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
@@ -365,6 +387,7 @@ $("#DAY_SELECT").on("change", function() {
 
             img.src = fields['IMG_SELECT'].input.val();
 
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -374,7 +397,6 @@ $("#DAY_SELECT").on("change", function() {
             });
         },
     });
-
 });
 
 
@@ -384,6 +406,8 @@ $("#MONTH_SELECT").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
@@ -415,6 +439,7 @@ $("#MONTH_SELECT").on("change", function() {
 
             img.src = fields['IMG_SELECT'].input.val();
 
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -424,7 +449,6 @@ $("#MONTH_SELECT").on("change", function() {
             });
         },
     });
-
 });
 
 $("#YEAR_SELECT").on("change", function() {
@@ -433,6 +457,8 @@ $("#YEAR_SELECT").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
@@ -468,6 +494,7 @@ $("#YEAR_SELECT").on("change", function() {
 
             img.src = fields['IMG_SELECT'].input.val();
 
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -477,7 +504,6 @@ $("#YEAR_SELECT").on("change", function() {
             });
         },
     });
-
 });
 
 $("#FILTER_DETECTIONS").on("change", function() {
@@ -486,6 +512,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
@@ -524,6 +552,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
 
             img.src = fields['IMG_SELECT'].input.val();
 
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -533,7 +562,6 @@ $("#FILTER_DETECTIONS").on("change", function() {
             });
         },
     });
-
 });
 
 
