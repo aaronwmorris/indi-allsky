@@ -244,7 +244,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -333,7 +335,9 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -423,7 +427,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -514,7 +520,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -604,7 +612,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -703,7 +713,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
@@ -790,7 +802,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \
+        libopencv-dev \
         pkg-config \
+        rustc \
         ffmpeg \
         gifsicle \
         jq \
