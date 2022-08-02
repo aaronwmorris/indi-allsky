@@ -26,3 +26,4 @@ Flask-WTF
 cryptography
 dbus-python
 paho-mqtt
+setuptools-rust
