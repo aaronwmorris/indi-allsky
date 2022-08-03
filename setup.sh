@@ -222,6 +222,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -247,6 +249,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -316,6 +319,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -340,6 +345,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -409,6 +415,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -434,6 +442,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -505,6 +514,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -529,6 +540,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -598,6 +610,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -623,6 +637,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -701,6 +716,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3.9-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -726,6 +743,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
@@ -791,6 +809,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         python3.8-venv \
         python3-pip \
         virtualenv \
+        cmake \
+        gfortran \
         whiptail \
         rsyslog \
         cron \
@@ -817,6 +837,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libglib2.0-dev \
         libffi-dev \
         libopencv-dev \
+        libopenblas-dev \
         pkg-config \
         rustc \
         ffmpeg \
