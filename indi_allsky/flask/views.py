@@ -2289,7 +2289,7 @@ class JsonFocusView(JsonView):
         json_image_b64 = base64.b64encode(json_image_data[1])
 
         json_data = dict()
-        json_data['image_b64'] = json_image_b64
+        json_data['image_b64'] = json_image_b64.decode('utf-8')
 
         return jsonify(json_data)
 
