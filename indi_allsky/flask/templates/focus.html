@@ -14,7 +14,7 @@ canvas {
 var json_data = {
     'image_b64' : null,
 };
-var refreshInterval = 1000;
+var refreshInterval = 5000;
 var fullscreen = false;  //initial state
 
 function init() {
@@ -158,6 +158,19 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<form id="form_focus" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
+
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>

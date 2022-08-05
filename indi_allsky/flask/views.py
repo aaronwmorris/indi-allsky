@@ -64,6 +64,7 @@ from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskyTimelapseGeneratorForm
+from .forms import IndiAllskyFocusForm
 
 
 bp = Blueprint(
@@ -2260,6 +2261,9 @@ class FocusView(TemplateView):
 
     def get_context(self):
         context = super(FocusView, self).get_context()
+
+        context['form_focus'] = IndiAllskyFocusForm()
+
         return context
 
 
@@ -2272,7 +2276,14 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
-        #zoom = int(request.json.get('ZOOM', '100'))
+        #form_focus = IndiAllskyFocusForm()
+
+        #if not form_focus.validate():
+        #    form_errors = form_focus.errors  # this must be a property
+        #    return jsonify(form_errors), 400
+
+
+        #zoom = int(request.json.get('ZOOM_SELECT', 1))
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))

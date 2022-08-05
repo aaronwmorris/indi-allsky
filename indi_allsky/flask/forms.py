@@ -1505,3 +1505,14 @@ class IndiAllskySetDateTimeForm(FlaskForm):
 
     NEW_DATETIME = DateTimeLocalField('New Datetime', render_kw={'step' : '1'}, format='%Y-%m-%dT%H:%M:%S', validators=[DataRequired()])
 
+
+
+class IndiAllskyFocusForm(FlaskForm):
+    ZOOM_SELECT_choices = (
+        (1, '100%'),
+        (2, '200%'),
+        (3, '300%'),
+    )
+
+    ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
+
