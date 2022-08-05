@@ -12,7 +12,7 @@ canvas {
 </style>
 <script type="text/javascript">
 var json_data = {
-    'image_b64' : Null,
+    'image_b64' : null,
 };
 var refreshInterval = 1000;
 var fullscreen = false;  //initial state
@@ -25,7 +25,7 @@ function init() {
 async function loop() {
     console.log('Starting loop');
 
-    while(json_data['image_list'].length == 0) {
+    while(json_data['image_b64'] == null) {
         await sleep(100);
     }
 
@@ -37,6 +37,10 @@ async function loop() {
 
 function showImage(image_b64) {
     console.log('Showing image');
+
+    if (image_b64 == null) {
+        return;
+    }
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
@@ -60,7 +64,7 @@ function showImage(image_b64) {
 
 
 function loadNextImage() {
-    console.log('Loading next images');
+    console.log('Loading next image');
     loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
