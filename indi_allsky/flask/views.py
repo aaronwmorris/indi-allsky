@@ -6,6 +6,7 @@ import io
 import json
 import time
 import math
+import base64
 from pathlib import Path
 from collections import OrderedDict
 import socket
@@ -2256,6 +2257,39 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 
+class AjaxFocusAssistView(BaseView):
+    methods = ['POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxFocusAssistView, self).__init__(**kwargs)
+
+        #self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        #zoom = int(request.json.get('ZOOM', '100'))
+
+        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+
+        image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+        if isinstance(image_data, type(None)):
+            app.logger.error('Unable to read %s', latest_image_p)
+            return jsonify({}), 400
+
+
+        # returns tuple: rc, data
+        json_image_data = cv2.imencode('.jpg', image_data)
+
+        json_image_b64 = base64.b64encode(json_image_data[1])
+
+        json_data = dict()
+        json_data['image'] = json_image_b64
+
+        return jsonify(json_data)
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2286,6 +2320,7 @@ bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_vi
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp.add_url_rule('/ajax/focusassist', view_func=AjaxFocusAssistView.as_view('ajax_focusassist_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
