@@ -2256,13 +2256,17 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message), 400
 
 
+class FocusView(TemplateView):
 
-class AjaxFocusAssistView(BaseView):
-    methods = ['POST']
+    def get_context(self):
+        context = super(FocusView, self).get_context()
+        return context
 
+
+class JsonFocusView(JsonView):
 
     def __init__(self, **kwargs):
-        super(AjaxFocusAssistView, self).__init__(**kwargs)
+        super(JsonFocusView, self).__init__(**kwargs)
 
         #self.camera_id = self.getLatestCamera()
 
@@ -2285,7 +2289,7 @@ class AjaxFocusAssistView(BaseView):
         json_image_b64 = base64.b64encode(json_image_data[1])
 
         json_data = dict()
-        json_data['image'] = json_image_b64
+        json_data['image_b64'] = json_image_b64
 
         return jsonify(json_data)
 
@@ -2310,6 +2314,8 @@ bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
+bp.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
+bp.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 
 bp.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
 bp.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))
@@ -2320,7 +2326,6 @@ bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_vi
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
-bp.add_url_rule('/ajax/focusassist', view_func=AjaxFocusAssistView.as_view('ajax_focusassist_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))

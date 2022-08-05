@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Focus{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var json_data = {
+    'image_b64' : Null,
+};
+var refreshInterval = 1000;
+var fullscreen = false;  //initial state
+
+function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['image_list'].length == 0) {
+        await sleep(100);
+    }
+
+    showImage(json_data['image_b64']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(image_b64) {
+    console.log('Showing image');
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = "data:image/jpg;base64," + image_b64;
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+    };
+}
+
+
+function loadNextImage() {
+    console.log('Loading next images');
+    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {}, function() {});
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(json_data['image_b64']);
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-12">
+        <canvas id="canvas"/>
+    </div>
+</div>
+{% endblock %}
