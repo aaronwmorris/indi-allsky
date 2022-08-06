@@ -732,7 +732,7 @@ class IndiAllSky(object):
                     if self.focus_mode:
                         # Start frame immediately in focus mode
                         logger.warning('*** FOCUS MODE ENABLED ***')
-                        next_frame_time = now
+                        next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
                     elif self.night:
                         next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
                     else:

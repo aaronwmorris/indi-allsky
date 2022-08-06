@@ -764,6 +764,7 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
+            'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
@@ -1029,6 +1030,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['EXPOSURE_PERIOD_DAY']                  = float(request.json['EXPOSURE_PERIOD_DAY'])
         self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])
+        self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
