@@ -960,16 +960,26 @@ class ImageWorker(Process):
             return
 
 
-        # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
-            logger.warning('Focus mode enabled, Image labels disabled')
-            return
-
-
         image_height, image_width = data_bytes.shape[:2]
 
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, Image labels disabled')
+
+            # indicate focus mode is enabled in indi-allsky
+            self.drawText(
+                data_bytes,
+                '*',
+                (image_width - 20, image_height - 10),
+                tuple(color_bgr),
+            )
+
+            return
+
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
