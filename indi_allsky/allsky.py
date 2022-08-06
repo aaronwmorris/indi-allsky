@@ -83,8 +83,6 @@ class IndiAllSky(object):
         self.video_worker = None
         self.video_worker_idx = 0
 
-        self.save_images = True
-
         self.upload_q = Queue()
         self.upload_worker = None
         self.upload_worker_idx = 0
@@ -462,7 +460,6 @@ class IndiAllSky(object):
             self.sensortemp_v,
             self.night_v,
             self.moonmode_v,
-            save_images=self.save_images,
         )
         self.image_worker.start()
 
