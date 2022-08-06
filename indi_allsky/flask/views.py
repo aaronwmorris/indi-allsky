@@ -85,6 +85,9 @@ bp = Blueprint(
 
 
 class BaseView(View):
+
+    _release = 4.2
+
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
 
@@ -1433,6 +1436,8 @@ class AjaxVideoViewerView(BaseView):
 class SystemInfoView(TemplateView):
     def get_context(self):
         context = super(SystemInfoView, self).get_context()
+
+        context['release'] = self._release
 
         context['uptime_str'] = self.getUptime()
 
