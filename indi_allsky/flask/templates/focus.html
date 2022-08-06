@@ -17,6 +17,7 @@ var json_data = {
 };
 var refreshInterval = 2000;
 var zoom = 2;  // 2 is no zoom
+var blur_score = 0.0
 var fullscreen = false;  //initial state
 
 function init() {
@@ -61,6 +62,21 @@ function showImage(image_b64) {
 
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+
+        context.textAlign = 'left';
+        context.lineWidth = 10;
+        var maxWidth = 200;
+        var x = canvas.width-10-maxWidth;
+        var y = canvas.height-150;
+
+        context.font = '20px serif';
+
+        var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+100, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(blur_score_text, x-175, y+100, maxWidth);
     };
 }
 
@@ -88,6 +104,7 @@ function loadJS(url, data, onDone, onError) {
             json_data = data;
 
             // update score
+            blur_score = json_data['blur_score'].toFixed(2);
             $("#SCORE_FIELD").val(json_data['blur_score'].toFixed(2));
         },
         error: function(data){
