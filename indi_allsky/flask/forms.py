@@ -1525,14 +1525,15 @@ class IndiAllskyFocusForm(FlaskForm):
         (5, 'High'),
     )
     REFRESH_SELECT_choices = (
-        (1, '1s'),
         (2, '2s'),
         (3, '3s'),
         (4, '4s'),
         (5, '5s'),
+        (10, '10s'),
+        (15, '15s'),
     )
 
 
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
-    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[4][0], validators=[])
+    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[3][0], validators=[])
 
