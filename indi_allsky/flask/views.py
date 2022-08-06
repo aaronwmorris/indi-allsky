@@ -2276,6 +2276,8 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
+        json_data = dict()
+
         #form_focus = IndiAllskyFocusForm()
 
         #if not form_focus.validate():
@@ -2294,6 +2296,17 @@ class JsonFocusView(JsonView):
             return jsonify({}), 400
 
 
+        vl_start = time.time()
+
+        ### determine variance of laplacian
+        blur_score = cv2.Laplacian(image_data, cv2.CV_64F).var()
+
+        vl_elapsed_s = time.time() - vl_start
+        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
+
+        json_data['blur_score'] = blur_score
+
+
         image_height, image_width = image_data.shape[:2]
 
         x1 = int((image_width / 2) - (image_width / zoom))
@@ -2308,10 +2321,8 @@ class JsonFocusView(JsonView):
 
         # returns tuple: rc, data
         json_image_data = cv2.imencode('.jpg', image_roi)
-
         json_image_b64 = base64.b64encode(json_image_data[1])
 
-        json_data = dict()
         json_data['image_b64'] = json_image_b64.decode('utf-8')
 
         return jsonify(json_data)
