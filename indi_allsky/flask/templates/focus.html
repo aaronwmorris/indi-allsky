@@ -75,9 +75,9 @@ function showImage(image_b64) {
 
         var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
         context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+85, maxWidth);
+        context.strokeText(blur_score_text, x-175, y+75, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(blur_score_text, x-175, y+85, maxWidth);
+        context.fillText(blur_score_text, x-175, y+75, maxWidth);
 
         var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
         context.strokeStyle = 'black';
