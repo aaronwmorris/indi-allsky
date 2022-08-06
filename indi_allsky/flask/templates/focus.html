@@ -13,7 +13,7 @@ canvas {
 <script type="text/javascript">
 var json_data = {
     'image_b64' : null,
-    'zoom' : 2,
+    'blur_score' : 0.0,
 };
 var refreshInterval = 5000;
 var fullscreen = false;  //initial state
@@ -84,7 +84,10 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(data){
-            json_data = data
+            json_data = data;
+
+            // update score
+            $("#SCORE_FIELD").val(json_data['blur_score'].toFixed(2));
         },
         error: function(data){
             onError(data.status);
@@ -166,6 +169,13 @@ $( document ).ready(function() {
         </div>
         <div class="col-sm-2">
             {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-5"></div>
+        <div class="col-sm-1">
+            {{ form_focus.SCORE_FIELD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_focus.SCORE_FIELD(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>

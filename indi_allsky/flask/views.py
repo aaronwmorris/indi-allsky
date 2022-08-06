@@ -2300,11 +2300,10 @@ class JsonFocusView(JsonView):
 
         ### determine variance of laplacian
         blur_score = cv2.Laplacian(image_data, cv2.CV_64F).var()
+        json_data['blur_score'] = float(blur_score)
 
         vl_elapsed_s = time.time() - vl_start
         app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
-
-        json_data['blur_score'] = blur_score
 
 
         image_height, image_width = image_data.shape[:2]

@@ -1516,4 +1516,5 @@ class IndiAllskyFocusForm(FlaskForm):
     )
 
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
+    SCORE_FIELD       = StringField('Score', render_kw={'readonly' : True}, default='', validators=[])
 
