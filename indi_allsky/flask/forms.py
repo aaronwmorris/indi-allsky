@@ -1521,9 +1521,9 @@ class IndiAllskyFocusForm(FlaskForm):
     ZOOM_SELECT_choices = (
         (2, 'Off'),
         (3, 'Low'),
-        (4, 'Medium'),
-        (5, 'High'),
-        (8, 'Extreme'),
+        (5, 'Medium'),
+        (8, 'High'),
+        (12, 'Extreme'),
     )
     REFRESH_SELECT_choices = (
         (2, '2s'),
