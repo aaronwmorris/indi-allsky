@@ -2315,7 +2315,7 @@ class JsonFocusView(JsonView):
         ]
 
         # returns tuple: rc, data
-        json_image_data = cv2.imencode('.jpg', image_roi)
+        json_image_data = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 75])
         json_image_b64 = base64.b64encode(json_image_data[1])
 
         json_data['image_b64'] = json_image_b64.decode('utf-8')
