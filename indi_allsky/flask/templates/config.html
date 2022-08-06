@@ -177,6 +177,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FOCUS_MODE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FOCUS_MODE(class='form-check-input') }}
+                <div id="FOCUS_MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Focus mode removes any pause between exposures so they are taken as quickly as possible</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.AUTO_WB.label }}
         </div>
         <div class="col-sm-2">
@@ -1498,6 +1513,7 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'FOCUS_MODE',
     'AUTO_WB',
     'DETECT_STARS',
     'DETECT_METEORS',

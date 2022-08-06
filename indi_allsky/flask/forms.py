@@ -849,6 +849,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
+    FOCUS_MODE                       = BooleanField('Focus Mode')
     AUTO_WB                          = BooleanField('Auto White Balance')
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
