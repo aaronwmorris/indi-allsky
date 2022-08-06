@@ -128,7 +128,11 @@ class ImageWorker(Process):
         self.moon_phase = 0.0
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
+
         self.save_images = save_images
+        if self.config.get('FOCUS_MODE', False):
+            # disable saving images in focus mode
+            self.save_images = False
 
         self.target_adu_found = False
         self.current_adu_target = 0
