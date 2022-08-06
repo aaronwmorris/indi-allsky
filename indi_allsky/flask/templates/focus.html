@@ -105,7 +105,6 @@ function loadJS(url, data, onDone, onError) {
 
             // update score
             blur_score = json_data['blur_score'].toFixed(2);
-            $("#SCORE_FIELD").val(json_data['blur_score'].toFixed(2));
         },
         error: function(data){
             onError(data.status);
@@ -193,13 +192,6 @@ $( document ).ready(function() {
         </div>
         <div class="col-sm-2">
             {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
-        </div>
-        <div class="col-sm-2"></div>
-        <div class="col-sm-1">
-            {{ form_focus.SCORE_FIELD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_focus.SCORE_FIELD(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>
