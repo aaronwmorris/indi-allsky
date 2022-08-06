@@ -973,8 +973,8 @@ class ImageWorker(Process):
             # indicate focus mode is enabled in indi-allsky
             self.drawText(
                 data_bytes,
-                '*',
-                (image_width - 20, image_height - 10),
+                exp_date.strftime('%H:%M:%S'),
+                (image_width - 125, image_height - 10),
                 tuple(color_bgr),
             )
 
