@@ -2279,13 +2279,7 @@ class JsonFocusView(JsonView):
 
     def dispatch_request(self):
         json_data = dict()
-
-        #form_focus = IndiAllskyFocusForm()
-
-        #if not form_focus.validate():
-        #    form_errors = form_focus.errors  # this must be a property
-        #    return jsonify(form_errors), 400
-
+        json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
 
         zoom = int(request.args.get('zoom', 2))
 

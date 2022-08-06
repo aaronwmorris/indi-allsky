@@ -14,6 +14,7 @@ canvas {
 var json_data = {
     'image_b64'  : null,
     'blur_score' : 0.0,
+    'focus_mode' : false,
 };
 var refreshInterval = 2000;
 var zoom = 2;  // 2 is no zoom
@@ -77,6 +78,12 @@ function showImage(image_b64) {
         context.strokeText(blur_score_text, x-175, y+100, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(blur_score_text, x-175, y+100, maxWidth);
+
+        var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+130, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(blur_score_text, x-175, y+130, maxWidth);
     };
 }
 
