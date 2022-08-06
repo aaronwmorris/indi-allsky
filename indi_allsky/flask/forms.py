@@ -1515,7 +1515,16 @@ class IndiAllskyFocusForm(FlaskForm):
         (4, 'Medium'),
         (5, 'High'),
     )
+    REFRESH_SELECT_choices = (
+        (1, '1s'),
+        (2, '2s'),
+        (3, '3s'),
+        (4, '4s'),
+        (5, '5s'),
+    )
+
 
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
+    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[1][0], validators=[])
     SCORE_FIELD       = StringField('Score', render_kw={'readonly' : True}, default='', validators=[])
 

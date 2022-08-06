@@ -12,10 +12,11 @@ canvas {
 </style>
 <script type="text/javascript">
 var json_data = {
-    'image_b64' : null,
+    'image_b64'  : null,
     'blur_score' : 0.0,
 };
-var refreshInterval = 5000;
+var refreshInterval = 2000;
+var zoom = 2;  // 2 is no zoom
 var fullscreen = false;  //initial state
 
 function init() {
@@ -66,7 +67,7 @@ function showImage(image_b64) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {'zoom' : $("#ZOOM_SELECT").val()}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {'zoom' : zoom}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -165,12 +166,18 @@ $( document ).ready(function() {
 <form id="form_focus" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
+            {{ form_focus.REFRESH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_focus.REFRESH_SELECT(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-1">
             {{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
         </div>
-        <div class="col-sm-5"></div>
+        <div class="col-sm-2"></div>
         <div class="col-sm-1">
             {{ form_focus.SCORE_FIELD.label(class='col-form-label') }}
         </div>
@@ -187,4 +194,18 @@ $( document ).ready(function() {
         <canvas id="canvas"/>
     </div>
 </div>
+
+<script>
+$("#REFRESH_SELECT").on("change", function() {
+    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
+    console.log('Changing refresh interval: ' + refreshInterval);
+});
+
+$("#ZOOM_SELECT").on("change", function() {
+    zoom = $('#ZOOM_SELECT').val();
+    console.log('Changing zoom: ' + zoom);
+});
+</script>
+
+
 {% endblock %}
