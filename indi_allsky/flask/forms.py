@@ -1509,9 +1509,10 @@ class IndiAllskySetDateTimeForm(FlaskForm):
 
 class IndiAllskyFocusForm(FlaskForm):
     ZOOM_SELECT_choices = (
-        (1, '100%'),
-        (2, '200%'),
-        (3, '300%'),
+        (2, 'Off'),
+        (3, 'Low'),
+        (4, 'Medium'),
+        (5, 'High'),
     )
 
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])

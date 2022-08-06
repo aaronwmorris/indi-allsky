@@ -2283,7 +2283,7 @@ class JsonFocusView(JsonView):
         #    return jsonify(form_errors), 400
 
 
-        #zoom = int(request.json.get('ZOOM_SELECT', 1))
+        zoom = int(request.args.get('zoom', 2))
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
@@ -2294,8 +2294,20 @@ class JsonFocusView(JsonView):
             return jsonify({}), 400
 
 
+        image_height, image_width = image_data.shape[:2]
+
+        x1 = int((image_width / 2) - (image_width / zoom))
+        y1 = int((image_height / 2) - (image_height / zoom))
+        x2 = int((image_width / 2) + (image_width / zoom))
+        y2 = int((image_height / 2) + (image_height / zoom))
+
+        image_roi = image_data[
+            y1:y2,
+            x1:x2,
+        ]
+
         # returns tuple: rc, data
-        json_image_data = cv2.imencode('.jpg', image_data)
+        json_image_data = cv2.imencode('.jpg', image_roi)
 
         json_image_b64 = base64.b64encode(json_image_data[1])
 

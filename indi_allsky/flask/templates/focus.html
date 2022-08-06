@@ -13,6 +13,7 @@ canvas {
 <script type="text/javascript">
 var json_data = {
     'image_b64' : null,
+    'zoom' : 2,
 };
 var refreshInterval = 5000;
 var fullscreen = false;  //initial state
@@ -65,7 +66,7 @@ function showImage(image_b64) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {'zoom' : $("#ZOOM_SELECT").val()}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
