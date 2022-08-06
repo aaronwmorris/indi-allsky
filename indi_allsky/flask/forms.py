@@ -1523,6 +1523,7 @@ class IndiAllskyFocusForm(FlaskForm):
         (3, 'Low'),
         (4, 'Medium'),
         (5, 'High'),
+        (8, 'Extreme'),
     )
     REFRESH_SELECT_choices = (
         (2, '2s'),
