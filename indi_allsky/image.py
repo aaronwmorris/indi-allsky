@@ -154,7 +154,7 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(0.5)  # sleep every loop
+            time.sleep(0.05)  # sleep every loop
 
             try:
                 i_dict = self.image_q.get_nowait()
