@@ -2299,18 +2299,9 @@ class JsonFocusView(JsonView):
             return jsonify({}), 400
 
 
-        vl_start = time.time()
-
-        ### determine variance of laplacian
-        blur_score = cv2.Laplacian(image_data, cv2.CV_32F).var()
-        json_data['blur_score'] = float(blur_score)
-
-        vl_elapsed_s = time.time() - vl_start
-        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
-
-
         image_height, image_width = image_data.shape[:2]
 
+        ### get ROI based on zoom
         x1 = int((image_width / 2) - (image_width / zoom))
         y1 = int((image_height / 2) - (image_height / zoom))
         x2 = int((image_width / 2) + (image_width / zoom))
@@ -2321,11 +2312,24 @@ class JsonFocusView(JsonView):
             x1:x2,
         ]
 
+
         # returns tuple: rc, data
         json_image_data = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 75])
         json_image_b64 = base64.b64encode(json_image_data[1])
 
         json_data['image_b64'] = json_image_b64.decode('utf-8')
+
+
+        ### Blur detection
+        vl_start = time.time()
+
+        ### determine variance of laplacian
+        blur_score = cv2.Laplacian(image_roi, cv2.CV_32F).var()
+        json_data['blur_score'] = float(blur_score)
+
+        vl_elapsed_s = time.time() - vl_start
+        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
+
 
         return jsonify(json_data)
 
