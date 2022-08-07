@@ -105,7 +105,6 @@ class ImageWorker(Process):
         sensortemp_v,
         night_v,
         moonmode_v,
-        save_images=True,
     ):
         super(ImageWorker, self).__init__()
 
@@ -128,7 +127,6 @@ class ImageWorker(Process):
         self.moon_phase = 0.0
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
-        self.save_images = save_images
 
         self.target_adu_found = False
         self.current_adu_target = 0
@@ -156,7 +154,7 @@ class ImageWorker(Process):
 
     def run(self):
         while True:
-            time.sleep(0.5)  # sleep every loop
+            time.sleep(0.05)  # sleep every loop
 
             try:
                 i_dict = self.image_q.get_nowait()
@@ -364,9 +362,10 @@ class ImageWorker(Process):
 
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
-            if self.save_images:
-                latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id)
 
+            latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id)
+
+            if new_filename:
                 image_entry = self._miscDb.addImage(
                     new_filename,
                     camera_id,
@@ -389,6 +388,7 @@ class ImageWorker(Process):
                 )
 
 
+            if latest_file:
                 # build mqtt data
                 mqtt_data = {
                     'exposure' : round(exposure, 6),
@@ -670,11 +670,6 @@ class ImageWorker(Process):
 
 
     def write_img(self, scidata, exp_date, camera_id):
-        ### Do not write image files if fits are enabled
-        if not self.save_images:
-            return None, None
-
-
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -708,6 +703,13 @@ class ImageWorker(Process):
 
         shutil.copy2(str(tmpfile_name), str(latest_file))
         latest_file.chmod(0o644)
+
+
+        ### disable timelapse images in focus mode
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, not saving timelapse image')
+            tmpfile_name.unlink()  # cleanup temp file
+            return None, None
 
 
         ### Do not write daytime image files if daytime timelapse is disabled
@@ -957,10 +959,27 @@ class ImageWorker(Process):
             logger.warning('Image labels disabled')
             return
 
+
         image_height, image_width = data_bytes.shape[:2]
 
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, Image labels disabled')
+
+            # indicate focus mode is enabled in indi-allsky
+            self.drawText(
+                data_bytes,
+                exp_date.strftime('%H:%M:%S'),
+                (image_width - 125, image_height - 10),
+                tuple(color_bgr),
+            )
+
+            return
+
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing

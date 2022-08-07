@@ -238,6 +238,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | CCD_EXPOSURE_DEF    | CCD_EXPOSURE_MIN | (float) Default/starting exposure |
 | EXPOSURE_PERIOD     | 15.0        | (float) Seconds between beginning of each exposure (Night) |
 | EXPOSURE_PERIOD_DAY | 15.0        | (float) Seconds between beginning of each exposure (Day) |
+| FOCUS_MODE          | false       | (bool) Focus mode is used to take exposures as quickly as possible to aid in focusing |
+| FOCUS_DELAY         | 4.0         | (float) Delay between exposures during focus mode |
 | AUTO_WB             | false       | (bool) Automatic white balance adjustment |
 | WBR_FACTOR          | 1.0         | (float) Red Balance Adjustment Factor |
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |

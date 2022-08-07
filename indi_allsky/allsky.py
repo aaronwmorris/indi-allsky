@@ -70,6 +70,8 @@ class IndiAllSky(object):
         self.moonmode_v = Value('i', -1)  # bogus initial value
         self.moonmode = None
 
+        self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
+
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
@@ -80,8 +82,6 @@ class IndiAllSky(object):
         self.video_q = Queue()
         self.video_worker = None
         self.video_worker_idx = 0
-
-        self.save_images = True
 
         self.upload_q = Queue()
         self.upload_worker = None
@@ -155,6 +155,9 @@ class IndiAllSky(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
         self.config['CCD_INFO'] = ccd_info
+
+        # Update focus mode
+        self.focus_mode = self.config.get('FOCUS_MODE', False)
 
         # set minimum exposure
         ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
@@ -457,7 +460,6 @@ class IndiAllSky(object):
             self.sensortemp_v,
             self.night_v,
             self.moonmode_v,
-            save_images=self.save_images,
         )
         self.image_worker.start()
 
@@ -727,7 +729,11 @@ class IndiAllSky(object):
                     camera_ready = False
                     waiting_for_frame = True
 
-                    if self.night:
+                    if self.focus_mode:
+                        # Start frame immediately in focus mode
+                        logger.warning('*** FOCUS MODE ENABLED ***')
+                        next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
+                    elif self.night:
                         next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
                     else:
                         next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY']

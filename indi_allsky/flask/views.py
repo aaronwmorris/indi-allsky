@@ -6,6 +6,7 @@ import io
 import json
 import time
 import math
+import base64
 from pathlib import Path
 from collections import OrderedDict
 import socket
@@ -63,6 +64,7 @@ from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskyTimelapseGeneratorForm
+from .forms import IndiAllskyFocusForm
 
 
 bp = Blueprint(
@@ -83,6 +85,9 @@ bp = Blueprint(
 
 
 class BaseView(View):
+
+    _release = 4.2
+
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
 
@@ -761,6 +766,8 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
+            'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
+            'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
@@ -1025,6 +1032,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['EXPOSURE_PERIOD_DAY']                  = float(request.json['EXPOSURE_PERIOD_DAY'])
+        self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])
+        self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
@@ -1427,6 +1436,8 @@ class AjaxVideoViewerView(BaseView):
 class SystemInfoView(TemplateView):
     def get_context(self):
         context = super(SystemInfoView, self).get_context()
+
+        context['release'] = self._release
 
         context['uptime_str'] = self.getUptime()
 
@@ -2255,6 +2266,73 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message), 400
 
 
+class FocusView(TemplateView):
+
+    def get_context(self):
+        context = super(FocusView, self).get_context()
+
+        context['form_focus'] = IndiAllskyFocusForm()
+
+        return context
+
+
+class JsonFocusView(JsonView):
+
+    def __init__(self, **kwargs):
+        super(JsonFocusView, self).__init__(**kwargs)
+
+        #self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        json_data = dict()
+        json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
+
+        zoom = int(request.args.get('zoom', 2))
+
+        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+
+        image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+        if isinstance(image_data, type(None)):
+            app.logger.error('Unable to read %s', latest_image_p)
+            return jsonify({}), 400
+
+
+        image_height, image_width = image_data.shape[:2]
+
+        ### get ROI based on zoom
+        x1 = int((image_width / 2) - (image_width / zoom))
+        y1 = int((image_height / 2) - (image_height / zoom))
+        x2 = int((image_width / 2) + (image_width / zoom))
+        y2 = int((image_height / 2) + (image_height / zoom))
+
+        image_roi = image_data[
+            y1:y2,
+            x1:x2,
+        ]
+
+
+        # returns tuple: rc, data
+        json_image_data = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 75])
+        json_image_b64 = base64.b64encode(json_image_data[1])
+
+        json_data['image_b64'] = json_image_b64.decode('utf-8')
+
+
+        ### Blur detection
+        vl_start = time.time()
+
+        ### determine variance of laplacian
+        blur_score = cv2.Laplacian(image_roi, cv2.CV_32F).var()
+        json_data['blur_score'] = float(blur_score)
+
+        vl_elapsed_s = time.time() - vl_start
+        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
+
+
+        return jsonify(json_data)
+
 
 # images are normally served directly by the web server, this is a backup method
 @bp.route('/images/<path:path>')  # noqa: E302
@@ -2276,6 +2354,8 @@ bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
+bp.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
+bp.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 
 bp.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
 bp.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))

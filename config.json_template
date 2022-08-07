@@ -30,6 +30,9 @@
     "EXPOSURE_PERIOD"      : 15.00000,
     "EXPOSURE_PERIOD_DAY"  : 15.00000,
 
+    "FOCUS_MODE"           : false,
+    "FOCUS_DELAY"          : 4.0,
+
     "AUTO_WB"          : false,
     "WBR_FACTOR"       : 1.0,
     "WBG_FACTOR"       : 1.0,

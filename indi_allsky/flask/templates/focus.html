@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Focus{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var json_data = {
+    'image_b64'  : null,
+    'blur_score' : 0.0,
+    'focus_mode' : false,
+};
+var refreshInterval = 5000;
+var zoom = 2;  // 2 is no zoom
+var blur_score = 0.0
+var fullscreen = false;  //initial state
+
+function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['image_b64'] == null) {
+        await sleep(100);
+    }
+
+    showImage(json_data['image_b64']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(image_b64) {
+    console.log('Showing image');
+
+    if (image_b64 == null) {
+        return;
+    }
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = "data:image/jpg;base64," + image_b64;
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+
+        context.textAlign = 'left';
+        context.lineWidth = 10;
+        var maxWidth = 200;
+        var x = canvas.width-10-maxWidth;
+        var y = canvas.height-150;
+
+        context.font = '20px serif';
+
+        var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+75, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(blur_score_text, x-175, y+75, maxWidth);
+
+        var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+110, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(blur_score_text, x-175, y+110, maxWidth);
+    };
+}
+
+
+function loadNextImage() {
+    console.log('Loading next image');
+    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {'zoom' : zoom}, function() {});
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data;
+
+            // update score
+            blur_score = json_data['blur_score'].toFixed(2);
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(json_data['image_b64']);
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_focus" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_focus.REFRESH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_focus.REFRESH_SELECT(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-12">
+        <canvas id="canvas"/>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-8">
+        Do not forget to enable <b>Focus Mode</b> in the configuration and reload the configuration!
+    <div>
+</div>
+
+<script>
+$("#REFRESH_SELECT").on("change", function() {
+    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
+    console.log('Changing refresh interval: ' + refreshInterval);
+});
+
+$("#ZOOM_SELECT").on("change", function() {
+    zoom = $('#ZOOM_SELECT').val();
+    console.log('Changing zoom: ' + zoom);
+});
+</script>
+
+
+{% endblock %}

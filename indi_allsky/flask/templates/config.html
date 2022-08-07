@@ -177,6 +177,36 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FOCUS_MODE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FOCUS_MODE(class='form-check-input') }}
+                <div id="FOCUS_MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Focus mode removes any pause between exposures so they are taken as quickly as possible</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUS_DELAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUS_DELAY(class='form-control bg-secondary') }}
+            <div id="FOCUS_DELAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Seconds between each frame during focusing. This value should be slightly higher than the download time of images for your camera.</div>
+            <div>RasPi HQ camera is about 3.5 seconds, therefore 4.0 should be sufficient.</div>
+            <div>Astronomy cameras may be able to go as low as 1.0 or 2.0</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.AUTO_WB.label }}
         </div>
         <div class="col-sm-2">
@@ -1415,6 +1445,7 @@ const field_names = [
     'CCD_EXPOSURE_MIN',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
+    'FOCUS_DELAY',
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
@@ -1498,6 +1529,7 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'FOCUS_MODE',
     'AUTO_WB',
     'DETECT_STARS',
     'DETECT_METEORS',

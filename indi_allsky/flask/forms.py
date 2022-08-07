@@ -129,6 +129,14 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def FOCUS_DELAY_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1.0:
+        raise ValidationError('Focus delay must be 1.0 or more')
+
+
 def WB_FACTOR_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -849,6 +857,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
+    FOCUS_MODE                       = BooleanField('Focus Mode')
+    FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
@@ -1504,4 +1514,27 @@ class IndiAllskyHistoryForm(FlaskForm):
 class IndiAllskySetDateTimeForm(FlaskForm):
 
     NEW_DATETIME = DateTimeLocalField('New Datetime', render_kw={'step' : '1'}, format='%Y-%m-%dT%H:%M:%S', validators=[DataRequired()])
+
+
+
+class IndiAllskyFocusForm(FlaskForm):
+    ZOOM_SELECT_choices = (
+        (2, 'Off'),
+        (3, 'Low'),
+        (5, 'Medium'),
+        (8, 'High'),
+        (12, 'Extreme'),
+    )
+    REFRESH_SELECT_choices = (
+        (2, '2s'),
+        (3, '3s'),
+        (4, '4s'),
+        (5, '5s'),
+        (10, '10s'),
+        (15, '15s'),
+    )
+
+
+    ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
+    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[3][0], validators=[])
 
