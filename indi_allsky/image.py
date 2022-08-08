@@ -1007,7 +1007,14 @@ class ImageWorker(Process):
         sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
-        self.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        ### ORBS
+        orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+        if orb_mode == 'ha':
+            self.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        elif orb_mode == 'az':
+            pass
+        else:
+            logger.error('Unknown orb display mode: %s', orb_mode)
 
 
         #cv2.rectangle(
