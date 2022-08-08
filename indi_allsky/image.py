@@ -994,21 +994,150 @@ class ImageWorker(Process):
         sun.compute(obs)
         self.sun_alt = math.degrees(sun.alt)
 
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
-
 
 
         moon = ephem.Moon()
-        obs.date = utcnow
+        #obs.date = utcnow
         moon.compute(obs)
         self.moon_alt = math.degrees(moon.alt)
         self.moon_phase = moon.moon_phase * 100.0
 
-        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
-
 
         # separation of 1-3 degrees means a possible eclipse
         sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
+
+
+        self.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
+
+
+        #cv2.rectangle(
+        #    img=data_bytes,
+        #    pt1=(0, 0),
+        #    pt2=(350, 125),
+        #    color=(0, 0, 0),
+        #    thickness=cv2.FILLED,
+        #)
+
+        datetime_format = self.config['TEXT_PROPERTIES']['DATE_FORMAT']
+        exp_date_str = exp_date.strftime(datetime_format)
+
+        line_offset = 0
+        self.drawText(
+            data_bytes,
+            exp_date_str,
+            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+            tuple(color_bgr),
+        )
+
+
+        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        self.drawText(
+            data_bytes,
+            'Exposure {0:0.6f}'.format(exposure),
+            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+            tuple(color_bgr),
+        )
+
+
+        #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        #self.drawText(
+        #    data_bytes,
+        #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
+        #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+        #    tuple(color_bgr),
+        #)
+
+
+        # Add if gain is supported
+        if self.gain_v.value > -1:
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                'Gain {0:d}'.format(self.gain_v.value),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_bgr),
+            )
+
+
+        # Add temp if value is set
+        if self.sensortemp_v.value > -100.0:
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+                temp_sys = 'F'
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                sensortemp = self.sensortemp_v.value + 273.15
+                temp_sys = 'K'
+            else:
+                sensortemp = self.sensortemp_v.value
+                temp_sys = 'C'
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                'Temp {0:0.1f}{1:s}'.format(sensortemp, temp_sys),  # hershey fonts do not support degree symbol
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_bgr),
+            )
+
+
+        # Add moon mode indicator
+        if self.moonmode_v.value:
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* Moon {0:0.1f}% *'.format(self.moon_phase),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_bgr),
+            )
+
+
+        # Add eclipse indicator
+        if self.moon_phase > 50.0 and sun_moon_sep < 2.0:
+            # Lunar eclipse (earth's penumbra is large)
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* LUNAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_bgr),
+            )
+        elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
+            # Solar eclipse
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self.drawText(
+                data_bytes,
+                '* SOLAR ECLIPSE *',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_bgr),
+            )
+
+
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for extra_text_line in extra_text_lines:
+                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+                self.drawText(
+                    data_bytes,
+                    extra_text_line,
+                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                    tuple(color_bgr),
+                )
+
+
+
+    def drawOrbsHourAngle(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+        image_height, image_width = data_bytes.shape[:2]
+
+        obs.date = utcnow
+        sun.compute(obs)
+        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
+
+        obs.date = utcnow
+        moon.compute(obs)
+        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 
         # Civil dawn
@@ -1127,122 +1256,6 @@ class ImageWorker(Process):
         # Moon
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
-
-        #cv2.rectangle(
-        #    img=data_bytes,
-        #    pt1=(0, 0),
-        #    pt2=(350, 125),
-        #    color=(0, 0, 0),
-        #    thickness=cv2.FILLED,
-        #)
-
-        datetime_format = self.config['TEXT_PROPERTIES']['DATE_FORMAT']
-        exp_date_str = exp_date.strftime(datetime_format)
-
-        line_offset = 0
-        self.drawText(
-            data_bytes,
-            exp_date_str,
-            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            tuple(color_bgr),
-        )
-
-
-        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-        self.drawText(
-            data_bytes,
-            'Exposure {0:0.6f}'.format(exposure),
-            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            tuple(color_bgr),
-        )
-
-
-        #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-        #self.drawText(
-        #    data_bytes,
-        #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
-        #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-        #    tuple(color_bgr),
-        #)
-
-
-        # Add if gain is supported
-        if self.gain_v.value > -1:
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                'Gain {0:d}'.format(self.gain_v.value),
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
-
-
-        # Add temp if value is set
-        if self.sensortemp_v.value > -100.0:
-            if self.config.get('TEMP_DISPLAY') == 'f':
-                sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
-                temp_sys = 'F'
-            elif self.config.get('TEMP_DISPLAY') == 'k':
-                sensortemp = self.sensortemp_v.value + 273.15
-                temp_sys = 'K'
-            else:
-                sensortemp = self.sensortemp_v.value
-                temp_sys = 'C'
-
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                'Temp {0:0.1f}{1:s}'.format(sensortemp, temp_sys),  # hershey fonts do not support degree symbol
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
-
-
-        # Add moon mode indicator
-        if self.moonmode_v.value:
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                '* Moon {0:0.1f}% *'.format(self.moon_phase),
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
-
-
-        # Add eclipse indicator
-        if self.moon_phase > 50.0 and sun_moon_sep < 2.0:
-            # Lunar eclipse (earth's penumbra is large)
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                '* LUNAR ECLIPSE *',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
-        elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
-            # Solar eclipse
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                '* SOLAR ECLIPSE *',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for extra_text_line in extra_text_lines:
-                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-                self.drawText(
-                    data_bytes,
-                    extra_text_line,
-                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    tuple(color_bgr),
-                )
 
 
     def drawText(self, data_bytes, text, pt, color_bgr):
