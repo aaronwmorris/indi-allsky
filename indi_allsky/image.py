@@ -1133,11 +1133,11 @@ class ImageWorker(Process):
 
         obs.date = utcnow
         sun.compute(obs)
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
+        sunOrbX, sunOrbY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
         obs.date = utcnow
         moon.compute(obs)
-        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
+        moonOrbX, moonOrbY = self.getOrbHourAngleXY(moon, obs, (image_height, image_width))
 
 
         # Civil dawn
@@ -1147,7 +1147,7 @@ class ImageWorker(Process):
 
             obs.date = sun_civilDawn_date
             sun.compute(obs)
-            sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunCivilDawnX, sunCivilDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), color_bgr)
         except ephem.NeverUpError:
@@ -1165,7 +1165,7 @@ class ImageWorker(Process):
 
             obs.date = sun_nauticalDawn_date
             sun.compute(obs)
-            sunNauticalDawnX, sunNauticalDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunNauticalDawnX, sunNauticalDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
         except ephem.NeverUpError:
@@ -1183,7 +1183,7 @@ class ImageWorker(Process):
 
             obs.date = sun_astroDawn_date
             sun.compute(obs)
-            sunAstroDawnX, sunAstroDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunAstroDawnX, sunAstroDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
         except ephem.NeverUpError:
@@ -1202,7 +1202,7 @@ class ImageWorker(Process):
 
             obs.date = sun_civilTwilight_date
             sun.compute(obs)
-            sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunCivilTwilightX, sunCivilTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), color_bgr)
         except ephem.AlwaysUpError:
@@ -1220,7 +1220,7 @@ class ImageWorker(Process):
 
             obs.date = sun_nauticalTwilight_date
             sun.compute(obs)
-            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
@@ -1238,7 +1238,7 @@ class ImageWorker(Process):
 
             obs.date = sun_astroTwilight_date
             sun.compute(obs)
-            sunAstroTwilightX, sunAstroTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
+            sunAstroTwilightX, sunAstroTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
             self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
@@ -1798,7 +1798,7 @@ class ImageWorker(Process):
         logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
 
 
-    def getOrbXY(self, skyObj, obs, image_size):
+    def getOrbHourAngleXY(self, skyObj, obs, image_size):
         image_height, image_width = image_size
 
         ha_rad = obs.sidereal_time() - skyObj.ra
