@@ -1285,6 +1285,115 @@ class ImageWorker(Process):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
 
+        # Civil dawn
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_civilDawn_date
+            sun.compute(obs)
+            sunCivilDawnX, sunCivilDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), color_bgr)
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+        # Nautical dawn
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nauticalDawn_date
+            sun.compute(obs)
+            sunNauticalDawnX, sunNauticalDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+        # Astronomical dawn
+        try:
+            obs.horizon = math.radians(-18)
+            sun_astroDawn_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_astroDawn_date
+            sun.compute(obs)
+            sunAstroDawnX, sunAstroDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+
+        # Civil twilight
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_civilTwilight_date
+            sun.compute(obs)
+            sunCivilTwilightX, sunCivilTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), color_bgr)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Nautical twilight
+        try:
+            obs.horizon = math.radians(-12)
+            sun_nauticalTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_nauticalTwilight_date
+            sun.compute(obs)
+            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        # Astronomical twilight
+        try:
+            obs.horizon = math.radians(-18)
+            sun_astroTwilight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_astroTwilight_date
+            sun.compute(obs)
+            sunAstroTwilightX, sunAstroTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
     def getOrbAzimuthXY(self, skyObj, obs, image_size):
         image_height, image_width = image_size
 
