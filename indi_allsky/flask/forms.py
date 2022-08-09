@@ -609,7 +609,7 @@ def TEXT_PROPERTIES__DATE_FORMAT_validator(form, field):
 
 
 def ORB_PROPERTIES__MODE_validator(form, field):
-    if field.data not in ('ha', 'az'):
+    if field.data not in ('ha', 'az', 'alt'):
         raise ValidationError('Please select a valid orb mode')
 
 
@@ -823,6 +823,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__MODE_choices = (
         ('ha', 'Hour Angle'),
         ('az', 'Azimuth'),
+        ('alt', 'Altitude'),
     )
 
     TEXT_PROPERTIES__FONT_FACE_choices = (

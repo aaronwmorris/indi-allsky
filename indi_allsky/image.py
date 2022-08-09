@@ -1013,6 +1013,8 @@ class ImageWorker(Process):
             self.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'az':
             self.drawOrbsAzimuth(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        elif orb_mode == 'alt':
+            pass
         else:
             logger.error('Unknown orb display mode: %s', orb_mode)
 
