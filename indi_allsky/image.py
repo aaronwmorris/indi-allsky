@@ -1012,7 +1012,7 @@ class ImageWorker(Process):
         if orb_mode == 'ha':
             self.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'az':
-            pass
+            self.drawOrbsAzimuth(data_bytes, utcnow, color_bgr, obs, sun, moon)
         else:
             logger.error('Unknown orb display mode: %s', orb_mode)
 
@@ -1263,6 +1263,81 @@ class ImageWorker(Process):
         # Moon
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
+
+
+    def drawOrbsAzimuth(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+        image_height, image_width = data_bytes.shape[:2]
+
+        obs.date = utcnow
+        sun.compute(obs)
+        sunOrbX, sunOrbY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+        obs.date = utcnow
+        moon.compute(obs)
+        moonOrbX, moonOrbY = self.getOrbAzimuthXY(moon, obs, (image_height, image_width))
+
+
+        # Sun
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+
+
+        # Moon
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+
+
+    def getOrbAzimuthXY(self, skyObj, obs, image_size):
+        image_height, image_width = image_size
+
+        az_deg = math.degrees(skyObj.az)
+
+
+        # For now, I am too lazy to fix the calculations below (pulled from hour angle code)
+        if az_deg < 180:
+            az_deg = az_deg * -1
+        elif az_deg > 180:
+            az_deg = (-360 + az_deg) * -1
+
+
+        logger.info('%s azimuth: %0.2f @ %s', skyObj.name, az_deg, obs.date)
+
+        abs_az_deg = abs(az_deg)
+        perimeter_half = image_width + image_height
+
+        mapped_az_deg = self.remap(abs_az_deg, 0, 180, 0, perimeter_half)
+        #logger.info('Mapped azimuth: %0.2f', mapped_az_deg)
+
+        ### The image perimeter is mapped to the azimuth for the X,Y coordinates
+        if mapped_az_deg < (image_width / 2) and az_deg < 0:
+            #logger.info('Top right')
+            x = (image_width / 2) + mapped_az_deg
+            y = 0
+        elif mapped_az_deg < (image_width / 2) and az_deg > 0:
+            #logger.info('Top left')
+            x = (image_width / 2) - mapped_az_deg
+            y = 0
+        elif mapped_az_deg > ((image_width / 2) + image_height) and az_deg < 0:
+            #logger.info('Bottom right')
+            x = image_width - (mapped_az_deg - (image_height + (image_width / 2)))
+            y = image_height
+        elif mapped_az_deg > ((image_width / 2) + image_height) and az_deg > 0:
+            #logger.info('Bottom left')
+            x = mapped_az_deg - (image_height + (image_width / 2))
+            y = image_height
+        elif az_deg < 0:
+            #logger.info('Right')
+            x = image_width
+            y = mapped_az_deg - (image_width / 2)
+        elif az_deg > 0:
+            #logger.info('Left')
+            x = 0
+            y = mapped_az_deg - (image_width / 2)
+        else:
+            raise Exception('This cannot happen')
+
+
+        #logger.info('Orb: %0.2f x %0.2f', x, y)
+
+        return int(x), int(y)
 
 
     def drawText(self, data_bytes, text, pt, color_bgr):
@@ -1823,8 +1898,8 @@ class ImageWorker(Process):
         abs_ha_deg = abs(ha_deg)
         perimeter_half = image_width + image_height
 
-        mapped_ha_deg = int(self.remap(abs_ha_deg, 0, 180, 0, perimeter_half))
-        #logger.info('Mapped hour angle: %d', mapped_ha_deg)
+        mapped_ha_deg = self.remap(abs_ha_deg, 0, 180, 0, perimeter_half)
+        #logger.info('Mapped hour angle: %0.2f', mapped_ha_deg)
 
         ### The image perimeter is mapped to the hour angle for the X,Y coordinates
         if mapped_ha_deg < (image_width / 2) and ha_deg < 0:
@@ -1861,7 +1936,7 @@ class ImageWorker(Process):
 
 
     def remap(self, x, in_min, in_max, out_min, out_max):
-        return (float(x) - float(in_min)) * (float(out_max) - float(out_min)) / (float(in_max) - float(in_min)) + float(out_min)
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 
     def calculateSqm(self, data, exposure):
