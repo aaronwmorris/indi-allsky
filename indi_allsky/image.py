@@ -1147,6 +1147,14 @@ class ImageWorker(Process):
         moonOrbX, moonOrbY = self.getOrbHourAngleXY(moon, obs, (image_height, image_width))
 
 
+        # Sun
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+
+
+        # Moon
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+
+
         # Civil dawn
         try:
             obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -1254,14 +1262,6 @@ class ImageWorker(Process):
         except ephem.NeverUpError:
             # southern hemisphere
             pass
-
-
-        # Sun
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
-
-
-        # Moon
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
 
 
