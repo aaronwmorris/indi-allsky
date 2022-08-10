@@ -1471,6 +1471,48 @@ class ImageWorker(Process):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
 
 
+        # Civil dawn
+        sunCivilDawnX = image_width
+        sunCivilDawnY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
+
+        self.drawEdgeLine(data_bytes, (sunCivilDawnX, int(sunCivilDawnY)), color_bgr)
+
+
+        # Nautical dawn
+        sunNauticalDawnX = image_width
+        sunNauticalDawnY = self.remap(-12, -90.0, 90.0, 0.0, image_height)
+
+        self.drawEdgeLine(data_bytes, (sunNauticalDawnX, int(sunNauticalDawnY)), (100, 100, 100))
+
+
+        # Astronomical dawn
+        sunAstroDawnX = image_width
+        sunAstroDawnY = self.remap(-18, -90.0, 90.0, 0.0, image_height)
+
+        self.drawEdgeLine(data_bytes, (sunAstroDawnX, int(sunAstroDawnY)), (100, 100, 100))
+
+
+        # Civil twilight
+        sunCivilTwilightX = 0
+        sunCivilTwilightY = sunCivilDawnY  # reuse
+
+        self.drawEdgeLine(data_bytes, (sunCivilTwilightX, int(sunCivilTwilightY)), color_bgr)
+
+
+        # Nautical twilight
+        sunNauticalTwilightX = 0
+        sunNauticalTwilightY = sunNauticalDawnY  # reuse
+
+        self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, int(sunNauticalTwilightY)), (100, 100, 100))
+
+
+        # Astronomical twilight
+        sunAstroTwilightX = 0
+        sunAstroTwilightY = sunAstroDawnY  # reuse
+
+        self.drawEdgeLine(data_bytes, (sunAstroTwilightX, int(sunAstroTwilightY)), (100, 100, 100))
+
+
     def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
         image_height, image_width = image_size
 
