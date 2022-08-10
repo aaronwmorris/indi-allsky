@@ -1025,6 +1025,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MODE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__MODE(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Orb display mode</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__RADIUS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1500,6 +1511,7 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
     'TEXT_PROPERTIES__DATE_FORMAT',
+    'ORB_PROPERTIES__MODE',
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',
     'ORB_PROPERTIES__MOON_COLOR',

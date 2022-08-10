@@ -24,6 +24,7 @@ from astropy.io import fits
 import cv2
 import numpy
 
+from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
@@ -72,8 +73,6 @@ sys.excepthook = unhandled_exception
 class ImageWorker(Process):
 
     dark_temperature_range = 5.0  # dark must be within this range
-
-    line_thickness = 2
 
     sqm_history_minutes = 30
     stars_history_minutes = 30
@@ -134,6 +133,8 @@ class ImageWorker(Process):
         self.target_adu = float(self.config['TARGET_ADU'])
 
         self.image_count = 0
+
+        self._orb = IndiAllskyOrbGenerator(self.config)
 
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self.sqm_value = 0
@@ -994,138 +995,29 @@ class ImageWorker(Process):
         sun.compute(obs)
         self.sun_alt = math.degrees(sun.alt)
 
-        sunOrbX, sunOrbY = self.getOrbXY(sun, obs, (image_height, image_width))
-
 
 
         moon = ephem.Moon()
-        obs.date = utcnow
+        #obs.date = utcnow
         moon.compute(obs)
         self.moon_alt = math.degrees(moon.alt)
         self.moon_phase = moon.moon_phase * 100.0
-
-        moonOrbX, moonOrbY = self.getOrbXY(moon, obs, (image_height, image_width))
 
 
         # separation of 1-3 degrees means a possible eclipse
         sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
-        # Civil dawn
-        try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-            sun_civilDawn_date = obs.next_rising(sun, use_center=True)
-
-            obs.date = sun_civilDawn_date
-            sun.compute(obs)
-            sunCivilDawnX, sunCivilDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), color_bgr)
-        except ephem.NeverUpError:
-            # northern hemisphere
-            pass
-        except ephem.AlwaysUpError:
-            # southern hemisphere
-            pass
-
-
-        # Nautical dawn
-        try:
-            obs.horizon = math.radians(-12)
-            sun_nauticalDawn_date = obs.next_rising(sun, use_center=True)
-
-            obs.date = sun_nauticalDawn_date
-            sun.compute(obs)
-            sunNauticalDawnX, sunNauticalDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
-        except ephem.NeverUpError:
-            # northern hemisphere
-            pass
-        except ephem.AlwaysUpError:
-            # southern hemisphere
-            pass
-
-
-        # Astronomical dawn
-        try:
-            obs.horizon = math.radians(-18)
-            sun_astroDawn_date = obs.next_rising(sun, use_center=True)
-
-            obs.date = sun_astroDawn_date
-            sun.compute(obs)
-            sunAstroDawnX, sunAstroDawnY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
-        except ephem.NeverUpError:
-            # northern hemisphere
-            pass
-        except ephem.AlwaysUpError:
-            # southern hemisphere
-            pass
-
-
-
-        # Civil twilight
-        try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-            sun_civilTwilight_date = obs.next_setting(sun, use_center=True)
-
-            obs.date = sun_civilTwilight_date
-            sun.compute(obs)
-            sunCivilTwilightX, sunCivilTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), color_bgr)
-        except ephem.AlwaysUpError:
-            # northern hemisphere
-            pass
-        except ephem.NeverUpError:
-            # southern hemisphere
-            pass
-
-
-        # Nautical twilight
-        try:
-            obs.horizon = math.radians(-12)
-            sun_nauticalTwilight_date = obs.next_setting(sun, use_center=True)
-
-            obs.date = sun_nauticalTwilight_date
-            sun.compute(obs)
-            sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
-        except ephem.AlwaysUpError:
-            # northern hemisphere
-            pass
-        except ephem.NeverUpError:
-            # southern hemisphere
-            pass
-
-
-        # Astronomical twilight
-        try:
-            obs.horizon = math.radians(-18)
-            sun_astroTwilight_date = obs.next_setting(sun, use_center=True)
-
-            obs.date = sun_astroTwilight_date
-            sun.compute(obs)
-            sunAstroTwilightX, sunAstroTwilightY = self.getOrbXY(sun, obs, (image_height, image_width))
-
-            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
-        except ephem.AlwaysUpError:
-            # northern hemisphere
-            pass
-        except ephem.NeverUpError:
-            # southern hemisphere
-            pass
-
-
-        # Sun
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
-
-
-        # Moon
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        ### ORBS
+        orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+        if orb_mode == 'ha':
+            self._orb.drawOrbsHourAngle(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        elif orb_mode == 'az':
+            self._orb.drawOrbsAzimuth(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        elif orb_mode == 'alt':
+            self._orb.drawOrbsAltitude(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        else:
+            logger.error('Unknown orb display mode: %s', orb_mode)
 
 
         #cv2.rectangle(
@@ -1269,66 +1161,6 @@ class ImageWorker(Process):
             lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
-        )
-
-
-    def drawEdgeCircle(self, data_bytes, pt, color_bgr):
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-            cv2.circle(
-                img=data_bytes,
-                center=pt,
-                radius=self.config['ORB_PROPERTIES']['RADIUS'],
-                color=(0, 0, 0),
-                thickness=cv2.FILLED,
-            )
-
-        cv2.circle(
-            img=data_bytes,
-            center=pt,
-            radius=self.config['ORB_PROPERTIES']['RADIUS'] - 1,
-            color=tuple(color_bgr),
-            thickness=cv2.FILLED,
-        )
-
-
-    def drawEdgeLine(self, data_bytes, pt, color_bgr):
-        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-
-        image_height, image_width = data_bytes.shape[:2]
-
-        line_length = int(self.config['ORB_PROPERTIES']['RADIUS'] / 2)
-
-        x, y = pt
-        if x == 0 or x == image_width:
-            # line is on the left or right
-            x1 = x - line_length
-            y1 = y
-            x2 = x + line_length
-            y2 = y
-        else:
-            # line is on the top or bottom
-            x1 = x
-            y1 = y - line_length
-            x2 = x
-            y2 = y + line_length
-
-
-        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
-            cv2.line(
-                img=data_bytes,
-                pt1=(x1, y1),
-                pt2=(x2, y2),
-                color=(0, 0, 0),
-                thickness=self.line_thickness + 1,
-                lineType=lineType,
-            )  # black outline
-        cv2.line(
-            img=data_bytes,
-            pt1=(x1, y1),
-            pt2=(x2, y2),
-            color=tuple(color_bgr),
-            thickness=self.line_thickness,
-            lineType=lineType,
         )
 
 
@@ -1783,65 +1615,6 @@ class ImageWorker(Process):
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
-
-
-    def getOrbXY(self, skyObj, obs, image_size):
-        image_height, image_width = image_size
-
-        ha_rad = obs.sidereal_time() - skyObj.ra
-        ha_deg = math.degrees(ha_rad)
-
-        if ha_deg < -180:
-            ha_deg = 360 + ha_deg
-        elif ha_deg > 180:
-            ha_deg = -360 + ha_deg
-        else:
-            pass
-
-        logger.info('%s hour angle: %0.2f @ %s', skyObj.name, ha_deg, obs.date)
-
-        abs_ha_deg = abs(ha_deg)
-        perimeter_half = image_width + image_height
-
-        mapped_ha_deg = int(self.remap(abs_ha_deg, 0, 180, 0, perimeter_half))
-        #logger.info('Mapped hour angle: %d', mapped_ha_deg)
-
-        ### The image perimeter is mapped to the hour angle for the X,Y coordinates
-        if mapped_ha_deg < (image_width / 2) and ha_deg < 0:
-            #logger.info('Top right')
-            x = (image_width / 2) + mapped_ha_deg
-            y = 0
-        elif mapped_ha_deg < (image_width / 2) and ha_deg > 0:
-            #logger.info('Top left')
-            x = (image_width / 2) - mapped_ha_deg
-            y = 0
-        elif mapped_ha_deg > ((image_width / 2) + image_height) and ha_deg < 0:
-            #logger.info('Bottom right')
-            x = image_width - (mapped_ha_deg - (image_height + (image_width / 2)))
-            y = image_height
-        elif mapped_ha_deg > ((image_width / 2) + image_height) and ha_deg > 0:
-            #logger.info('Bottom left')
-            x = mapped_ha_deg - (image_height + (image_width / 2))
-            y = image_height
-        elif ha_deg < 0:
-            #logger.info('Right')
-            x = image_width
-            y = mapped_ha_deg - (image_width / 2)
-        elif ha_deg > 0:
-            #logger.info('Left')
-            x = 0
-            y = mapped_ha_deg - (image_width / 2)
-        else:
-            raise Exception('This cannot happen')
-
-
-        #logger.info('Orb: %0.2f x %0.2f', x, y)
-
-        return int(x), int(y)
-
-
-    def remap(self, x, in_min, in_max, out_min, out_max):
-        return (float(x) - float(in_min)) * (float(out_max) - float(out_min)) / (float(in_max) - float(in_min)) + float(out_min)
 
 
     def calculateSqm(self, data, exposure):
