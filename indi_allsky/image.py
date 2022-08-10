@@ -1014,7 +1014,7 @@ class ImageWorker(Process):
         elif orb_mode == 'az':
             self.drawOrbsAzimuth(data_bytes, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'alt':
-            pass
+            self.drawOrbsAltitude(data_bytes, utcnow, color_bgr, obs, sun, moon)
         else:
             logger.error('Unknown orb display mode: %s', orb_mode)
 
@@ -1414,7 +1414,7 @@ class ImageWorker(Process):
         abs_az_deg = abs(az_deg)
         perimeter_half = image_width + image_height
 
-        mapped_az_deg = self.remap(abs_az_deg, 0, 180, 0, perimeter_half)
+        mapped_az_deg = self.remap(abs_az_deg, 0.0, 180.0, 0.0, perimeter_half)
         #logger.info('Mapped azimuth: %0.2f', mapped_az_deg)
 
         ### The image perimeter is mapped to the azimuth for the X,Y coordinates
@@ -1447,6 +1447,45 @@ class ImageWorker(Process):
 
 
         #logger.info('Orb: %0.2f x %0.2f', x, y)
+
+        return int(x), int(y)
+
+
+    def drawOrbsAltitude(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+        image_height, image_width = data_bytes.shape[:2]
+
+        obs.date = utcnow
+        sun.compute(obs)
+        sunOrbX, sunOrbY = self.getOrbAltitudeXY(sun, obs, (image_height, image_width), utcnow)
+
+        obs.date = utcnow
+        moon.compute(obs)
+        moonOrbX, moonOrbY = self.getOrbAltitudeXY(moon, obs, (image_height, image_width), utcnow)
+
+
+        # Sun
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+
+
+        # Moon
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+
+
+    def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
+        image_height, image_width = image_size
+
+        alt_deg = math.degrees(skyObj.alt)
+
+        skyObj_transit_date = obs.next_transit(skyObj).datetime()
+        skyObj_transit_delta = skyObj_transit_date - utcnow
+        if skyObj_transit_delta.seconds < 43200:  # 12 hours
+            # rising, put on right
+            x = image_width
+        else:
+            # setting, put on left
+            x = 0
+
+        y = self.remap(alt_deg, -90.0, 90.0, 0.0, image_height)
 
         return int(x), int(y)
 
@@ -2009,7 +2048,7 @@ class ImageWorker(Process):
         abs_ha_deg = abs(ha_deg)
         perimeter_half = image_width + image_height
 
-        mapped_ha_deg = self.remap(abs_ha_deg, 0, 180, 0, perimeter_half)
+        mapped_ha_deg = self.remap(abs_ha_deg, 0.0, 180.0, 0.0, perimeter_half)
         #logger.info('Mapped hour angle: %0.2f', mapped_ha_deg)
 
         ### The image perimeter is mapped to the hour angle for the X,Y coordinates
