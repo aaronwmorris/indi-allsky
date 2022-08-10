@@ -1474,6 +1474,7 @@ class ImageWorker(Process):
         # Civil dawn
         sunCivilDawnX = image_width
         sunCivilDawnY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
+        sunCivilDawnY = image_height - sunCivilDawnY  # need to map from the top down
 
         self.drawEdgeLine(data_bytes, (sunCivilDawnX, int(sunCivilDawnY)), color_bgr)
 
@@ -1481,6 +1482,7 @@ class ImageWorker(Process):
         # Nautical dawn
         sunNauticalDawnX = image_width
         sunNauticalDawnY = self.remap(-12, -90.0, 90.0, 0.0, image_height)
+        sunNauticalDawnY = image_height - sunNauticalDawnY  # need to map from the top down
 
         self.drawEdgeLine(data_bytes, (sunNauticalDawnX, int(sunNauticalDawnY)), (100, 100, 100))
 
@@ -1488,6 +1490,7 @@ class ImageWorker(Process):
         # Astronomical dawn
         sunAstroDawnX = image_width
         sunAstroDawnY = self.remap(-18, -90.0, 90.0, 0.0, image_height)
+        sunAstroDawnY = image_height - sunAstroDawnY  # need to map from the top down
 
         self.drawEdgeLine(data_bytes, (sunAstroDawnX, int(sunAstroDawnY)), (100, 100, 100))
 
@@ -1528,6 +1531,7 @@ class ImageWorker(Process):
             x = 0
 
         y = self.remap(alt_deg, -90.0, 90.0, 0.0, image_height)
+        y = image_height - y  # need to map from the top down
 
         return int(x), int(y)
 
