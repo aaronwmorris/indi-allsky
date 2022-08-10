@@ -608,6 +608,11 @@ def TEXT_PROPERTIES__DATE_FORMAT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def ORB_PROPERTIES__MODE_validator(form, field):
+    if field.data not in ('ha', 'az', 'alt'):
+        raise ValidationError('Please select a valid orb mode')
+
+
 def ORB_PROPERTIES__RADIUS_validator(form, field):
     if field.data < 1:
         raise ValidationError('Orb radius must be 1 or more')
@@ -815,6 +820,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    ORB_PROPERTIES__MODE_choices = (
+        ('ha', 'Hour Angle'),
+        ('az', 'Azimuth'),
+        ('alt', 'Altitude'),
+    )
+
     TEXT_PROPERTIES__FONT_FACE_choices = (
         ('FONT_HERSHEY_SIMPLEX', 'Sans-Serif'),
         ('FONT_HERSHEY_PLAIN', 'Sans-Serif (small)'),
@@ -931,6 +942,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
     TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
     TEXT_PROPERTIES__DATE_FORMAT     = StringField('Date Format', validators=[DataRequired(), TEXT_PROPERTIES__DATE_FORMAT_validator])
+    ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])

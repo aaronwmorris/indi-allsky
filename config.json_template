@@ -128,6 +128,8 @@
     },
 
     "ORB_PROPERTIES" : {
+        "comment_MODE" : "ha = hour angle, az = azimuth, alt = altitude"
+        "MODE"        : "ha",
         "RADIUS"      : 9,
         "SUN_COLOR"   : [255, 255, 255],
         "MOON_COLOR"  : [128, 128, 128]
