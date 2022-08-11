@@ -304,7 +304,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > FONT_OUTLINE      | true        | (bool) Enable black outline of text |
 | > DATE_FORMAT       | %Y%m%d %H:%M:%S | (str) Date string format |
 | ORB_PROPERTIES      |             | (dict) Sun and moon org drawing properties |
-| > MODE              | ha          | (str) Orb Mode - ha = Hour Angle, az = Azimuth, alt = Altitude |
+| > MODE              | ha          | (str) Orb Mode - ha = Hour Angle, az = Azimuth, alt = Altitude , off = Off|
 | > RADIUS            | 9           | (pixels) Radius of orbs |
 | > SUN_COLOR         | [0, 255, 255]   | (array) R, G, B Color of sun orb |
 | > MOON_COLOR        | [255, 255, 255] | (array) R, G, B Color of moon orb |
