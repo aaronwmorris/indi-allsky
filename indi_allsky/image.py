@@ -1016,6 +1016,9 @@ class ImageWorker(Process):
             self._orb.drawOrbsAzimuth(data_bytes, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'alt':
             self._orb.drawOrbsAltitude(data_bytes, utcnow, color_bgr, obs, sun, moon)
+        elif orb_mode == 'off':
+            # orbs disabled
+            pass
         else:
             logger.error('Unknown orb display mode: %s', orb_mode)
 

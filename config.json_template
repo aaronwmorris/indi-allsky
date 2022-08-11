@@ -128,7 +128,7 @@
     },
 
     "ORB_PROPERTIES" : {
-        "comment_MODE" : "ha = hour angle, az = azimuth, alt = altitude",
+        "comment_MODE" : "ha = hour angle, az = azimuth, alt = altitude, off = off",
         "MODE"        : "ha",
         "RADIUS"      : 9,
         "SUN_COLOR"   : [255, 255, 255],
