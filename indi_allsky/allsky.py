@@ -60,7 +60,6 @@ class IndiAllSky(object):
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
         self.indiclient = None
-        self.ccd_device = None
 
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
@@ -143,8 +142,8 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.ccd_device.getDriverExec()
+        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
@@ -334,17 +333,15 @@ class IndiAllSky(object):
             sys.exit(1)
 
         logger.info('Found %d CCDs', len(ccd_list))
-        self.ccd_device = ccd_list[0]
-
-        logger.warning('Connecting to device %s', self.ccd_device.getDeviceName())
-        self.indiclient.connectDevice(self.ccd_device.getDeviceName())
-
         # set default device in indiclient
-        self.indiclient.ccd_device = self.ccd_device
+        self.indiclient.ccd_device = ccd_list[0]
+
+        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
+        self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.ccd_device.getDriverExec()
+        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
@@ -777,13 +774,11 @@ class IndiAllSky(object):
             sys.exit(1)
 
         logger.info('Found %d CCDs', len(ccd_list))
-        self.ccd_device = ccd_list[0]
-
-        logger.warning('Connecting to device %s', self.ccd_device.getDeviceName())
-        self.indiclient.connectDevice(self.ccd_device.getDeviceName())
-
         # set default device in indiclient
-        self.indiclient.ccd_device = self.ccd_device
+        self.indiclient.ccd_device = ccd_list[0]
+
+        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
+        self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
