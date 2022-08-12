@@ -53,7 +53,7 @@ class IndiAllSkyDarks(object):
 
         self.image_q = Queue()
         self.indiclient = None
-        self.ccdDevice = None
+        self.ccd_device = None
         self.camera_id = None
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
@@ -146,38 +146,37 @@ class IndiAllSkyDarks(object):
             sys.exit(1)
 
         logger.info('Found %d CCDs', len(ccd_list))
-        ccdDevice = ccd_list[0]
+        self.ccd_device = ccd_list[0]
 
-        logger.warning('Connecting to device %s', ccdDevice.getDeviceName())
-        self.indiclient.connectDevice(ccdDevice.getDeviceName())
-        self.ccdDevice = ccdDevice
+        logger.warning('Connecting to device %s', self.ccd_device.getDeviceName())
+        self.indiclient.connectDevice(self.ccd_device.getDeviceName())
 
         # set default device in indiclient
-        self.indiclient.device = self.ccdDevice
+        self.indiclient.ccd_device = self.ccd_device
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.ccdDevice.getDeviceName()
-        self.config['CCD_SERVER'] = self.ccdDevice.getDriverExec()
+        self.config['CCD_NAME'] = self.ccd_device.getDeviceName()
+        self.config['CCD_SERVER'] = self.ccd_device.getDriverExec()
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
         self.camera_id = db_camera.id
 
         # Disable debugging
-        self.indiclient.disableDebug(self.ccdDevice)
+        self.indiclient.disableDebugCcd()
 
         # Get Properties (this might be needed to initialize some cameras)
-        ccd_properties = self.indiclient.getDeviceProperties(self.ccdDevice)
+        ccd_properties = self.indiclient.getCcdDeviceProperties()
         self.config['CCD_PROPERTIES'] = ccd_properties
 
         # set BLOB mode to BLOB_ALSO
-        self.indiclient.updateCcdBlobMode(self.ccdDevice)
+        self.indiclient.updateCcdBlobMode()
 
-        self.indiclient.configureDevice(self.ccdDevice, self.config['INDI_CONFIG_DEFAULTS'])
-        self.indiclient.setFrameType(self.ccdDevice, 'FRAME_DARK')
+        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+        self.indiclient.setCcdFrameType('FRAME_DARK')
 
         # get CCD information
-        ccd_info = self.indiclient.getCcdInfo(self.ccdDevice)
+        ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
 
 
@@ -220,10 +219,10 @@ class IndiAllSkyDarks(object):
             time.sleep(3)
 
 
-    def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
+    def shoot(self, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
-        ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
+        ctl = self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
         return ctl
 
@@ -270,16 +269,16 @@ class IndiAllSkyDarks(object):
 
     def average(self):
         self._initialize()
-        self._pre_run_tasks(self.ccdDevice)
+        self._pre_run_tasks()
 
         self._run(IndiAllSkyDarksAverage)
 
 
     def tempaverage(self):
         self._initialize()
-        self._pre_run_tasks(self.ccdDevice)
+        self._pre_run_tasks()
 
-        current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+        current_temp = self.indiclient.getCcdTemperature()
         next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
@@ -287,7 +286,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+            current_temp = self.indiclient.getCcdTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -304,16 +303,16 @@ class IndiAllSkyDarks(object):
 
     def sigmaclip(self):
         self._initialize()
-        self._pre_run_tasks(self.ccdDevice)
+        self._pre_run_tasks()
 
         self._run(IndiAllSkyDarksSigmaClip)
 
 
     def tempsigmaclip(self):
         self._initialize()
-        self._pre_run_tasks(self.ccdDevice)
+        self._pre_run_tasks()
 
-        current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+        current_temp = self.indiclient.getCcdTemperature()
         next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
@@ -321,7 +320,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.indiclient.getCcdTemperature(self.ccdDevice)
+            current_temp = self.indiclient.getCcdTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -335,14 +334,14 @@ class IndiAllSkyDarks(object):
             self._run(IndiAllSkyDarksSigmaClip)
 
 
-    def _pre_run_tasks(self, ccdDevice):
+    def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
         if self.config['CCD_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(ccdDevice, 7.0, sync=True)
+            self.shoot(7.0, sync=True)
 
 
             i_dict = self.image_q.get(timeout=15)
@@ -431,8 +430,8 @@ class IndiAllSkyDarks(object):
 
         ### NIGHT DARKS ###
         for gain, binmode in night_darks_odict.keys():
-            self.indiclient.setCcdGain(self.ccdDevice, gain)
-            self.indiclient.setCcdBinning(self.ccdDevice, binmode)
+            self.indiclient.setCcdGain(gain)
+            self.indiclient.setCcdBinning(binmode)
 
             for exposure in dark_exposures:
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
@@ -442,8 +441,8 @@ class IndiAllSkyDarks(object):
         ### DAY DARKS ###
         day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
         if day_params not in night_darks_odict.keys():
-            self.indiclient.setCcdGain(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['GAIN'])
-            self.indiclient.setCcdBinning(self.ccdDevice, self.config['CCD_CONFIG']['DAY']['BINNING'])
+            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
             # day will rarely exceed 1 second
             for exposure in dark_exposures:
@@ -452,7 +451,7 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
-        self.indiclient.getCcdTemperature(self.ccdDevice)
+        self.indiclient.getCcdTemperature()
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
@@ -488,7 +487,7 @@ class IndiAllSkyDarks(object):
         for c in range(self._count):
             start = time.time()
 
-            self.shoot(self.ccdDevice, float(exposure), sync=True)
+            self.shoot(float(exposure), sync=True)
 
             elapsed_s = time.time() - start
 

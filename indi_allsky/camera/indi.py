@@ -98,6 +98,8 @@ class IndiClient(PyIndi.BaseClient):
         self.bin_v = bin_v
         self.sensortemp_v = sensortemp_v
 
+        self._ccd_device = None
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -106,6 +108,15 @@ class IndiClient(PyIndi.BaseClient):
         self.exposureStartTime = None
 
         logger.info('creating an instance of IndiClient')
+
+
+    @property
+    def ccd_device(self):
+        return self._ccd_device
+
+    @ccd_device.setter
+    def ccd_device(self, new_ccd_device):
+        self._ccd_device = new_ccd_device
 
 
     @property
@@ -224,12 +235,12 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
 
 
-    def updateCcdBlobMode(self, ccd_device, blobmode=PyIndi.B_ALSO, prop=None):
+    def updateCcdBlobMode(self, blobmode=PyIndi.B_ALSO, prop=None):
         logger.info('Set BLOB mode')
-        self.setBLOBMode(blobmode, ccd_device.getDeviceName(), prop)
+        self.setBLOBMode(blobmode, self._ccd_device.getDeviceName(), prop)
 
 
-    def disableDebug(self, device):
+    def disableDebug(self, ccd_device):
         debug_config = {
             "SWITCHES" : {
                 "DEBUG" : {
@@ -239,10 +250,14 @@ class IndiClient(PyIndi.BaseClient):
             }
         }
 
-        self.configureDevice(device, debug_config)
+        self.configureDevice(ccd_device, debug_config)
 
 
-    def resetCcdFrame(self, ccd_device):
+    def disableDebugCcd(self):
+        self.disableDebug(self._ccd_device)
+
+
+    def resetCcdFrame(self):
         reset_config = {
             "SWITCHES" : {
                 "CCD_FRAME_RESET" : {
@@ -251,10 +266,10 @@ class IndiClient(PyIndi.BaseClient):
             }
         }
 
-        self.configureDevice(ccd_device, reset_config)
+        self.configureDevice(self._ccd_device, reset_config)
 
 
-    def setFrameType(self, ccd_device, frame_type):
+    def setCcdFrameType(self, frame_type):
         frame_config = {
             "SWITCHES" : {
                 "CCD_FRAME_TYPE" : {
@@ -263,7 +278,7 @@ class IndiClient(PyIndi.BaseClient):
             }
         }
 
-        self.configureDevice(ccd_device, frame_config)
+        self.configureDevice(self._ccd_device, frame_config)
 
 
     def getDeviceProperties(self, device):
@@ -294,10 +309,14 @@ class IndiClient(PyIndi.BaseClient):
         return properties
 
 
-    def getCcdInfo(self, ccdDevice):
+    def getCcdDeviceProperties(self):
+        self.getDeviceProperties(self._ccd_device)
+
+
+    def getCcdInfo(self):
         ccdinfo = dict()
 
-        ctl_CCD_EXPOSURE = self.get_control(ccdDevice, 'CCD_EXPOSURE', 'number')
+        ctl_CCD_EXPOSURE = self.get_control(self._ccd_device, 'CCD_EXPOSURE', 'number')
         ccdinfo['CCD_EXPOSURE'] = dict()
         for i in ctl_CCD_EXPOSURE:
             ccdinfo['CCD_EXPOSURE'][i.getName()] = {
@@ -309,7 +328,7 @@ class IndiClient(PyIndi.BaseClient):
             }
 
 
-        ctl_CCD_INFO = self.get_control(ccdDevice, 'CCD_INFO', 'number')
+        ctl_CCD_INFO = self.get_control(self._ccd_device, 'CCD_INFO', 'number')
 
         ccdinfo['CCD_INFO'] = dict()
         for i in ctl_CCD_INFO:
@@ -324,7 +343,7 @@ class IndiClient(PyIndi.BaseClient):
 
         try:
             logger.info('Detecting bayer pattern')
-            ctl_CCD_CFA = self.get_control(ccdDevice, 'CCD_CFA', 'text', timeout=5.0)
+            ctl_CCD_CFA = self.get_control(self._ccd_device, 'CCD_CFA', 'text', timeout=5.0)
 
             ccdinfo['CCD_CFA'] = dict()
             for i in ctl_CCD_CFA:
@@ -338,7 +357,7 @@ class IndiClient(PyIndi.BaseClient):
             }
 
 
-        ctl_CCD_FRAME = self.get_control(ccdDevice, 'CCD_FRAME', 'number')
+        ctl_CCD_FRAME = self.get_control(self._ccd_device, 'CCD_FRAME', 'number')
 
         ccdinfo['CCD_FRAME'] = dict()
         for i in ctl_CCD_FRAME:
@@ -351,14 +370,14 @@ class IndiClient(PyIndi.BaseClient):
             }
 
 
-        ctl_CCD_FRAME_TYPE = self.get_control(ccdDevice, 'CCD_FRAME_TYPE', 'switch')
+        ctl_CCD_FRAME_TYPE = self.get_control(self._ccd_device, 'CCD_FRAME_TYPE', 'switch')
         ccdinfo['CCD_FRAME_TYPE'] = dict()
 
         for i in ctl_CCD_FRAME_TYPE:
             ccdinfo['CCD_FRAME_TYPE'][i.getName()] = i.getState()
 
 
-        gain_info = self.getCcdGain(ccdDevice)
+        gain_info = self.getCcdGain()
         ccdinfo['GAIN_INFO'] = gain_info
 
         #logger.info('CCD Info: %s', pformat(ccdinfo))
@@ -411,8 +430,12 @@ class IndiClient(PyIndi.BaseClient):
         time.sleep(sleep)
 
 
-    def getCcdTemperature(self, ccdDevice):
-        temp = ccdDevice.getNumber("CCD_TEMPERATURE")
+    def configureCcdDevice(self, *args, **kwargs):
+        self.configureDevice(self._ccd_device, *args, **kwargs)
+
+
+    def getCcdTemperature(self):
+        temp = self._ccd_device.getNumber("CCD_TEMPERATURE")
 
         if isinstance(temp, type(None)):
             logger.warning("Sensor temperature: not supported")
@@ -427,7 +450,7 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
-    def setCcdExposure(self, ccdDevice, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, sync=False, timeout=None):
         self.exposureStartTime = time.time()
 
         if not timeout:
@@ -435,13 +458,13 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        ctl = self.set_number(ccdDevice, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        ctl = self.set_number(self._ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
         return ctl
 
 
-    def getCcdGain(self, ccdDevice):
-        indi_exec = ccdDevice.getDriverExec()
+    def getCcdGain(self):
+        indi_exec = self._ccd_device.getDriverExec()
 
 
         # for cameras that do not support gain
@@ -461,7 +484,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_altair_ccd',
             'indi_playerone_ccd',
         ]:
-            gain_ctl = self.get_control(ccdDevice, 'CCD_CONTROLS', 'number')
+            gain_ctl = self.get_control(self._ccd_device, 'CCD_CONTROLS', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
             index = gain_index_dict['Gain']
         elif indi_exec in [
@@ -470,7 +493,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_simulator_ccd',
             'indi_rpicam',
         ]:
-            gain_ctl = self.get_control(ccdDevice, 'CCD_GAIN', 'number')
+            gain_ctl = self.get_control(self._ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
             index = gain_index_dict['GAIN']
         elif indi_exec in ['indi_sx_ccd']:
@@ -500,9 +523,9 @@ class IndiClient(PyIndi.BaseClient):
         return gain_info
 
 
-    def setCcdGain(self, ccdDevice, gain_value):
+    def setCcdGain(self, gain_value):
         logger.warning('Setting CCD gain to %s', str(gain_value))
-        indi_exec = ccdDevice.getDriverExec()
+        indi_exec = self._ccd_device.getDriverExec()
 
         if indi_exec in [
             'indi_asi_ccd',
@@ -560,7 +583,7 @@ class IndiClient(PyIndi.BaseClient):
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
 
-        self.configureDevice(ccdDevice, gain_config)
+        self.configureDevice(self._ccd_device, gain_config)
 
 
         # Update shared gain value
@@ -568,7 +591,7 @@ class IndiClient(PyIndi.BaseClient):
             self.gain_v.value = int(gain_value)
 
 
-    def setCcdBinning(self, ccdDevice, bin_value):
+    def setCcdBinning(self, bin_value):
         if type(bin_value) is int:
             bin_value = [bin_value, bin_value]
         elif type(bin_value) is str:
@@ -579,7 +602,7 @@ class IndiClient(PyIndi.BaseClient):
 
         logger.warning('Setting CCD binning to (%d, %d)', bin_value[0], bin_value[1])
 
-        indi_exec = ccdDevice.getDriverExec()
+        indi_exec = self._ccd_device.getDriverExec()
 
         if indi_exec in [
             'indi_asi_ccd',
@@ -613,7 +636,7 @@ class IndiClient(PyIndi.BaseClient):
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
-        self.configureDevice(ccdDevice, binning_config)
+        self.configureDevice(self._ccd_device, binning_config)
 
         # Update shared gain value
         with self.bin_v.get_lock():
