@@ -219,9 +219,7 @@ class IndiAllSkyDarks(object):
     def shoot(self, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
-        ctl = self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
-
-        return ctl
+        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
 
     def _wait_for_image(self):

@@ -588,7 +588,6 @@ class IndiAllSky(object):
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
         waiting_for_frame = False
-        exposure_ctl = None  # populated later
 
         camera_ready_time = time.time()
         camera_ready = False
@@ -659,7 +658,7 @@ class IndiAllSky(object):
                 now = time.time()
 
                 last_camera_ready = camera_ready
-                camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
+                camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
 
                 if not camera_ready:
                     continue
@@ -721,7 +720,7 @@ class IndiAllSky(object):
 
                     frame_start_time = now
 
-                    exposure_ctl = self.shoot(self.exposure_v.value, sync=False)
+                    self.shoot(self.exposure_v.value, sync=False)
                     camera_ready = False
                     waiting_for_frame = True
 
@@ -1066,9 +1065,7 @@ class IndiAllSky(object):
     def shoot(self, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
-        ctl = self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
-
-        return ctl
+        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
 
     def expireData(self):

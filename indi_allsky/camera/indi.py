@@ -99,6 +99,7 @@ class IndiClient(PyIndi.BaseClient):
         self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
+        self._ctl_ccd_exposure = None
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -117,6 +118,9 @@ class IndiClient(PyIndi.BaseClient):
     @ccd_device.setter
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
+
+        # fetch exposure control
+        self._ctl_ccd_exposure = self.get_control(self._ccd_device, 'CCD_EXPOSURE', 'number')
 
 
     @property
@@ -466,9 +470,13 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        ctl = self.set_number(self._ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        self.set_number(self._ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
-        return ctl
+
+    def getCcdExposureStatus(self):
+        camera_ready, exposure_state = self.ctl_ready(self._ctl_ccd_exposure)
+
+        return camera_ready, exposure_state
 
 
     def getCcdGain(self):
