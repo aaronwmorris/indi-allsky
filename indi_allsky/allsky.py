@@ -17,7 +17,7 @@ import ephem
 from multiprocessing import Queue
 from multiprocessing import Value
 
-from . import camera
+from . import camera as camera_module
 
 from .image import ImageWorker
 from .video import VideoWorker
@@ -302,8 +302,10 @@ class IndiAllSky(object):
 
 
     def _initialize(self):
+        camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
+
         # instantiate the client
-        self.indiclient = camera.IndiClient(
+        self.indiclient = camera_interface(
             self.config,
             self.image_q,
             self.gain_v,
@@ -740,8 +742,10 @@ class IndiAllSky(object):
 
 
     def cameraReport(self):
+        camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
+
         # instantiate the client
-        self.indiclient = camera.IndiClient(
+        self.indiclient = camera_interface(
             self.config,
             self.image_q,
             self.gain_v,

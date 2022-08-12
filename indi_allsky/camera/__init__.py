@@ -1,6 +1,6 @@
-from .indi import IndiClient
+from .indi import IndiClient as indi
 
 __all__ = (
-    'IndiClient',
+    'indi',
 )
 
