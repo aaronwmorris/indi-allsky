@@ -138,16 +138,13 @@ class IndiAllSkyDarks(object):
         time.sleep(8)
 
         # connect to all devices
-        ccd_list = self.indiclient.findCcds()
+        self.indiclient.findCcd()
 
-        if len(ccd_list) == 0:
+        if not self.indiclient.ccd_device:
             logger.error('No CCDs detected')
             time.sleep(1)
             sys.exit(1)
 
-        logger.info('Found %d CCDs', len(ccd_list))
-        # set default device in indiclient
-        self.indiclient.ccd_device = ccd_list[0]
 
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())

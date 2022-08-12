@@ -396,7 +396,7 @@ class IndiClient(PyIndi.BaseClient):
         return device_interfaces
 
 
-    def findCcds(self):
+    def _findCcds(self):
         ccd_list = list()
 
         for device in self.getDevices():
@@ -410,6 +410,14 @@ class IndiClient(PyIndi.BaseClient):
                         ccd_list.append(device)
 
         return ccd_list
+
+
+    def findCcd(self):
+        ccd_list = self._findCcds()
+
+        logger.info('Found %d CCDs', len(ccd_list))
+        # set default device in indiclient
+        self._ccd_device = ccd_list[0]
 
 
     def configureDevice(self, device, indi_config, sleep=1.0):
