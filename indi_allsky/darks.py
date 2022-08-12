@@ -18,7 +18,7 @@ from multiprocessing import Queue
 from multiprocessing import Value
 
 
-from .indi import IndiClient
+from . import camera
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -116,7 +116,7 @@ class IndiAllSkyDarks(object):
 
     def _initialize(self):
         # instantiate the client
-        self.indiclient = IndiClient(
+        self.indiclient = camera.IndiClient(
             self.config,
             self.image_q,
             self.gain_v,

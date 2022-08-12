@@ -10,14 +10,14 @@ from astropy.io import fits
 
 import PyIndi
 
-#from .flask import db
-from .flask import create_app
+#from ..flask import db
+from ..flask import create_app
 
-#from .flask.models import TaskQueueQueue
-#from .flask.models import TaskQueueState
-#from .flask.models import IndiAllSkyDbTaskQueueTable
+#from ..flask.models import TaskQueueQueue
+#from ..flask.models import TaskQueueState
+#from ..flask.models import IndiAllSkyDbTaskQueueTable
 
-from .exceptions import TimeOutException
+from ..exceptions import TimeOutException
 
 logger = logging.getLogger('indi_allsky')
 

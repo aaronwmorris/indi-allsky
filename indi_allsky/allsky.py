@@ -17,7 +17,8 @@ import ephem
 from multiprocessing import Queue
 from multiprocessing import Value
 
-from .indi import IndiClient
+from . import camera
+
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
@@ -303,7 +304,7 @@ class IndiAllSky(object):
 
     def _initialize(self):
         # instantiate the client
-        self.indiclient = IndiClient(
+        self.indiclient = camera.IndiClient(
             self.config,
             self.image_q,
             self.gain_v,
@@ -747,7 +748,7 @@ class IndiAllSky(object):
 
     def cameraReport(self):
         # instantiate the client
-        self.indiclient = IndiClient(
+        self.indiclient = camera.IndiClient(
             self.config,
             self.image_q,
             self.gain_v,
