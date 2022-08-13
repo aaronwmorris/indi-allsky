@@ -373,6 +373,17 @@ class IndiAllSkyDarks(object):
             filename.unlink()  # no longer need the original file
 
 
+    def _pre_shoot_reconfigure(self):
+        if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
+            # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
+            # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
+            if self.config['CCD_NAME'].startswith('ZWO CCD ASI120'):
+                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+        elif self.config['CCD_SERVER'] in ['indi_asi_single_ccd']:
+            if self.config['CCD_NAME'].startswith('ZWO ASI120'):
+                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+
+
     def _run(self, stacking_class):
 
         ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
@@ -481,6 +492,8 @@ class IndiAllSkyDarks(object):
         image_bitpix = None
         for c in range(self._count):
             start = time.time()
+
+            self._pre_shoot_reconfigure()
 
             self.shoot(float(exposure), sync=True)
 
