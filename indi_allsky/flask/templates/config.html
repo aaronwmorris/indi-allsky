@@ -27,6 +27,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CAMERA_INTERFACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
+            <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.INDI_SERVER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1443,6 +1456,7 @@ const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
     'SQLALCHEMY_DATABASE_URI',
+    'CAMERA_INTERFACE',
     'INDI_SERVER',
     'INDI_PORT',
     'CCD_CONFIG__NIGHT__GAIN',

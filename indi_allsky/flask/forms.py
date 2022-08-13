@@ -46,6 +46,11 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
         raise ValidationError('Invalid URI')
 
 
+def CAMERA_INTERFACE_validator(form, field):
+    if field.data not in ('indi',):
+        raise ValidationError('Invalid camera interface')
+
+
 def INDI_SERVER_validator(form, field):
     if not field.data:
         return
@@ -802,6 +807,10 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 
 class IndiAllskyConfigForm(FlaskForm):
+    CAMERA_INTERFACE_choices = (
+        ('indi', 'INDI'),
+    )
+
     TEMP_DISPLAY_choices = (
         ('c', 'Celcius'),
         ('f', 'Fahrenheit'),
@@ -856,6 +865,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
     SQLALCHEMY_DATABASE_URI          = StringField('Database URI', render_kw={'readonly' : True}, validators=[DataRequired(), SQLALCHEMY_DATABASE_URI_validator])
+    CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])

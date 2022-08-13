@@ -1,4 +1,6 @@
 {
+    "CAMERA_INTERFACE" : "indi",
+
     "INDI_SERVER" : "localhost",
     "INDI_PORT"   : 7624,
 

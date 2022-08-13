@@ -221,6 +221,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |
+| CAMERA_INTERFACE    | indi        | (str) Default camera interface |
 | INDI_SERVER         | localhost   | (str) Hostname for INDI server |
 | INDI_PORT           | 7624        | (int) Port for INDI server |
 | CCD_CONFIG          |             | (dict) Indi configuration parameters for CCD |
