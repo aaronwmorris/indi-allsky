@@ -668,7 +668,7 @@ class VideoWorker(Process):
         old_fits_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), fits_file_list)
         logger.warning('Found %d expired fits images to delete', len(old_fits_files))
         for f in old_fits_files:
-            logger.info('Removing old export image: %s', f)
+            logger.info('Removing old fits image: %s', f)
 
             try:
                 f.unlink()
@@ -718,7 +718,7 @@ class VideoWorker(Process):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 
-        logger.info('Searching for image files in %s', folder)
+        #logger.info('Searching for image files in %s', folder)
 
         dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
 
