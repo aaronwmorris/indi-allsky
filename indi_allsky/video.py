@@ -666,7 +666,7 @@ class VideoWorker(Process):
         self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
 
         old_fits_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), fits_file_list)
-        logger.warning('Found %d expired fits images to delete', len(old_fits_files))
+        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files)))
         for f in old_fits_files:
             logger.info('Removing old fits image: %s', f)
 
@@ -684,7 +684,7 @@ class VideoWorker(Process):
         self.getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
         old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), export_file_list)
-        logger.warning('Found %d expired export images to delete', len(old_export_files))
+        logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
         for f in old_export_files:
             logger.info('Removing old export image: %s', f)
 
