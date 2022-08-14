@@ -119,9 +119,6 @@ class IndiClient(PyIndi.BaseClient):
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
 
-        # fetch exposure control
-        self._ctl_ccd_exposure = self.get_control(self._ccd_device, 'CCD_EXPOSURE', 'number')
-
 
     @property
     def timeout(self):
@@ -472,7 +469,9 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = exposure
 
-        self.set_number(self._ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+        ctl_ccd_exposure = self.set_number(self._ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
+
+        self._ctl_ccd_exposure = ctl_ccd_exposure
 
 
     def getCcdExposureStatus(self):
