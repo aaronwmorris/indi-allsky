@@ -9,7 +9,7 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="3.4"
+INDI_ALLSKY_VERSION="20220813.0"
 INDI_DRIVER_PATH="/usr/bin"
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
@@ -56,6 +56,7 @@ HTDOCS_FILES="
 IMAGE_FOLDER_FILES="
     .htaccess
     darks/.htaccess
+    export/.htaccess
 "
 
 

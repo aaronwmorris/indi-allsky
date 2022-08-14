@@ -661,10 +661,44 @@ class VideoWorker(Process):
         db.session.commit()
 
 
+        # Old fits image files need to be pruned
+        fits_file_list = list()
+        self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
+
+        old_fits_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), fits_file_list)
+        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files)))
+        for f in old_fits_files:
+            logger.info('Removing old fits image: %s', f)
+
+            try:
+                f.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+
+
+
+        # Old export image files need to be pruned
+        export_folder_p = Path(self.config['IMAGE_EXPORT_FOLDER'])
+
+        export_file_list = list()
+        self.getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+
+        old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), export_file_list)
+        logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
+        for f in old_export_files:
+            logger.info('Removing old export image: %s', f)
+
+            try:
+                f.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+
+
 
         # Remove empty folders
         dir_list = list()
         self.getFolderFolders(img_folder, dir_list)
+        self.getFolderFolders(export_folder_p, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
@@ -684,7 +718,7 @@ class VideoWorker(Process):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 
-        logger.info('Searching for image files in %s', folder)
+        #logger.info('Searching for image files in %s', folder)
 
         dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
 
