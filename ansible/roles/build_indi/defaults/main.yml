@@ -3,7 +3,7 @@
 projects_folder: "{{ lookup('env','HOME') }}/Projects"
 parallel_processes: "{{ ansible_facts['processor_vcpus'] }}"
 install_prefix: /usr/local
-indi_core_git_version: 'v1.9.6'
-indi_3rdparty_git_version: 'v1.9.6'
+indi_core_git_version: 'v1.9.7'
+indi_3rdparty_git_version: 'v1.9.7'
 indi_3rdparty_build_libs: []
 indi_3rdparty_build_drivers: []
