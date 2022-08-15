@@ -1312,6 +1312,8 @@ sudo chmod 775 "$IMAGE_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$IMAGE_FOLDER"
 [[ ! -d "${IMAGE_FOLDER}/darks" ]] && mkdir "${IMAGE_FOLDER}/darks"
 chmod 775 "${IMAGE_FOLDER}/darks"
+[[ ! -d "${IMAGE_FOLDER}/export" ]] && mkdir "${IMAGE_FOLDER}/export"
+chmod 775 "${IMAGE_FOLDER}/export"
 
 for F in $IMAGE_FOLDER_FILES; do
     cp -f "${ALLSKY_DIRECTORY}/html/images/${F}" "${IMAGE_FOLDER}/${F}"
