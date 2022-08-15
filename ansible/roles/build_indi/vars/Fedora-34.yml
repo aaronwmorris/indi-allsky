@@ -35,6 +35,7 @@ indi_packages:
   - libtheora-devel
   - gmock-devel
   - gtest-devel
+  - libev-devel
 indi_3rdparty_packages:
   - '@Development tools'
   - git
