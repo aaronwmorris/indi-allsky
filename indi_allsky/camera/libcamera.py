@@ -18,8 +18,11 @@ class FakeIndiLibCamera(FakeIndiClient):
 
         self.libcamera_pid = None
 
-        self.max_gain = 16
         self.min_gain = 1
+        self.max_gain = 16
+
+        self.min_exposure = 0.000032
+        self.max_exposure = 200.0
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -75,6 +78,12 @@ class FakeIndiLibCamera(FakeIndiClient):
         new_ccd = FakeIndiCcd()
         new_ccd.device_name = 'libcamera0'
         new_ccd.driver_exec = 'indi_fake_ccd'
+
+        new_ccd.min_gain = self.min_gain
+        new_ccd.max_gain = self.max_gain
+
+        new_ccd.min_exposure = self.min_exposure
+        new_ccd.max_exposure = self.max_exposure
 
         self._ccd_device = new_ccd
 

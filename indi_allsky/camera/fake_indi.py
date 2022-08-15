@@ -19,6 +19,12 @@ class FakeIndiClient(object):
         self._ccd_bin = 1
         self._ccd_frame_type = 'LIGHT'
 
+        self.min_gain = 0
+        self.max_gain = 100
+
+        self.min_exposure = 0.0000032
+        self.max_exposure = 300.0
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -147,20 +153,24 @@ class FakeIndiClient(object):
         return self._ccd_gain
 
 
-    def setCcdGain(self, gain_value):
-        self._ccd_gain = int(gain_value)
+    def setCcdGain(self, new_gain_value):
+        if new_gain_value > self.max_gain:
+            logger.warning('New gain value is above max, setting to %d', self.max_gain)
+            new_gain_value = self.max_gain
+
+        self._ccd_gain = int(new_gain_value)
 
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = int(gain_value)
+            self.gain_v.value = int(new_gain_value)
 
 
-    def setCcdBinning(self, bin_value):
-        self._ccd_bin = int(bin_value[0])
+    def setCcdBinning(self, new_bin_value):
+        self._ccd_bin = int(new_bin_value[0])
 
         # Update shared gain value
         with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value[0])
+            self.bin_v.value = int(new_bin_value[0])
 
 
 
@@ -172,6 +182,12 @@ class FakeIndiCcd(object):
         # these should be set
         self._device_name = 'UNDEFINED'
         self._driver_exec = 'UNDEFINED'
+
+        self._min_gain = None
+        self._max_gain = None
+
+        self._min_exposure = None
+        self._max_exposure = None
 
 
     @property
@@ -190,6 +206,61 @@ class FakeIndiCcd(object):
     @driver_exec.setter
     def driver_exec(self, new_driver_exec):
         self._driver_exec = new_driver_exec
+
+
+    @property
+    def min_gain(self):
+        return self._min_gain
+
+    @min_gain.setter
+    def min_gain(self, new_min_gain):
+        self._min_gain = float(new_min_gain)
+
+
+    @property
+    def max_gain(self):
+        return self._max_gain
+
+    @max_gain.setter
+    def max_gain(self, new_max_gain):
+        self._max_gain = float(new_max_gain)
+
+
+    @property
+    def min_exposure(self):
+        return self._min_exposure
+
+    @min_exposure.setter
+    def min_exposure(self, new_min_exposure):
+        self._min_exposure = float(new_min_exposure)
+
+
+    @property
+    def max_exposure(self):
+        return self._max_exposure
+
+    @max_exposure.setter
+    def max_exposure(self, new_max_exposure):
+        self._max_exposure = float(new_max_exposure)
+
+
+    @property
+    def min_gain(self):
+        return self._min_gain
+
+    @min_gain.setter
+    def min_gain(self, new_min_gain):
+        self._min_gain = float(new_min_gain)
+
+
+    @property
+    def max_gain(self):
+        return self._max_gain
+
+    @max_gain.setter
+    def max_gain(self, new_max_gain):
+        self._max_gain = float(new_max_gain)
+
 
 
     def getDeviceName(self):
