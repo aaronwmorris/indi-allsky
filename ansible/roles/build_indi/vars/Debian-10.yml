@@ -21,6 +21,7 @@ indi_packages:
   - libfftw3-dev
   - pkg-config
   - libgmock-dev
+  - libev-dev
 indi_3rdparty_packages:
   - build-essential
   - libnova-dev
