@@ -37,9 +37,18 @@
     refspec: "{{ indi_core_git_refspec }}"
 
 
+- set_fact:
+    indi_core_setup_cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release {{ indi_core_src }}"
+
+
+- debug:
+    msg:
+      - "INDI core setup: {{ indi_core_setup_cmd }}"
+
+
 - name: Setup indi_core build
   command:
-    cmd: "{{ cmake_bin }} -DCMAKE_INSTALL_PREFIX={{ install_prefix }} -DCMAKE_BUILD_TYPE=Release {{ indi_core_src }}"
+    cmd: "{{ indi_core_setup_cmd }}"
     chdir: "{{ indi_core_build }}"
 
 
