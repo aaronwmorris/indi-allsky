@@ -16,6 +16,9 @@ function handler_SIGINT() {
 trap handler_SIGINT SIGINT
 
 
+INDI_CORE_TAG="v1.9.7"
+INDI_3RDPARTY_TAG=$INDI_CORE_TAG
+
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
@@ -49,6 +52,9 @@ echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
+echo
+echo "Indi core:     $INDI_CORE_TAG"
+echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
 echo
 
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
@@ -197,5 +203,5 @@ echo
 
 cd ${ALLSKY_DIRECTORY}/ansible
 
-ansible-playbook -i inventory.yml site.yml --ask-become-pass $@
+ansible-playbook -i inventory.yml site.yml --ask-become-pass -e "indi_core_git_version=${INDI_CORE_TAG}" -e "indi_3rdparty_git_version=${INDI_3RDPARTY_TAG}" $@
 
