@@ -931,13 +931,33 @@ pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
-PS3="Select an INDI driver: "
-select indi_driver_path in $INDI_DRIVERS; do
-    if [ -f "${INDI_DRIVER_PATH}/${indi_driver_path}" ]; then
-        CCD_DRIVER=$indi_driver_path
+echo
+echo
+echo "indi-allsky supports the following camera interfaces"
+echo
+PS3="Select a camera interface: "
+select camera_interface in indi libcamera_imx477; do
+    if [ -n "$camera_interface" ]; then
+        CAMERA_INTERFACE=$camera_interface
         break
     fi
 done
+
+
+if [ "$CAMERA_INTERFACE" == "indi" ]; then
+    echo
+    echo
+    PS3="Select an INDI driver: "
+    select indi_driver_path in $INDI_DRIVERS; do
+        if [ -f "${INDI_DRIVER_PATH}/${indi_driver_path}" ]; then
+            CCD_DRIVER=$indi_driver_path
+            break
+        fi
+    done
+else
+    # simulator will not affect anything
+    CCD_DRIVER=indi_ccd_simulator
+fi
 
 #echo $CCD_DRIVER
 
@@ -1399,14 +1419,23 @@ echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
+echo "**** Update config camera interface ****"
+TMP_CAMERA_INT=$(mktemp)
+jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > $TMP_CAMERA_INT
+cp -f "$TMP_CAMERA_INT" "${ALLSKY_ETC}/config.json"
+[[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
+
 
 echo "**** Update config version ****"
 TMP_CONFIG2=$(mktemp)
 jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > $TMP_CONFIG2
 cp -f "$TMP_CONFIG2" "${ALLSKY_ETC}/config.json"
+[[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
+
+
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
 sudo chmod 660 "${ALLSKY_ETC}/config.json"
-[[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
+
 
 
 # final config syntax check
