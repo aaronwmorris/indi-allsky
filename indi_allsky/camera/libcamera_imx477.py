@@ -20,23 +20,22 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         self.libcamera_process = None
 
-        self.device_name = 'libcamera_imx477'
-
-        self.width = 4056
-        self.height = 3040
-        self.pixel = 1.55
-
-        self.min_gain = 1
-        self.max_gain = 16
-
-        self.min_exposure = 0.000032
-        self.max_exposure = 200.0
-
-        self.cfa = 'BGGR'
-        self.bit_depth = 12
-
         self.active_exposure = False
         self.current_exposure_file_p = None
+
+        self.device_name = 'libcamera_imx477'
+
+        self.camera_info = {
+            'width'         : 4056,
+            'height'        : 3040,
+            'pixel'         : 1.55,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.000032,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 12,
+        }
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -134,18 +133,18 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         new_ccd.device_name = self.device_name
         new_ccd.driver_exec = 'indi_fake_ccd'
 
-        new_ccd.width = self.width
-        new_ccd.height = self.height
-        new_ccd.pixel = self.pixel
+        new_ccd.width = self.camera_info['width']
+        new_ccd.height = self.camera_info['height']
+        new_ccd.pixel = self.camera_info['pixel']
 
-        new_ccd.min_gain = self.min_gain
-        new_ccd.max_gain = self.max_gain
+        new_ccd.min_gain = self.camera_info['min_gain']
+        new_ccd.max_gain = self.camera_info['max_gain']
 
-        new_ccd.min_exposure = self.min_exposure
-        new_ccd.max_exposure = self.max_exposure
+        new_ccd.min_exposure = self.camera_info['min_exposure']
+        new_ccd.max_exposure = self.camera_info['max_exposure']
 
-        new_ccd.cfa = self.cfa
-        new_ccd.bit_depth = self.bit_depth
+        new_ccd.cfa = self.camera_info['cfa']
+        new_ccd.bit_depth = self.camera_info['bit_depth']
 
         self._ccd_device = new_ccd
 

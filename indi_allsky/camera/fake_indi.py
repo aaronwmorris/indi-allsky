@@ -20,18 +20,18 @@ class FakeIndiClient(object):
         self._ccd_bin = 1
         self._ccd_frame_type = 'LIGHT'
 
-        self.width = None
-        self.height = None
-        self.pixel = None
+        self.camera_info = {
+            'width'         : None,
+            'height'        : None,
+            'pixel'         : None,
+            'min_gain'      : 0,
+            'max_gain'      : 100,
+            'min_exposure'  : 0.0000032,
+            'max_exposure'  : 300.0,
+            'cfa'           : None,
+            'bit_depth'     : 12,
+        }
 
-        self.min_gain = 0
-        self.max_gain = 100
-
-        self.min_exposure = 0.0000032
-        self.max_exposure = 300.0
-
-        self.cfa = None
-        self.bit_depth = 12
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -220,10 +220,6 @@ class FakeIndiClient(object):
 
 
     def setCcdGain(self, new_gain_value):
-        if new_gain_value > self.max_gain:
-            logger.warning('New gain value is above max, setting to %d', self.max_gain)
-            new_gain_value = self.max_gain
-
         self._ccd_gain = int(new_gain_value)
 
         # Update shared gain value
