@@ -18,6 +18,8 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         self.libcamera_pid = None
 
+        self.device_name = 'libcamera_imx477'
+
         self.width = 4056
         self.height = 3040
         self.pixel = 1.55
@@ -83,7 +85,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
     def findCcd(self):
         new_ccd = FakeIndiCcd()
-        new_ccd.device_name = 'libcamera0'
+        new_ccd.device_name = self.device_name
         new_ccd.driver_exec = 'indi_fake_ccd'
 
         new_ccd.width = self.width
