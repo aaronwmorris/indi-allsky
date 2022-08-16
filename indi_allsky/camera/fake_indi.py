@@ -227,6 +227,15 @@ class FakeIndiClient(object):
 
 
     def setCcdBinning(self, new_bin_value):
+        if type(new_bin_value) is int:
+            new_bin_value = [new_bin_value, new_bin_value]
+        elif type(new_bin_value) is str:
+            new_bin_value = [int(new_bin_value), int(new_bin_value)]
+        elif not new_bin_value:
+            # Assume default
+            return
+
+
         self._ccd_bin = int(new_bin_value[0])
 
         # Update shared gain value
