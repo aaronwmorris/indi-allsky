@@ -1,8 +1,8 @@
-import datetime
+from datetime import datetime
 import time
 import tempfile
 import subprocess
-import psutil
+#import psutil
 from pathlib import Path
 import logging
 
@@ -18,7 +18,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
     def __init__(self, *args, **kwargs):
         super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
-        self.libcamera_pid = None
+        self.libcamera_process = None
 
         self.device_name = 'libcamera_imx477'
 
@@ -65,12 +65,11 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         logger.info('image command: %s', ' '.join(cmd))
 
-        libcamera_subproc = subprocess.Popen(
+        self.libcamera_process = subprocess.Popen(
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        self.libcamera_pid = libcamera_subproc.pid
 
         self.active_exposure = True
         self.current_exposure_file = image_tmp_p
@@ -107,10 +106,11 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
 
     def _libCameraPidRunning(self):
-        if not self.libcamera_pid:
+        if not self.libcamera_process:
             return False
 
-        if psutil.pid_exists(self.libcamera_pid):
+        if self.libcamera_process.poll():
+            #self.libcamera_process = None
             return True
 
         return False
