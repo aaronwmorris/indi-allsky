@@ -318,7 +318,7 @@ class IndiAllSky(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
@@ -757,7 +757,7 @@ class IndiAllSky(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)

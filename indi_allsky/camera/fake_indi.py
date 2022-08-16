@@ -85,7 +85,7 @@ class FakeIndiClient(object):
 
     def connectServer(self):
         # does nothing
-        pass
+        return True
 
 
     def getHost(self):
