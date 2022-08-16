@@ -85,7 +85,20 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
 
+
+            # file is initially 0 size
+            i = 0
+            while self.current_exposure_file_p.stat().st_size == 0:
+                if i >= 3:  # 3 seconds max
+                    logger.error('Image was never written')
+                    return True, 'READY'
+
+                time.sleep(1.0)
+                i += 1
+
+
             exposure_elapsed_s = time.time() - self.exposureStartTime
+
 
             exp_date = datetime.now()
 
