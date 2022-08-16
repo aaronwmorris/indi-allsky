@@ -154,7 +154,7 @@ class FakeIndiClient(object):
         ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = dict()
 
         ccdinfo['CCD_CFA'] = dict()
-        ccdinfo['CCD_CFA']['CCD_CFA'] = {
+        ccdinfo['CCD_CFA']['CFA_TYPE'] = {
             'text' : self._ccd_device.cfa,
         }
 
