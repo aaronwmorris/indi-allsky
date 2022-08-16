@@ -15,9 +15,14 @@ class FakeIndiClient(object):
         self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
+
         self._ccd_gain = -1
         self._ccd_bin = 1
         self._ccd_frame_type = 'LIGHT'
+
+        self.width = None
+        self.height = None
+        self.pixel = None
 
         self.min_gain = 0
         self.max_gain = 100
@@ -26,6 +31,7 @@ class FakeIndiClient(object):
         self.max_exposure = 300.0
 
         self.cfa = None
+        self.bit_depth = 12
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -229,6 +235,10 @@ class FakeIndiCcd(object):
         self._device_name = 'UNDEFINED'
         self._driver_exec = 'UNDEFINED'
 
+        self._width = None
+        self._height = None
+        self._pixel = None
+
         self._min_gain = None
         self._max_gain = None
 
@@ -236,6 +246,33 @@ class FakeIndiCcd(object):
         self._max_exposure = None
 
         self._cfa = None
+        self._bit_depth = None
+
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, new_width):
+        self._width = int(new_width)
+
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, new_height):
+        self._height = int(new_height)
+
+
+    @property
+    def pixel(self):
+        return self._pixel
+
+    @pixel.setter
+    def pixel(self, new_pixel):
+        self._pixel = float(new_pixel)
 
 
     @property
@@ -317,6 +354,16 @@ class FakeIndiCcd(object):
     @cfa.setter
     def cfa(self, new_cfa):
         self._cfa = new_cfa
+
+
+    @property
+    def bit_depth(self):
+        return self._bit_depth
+
+    @bit_depth.setter
+    def bit_depth(self, new_bit_depth):
+        self._bit_depth = int(new_bit_depth)
+
 
 
     def getDeviceName(self):

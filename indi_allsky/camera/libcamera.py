@@ -11,12 +11,16 @@ from .fake_indi import FakeIndiCcd
 logger = logging.getLogger('indi_allsky')
 
 
-class FakeIndiLibCamera(FakeIndiClient):
+class FakeIndiLibCameraImx477(FakeIndiClient):
 
     def __init__(self, *args, **kwargs):
-        super(FakeIndiLibCamera, self).__init__(*args, **kwargs)
+        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
         self.libcamera_pid = None
+
+        self.width = 4056
+        self.height = 3040
+        self.pixel = 1.55
 
         self.min_gain = 1
         self.max_gain = 16
@@ -25,6 +29,7 @@ class FakeIndiLibCamera(FakeIndiClient):
         self.max_exposure = 200.0
 
         self.cfa = 'BGGR'
+        self.bit_depth = 12
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -81,6 +86,10 @@ class FakeIndiLibCamera(FakeIndiClient):
         new_ccd.device_name = 'libcamera0'
         new_ccd.driver_exec = 'indi_fake_ccd'
 
+        new_ccd.width = self.width
+        new_ccd.height = self.height
+        new_ccd.pixel = self.pixel
+
         new_ccd.min_gain = self.min_gain
         new_ccd.max_gain = self.max_gain
 
@@ -88,6 +97,7 @@ class FakeIndiLibCamera(FakeIndiClient):
         new_ccd.max_exposure = self.max_exposure
 
         new_ccd.cfa = self.cfa
+        new_ccd.bit_depth = self.bit_depth
 
         self._ccd_device = new_ccd
 
