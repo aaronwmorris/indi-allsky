@@ -91,7 +91,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
             ### process data in worker
             jobdata = {
-                'filename'    : self.current_exposure_file.name,
+                'filename'    : str(self.current_exposure_file),
                 'exposure'    : self._exposure,
                 'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
                 'exp_elapsed' : exposure_elapsed_s,
