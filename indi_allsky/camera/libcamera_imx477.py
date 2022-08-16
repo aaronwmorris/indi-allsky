@@ -18,12 +18,13 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
     def __init__(self, *args, **kwargs):
         super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
+        self.device_name = 'libcamera_imx477'
+        self.driver_exec = 'indi_fake_ccd'
+
         self.libcamera_process = None
 
         self.active_exposure = False
         self.current_exposure_file_p = None
-
-        self.device_name = 'libcamera_imx477'
 
         self.camera_info = {
             'width'         : 4056,
@@ -131,7 +132,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
     def findCcd(self):
         new_ccd = FakeIndiCcd()
         new_ccd.device_name = self.device_name
-        new_ccd.driver_exec = 'indi_fake_ccd'
+        new_ccd.driver_exec = self.driver_exec
 
         new_ccd.width = self.camera_info['width']
         new_ccd.height = self.camera_info['height']
