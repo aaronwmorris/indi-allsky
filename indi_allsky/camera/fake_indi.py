@@ -88,6 +88,11 @@ class FakeIndiClient(object):
         return True
 
 
+    def disconnectServer(self):
+        # does nothing
+        pass
+
+
     def connectDevice(self, *args, **kwargs):
         # does nothing
         pass
