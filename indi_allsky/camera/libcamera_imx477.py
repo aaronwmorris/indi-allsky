@@ -1,3 +1,5 @@
+import datetime
+import time
 import tempfile
 import subprocess
 import psutil
@@ -33,10 +35,17 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         self.cfa = 'BGGR'
         self.bit_depth = 12
 
+        self.active_exposure = False
+        self.current_exposure_file = None
+
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
-        if self._libCameraPidRunning():
-            return False
+        if self.active_exposure:
+            return
+
+        self._exposure = exposure
+
+        self.exposureStartTime = time.time()
 
         image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.dng', delete=False)
         image_tmp_p = Path(image_tmp_f.name)
@@ -61,14 +70,38 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-
         self.libcamera_pid = libcamera_subproc.pid
+
+        self.active_exposure = True
+        self.current_exposure_file = image_tmp_p
 
 
     def getCcdExposureStatus(self):
         # returns camera_ready, exposure_state
-        if not self._libCameraPidRunning():
+        if self._libCameraPidRunning():
             return False, 'BUSY'
+
+
+        if self.active_exposure:
+            # if we get here, that means the camera is finished with the exposure
+            self.active_exposure = False
+
+            exposure_elapsed_s = time.time() - self.exposureStartTime
+
+            exp_date = datetime.now()
+
+            ### process data in worker
+            jobdata = {
+                'filename'    : self.current_exposure_file.name,
+                'exposure'    : self._exposure,
+                'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
+                'exp_elapsed' : exposure_elapsed_s,
+                'camera_id'   : self.config['DB_CCD_ID'],
+                'filename_t'  : self._filename_t,
+            }
+
+            self.image_q.put(jobdata)
+
 
         return True, 'READY'
 
