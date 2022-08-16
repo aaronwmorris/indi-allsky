@@ -36,7 +36,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         self.bit_depth = 12
 
         self.active_exposure = False
-        self.current_exposure_file = None
+        self.current_exposure_file_p = None
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -72,7 +72,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         )
 
         self.active_exposure = True
-        self.current_exposure_file = image_tmp_p
+        self.current_exposure_file_p = image_tmp_p
 
 
     def getCcdExposureStatus(self):
@@ -91,7 +91,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
             ### process data in worker
             jobdata = {
-                'filename'    : str(self.current_exposure_file),
+                'filename'    : str(self.current_exposure_file_p),
                 'exposure'    : self._exposure,
                 'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
                 'exp_elapsed' : exposure_elapsed_s,

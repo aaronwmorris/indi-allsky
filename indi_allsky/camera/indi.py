@@ -3,6 +3,7 @@ import io
 import tempfile
 import ctypes
 from datetime import datetime
+from pathlib import Path
 import logging
 #from pprint import pformat
 
@@ -174,6 +175,7 @@ class IndiClient(PyIndi.BaseClient):
         hdulist = fits.open(blobfile)
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        f_tmpfile_p = Path(f_tmpfile.name)
 
         hdulist.writeto(f_tmpfile)
 
@@ -188,7 +190,7 @@ class IndiClient(PyIndi.BaseClient):
 
         ### process data in worker
         jobdata = {
-            'filename'    : f_tmpfile.name,
+            'filename'    : str(f_tmpfile_p),
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
@@ -677,7 +679,7 @@ class IndiClient(PyIndi.BaseClient):
         }[ctl_type]
 
         started = time.time()
-        while not(ctl):
+        while not ctl:
             ctl = getattr(device, attr)(name)
 
             if not ctl and 0 < timeout < time.time() - started:
