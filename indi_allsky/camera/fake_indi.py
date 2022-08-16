@@ -88,6 +88,11 @@ class FakeIndiClient(object):
         return True
 
 
+    def connectDevice(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
     def getHost(self):
         return self.__class__.__name__
 
@@ -104,6 +109,10 @@ class FakeIndiClient(object):
     def disableDebug(self, *args, **kwargs):
         # does nothing
         pass
+
+
+    def disableDebugCcd(self):
+        self.disableDebug(self._ccd_device)
 
 
     def resetCcdFrame(self, *args, **kwargs):
