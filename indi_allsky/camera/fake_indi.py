@@ -25,6 +25,8 @@ class FakeIndiClient(object):
         self.min_exposure = 0.0000032
         self.max_exposure = 300.0
 
+        self.cfa = None
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -118,6 +120,50 @@ class FakeIndiClient(object):
 
     def getCcdInfo(self):
         ccdinfo = dict()
+
+        ccdinfo['CCD_EXPOSURE'] = dict()
+        ccdinfo['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE'] = {
+            'current' : None,
+            'min'     : self._ccd_device.min_exposure,
+            'max'     : self._ccd_device.max_exposure,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_INFO'] = dict()
+        ccdinfo['CCD_INFO']['CCD_MAX_X'] = dict()
+        ccdinfo['CCD_INFO']['CCD_MAX_Y'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = dict()
+        ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = dict()
+
+        ccdinfo['CCD_CFA'] = dict()
+        ccdinfo['CCD_CFA']['CCD_CFA'] = {
+            'text' : self._ccd_device.cfa,
+        }
+
+        ccdinfo['CCD_FRAME'] = dict()
+        ccdinfo['CCD_FRAME']['X'] = dict()
+        ccdinfo['CCD_FRAME']['Y'] = dict()
+        ccdinfo['CCD_FRAME']['WIDTH'] = dict()
+        ccdinfo['CCD_FRAME']['HEIGHT'] = dict()
+
+        ccdinfo['CCD_FRAME_TYPE'] = {
+            'FRAME_LIGHT' : 1,
+            'FRAME_BIAS'  : 0,
+            'FRAME_DARK'  : 0,
+            'FRAME_FLAT'  : 0,
+        }
+
+        ccdinfo['GAIN_INFO'] = {
+            'current' : 0,
+            'min'     : self._ccd_device.min_gain,
+            'max'     : self._ccd_device.max_gain,
+            'step'    : None,
+            'format'  : None,
+        }
+
         return ccdinfo
 
 
@@ -188,6 +234,8 @@ class FakeIndiCcd(object):
 
         self._min_exposure = None
         self._max_exposure = None
+
+        self._cfa = None
 
 
     @property
@@ -261,6 +309,14 @@ class FakeIndiCcd(object):
     def max_gain(self, new_max_gain):
         self._max_gain = float(new_max_gain)
 
+
+    @property
+    def cfa(self):
+        return self._cfa
+
+    @cfa.setter
+    def cfa(self, new_cfa):
+        self._cfa = new_cfa
 
 
     def getDeviceName(self):

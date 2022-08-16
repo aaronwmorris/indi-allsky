@@ -24,6 +24,8 @@ class FakeIndiLibCamera(FakeIndiClient):
         self.min_exposure = 0.000032
         self.max_exposure = 200.0
 
+        self.cfa = 'BGGR'
+
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         if self._libCameraPidRunning():
@@ -84,6 +86,8 @@ class FakeIndiLibCamera(FakeIndiClient):
 
         new_ccd.min_exposure = self.min_exposure
         new_ccd.max_exposure = self.max_exposure
+
+        new_ccd.cfa = self.cfa
 
         self._ccd_device = new_ccd
 
