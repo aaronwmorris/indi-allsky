@@ -63,7 +63,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             '--output', str(image_tmp_p),
         ]
 
-        logger.info('image command: %s', cmd.join(' '))
+        logger.info('image command: %s', ' '.join(cmd))
 
         libcamera_subproc = subprocess.Popen(
             cmd,
