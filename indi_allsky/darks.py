@@ -124,7 +124,6 @@ class IndiAllSkyDarks(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
         )
 
         # set indi server localhost and port
@@ -479,7 +478,9 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
-        self.indiclient.getCcdTemperature()
+        temp_val = self.indiclient.getCcdTemperature()
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
