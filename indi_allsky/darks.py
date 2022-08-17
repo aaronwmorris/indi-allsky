@@ -9,6 +9,7 @@ from pathlib import Path
 import logging
 
 import numpy
+import rawpy
 from astropy.io import fits
 
 import ccdproc
@@ -260,7 +261,22 @@ class IndiAllSkyDarks(object):
 
 
 
-        hdulist = fits.open(filename_p)
+        ### Open file
+        if filename_p.suffix in ['.fit']:
+            hdulist = fits.open(filename_p)
+        elif filename_p.suffix in ['.dng']:
+            # DNG raw
+            raw = rawpy.imread(str(filename_p))
+            scidata_uncalibrated = raw.raw_image
+
+            # create a new fits container for DNG data
+            hdu = fits.PrimaryHDU(scidata_uncalibrated)
+            hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['IMAGETYP'] = 'DARK'
+            #hdulist[0].header['BITPIX'] = 16
+
+
         filename_p.unlink()  # no longer need the original file
 
 
