@@ -45,8 +45,6 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         self._exposure = exposure
 
-        self.exposureStartTime = time.time()
-
         image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.dng', delete=False)
         image_tmp_p = Path(image_tmp_f.name)
         image_tmp_f.close()
@@ -65,6 +63,9 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         ]
 
         logger.info('image command: %s', ' '.join(cmd))
+
+
+        self.exposureStartTime = time.time()
 
         self.libcamera_process = subprocess.Popen(
             cmd,
@@ -85,17 +86,6 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         if self.active_exposure:
             # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
-
-
-            # file is initially 0 size
-            i = 0
-            while self.current_exposure_file_p.stat().st_size == 0:
-                if i >= 3:  # 3 seconds max
-                    logger.error('Image was never written')
-                    return True, 'READY'
-
-                time.sleep(1.0)
-                i += 1
 
 
             exposure_elapsed_s = time.time() - self.exposureStartTime
@@ -123,8 +113,9 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         if not self.libcamera_process:
             return False
 
-        if self.libcamera_process.poll():
-            #self.libcamera_process = None
+        # poll returns None when process is active, rc (normally 0) when finished
+        poll = self.libcamera_process.poll()
+        if isinstance(poll, type(None)):
             return True
 
         return False
