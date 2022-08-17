@@ -21,6 +21,7 @@ DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 DB_URI_DEFAULT="sqlite:///${DB_FILE}"
 INSTALL_INDI="true"
+INSTALL_LIBCAMERA="false"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 #### end config ####
@@ -169,10 +170,37 @@ sleep 10
 sudo true
 
 
+echo
+echo
+echo "indi-allsky supports the following camera interfaces."
+echo
+echo "Note:  libcamera is generally only available on ARM SoCs like Raspberry Pi"
+echo
+PS3="Select a camera interface: "
+select camera_interface in indi libcamera_imx477; do
+    if [ -n "$camera_interface" ]; then
+        CAMERA_INTERFACE=$camera_interface
+        break
+    fi
+done
+
+
+if [ "$CAMERA_INTERFACE" != "indi" ]; then
+    INSTALL_INDI="false"
+fi
+
+if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    INSTALL_LIBCAMERA="true"
+fi
+
+
+echo
+echo
 echo "Fixing git checkout permissions"
 sudo find "$(dirname $0)" ! -user "$USER" -exec chown "$USER" {} \;
 sudo find "$(dirname $0)" -type d ! -perm -555 -exec chmod ugo+rx {} \;
 sudo find "$(dirname $0)" -type f ! -perm -444 -exec chmod ugo+r {} \;
+
 
 
 echo "**** Installing packages... ****"
@@ -190,7 +218,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -283,6 +311,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     #        indi-gphoto \
     #        indi-sx
     #fi
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            libcamera-apps
+    fi
+
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
@@ -380,6 +414,11 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
             indi-sx
     fi
 
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            libcamera-apps
+    fi
+
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
@@ -394,7 +433,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -492,7 +531,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -592,7 +631,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo dpkg-reconfigure tzdata
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -697,7 +736,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
 
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             echo
             echo
             echo "There are not prebuilt indi packages for this distribution"
@@ -931,19 +970,6 @@ pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
-echo
-echo
-echo "indi-allsky supports the following camera interfaces"
-echo
-PS3="Select a camera interface: "
-select camera_interface in indi libcamera_imx477; do
-    if [ -n "$camera_interface" ]; then
-        CAMERA_INTERFACE=$camera_interface
-        break
-    fi
-done
-
-
 if [ "$CAMERA_INTERFACE" == "indi" ]; then
     echo
     echo
@@ -965,7 +991,8 @@ fi
 # create users systemd folder
 [[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
 
-
+echo
+echo
 echo "**** Setting up indiserver service ****"
 TMP1=$(mktemp)
 sed \
