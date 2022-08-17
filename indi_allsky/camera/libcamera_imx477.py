@@ -9,6 +9,8 @@ import logging
 from .fake_indi import FakeIndiClient
 from .fake_indi import FakeIndiCcd
 
+from ..exceptions import TimeOutException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -49,6 +51,9 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         image_tmp_p = Path(image_tmp_f.name)
         image_tmp_f.close()
 
+        self.current_exposure_file_p = image_tmp_p
+
+
         exposure_us = int(exposure * 1000000)
 
         cmd = [
@@ -74,7 +79,15 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         )
 
         self.active_exposure = True
-        self.current_exposure_file_p = image_tmp_p
+
+        if sync:
+            try:
+                self.libcamera_process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                logger.error('Exposure timeout')
+                raise TimeOutException('Timeout waiting for exposure')
+
+            self.active_exposure = False
 
 
     def getCcdExposureStatus(self):
