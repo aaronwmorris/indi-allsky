@@ -56,6 +56,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         cmd = [
             'libcamera-still',
             '--immediate',
+            '--nopreview',
             '--raw',
             '--awbgains', '1.0,1.0,1.0',
             '--gain', '{0:d}'.format(self._ccd_gain),
