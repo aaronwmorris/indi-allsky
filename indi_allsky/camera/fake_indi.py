@@ -5,14 +5,13 @@ logger = logging.getLogger('indi_allsky')
 
 class FakeIndiClient(object):
 
-    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
+    def __init__(self, config, image_q, gain_v, bin_v):
         super(FakeIndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
 

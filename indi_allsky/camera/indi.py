@@ -90,14 +90,13 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
+    def __init__(self, config, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
         self._ctl_ccd_exposure = None
@@ -456,9 +455,6 @@ class IndiClient(PyIndi.BaseClient):
         else:
             temp_val = float(temp[0].value)
             logger.info("Sensor temperature: %0.1f", temp_val)
-
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val
 
         return temp_val
 
