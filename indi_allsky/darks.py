@@ -272,8 +272,11 @@ class IndiAllSkyDarks(object):
             hdu = fits.PrimaryHDU(scidata_uncalibrated)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['IMAGETYP'] = 'DARK'
+            hdulist[0].header['IMAGETYP'] = 'FRAME_DARK'
             #hdulist[0].header['BITPIX'] = 16
+
+            #for h in hdulist[0].header.keys():
+            #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
 
 
         filename_p.unlink()  # no longer need the original file
