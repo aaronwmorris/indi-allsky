@@ -89,6 +89,8 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
             self.active_exposure = False
 
+            self._queueImage()
+
 
     def getCcdExposureStatus(self):
         # returns camera_ready, exposure_state
@@ -100,26 +102,28 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
 
-
-            exposure_elapsed_s = time.time() - self.exposureStartTime
-
-
-            exp_date = datetime.now()
-
-            ### process data in worker
-            jobdata = {
-                'filename'    : str(self.current_exposure_file_p),
-                'exposure'    : self._exposure,
-                'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
-                'exp_elapsed' : exposure_elapsed_s,
-                'camera_id'   : self.config['DB_CCD_ID'],
-                'filename_t'  : self._filename_t,
-            }
-
-            self.image_q.put(jobdata)
+            self._queueImage()
 
 
         return True, 'READY'
+
+
+    def _queueImage(self):
+        exposure_elapsed_s = time.time() - self.exposureStartTime
+
+        exp_date = datetime.now()
+
+        ### process data in worker
+        jobdata = {
+            'filename'    : str(self.current_exposure_file_p),
+            'exposure'    : self._exposure,
+            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
+            'exp_elapsed' : exposure_elapsed_s,
+            'camera_id'   : self.config['DB_CCD_ID'],
+            'filename_t'  : self._filename_t,
+        }
+
+        self.image_q.put(jobdata)
 
 
     def _libCameraPidRunning(self):
