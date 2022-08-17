@@ -213,6 +213,11 @@ class ImageWorker(Process):
                 continue
 
 
+            if filename_p.stat().st_size == 0:
+                logger.error('Frame is empty: %s', filename_p)
+                continue
+
+
             ### Open file
             if filename_p.suffix in ['.fit']:
                 hdulist = fits.open(filename_p)
