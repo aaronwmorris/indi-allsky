@@ -101,7 +101,7 @@ class IndiAllSkyDarks(object):
     @bitmax.setter
     def bitmax(self, new_bitmax):
         self._bitmax = int(new_bitmax)
-        assert(self._bitmax in (0, 8, 10, 12, 14, 16))
+        assert self._bitmax in (0, 8, 10, 12, 14, 16)
 
 
     @property
@@ -131,7 +131,7 @@ class IndiAllSkyDarks(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
@@ -247,15 +247,21 @@ class IndiAllSkyDarks(object):
         ###
 
 
-        filename = Path(i_dict['filename'])
+        filename_p = Path(i_dict['filename'])
 
-        if not filename.exists():
-            #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
-            raise Exception('Frame not found {0:s}'.format(str(filename)))
+        if not filename_p.exists():
+            #task.setFailed('Frame not found: {0:s}'.format(str(filename_p)))
+            raise Exception('Frame not found {0:s}'.format(str(filename_p)))
 
 
-        hdulist = fits.open(filename)
-        filename.unlink()  # no longer need the original file
+        if filename_p.stat().st_size == 0:
+            #task.setFailed('Frame is empty: {0:s}'.format(str(filename_p)))
+            raise Exception('Frame is empty: {0:s}'.format(str(filename_p)))
+
+
+
+        hdulist = fits.open(filename_p)
+        filename_p.unlink()  # no longer need the original file
 
 
         return hdulist
