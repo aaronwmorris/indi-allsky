@@ -155,7 +155,14 @@ class FakeIndiClient(object):
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = dict()
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = dict()
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = dict()
-        ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = dict()
+
+        ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = {
+            'current' : self._ccd_device.bit_depth,
+            'min'     : None,
+            'max'     : None,
+            'step'    : None,
+            'format'  : None,
+        }
 
         ccdinfo['CCD_CFA'] = dict()
         ccdinfo['CCD_CFA']['CFA_TYPE'] = {
