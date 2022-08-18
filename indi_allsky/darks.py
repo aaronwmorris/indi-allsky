@@ -222,7 +222,7 @@ class IndiAllSkyDarks(object):
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
 
-    def _wait_for_image(self):
+    def _wait_for_image(self, exposure):
         i_dict = self.image_q.get(timeout=15)
 
         ### Not using DB task queue for image processing to reduce database I/O
@@ -272,8 +272,8 @@ class IndiAllSkyDarks(object):
             hdu = fits.PrimaryHDU(scidata_uncalibrated)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['IMAGETYP'] = 'FRAME_DARK'
-            #hdulist[0].header['BITPIX'] = 16
+            hdulist[0].header['IMAGETYP'] = 'Dark Frame'
+            hdulist[0].header['EXPTIME'] = float(exposure)
 
             #for h in hdulist[0].header.keys():
             #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
@@ -528,7 +528,7 @@ class IndiAllSkyDarks(object):
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
 
-            hdulist = self._wait_for_image()
+            hdulist = self._wait_for_image(exposure)
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
             image_bitpix = hdulist[0].header['BITPIX']
@@ -649,7 +649,7 @@ class IndiAllSkyDarksProcessor(object):
         hdulist = None
         for item in Path(tmp_fit_dir_p).iterdir():
             #logger.info('Found item: %s', item)
-            if item.is_file() and item.suffix in ('.fit',):
+            if item.is_file() and item.suffix in ['.fit']:
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
                 image_data.append(hdulist[0].data)
