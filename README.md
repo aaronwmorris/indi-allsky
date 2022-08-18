@@ -61,6 +61,12 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 MacOS support is theoretically possible, but not tested.
 
+### libcamera support
+libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
+
+Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4
+
+
 ## Installation
 1. Install git
 ```
