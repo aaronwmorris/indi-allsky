@@ -9,7 +9,6 @@ from pathlib import Path
 import logging
 
 import numpy
-import rawpy
 from astropy.io import fits
 
 import ccdproc
@@ -264,6 +263,8 @@ class IndiAllSkyDarks(object):
         if filename_p.suffix in ['.fit']:
             hdulist = fits.open(filename_p)
         elif filename_p.suffix in ['.dng']:
+            import rawpy  # not available in all cases
+
             # DNG raw
             raw = rawpy.imread(str(filename_p))
             scidata_uncalibrated = raw.raw_image

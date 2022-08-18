@@ -329,6 +329,14 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
+    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
+
+
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
@@ -440,6 +448,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         exit 1
     fi
 
+
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
@@ -526,6 +535,14 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements_debian10.txt
+
+
+    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -624,10 +641,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
-
-
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
@@ -637,6 +650,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         echo
         exit 1
     fi
+
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
 
 
     sudo apt-get update
@@ -722,10 +739,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
-
-
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
@@ -743,6 +756,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
             exit 1
         fi
     fi
+
+
+    # reconfigure system timezone
+    sudo dpkg-reconfigure tzdata
 
 
     sudo apt-get update
@@ -825,6 +842,14 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     PYTHON_BIN=python3.8
 
     VIRTUALENV_REQ=requirements_debian11.txt
+
+
+    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
 
 
     # reconfigure system timezone

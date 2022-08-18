@@ -23,7 +23,6 @@ import queue
 from astropy.io import fits
 import cv2
 import numpy
-import rawpy
 
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
@@ -228,6 +227,8 @@ class ImageWorker(Process):
 
                 scidata_uncalibrated = hdulist[0].data
             elif filename_p.suffix in ['.dng']:
+                import rawpy  # not available in all cases
+
                 # DNG raw
                 raw = rawpy.imread(str(filename_p))
                 scidata_uncalibrated = raw.raw_image

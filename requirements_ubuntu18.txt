@@ -15,7 +15,7 @@ paramiko
 pycurl==7.44.1
 imageio
 imageio-ffmpeg
-rawpy
+#rawpy  # not available
 pygifsicle
 gunicorn[gthread]
 inotify
