@@ -238,6 +238,13 @@ class ImageWorker(Process):
 
                 hdulist[0].header['IMAGETYP'] = 'Light Frame'
                 hdulist[0].header['EXPTIME'] = float(exposure)
+                #hdulist[0].header['XBINNING'] = 1
+                #hdulist[0].header['YBINNING'] = 1
+
+                if self.config['CFA_PATTERN']:
+                    hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                    hdulist[0].header['XBAYROFF'] = 0
+                    hdulist[0].header['YBAYROFF'] = 0
 
                 image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']

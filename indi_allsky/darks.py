@@ -274,6 +274,13 @@ class IndiAllSkyDarks(object):
 
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['EXPTIME'] = float(exposure)
+            #hdulist[0].header['XBINNING'] = 1
+            #hdulist[0].header['YBINNING'] = 1
+
+            if self.config['CFA_PATTERN']:
+                hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
 
             #for h in hdulist[0].header.keys():
             #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
