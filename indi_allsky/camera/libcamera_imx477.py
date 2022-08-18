@@ -61,6 +61,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             '--immediate',
             '--nopreview',
             '--raw',
+            '--denoise', 'off',
             '--awbgains', '1.0,1.0,1.0',  # disable awb
             '--gain', '{0:d}'.format(self._ccd_gain),
             '--shutter', '{0:d}'.format(exposure_us),
