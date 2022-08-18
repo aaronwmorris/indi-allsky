@@ -263,7 +263,12 @@ class IndiAllSkyDarks(object):
         if filename_p.suffix in ['.fit']:
             hdulist = fits.open(filename_p)
         elif filename_p.suffix in ['.dng']:
-            import rawpy  # not available in all cases
+            try:
+                import rawpy  # not available in all cases
+            except ImportError:
+                logger.error('*** rawpy module is not available ***')
+                filename_p.unlink()
+                raise
 
             # DNG raw
             raw = rawpy.imread(str(filename_p))
