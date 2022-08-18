@@ -47,6 +47,12 @@ function init() {
         context.drawImage(this, 0, 0, this.width, this.height,
                                 centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
+        $('#img_download').html(
+            $('<a />', {
+                'href' : this.src,
+            }).html('Download')
+        );
+
     };
 
 
@@ -233,6 +239,12 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6"></div>
+    <div class="col-sm-2">
+        <div id="img_download"></div>
     </div>
 </div>
 

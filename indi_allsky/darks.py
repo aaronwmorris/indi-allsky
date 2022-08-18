@@ -101,7 +101,7 @@ class IndiAllSkyDarks(object):
     @bitmax.setter
     def bitmax(self, new_bitmax):
         self._bitmax = int(new_bitmax)
-        assert(self._bitmax in (0, 8, 10, 12, 14, 16))
+        assert self._bitmax in (0, 8, 10, 12, 14, 16)
 
 
     @property
@@ -123,7 +123,6 @@ class IndiAllSkyDarks(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
         )
 
         # set indi server localhost and port
@@ -131,7 +130,7 @@ class IndiAllSkyDarks(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
@@ -222,7 +221,7 @@ class IndiAllSkyDarks(object):
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
 
-    def _wait_for_image(self):
+    def _wait_for_image(self, exposure):
         i_dict = self.image_q.get(timeout=15)
 
         ### Not using DB task queue for image processing to reduce database I/O
@@ -247,15 +246,53 @@ class IndiAllSkyDarks(object):
         ###
 
 
-        filename = Path(i_dict['filename'])
+        filename_p = Path(i_dict['filename'])
 
-        if not filename.exists():
-            #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
-            raise Exception('Frame not found {0:s}'.format(str(filename)))
+        if not filename_p.exists():
+            #task.setFailed('Frame not found: {0:s}'.format(str(filename_p)))
+            raise Exception('Frame not found {0:s}'.format(str(filename_p)))
 
 
-        hdulist = fits.open(filename)
-        filename.unlink()  # no longer need the original file
+        if filename_p.stat().st_size == 0:
+            #task.setFailed('Frame is empty: {0:s}'.format(str(filename_p)))
+            raise Exception('Frame is empty: {0:s}'.format(str(filename_p)))
+
+
+
+        ### Open file
+        if filename_p.suffix in ['.fit']:
+            hdulist = fits.open(filename_p)
+        elif filename_p.suffix in ['.dng']:
+            try:
+                import rawpy  # not available in all cases
+            except ImportError:
+                logger.error('*** rawpy module is not available ***')
+                filename_p.unlink()
+                raise
+
+            # DNG raw
+            raw = rawpy.imread(str(filename_p))
+            scidata_uncalibrated = raw.raw_image
+
+            # create a new fits container for DNG data
+            hdu = fits.PrimaryHDU(scidata_uncalibrated)
+            hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['IMAGETYP'] = 'Dark Frame'
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            #hdulist[0].header['XBINNING'] = 1
+            #hdulist[0].header['YBINNING'] = 1
+
+            if self.config['CFA_PATTERN']:
+                hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
+
+            #for h in hdulist[0].header.keys():
+            #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
+
+
+        filename_p.unlink()  # no longer need the original file
 
 
         return hdulist
@@ -457,7 +494,9 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
-        self.indiclient.getCcdTemperature()
+        temp_val = self.indiclient.getCcdTemperature()
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
@@ -502,7 +541,7 @@ class IndiAllSkyDarks(object):
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
 
-            hdulist = self._wait_for_image()
+            hdulist = self._wait_for_image(exposure)
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
             image_bitpix = hdulist[0].header['BITPIX']
@@ -623,7 +662,7 @@ class IndiAllSkyDarksProcessor(object):
         hdulist = None
         for item in Path(tmp_fit_dir_p).iterdir():
             #logger.info('Found item: %s', item)
-            if item.is_file() and item.suffix in ('.fit',):
+            if item.is_file() and item.suffix in ['.fit']:
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
                 image_data.append(hdulist[0].data)

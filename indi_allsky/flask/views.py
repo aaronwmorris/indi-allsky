@@ -86,7 +86,7 @@ bp = Blueprint(
 
 class BaseView(View):
 
-    _release = 4.2
+    _release = 5.0
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
@@ -436,10 +436,6 @@ class ImageLoopView(TemplateView):
         context['form_history'] = IndiAllskyHistoryForm()
 
         return context
-
-
-class ViewerView(TemplateView):
-    pass
 
 
 class JsonImageLoopView(JsonView):
@@ -2376,5 +2372,3 @@ bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', templa
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 
-# work in progress
-bp.add_url_rule('/viewer', view_func=ViewerView.as_view('viewer_view', template_name='viewer.html'))

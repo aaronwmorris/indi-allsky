@@ -14,6 +14,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Starlight Xpress
     * Player One Astronomy
     * Raspberry Pi HQ Camera
+    * libcamera support (imx477, imx378, etc)
     * Canon DSLRs
     * Generic web cameras
     * More to come
@@ -41,23 +42,30 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * (Optional) Internet connectivity for image uploading
 * An INDI supported camera
     * CPU architecture support varies between camera manufacturers
+* NEW: A libcamera supported camera
 
 ### Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
-| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
+| Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Use libcamera for Raspberry PI HQ camera |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
-| Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
-| Ubuntu 22.04          | arm64          | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Ubuntu 22.04          | arm64          | Compile indi with build_indi.sh |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04<br />inc. Ubuntu Mate | arm64 | Compile indi with build_indi.sh<br />Raspberry PI HQ camera support missing |
+| Ubuntu 20.04<br />inc. Ubuntu Mate | arm64 | Compile indi with build_indi.sh |
 | Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Astroberry Server 2.0 | armhf          | |
 
 MacOS support is theoretically possible, but not tested.
+
+### libcamera support
+libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
+
+Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4
+
 
 ## Installation
 1. Install git
@@ -191,6 +199,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | ----------------- | ------------- | --- |
 | Camera interface  | INDI          | https://indilib.org/ |
 |                   | pyindi-client | https://github.com/indilib/pyindi-client |
+|                   | libcamera     | https://libcamera.org/ |
 | Image processing  | OpenCV        | https://opencv.org/ |
 |                   | opencv-python | https://github.com/opencv/opencv-python |
 |                   | astropy       | https://www.astropy.org/ |
@@ -366,6 +375,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One   | Mars-C          | A      |       |
 | Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
+| Raspberry Pi | HQ Camera (libcamera) | A      | |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |

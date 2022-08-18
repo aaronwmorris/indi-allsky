@@ -3,6 +3,7 @@ import io
 import tempfile
 import ctypes
 from datetime import datetime
+from pathlib import Path
 import logging
 #from pprint import pformat
 
@@ -89,14 +90,13 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
+    def __init__(self, config, image_q, gain_v, bin_v):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
         self._ctl_ccd_exposure = None
@@ -174,6 +174,7 @@ class IndiClient(PyIndi.BaseClient):
         hdulist = fits.open(blobfile)
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        f_tmpfile_p = Path(f_tmpfile.name)
 
         hdulist.writeto(f_tmpfile)
 
@@ -188,7 +189,7 @@ class IndiClient(PyIndi.BaseClient):
 
         ### process data in worker
         jobdata = {
-            'filename'    : f_tmpfile.name,
+            'filename'    : str(f_tmpfile_p),
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
@@ -455,9 +456,6 @@ class IndiClient(PyIndi.BaseClient):
             temp_val = float(temp[0].value)
             logger.info("Sensor temperature: %0.1f", temp_val)
 
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val
-
         return temp_val
 
 
@@ -677,7 +675,7 @@ class IndiClient(PyIndi.BaseClient):
         }[ctl_type]
 
         started = time.time()
-        while not(ctl):
+        while not ctl:
             ctl = getattr(device, attr)(name)
 
             if not ctl and 0 < timeout < time.time() - started:
