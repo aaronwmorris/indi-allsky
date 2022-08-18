@@ -232,9 +232,15 @@ class ImageWorker(Process):
                 raw = rawpy.imread(str(filename_p))
                 scidata_uncalibrated = raw.raw_image
 
-                image_type = 'LIGHT'
-                image_bitpix = 16  # just a guess
+                # create a new fits container for DNG data
+                hdu = fits.PrimaryHDU(scidata_uncalibrated)
+                hdulist = fits.HDUList([hdu])
 
+                hdulist[0].header['IMAGETYP'] = 'Light Frame'
+                hdulist[0].header['EXPTIME'] = float(exposure)
+
+                image_type = hdulist[0].header['IMAGETYP']
+                image_bitpix = hdulist[0].header['BITPIX']
 
 
 
