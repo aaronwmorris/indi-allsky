@@ -37,7 +37,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
-            'bit_depth'     : 12,
+            'bit_depth'     : 16,
         }
 
 
