@@ -641,6 +641,14 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
+    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
+
+
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
@@ -737,6 +745,14 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     PYTHON_BIN=python3.9
 
     VIRTUALENV_REQ=requirements_debian11.txt
+
+
+    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
 
 
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
