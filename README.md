@@ -47,9 +47,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ### Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
-| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
-| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
 | Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Use libcamera for Raspberry PI HQ camera |
+| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
+| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
