@@ -1419,10 +1419,30 @@ if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
     echo "**** Disable star eater algorithm ****"
     sudo vcdbg set imx477_dpc 0 || true
 
-    echo "**** Setup disable crontjob at /etc/cron.d/disable_star_eater ****"
+    echo "**** Setup disable cronjob at /etc/cron.d/disable_star_eater ****"
     echo "@reboot root /usr/bin/vcdbg set imx477_dpc 0 >/dev/null 2>&1" | sudo tee /etc/cron.d/disable_star_eater
     sudo chown root:root /etc/cron.d/disable_star_eater
     sudo chmod 644 /etc/cron.d/disable_star_eater
+
+    echo
+    echo
+    echo "If this is the first time you have setup your Raspberry PI camera, please reboot when"
+    echo "this script completes to enable the camera interface..."
+    echo
+    echo
+
+    sleep 5
+fi
+
+
+if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    echo "**** Ensure user is a member of the video group ****"
+    sudo usermod -a -G video "$USER"
+
+    echo "**** Disable star eater algorithm ****"
+    echo "options imx477 dpc_enable=0" | sudo tee /etc/modprobe.d/imx477_dpc.conf
+    sudo chown root:root /etc/modprobe.d/imx477_dpc.conf
+    sudo chmod 644 /etc/modprobe.d/imx477_dpc.conf
 
     echo
     echo
