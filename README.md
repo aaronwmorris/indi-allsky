@@ -14,6 +14,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Starlight Xpress
     * Player One Astronomy
     * Raspberry Pi HQ Camera
+    * libcamera support (imx477, imx378, etc)
     * Canon DSLRs
     * Generic web cameras
     * More to come
@@ -41,6 +42,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * (Optional) Internet connectivity for image uploading
 * An INDI supported camera
     * CPU architecture support varies between camera manufacturers
+* NEW: A libcamera supported camera
 
 ### Distibution support
 | Distribution          | Arch           | Note |
@@ -191,6 +193,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded
 | ----------------- | ------------- | --- |
 | Camera interface  | INDI          | https://indilib.org/ |
 |                   | pyindi-client | https://github.com/indilib/pyindi-client |
+|                   | libcamera     | https://libcamera.org/ |
 | Image processing  | OpenCV        | https://opencv.org/ |
 |                   | opencv-python | https://github.com/opencv/opencv-python |
 |                   | astropy       | https://www.astropy.org/ |
@@ -366,6 +369,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One   | Mars-C          | A      |       |
 | Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
+| Raspberry Pi | HQ Camera (libcamera) | A      | |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
