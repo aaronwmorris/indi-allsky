@@ -23,6 +23,7 @@ import queue
 from astropy.io import fits
 import cv2
 import numpy
+import rawpy
 
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
@@ -80,7 +81,7 @@ class ImageWorker(Process):
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'RGGB' : cv2.COLOR_BAYER_BG2BGR,
-        'BGGR' : cv2.COLOR_BAYER_RG2BGR,  # untested
+        'BGGR' : cv2.COLOR_BAYER_RG2BGR,
         'GBRG' : cv2.COLOR_BAYER_GR2BGR,  # untested
     }
 
@@ -192,7 +193,7 @@ class ImageWorker(Process):
             #filename_t = task.data.get('filename_t')
             ###
 
-            filename = Path(i_dict['filename'])
+            filename_p = Path(i_dict['filename'])
             exposure = i_dict['exposure']
             exp_date = datetime.fromtimestamp(i_dict['exp_time'])
             exp_elapsed = i_dict['exp_elapsed']
@@ -206,22 +207,53 @@ class ImageWorker(Process):
             self.image_count += 1
 
 
-            if not filename.exists():
-                logger.error('Frame not found: %s', filename)
-                #task.setFailed('Frame not found: {0:s}'.format(str(filename)))
+            if not filename_p.exists():
+                logger.error('Frame not found: %s', filename_p)
+                #task.setFailed('Frame not found: {0:s}'.format(str(filename_p)))
                 continue
 
 
-            hdulist = fits.open(filename)
-            filename.unlink()  # no longer need the original file
+            if filename_p.stat().st_size == 0:
+                logger.error('Frame is empty: %s', filename_p)
+                continue
 
-            #logger.info('HDU Header = %s', pformat(hdulist[0].header))
-            image_type = hdulist[0].header['IMAGETYP']
-            image_bitpix = hdulist[0].header['BITPIX']
 
+            ### Open file
+            if filename_p.suffix in ['.fit']:
+                hdulist = fits.open(filename_p)
+
+                #logger.info('HDU Header = %s', pformat(hdulist[0].header))
+                image_type = hdulist[0].header['IMAGETYP']
+                image_bitpix = hdulist[0].header['BITPIX']
+
+                scidata_uncalibrated = hdulist[0].data
+            elif filename_p.suffix in ['.dng']:
+                # DNG raw
+                raw = rawpy.imread(str(filename_p))
+                scidata_uncalibrated = raw.raw_image
+
+                # create a new fits container for DNG data
+                hdu = fits.PrimaryHDU(scidata_uncalibrated)
+                hdulist = fits.HDUList([hdu])
+
+                hdulist[0].header['IMAGETYP'] = 'Light Frame'
+                hdulist[0].header['EXPTIME'] = float(exposure)
+                #hdulist[0].header['XBINNING'] = 1
+                #hdulist[0].header['YBINNING'] = 1
+
+                if self.config['CFA_PATTERN']:
+                    hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                    hdulist[0].header['XBAYROFF'] = 0
+                    hdulist[0].header['YBAYROFF'] = 0
+
+                image_type = hdulist[0].header['IMAGETYP']
+                image_bitpix = hdulist[0].header['BITPIX']
+
+
+
+            filename_p.unlink()  # no longer need the original file
             logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
 
-            scidata_uncalibrated = hdulist[0].data
 
 
             processing_start = time.time()

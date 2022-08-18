@@ -5,19 +5,32 @@ logger = logging.getLogger('indi_allsky')
 
 class FakeIndiClient(object):
 
-    def __init__(self, config, image_q, gain_v, bin_v, sensortemp_v):
+    def __init__(self, config, image_q, gain_v, bin_v):
         super(FakeIndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
 
         self._ccd_device = None
+
         self._ccd_gain = -1
         self._ccd_bin = 1
         self._ccd_frame_type = 'LIGHT'
+
+        self.camera_info = {
+            'width'         : None,
+            'height'        : None,
+            'pixel'         : None,
+            'min_gain'      : 0,
+            'max_gain'      : 100,
+            'min_exposure'  : 0.0000032,
+            'max_exposure'  : 300.0,
+            'cfa'           : None,
+            'bit_depth'     : 12,
+        }
+
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -71,6 +84,16 @@ class FakeIndiClient(object):
 
     def connectServer(self):
         # does nothing
+        return True
+
+
+    def disconnectServer(self):
+        # does nothing
+        pass
+
+
+    def connectDevice(self, *args, **kwargs):
+        # does nothing
         pass
 
 
@@ -90,6 +113,10 @@ class FakeIndiClient(object):
     def disableDebug(self, *args, **kwargs):
         # does nothing
         pass
+
+
+    def disableDebugCcd(self):
+        self.disableDebug(self._ccd_device)
 
 
     def resetCcdFrame(self, *args, **kwargs):
@@ -112,6 +139,57 @@ class FakeIndiClient(object):
 
     def getCcdInfo(self):
         ccdinfo = dict()
+
+        ccdinfo['CCD_EXPOSURE'] = dict()
+        ccdinfo['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE'] = {
+            'current' : None,
+            'min'     : self._ccd_device.min_exposure,
+            'max'     : self._ccd_device.max_exposure,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_INFO'] = dict()
+        ccdinfo['CCD_INFO']['CCD_MAX_X'] = dict()
+        ccdinfo['CCD_INFO']['CCD_MAX_Y'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = dict()
+
+        ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = {
+            'current' : self._ccd_device.bit_depth,
+            'min'     : None,
+            'max'     : None,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_CFA'] = dict()
+        ccdinfo['CCD_CFA']['CFA_TYPE'] = {
+            'text' : self._ccd_device.cfa,
+        }
+
+        ccdinfo['CCD_FRAME'] = dict()
+        ccdinfo['CCD_FRAME']['X'] = dict()
+        ccdinfo['CCD_FRAME']['Y'] = dict()
+        ccdinfo['CCD_FRAME']['WIDTH'] = dict()
+        ccdinfo['CCD_FRAME']['HEIGHT'] = dict()
+
+        ccdinfo['CCD_FRAME_TYPE'] = {
+            'FRAME_LIGHT' : 1,
+            'FRAME_BIAS'  : 0,
+            'FRAME_DARK'  : 0,
+            'FRAME_FLAT'  : 0,
+        }
+
+        ccdinfo['GAIN_INFO'] = {
+            'current' : 0,
+            'min'     : self._ccd_device.min_gain,
+            'max'     : self._ccd_device.max_gain,
+            'step'    : None,
+            'format'  : None,
+        }
+
         return ccdinfo
 
 
@@ -147,20 +225,29 @@ class FakeIndiClient(object):
         return self._ccd_gain
 
 
-    def setCcdGain(self, gain_value):
-        self._ccd_gain = int(gain_value)
+    def setCcdGain(self, new_gain_value):
+        self._ccd_gain = int(new_gain_value)
 
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = int(gain_value)
+            self.gain_v.value = int(new_gain_value)
 
 
-    def setCcdBinning(self, bin_value):
-        self._ccd_bin = int(bin_value[0])
+    def setCcdBinning(self, new_bin_value):
+        if type(new_bin_value) is int:
+            new_bin_value = [new_bin_value, new_bin_value]
+        elif type(new_bin_value) is str:
+            new_bin_value = [int(new_bin_value), int(new_bin_value)]
+        elif not new_bin_value:
+            # Assume default
+            return
+
+
+        self._ccd_bin = int(new_bin_value[0])
 
         # Update shared gain value
         with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value[0])
+            self.bin_v.value = int(new_bin_value[0])
 
 
 
@@ -172,6 +259,45 @@ class FakeIndiCcd(object):
         # these should be set
         self._device_name = 'UNDEFINED'
         self._driver_exec = 'UNDEFINED'
+
+        self._width = None
+        self._height = None
+        self._pixel = None
+
+        self._min_gain = None
+        self._max_gain = None
+
+        self._min_exposure = None
+        self._max_exposure = None
+
+        self._cfa = None
+        self._bit_depth = None
+
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, new_width):
+        self._width = int(new_width)
+
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, new_height):
+        self._height = int(new_height)
+
+
+    @property
+    def pixel(self):
+        return self._pixel
+
+    @pixel.setter
+    def pixel(self, new_pixel):
+        self._pixel = float(new_pixel)
 
 
     @property
@@ -190,6 +316,79 @@ class FakeIndiCcd(object):
     @driver_exec.setter
     def driver_exec(self, new_driver_exec):
         self._driver_exec = new_driver_exec
+
+
+    @property
+    def min_gain(self):
+        return self._min_gain
+
+    @min_gain.setter
+    def min_gain(self, new_min_gain):
+        self._min_gain = float(new_min_gain)
+
+
+    @property
+    def max_gain(self):
+        return self._max_gain
+
+    @max_gain.setter
+    def max_gain(self, new_max_gain):
+        self._max_gain = float(new_max_gain)
+
+
+    @property
+    def min_exposure(self):
+        return self._min_exposure
+
+    @min_exposure.setter
+    def min_exposure(self, new_min_exposure):
+        self._min_exposure = float(new_min_exposure)
+
+
+    @property
+    def max_exposure(self):
+        return self._max_exposure
+
+    @max_exposure.setter
+    def max_exposure(self, new_max_exposure):
+        self._max_exposure = float(new_max_exposure)
+
+
+    @property
+    def min_gain(self):
+        return self._min_gain
+
+    @min_gain.setter
+    def min_gain(self, new_min_gain):
+        self._min_gain = float(new_min_gain)
+
+
+    @property
+    def max_gain(self):
+        return self._max_gain
+
+    @max_gain.setter
+    def max_gain(self, new_max_gain):
+        self._max_gain = float(new_max_gain)
+
+
+    @property
+    def cfa(self):
+        return self._cfa
+
+    @cfa.setter
+    def cfa(self, new_cfa):
+        self._cfa = new_cfa
+
+
+    @property
+    def bit_depth(self):
+        return self._bit_depth
+
+    @bit_depth.setter
+    def bit_depth(self, new_bit_depth):
+        self._bit_depth = int(new_bit_depth)
+
 
 
     def getDeviceName(self):

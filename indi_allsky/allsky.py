@@ -46,7 +46,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 20220813.0
+    _version = 20220816.0
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
@@ -310,7 +310,6 @@ class IndiAllSky(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
         )
 
         # set indi server localhost and port
@@ -318,7 +317,7 @@ class IndiAllSky(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
@@ -637,7 +636,12 @@ class IndiAllSky(object):
                     self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
-            self.indiclient.getCcdTemperature()
+
+            temp_val = self.indiclient.getCcdTemperature()
+            with self.sensortemp_v.get_lock():
+                self.sensortemp_v.value = temp_val
+
+
 
             if self.night:
                 # always indicate timelapse generation at night
@@ -749,7 +753,6 @@ class IndiAllSky(object):
             self.image_q,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
         )
 
         # set indi server localhost and port
@@ -757,7 +760,7 @@ class IndiAllSky(object):
 
         # connect to indi server
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
