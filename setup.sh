@@ -185,9 +185,6 @@ select camera_interface in indi libcamera_imx477; do
 done
 
 
-if [ "$CAMERA_INTERFACE" != "indi" ]; then
-    INSTALL_INDI="false"
-fi
 
 if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
     INSTALL_LIBCAMERA="true"
@@ -218,7 +215,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -433,7 +430,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     VIRTUALENV_REQ=requirements_debian11.txt
 
 
-    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -531,7 +528,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
-    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -631,7 +628,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo dpkg-reconfigure tzdata
 
 
-    if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
         echo "There are not prebuilt indi packages for this distribution"
@@ -736,7 +733,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
 
-        if [[ "$CAMERA_INTERFACE" == "indi" && ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             echo
             echo
             echo "There are not prebuilt indi packages for this distribution"
