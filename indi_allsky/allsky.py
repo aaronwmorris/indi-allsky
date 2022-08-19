@@ -14,6 +14,7 @@ import logging
 
 import ephem
 
+import queue
 from multiprocessing import Queue
 from multiprocessing import Value
 
@@ -76,6 +77,7 @@ class IndiAllSky(object):
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         self.image_q = Queue()
+        self.image_error_q = Queue()
         self.image_worker = None
         self.image_worker_idx = 0
 
@@ -441,12 +443,21 @@ class IndiAllSky(object):
             if self.image_worker.is_alive():
                 return
 
+            try:
+                image_error, image_traceback = self.image_error_q.get_nowait()
+                for line in image_traceback.split('\n'):
+                    logger.error('Image worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
         self.image_worker_idx += 1
 
         logger.info('Starting ImageWorker process')
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
+            self.image_error_q,
             self.image_q,
             self.upload_q,
             self.exposure_v,

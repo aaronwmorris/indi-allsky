@@ -75,6 +75,7 @@ class ImageWorker(Process):
         self,
         idx,
         config,
+        error_q,
         image_q,
         upload_q,
         exposure_v,
@@ -90,6 +91,7 @@ class ImageWorker(Process):
         self.name = 'ImageWorker{0:03d}'.format(idx)
 
         self.config = config
+        self.error_q = error_q
         self.image_q = image_q
         self.upload_q = upload_q
 
@@ -132,7 +134,21 @@ class ImageWorker(Process):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+
     def run(self):
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
+
+
+
+    def saferun(self):
+        #raise Exception('Test exception handling in worker')
+
         while True:
             time.sleep(0.05)  # sleep every loop
 
