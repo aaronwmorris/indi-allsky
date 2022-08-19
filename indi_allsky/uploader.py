@@ -1,8 +1,7 @@
-import sys
 import time
 from pathlib import Path
-import logging
 import traceback
+import logging
 
 from multiprocessing import Process
 #from threading import Thread
@@ -21,39 +20,32 @@ from sqlalchemy.orm.exc import NoResultFound
 logger = logging.getLogger('indi_allsky')
 
 
-def unhandled_exception(exc_type, exc_value, exc_traceback):
-    # Do not print exception when user cancels the program
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-
-    logger.error("An uncaught exception occurred:")
-    logger.error("Type: %s", exc_type)
-    logger.error("Value: %s", exc_value)
-
-    if exc_traceback:
-        format_exception = traceback.format_tb(exc_traceback)
-        for line in format_exception:
-            logger.error(repr(line))
-
-
-#log unhandled exceptions
-sys.excepthook = unhandled_exception
-
-
 
 class FileUploader(Process):
-    def __init__(self, idx, config, upload_q):
+    def __init__(self, idx, config, error_q, upload_q):
         super(FileUploader, self).__init__()
 
         #self.threadID = idx
         self.name = 'FileUploader{0:03d}'.format(idx)
 
         self.config = config
+        self.error_q = error_q
         self.upload_q = upload_q
 
 
     def run(self):
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
+
+
+    def saferun(self):
+        #raise Exception('Test exception handling in worker')
+
         while True:
             time.sleep(0.7)  # sleep every loop
 
