@@ -46,13 +46,14 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, video_q, upload_q, bin_v):
+    def __init__(self, idx, config, error_q, video_q, upload_q, bin_v):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
         self.name = 'VideoWorker{0:03d}'.format(idx)
 
         self.config = config
+        self.error_q = error_q
         self.video_q = video_q
         self.upload_q = upload_q
         self.bin_v = bin_v
@@ -65,6 +66,18 @@ class VideoWorker(Process):
 
 
     def run(self):
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
+
+
+    def saferun(self):
+        #raise Exception('Test exception handling in worker')
+
         while True:
             time.sleep(1.9)  # sleep every loop
 

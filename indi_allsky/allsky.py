@@ -82,10 +82,12 @@ class IndiAllSky(object):
         self.image_worker_idx = 0
 
         self.video_q = Queue()
+        self.video_error_q = Queue()
         self.video_worker = None
         self.video_worker_idx = 0
 
         self.upload_q = Queue()
+        self.upload_error_q = Queue()
         self.upload_worker = None
         self.upload_worker_idx = 0
 
@@ -492,12 +494,22 @@ class IndiAllSky(object):
             if self.video_worker.is_alive():
                 return
 
+
+            try:
+                video_error, video_traceback = self.video_error_q.get_nowait()
+                for line in video_traceback.split('\n'):
+                    logger.error('Video worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
         self.video_worker_idx += 1
 
         logger.info('Starting VideoWorker process')
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
+            self.video_error_q,
             self.video_q,
             self.upload_q,
             self.bin_v,
@@ -527,12 +539,22 @@ class IndiAllSky(object):
             if self.upload_worker.is_alive():
                 return
 
+
+            try:
+                upload_error, upload_traceback = self.upload_error_q.get_nowait()
+                for line in upload_traceback.split('\n'):
+                    logger.error('Upload worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
         self.upload_worker_idx += 1
 
         logger.info('Starting FileUploader process %d', self.upload_worker_idx)
         self.upload_worker = FileUploader(
             self.upload_worker_idx,
             self.config,
+            self.upload_error_q,
             self.upload_q,
         )
 
