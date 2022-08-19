@@ -212,7 +212,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     PYTHON_BIN=python3
 
-    VIRTUALENV_REQ=requirements_debian11.txt
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        # rawpy not available on arm 32bit
+        VIRTUALENV_REQ=requirements_debian11_armv7l.txt
+    else
+        VIRTUALENV_REQ=requirements_debian11.txt
+    fi
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -435,7 +440,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     PYTHON_BIN=python3
 
-    VIRTUALENV_REQ=requirements_debian11.txt
+    # Sometimes raspbian can be detected as debian
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        # rawpy not available on arm 32bit
+        VIRTUALENV_REQ=requirements_debian11_armv7l.txt
+    else
+        VIRTUALENV_REQ=requirements_debian11.txt
+    fi
 
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
