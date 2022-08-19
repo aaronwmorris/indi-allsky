@@ -48,7 +48,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
 | Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Use libcamera for Raspberry PI HQ camera |
-| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
+| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh<br />The rawpy module is not availble on 32-bit Arm, therefore libcamera image processing is not available |
 | Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
@@ -64,7 +64,7 @@ MacOS support is theoretically possible, but not tested.
 ### libcamera support
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
-Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4
+Proper libcamera support is only working on Raspbian 11 64-bit on Raspberry Pi 3 & 4
 
 
 ## Installation
