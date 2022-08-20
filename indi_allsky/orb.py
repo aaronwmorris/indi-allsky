@@ -30,12 +30,16 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR']).reverse()
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR']).reverse()
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
@@ -216,12 +220,16 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR']).reverse()
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR']).reverse()
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
@@ -402,12 +410,16 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR']).reverse()
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR']).reverse()
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
