@@ -165,7 +165,7 @@ class IndiAllskyOrbGenerator(object):
         else:
             pass
 
-        logger.info('%s hour angle: %0.2f @ %s', skyObj.name, ha_deg, obs.date)
+        #logger.info('%s hour angle: %0.2f @ %s', skyObj.name, ha_deg, obs.date)
 
         abs_ha_deg = abs(ha_deg)
         perimeter_half = image_width + image_height
@@ -355,7 +355,7 @@ class IndiAllskyOrbGenerator(object):
             az_deg = (-360 + az_deg) * -1
 
 
-        logger.info('%s azimuth: %0.2f @ %s', skyObj.name, az_deg, obs.date)
+        #logger.info('%s azimuth: %0.2f @ %s', skyObj.name, az_deg, obs.date)
 
         abs_az_deg = abs(az_deg)
         perimeter_half = image_width + image_height

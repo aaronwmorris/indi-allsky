@@ -447,7 +447,7 @@ class ImageWorker(Process):
     def upload_image(self, latest_file, image_entry):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
-            logger.warning('Image uploading disabled')
+            #logger.warning('Image uploading disabled')
             return
 
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
@@ -482,7 +482,7 @@ class ImageWorker(Process):
     def upload_metadata(self, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
-            logger.warning('Metadata uploading disabled')
+            #logger.warning('Metadata uploading disabled')
             return
 
 
@@ -548,7 +548,7 @@ class ImageWorker(Process):
 
     def mqtt_publish(self, latest_file, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
-            logger.warning('MQ publishing disabled')
+            #logger.warning('MQ publishing disabled')
             return
 
         logger.info('Publishing data to MQ broker')
@@ -749,7 +749,6 @@ class ImageWorker(Process):
         if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
             logger.info('Daytime timelapse is disabled')
             tmpfile_name.unlink()  # cleanup temp file
-            logger.info('Finished writing files')
             return latest_file, None
 
 
@@ -759,7 +758,7 @@ class ImageWorker(Process):
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
 
-        logger.info('Image filename: %s', filename)
+        #logger.info('Image filename: %s', filename)
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
@@ -772,7 +771,7 @@ class ImageWorker(Process):
         ### Cleanup
         tmpfile_name.unlink()
 
-        logger.info('Finished writing files')
+        #logger.info('Finished writing files')
 
         return latest_file, filename
 
