@@ -45,6 +45,12 @@ from sqlalchemy import func
 from .exceptions import CalibrationNotFound
 
 
+try:
+    import rawpy  # not available in all cases
+except ImportError:
+    rawpy = None
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -221,12 +227,9 @@ class ImageWorker(Process):
 
                 scidata_uncalibrated = hdulist[0].data
             elif filename_p.suffix in ['.dng']:
-                try:
-                    import rawpy  # not available in all cases
-                except ImportError:
-                    logger.error('*** rawpy module is not available ***')
+                if not rawpy:
                     filename_p.unlink()
-                    raise
+                    raise Exception('*** rawpy module not available ***')
 
                 # DNG raw
                 raw = rawpy.imread(str(filename_p))

@@ -32,6 +32,12 @@ from .flask.models import IndiAllSkyDbBadPixelMapTable
 #from sqlalchemy.orm.exc import NoResultFound
 
 
+try:
+    import rawpy  # not available in all cases
+except ImportError:
+    rawpy = None
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -263,12 +269,9 @@ class IndiAllSkyDarks(object):
         if filename_p.suffix in ['.fit']:
             hdulist = fits.open(filename_p)
         elif filename_p.suffix in ['.dng']:
-            try:
-                import rawpy  # not available in all cases
-            except ImportError:
-                logger.error('*** rawpy module is not available ***')
+            if not rawpy:
                 filename_p.unlink()
-                raise
+                raise Exception('*** rawpy module not available ***')
 
             # DNG raw
             raw = rawpy.imread(str(filename_p))
