@@ -288,7 +288,7 @@ class ImageWorker(Process):
                 # gray scale or bayered
 
                 if self.config.get('IMAGE_SAVE_FITS'):
-                    self.write_fit(hdulist, camera_id, exposure, exp_date, image_type, image_bitpix)
+                    self.write_fit(hdulist, camera_id, exposure, exp_date, image_bitpix)
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
@@ -674,7 +674,7 @@ class ImageWorker(Process):
         return image_bit_depth
 
 
-    def write_fit(self, hdulist, camera_id, exposure, exp_date, image_type, image_bitpix):
+    def write_fit(self, hdulist, camera_id, exposure, exp_date, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_FITS'):
             return
