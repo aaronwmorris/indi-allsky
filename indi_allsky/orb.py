@@ -30,11 +30,17 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
         # Civil dawn
@@ -214,11 +220,17 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
         # Civil dawn
@@ -398,11 +410,17 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        sun_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        moon_color_bgr.reverse()
+
+        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
         # Civil dawn
