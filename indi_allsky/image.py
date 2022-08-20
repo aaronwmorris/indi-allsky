@@ -995,8 +995,7 @@ class ImageWorker(Process):
 
         image_height, image_width = data_bytes.shape[:2]
 
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR']).reverse()
 
 
         # Disabled when focus mode is enabled

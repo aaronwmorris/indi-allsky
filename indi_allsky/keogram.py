@@ -255,8 +255,7 @@ class KeogramGenerator(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR']).reverse()
 
         for i, u_ts in enumerate(self.timestamps_list):
             ts = datetime.fromtimestamp(u_ts)

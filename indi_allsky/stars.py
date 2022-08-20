@@ -130,8 +130,7 @@ class IndiAllSkyStars(object):
 
         image_height, image_width = sep_data.shape[:2]
 
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR']).reverse()
 
         logger.info('Draw circles around objects')
         for blob in blob_list:

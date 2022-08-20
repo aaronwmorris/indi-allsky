@@ -140,8 +140,7 @@ class IndiAllskyDetectLines(object):
         if not self.config.get('DETECT_DRAW'):
             return
 
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR']).reverse()
 
 
         for line in lines:
