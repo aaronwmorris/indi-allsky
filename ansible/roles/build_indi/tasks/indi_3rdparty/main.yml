@@ -165,6 +165,51 @@
     - udev
 
 
+- name: check status of /lib/firmware/qhy
+  stat:
+    path: /lib/firmware/qhy
+  register: lib_firmware_qhy_stat
+
+
+- name: Find list of QHY firmwares
+  find:
+    paths:
+      - /lib/firmware
+    patterns:
+      - "QHY*.HEX"
+    file_type: file
+    recurse: no
+  register: qhy_firmware_files
+  when:
+    - not lib_firmware_qhy_stat.stat.exists
+
+
+- name: Create /lib/firmware/qhy
+  file:
+    path: /lib/firmware/qhy
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+  when:
+    - not lib_firmware_qhy_stat.stat.exists
+
+
+- name: Create QHY firmware symbolic links
+  file:
+    src:  "{{ item.path }}"
+    dest: "/lib/firmware/qhy/{{ item.path | basename }}"
+    owner: root
+    group: root
+    state: link
+    force: no
+  become: true
+  with_items: "{{ qhy_firmware_files.files }}"
+  when:
+    - not lib_firmware_qhy_stat.stat.exists
+
+
 - name: Cleanup indi_3rdparty libs build folder
   file:
     path: "{{ indi_3rdparty_libs_build }}"
