@@ -777,6 +777,11 @@ def MQTTPUBLISH__QOS_validator(form, field):
         raise ValidationError('Invalid QoS')
 
 
+def LIBCAMERA__IMAGE_FILE_TYPE_validator(form, field):
+    if field.data not in ('dng', 'jpg', 'png'):
+        raise ValidationError('Please select a valid file type')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -862,6 +867,12 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__TRANSPORT_choices = (
         ('tcp', 'tcp'),
         ('websockets', 'websockets'),
+    )
+
+    LIBCAMERA__IMAGE_FILE_TYPE_choices = (
+        ('dng', 'DNG (raw)'),
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
     )
 
 
@@ -988,6 +999,7 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
+    LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
 

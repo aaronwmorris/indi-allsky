@@ -176,5 +176,9 @@
         "QOS"                    : 0,
         "TLS"                    : true,
         "CERT_BYPASS"            : true
+    },
+
+    "LIBCAMERA" : {
+        "IMAGE_FILE_TYPE"        : "dng"
     }
 }
