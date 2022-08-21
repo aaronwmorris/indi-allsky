@@ -1504,6 +1504,17 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
 fi
 
 
+# Disable raw frames with libcamera when running 1GB of memory
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
+if [ "$MEM_TOTAL" -lt "15360000" ]; then
+    TMP_LIBCAM_TYPE=$(mktemp)
+    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_TYPE
+    cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
+    [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
+fi
+
+
+
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
 # Not trying to push out the competition, these just cannot run at the same time :-)
 sudo systemctl stop allsky || true
