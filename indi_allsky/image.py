@@ -467,11 +467,11 @@ class ImageWorker(Process):
                 self.mqtt_publish(latest_file, mqtt_data)
 
 
-                self.upload_image(latest_file, image_entry)
+                self.upload_image(latest_file, image_entry=image_entry)
                 self.upload_metadata(exposure, exp_date, adu, adu_average, blob_stars, camera_id)
 
 
-    def upload_image(self, latest_file, image_entry):
+    def upload_image(self, latest_file, image_entry=None):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
