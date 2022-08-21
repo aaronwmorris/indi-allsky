@@ -45,6 +45,12 @@ from sqlalchemy import func
 from .exceptions import CalibrationNotFound
 
 
+try:
+    import rawpy  # not available in all cases
+except ImportError:
+    rawpy = None
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -94,6 +100,8 @@ class ImageWorker(Process):
         self.error_q = error_q
         self.image_q = image_q
         self.upload_q = upload_q
+
+        self.indi_rgb = True  # INDI returns array in the wrong order for cv2
 
         self.exposure_v = exposure_v
         self.gain_v = gain_v
@@ -220,13 +228,24 @@ class ImageWorker(Process):
                 image_bitpix = hdulist[0].header['BITPIX']
 
                 scidata_uncalibrated = hdulist[0].data
+            elif filename_p.suffix in ['.jpg', '.jpeg']:
+                self.indi_rgb = False
+
+                scidata_uncalibrated = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+                image_type = 'Light Frame'
+                image_bitpix = 8
+            elif filename_p.suffix in ['.png']:
+                self.indi_rgb = False
+
+                scidata_uncalibrated = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+                image_type = 'Light Frame'
+                image_bitpix = 8
             elif filename_p.suffix in ['.dng']:
-                try:
-                    import rawpy  # not available in all cases
-                except ImportError:
-                    logger.error('*** rawpy module is not available ***')
+                if not rawpy:
                     filename_p.unlink()
-                    raise
+                    raise Exception('*** rawpy module not available ***')
 
                 # DNG raw
                 raw = rawpy.imread(str(filename_p))
@@ -269,7 +288,7 @@ class ImageWorker(Process):
                 # gray scale or bayered
 
                 if self.config.get('IMAGE_SAVE_FITS'):
-                    self.write_fit(hdulist, camera_id, exposure, exp_date, image_type, image_bitpix)
+                    self.write_fit(hdulist, camera_id, exposure, exp_date, image_bitpix)
 
                 try:
                     scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
@@ -289,15 +308,20 @@ class ImageWorker(Process):
                 # data is probably RGB
                 #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
 
-                #INDI returns array in the wrong order for cv2
-                scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
-                scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 1)
-                #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+                if self.indi_rgb:
+                    # INDI returns array in the wrong order for cv2
+                    scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
+                    scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 1)
+                    #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+
+                    scidata_debayered = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+                else:
+                    # normal rgb data
+                    scidata_debayered = scidata_uncalibrated
+
 
                 # sqm calculation
-                self.sqm_value = self.calculateSqm(scidata_uncalibrated, exposure)
-
-                scidata_debayered = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+                self.sqm_value = self.calculateSqm(scidata_debayered, exposure)
 
                 calibrated = False
 
@@ -650,7 +674,7 @@ class ImageWorker(Process):
         return image_bit_depth
 
 
-    def write_fit(self, hdulist, camera_id, exposure, exp_date, image_type, image_bitpix):
+    def write_fit(self, hdulist, camera_id, exposure, exp_date, image_bitpix):
         ### Do not write image files if fits are enabled
         if not self.config.get('IMAGE_SAVE_FITS'):
             return

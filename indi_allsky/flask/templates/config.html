@@ -1434,6 +1434,20 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File type for libcamera acquistion.  This has no effect when using indi.</div>
+    </div>
+
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
@@ -1551,6 +1565,7 @@ const field_names = [
     'MQTTPUBLISH__PASSWORD',
     'MQTTPUBLISH__BASE_TOPIC',
     'MQTTPUBLISH__QOS',
+    'LIBCAMERA__IMAGE_FILE_TYPE',
     'INDI_CONFIG_DEFAULTS',
 ];
 

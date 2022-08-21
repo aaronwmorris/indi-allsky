@@ -2,7 +2,7 @@ from datetime import datetime
 import time
 import tempfile
 import subprocess
-#import psutil
+import psutil
 from pathlib import Path
 import logging
 
@@ -41,13 +41,24 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         }
 
 
+        memory_info = psutil.virtual_memory()
+        self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
+
+
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         if self.active_exposure:
             return
 
         self._exposure = exposure
 
-        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.dng', delete=False)
+
+        image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+
+        if image_type == 'dng' and self.memory_total_mb <= 1536:
+            logger.warning('*** Capturing raw images (dng) with libcamera and less than 2gb of memory can result in out-of-memory errors ***')
+
+
+        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=True)
         image_tmp_p = Path(image_tmp_f.name)
         image_tmp_f.close()
 
@@ -56,17 +67,35 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         exposure_us = int(exposure * 1000000)
 
-        cmd = [
-            'libcamera-still',
-            '--immediate',
-            '--nopreview',
-            '--raw',
-            '--denoise', 'off',
-            '--awbgains', '1.0,1.0,1.0',  # disable awb
-            '--gain', '{0:d}'.format(self._ccd_gain),
-            '--shutter', '{0:d}'.format(exposure_us),
-            '--output', str(image_tmp_p),
-        ]
+        if image_type in ['dng']:
+            cmd = [
+                'libcamera-still',
+                '--immediate',
+                '--nopreview',
+                '--raw',
+                '--denoise', 'off',
+                '--awbgains', '1.0,1.0,1.0',  # disable awb
+                '--gain', '{0:d}'.format(self._ccd_gain),
+                '--shutter', '{0:d}'.format(exposure_us),
+                '--output', str(image_tmp_p),
+            ]
+        elif image_type in ['jpg', 'png']:
+            #logger.warning('RAW frame mode disabled due to low memory resources')
+            cmd = [
+                'libcamera-still',
+                '--immediate',
+                '--nopreview',
+                '--encoding', '{0:s}'.format(image_type),
+                '--quality', '100',
+                '--denoise', 'off',
+                '--awbgains', '1.0,1.0,1.0',  # disable awb
+                '--gain', '{0:d}'.format(self._ccd_gain),
+                '--shutter', '{0:d}'.format(exposure_us),
+                '--output', str(image_tmp_p),
+            ]
+        else:
+            raise Exception('Invalid image type')
+
 
         logger.info('image command: %s', ' '.join(cmd))
 
