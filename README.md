@@ -64,7 +64,9 @@ MacOS support is theoretically possible, but not tested.
 ### libcamera support
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
-Proper libcamera support is only working on Raspbian 11 64-bit on Raspberry Pi 3 & 4
+Proper libcamera support is only working on Raspbian 11 64-bit on Raspberry Pi 3 & 4.
+
+Note: Genererating and processing raw (dng) files on a system with 1GB of memory with libcamera causes out-of-memory conditions.  There is an option to generate JPEG or PNG files with libcamera which solves this issue.
 
 
 ## Installation

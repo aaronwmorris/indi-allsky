@@ -1,3 +1,4 @@
+import os
 import io
 import time
 import math
@@ -51,6 +52,8 @@ class VideoWorker(Process):
 
         #self.threadID = idx
         self.name = 'VideoWorker{0:03d}'.format(idx)
+
+        os.nice(19)  # lower priority
 
         self.config = config
         self.error_q = error_q
