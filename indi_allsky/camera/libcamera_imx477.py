@@ -41,14 +41,8 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         }
 
 
-        self.image_type = 'dng'  # default raw image type
-
         memory_info = psutil.virtual_memory()
-        memory_total_mb = memory_info[0] / 1024.0 / 1024.0
-        if memory_total_mb <= 1536:
-            ### raw frame processing requires more than 1GB of memory
-            logger.warning('Detected %d memory, disabling raw frame mode', int(memory_total_mb))
-            self.image_type = 'jpg'
+        self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -57,7 +51,14 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         self._exposure = exposure
 
-        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(self.image_type), delete=False)
+
+        image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+
+        if image_type == 'dng' and self.memory_total_mb <= 1536:
+            logger.warning('*** Capturing raw images (dng) with libcamera and less than 2gb of memory can result in out-of-memory errors ***')
+
+
+        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=False)
         image_tmp_p = Path(image_tmp_f.name)
         image_tmp_f.close()
 
@@ -66,7 +67,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         exposure_us = int(exposure * 1000000)
 
-        if self.image_type in ['dng']:
+        if image_type in ['dng']:
             cmd = [
                 'libcamera-still',
                 '--immediate',
@@ -78,13 +79,13 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--output', str(image_tmp_p),
             ]
-        elif self.image_type in ['jpg', 'png']:
+        elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
             cmd = [
                 'libcamera-still',
                 '--immediate',
                 '--nopreview',
-                '--encoding', '{0:s}'.format(self.image_type),
+                '--encoding', '{0:s}'.format(image_type),
                 '--denoise', 'off',
                 '--awbgains', '1.0,1.0,1.0',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
