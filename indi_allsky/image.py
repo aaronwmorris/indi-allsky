@@ -443,6 +443,9 @@ class ImageWorker(Process):
                     stars=len(blob_stars),
                     detections=len(image_lines),
                 )
+            else:
+                # images not being saved
+                image_entry = None
 
 
             if latest_file:
@@ -500,7 +503,9 @@ class ImageWorker(Process):
 
         self.upload_q.put({'task_id' : task.id})
 
-        self._miscDb.addUploadedFlag(image_entry)
+        if image_entry:
+            # image was not saved
+            self._miscDb.addUploadedFlag(image_entry)
 
 
     def upload_metadata(self, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
