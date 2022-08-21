@@ -58,7 +58,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
             logger.warning('*** Capturing raw images (dng) with libcamera and less than 2gb of memory can result in out-of-memory errors ***')
 
 
-        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=False)
+        image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=True)
         image_tmp_p = Path(image_tmp_f.name)
         image_tmp_f.close()
 
@@ -86,6 +86,7 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
                 '--immediate',
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
+                '--quality', '100',
                 '--denoise', 'off',
                 '--awbgains', '1.0,1.0,1.0',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
