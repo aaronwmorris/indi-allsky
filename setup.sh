@@ -1485,6 +1485,9 @@ fi
 
 
 if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    echo "**** Enable Raspberry Pi camera interface ****"
+    sudo raspi-config nonint do_camera 0
+
     echo "**** Ensure user is a member of the video group ****"
     sudo usermod -a -G video "$USER"
 
