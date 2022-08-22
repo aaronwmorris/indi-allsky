@@ -1496,6 +1496,31 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
     sudo chown root:root /etc/modprobe.d/imx477_dpc.conf
     sudo chmod 644 /etc/modprobe.d/imx477_dpc.conf
 
+
+    LIBCAMERA_CAMERAS="
+        imx290
+        imx378
+        imx477
+        imx477_noir
+        imx519
+    "
+
+    for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
+        JSON_FILE="/usr/share/libcamera/ipa/raspberrypi/${LIBCAMERA_JSON}.json"
+
+        if [ -f "$JSON_FILE" ]; then
+            echo "Disabling dpc in $JSON_FILE"
+
+            TMP_JSON=$(mktemp)
+            jq --argjson rpidpc_strength "0" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > $TMP_JSON
+            sudo cp -f "$TMP_JSON" "$JSON_FILE"
+            sudo chown root:root "$JSON_FILE"
+            sudo chmod 644 "$JSON_FILE"
+            [[ -f "$TMP_JSON" ]] && rm -f "$TMP_JSON"
+        fi
+    done
+
+
     echo
     echo
     echo "If this is the first time you have setup your Raspberry PI camera, please reboot when"
