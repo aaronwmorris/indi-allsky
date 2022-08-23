@@ -304,7 +304,12 @@
     <div id="form_settime_success-message" class="text-success" style="display: none;"></div>
     <div id="form_settime_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
 
-    <button class="btn btn-primary">Update Time</button>
+    <div class="row">
+        <div class="col-sm-2">
+            <button class="btn btn-primary">Update Time</button>
+        </div>
+        <div class="col-sm-1 loader" id="loader_settime"></div>
+    </div>
 </form>
 
 <div class="row">
@@ -368,6 +373,8 @@ $('#form_settime').on('submit', function() {
     });
 
 
+    $("#loader_settime").css({'display' : 'block'});
+
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_settime_view') }}",
@@ -379,6 +386,8 @@ $('#form_settime').on('submit', function() {
             setTimeout(function() {
                 form_settime_successMessage.css({'display' : 'none'});
             }, 60000);
+
+            $("#loader_settime").css({'display' : 'none'});
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
