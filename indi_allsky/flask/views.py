@@ -156,6 +156,10 @@ class BaseView(View):
 
         data = dict()
 
+        data['latitude'] = float(self.indi_allsky_config['LOCATION_LATITUDE'])
+        data['longitude'] = float(self.indi_allsky_config['LOCATION_LONGITUDE'])
+
+
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
