@@ -110,6 +110,13 @@ class IndiClient(PyIndi.BaseClient):
 
         logger.info('creating an instance of IndiClient')
 
+        pyindi_version = '.'.join((
+            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
+        ))
+        logger.info('PyIndi version: %s', pyindi_version)
+
 
     @property
     def ccd_device(self):

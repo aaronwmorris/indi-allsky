@@ -4,6 +4,7 @@ import time
 import io
 import json
 import re
+import psutil
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -306,6 +307,9 @@ class IndiAllSky(object):
 
 
     def _initialize(self):
+        uptime_s = time.time() - psutil.boot_time()
+        logger.info('System uptime: %ds', uptime_s)
+
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
         # instantiate the client
