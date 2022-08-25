@@ -9,7 +9,7 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20220816.0"
+INDI_ALLSKY_VERSION="20220825.0"
 INDI_DRIVER_PATH="/usr/bin"
 INDISEVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
@@ -259,6 +259,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -370,6 +371,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -478,6 +480,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -585,6 +588,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -689,6 +693,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -803,6 +808,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -904,6 +910,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         rsyslog \
         cron \
         git \
+        cpio \
         tzdata \
         ca-certificates \
         avahi-daemon \
@@ -979,16 +986,16 @@ fi
 
 
 # get list of drivers
-cd $INDI_DRIVER_PATH
+cd "$INDI_DRIVER_PATH"
 INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
 cd "$SCRIPT_DIR"
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 echo "**** Ensure path to git folder is traversable ****"
@@ -1423,20 +1430,20 @@ sudo chmod 775 "$DB_FOLDER"
 sudo chown "$USER":"$PGRP" "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
 sudo chmod 775 "$DB_FOLDER/backup"
-sudo chown "$USER":"$PGRP" "$DB_FOLDER/backup"
+sudo chown "$USER":"$PGRP" "${DB_FOLDER}/backup"
 if [[ -f "${DB_FILE}" ]]; then
     sudo chmod 664 "${DB_FILE}"
     sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
-    sqlite3 "${DB_FILE}" .dump > $DB_BACKUP
-    gzip $DB_BACKUP
+    sqlite3 "${DB_FILE}" .dump > "$DB_BACKUP"
+    gzip "$DB_BACKUP"
 fi
 
 
 # Check for old alembic folder
-if [[ -d "alembic" ]]; then
+if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
     echo
     echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
     echo "for database migrations"
@@ -1447,8 +1454,24 @@ if [[ -d "alembic" ]]; then
 
     sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
 
-    rm -fR alembic
+    rm -fR "${ALLSKY_DIRECTORY}/alembic"
 fi
+
+
+# Setup migration folder
+if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
+    # Folder defined in flask config
+    flask db init
+
+    # Move migrations out of git checkout
+    cd "${ALLSKY_DIRECTORY}/migrations/versions"
+    find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
+    cd "$OLDPWD"
+
+    # Cleanup old files
+    find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
+fi
+
 
 flask db revision --autogenerate
 flask db upgrade head

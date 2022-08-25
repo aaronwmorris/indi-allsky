@@ -76,7 +76,7 @@ def create_app():
     app.register_blueprint(bp)
 
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
 
     with app.app_context():
         from flask_sqlalchemy import event
