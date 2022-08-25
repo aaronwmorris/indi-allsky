@@ -1458,14 +1458,17 @@ if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
 fi
 
 
-# Move migrations out of git checkout
+# Setup migration folder
 if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
+    # Folder defined in flask config
     flask db init
 
+    # Move migrations out of git checkout
     cd "${ALLSKY_DIRECTORY}/migrations/versions"
     find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
     cd "$OLDPWD"
 
+    # Cleanup old files
     find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
 fi
 
