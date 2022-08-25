@@ -427,6 +427,11 @@ class SqmView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
+        if not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+            context['timelapse_message'] = 'Day time timelapse disabled'
+        else:
+            context['timelapse_message'] = ''
+
         return context
 
 
@@ -438,6 +443,11 @@ class ImageLoopView(TemplateView):
         context['refreshInterval'] = refreshInterval_ms
 
         context['form_history'] = IndiAllskyHistoryForm()
+
+        if not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+            context['timelapse_message'] = 'Day time timelapse disabled'
+        else:
+            context['timelapse_message'] = ''
 
         return context
 
@@ -559,6 +569,11 @@ class ChartView(TemplateView):
         context['refreshInterval'] = refreshInterval_ms
 
         context['form_history'] = IndiAllskyHistoryForm()
+
+        if not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+            context['timelapse_message'] = 'Day time timelapse disabled'
+        else:
+            context['timelapse_message'] = ''
 
         return context
 
