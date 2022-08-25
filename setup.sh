@@ -1460,7 +1460,7 @@ fi
 
 # Move migrations out of git checkout
 if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
-    flask db init --directory "${DB_FOLDER}/migrations"
+    flask db init
 
     cd "${ALLSKY_DIRECTORY}/migrations/versions"
     find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"

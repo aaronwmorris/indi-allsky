@@ -17,6 +17,8 @@
     "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json",
     "INDI_ALLSKY_PID" : "%DB_FOLDER%/indi-allsky.pid",
 
+    "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
+
     "INDISEVER_SERVICE_NAME" : "%INDISEVER_SERVICE_NAME%.service",
     "ALLSKY_SERVICE_NAME" : "%ALLSKY_SERVICE_NAME%.service",
     "GUNICORN_SERVICE_NAME" : "%GUNICORN_SERVICE_NAME%.service"
