@@ -819,12 +819,10 @@ class IndiAllSky(object):
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
+        logger.info('Camera Properties: %s', json.dumps(ccd_properties, indent=4))
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-
-
-        logger.info('Camera Properties: %s', json.dumps(ccd_properties, indent=4))
         logger.info('Camera Info: %s', json.dumps(ccd_info, indent=4))
 
         self.indiclient.disconnectServer()
