@@ -292,28 +292,30 @@ class IndiClient(PyIndi.BaseClient):
 
     def getDeviceProperties(self, device):
         properties = dict()
-        for p in device.getProperties():
-            name = p.getName()
-            properties[name] = dict()
 
-            if p.getType() == PyIndi.INDI_TEXT:
-                for t in p.getText():
-                    properties[name][t.name] = t.text
-            elif p.getType() == PyIndi.INDI_NUMBER:
-                for t in p.getNumber():
-                    properties[name][t.name] = t.value
-            elif p.getType() == PyIndi.INDI_SWITCH:
-                for t in p.getSwitch():
-                    properties[name][t.name] = self.__state_to_str_s[t.s]
-            elif p.getType() == PyIndi.INDI_LIGHT:
-                for t in p.getLight():
-                    properties[name][t.name] = self.__state_to_str_p[t.s]
-            elif p.getType() == PyIndi.INDI_BLOB:
-                pass
-                #for t in p.getBLOB():
-                #    logger.info("       %s(%s) = %d bytes", t.name, t.label, t.size)
+        ### Causing a segfault as of 8/25/22
+        #for p in device.getProperties():
+        #    name = p.getName()
+        #    properties[name] = dict()
 
-            #logger.warning('%s', pformat(properties))
+        #    if p.getType() == PyIndi.INDI_TEXT:
+        #        for t in p.getText():
+        #            properties[name][t.name] = t.text
+        #    elif p.getType() == PyIndi.INDI_NUMBER:
+        #        for t in p.getNumber():
+        #            properties[name][t.name] = t.value
+        #    elif p.getType() == PyIndi.INDI_SWITCH:
+        #        for t in p.getSwitch():
+        #            properties[name][t.name] = self.__state_to_str_s[t.s]
+        #    elif p.getType() == PyIndi.INDI_LIGHT:
+        #        for t in p.getLight():
+        #            properties[name][t.name] = self.__state_to_str_p[t.s]
+        #    elif p.getType() == PyIndi.INDI_BLOB:
+        #        pass
+        #        #for t in p.getBLOB():
+        #        #    logger.info("       %s(%s) = %d bytes", t.name, t.label, t.size)
+
+        #    #logger.warning('%s', pformat(properties))
 
         return properties
 
