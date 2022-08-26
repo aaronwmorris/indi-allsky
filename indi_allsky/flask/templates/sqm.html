@@ -32,6 +32,8 @@ async function loop() {
         await sleep(100);
     }
 
+    $('#nodata').css({'display' : 'none'});
+
     showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
@@ -242,7 +244,9 @@ $( document ).ready(function() {
 {% block content %}
 <div class="row">
     <div class="col-sm-5"></div>
-    <div class="col-sm-7 text-warning">{{ timelapse_message }}</div>
+    <div class="col-sm-7">
+        <div class="text-muted" id="nodata">No Timelapse Data</div>
+    </div>
 </div>
 <div class="row">
     <div class="col-sm-12">
