@@ -15,18 +15,14 @@ from ..exceptions import TimeOutException
 logger = logging.getLogger('indi_allsky')
 
 
-class FakeIndiLibCameraImx477(FakeIndiClient):
+
+class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
         self.device_name = 'libcamera_imx477'
         self.driver_exec = 'indi_fake_ccd'
-
-        self.libcamera_process = None
-
-        self.active_exposure = False
-        self.current_exposure_file_p = None
 
         self.camera_info = {
             'width'         : 4056,
@@ -41,8 +37,36 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         }
 
 
+class FakeIndiLibCameraGeneric(FakeIndiClient):
+
+    def __init__(self, *args, **kwargs):
+        super(FakeIndiLibCameraGeneric, self).__init__(*args, **kwargs)
+
+        self.libcamera_process = None
+
+        self._exposure = None
+
+        self.active_exposure = False
+        self.current_exposure_file_p = None
+
         memory_info = psutil.virtual_memory()
         self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
+
+
+        self.device_name = 'CHANGEME'
+        self.driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 0,
+            'height'        : 0,
+            'pixel'         : 0.0,
+            'min_gain'      : 0,
+            'max_gain'      : 0,
+            'min_exposure'  : 0.0,
+            'max_exposure'  : 0.0,
+            'cfa'           : 'CHANGEME',
+            'bit_depth'     : 16,
+        }
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
