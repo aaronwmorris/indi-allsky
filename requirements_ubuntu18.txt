@@ -28,3 +28,5 @@ cryptography
 dbus-python
 paho-mqtt
 setuptools-rust
+#https://www.piwheels.org/project/bcrypt/
+bcrypt==3.2.2
