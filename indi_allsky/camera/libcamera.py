@@ -128,8 +128,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
 
         self.libcamera_process = subprocess.Popen(
             cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
 
         self.active_exposure = True
@@ -155,6 +155,14 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         if self.active_exposure:
             # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
+
+
+            if self.libcamera_process.returncode != 0:
+                # log errors
+                stdout = self.libcamera_process.stdout
+                for line in stdout.split('\n'):
+                    logger.error('libcamera-still error: %s', line)
+
 
             self._queueImage()
 
