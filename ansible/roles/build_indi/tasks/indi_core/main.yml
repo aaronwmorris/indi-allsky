@@ -52,6 +52,11 @@
     chdir: "{{ indi_core_build }}"
 
 
+- debug:
+    msg:
+      - "Please be patient.  This will take a while..."
+
+
 - name: Build indi_core
   community.general.make:
     jobs: "{{ parallel_processes }}"
