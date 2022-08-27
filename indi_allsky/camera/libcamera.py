@@ -16,27 +16,6 @@ logger = logging.getLogger('indi_allsky')
 
 
 
-class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
-
-    def __init__(self, *args, **kwargs):
-        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
-
-        self.device_name = 'libcamera_imx477'
-        self.driver_exec = 'indi_fake_ccd'
-
-        self.camera_info = {
-            'width'         : 4056,
-            'height'        : 3040,
-            'pixel'         : 1.55,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
-            'min_exposure'  : 0.001,
-            'max_exposure'  : 200.0,
-            'cfa'           : 'BGGR',
-            'bit_depth'     : 16,
-        }
-
-
 class FakeIndiLibCameraGeneric(FakeIndiClient):
 
     def __init__(self, *args, **kwargs):
@@ -221,5 +200,28 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         self._ccd_device = new_ccd
 
         return self._ccd_device
+
+
+
+class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
+
+        self.device_name = 'libcamera_imx477'
+        self.driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 4056,
+            'height'        : 3040,
+            'pixel'         : 1.55,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
 
 
