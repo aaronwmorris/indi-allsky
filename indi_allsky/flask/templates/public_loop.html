@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var refreshInterval = {{ refreshInterval | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
 var page_settings;  // set later
@@ -32,6 +33,8 @@ async function loop() {
     while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
+
+    $('#nodata').css({'display' : 'none'});
 
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
@@ -223,6 +226,12 @@ $( document ).ready(function() {
 
 <hr />
 
+<div class="row">
+    <div class="col-sm-5"></div>
+    <div class="col-sm-7">
+        <div class="text-muted" id="nodata">No Timelapse Data</div>
+    </div>
+</div>
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>
