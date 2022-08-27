@@ -38,9 +38,9 @@ class LibCameraProcess(object):
             '--nopreview',
             '--raw',
             '--denoise', 'off',
-            '--awbgains', '1.0,1.0,1.0',  # disable awb
+            '--awbgains', '1,1',  # disable awb
             '--gain', '{0:d}'.format(self._ccd_gain),
-            '--shuttter', '{0:d}'.format(exposure_us),
+            '--shutter', '{0:d}'.format(exposure_us),
             '--output', str(image_tmp_p),
         ]
 
