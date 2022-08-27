@@ -88,6 +88,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
@@ -105,6 +107,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
@@ -122,6 +126,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
@@ -139,6 +145,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
@@ -156,6 +164,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         python3-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
@@ -173,6 +183,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3.9-venv \
         python3-pip \
         virtualenv \
+        rustc \
+        cargo \
         libapt-pkg-dev \
         libssl-dev \
         libxml2-dev \
