@@ -38,7 +38,7 @@ class LibCameraProcess(object):
             '--nopreview',
             '--raw',
             '--denoise', 'off',
-            '--awbgains', '1.0,1.0,1.0',  # disable awb
+            '--awbgains', '1,1',  # disable awb
             '--gain', '{0:d}'.format(self._ccd_gain),
             '--shutter', '{0:d}'.format(exposure_us),
             '--output', str(image_tmp_p),
@@ -51,8 +51,8 @@ class LibCameraProcess(object):
 
         self.libcamera_process = subprocess.Popen(
             cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
 
 
@@ -70,15 +70,24 @@ class LibCameraProcess(object):
 
 
 
-        while True:
-            size = self.current_exposure_file_p.stat().st_size
+        #while True:
+        #    size = self.current_exposure_file_p.stat().st_size
 
-            logger.info('File size: %d', size)
+        #    logger.info('File size: %d', size)
 
-            if size != 0:
-                break
+        #    if size != 0:
+        #        break
 
-            time.sleep(0.2)
+        #    time.sleep(0.2)
+
+
+
+        if self.libcamera_process.returncode != 0:
+            # log errors
+            stdout = self.libcamera_process.stdout
+            for line in stdout.readlines():
+                logger.error('libcamera-still error: %s', line)
+
 
 
         # delete image

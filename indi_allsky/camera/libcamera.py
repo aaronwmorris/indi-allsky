@@ -15,34 +15,37 @@ from ..exceptions import TimeOutException
 logger = logging.getLogger('indi_allsky')
 
 
-class FakeIndiLibCameraImx477(FakeIndiClient):
+
+class FakeIndiLibCameraGeneric(FakeIndiClient):
 
     def __init__(self, *args, **kwargs):
-        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
-
-        self.device_name = 'libcamera_imx477'
-        self.driver_exec = 'indi_fake_ccd'
+        super(FakeIndiLibCameraGeneric, self).__init__(*args, **kwargs)
 
         self.libcamera_process = None
+
+        self._exposure = None
 
         self.active_exposure = False
         self.current_exposure_file_p = None
 
-        self.camera_info = {
-            'width'         : 4056,
-            'height'        : 3040,
-            'pixel'         : 1.55,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
-            'min_exposure'  : 0.001,
-            'max_exposure'  : 200.0,
-            'cfa'           : 'BGGR',
-            'bit_depth'     : 16,
-        }
-
-
         memory_info = psutil.virtual_memory()
         self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
+
+
+        self.device_name = 'CHANGEME'
+        self.driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 0,
+            'height'        : 0,
+            'pixel'         : 0.0,
+            'min_gain'      : 0,
+            'max_gain'      : 0,
+            'min_exposure'  : 0.0,
+            'max_exposure'  : 0.0,
+            'cfa'           : 'CHANGEME',
+            'bit_depth'     : 16,
+        }
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -104,8 +107,8 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
 
         self.libcamera_process = subprocess.Popen(
             cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
 
         self.active_exposure = True
@@ -131,6 +134,14 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         if self.active_exposure:
             # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
+
+
+            if self.libcamera_process.returncode != 0:
+                # log errors
+                stdout = self.libcamera_process.stdout
+                for line in stdout.readlines():
+                    logger.error('libcamera-still error: %s', line)
+
 
             self._queueImage()
 
@@ -189,5 +200,28 @@ class FakeIndiLibCameraImx477(FakeIndiClient):
         self._ccd_device = new_ccd
 
         return self._ccd_device
+
+
+
+class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
+
+        self.device_name = 'libcamera_imx477'
+        self.driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 4056,
+            'height'        : 3040,
+            'pixel'         : 1.55,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
 
 
