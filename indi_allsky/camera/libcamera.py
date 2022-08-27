@@ -139,7 +139,7 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
             if self.libcamera_process.returncode != 0:
                 # log errors
                 stdout = self.libcamera_process.stdout
-                for line in stdout.split('\n'):
+                for line in stdout.readlines():
                     logger.error('libcamera-still error: %s', line)
 
 
