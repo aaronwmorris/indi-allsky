@@ -1557,7 +1557,7 @@ fi
 
 # Disable raw frames with libcamera when running 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
-if [ "$MEM_TOTAL" -lt "15360000" ]; then
+if [ "$MEM_TOTAL" -lt "1536000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_TYPE
     cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
