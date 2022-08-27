@@ -23,6 +23,8 @@ function init() {
 
     img = new Image();
     img.onload = function() {
+        $('#nodata').css({'display' : 'none'});
+
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
 
@@ -123,6 +125,12 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<div class="row">
+    <div class="col-sm-5"></div>
+    <div class="col-sm-7">
+        <div class="text-muted" id="nodata">No Image</div>
+    </div>
+</div>
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>
