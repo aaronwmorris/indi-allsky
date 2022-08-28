@@ -4,9 +4,11 @@ pyindi-client==1.9.1
 #https://www.piwheels.org/project/astropy/
 astropy
 #https://www.piwheels.org/project/numpy/
-numpy==1.22.4
+numpy<=1.22.4
 #https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless==4.6.0.66
+opencv-python-headless<=4.6.0.66
+#https://www.piwheels.org/project/scipy/
+scipy<=1.8.1
 ccdproc
 python-dateutil
 ephem
@@ -29,4 +31,4 @@ dbus-python
 paho-mqtt
 setuptools-rust
 #https://www.piwheels.org/project/bcrypt/
-bcrypt==3.2.2
+bcrypt<=3.2.2

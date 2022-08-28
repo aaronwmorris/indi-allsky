@@ -4,15 +4,17 @@ pyindi-client==1.9.1
 #https://www.piwheels.org/project/astropy/
 astropy
 #https://www.piwheels.org/project/numpy/
-numpy==1.18.5
+numpy<=1.18.5
 #https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless==4.5.5.64
+opencv-python-headless<=4.5.5.64
+#https://www.piwheels.org/project/scipy/
+scipy<=1.8.1
 ccdproc
 python-dateutil
 ephem
 paramiko
 #https://www.piwheels.org/project/pycurl/
-pycurl==7.44.1
+pycurl<=7.44.1
 imageio
 imageio-ffmpeg
 #rawpy  # not available
@@ -29,4 +31,4 @@ dbus-python
 paho-mqtt
 setuptools-rust
 #https://www.piwheels.org/project/bcrypt/
-bcrypt==3.2.2
+bcrypt<=3.2.2

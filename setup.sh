@@ -284,6 +284,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -395,6 +396,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -505,6 +507,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -612,6 +615,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -718,6 +722,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -833,6 +838,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
@@ -936,6 +942,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libopenblas-dev \
         pkg-config \
         rustc \
+        cargo \
         ffmpeg \
         gifsicle \
         jq \
