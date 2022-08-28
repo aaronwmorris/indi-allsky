@@ -419,9 +419,35 @@ indi-allsky supports publishing all sky data to an MQTT service for monitoring.
 
 For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing
 
-## To Do
+## Alternatives
 
-* Additional camera vendor support
+* Thomas Jacquin's Allsky
+    * Free, Open source
+    * Linux, SoC
+    * https://github.com/thomasjacquin/allsky
+* AllSkEye
+    * Free version, Commercial option
+    * Windows
+    * https://allskeye.com/
+* RPi Meteor Station
+    * Free, Open source
+    * Linux, SoC
+    * https://github.com/CroatianMeteorNetwork/RMS
+* Meteotux Pi
+    * Free version, Commercial option
+    * Linux, SoC
+    * https://www.meteotuxpi.com/
+* UFOCapture
+    * Shareware, Commercial option
+    * Windows
+    * https://sonotaco.com/soft/e_index.html
+
+## Commercial hardware
+
+* Oculus All-Sky Cameras
+    * https://www.sxccd.com/cameras/oculus-all-sky-cameras/
+* Alcor System
+    * https://www.alcor-system.com/new/AllSky/Alphea_camera.html
 
 ## Acknowledgements
 
