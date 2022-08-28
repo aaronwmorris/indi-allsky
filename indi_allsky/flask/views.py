@@ -129,17 +129,39 @@ class BaseView(View):
     def get_indi_allsky_status(self):
         pid = self.get_indiallsky_pid()
 
-        if pid is None:
+        if isinstance(pid, type(None)):
             return '<span class="text-warning">UNKNOWN</span>'
 
         if not pid:
             return '<span class="text-danger">DOWN</span>'
 
-        if psutil.pid_exists(pid):
-            return '<span class="text-success">RUNNING</span>'
+        if not psutil.pid_exists(pid):
+            return '<span class="text-danger">DOWN</span>'
 
 
-        return '<span class="text-danger">DOWN</span>'
+        ### assuming indi-allsky process is running if we reach this point
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.indi_allsky_config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.indi_allsky_config['LOCATION_LATITUDE'])
+
+        sun = ephem.Sun()
+
+        obs.date = utcnow
+        sun.compute(obs)
+        sun_alt = math.degrees(sun.alt)
+
+        if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
+            night = False
+        else:
+            night = True
+
+        if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
+            return '<span class="text-muted">SLEEPING</span>'
+
+        return '<span class="text-success">RUNNING</span>'
 
 
     def getLatestCamera(self):
@@ -796,7 +818,7 @@ class ConfigView(FormView):
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
-            'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', False),
+            'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
             'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', True),
             'DAYTIME_CONTRAST_ENHANCE'       : self.indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
