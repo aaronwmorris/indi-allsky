@@ -358,7 +358,18 @@ class IndexView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
-        context['latest_image_uri'] = 'images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))
+        latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+        context['latest_image_uri'] = str(latest_image_uri)
+
+        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        latest_image_p = image_dir.joinpath(latest_image_uri.name)
+
+
+        context['user_message'] = ''  # default message
+        if latest_image_p.exists():
+            max_age = datetime.now() - timedelta(minutes=15)
+            if latest_image_p.stat().st_mtime < max_age.timestamp():
+                context['user_message'] = 'Image is out of date'
 
         return context
 
