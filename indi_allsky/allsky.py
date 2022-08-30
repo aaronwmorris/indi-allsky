@@ -674,10 +674,7 @@ class IndiAllSky(object):
 
 
 
-            temp_val = self.indiclient.getCcdTemperature()
-            with self.sensortemp_v.get_lock():
-                self.sensortemp_v.value = temp_val
-
+            self.getSensorTemperature()
 
 
             if self.night:
@@ -779,6 +776,13 @@ class IndiAllSky(object):
 
             loop_elapsed = now - loop_start_time
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
+
+
+    def getSensorTemperature(self):
+        temp_val = self.indiclient.getCcdTemperature()
+
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val
 
 
     def cameraReport(self):
