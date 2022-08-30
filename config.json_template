@@ -42,6 +42,7 @@
 
     "comment_TEMP_DISPLAY" : "c = celcius, f = fahrenheit, k = kelvin",
     "TEMP_DISPLAY"     : "c",
+    "CCD_TEMP_SCRIPT"  : "",
 
     "comment_TARGET_ADU" : "Average channel brightness target",
     "TARGET_ADU" : 75,

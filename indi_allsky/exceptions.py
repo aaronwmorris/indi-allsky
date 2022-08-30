@@ -6,3 +6,7 @@ class TimeOutException(Exception):
 class CalibrationNotFound(Exception):
     pass
 
+
+class TemperatureException(Exception):
+    pass
+

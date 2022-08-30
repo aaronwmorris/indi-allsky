@@ -1,9 +1,11 @@
+import os
 from pathlib import Path
 import io
 import re
 import json
 import time
 from datetime import datetime
+import subprocess
 import cv2
 import numpy
 
@@ -156,6 +158,62 @@ def WB_FACTOR_validator(form, field):
 def TEMP_DISPLAY_validator(form, field):
     if field.data not in ('c', 'f', 'k'):
         raise ValidationError('Please select the temperature system for display')
+
+
+def CCD_TEMP_SCRIPT_validator(form, field):
+    if not field.data:
+        return
+
+
+    temp_script_p = Path(field.data)
+
+    if not temp_script_p.exists():
+        raise ValidationError('Temperature script does not exist')
+
+    if not temp_script_p.is_file():
+        raise ValidationError('Temperature script is not a file')
+
+    if temp_script_p.stat().st_size == 0:
+        raise ValidationError('Temperature script is empty')
+
+    if not os.access(str(temp_script_p), os.X_OK):
+        raise ValidationError('Temperature script is not executable')
+
+
+    cmd = [
+        str(temp_script_p),
+    ]
+
+    try:
+        temp_process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        raise ValidationError('Temperature script failed to execute')
+
+
+    try:
+        temp_process.wait(timeout=2.0)
+    except subprocess.TimeoutExpired:
+        temp_process.kill()
+        time.sleep(1.0)
+        temp_process.poll()  # close out process
+        raise ValidationError('Temperature script timed out')
+
+
+    if temp_process.returncode != 0:
+        raise ValidationError('Temperature script returned exited abnormally')
+
+
+    temp_str = temp_process.stdout.readline()  # temp should be on the first line of output
+
+
+    try:
+        float(temp_str.rstrip())
+    except ValueError:
+        raise ValidationError('Temperature script returned a non-numerical value')
 
 
 def TARGET_ADU_validator(form, field):
@@ -912,6 +970,7 @@ class IndiAllskyConfigForm(FlaskForm):
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
+    CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
     TARGET_ADU_DEV                   = IntegerField('Target ADU Deviation (night)', validators=[DataRequired(), TARGET_ADU_DEV_validator])
     TARGET_ADU_DEV_DAY               = IntegerField('Target ADU Deviation (day)', validators=[DataRequired(), TARGET_ADU_DEV_DAY_validator])
