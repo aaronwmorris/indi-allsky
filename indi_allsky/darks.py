@@ -1,8 +1,10 @@
+import os
 import sys
 import time
 import math
 import tempfile
 import json
+import subprocess
 from datetime import datetime
 from collections import OrderedDict
 from pathlib import Path
@@ -17,6 +19,7 @@ from astropy.stats import mad_std
 from multiprocessing import Queue
 from multiprocessing import Value
 
+from .exceptions import TemperatureException
 
 from . import camera as camera_module
 
@@ -313,7 +316,7 @@ class IndiAllSkyDarks(object):
         self._initialize()
         self._pre_run_tasks()
 
-        current_temp = self.indiclient.getCcdTemperature()
+        current_temp = self.getSensorTemperature()
         next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
@@ -321,7 +324,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.indiclient.getCcdTemperature()
+            current_temp = self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -347,7 +350,7 @@ class IndiAllSkyDarks(object):
         self._initialize()
         self._pre_run_tasks()
 
-        current_temp = self.indiclient.getCcdTemperature()
+        current_temp = self.getSensorTemperature()
         next_temp_thold = current_temp - self._temp_delta
 
         # get first set of images
@@ -355,7 +358,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.indiclient.getCcdTemperature()
+            current_temp = self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -497,9 +500,7 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
-        temp_val = self.indiclient.getCcdTemperature()
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val
+        self.getSensorTemperature()
 
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
@@ -618,6 +619,88 @@ class IndiAllSkyDarks(object):
         badpixelmaps_all.delete()
         dark_frames_all.delete()
         db.session.commit()
+
+
+
+    def getSensorTemperature(self):
+        temp_val = self.indiclient.getCcdTemperature()
+
+
+        # query external temperature if camera does not return temperature
+        if temp_val < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
+            try:
+                ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
+                temp_val = ext_temp_val
+            except TemperatureException as e:
+                logger.error('Exception querying external temperature: %s', str(e))
+
+
+        temp_val_f = float(temp_val)
+
+        with self.sensortemp_v.get_lock():
+            self.sensortemp_v.value = temp_val_f
+
+
+        return temp_val_f
+
+
+    def getExternalTemperature(self, script_path):
+        temp_script_p = Path(script_path)
+
+        logger.info('Running external script for temperature: %s', temp_script_p)
+
+        # need to be extra careful running in the main thread
+        if not temp_script_p.exists():
+            raise TemperatureException('Temperature script does not exist')
+
+        if not temp_script_p.is_file():
+            raise TemperatureException('Temperature script is not a file')
+
+        if temp_script_p.stat().st_size == 0:
+            raise TemperatureException('Temperature script is empty')
+
+        if not os.access(str(temp_script_p), os.X_OK):
+            raise TemperatureException('Temperature script is not executable')
+
+
+        cmd = [
+            str(temp_script_p),
+        ]
+
+        try:
+            temp_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError:
+            raise TemperatureException('Temperature script failed to execute')
+
+
+        try:
+            temp_process.wait(timeout=2.0)
+        except subprocess.TimeoutExpired:
+            temp_process.kill()
+            time.sleep(1.0)
+            temp_process.poll()  # close out process
+            raise TemperatureException('Temperature script timed out')
+
+
+        if temp_process.returncode != 0:
+            raise TemperatureException('Temperature script returned exited abnormally')
+
+
+        temp_str = temp_process.stdout.readline()  # temp should be on the first line of output
+
+
+        try:
+            temp_float = float(temp_str.rstrip())
+        except ValueError:
+            raise TemperatureException('Temperature script returned a non-numerical value')
+
+
+        return temp_float
+
 
 
 

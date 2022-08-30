@@ -793,8 +793,13 @@ class IndiAllSky(object):
                 logger.error('Exception querying external temperature: %s', str(e))
 
 
+        temp_val_f = float(temp_val)
+
         with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = float(temp_val)
+            self.sensortemp_v.value = temp_val_f
+
+
+        return temp_val_f
 
 
     def getExternalTemperature(self, script_path):
