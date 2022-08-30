@@ -45,8 +45,19 @@ class TimelapseGenerator(object):
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
-            '{0:s}'.format(str(video_file)),
         ]
+
+
+        # add scaling option if defined
+        if self.config.get('FFMPEG_VFSCALE'):
+            logger.warning('Setting FFMPEG scaling option: %s', self.config.get('FFMPEG_VFSCALE'))
+            cmd.append('-vf')
+            cmd.append('scale={0:s}'.format(self.config.get('FFMPEG_VFSCALE')))
+
+
+        # finally add filename
+        cmd.append('{0:s}'.format(str(video_file)))
+
 
         ffmpeg_subproc = subprocess.run(
             cmd,

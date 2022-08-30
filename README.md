@@ -304,6 +304,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | TIMELAPSE_EXPIRE_DAYS    | 365    | (days) Number of days to keep timelapse, keogram, and star trails before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
 | FFMPEG_BITRATE      | 2500k       | (kilobytes) Target data rate for timelapse video compression |
+| FFMPEG_VFSCALE      | ""          | (str) Scaling option for ffmpeg |
 | TEXT_PROPERTIES     |             | (dict) Default text properties (font, size, etc) |
 | > FONT_FACE         |             | (str) OpenCV font name |
 | > FONT_HEIGHT       | 30          | (pixels) Font height |

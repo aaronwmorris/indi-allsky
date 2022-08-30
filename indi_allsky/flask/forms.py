@@ -538,6 +538,15 @@ def FFMPEG_BITRATE_validator(form, field):
         raise ValidationError('Invalid bitrate syntax')
 
 
+def FFMPEG_VFSCALE_validator(form, field):
+    if not field.data:
+        return
+
+    scale_regex = r'^[\-?\d+\:\-?\d+]+$'
+    if not re.search(scale_regex, field.data):
+        raise ValidationError('Invalid scale option')
+
+
 def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
     fonts = (
         'FONT_HERSHEY_SIMPLEX',
@@ -835,6 +844,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    FFMPEG_VFSCALE_choices = (
+        ('', 'None'),
+        ('-1:2304', 'V 2304px (imx477)'),
+    )
+
     ORB_PROPERTIES__MODE_choices = (
         ('ha', 'Hour Angle'),
         ('az', 'Azimuth'),
@@ -955,6 +969,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
+    FFMPEG_VFSCALE                   = SelectField('FFMPEG Scaling', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
     TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
     TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Font Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
     TEXT_PROPERTIES__FONT_X          = IntegerField('Font X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
