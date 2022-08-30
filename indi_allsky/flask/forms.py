@@ -195,7 +195,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
 
     try:
-        temp_process.wait(timeout=3.0)
+        temp_process.wait(timeout=2.0)
     except subprocess.TimeoutExpired:
         temp_process.kill()
         time.sleep(1.0)

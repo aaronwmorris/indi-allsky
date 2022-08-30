@@ -5,6 +5,7 @@ import io
 import json
 import re
 import psutil
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -25,6 +26,7 @@ from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
 from .exceptions import TimeOutException
+from .exceptions import TemperatureException
 
 #from flask import current_app as app
 from .flask import db
@@ -781,8 +783,76 @@ class IndiAllSky(object):
     def getSensorTemperature(self):
         temp_val = self.indiclient.getCcdTemperature()
 
+
+        # query external temperature if camera does not return temperature
+        if temp_val < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
+            try:
+                ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
+                temp_val = ext_temp_val
+            except TemperatureException as e:
+                logger.error('Exception querying external temperature: %s', str(e))
+
+
         with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val
+            self.sensortemp_v.value = float(temp_val)
+
+
+    def getExternalTemperature(self, script_path):
+        temp_script_p = Path(script_path)
+
+        logger.info('Running external script for temperature: %s', temp_script_p)
+
+        # need to be extra careful running in the main thread
+        if not temp_script_p.exists():
+            raise TemperatureException('Temperature script does not exist')
+
+        if not temp_script_p.is_file():
+            raise TemperatureException('Temperature script is not a file')
+
+        if temp_script_p.stat().st_size == 0:
+            raise TemperatureException('Temperature script is empty')
+
+        if not os.access(str(temp_script_p), os.X_OK):
+            raise TemperatureException('Temperature script is not executable')
+
+
+        cmd = [
+            str(temp_script_p),
+        ]
+
+        try:
+            temp_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError:
+            raise TemperatureException('Temperature script failed to execute')
+
+
+        try:
+            temp_process.wait(timeout=2.0)
+        except subprocess.TimeoutExpired:
+            temp_process.kill()
+            time.sleep(1.0)
+            temp_process.poll()  # close out process
+            raise TemperatureException('Temperature script timed out')
+
+
+        if temp_process.returncode != 0:
+            raise TemperatureException('Temperature script returned exited abnormally')
+
+
+        temp_str = temp_process.stdout.readline()  # temp should be on the first line of output
+
+
+        try:
+            temp_float = float(temp_str.rstrip())
+        except ValueError:
+            raise TemperatureException('Temperature script returned a non-numerical value')
+
+
+        return temp_float
 
 
     def cameraReport(self):
