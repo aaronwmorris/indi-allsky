@@ -330,6 +330,20 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         raise ValidationError('Invalid template data')
 
 
+    test_data = {
+        'timestamp' : datetime.now(),
+        'exposure'  : 1.0,
+        'gain'      : 1,
+        'temp'      : -5.1,
+        'temp_unit' : 'C',
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+
+
 def WEB_EXTRA_TEXT_validator(form, field):
     if not field.data:
         return
