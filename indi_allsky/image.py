@@ -407,7 +407,7 @@ class ImageWorker(Process):
             # denoise
             #scidata_denoise = self.fastDenoise(scidata_scaled)
 
-            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed)
+            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed, blob_stars, image_lines)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -1009,7 +1009,7 @@ class ImageWorker(Process):
         return scidata_bgr
 
 
-    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
+    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed, blob_stars, image_lines):
         # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
@@ -1083,74 +1083,46 @@ class ImageWorker(Process):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
-        #cv2.rectangle(
-        #    img=data_bytes,
-        #    pt1=(0, 0),
-        #    pt2=(350, 125),
-        #    color=(0, 0, 0),
-        #    thickness=cv2.FILLED,
-        #)
 
-        datetime_format = self.config['TEXT_PROPERTIES']['DATE_FORMAT']
-        exp_date_str = exp_date.strftime(datetime_format)
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}')
+
+
+        if self.config.get('TEMP_DISPLAY') == 'f':
+            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+            temp_unit = 'F'
+        elif self.config.get('TEMP_DISPLAY') == 'k':
+            sensortemp = self.sensortemp_v.value + 273.15
+            temp_unit = 'K'
+        else:
+            sensortemp = self.sensortemp_v.value
+            temp_unit = 'C'
+
+
+        label_data = {
+            'timestamp'    : exp_date,
+            'exposure'     : exposure,
+            'gain'         : self.gain_v.value,
+            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
+            'temp_unit'    : temp_unit,
+            'sqm'          : self.sqm_value,
+            'stars'        : len(blob_stars),
+            'detections'   : str(bool(len(image_lines))),
+        }
+
+
+        image_label = image_label_tmpl.format(**label_data)  # fill in the data
+
 
         line_offset = 0
-        self.drawText(
-            data_bytes,
-            exp_date_str,
-            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            tuple(color_bgr),
-        )
-
-
-        line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-        self.drawText(
-            data_bytes,
-            'Exposure {0:0.6f}'.format(exposure),
-            (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-            tuple(color_bgr),
-        )
-
-
-        #line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-        #self.drawText(
-        #    data_bytes,
-        #    'Elapsed {0:0.2f} ({1:0.2f})'.format(exp_elapsed, exp_elapsed - exposure),
-        #    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-        #    tuple(color_bgr),
-        #)
-
-
-        # Add if gain is supported
-        if self.gain_v.value > -1:
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        for line in image_label.split('\n'):
             self.drawText(
                 data_bytes,
-                'Gain {0:d}'.format(self.gain_v.value),
+                line,
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 tuple(color_bgr),
             )
 
-
-        # Add temp if value is set
-        if self.sensortemp_v.value > -100.0:
-            if self.config.get('TEMP_DISPLAY') == 'f':
-                sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
-                temp_sys = 'F'
-            elif self.config.get('TEMP_DISPLAY') == 'k':
-                sensortemp = self.sensortemp_v.value + 273.15
-                temp_sys = 'K'
-            else:
-                sensortemp = self.sensortemp_v.value
-                temp_sys = 'C'
-
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
-            self.drawText(
-                data_bytes,
-                'Temp {0:0.1f}{1:s}'.format(sensortemp, temp_sys),  # hershey fonts do not support degree symbol
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
-            )
 
 
         # Add moon mode indicator
