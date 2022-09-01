@@ -380,19 +380,19 @@ class ImageWorker(Process):
 
 
             # white balance
-            scidata_balanced_auto = self.white_balance_auto_bgr(scidata_cropped)
-            scidata_balanced = self.white_balance_manual_bgr(scidata_balanced_auto)
+            scidata_balanced_manual = self.white_balance_manual_bgr(scidata_cropped)
+            scidata_balanced_auto = self.white_balance_auto_bgr(scidata_balanced_manual)
             #scidata_balanced = scidata_cropped
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
-                scidata_contrast = self.contrast_clahe(scidata_balanced)
+                scidata_contrast = self.contrast_clahe(scidata_balanced_auto)
             elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
                 # Contrast enhancement during night
-                scidata_contrast = self.contrast_clahe(scidata_balanced)
+                scidata_contrast = self.contrast_clahe(scidata_balanced_auto)
             else:
-                scidata_contrast = scidata_balanced
+                scidata_contrast = scidata_balanced_auto
 
 
             if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
@@ -1452,10 +1452,6 @@ class ImageWorker(Process):
     def white_balance_manual_bgr(self, data_bytes):
         if len(data_bytes.shape) == 2:
             # mono
-            return data_bytes
-
-        if self.config.get('AUTO_WB'):
-            # auto white balance disables manual balance
             return data_bytes
 
 
