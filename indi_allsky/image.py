@@ -407,7 +407,7 @@ class ImageWorker(Process):
             # denoise
             #scidata_denoise = self.fastDenoise(scidata_scaled)
 
-            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed)
+            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed, blob_stars, image_lines)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -1009,7 +1009,7 @@ class ImageWorker(Process):
         return scidata_bgr
 
 
-    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed):
+    def image_text(self, data_bytes, exposure, exp_date, exp_elapsed, blob_stars, image_lines):
         # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
@@ -1104,6 +1104,9 @@ class ImageWorker(Process):
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
+            'sqm'          : self.sqm_value,
+            'stars'        : len(blob_stars),
+            'detections'   : str(bool(len(image_lines))),
         }
 
 

@@ -331,17 +331,22 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
 
 
     test_data = {
-        'timestamp' : datetime.now(),
-        'exposure'  : 1.0,
-        'gain'      : 1,
-        'temp'      : -5.1,
-        'temp_unit' : 'C',
+        'timestamp'  : datetime.now(),
+        'exposure'   : 1.0,
+        'gain'       : 1,
+        'temp'       : -5.1,
+        'temp_unit'  : 'C',
+        'sqm'        : 8000.0,
+        'stars'      : 1,
+        'detections' : 'True',
     }
 
     try:
         field.data.format(**test_data)
     except KeyError as e:
         raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
 def WEB_EXTRA_TEXT_validator(form, field):
