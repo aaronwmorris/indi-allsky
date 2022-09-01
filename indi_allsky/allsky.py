@@ -650,12 +650,6 @@ class IndiAllSky(object):
             self.detectNight()
             self.detectMoonMode()
 
-            if not self.night and not self.config['DAYTIME_CAPTURE']:
-                logger.info('Daytime capture is disabled')
-                time.sleep(60)
-                continue
-
-
             ### Change between day and night
             if self.night_v.value != int(self.night):
                 if self.generate_timelapse_flag:
@@ -675,10 +669,7 @@ class IndiAllSky(object):
                     self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
 
 
-
-            self.getSensorTemperature()
-
-
+            # this is to prevent expiring images at startup
             if self.night:
                 # always indicate timelapse generation at night
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
@@ -687,8 +678,17 @@ class IndiAllSky(object):
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
 
+            self.getSensorTemperature()
+
+
             # Queue externally defined tasks
             self._queueManualTasks()
+
+
+            if not self.night and not self.config['DAYTIME_CAPTURE']:
+                logger.info('Daytime capture is disabled')
+                time.sleep(60)
+                continue
 
 
             # every ~10 seconds end this loop and run the code above
