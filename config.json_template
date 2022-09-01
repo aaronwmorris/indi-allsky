@@ -35,10 +35,10 @@
     "FOCUS_MODE"           : false,
     "FOCUS_DELAY"          : 4.0,
 
-    "AUTO_WB"          : false,
     "WBR_FACTOR"       : 1.0,
     "WBG_FACTOR"       : 1.0,
     "WBB_FACTOR"       : 1.0,
+    "AUTO_WB"          : false,
 
     "comment_TEMP_DISPLAY" : "c = celcius, f = fahrenheit, k = kelvin",
     "TEMP_DISPLAY"     : "c",
