@@ -760,6 +760,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='8') }}
+            <div id="IMAGE_LABEL_TEMPLATE" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
+            <div>Available variables: timestamp, exposure, gain, temperature</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXTRA_TEXT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -1055,7 +1070,9 @@
             {{ form_config.TEXT_PROPERTIES__DATE_FORMAT(class='form-control bg-secondary') }}
             <div id="TEXT_PROPERTIES__DATE_FORMAT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-4"><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
+        <div class="col-sm-4">
+            <div>(read-only) No longer used, see Label Template above</div>
+        </div>
     </div>
 
     <hr />
@@ -1544,6 +1561,7 @@ const field_names = [
     'IMAGE_FILE_COMPRESSION__PNG',
     'IMAGE_FILE_COMPRESSION__TIF',
     'IMAGE_FOLDER',
+    'IMAGE_LABEL_TEMPLATE',
     'IMAGE_EXTRA_TEXT',
     'IMAGE_SCALE',
     'IMAGE_CROP_ROI_X1',

@@ -290,6 +290,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
 | IMAGE_LABEL         | true        | (bool) Add image timestamps labels |
+| IMAGE_LABEL_TEMPLATE     |        | (str) Template for image label |
 | IMAGE_EXTRA_TEXT    |             | (string) Filename containing extra text for image |
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | NIGHT_GRAYSCALE     | false       | Convert image to grayscale at night|
