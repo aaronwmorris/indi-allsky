@@ -673,7 +673,7 @@ class IndiAllSky(object):
             if self.night:
                 # always indicate timelapse generation at night
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-            elif self.config['DAYTIME_TIMELAPSE']:
+            elif self.config['DAYTIME_CAPTURE'] and self.config['DAYTIME_TIMELAPSE']:
                 # must be day time
                 self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
@@ -687,6 +687,7 @@ class IndiAllSky(object):
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
+                self.generate_timelapse_flag = False
                 time.sleep(60)
                 continue
 
