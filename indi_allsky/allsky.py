@@ -688,6 +688,27 @@ class IndiAllSky(object):
             if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
                 self.generate_timelapse_flag = False
+
+                if self._shutdown:
+                    logger.warning('Shutting down')
+                    self._stopImageWorker(terminate=self._terminate)
+                    self._stopVideoWorker(terminate=self._terminate)
+                    self._stopFileUploadWorker(terminate=self._terminate)
+
+                    self.indiclient.disconnectServer()
+
+                    sys.exit()
+
+
+                if self._restart:
+                    logger.warning('Restarting processes')
+                    self._restart = False
+                    self._stopImageWorker()
+                    self._stopVideoWorker()
+                    self._stopFileUploadWorker()
+                    # processes will start at the next loop
+
+
                 time.sleep(60)
                 continue
 
