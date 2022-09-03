@@ -655,6 +655,10 @@ class ImageWorker(Process):
         max_val = numpy.amax(data)
         logger.info('Image max value: %d', int(max_val))
 
+        # This method of detecting bit depth can cause the 16->8 bit conversion
+        # to stretch too much.  This most commonly happens with very low gains
+        # during the day when there are no hot pixels.  This can result in a
+        # trippy effect
         if max_val > 32768:
             image_bit_depth = 16
         elif max_val > 16384:
