@@ -48,7 +48,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
 | Raspbian 11 64-bit    | arm64          | Compile indi with build_indi.sh<br />Use libcamera for Raspberry PI HQ camera |
-| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh<br />The rawpy module is not availble on 32-bit Arm, therefore libcamera image processing is not available |
+| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh<br />The rawpy module is not availble on 32-bit Arm, therefore DNG/raw libcamera image processing is not available (jpeg/png still possible) |
 | Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
@@ -151,6 +151,9 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks
 ## Meteor Detection
 Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able to perform basic line detection to detect meteor and fireball trails in the view.  Airplane and satellite trails are also detected using this method.  Images are tagged with an asterisk in the image viewer if a trail has been detected.
 
+## Focus Mode
+Focus mode is a special setting that generates images more often and implements a Variance of Laplacian scoring algorithm on the image to assist with focusing the camera.  Images are not saved when focus mode is enabled.
+
 ## Web Interface
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
@@ -193,7 +196,7 @@ The database is managed via the python modules SQLAlchemy and alembic to provide
 
 indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C based which makes indi-allsky extremely fast.  A 1920 x 1080 image can be dark frame calibrated, debayered, histogram processed, text applied, and compressed to a JPG in less than 0.5 seconds on Raspberry Pi 3 class hardware.  PNG processing is a little more taxing, but usually only takes a few seconds.
 
-ffmpeg video processing is considerably more expensive.  A 2 minute x264 encoded video compiled from 3,000 frames requires ~20 minutes on Raspberry Pi 3 (4 core) hardware.  Encoding takes place in a separate process from image aqcuisition and image processing and is run at the lowest CPU priority so image acquision is never impacted.
+ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.264 encoded video compiled from 3,000 frames requires ~20 minutes on Raspberry Pi 3 (4 core) hardware.  Encoding takes place in a separate process from image aqcuisition and image processing and is run at the lowest CPU priority so image acquision is not impacted.
 
 ## Software Dependencies
 
@@ -395,10 +398,14 @@ If you have an INDI supported camera from a vendor not listed, open an enhanceme
 Common problems you might run into.
 
 * The indi-allsky python processes consume ~500MB of RAM.
-    * 1K (1920x1080) x264 encoding with ffmpeg requires an additional ~500MB of RAM.  1GB of RAM should be the bare minimum system memory.  You should also have 100-200MB of additional swap space to prevent running out of memory during encoding.
-    * 4K (3840x2160) x264 encoding requires an additional 2+GB of RAM.  4GB of RAM should be the minimum system memory.
-* The x264 codec is has a maximum frame size of 4096×2304.  If your camera generates images larger than this, you will need to scale the frames or use the Region of Interest (RoI) options to reduce the frame size.
+    * 1K (1920x1080) h.264 encoding with ffmpeg requires an additional ~500MB of RAM.  1GB of RAM should be the bare minimum system memory.  You should also have 100-500MB of additional swap space to prevent running out of memory during encoding.  2GB of RAM recommended.
+    * 4K (3840x2160) h.264 encoding requires an additional 2+GB of RAM.  4GB of RAM recommended.
+    * Above 4K resolution requires greater than 4GB of RAM.
+* In Raspbian 10 (legacy), the h.264 codec in ffmpeg has a maximum frame size of 4096×2304 (AVC level 5.1).  If your camera generates higher resolution images, you will need to scale the frames or use the Region of Interest (RoI) options to reduce the frame size.
+    * NEW: indi-allsky now has the ability to scale the native resolution images during the ffmpeg encoding phase, so you do not need to pre-scale your images.
     * The RaspberryPi HQ camera has a bin1 image size of 4056x3040.  Setting IMAGE_SCALE to 75 in the config results in a image size of 3042x2280.  Alternatively, you can center crop the image using IMAGE_CROP_ROI set to [0, 368, 4056, 2672] for an image size of 4056×2304.
+* ffmpeg in Raspbian 11 enables AVC level 6.0+ which permits h.264 resolutions up to 8192×4320 (you must have sufficient system memory)
+    * https://en.wikipedia.org/wiki/Advanced_Video_Coding
 
 
 ## File Transfer
