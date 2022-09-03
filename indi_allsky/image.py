@@ -655,6 +655,10 @@ class ImageWorker(Process):
         max_val = numpy.amax(data)
         logger.info('Image max value: %d', int(max_val))
 
+        # This method of detecting bit depth can cause the 16->8 bit conversion
+        # to stretch too much.  This most commonly happens with very low gains
+        # during the day when there are no hot pixels.  This can result in a
+        # trippy effect
         if max_val > 32768:
             image_bit_depth = 16
         elif max_val > 16384:
@@ -1127,7 +1131,6 @@ class ImageWorker(Process):
 
         # Add moon mode indicator
         if self.moonmode_v.value:
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
                 '* Moon {0:0.1f}% *'.format(self.moon_phase),
@@ -1135,26 +1138,31 @@ class ImageWorker(Process):
                 tuple(color_bgr),
             )
 
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
 
         # Add eclipse indicator
         if self.moon_phase > 50.0 and sun_moon_sep < 2.0:
             # Lunar eclipse (earth's penumbra is large)
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
                 '* LUNAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 tuple(color_bgr),
             )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
         elif self.moon_phase < 50.0 and sun_moon_sep < 1.0:
             # Solar eclipse
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
             self.drawText(
                 data_bytes,
                 '* SOLAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 tuple(color_bgr),
             )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
 
 
         # add extra text to image
@@ -1163,13 +1171,14 @@ class ImageWorker(Process):
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
             for extra_text_line in extra_text_lines:
-                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
                 self.drawText(
                     data_bytes,
                     extra_text_line,
                     (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                     tuple(color_bgr),
                 )
+
+                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
 
 
     def drawText(self, data_bytes, text, pt, color_bgr):
