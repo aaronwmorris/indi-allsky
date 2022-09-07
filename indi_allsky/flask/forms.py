@@ -202,7 +202,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
         temp_process = subprocess.Popen(
             cmd,
             env=cmd_env,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
     except OSError:
@@ -210,7 +210,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
 
     try:
-        temp_process.wait(timeout=2.0)
+        temp_process.wait(timeout=3.0)
     except subprocess.TimeoutExpired:
         temp_process.kill()
         time.sleep(1.0)

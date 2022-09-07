@@ -874,7 +874,7 @@ class IndiAllSky(object):
 
 
         try:
-            temp_process.wait(timeout=2.0)
+            temp_process.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
             temp_process.kill()
             time.sleep(1.0)
