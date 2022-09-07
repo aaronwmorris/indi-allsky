@@ -897,6 +897,8 @@ class IndiAllSky(object):
         except json.JSONDecodeError as e:
             logger.error('Error decoding json: %s', str(e))
             raise TemperatureException(str(e))
+        except FileNotFoundError as e:
+            raise TemperatureException(str(e))
 
 
         try:

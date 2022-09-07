@@ -233,6 +233,8 @@ def CCD_TEMP_SCRIPT_validator(form, field):
     except json.JSONDecodeError as e:
         app.logger.error('Error decoding json: %s', str(e))
         raise ValidationError(str(e))
+    except FileNotFoundError as e:
+        raise ValidationError(str(e))
 
 
     try:
