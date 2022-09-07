@@ -1,24 +1,43 @@
 #!/usr/bin/env python3
 
 # Example of an external temperature script for indi-allsky
-# The first line to STDOUT should be a number
-# Additional lines are ignored
-# Any info sent to STDERR is also ignored
+# STDOUT and STDERR are ignored
+#
+# The json output file is set in the environment variable TEMP_JSON
 
+
+import os
 import sys
+import io
+import json
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging
 
 
 temp_c = -5.111
 
-print('STDERR is ignored', file=sys.stderr)
-
-# first line to STDOUT must contain a number with no additional details
-# number is assumed to be celcius
-
-print(f'{temp_c:0.2f}')  # formatting is not necessary, this is just an example
-
-# This would also be valid
-#print(temp_c)
+try:
+    # data file is communicated via environment variable
+    temp_json = os.environ['TEMP_JSON']
+except KeyError:
+    logger.error('TEMP_JSON environment variable is not defined')
+    sys.exit(1)
 
 
-print('Any additional lines are ignored')
+# dict to be used for json data
+temp_data = {
+    'temp' : temp_c,
+}
+
+
+# write json data
+with io.open(temp_json, 'w') as f_temp_json:
+    json.dump(temp_data, f_temp_json, indent=4)
+
+
+# script must exist with exit code 0 for success
+sys.exit(0)
+

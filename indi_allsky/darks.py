@@ -1,5 +1,6 @@
 import os
 import sys
+import io
 import time
 import math
 import tempfile
@@ -663,14 +664,29 @@ class IndiAllSkyDarks(object):
             raise TemperatureException('Temperature script is not executable')
 
 
+        # generate a tempfile for the data
+        f_tmp_tempjson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
+        f_tmp_tempjson.close()
+
+        tempjson_name_p = Path(f_tmp_tempjson.name)
+
+
         cmd = [
             str(temp_script_p),
         ]
 
+
+        # the file used for the json data is communicated via environment variable
+        cmd_env = {
+            'TEMP_JSON' : str(tempjson_name_p),
+        }
+
+
         try:
             temp_process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.PIPE,
+                env=cmd_env,
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
         except OSError:
@@ -678,7 +694,7 @@ class IndiAllSkyDarks(object):
 
 
         try:
-            temp_process.wait(timeout=2.0)
+            temp_process.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
             temp_process.kill()
             time.sleep(1.0)
@@ -690,17 +706,30 @@ class IndiAllSkyDarks(object):
             raise TemperatureException('Temperature script returned exited abnormally')
 
 
-        temp_str = temp_process.stdout.readline()  # temp should be on the first line of output
+        try:
+            with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
+                temp_data = json.load(tempjson_name_f)
+
+            tempjson_name_p.unlink()  # remove temp file
+        except PermissionError as e:
+            logger.error(str(e))
+            raise TemperatureException(str(e))
+        except json.JSONDecodeError as e:
+            logger.error('Error decoding json: %s', str(e))
+            raise TemperatureException(str(e))
+        except FileNotFoundError as e:
+            raise TemperatureException(str(e))
 
 
         try:
-            temp_float = float(temp_str.rstrip())
+            temp_float = float(temp_data['temp'])
         except ValueError:
             raise TemperatureException('Temperature script returned a non-numerical value')
+        except KeyError:
+            raise TemperatureException('Temperature script returned incorrect data')
 
 
         return temp_float
-
 
 
 

@@ -385,7 +385,8 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One   | Mars-C          | A      |       |
 | Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
-| Raspberry Pi | HQ Camera (libcamera) | A      | |
+| Raspberry Pi | HQ Camera (libcamera) | A      | Minimum 2GB of memory is needed to process RAW images with dark calibration frames |
+| Waveshare    | imx378 (libcamera)    | A      | Select libcamera_imx477 interface |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
