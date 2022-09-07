@@ -889,6 +889,8 @@ class IndiAllSky(object):
         try:
             with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
                 temp_data = json.load(tempjson_name_f)
+
+            tempjson_name_p.unlink()  # remove temp file
         except PermissionError as e:
             logger.error(str(e))
             raise TemperatureException(str(e))
@@ -904,8 +906,6 @@ class IndiAllSky(object):
         except KeyError:
             raise TemperatureException('Temperature script returned incorrect data')
 
-
-        tempjson_name_p.unlink()  # remove temp file
 
         return temp_float
 

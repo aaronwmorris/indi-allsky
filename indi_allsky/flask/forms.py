@@ -5,6 +5,7 @@ import re
 import json
 import time
 from datetime import datetime
+import tempfile
 import subprocess
 import cv2
 import numpy
@@ -180,13 +181,27 @@ def CCD_TEMP_SCRIPT_validator(form, field):
         raise ValidationError('Temperature script is not executable')
 
 
+    # generate a tempfile for the data
+    f_tmp_tempjson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
+    f_tmp_tempjson.close()
+
+    tempjson_name_p = Path(f_tmp_tempjson.name)
+
+
     cmd = [
         str(temp_script_p),
     ]
 
+
+    # the file used for the json data is communicated via environment variable
+    cmd_env = {
+        'TEMP_JSON' : str(tempjson_name_p),
+    }
+
     try:
         temp_process = subprocess.Popen(
             cmd,
+            env=cmd_env,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
         )
@@ -207,13 +222,26 @@ def CCD_TEMP_SCRIPT_validator(form, field):
         raise ValidationError('Temperature script returned exited abnormally')
 
 
-    temp_str = temp_process.stdout.readline()  # temp should be on the first line of output
+    try:
+        with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
+            temp_data = json.load(tempjson_name_f)
+
+        tempjson_name_p.unlink()  # remove temp file
+    except PermissionError as e:
+        app.logger.error(str(e))
+        raise ValidationError(str(e))
+    except json.JSONDecodeError as e:
+        app.logger.error('Error decoding json: %s', str(e))
+        raise ValidationError(str(e))
 
 
     try:
-        float(temp_str.rstrip())
+        float(temp_data['temp'])
     except ValueError:
         raise ValidationError('Temperature script returned a non-numerical value')
+    except KeyError:
+        raise ValidationError('Temperature script returned incorrect data')
+
 
 
 def TARGET_ADU_validator(form, field):
