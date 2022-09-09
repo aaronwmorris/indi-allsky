@@ -227,18 +227,18 @@ class ImageWorker(Process):
                 image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']
 
-                scidata_uncalibrated = hdulist[0].data
+                scidata = hdulist[0].data
             elif filename_p.suffix in ['.jpg', '.jpeg']:
                 self.indi_rgb = False
 
-                scidata_uncalibrated = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+                scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
                 image_type = 'Light Frame'
                 image_bitpix = 8
             elif filename_p.suffix in ['.png']:
                 self.indi_rgb = False
 
-                scidata_uncalibrated = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+                scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
                 image_type = 'Light Frame'
                 image_bitpix = 8
@@ -249,10 +249,10 @@ class ImageWorker(Process):
 
                 # DNG raw
                 raw = rawpy.imread(str(filename_p))
-                scidata_uncalibrated = raw.raw_image
+                scidata = raw.raw_image
 
                 # create a new fits container for DNG data
-                hdu = fits.PrimaryHDU(scidata_uncalibrated)
+                hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
                 hdulist[0].header['IMAGETYP'] = 'Light Frame'
@@ -278,94 +278,87 @@ class ImageWorker(Process):
             processing_start = time.time()
 
 
-            image_bit_depth = self.detectBitDepth(scidata_uncalibrated)
+            image_bit_depth = self.detectBitDepth(scidata)
 
-            image_height, image_width = scidata_uncalibrated.shape[:2]
+            image_height, image_width = scidata.shape[:2]
             logger.info('Image: %d x %d', image_width, image_height)
 
 
-            if len(scidata_uncalibrated.shape) == 2:
+            if len(scidata.shape) == 2:
                 # gray scale or bayered
 
                 if self.config.get('IMAGE_SAVE_FITS'):
                     self.write_fit(hdulist, camera_id, exposure, exp_date, image_bitpix)
 
                 try:
-                    scidata_calibrated = self.calibrate(scidata_uncalibrated, exposure, camera_id, image_bitpix)
+                    scidata = self.calibrate(scidata, exposure, camera_id, image_bitpix)
                     calibrated = True
                 except CalibrationNotFound:
-                    scidata_calibrated = scidata_uncalibrated
                     calibrated = False
 
 
                 # sqm calculation
-                self.sqm_value = self.calculateSqm(scidata_calibrated, exposure)
+                self.sqm_value = self.calculateSqm(scidata, exposure)
 
                 # debayer
-                scidata_debayered = self.debayer(scidata_calibrated)
+                scidata = self.debayer(scidata)
 
             else:
                 # data is probably RGB
-                #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+                #logger.info('Channels: %s', pformat(scidata.shape))
 
                 if self.indi_rgb:
                     # INDI returns array in the wrong order for cv2
-                    scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 2)
-                    scidata_uncalibrated = numpy.swapaxes(scidata_uncalibrated, 0, 1)
-                    #logger.info('Channels: %s', pformat(scidata_uncalibrated.shape))
+                    scidata = numpy.swapaxes(scidata, 0, 2)
+                    scidata = numpy.swapaxes(scidata, 0, 1)
+                    #logger.info('Channels: %s', pformat(scidata.shape))
 
-                    scidata_debayered = cv2.cvtColor(scidata_uncalibrated, cv2.COLOR_RGB2BGR)
+                    scidata = cv2.cvtColor(scidata, cv2.COLOR_RGB2BGR)
                 else:
                     # normal rgb data
-                    scidata_debayered = scidata_uncalibrated
+                    pass
 
 
                 # sqm calculation
-                self.sqm_value = self.calculateSqm(scidata_debayered, exposure)
+                self.sqm_value = self.calculateSqm(scidata, exposure)
 
                 calibrated = False
 
 
             ### IMAGE IS CALIBRATED ###
-            self._export_raw_image(scidata_debayered, exp_date, camera_id, image_bitpix, image_bit_depth)
+            self._export_raw_image(scidata, exp_date, camera_id, image_bitpix, image_bit_depth)
 
-            scidata_debayered_8 = self._convert_16bit_to_8bit(scidata_debayered, image_bitpix, image_bit_depth)
-            #scidata_debayered_8 = scidata_debayered
+            scidata = self._convert_16bit_to_8bit(scidata, image_bitpix, image_bit_depth)
 
 
             #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
-            #    numpy.save(f_numpy, scidata_debayered_8)
+            #    numpy.save(f_numpy, scidata)
             #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
             # verticle flip
             if self.config['IMAGE_FLIP_V']:
-                scidata_cal_flip_v = cv2.flip(scidata_debayered_8, 0)
-            else:
-                scidata_cal_flip_v = scidata_debayered_8
+                scidata = cv2.flip(scidata, 0)
 
             # horizontal flip
             if self.config['IMAGE_FLIP_H']:
-                scidata_cal_flip = cv2.flip(scidata_cal_flip_v, 1)
-            else:
-                scidata_cal_flip = scidata_cal_flip_v
+                scidata = cv2.flip(scidata, 1)
 
 
             # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(scidata_cal_flip, exposure)
-
+            adu, adu_average = self.calculate_histogram(scidata, exposure)
 
 
             # line detection
             if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self._lineDetect.detectLines(scidata_cal_flip)
+                image_lines = self._lineDetect.detectLines(scidata)
             else:
                 image_lines = list()
 
 
             # star detection
             if self.night_v.value and self.config.get('DETECT_STARS', True):
-                blob_stars = self._stars.detectObjects(scidata_cal_flip)
+                blob_stars = self._stars.detectObjects(scidata)
             else:
                 blob_stars = list()
 
@@ -373,41 +366,33 @@ class ImageWorker(Process):
 
             # crop
             if self.config.get('IMAGE_CROP_ROI'):
-                scidata_cropped = self.crop_image(scidata_cal_flip)
-            else:
-                scidata_cropped = scidata_cal_flip
-
+                scidata = self.crop_image(scidata)
 
 
             # white balance
-            scidata_balanced_manual = self.white_balance_manual_bgr(scidata_cropped)
-            scidata_balanced_auto = self.white_balance_auto_bgr(scidata_balanced_manual)
-            #scidata_balanced = scidata_cropped
+            scidata = self.white_balance_manual_bgr(scidata)
+            scidata = self.white_balance_auto_bgr(scidata)
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
-                scidata_contrast = self.contrast_clahe(scidata_balanced_auto)
+                scidata = self.contrast_clahe(scidata)
             elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
                 # Contrast enhancement during night
-                scidata_contrast = self.contrast_clahe(scidata_balanced_auto)
-            else:
-                scidata_contrast = scidata_balanced_auto
+                scidata = self.contrast_clahe(scidata)
 
 
             if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                scidata_scaled = self.scale_image(scidata_contrast)
-            else:
-                scidata_scaled = scidata_contrast
+                scidata = self.scale_image(scidata)
 
 
             # blur
-            #scidata_blur = self.median_blur(scidata_scaled)
+            #scidata = self.median_blur(scidata)
 
             # denoise
-            #scidata_denoise = self.fastDenoise(scidata_scaled)
+            #scidata = self.fastDenoise(scidata)
 
-            self.image_text(scidata_scaled, exposure, exp_date, exp_elapsed, blob_stars, image_lines)
+            self.image_text(scidata, exposure, exp_date, exp_elapsed, blob_stars, image_lines)
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -420,7 +405,7 @@ class ImageWorker(Process):
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
 
-            latest_file, new_filename = self.write_img(scidata_scaled, exp_date, camera_id)
+            latest_file, new_filename = self.write_img(scidata, exp_date, camera_id)
 
             if new_filename:
                 image_entry = self._miscDb.addImage(
