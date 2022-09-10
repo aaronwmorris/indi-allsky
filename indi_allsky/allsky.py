@@ -296,11 +296,6 @@ class IndiAllSky(object):
             c['KEOGRAM_H_SCALE'] = 100
 
 
-        # enable star detection by default
-        if not c.get('DETECT_STARS'):
-            c['DETECT_STARS'] = True
-
-
         # set default date format for image label
         if not c['TEXT_PROPERTIES'].get('DATE_FORMAT'):
             c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'

@@ -80,7 +80,6 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
-                '--output', str(image_tmp_p),
             ]
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
@@ -94,10 +93,19 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
-                '--output', str(image_tmp_p),
             ]
         else:
             raise Exception('Invalid image type')
+
+
+        # Add extra config options
+        extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
+        if extra_options:
+            cmd.extend(extra_options.split(' '))
+
+
+        # Finally add output file
+        cmd.extend(['--output', str(image_tmp_p)])
 
 
         logger.info('image command: %s', ' '.join(cmd))
