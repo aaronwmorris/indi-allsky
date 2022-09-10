@@ -905,6 +905,15 @@ def LIBCAMERA__IMAGE_FILE_TYPE_validator(form, field):
         raise ValidationError('Please select a valid file type')
 
 
+def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
+    if not field.data:
+        return
+
+    options_regex = r'^[a-zA-Z0-9_\.\-\ ]+$'
+    if not re.search(options_regex, field.data):
+        raise ValidationError('Invalid characters')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -1131,6 +1140,7 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
+    LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
 

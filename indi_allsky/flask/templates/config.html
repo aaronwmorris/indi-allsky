@@ -1485,6 +1485,16 @@
         <div class="col-sm-8">File type for libcamera acquistion.  This has no effect when using indi.</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Extra options for libcamera-still</div>
+    </div>
 
     <hr />
 
@@ -1611,6 +1621,7 @@ const field_names = [
     'MQTTPUBLISH__BASE_TOPIC',
     'MQTTPUBLISH__QOS',
     'LIBCAMERA__IMAGE_FILE_TYPE',
+    'LIBCAMERA__EXTRA_OPTIONS',
     'INDI_CONFIG_DEFAULTS',
 ];
 

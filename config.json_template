@@ -182,6 +182,7 @@
     },
 
     "LIBCAMERA" : {
-        "IMAGE_FILE_TYPE"        : "dng"
+        "IMAGE_FILE_TYPE"        : "dng",
+        "EXTRA_OPTIONS"          : ""
     }
 }
