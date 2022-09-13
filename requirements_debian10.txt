@@ -26,7 +26,8 @@ Flask
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
-cryptography
+#https://www.piwheels.org/project/cryptography/
+cryptography<=37.0.4
 dbus-python
 paho-mqtt
 setuptools-rust
