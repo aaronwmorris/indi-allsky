@@ -1,3 +1,8 @@
+####################################################################################
+# Algorithms below were borrowed from PixInsight docs
+# https://www.pixinsight.com/doc/legacy/LE/21_noise_reduction/scnr/scnr.html
+####################################################################################
+
 import time
 #from pathlib import Path
 import cv2
