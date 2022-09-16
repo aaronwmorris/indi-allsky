@@ -1,7 +1,7 @@
 import time
 #from pathlib import Path
 #import cv2
-#import numpy
+import numpy
 import logging
 
 
@@ -16,27 +16,55 @@ class IndiAllskyScnr(object):
         self.amount = self.config.get('SCNR_AMOUNT', 0.50)
 
 
-    def additive(self, scidata):
+    def additive_mask_function(self, p):
+        b, g, r = p
+
+        m = min(1, r + b)
+
+        p[1] = g * (1 - self.amount) * (1 - m) + m * g
+
+        return p
+
+
+    def additive_mask(self, scidata):
         if len(scidata.shape) == 2:
-            return
+            return scidata
 
-        logger.warning('Applying SCNR additive function')
-
-        image_height, image_width = scidata.shape[:2]
+        logger.warning('Applying SCNR additive_mask function')
 
         start = time.time()
 
-        for y in range(0, image_height):
-            for x in range(0, image_width):
-                b, g, r = scidata[y, x]
-
-                m = min(1, r + b)
-
-                g = g * (1 - self.amount) * (1 - m) + m * g
+        scnr_data = numpy.apply_along_axis(self.additive_mask_function, 2, scidata)
 
         elapsed_s = time.time() - start
-        logger.info('SCNR additive in %0.4f s', elapsed_s)
+        logger.info('SCNR additive mask in %0.4f s', elapsed_s)
+
+        return scnr_data
 
 
-        return
+    def average_neutral_function(self, p):
+        b, g, r = p
+
+        m = 0.5 * (r + b)
+
+        p[1] = min(g, m)
+
+        return p
+
+
+    def average_neutral(self, scidata):
+        if len(scidata.shape) == 2:
+            return scidata
+
+        logger.warning('Applying SCNR average_neutral')
+
+        start = time.time()
+
+        scnr_data = numpy.apply_along_axis(self.average_neutral_function, 2, scidata)
+
+        elapsed_s = time.time() - start
+        logger.info('SCNR average neutral in %0.4f s', elapsed_s)
+
+        return scnr_data
+
 
