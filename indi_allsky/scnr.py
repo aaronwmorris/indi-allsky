@@ -59,11 +59,31 @@ class IndiAllskyScnr(object):
 
         start = time.time()
 
-        m = numpy.add(b, r) * 0.5
+        m = numpy.add(r, b) * 0.5
         g = numpy.minimum(g, m.astype(numpy.uint8))
 
         elapsed_s = time.time() - start
         logger.info('SCNR average neutral in %0.4f s', elapsed_s)
+
+        return cv2.merge((b, g, r))
+
+
+    def maximum_neutral(self, scidata):
+        if len(scidata.shape) == 2:
+            return scidata
+
+        #logger.warning('Applying SCNR maximum neutral')
+
+
+        b, g, r = cv2.split(scidata)
+
+        start = time.time()
+
+        m = numpy.maximum(r, b)
+        g = numpy.minimum(g, m)
+
+        elapsed_s = time.time() - start
+        logger.info('SCNR maximum neutral in %0.4f s', elapsed_s)
 
         return cv2.merge((b, g, r))
 
