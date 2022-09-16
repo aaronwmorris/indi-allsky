@@ -18,13 +18,14 @@ class IndiAllskyScnr(object):
     def __init__(self, config):
         self.config = config
 
-        self.amount = self.config.get('SCNR_AMOUNT', 0.50)
+        self.amount = self.config.get('SCNR_AMOUNT', 0.50)  # not currently used
 
 
     def additive_mask(self, scidata):
         ### The function below returns an out of memory error, needs to be fixed
 
         if len(scidata.shape) == 2:
+            # grayscale
             return scidata
 
         #logger.warning('Applying SCNR additive mask')
@@ -50,6 +51,7 @@ class IndiAllskyScnr(object):
 
     def average_neutral(self, scidata):
         if len(scidata.shape) == 2:
+            # grayscale
             return scidata
 
         #logger.warning('Applying SCNR average neutral')
@@ -70,6 +72,7 @@ class IndiAllskyScnr(object):
 
     def maximum_neutral(self, scidata):
         if len(scidata.shape) == 2:
+            # grayscale
             return scidata
 
         #logger.warning('Applying SCNR maximum neutral')

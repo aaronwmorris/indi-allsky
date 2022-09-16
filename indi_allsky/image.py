@@ -378,8 +378,10 @@ class ImageWorker(Process):
 
 
             # green removal
-            #scidata = self._scnr.average_neutral(scidata)
-            scidata = self._scnr.maximum_neutral(scidata)
+            scnr_algo = self.config.get('SCNR_ALGORITHM')
+            if scnr_algo:
+                scnr_function = getattr(self._scnr, scnr_algo)
+                scidata = scnr_function(scidata)
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
