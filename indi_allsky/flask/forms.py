@@ -972,7 +972,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     SCNR_ALGORITHM_choices = (
         ('', 'Disabled'),
-        ('average_neutral', 'Average Neutral (default)'),
+        ('average_neutral', 'Average Neutral'),
         ('maximum_neutral', 'Maximum Neutral'),
     )
 
