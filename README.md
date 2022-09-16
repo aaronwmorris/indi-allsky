@@ -466,4 +466,5 @@ For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wi
 
 * [Thomas Jacquin](https://github.com/thomasjacquin) - indi-allsky is heavily inspired by his [allsky](https://github.com/thomasjacquin/allsky) software.
 * [Marco Gulino](https://github.com/GuLinux) - His examples from [indi-lite-tools](https://github.com/GuLinux/indi-lite-tools) were key to understanding how to work with pyindi-client
+* [PixInsight](https://www.pixinsight.com/) - Various algorithms were used that are in the PixInsight documentation
 
