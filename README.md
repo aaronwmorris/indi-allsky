@@ -255,10 +255,11 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | EXPOSURE_PERIOD_DAY | 15.0        | (float) Seconds between beginning of each exposure (Day) |
 | FOCUS_MODE          | false       | (bool) Focus mode is used to take exposures as quickly as possible to aid in focusing |
 | FOCUS_DELAY         | 4.0         | (float) Delay between exposures during focus mode |
-| AUTO_WB             | false       | (bool) Automatic white balance adjustment |
+| SCNR_ALGORITHM      |             | (str) SCNR (green reduction) algorithm |
 | WBR_FACTOR          | 1.0         | (float) Red Balance Adjustment Factor |
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |
 | WBB_FACTOR          | 1.0         | (float) Blue Balance Adjustment Factor |
+| AUTO_WB             | false       | (bool) Automatic white balance adjustment |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | CCD_TEMP_SCRIPT     |             | (str) External script used for CCD temperature.  Used when a camera does not support temperature measurements. |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
@@ -465,4 +466,5 @@ For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wi
 
 * [Thomas Jacquin](https://github.com/thomasjacquin) - indi-allsky is heavily inspired by his [allsky](https://github.com/thomasjacquin/allsky) software.
 * [Marco Gulino](https://github.com/GuLinux) - His examples from [indi-lite-tools](https://github.com/GuLinux/indi-lite-tools) were key to understanding how to work with pyindi-client
+* [PixInsight](https://www.pixinsight.com/) - Various algorithms were used that are in the PixInsight documentation
 

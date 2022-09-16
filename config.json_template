@@ -35,6 +35,8 @@
     "FOCUS_MODE"           : false,
     "FOCUS_DELAY"          : 4.0,
 
+    "comment_SCNR_ALGORITHM" : "empty string, average_neutral, or maximum_neutral",
+    "SCNR_ALGORITHM"   : "",
     "WBR_FACTOR"       : 1.0,
     "WBG_FACTOR"       : 1.0,
     "WBB_FACTOR"       : 1.0,

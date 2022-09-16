@@ -27,6 +27,7 @@ from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
+from .scnr import IndiAllskyScnr
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -133,6 +134,8 @@ class ImageWorker(Process):
 
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
+
+        self._scnr = IndiAllskyScnr(self.config)
 
         self._miscDb = miscDb(self.config)
 
@@ -367,6 +370,13 @@ class ImageWorker(Process):
             # crop
             if self.config.get('IMAGE_CROP_ROI'):
                 scidata = self.crop_image(scidata)
+
+
+            # green removal
+            scnr_algo = self.config.get('SCNR_ALGORITHM')
+            if scnr_algo:
+                scnr_function = getattr(self._scnr, scnr_algo)
+                scidata = scnr_function(scidata)
 
 
             # white balance
