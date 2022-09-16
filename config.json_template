@@ -39,6 +39,8 @@
     "WBG_FACTOR"       : 1.0,
     "WBB_FACTOR"       : 1.0,
     "AUTO_WB"          : false,
+    "comment_SCNR_ALGORITHM" : "empty string, average_neutral, or maximum_neutral",
+    "SCNR_ALGORITHM"   : "",
 
     "comment_TEMP_DISPLAY" : "c = celcius, f = fahrenheit, k = kelvin",
     "TEMP_DISPLAY"     : "c",

@@ -156,6 +156,15 @@ def WB_FACTOR_validator(form, field):
         raise ValidationError('Balance factor must be less than 2.0')
 
 
+def SCNR_ALGORITHM_validator(form, field):
+    if not field.data:
+        return
+
+    scnr_list = ('average_neutral', 'maximum_neutral')
+    if field.data not in scnr_list:
+        raise ValidationError('Please select a valid algorithm')
+
+
 def TEMP_DISPLAY_validator(form, field):
     if field.data not in ('c', 'f', 'k'):
         raise ValidationError('Please select the temperature system for display')
@@ -961,6 +970,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    SCNR_ALGORITHM_choices = (
+        ('', 'Disabled'),
+        ('average_neutral', 'Average Neutral (default)'),
+        ('maximum_neutral', 'Maximum Neutral'),
+    )
+
     IMAGE_EXPORT_RAW_choices = (
         ('', 'Disabled'),
         ('png', 'PNG'),
@@ -1034,6 +1049,7 @@ class IndiAllskyConfigForm(FlaskForm):
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])

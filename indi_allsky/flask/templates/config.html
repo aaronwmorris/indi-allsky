@@ -264,6 +264,17 @@
         <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SCNR_ALGORITHM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.SCNR_ALGORITHM(class='form-control bg-secondary') }}
+            <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">SCNR algorithm to apply to reduce green bias in image</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -1540,6 +1551,7 @@ const field_names = [
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
+    'SCNR_ALGORITHM',
     'TEMP_DISPLAY',
     'CCD_TEMP_SCRIPT',
     'TARGET_ADU',
