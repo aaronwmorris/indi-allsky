@@ -226,7 +226,15 @@
             {{ form_config.SCNR_ALGORITHM(class='form-control bg-secondary') }}
             <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">SCNR algorithm to apply to reduce green bias in image</div>
+        <div class="col-sm-7">
+            <div>SCNR algorithm to apply to reduce green bias in image</div>
+            <div>
+              <ul>
+                <li>Average Neutral - Good colors, but can cause a magenta bias (especially during the day)</li>
+                <li>Maximum Neutral - Use this if you enable day time caputures</li>
+              </ul>
+            </div>
+        </div>
     </div>
 
     <div class="form-group row">
