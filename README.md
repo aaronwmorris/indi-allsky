@@ -255,11 +255,11 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | EXPOSURE_PERIOD_DAY | 15.0        | (float) Seconds between beginning of each exposure (Day) |
 | FOCUS_MODE          | false       | (bool) Focus mode is used to take exposures as quickly as possible to aid in focusing |
 | FOCUS_DELAY         | 4.0         | (float) Delay between exposures during focus mode |
+| SCNR_ALGORITHM      |             | (str) SCNR (green reduction) algorithm |
 | WBR_FACTOR          | 1.0         | (float) Red Balance Adjustment Factor |
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |
 | WBB_FACTOR          | 1.0         | (float) Blue Balance Adjustment Factor |
 | AUTO_WB             | false       | (bool) Automatic white balance adjustment |
-| SCNR_ALGORITHM      |             | (str) SCNR (green reduction) algorithm |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | CCD_TEMP_SCRIPT     |             | (str) External script used for CCD temperature.  Used when a camera does not support temperature measurements. |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |

@@ -372,16 +372,16 @@ class ImageWorker(Process):
                 scidata = self.crop_image(scidata)
 
 
-            # white balance
-            scidata = self.white_balance_manual_bgr(scidata)
-            scidata = self.white_balance_auto_bgr(scidata)
-
-
             # green removal
             scnr_algo = self.config.get('SCNR_ALGORITHM')
             if scnr_algo:
                 scnr_function = getattr(self._scnr, scnr_algo)
                 scidata = scnr_function(scidata)
+
+
+            # white balance
+            scidata = self.white_balance_manual_bgr(scidata)
+            scidata = self.white_balance_auto_bgr(scidata)
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
