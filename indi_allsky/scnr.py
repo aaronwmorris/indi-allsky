@@ -1,6 +1,6 @@
 import time
 #from pathlib import Path
-#import cv2
+import cv2
 import numpy
 import logging
 
@@ -16,55 +16,50 @@ class IndiAllskyScnr(object):
         self.amount = self.config.get('SCNR_AMOUNT', 0.50)
 
 
-    def additive_mask_function(self, p):
-        b, g, r = p
-
-        m = min(1, r + b)
-
-        p[1] = g * (1 - self.amount) * (1 - m) + m * g
-
-        return p
-
-
     def additive_mask(self, scidata):
+        ### The function below returns an out of memory error, needs to be fixed
+
         if len(scidata.shape) == 2:
             return scidata
 
-        logger.warning('Applying SCNR additive_mask function')
+        #logger.warning('Applying SCNR additive mask')
+
+
+        image_height, image_width = scidata.shape[:2]
+        b, g, r = cv2.split(scidata)
 
         start = time.time()
 
-        scnr_data = numpy.apply_along_axis(self.additive_mask_function, 2, scidata)
+        ones = numpy.ones([image_height, image_width])
+
+        m = numpy.minimum(ones, numpy.sum(r + b))
+
+        #g * (1 - self.amount) * (1 - m) + m * g
+        g = numpy.multiply(g * (1 - self.amount), numpy.sum(numpy.subtract(ones, m), numpy.multiply(m, g)))  # oom
 
         elapsed_s = time.time() - start
         logger.info('SCNR additive mask in %0.4f s', elapsed_s)
 
-        return scnr_data
-
-
-    def average_neutral_function(self, p):
-        b, g, r = p
-
-        m = 0.5 * (r + b)
-
-        p[1] = min(g, m)
-
-        return p
+        return cv2.merge((b, g, r))
 
 
     def average_neutral(self, scidata):
         if len(scidata.shape) == 2:
             return scidata
 
-        logger.warning('Applying SCNR average_neutral')
+        #logger.warning('Applying SCNR average neutral')
+
+
+        b, g, r = cv2.split(scidata)
 
         start = time.time()
 
-        scnr_data = numpy.apply_along_axis(self.average_neutral_function, 2, scidata)
+        m = numpy.add(b, r) * 0.5
+        g = numpy.minimum(g, m.astype(numpy.uint8))
 
         elapsed_s = time.time() - start
         logger.info('SCNR average neutral in %0.4f s', elapsed_s)
 
-        return scnr_data
+        return cv2.merge((b, g, r))
 
 
