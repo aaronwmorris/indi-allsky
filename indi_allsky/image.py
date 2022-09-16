@@ -27,6 +27,7 @@ from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
+from .scnr import IndiAllskyScnr
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -133,6 +134,8 @@ class ImageWorker(Process):
 
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
+
+        self._scnr = IndiAllskyScnr(self.config)
 
         self._miscDb = miscDb(self.config)
 
@@ -372,6 +375,8 @@ class ImageWorker(Process):
             # white balance
             scidata = self.white_balance_manual_bgr(scidata)
             scidata = self.white_balance_auto_bgr(scidata)
+
+            self._scnr.additive(scidata)
 
 
             if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
