@@ -657,7 +657,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     PYTHON_BIN=python3
 
-    VIRTUALENV_REQ=requirements_debian11.txt
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        # rawpy not available on arm 32bit
+        VIRTUALENV_REQ=requirements_debian11_armv7l.txt
+    else
+        VIRTUALENV_REQ=requirements_debian11.txt
+    fi
 
 
     if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
@@ -765,7 +770,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     PYTHON_BIN=python3.9
 
-    VIRTUALENV_REQ=requirements_debian11.txt
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        # rawpy not available on arm 32bit
+        VIRTUALENV_REQ=requirements_debian11_armv7l.txt
+    else
+        VIRTUALENV_REQ=requirements_debian11.txt
+    fi
 
 
     if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
@@ -880,7 +890,13 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     PYTHON_BIN=python3.8
 
-    VIRTUALENV_REQ=requirements_debian11.txt
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        # rawpy not available on arm 32bit
+        VIRTUALENV_REQ=requirements_debian11_armv7l.txt
+    else
+        VIRTUALENV_REQ=requirements_debian11.txt
+    fi
+
 
 
     if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
