@@ -1132,7 +1132,7 @@ class ImageWorker(Process):
         if self.moonmode_v.value:
             self.drawText(
                 data_bytes,
-                '* Moon {0:0.1f}% *'.format(self.moon_phase),
+                '* Moon Mode *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 tuple(color_bgr),
             )
