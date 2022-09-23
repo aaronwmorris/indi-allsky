@@ -378,6 +378,10 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'sqm'        : 8000.0,
         'stars'      : 1,
         'detections' : 'True',
+        'sun_alt'    : 0.0,
+        'moon_alt'   : 0.0,
+        'moon_phase' : 0.0,
+        'sun_moon_sep' : 0.0,
     }
 
     try:

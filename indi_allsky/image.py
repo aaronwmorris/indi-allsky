@@ -1106,6 +1106,10 @@ class ImageWorker(Process):
             'sqm'          : self.sqm_value,
             'stars'        : len(blob_stars),
             'detections'   : str(bool(len(image_lines))),
+            'sun_alt'      : self.sun_alt,
+            'moon_alt'     : self.moon_alt,
+            'moon_phase'   : self.moon_phase,
+            'sun_moon_sep' : sun_moon_sep,
         }
 
 
@@ -1128,7 +1132,7 @@ class ImageWorker(Process):
         if self.moonmode_v.value:
             self.drawText(
                 data_bytes,
-                '* Moon {0:0.1f}% *'.format(self.moon_phase),
+                '* Moon Mode *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
                 tuple(color_bgr),
             )
