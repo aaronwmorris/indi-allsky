@@ -1106,6 +1106,10 @@ class ImageWorker(Process):
             'sqm'          : self.sqm_value,
             'stars'        : len(blob_stars),
             'detections'   : str(bool(len(image_lines))),
+            'sun_alt'      : self.sun_alt,
+            'moon_alt'     : self.moon_alt,
+            'moon_phase'   : self.moon_phase,
+            'sun_moon_sep' : sun_moon_sep,
         }
 
 
