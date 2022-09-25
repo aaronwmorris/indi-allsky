@@ -27,6 +27,7 @@ from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
+from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 
 from .flask import db
@@ -134,6 +135,7 @@ class ImageWorker(Process):
 
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
+        self._draw = IndiAllSkyDraw(self.config, self.bin_v)
 
         self._scnr = IndiAllskyScnr(self.config)
 
@@ -365,6 +367,10 @@ class ImageWorker(Process):
             else:
                 blob_stars = list()
 
+
+            # additional draw code
+            if self.config.get('DETECT_DRAW'):
+                self._draw.main(scidata)
 
 
             # crop
