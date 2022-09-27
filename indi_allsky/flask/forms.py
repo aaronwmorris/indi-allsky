@@ -989,6 +989,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_VFSCALE_choices = (
         ('', 'None'),
         ('-1:2304', 'V 2304px (imx477)'),
+        ('-1:1520', 'V 1520px (imx477)'),
+        ('-1:760', 'V 760px (imx477)'),
     )
 
     ORB_PROPERTIES__MODE_choices = (
