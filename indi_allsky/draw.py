@@ -7,19 +7,21 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyDraw(object):
-    def __init__(self, config, bin_v):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
         self.bin_v = bin_v
+
+        self._sqm_mask = mask
 
 
     def main(self, sep_data):
         if not self.config.get('DETECT_DRAW'):
-            return
+            return sep_data
 
         image_height, image_width = sep_data.shape[:2]
 
 
-        if not self.config.get('DETECT_MASK', ''):
+        if isinstance(self._sqm_mask, type(None)):
             ### Draw ADU ROI if detection mask is not defined
             ###  Make sure the box calculation matches image.py
             adu_roi = self.config.get('ADU_ROI', [])
@@ -44,6 +46,9 @@ class IndiAllSkyDraw(object):
                 color=(128, 128, 128),
                 thickness=1,
             )
+        else:
+            # apply mask to image
+            sep_data = cv2.bitwise_and(sep_data, sep_data, mask=self._sqm_mask)
 
 
         logger.info('Draw keogram meridian')
@@ -69,4 +74,7 @@ class IndiAllSkyDraw(object):
             (64, 64, 64),
             3,
         )
+
+
+        return sep_data
 
