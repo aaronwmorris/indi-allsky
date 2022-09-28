@@ -135,7 +135,7 @@ class ImageWorker(Process):
 
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
-        self._draw = IndiAllSkyDraw(self.config, self.bin_v)
+        self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
 
         self._scnr = IndiAllskyScnr(self.config)
 
@@ -370,7 +370,7 @@ class ImageWorker(Process):
 
             # additional draw code
             if self.config.get('DETECT_DRAW'):
-                self._draw.main(scidata)
+                scidata = self._draw.main(scidata)
 
 
             # crop
