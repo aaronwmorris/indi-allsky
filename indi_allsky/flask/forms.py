@@ -669,7 +669,7 @@ def FFMPEG_VFSCALE_validator(form, field):
     if not field.data:
         return
 
-    scale_regex = r'^[\-?\d+\:\-?\d+]+$'
+    scale_regex = r'^[a-z0-9\-\*\.]+\:[a-z0-9\-\*\.]+$'
     if not re.search(scale_regex, field.data):
         raise ValidationError('Invalid scale option')
 
@@ -991,6 +991,9 @@ class IndiAllskyConfigForm(FlaskForm):
         ('-1:2304', 'V 2304px (imx477)'),
         ('-1:1520', 'V 1520px (imx477)'),
         ('-1:760', 'V 760px (imx477)'),
+        ('iw*.75:ih*.75', '75%'),
+        ('iw*.5:ih*.5', '50%'),
+        ('iw*.25:ih*.25', '25%'),
     )
 
     ORB_PROPERTIES__MODE_choices = (
