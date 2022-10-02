@@ -16,7 +16,7 @@ function handler_SIGINT() {
 trap handler_SIGINT SIGINT
 
 
-INDI_CORE_TAG="v1.9.7"
+INDI_CORE_TAG="v1.9.8"
 INDI_3RDPARTY_TAG=$INDI_CORE_TAG
 
 DISTRO_NAME=$(lsb_release -s -i)
