@@ -79,7 +79,7 @@ def create_app():
     migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
 
     with app.app_context():
-        from flask_sqlalchemy import event
+        from sqlalchemy import event
         event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
 
         from . import views  # noqa: F401
