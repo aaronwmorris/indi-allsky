@@ -23,7 +23,8 @@ gunicorn[gthread]
 inotify
 psutil
 Flask
-Flask-SQLAlchemy
+# Python 3.6 support removed in Flask-SQLAlchemy 3.0.0
+Flask-SQLAlchemy<=2.5.1
 Flask-Migrate
 Flask-WTF
 #https://www.piwheels.org/project/cryptography/
