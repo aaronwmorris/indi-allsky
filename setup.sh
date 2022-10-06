@@ -673,14 +673,22 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     fi
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-        echo
-        echo
-        echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./misc/build_indi.sh before running setup.sh"
-        echo
-        echo
-        exit 1
+    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
     fi
 
 
@@ -736,27 +744,27 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         dbus-user-session
 
 
-    #if [[ "$INSTALL_INDI" == "true" ]]; then
-    #    sudo apt-get -y install \
-    #        indi-full \
-    #        libindi-dev \
-    #        indi-asi \
-    #        libasi \
-    #        indi-qhy \
-    #        libqhy \
-    #        indi-playerone \
-    #        libplayerone \
-    #        indi-sv305 \
-    #        libsv305 \
-    #        libaltaircam \
-    #        libmallincam \
-    #        libmicam \
-    #        libnncam \
-    #        indi-toupbase \
-    #        libtoupcam \
-    #        indi-gphoto \
-    #        indi-sx
-    #fi
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx
+    fi
 
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
