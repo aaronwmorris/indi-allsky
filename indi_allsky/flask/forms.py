@@ -878,7 +878,7 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
 
 
 def REMOTE_FOLDER_validator(form, field):
-    folder_regex = r'^[a-zA-Z0-9_\.\-\/\{\}\:\%]+$'
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\{\}\:\%\~]+$'
 
     if not re.search(folder_regex, field.data):
         raise ValidationError('Invalid filename syntax')
