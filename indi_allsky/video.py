@@ -246,14 +246,27 @@ class VideoWorker(Process):
             logger.warning('Video uploading disabled')
             return
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'])
-        remote_file = remote_path.joinpath(video_file.name)
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'].format(**file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(video_file.name)
 
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
             'local_file'  : str(video_file),
-            'remote_file' : str(remote_file),
+            'remote_file' : str(remote_file_p),
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -424,14 +437,28 @@ class VideoWorker(Process):
             logger.warning('Keogram uploading disabled')
             return
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'])
-        remote_file = remote_path.joinpath(keogram_file.name)
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'].format(**file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(keogram_file.name)
+
 
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
             'local_file'  : str(keogram_file),
-            'remote_file' : str(remote_file),
+            'remote_file' : str(remote_file_p),
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -450,14 +477,28 @@ class VideoWorker(Process):
             logger.warning('Star trail uploading disabled')
             return
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'])
-        remote_file = remote_path.joinpath(startrail_file.name)
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'].format(**file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(startrail_file.name)
+
 
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
             'local_file'  : str(startrail_file),
-            'remote_file' : str(remote_file),
+            'remote_file' : str(remote_file_p),
         }
 
         task = IndiAllSkyDbTaskQueueTable(
