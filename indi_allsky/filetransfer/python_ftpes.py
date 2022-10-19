@@ -72,16 +72,10 @@ class python_ftpes(GenericFileTransfer):
         # Try to create remote folder
         try:
             self.client.mkd(str(remote_file_p.parent))
-        except ftplib.error_perm as e:
+        except ftplib.error_perm as e:  # noqa: F841
             # will return an error if the directory already exists
             #logger.warning('FTPES error creating directory: %s', str(e))
             pass
-
-
-        try:
-            self.client.sendcmd('SITE CHMOD 755 {0:s}'.format(str(remote_file_p.parent)))
-        except ftplib.error_perm as e:
-            logger.warning('FTP unable to chmod dir: %s', str(e))
 
 
         start = time.time()
@@ -103,4 +97,9 @@ class python_ftpes(GenericFileTransfer):
             self.client.sendcmd('SITE CHMOD 644 {0:s}'.format(str(remote_file_p)))
         except ftplib.error_perm as e:
             logger.warning('FTPES unable to chmod file: %s', str(e))
+
+        try:
+            self.client.sendcmd('SITE CHMOD 755 {0:s}'.format(str(remote_file_p.parent)))
+        except ftplib.error_perm as e:
+            logger.warning('FTP unable to chmod dir: %s', str(e))
 

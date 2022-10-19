@@ -68,7 +68,7 @@ class paramiko_sftp(GenericFileTransfer):
         # Try to create remote folder
         try:
             self.sftp.mkdir(str(remote_file_p.parent))
-        except OSError as e:
+        except OSError as e:  # noqa: F841
             # will return an error if the directory already exists
             #logger.warning('SFTP error creating directory: %s', str(e))
             pass
