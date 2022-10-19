@@ -468,11 +468,11 @@ class ImageWorker(Process):
                 self.mqtt_publish(latest_file, mqtt_data)
 
 
-                self.upload_image(latest_file, image_entry=image_entry)
+                self.upload_image(latest_file, exp_date, image_entry=image_entry)
                 self.upload_metadata(exposure, exp_date, adu, adu_average, blob_stars, camera_id)
 
 
-    def upload_image(self, latest_file, image_entry=None):
+    def upload_image(self, latest_file, exp_date, image_entry=None):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
@@ -484,14 +484,31 @@ class ImageWorker(Process):
             return
 
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'])
-        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(self.config['IMAGE_FILE_TYPE']))
+        # Parameters for string formatting
+        file_data_list = [
+            self.config['IMAGE_FILE_TYPE'],
+        ]
+
+        file_data_dict = {
+            'timestamp'    : exp_date,
+            'ts'           : exp_date,  # shortcut
+            'ext'          : self.config['IMAGE_FILE_TYPE'],
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(*file_data_list, **file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
 
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
             'local_file'  : str(latest_file),
-            'remote_file' : str(remote_file),
+            'remote_file' : str(remote_file_p),
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1105,6 +1122,7 @@ class ImageWorker(Process):
 
         label_data = {
             'timestamp'    : exp_date,
+            'ts'           : exp_date,  # shortcut
             'exposure'     : exposure,
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
