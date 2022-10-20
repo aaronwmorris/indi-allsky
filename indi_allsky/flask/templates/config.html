@@ -630,7 +630,10 @@
             {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
             <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min: -180, Max: 180 - Image rotate for Keogram data</div>
+        <div class="col-sm-8">
+            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" target="_blank">Keogram Wiki</a></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -788,7 +791,7 @@
         <div class="col-sm-6">
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
             <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
-            <div>Available variables: timestamp, exposure, gain, temp, temp_unit, sqm, stars, detections</div>
+            <div>Available variables: <pre>timestamp, ts, exposure, gain, temp, temp_unit, sqm, stars, detections</pre></div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" target="_blank">Image Labels Wiki</a></div>
         </div>
     </div>
@@ -1213,11 +1216,16 @@
         <div class="col-sm-2">
             {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='form-control bg-secondary') }}
             <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Remote image name. "{0}" is replaced with the configured image type extension.</div>
+        <div class="col-sm-7">
+            <div>Remote image name. "{0}" is replaced with the configured image type extension.</div>
+            <div>Available variables: <pre>timestamp, ts, ext</pre></div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1228,7 +1236,10 @@
             {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='form-control bg-secondary') }}
             <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">Remote folder to store images</div>
+        <div class="col-sm-6">
+            <div>Remote folder to store images</div>
+            <div>Available variables: <pre>timestamp, ts</pre></div>
+        </div>
     </div>
 
     <div class="form-group row">

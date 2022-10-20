@@ -65,19 +65,23 @@ class paramiko_sftp(GenericFileTransfer):
         local_file_p = Path(local_file)
         remote_file_p = Path(remote_file)
 
+
         # Try to create remote folder
-        try:
-            self.sftp.mkdir(str(remote_file_p.parent))
-        except OSError as e:
-            # will return an error if the directory already exists
-            #logger.warning('SFTP error creating directory: %s', str(e))
-            pass
+        dir_list = list(remote_file_p.parents)
+        dir_list.reverse()  # need root dirs first
 
+        for d in dir_list:
+            d_str = str(d)
 
-        try:
-            self.sftp.chmod(str(remote_file_p.parent), 0o755)
-        except OSError as e:
-            logger.warning('SFTP unable to chmod dir: %s', str(e))
+            if d_str in ['.', '~', '/']:
+                continue
+
+            try:
+                self.sftp.mkdir(d_str)
+            except OSError as e:  # noqa: F841
+                # will return an error if the directory already exists
+                #logger.warning('SFTP error creating directory: %s', str(e))
+                pass
 
 
         start = time.time()
@@ -96,4 +100,8 @@ class paramiko_sftp(GenericFileTransfer):
         except OSError as e:
             logger.warning('SFTP unable to chmod file: %s', str(e))
 
+        try:
+            self.sftp.chmod(str(remote_file_p.parent), 0o755)
+        except OSError as e:
+            logger.warning('SFTP unable to chmod dir: %s', str(e))
 

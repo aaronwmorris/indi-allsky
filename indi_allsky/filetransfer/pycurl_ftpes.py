@@ -62,12 +62,12 @@ class pycurl_ftpes(GenericFileTransfer):
         local_file_p = Path(local_file)
         remote_file_p = Path(remote_file)
 
-        pre_commands = [
-            'SITE CHMOD 755 {0:s}'.format(str(remote_file_p.parent)),
-        ]
+        #pre_commands = [
+        #]
 
         post_commands = [
             'SITE CHMOD 644 {0:s}'.format(str(remote_file_p)),
+            'SITE CHMOD 755 {0:s}'.format(str(remote_file_p.parent)),
         ]
 
         url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
@@ -79,7 +79,7 @@ class pycurl_ftpes(GenericFileTransfer):
 
         self.client.setopt(pycurl.URL, url)
         self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
-        self.client.setopt(pycurl.PREQUOTE, pre_commands)
+        #self.client.setopt(pycurl.PREQUOTE, pre_commands)
         self.client.setopt(pycurl.POSTQUOTE, post_commands)
         self.client.setopt(pycurl.UPLOAD, 1)
         self.client.setopt(pycurl.READDATA, f_localfile)
@@ -101,6 +101,8 @@ class pycurl_ftpes(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_QUOTE_ERROR]:
+                logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
             else:
                 raise e from e
 

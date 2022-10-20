@@ -37,7 +37,12 @@ class pycurl_webdav_https(GenericFileTransfer):
         #self.client.setopt(pycurl.VERBOSE, 1)
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
+        self.client.setopt(pycurl.HTTPHEADER, ['Accept: */*', 'Connection: Keep-Alive'])
+
+        self.client.setopt(pycurl.FOLLOWLOCATION, 1)
+
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+        self.client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
 
         #self.client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
         self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
@@ -60,6 +65,46 @@ class pycurl_webdav_https(GenericFileTransfer):
         local_file_p = Path(local_file)
         remote_file_p = Path(remote_file)
 
+
+        # Try to create remote folder
+        dir_list = list(remote_file_p.parents)
+        dir_list.reverse()  # need root dirs first
+
+        for d in dir_list:
+            d_str = str(d)
+
+            if d_str in ['.', '~', '/']:
+                continue
+
+            d_url = '{0:s}/{1:s}'.format(self.url, d_str)
+
+            self.client.setopt(pycurl.URL, d_url)
+            self.client.setopt(pycurl.CUSTOMREQUEST, 'MKCOL')  # mkdir
+
+            try:
+                self.client.perform()
+            except pycurl.error as e:
+                rc, msg = e.args
+
+                if rc in [pycurl.E_LOGIN_DENIED]:
+                    raise AuthenticationFailure(msg) from e
+                elif rc in [pycurl.E_COULDNT_RESOLVE_HOST]:
+                    raise ConnectionFailure(msg) from e
+                elif rc in [pycurl.E_COULDNT_CONNECT]:
+                    raise ConnectionFailure(msg) from e
+                elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
+                    raise ConnectionFailure(msg) from e
+                else:
+                    raise e from e
+
+                # will return an error if the directory already exists
+                #pass
+
+
+        # reset option
+        self.client.unsetopt(pycurl.CUSTOMREQUEST)
+
+
         url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
         logger.info('pycurl URL: %s', url)
 
@@ -69,9 +114,7 @@ class pycurl_webdav_https(GenericFileTransfer):
 
         self.client.setopt(pycurl.URL, url)
         self.client.setopt(pycurl.UPLOAD, 1)
-        self.client.setopt(pycurl.FOLLOWLOCATION, 1)
         #self.client.setopt(pycurl.HTTPHEADER, ['Transfer-Encoding: chunked'])
-        self.client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
         self.client.setopt(pycurl.READDATA, f_localfile)
         self.client.setopt(
             pycurl.INFILESIZE_LARGE,
