@@ -70,12 +70,23 @@ class python_ftpes(GenericFileTransfer):
 
 
         # Try to create remote folder
-        try:
-            self.client.mkd(str(remote_file_p.parent))
-        except ftplib.error_perm as e:  # noqa: F841
-            # will return an error if the directory already exists
-            #logger.warning('FTPES error creating directory: %s', str(e))
-            pass
+        dir_list = list(remote_file_p.parents)
+        dir_list.reverse()  # need root dirs first
+
+        for d in dir_list:
+            d_str = str(d)
+
+            if d_str in ['.', '~']:
+                continue
+
+
+            # Try to create remote folder
+            try:
+                self.client.mkd(d_str)
+            except ftplib.error_perm as e:  # noqa: F841
+                # will return an error if the directory already exists
+                #logger.warning('FTPES error creating directory: %s', str(e))
+                pass
 
 
         start = time.time()
