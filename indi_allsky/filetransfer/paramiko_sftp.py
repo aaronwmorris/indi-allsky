@@ -73,7 +73,7 @@ class paramiko_sftp(GenericFileTransfer):
         for d in dir_list:
             d_str = str(d)
 
-            if d_str in ['.', '~']:
+            if d_str in ['.', '~', '/']:
                 continue
 
             try:
