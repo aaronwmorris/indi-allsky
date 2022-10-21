@@ -20,6 +20,7 @@ LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processN
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
+logger.handlers.clear()  # remove syslog
 logger.addHandler(LOG_HANDLER_STREAM)
 
 

@@ -13,12 +13,12 @@ csrf = CSRFProtect()
 
 from .views import bp  # noqa: E402
 
-### This causes problems with indi-allsky logging
+
 dictConfig({
     'version' : 1,
     'formatters' : {
         'default' : {
-            'format' : '[%(asctime)s] [%(levelname)s] in %(module)s.%(funcName)s(): %(message)s',
+            'format' : '[%(asctime)s] [%(levelname)s] in %(module)s.%(funcName)s() #%(lineno)d: %(message)s',
         },
         'syslog' : {
             'format' : '[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s',
@@ -31,7 +31,13 @@ dictConfig({
             'stream'    : 'ext://flask.logging.wsgi_errors_stream',
             'formatter' : 'default',
         },
-        'syslog' : {
+        'syslog_local6' : {
+            'class'     : 'logging.handlers.SysLogHandler',
+            'formatter' : 'syslog',
+            'address'   : '/dev/log',
+            'facility'  : 'local6',
+        },
+        'syslog_local7' : {
             'class'     : 'logging.handlers.SysLogHandler',
             'formatter' : 'syslog',
             'address'   : '/dev/log',
@@ -40,16 +46,19 @@ dictConfig({
     },
     'loggers' : {
         'root' : {
-            'level'    : 'INFO',
-            'handlers' : ['wsgi'],
+            'level'      : 'INFO',
+            'handlers'   : ['wsgi'],
+            'propagate'  : False,
         },
         'gunicorn.error' : {
-            'level'    : 'INFO',
-            'handlers' : ['syslog'],
+            'level'      : 'INFO',
+            'handlers'   : ['syslog_local7'],
+            'propagate'  : False,
         },
         'indi_allsky' : {
-            'level'    : 'INFO',
-            'handlers' : [],  # empty
+            'level'      : 'INFO',
+            'handlers'   : ['syslog_local6'],
+            'propagate'  : False,
         },
     }
 })
