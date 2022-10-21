@@ -1165,10 +1165,17 @@ sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
 sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
 sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
-sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/indi-allsky.conf
-sudo chown root:root /etc/rsyslog.d/indi-allsky.conf
-sudo chmod 644 /etc/rsyslog.d/indi-allsky.conf
+
+# 10 prefix so they are process before the defaults in 50
+sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/10-indi-allsky.conf
+sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
+sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
+
+# remove old version
+[[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
+
 sudo systemctl restart rsyslog
+
 
 sudo cp -f ${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky
 sudo chown root:root /etc/logrotate.d/indi-allsky
