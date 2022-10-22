@@ -62,7 +62,6 @@ echo
 sleep 10
 
 
-
 # find script directory for service setup
 SCRIPT_DIR=$(dirname $0)
 cd "${SCRIPT_DIR}/.."
@@ -74,6 +73,8 @@ cd $OLDPWD
 # Run sudo to ask for initial password
 sudo true
 
+
+START_TIME=$(date +%s)
 
 
 echo "**** Installing packages... ****"
@@ -217,3 +218,10 @@ cd ${ALLSKY_DIRECTORY}/ansible
 
 ansible-playbook -i inventory.yml site.yml --ask-become-pass -e "indi_core_git_version=${INDI_CORE_TAG}" -e "indi_3rdparty_git_version=${INDI_3RDPARTY_TAG}" $@
 
+
+END_TIME=$(date +%s)
+
+echo
+echo
+echo "Completed in $((END_TIME - START_TIME))s"
+echo
