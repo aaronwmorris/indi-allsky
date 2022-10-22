@@ -164,10 +164,11 @@ echo
 sleep 10
 
 
-
-
 # Run sudo to ask for initial password
 sudo true
+
+
+START_TIME=$(date +%s)
 
 
 echo
@@ -1665,6 +1666,13 @@ else
     echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/public  (unauthenticated access)"
 
 fi
+
+END_TIME=$(date +%s)
+
+echo
+echo
+echo "Completed in $((END_TIME - START_TIME))s"
+echo
 
 echo
 echo "Enjoy!"
