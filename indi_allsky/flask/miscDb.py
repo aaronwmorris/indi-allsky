@@ -370,7 +370,8 @@ class miscDb(object):
             try:
                 camera = IndiAllSkyDbCameraTable.query\
                     .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-                    .first()
+                    .limit(1)\
+                    .one()
             except NoResultFound:
                 logger.error('No cameras found')
                 raise

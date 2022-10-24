@@ -35,6 +35,7 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
+from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbVideoTable
@@ -1262,10 +1263,16 @@ class IndiAllSky(object):
 
     def dbImportImages(self):
         try:
-            camera_id = self._miscDb.getCurrentCameraId()
-        except NoResultFound:
-            logger.error('No camera found')
+            IndiAllSkyDbCameraTable.query\
+                .limit(1)\
+                .one()
+
+            logger.error('Imports may only be performed before the first camera is connected')
             sys.exit(1)
+
+        except NoResultFound:
+            camera = self._miscDb.addCamera('Import camera')
+            camera_id = camera.id
 
 
         ### Dark frames
