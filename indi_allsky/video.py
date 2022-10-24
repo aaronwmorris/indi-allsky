@@ -435,21 +435,18 @@ class VideoWorker(Process):
             stg.finalize(startrail_file)
 
             st_frame_count = stg.timelapse_frame_count
-            if st_frame_count < self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
+            if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
+                startrail_video_entry = self._miscDb.addStarTrailVideo(
+                    startrail_video_file,
+                    camera_id,
+                    d_dayDate,
+                    timeofday=timeofday,
+                )
+
+                st_tg = TimelapseGenerator(self.config)
+                st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+            else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', self.st_frame_count)
-                return
-
-
-            startrail_video_entry = self._miscDb.addStarTrailVideo(
-                startrail_video_file,
-                camera_id,
-                d_dayDate,
-                timeofday=timeofday,
-            )
-
-            st_tg = TimelapseGenerator(self.config)
-            st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
-
 
 
         processing_elapsed_s = time.time() - processing_start
