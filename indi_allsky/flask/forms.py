@@ -38,6 +38,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
 
 from . import db
 
@@ -1679,6 +1680,18 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_night_str = '{0:s} [S]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            startrail_video_entry_night = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == true)\
+                .first()
+
+            if startrail_video_entry_night:
+                day_night_str = '{0:s} [ST]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
 
 
             entry_night = ('{0:s}_night'.format(day_str), day_night_str)

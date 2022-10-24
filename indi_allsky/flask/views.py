@@ -42,6 +42,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbTaskQueueTable
@@ -2234,6 +2235,11 @@ class AjaxTimelapseGeneratorView(BaseView):
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
                 .first()
 
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
+                .first()
+
 
             if video_entry:
                 video_filename = video_entry.getFilesystemPath()
@@ -2264,6 +2270,16 @@ class AjaxTimelapseGeneratorView(BaseView):
                     startrail_filename_p.unlink()
 
                 db.session.delete(startrail_entry)
+
+            if startrail_video_entry:
+                startrail_video_filename = startrail_video_entry.getFilesystemPath()
+                startrail_video_filename_p = Path(startrail_video_filename)
+
+                if startrail_video_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_video_filename_p)
+                    startrail_video_filename_p.unlink()
+
+                db.session.delete(startrail_video_entry)
 
 
             db.session.commit()
