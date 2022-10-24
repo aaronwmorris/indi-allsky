@@ -37,8 +37,12 @@ class StarTrailGenerator(object):
         self._timelapse_frame_count = 0
         self._timelapse_frame_list = list()
 
+
+        self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+
+
         if self.config.get('STARTRAILS_TIMELAPSE', True):
-            self.timelapse_tmpdir = tempfile.TemporaryDirectory()
+            self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')
             self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
         else:
             self.timelapse_tmpdir = None
