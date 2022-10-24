@@ -40,6 +40,7 @@ from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
+from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -1435,7 +1436,8 @@ class IndiAllSky(object):
 
 
         ### Star trails
-        file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list)
+        file_list_startrail_1 = filter(lambda p: 'startrail' in p.name, file_list)
+        file_list_startrail = filter(lambda p: 'timelapse' not in p.name, file_list_startrail_1)  # exclude timelapses
 
         #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
         re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
@@ -1479,6 +1481,57 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Star trails inserted ***')
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
+
+
+        ### Star trail Videos
+        file_list_startrail_video_1 = filter(lambda p: 'startrail' in p.name, file_list)
+        file_list_startrail_video = filter(lambda p: 'timelapse' in p.name, file_list_startrail_video_1)
+
+        #/var/www/html/allsky/images/20210915/allsky-startrail_timelapse_ccd1_20210915_night.mp4
+        re_startrail_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+
+        startrail_video_entries = list()
+        for f in file_list_startrail_video:
+            #logger.info('Star trail timelapse: %s', f)
+
+            m = re.search(re_startrail_video, str(f))
+            if not m:
+                logger.error('Regex did not match file: %s', f)
+                continue
+
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+
+            startrail_video_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
+
+            startrail_video_entries.append(startrail_video_dict)
+
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsVideoTable, startrail_video_entries)
+            db.session.commit()
+
+            logger.warning('*** Star trail timelapses inserted ***')
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
