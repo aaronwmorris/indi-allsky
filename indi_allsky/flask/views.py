@@ -1925,12 +1925,14 @@ class AjaxSystemInfoView(BaseView):
         video_query = IndiAllSkyDbVideoTable.query
         keogram_query = IndiAllSkyDbKeogramTable.query
         startrail_query = IndiAllSkyDbStarTrailsTable.query
+        startrail_video_query = IndiAllSkyDbStarTrailsVideoTable.query
 
         video_count = video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
+        startrail_video_count = startrail_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count
+        file_count = video_count + keogram_count + startrail_count + startrail_video_count
 
 
         # videos
@@ -1969,6 +1971,19 @@ class AjaxSystemInfoView(BaseView):
                 startrail_filename_p.unlink()
 
         startrail_query.delete()
+        db.session.commit()
+
+
+        # startrail videos
+        for s in startrail_video_query:
+            startrail_video_filename = s.getFilesystemPath()
+            startrail_video_filename_p = Path(startrail_video_filename)
+
+            if startrail_video_filename_p.exists():
+                app.logger.info('Deleting %s', startrail_video_filename_p)
+                startrail_video_filename_p.unlink()
+
+        startrail_video_query.delete()
         db.session.commit()
 
 
@@ -2085,7 +2100,26 @@ class AjaxSystemInfoView(BaseView):
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
-                keogram_notfound_list.append(s)
+                startrail_notfound_list.append(s)
+
+
+        ### Startrail videos
+        startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
+
+        startrail_video_entries_count = startrail_video_entries.count()
+        message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
+
+        app.logger.info('Searching %d star trail timelapses...', startrail_video_entries_count)
+        startrail_video_notfound_list = list()
+        for s in startrail_video_entries:
+            try:
+                self._validate_entry(s)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                startrail_video_notfound_list.append(s)
+
 
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
@@ -2094,6 +2128,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
+        app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
 
 
         ### DELETE ###
@@ -2119,6 +2154,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing star trail entries</p>'.format(len(startrail_notfound_list)))
         [db.session.delete(s) for s in startrail_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing star trail timelapse entries</p>'.format(len(startrail_video_notfound_list)))
+        [db.session.delete(s) for s in startrail_video_notfound_list]
 
 
         # finalize transaction
