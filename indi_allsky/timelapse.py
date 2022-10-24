@@ -15,6 +15,13 @@ class TimelapseGenerator(object):
     def __init__(self, config):
         self.config = config
 
+        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')
+        self.seqfolder_p = Path(self.seqfolder.name)
+
+
+    def __del__(self):
+        self.cleanup()
+
 
     def generate(self, video_file, file_list):
         # Exclude empty files
@@ -24,12 +31,8 @@ class TimelapseGenerator(object):
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-        seqfolder = tempfile.TemporaryDirectory()
-        p_seqfolder = Path(seqfolder.name)
-
-
         for i, f in enumerate(file_list_ordered):
-            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
+            p_symlink = self.seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             p_symlink.symlink_to(f)
 
 
@@ -40,7 +43,7 @@ class TimelapseGenerator(object):
             '-y',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
-            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), self.config['IMAGE_FILE_TYPE']),
+            '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
             '-vcodec', 'libx264',
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
             '-pix_fmt', 'yuv420p',
@@ -71,7 +74,8 @@ class TimelapseGenerator(object):
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
-        # delete all existing symlinks and sequence folder
-        seqfolder.cleanup()
 
+    def cleanup(self):
+        # delete all existing symlinks and sequence folder
+        self.seqfolder.cleanup()
 
