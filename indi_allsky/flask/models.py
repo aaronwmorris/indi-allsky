@@ -17,10 +17,19 @@ class IndiAllSkyDbCameraTable(db.Model):
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
     #connectDate = db.Column(db.DateTime(timezone=True), nullable=True)
     connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
+    minGain = db.Column(db.Integer, nullable=True)
+    maxGain = db.Column(db.Integer, nullable=True)
+    minExposure = db.Column(db.Float, nullable=True)
+    maxExposure = db.Column(db.Float, nullable=True)
+    width = db.Column(db.Integer, nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    bits = db.Column(db.Integer, nullable=True)
+    pixelSize = db.Column(db.Float, nullable=True)
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
     startrails = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='camera')
+    startrailvideos = db.relationship('IndiAllSkyDbStarTrailsVideoTable', back_populates='camera')
     darkframes = db.relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
     badpixelmaps = db.relationship('IndiAllSkyDbBadPixelMapTable', back_populates='camera')
 
@@ -228,6 +237,8 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    startrailvideo_id = db.Column(db.Integer, db.ForeignKey('startrailvideo.id'), nullable=True)
+    startrailvideo = db.relationship('IndiAllSkyDbStarTrailsVideoTable', back_populates='startrail')
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
 
@@ -264,6 +275,53 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
         return full_filename_p
 
+
+class IndiAllSkyDbStarTrailsVideoTable(db.Model):
+    __tablename__ = 'startrailvideo'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    dayDate = db.Column(db.Date, nullable=False, index=True)
+    night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    startrail = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='startrailvideo')
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailsvideos')
+
+    def __repr__(self):
+        return '<StarTrailVideo {0:s}>'.format(self.filename)
+
+
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
 
 
 class TaskQueueState(enum.Enum):
