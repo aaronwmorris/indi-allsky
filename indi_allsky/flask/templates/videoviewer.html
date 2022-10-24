@@ -144,11 +144,19 @@ function populate_videos(video_list) {
         // star trails only valid for night
         if (item['night']) {
             if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : item['startrail'],
-                    'target' : "_blank",
-                }).appendTo(startrail_div);
-
+                if (item['startrail_timelapse'] != 'None') {
+                    // Star trail timelapse
+                    var st_a = $('<a />', {
+                        'href'   : item['startrail_timelapse'],
+                        'target' : "_blank",
+                    }).appendTo(startrail_div);
+                } else {
+                    // no timelapse, link to image
+                    var st_a = $('<a />', {
+                        'href'   : item['startrail'],
+                        'target' : "_blank",
+                    }).appendTo(startrail_div);
+                }
                 $('<img />', {
                     'src'   : item['startrail'],
                     'style' : "height:auto;max-width:100%;object-fit:scale-down;",

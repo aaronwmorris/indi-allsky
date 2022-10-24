@@ -1478,6 +1478,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Querying the oldest due to a bug where regeneated files are added with the wrong dayDate
             # fix is inbound
 
+            ### Keogram
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
@@ -1495,6 +1496,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 keogram_url = None
 
 
+            ### Star trail
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
@@ -1512,8 +1514,27 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_url = None
 
 
+            ### Star trail timelapses
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == entry['night'])\
+                .order_by(IndiAllSkyDbStarTrailsVideoTable.dayDate.asc())\
+                .first()  # use the oldest (asc)
+
+
+            if startrail_video_entry:
+                try:
+                    startrail_video_url = startrail_video_entry.getUri()
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    startrail_video_url = None
+            else:
+                startrail_video_url = None
+
+
             entry['keogram']    = str(keogram_url)
             entry['startrail']  = str(startrail_url)
+            entry['startrail_timelapse']  = str(startrail_video_url)
 
 
         return videos_data
