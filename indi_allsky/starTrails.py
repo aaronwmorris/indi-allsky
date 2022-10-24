@@ -1,7 +1,10 @@
 import cv2
 import numpy
 import time
+from pathlib import Path
+import tempfile
 import logging
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -31,6 +34,21 @@ class StarTrailGenerator(object):
         self.placeholder_adu = 255
 
 
+        self._timelapse_frame_count = 0
+        self._timelapse_frame_list = list()
+
+        if self.config.get('STARTRAILS_TIMELAPSE'):
+            self.timelapse_tmpdir = tempfile.TemporaryDirectory()
+            self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
+        else:
+            self.timelapse_tmpdir = None
+            self.timelapse_tmpdir_p = None
+
+
+    def __del__(self):
+        self.cleanup()
+
+
     @property
     def max_brightness(self):
         return self._max_brightness
@@ -54,6 +72,22 @@ class StarTrailGenerator(object):
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
         self._pixel_cutoff_threshold = new_thold
+
+    @property
+    def timelapse_frame_count(self):
+        return self._timelapse_frame_count
+
+    @timelapse_frame_count.setter
+    def timelapse_frame_count(self, new_frame_count):
+        return  # read only
+
+    @property
+    def timelapse_frame_list(self):
+        return self._timelapse_frame_list
+
+    @timelapse_frame_list.setter
+    def timelapse_frame_list(self, new_frame_list):
+        return  # read only
 
 
     def generate(self, outfile, file_list):
@@ -137,6 +171,27 @@ class StarTrailGenerator(object):
         ### Here is the magic
         self.trail_image = cv2.max(self.trail_image, image)
 
+
+        # Star trail timelapse processing
+        if self.timelapse_tmpdir_p:
+            f_tmp_frame = tempfile.NamedTemporaryFile(dir=self.timelapse_tmpdir_p, suffix='.{0:s}'.format(self.config['IMAGE_FILE_TYPE']), delete=False)
+            f_tmp_frame.close()
+
+            f_tmp_frame_p = Path(f_tmp_frame.name)
+
+            if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            else:
+                raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+            self._timelapse_frame_list.append(f_tmp_frame_p)
+            self._timelapse_frame_count += 1
+
+
         self.image_processing_elapsed_s += time.time() - image_processing_start
 
 
@@ -164,6 +219,12 @@ class StarTrailGenerator(object):
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+
+
+    def cleanup(self):
+        # cleanup the folder
+        if self.timelapse_tmpdir:
+            self.timelapse_tmpdir.cleanup()
 
 
     def _generateSqmMask(self, img):

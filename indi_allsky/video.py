@@ -30,6 +30,7 @@ from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
+from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -298,6 +299,7 @@ class VideoWorker(Process):
 
         keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
         startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
+        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.mp4'.format(camera_id, timespec, timeofday))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
@@ -308,6 +310,12 @@ class VideoWorker(Process):
             logger.warning('Star trail is already generated: %s', startrail_file)
             task.setFailed('Star trail is already generated: {0:s}'.format(str(startrail_file)))
             return
+
+        if startrail_video_file.exists():
+            logger.warning('Star trail timelapse is already generated: %s', startrail_video_file)
+            task.setFailed('Star trail timelapse is already generated: {0:s}'.format(str(startrail_video_file)))
+            return
+
 
 
         try:
@@ -331,6 +339,19 @@ class VideoWorker(Process):
 
             logger.warning('Removing orphaned star trail db entry')
             db.session.delete(startrail_entry)
+            db.session.commit()
+        except NoResultFound:
+            pass
+
+
+        try:
+            # delete old star trail video entry if it exists
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                .one()
+
+            logger.warning('Removing orphaned star trail video db entry')
+            db.session.delete(startrail_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -413,6 +434,23 @@ class VideoWorker(Process):
         if night:
             stg.finalize(startrail_file)
 
+            st_frame_count = stg.timelapse_frame_count
+            if st_frame_count < self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
+                logger.error('Not enough frames to generate star trails timelapse: %d', self.st_frame_count)
+                return
+
+
+            startrail_video_entry = self._miscDb.addStarTrailVideo(
+                startrail_video_file,
+                camera_id,
+                d_dayDate,
+                timeofday=timeofday,
+            )
+
+            st_tg = TimelapseGenerator(self.config)
+            st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+
+
 
         processing_elapsed_s = time.time() - processing_start
         logger.warning('Total keogram/star trail processing in %0.1f s', processing_elapsed_s)
@@ -426,6 +464,11 @@ class VideoWorker(Process):
         if night and startrail_file.exists():
             self.uploadStarTrail(startrail_file)
             self._miscDb.addUploadedFlag(startrail_entry)
+
+
+        if night and startrail_video_file.exists():
+            self.uploadStarTrailVideo(startrail_video_file)
+            self._miscDb.addUploadedFlag(startrail_video_entry)
 
 
         task.setSuccess('Generated keogram and/or star trail')
@@ -510,6 +553,10 @@ class VideoWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : task.id})
+
+
+    def uploadStarTrailVideo(self, startrail_video_file):
+        self.uploadVideo(startrail_video_file)
 
 
     def uploadAllskyEndOfNight(self, timeofday):
