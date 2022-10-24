@@ -285,7 +285,7 @@ class IndiAllSkyDbStarTrailsVideoTable(db.Model):
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
-    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailsvideos')
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailvideos')
 
     def __repr__(self):
         return '<StarTrailVideo {0:s}>'.format(self.filename)
