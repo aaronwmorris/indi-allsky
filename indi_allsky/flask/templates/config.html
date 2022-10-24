@@ -706,6 +706,31 @@
         <div class="col-sm-8">Pixel threshold for mask threshold</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.STARTRAILS_TIMELAPSE(class='form-check-input') }}
+                <div id="STARTRAILS_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Generate star trails timelapse</div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_TIMELAPSE_MINFRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum frames for star trails timelapse.  250 frames = 10s @ 25fps</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -1598,6 +1623,7 @@ const field_names = [
     'STARTRAILS_MAX_ADU',
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',
+    'STARTRAILS_TIMELAPSE_MINFRAMES',
     'IMAGE_FILE_TYPE',
     'IMAGE_FILE_COMPRESSION__JPG',
     'IMAGE_FILE_COMPRESSION__PNG',
@@ -1668,6 +1694,7 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'KEOGRAM_LABEL',
+    'STARTRAILS_TIMELAPSE',
     'IMAGE_LABEL',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
