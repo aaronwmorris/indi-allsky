@@ -237,8 +237,6 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
-    startrailvideo_id = db.Column(db.Integer, db.ForeignKey('startrailvideo.id'), nullable=True)
-    startrailvideo = db.relationship('IndiAllSkyDbStarTrailsVideoTable', back_populates='startrail')
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
 
@@ -286,7 +284,6 @@ class IndiAllSkyDbStarTrailsVideoTable(db.Model):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
-    startrail = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='startrailvideo')
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailsvideos')
 
