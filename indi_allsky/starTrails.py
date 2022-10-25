@@ -194,7 +194,7 @@ class StarTrailGenerator(object):
                 raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
             # put original mtime on file
-            os.utime(f_tmp_frame_p, time=(image_mtime, image_mtime))
+            os.utime(f_tmp_frame_p, times=(image_mtime, image_mtime))
 
             self._timelapse_frame_list.append(f_tmp_frame_p)
             self._timelapse_frame_count += 1
