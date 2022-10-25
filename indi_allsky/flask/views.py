@@ -42,6 +42,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbTaskQueueTable
@@ -86,7 +87,7 @@ bp = Blueprint(
 
 class BaseView(View):
 
-    _release = 5.2
+    _release = 5.3
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
@@ -835,6 +836,8 @@ class ConfigView(FormView):
             'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 50),
             'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 190),
             'STARTRAILS_PIXEL_THOLD'         : self.indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 0.1),
+            'STARTRAILS_TIMELAPSE'           : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE', True),
+            'STARTRAILS_TIMELAPSE_MINFRAMES' : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250),
             'IMAGE_FILE_TYPE'                : self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
             'IMAGE_FILE_COMPRESSION__JPG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
             'IMAGE_FILE_COMPRESSION__PNG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5),
@@ -1112,6 +1115,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])
         self.indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
         self.indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])
+        self.indi_allsky_config['STARTRAILS_TIMELAPSE']                 = bool(request.json['STARTRAILS_TIMELAPSE'])
+        self.indi_allsky_config['STARTRAILS_TIMELAPSE_MINFRAMES']       = int(request.json['STARTRAILS_TIMELAPSE_MINFRAMES'])
         self.indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
         self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
         self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpeg']       = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])  # duplicate
@@ -1920,12 +1925,14 @@ class AjaxSystemInfoView(BaseView):
         video_query = IndiAllSkyDbVideoTable.query
         keogram_query = IndiAllSkyDbKeogramTable.query
         startrail_query = IndiAllSkyDbStarTrailsTable.query
+        startrail_video_query = IndiAllSkyDbStarTrailsVideoTable.query
 
         video_count = video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
+        startrail_video_count = startrail_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count
+        file_count = video_count + keogram_count + startrail_count + startrail_video_count
 
 
         # videos
@@ -1964,6 +1971,19 @@ class AjaxSystemInfoView(BaseView):
                 startrail_filename_p.unlink()
 
         startrail_query.delete()
+        db.session.commit()
+
+
+        # startrail videos
+        for s in startrail_video_query:
+            startrail_video_filename = s.getFilesystemPath()
+            startrail_video_filename_p = Path(startrail_video_filename)
+
+            if startrail_video_filename_p.exists():
+                app.logger.info('Deleting %s', startrail_video_filename_p)
+                startrail_video_filename_p.unlink()
+
+        startrail_video_query.delete()
         db.session.commit()
 
 
@@ -2080,7 +2100,26 @@ class AjaxSystemInfoView(BaseView):
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
-                keogram_notfound_list.append(s)
+                startrail_notfound_list.append(s)
+
+
+        ### Startrail videos
+        startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
+
+        startrail_video_entries_count = startrail_video_entries.count()
+        message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
+
+        app.logger.info('Searching %d star trail timelapses...', startrail_video_entries_count)
+        startrail_video_notfound_list = list()
+        for s in startrail_video_entries:
+            try:
+                self._validate_entry(s)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                startrail_video_notfound_list.append(s)
+
 
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
@@ -2089,6 +2128,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
+        app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
 
 
         ### DELETE ###
@@ -2114,6 +2154,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing star trail entries</p>'.format(len(startrail_notfound_list)))
         [db.session.delete(s) for s in startrail_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing star trail timelapse entries</p>'.format(len(startrail_video_notfound_list)))
+        [db.session.delete(s) for s in startrail_video_notfound_list]
 
 
         # finalize transaction
@@ -2214,7 +2258,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 
-        if action == 'delete':
+        if action == 'delete_all':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
@@ -2228,6 +2272,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
+                .first()
+
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
                 .first()
 
 
@@ -2261,6 +2310,16 @@ class AjaxTimelapseGeneratorView(BaseView):
 
                 db.session.delete(startrail_entry)
 
+            if startrail_video_entry:
+                startrail_video_filename = startrail_video_entry.getFilesystemPath()
+                startrail_video_filename_p = Path(startrail_video_filename)
+
+                if startrail_video_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_video_filename_p)
+                    startrail_video_filename_p.unlink()
+
+                db.session.delete(startrail_video_entry)
+
 
             db.session.commit()
 
@@ -2272,7 +2331,92 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
 
-        elif action == 'generate':
+        elif action == 'delete_video':
+            video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == night)\
+                .first()
+
+            if video_entry:
+                video_filename = video_entry.getFilesystemPath()
+                video_filename_p = Path(video_filename)
+
+                if video_filename_p.exists():
+                    app.logger.info('Deleting %s', video_filename_p)
+                    video_filename_p.unlink()
+
+                db.session.delete(video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Timelapse deleted',
+            }
+
+            return jsonify(message)
+
+
+        if action == 'delete_k_st':
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == night)\
+                .first()
+
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == night)\
+                .first()
+
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
+                .first()
+
+
+            if keogram_entry:
+                keogram_filename = keogram_entry.getFilesystemPath()
+                keogram_filename_p = Path(keogram_filename)
+
+                if keogram_filename_p.exists():
+                    app.logger.info('Deleting %s', keogram_filename_p)
+                    keogram_filename_p.unlink()
+
+                db.session.delete(keogram_entry)
+
+            if startrail_entry:
+                startrail_filename = startrail_entry.getFilesystemPath()
+                startrail_filename_p = Path(startrail_filename)
+
+                if startrail_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_filename_p)
+                    startrail_filename_p.unlink()
+
+                db.session.delete(startrail_entry)
+
+            if startrail_video_entry:
+                startrail_video_filename = startrail_video_entry.getFilesystemPath()
+                startrail_video_filename_p = Path(startrail_video_filename)
+
+                if startrail_video_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_video_filename_p)
+                    startrail_video_filename_p.unlink()
+
+                db.session.delete(startrail_video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Keogram/Star Trails deleted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_all':
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
@@ -2293,6 +2437,84 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
                 'video'       : True,
+                'keogram'     : True,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_video':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : True,
+                'keogram'     : False,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_k_st':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : False,
                 'keogram'     : True,
             }
 

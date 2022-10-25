@@ -137,10 +137,17 @@ Below you can see perodic clouds passed over between 8-9pm and again between 4-5
 
 Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.
 
+
 ## Star Trails
 Star trail images stack the stars from each frame to show their progression across the sky.
 
 ![](./content/startrails_example.jpg)
+
+### Star Trails Timelapse
+Video of the star trails being stacked in real-time!
+
+[YouTube](https://youtu.be/pLJbTzlyBkM)
+
 
 ## Star Detection
 indi-allsky utilizes OpenCV pattern matching to detect and count the number of stars in the view.  Star counts are a good objective measurement of sky conditions.
@@ -290,6 +297,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | STARTRAILS_MAX_ADU  | 50          | (int) Max ADU/brightness of image to be included in star trails |
 | STARTRAILS_MASK_THOLD    | 190    | (int) Minimum threshold for star mask generation for star trails |
 | STARTRAILS_PIXEL_THOLD   | 1.0    | (float) Cutoff percentage of pixels in mask to eliminate images from star trails |
+| STARTRAILS_TIMELAPSE     | True   | (bool) Generate star trails timelapse video |
+| STARTRAILS_TIMELAPSE_MINFRAMES | 250  | (int) Minimum number of frames for star trails timelapse |
 | IMAGE_FILE_TYPE     | jpg         | (string) Image output type, jpg or png |
 | IMAGE_FILE_COMPRESSION   |        | (dict) Default compression values for image types |
 | IMAGE_FOLDER        |             | (string) Base folder to save images |
@@ -325,8 +334,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | ORB_PROPERTIES      |             | (dict) Sun and moon org drawing properties |
 | > MODE              | ha          | (str) Orb Mode - ha = Hour Angle, az = Azimuth, alt = Altitude , off = Off|
 | > RADIUS            | 9           | (pixels) Radius of orbs |
-| > SUN_COLOR         | [0, 255, 255]   | (array) R, G, B Color of sun orb |
-| > MOON_COLOR        | [255, 255, 255] | (array) R, G, B Color of moon orb |
+| > SUN_COLOR         | [255, 255, 255] | (array) R, G, B Color of sun orb |
+| > MOON_COLOR        | [128, 128, 128] | (array) R, G, B Color of moon orb |
 | FILETRANSFER        |             | (dict) File tranfer configuration |
 | > CLASSNAME         |             | (str) File transfer class |
 | > HOST              |             | (str) Hostname for file transfer |

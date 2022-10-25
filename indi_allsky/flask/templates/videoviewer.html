@@ -129,11 +129,33 @@ function populate_videos(video_list) {
             $('<div />', {
                 'text'  : "Night",
             }).appendTo(datetime_div);
+
+            // Link to star trail image
+            if (item['startrail'] != 'None') {
+                var st_a = $('<a />', {
+                    'href'   : item['startrail'],
+                    'target' : "_blank",
+                }).appendTo(datetime_div);
+
+                $('<div />', {
+                    'text'  : "Star Trail",
+                }).appendTo(st_a);
+            }
         } else {
             $('<div />', {
                 'text'  : "Day",
             }).appendTo(datetime_div);
         }
+
+
+        // Link to keogram image
+        var kl_a = $('<a />', {
+            'href'   : item['keogram'],
+            'target' : "_blank",
+        }).appendTo(datetime_div);
+        $('<div />', {
+            'text'  : "Keogram",
+        }).appendTo(kl_a);
 
 
         // star trail
@@ -144,15 +166,24 @@ function populate_videos(video_list) {
         // star trails only valid for night
         if (item['night']) {
             if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : item['startrail'],
-                    'target' : "_blank",
-                }).appendTo(startrail_div);
+                if (item['startrail_timelapse'] != 'None') {
+                    // Link to Star trail timelapse
+                    var st_tl_a = $('<a />', {
+                        'href'   : item['startrail_timelapse'],
+                        'target' : "_blank",
+                    }).appendTo(startrail_div);
 
-                $('<img />', {
-                    'src'   : item['startrail'],
-                    'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-                }).appendTo(st_a);
+                    $('<img />', {
+                        'src'   : item['startrail'],
+                        'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                    }).appendTo(st_tl_a);
+                } else {
+                    // No link
+                    $('<img />', {
+                        'src'   : item['startrail'],
+                        'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                    }).appendTo(startrail_div);
+                }
             } else {
                 startrail_div.append('None');
             }

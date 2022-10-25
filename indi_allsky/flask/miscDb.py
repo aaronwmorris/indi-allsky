@@ -12,6 +12,7 @@ from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -323,6 +324,38 @@ class miscDb(object):
         return startrail
 
 
+    def addStarTrailVideo(self, filename, camera_id, dayDate, timeofday='night'):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.warning('File not found: %s', p_filename)
+
+
+        logger.info('Adding star trail video %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        startrail_video = IndiAllSkyDbStarTrailsVideoTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        db.session.add(startrail_video)
+        db.session.commit()
+
+        return startrail_video
 
 
     def addUploadedFlag(self, entry):
@@ -337,7 +370,8 @@ class miscDb(object):
             try:
                 camera = IndiAllSkyDbCameraTable.query\
                     .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-                    .first()
+                    .limit(1)\
+                    .one()
             except NoResultFound:
                 logger.error('No cameras found')
                 raise

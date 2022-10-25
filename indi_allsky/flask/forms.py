@@ -38,6 +38,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
 
 from . import db
 
@@ -473,6 +474,14 @@ def STARTRAILS_PIXEL_THOLD_validator(form, field):
 
     if field.data > 100:
         raise ValidationError('Star Trails Pixel Threshold must be 100 or less')
+
+
+def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 25:
+        raise ValidationError('Star Trails Timelapse Minimum Frames must be 25 or more')
 
 
 def IMAGE_FILE_TYPE_validator(form, field):
@@ -1095,6 +1104,8 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
+    STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
+    STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
@@ -1467,6 +1478,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Querying the oldest due to a bug where regeneated files are added with the wrong dayDate
             # fix is inbound
 
+            ### Keogram
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
@@ -1484,6 +1496,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 keogram_url = None
 
 
+            ### Star trail
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
@@ -1501,8 +1514,27 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_url = None
 
 
+            ### Star trail timelapses
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == entry['night'])\
+                .order_by(IndiAllSkyDbStarTrailsVideoTable.dayDate.asc())\
+                .first()  # use the oldest (asc)
+
+
+            if startrail_video_entry:
+                try:
+                    startrail_video_url = startrail_video_entry.getUri()
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    startrail_video_url = None
+            else:
+                startrail_video_url = None
+
+
             entry['keogram']    = str(keogram_url)
             entry['startrail']  = str(startrail_url)
+            entry['startrail_timelapse']  = str(startrail_video_url)
 
 
         return videos_data
@@ -1566,8 +1598,12 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 class IndiAllskyTimelapseGeneratorForm(FlaskForm):
     ACTION_SELECT_choices = (
-        ('generate', 'Generate'),
-        ('delete', 'Delete'),
+        ('generate_all', 'Generate All'),
+        ('generate_video', 'Generate Timelapse'),
+        ('generate_k_st', 'Generate Keogram/Star Trails'),
+        ('delete_all', 'Delete All'),
+        ('delete_video', 'Delete Timelapse'),
+        ('delete_k_st', 'Delete Keogram/Star Trails'),
     )
 
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
@@ -1669,6 +1705,18 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_night_str = '{0:s} [S]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
+
+
+            startrail_video_entry_night = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == true)\
+                .first()
+
+            if startrail_video_entry_night:
+                day_night_str = '{0:s} [ST]'.format(day_night_str)
+            else:
+                day_night_str = '{0:s} [ ]'.format(day_night_str)
+
 
 
             entry_night = ('{0:s}_night'.format(day_str), day_night_str)

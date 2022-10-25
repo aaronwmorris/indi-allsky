@@ -35,11 +35,14 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
+from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
+from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -51,7 +54,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    _version = 20221021.0
+    _version = 20221023.0
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
@@ -1261,16 +1264,24 @@ class IndiAllSky(object):
 
     def dbImportImages(self):
         try:
-            camera_id = self._miscDb.getCurrentCameraId()
-        except NoResultFound:
-            logger.error('No camera found')
+            IndiAllSkyDbCameraTable.query\
+                .limit(1)\
+                .one()
+
+            logger.error('Imports may only be performed before the first camera is connected')
             sys.exit(1)
+
+        except NoResultFound:
+            camera = self._miscDb.addCamera('Import camera')
+            camera_id = camera.id
+
+
+        file_list_darks = list()
+        self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darks, extension_list=['fit', 'fits'])
 
 
         ### Dark frames
-        file_list_darkframes = list()
-        self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darkframes, extension_list=['fit', 'fits'])
-
+        file_list_darkframes = filter(lambda p: 'dark' in p.name, file_list_darks)
 
         #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1_10c_20210826_020202.fit
         re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)_(?P<ccdtemp_str>\-?\d+)c_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
@@ -1320,22 +1331,83 @@ class IndiAllSky(object):
             db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, darkframe_entries)
             db.session.commit()
 
-            logger.warning('*** Dark frames inserted ***')
+            logger.warning('*** Dark frames inserted: %d ***', len(darkframe_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
 
 
-        ### Timelapse
         file_list_videos = list()
         self.getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
 
+
+        ### Bad pixel maps
+        file_list_bpm = filter(lambda p: 'bpm' in p.name, file_list_darks)
+
+        #/var/www/html/allsky/images/darks/bpm_ccd1_8bit_6s_gain250_bin1_10c_20210826_020202.fit
+        re_bpm = re.compile(r'\/bpm_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)_(?P<ccdtemp_str>\-?\d+)c_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
+
+        bpm_entries = list()
+        for f in file_list_bpm:
+            #logger.info('Raw frame: %s', f)
+
+            m = re.search(re_bpm, str(f))
+            if not m:
+                logger.error('Regex did not match file: %s', f)
+                continue
+
+
+            #logger.info('CCD ID string: %s', m.group('ccd_id_str'))
+            #logger.info('Exposure string: %s', m.group('exposure_str'))
+            #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
+            #logger.info('Gain string: %s', m.group('gain_str'))
+            #logger.info('Binmode string: %s', m.group('binmode_str'))
+            #logger.info('Ccd temp string: %s', m.group('ccdtemp_str'))
+
+            ccd_id = int(m.group('ccd_id_str'))
+            exposure = int(m.group('exposure_str'))
+            bitdepth = int(m.group('bitdepth_str'))
+            gain = int(m.group('gain_str'))
+            binmode = int(m.group('binmode_str'))
+            ccdtemp = float(m.group('ccdtemp_str'))
+
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+
+            bpm_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'bitdepth'   : bitdepth,
+                'exposure'   : exposure,
+                'gain'       : gain,
+                'binmode'    : binmode,
+                'camera_id'  : ccd_id,
+                'temp'       : ccdtemp,
+            }
+
+            bpm_entries.append(bpm_dict)
+
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbBadPixelMapTable, bpm_entries)
+            db.session.commit()
+
+            logger.warning('*** Bad pixel maps inserted: %d ***', len(bpm_entries))
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
+
+
+
+        ### Timelapse
+        timelapse_videos_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
+        timelapse_videos = filter(lambda p: 'startrail' not in p.name, timelapse_videos_tl)  # exclude star trail timelapses
 
         #/var/www/html/allsky/images/20210915/allsky-timelapse_ccd1_20210915_night.mp4
         re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
 
         video_entries = list()
-        for f in file_list_videos:
+        for f in timelapse_videos:
             #logger.info('Timelapse: %s', f)
 
             m = re.search(re_video, str(f))
@@ -1372,7 +1444,7 @@ class IndiAllSky(object):
             db.session.bulk_insert_mappings(IndiAllSkyDbVideoTable, video_entries)
             db.session.commit()
 
-            logger.warning('*** Timelapse videos inserted ***')
+            logger.warning('*** Timelapse videos inserted: %d ***', len(video_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -1380,12 +1452,12 @@ class IndiAllSky(object):
 
 
         ### find all imaegs
-        file_list = list()
-        self.getFolderFilesByExt(self.image_dir, file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        file_list_images = list()
+        self.getFolderFilesByExt(self.image_dir, file_list_images, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
 
         ### Keograms
-        file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list)
+        file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list_images)
 
         #/var/www/html/allsky/images/20210915/allsky-keogram_ccd1_20210915_night.jpg
         re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
@@ -1428,17 +1500,17 @@ class IndiAllSky(object):
             db.session.bulk_insert_mappings(IndiAllSkyDbKeogramTable, keogram_entries)
             db.session.commit()
 
-            logger.warning('*** Keograms inserted ***')
+            logger.warning('*** Keograms inserted: %d ***', len(keogram_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
 
 
         ### Star trails
-        file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list)
+        file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list_images)
 
         #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
-        re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrails?_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
+        re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrail_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
 
         startrail_entries = list()
         for f in file_list_startrail:
@@ -1478,7 +1550,58 @@ class IndiAllSky(object):
             db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsTable, startrail_entries)
             db.session.commit()
 
-            logger.warning('*** Star trails inserted ***')
+            logger.warning('*** Star trails inserted: %d ***', len(startrail_entries))
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
+
+
+        ### Star trail Videos
+        file_list_startrail_video_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
+        file_list_startrail_video = filter(lambda p: 'startrail' in p.name, file_list_startrail_video_tl)
+
+        #/var/www/html/allsky/images/20210915/allsky-startrail_timelapse_ccd1_20210915_night.mp4
+        re_startrail_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrail_timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+
+        startrail_video_entries = list()
+        for f in file_list_startrail_video:
+            #logger.info('Star trail timelapse: %s', f)
+
+            m = re.search(re_startrail_video, str(f))
+            if not m:
+                logger.error('Regex did not match file: %s', f)
+                continue
+
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+
+            startrail_video_dict = {
+                'filename'   : str(f),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
+
+            startrail_video_entries.append(startrail_video_dict)
+
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbStarTrailsVideoTable, startrail_video_entries)
+            db.session.commit()
+
+            logger.warning('*** Star trail timelapses inserted: %d ***', len(startrail_video_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -1486,7 +1609,7 @@ class IndiAllSky(object):
 
         ### Images
         # Exclude keograms and star trails
-        file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list)
+        file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list_images)
         file_list_images_nok_nost = filter(lambda p: 'startrail' not in p.name, file_list_images_nok)
 
         #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
@@ -1541,7 +1664,7 @@ class IndiAllSky(object):
             db.session.bulk_insert_mappings(IndiAllSkyDbImageTable, image_entries)
             db.session.commit()
 
-            logger.warning('*** Images inserted ***')
+            logger.warning('*** Images inserted: %d ***', len(image_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -1551,7 +1674,7 @@ class IndiAllSky(object):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 
-        logger.info('Searching for image files in %s', folder)
+        #logger.info('Searching for image files in %s', folder)
 
         dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
 
