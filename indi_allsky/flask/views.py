@@ -87,7 +87,7 @@ bp = Blueprint(
 
 class BaseView(View):
 
-    _release = 5.2
+    _release = 5.3
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
