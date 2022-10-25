@@ -137,10 +137,17 @@ Below you can see perodic clouds passed over between 8-9pm and again between 4-5
 
 Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.
 
+
 ## Star Trails
 Star trail images stack the stars from each frame to show their progression across the sky.
 
 ![](./content/startrails_example.jpg)
+
+### Star Trails Timelapse
+Video of the star trails being stacked in real-time!
+
+[YouTube](https://youtu.be/pLJbTzlyBkM)
+
 
 ## Star Detection
 indi-allsky utilizes OpenCV pattern matching to detect and count the number of stars in the view.  Star counts are a good objective measurement of sky conditions.
