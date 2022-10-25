@@ -334,8 +334,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | ORB_PROPERTIES      |             | (dict) Sun and moon org drawing properties |
 | > MODE              | ha          | (str) Orb Mode - ha = Hour Angle, az = Azimuth, alt = Altitude , off = Off|
 | > RADIUS            | 9           | (pixels) Radius of orbs |
-| > SUN_COLOR         | [0, 255, 255]   | (array) R, G, B Color of sun orb |
-| > MOON_COLOR        | [255, 255, 255] | (array) R, G, B Color of moon orb |
+| > SUN_COLOR         | [255, 255, 255] | (array) R, G, B Color of sun orb |
+| > MOON_COLOR        | [128, 128, 128] | (array) R, G, B Color of moon orb |
 | FILETRANSFER        |             | (dict) File tranfer configuration |
 | > CLASSNAME         |             | (str) File transfer class |
 | > HOST              |             | (str) Hostname for file transfer |
