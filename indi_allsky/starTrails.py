@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy
 import time
@@ -41,12 +42,8 @@ class StarTrailGenerator(object):
         self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
 
 
-        if self.config.get('STARTRAILS_TIMELAPSE', True):
-            self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')
-            self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
-        else:
-            self.timelapse_tmpdir = None
-            self.timelapse_tmpdir_p = None
+        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')
+        self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
 
 
     def __del__(self):
@@ -104,15 +101,15 @@ class StarTrailGenerator(object):
 
         processing_start = time.time()
 
-        for filename in file_list_ordered:
-            logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+        for file_p in file_list_ordered:
+            logger.info('Reading file: %s', file_p)
+            image = cv2.imread(str(file_p), cv2.IMREAD_UNCHANGED)
 
             if isinstance(image, type(None)):
-                logger.error('Unable to read %s', filename)
+                logger.error('Unable to read %s', file_p)
                 continue
 
-            self.processImage(filename, image)
+            self.processImage(file_p, image)
 
 
         self.finalize(outfile)
@@ -122,8 +119,9 @@ class StarTrailGenerator(object):
         logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, filename, image):
+    def processImage(self, file_p, image):
         image_processing_start = time.time()
+
 
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
@@ -172,12 +170,15 @@ class StarTrailGenerator(object):
 
         self.trail_count += 1
 
+
         ### Here is the magic
         self.trail_image = cv2.max(self.trail_image, image)
 
 
         # Star trail timelapse processing
-        if self.timelapse_tmpdir_p:
+        if self.config.get('STARTRAILS_TIMELAPSE', True):
+            image_mtime = file_p.stat().st_mtime
+
             f_tmp_frame = tempfile.NamedTemporaryFile(dir=self.timelapse_tmpdir_p, suffix='.{0:s}'.format(self.config['IMAGE_FILE_TYPE']), delete=False)
             f_tmp_frame.close()
 
@@ -191,6 +192,9 @@ class StarTrailGenerator(object):
                 cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
             else:
                 raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+            # put original mtime on file
+            os.utime(f_tmp_frame_p, time=(image_mtime, image_mtime))
 
             self._timelapse_frame_list.append(f_tmp_frame_p)
             self._timelapse_frame_count += 1
@@ -227,8 +231,7 @@ class StarTrailGenerator(object):
 
     def cleanup(self):
         # cleanup the folder
-        if self.timelapse_tmpdir:
-            self.timelapse_tmpdir.cleanup()
+        self.timelapse_tmpdir.cleanup()
 
 
     def _generateSqmMask(self, img):
