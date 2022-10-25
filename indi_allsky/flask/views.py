@@ -2258,7 +2258,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 
-        if action == 'delete':
+        if action == 'delete_all':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
@@ -2331,7 +2331,92 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
 
-        elif action == 'generate':
+        elif action == 'delete_video':
+            video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbVideoTable.night == night)\
+                .first()
+
+            if video_entry:
+                video_filename = video_entry.getFilesystemPath()
+                video_filename_p = Path(video_filename)
+
+                if video_filename_p.exists():
+                    app.logger.info('Deleting %s', video_filename_p)
+                    video_filename_p.unlink()
+
+                db.session.delete(video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Timelapse deleted',
+            }
+
+            return jsonify(message)
+
+
+        if action == 'delete_k_st':
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbKeogramTable.night == night)\
+                .first()
+
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsTable.night == night)\
+                .first()
+
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
+                .first()
+
+
+            if keogram_entry:
+                keogram_filename = keogram_entry.getFilesystemPath()
+                keogram_filename_p = Path(keogram_filename)
+
+                if keogram_filename_p.exists():
+                    app.logger.info('Deleting %s', keogram_filename_p)
+                    keogram_filename_p.unlink()
+
+                db.session.delete(keogram_entry)
+
+            if startrail_entry:
+                startrail_filename = startrail_entry.getFilesystemPath()
+                startrail_filename_p = Path(startrail_filename)
+
+                if startrail_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_filename_p)
+                    startrail_filename_p.unlink()
+
+                db.session.delete(startrail_entry)
+
+            if startrail_video_entry:
+                startrail_video_filename = startrail_video_entry.getFilesystemPath()
+                startrail_video_filename_p = Path(startrail_video_filename)
+
+                if startrail_video_filename_p.exists():
+                    app.logger.info('Deleting %s', startrail_video_filename_p)
+                    startrail_video_filename_p.unlink()
+
+                db.session.delete(startrail_video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Keogram/Star Trails deleted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_all':
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
@@ -2352,6 +2437,84 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
                 'video'       : True,
+                'keogram'     : True,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_video':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : True,
+                'keogram'     : False,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
+
+        elif action == 'generate_k_st':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                night_day_str = 'night'
+            else:
+                night_day_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            img_day_folder = img_base_folder.joinpath(night_day_str)
+
+            jobdata = {
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+                'video'       : False,
                 'keogram'     : True,
             }
 
