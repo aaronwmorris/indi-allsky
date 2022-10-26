@@ -57,8 +57,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
 
         image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
 
-        if image_type == 'dng' and self.memory_total_mb <= 1536:
-            logger.warning('*** Capturing raw images (dng) with libcamera and less than 2gb of memory can result in out-of-memory errors ***')
+        if image_type == 'dng' and self.memory_total_mb <= 768:
+            logger.warning('*** Capturing raw images (dng) with libcamera and less than 1gb of memory can result in out-of-memory errors ***')
 
 
         image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=True)

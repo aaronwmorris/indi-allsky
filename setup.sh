@@ -231,29 +231,30 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-        echo
-        echo
-        echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./misc/build_indi.sh before running setup.sh"
-        echo
-        echo
-        exit 1
-    fi
-
-
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
 
 
-    #if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-    #    # Astroberry repository
-    #    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-    #        echo "Installing INDI via Astroberry repository"
-    #        wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-    #        sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
-    #    fi
-    #fi
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
 
 
     sudo apt-get update
@@ -304,28 +305,27 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         dbus-user-session
 
 
-    #if [[ "$INSTALL_INDI" == "true" ]]; then
-    #    sudo apt-get -y install \
-    #        indi-full \
-    #        indi-rpicam \
-    #        libindi-dev \
-    #        indi-asi \
-    #        libasi \
-    #        indi-qhy \
-    #        libqhy \
-    #        indi-playerone \
-    #        libplayerone \
-    #        indi-sv305 \
-    #        libsv305 \
-    #        libaltaircam \
-    #        libmallincam \
-    #        libmicam \
-    #        libnncam \
-    #        indi-toupbase \
-    #        libtoupcam \
-    #        indi-gphoto \
-    #        indi-sx
-    #fi
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx
+    fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
         sudo apt-get -y install \
@@ -455,7 +455,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     PYTHON_BIN=python3
 
-    # Sometimes raspbian can be detected as debian
     if [ "$CPU_ARCH" == "armv7l" ]; then
         # rawpy not available on arm 32bit
         VIRTUALENV_REQ=requirements_debian11_armv7l.txt
@@ -464,19 +463,31 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-        echo
-        echo
-        echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./misc/build_indi.sh before running setup.sh"
-        echo
-        echo
-        exit 1
-    fi
-
-
     # reconfigure system timezone
     sudo dpkg-reconfigure tzdata
+
+
+    # Sometimes raspbian can be detected as debian
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
 
 
     sudo apt-get update
@@ -527,28 +538,34 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         dbus-user-session
 
 
-    #if [[ "$INSTALL_INDI" == "true" ]]; then
-    #    sudo apt-get -y install \
-    #        indi-full \
-    #        indi-rpicam \
-    #        libindi-dev \
-    #        indi-asi \
-    #        libasi \
-    #        indi-qhy \
-    #        libqhy \
-    #        indi-playerone \
-    #        libplayerone \
-    #        indi-sv305 \
-    #        libsv305 \
-    #        libaltaircam \
-    #        libmallincam \
-    #        libmicam \
-    #        libnncam \
-    #        indi-toupbase \
-    #        libtoupcam \
-    #        indi-gphoto \
-    #        indi-sx
-    #fi
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx
+    fi
+
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        # this can fail on armbian debian based repos
+        sudo apt-get -y install \
+            libcamera-apps || true
+    fi
 
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -573,14 +590,26 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     fi
 
 
-    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-        echo
-        echo
-        echo "There are not prebuilt indi packages for this distribution"
-        echo "Please run ./misc/build_indi.sh before running setup.sh"
-        echo
-        echo
-        exit 1
+    # Sometimes raspbian can be detected as debian
+    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
     fi
 
 
@@ -635,27 +664,28 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         dbus-user-session
 
 
-    #if [[ "$INSTALL_INDI" == "true" ]]; then
-    #    sudo apt-get -y install \
-    #        indi-full \
-    #        libindi-dev \
-    #        indi-asi \
-    #        libasi \
-    #        indi-qhy \
-    #        libqhy \
-    #        indi-playerone \
-    #        libplayerone \
-    #        indi-sv305 \
-    #        libsv305 \
-    #        libaltaircam \
-    #        libmallincam \
-    #        libmicam \
-    #        libnncam \
-    #        indi-toupbase \
-    #        libtoupcam \
-    #        indi-gphoto \
-    #        indi-sx
-    #fi
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            indi-rpicam \
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx
+    fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     DEBIAN_DISTRO=1
@@ -1604,15 +1634,24 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
 fi
 
 
-# Disable raw frames with libcamera when running 1GB of memory
+# Disable raw frames with libcamera when running less than 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
-if [ "$MEM_TOTAL" -lt "1536000" ]; then
+if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_TYPE
     cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
 
+# 25% ffmpeg scaling with libcamera when running 1GB of memory
+if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [ "$MEM_TOTAL" -lt "1536000" ]; then
+        TMP_LIBCAM_FFMPEG=$(mktemp)
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_FFMPEG
+        cp -f "$TMP_LIBCAM_FFMPEG" "${ALLSKY_ETC}/config.json"
+        [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
+    fi
+fi
 
 
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
