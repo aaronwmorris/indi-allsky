@@ -24,7 +24,17 @@ INSTALL_INDI="true"
 INSTALL_LIBCAMERA="false"
 HTTP_PORT="80"
 HTTPS_PORT="443"
+DPC_STRENGTH="0"
 #### end config ####
+
+
+### libcamera Defective Pixel Correction (DPC) Strength
+# https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf
+#
+# 0 = Off
+# 1 = Normal correction (default)
+# 2 = Strong correction
+###
 
 
 
@@ -1574,7 +1584,7 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
             echo "Disabling dpc in $JSON_FILE"
 
             TMP_JSON=$(mktemp)
-            jq --argjson rpidpc_strength "0" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > $TMP_JSON
+            jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > $TMP_JSON
             sudo cp -f "$TMP_JSON" "$JSON_FILE"
             sudo chown root:root "$JSON_FILE"
             sudo chmod 644 "$JSON_FILE"

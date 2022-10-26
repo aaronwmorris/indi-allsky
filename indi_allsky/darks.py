@@ -297,6 +297,8 @@ class IndiAllSkyDarks(object):
 
             #for h in hdulist[0].header.keys():
             #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
+        else:
+            raise Exception('Dark frames only supported with raw formats (fits, dng)')
 
 
         filename_p.unlink()  # no longer need the original file
