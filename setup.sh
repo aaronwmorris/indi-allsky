@@ -1634,15 +1634,24 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
 fi
 
 
-# Disable raw frames with libcamera when running 1GB of memory
+# Disable raw frames with libcamera when running less than 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
-if [ "$MEM_TOTAL" -lt "1536000" ]; then
+if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_TYPE
     cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
 
+# 25% ffmpeg scaling with libcamera when running 1GB of memory
+if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [ "$MEM_TOTAL" -lt "1536000" ]; then
+        TMP_LIBCAM_FFMPEG=$(mktemp)
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_FFMPEG
+        cp -f "$TMP_LIBCAM_FFMPEG" "${ALLSKY_ETC}/config.json"
+        [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
+    fi
+fi
 
 
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
