@@ -9,3 +9,6 @@ class TransferFailure(Exception):
 
 class PermissionFailure(Exception):
     pass
+
+class CertificateValidationFailure(Exception):
+    pass
