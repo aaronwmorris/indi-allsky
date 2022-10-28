@@ -17,6 +17,7 @@ __all__ = (
     'python_ftp',
     'python_ftpes',
     'pycurl_sftp',
+    'pycurl_ftp',
     'pycurl_ftps',
     'pycurl_ftpes',
     'sftp',

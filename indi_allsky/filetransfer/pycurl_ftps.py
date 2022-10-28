@@ -1,6 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import CertificateValidationFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
@@ -99,6 +100,8 @@ class pycurl_ftps(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
+                raise CertificateValidationFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
                 logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
             else:

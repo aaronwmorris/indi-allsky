@@ -159,7 +159,11 @@ class FileUploader(Process):
                 client.close()
                 task.setFailed('Authentication failure')
                 return
-
+            except filetransfer.exceptions.CertificateValidationFailure as e:
+                logger.error('Certificate validation failure: %s', e)
+                client.close()
+                task.setFailed('Certificate validation failure')
+                return
 
             # Upload file
             try:
@@ -183,6 +187,11 @@ class FileUploader(Process):
                 logger.error('Permission failure: %s', e)
                 client.close()
                 task.setFailed('Permission failure')
+                return
+            except filetransfer.exceptions.CertificateValidationFailure as e:
+                logger.error('Certificate validation failure: %s', e)
+                client.close()
+                task.setFailed('Certificate validation failure')
                 return
 
 
