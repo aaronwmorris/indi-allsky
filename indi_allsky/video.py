@@ -620,9 +620,24 @@ class VideoWorker(Process):
         data_tempfile_f.flush()
         data_tempfile_f.close()
 
-
         data_json_p = Path(data_tempfile_f.name)
-        remote_file_p = Path(self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']).joinpath('data.json')
+
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'].format(**file_data_dict)
+
+        remote_file_p = Path(remote_dir).joinpath('data.json')
+
 
         jobdata = {
             'action'         : 'upload',

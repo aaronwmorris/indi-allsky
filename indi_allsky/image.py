@@ -570,15 +570,22 @@ class ImageWorker(Process):
         tmp_metadata_name_p.chmod(0o644)
 
 
+        file_data_dict = {
+            'timestamp'    : exp_date,
+            'ts'           : exp_date,  # shortcut
+        }
 
-        remote_path = Path(self.config['FILETRANSFER']['REMOTE_METADATA_FOLDER'])
-        remote_file = remote_path.joinpath(self.config['FILETRANSFER']['REMOTE_METADATA_NAME'])
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_METADATA_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_METADATA_NAME'].format(**file_data_dict)
+
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
         # tell worker to upload file
         jobdata = {
             'action'       : 'upload',
             'local_file'   : str(tmp_metadata_name_p),
-            'remote_file'  : str(remote_file),
+            'remote_file'  : str(remote_file_p),
             'remove_local' : True,
         }
 

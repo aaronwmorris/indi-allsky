@@ -880,7 +880,7 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
 
 
 def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
-    metadata_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+    metadata_name_regex = r'^[a-zA-Z0-9_\.\-\{\}\:\%]+$'
 
     if not re.search(metadata_name_regex, field.data):
         raise ValidationError('Invalid filename syntax')
