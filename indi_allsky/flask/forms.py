@@ -372,6 +372,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
 
     test_data = {
         'timestamp'  : datetime.now(),
+        'ts'         : datetime.now(),
         'exposure'   : 1.0,
         'gain'       : 1,
         'temp'       : -5.1,
@@ -879,6 +880,21 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    test_list = ['jpg']
+    test_data = {
+        'timestamp'  : datetime.now(),
+        'ts'         : datetime.now(),
+        'ext'        : 'jpg',
+    }
+
+    try:
+        field.data.format(*test_list, **test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
     metadata_name_regex = r'^[a-zA-Z0-9_\.\-\{\}\:\%]+$'
 
@@ -886,11 +902,37 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    test_data = {
+        'timestamp'  : datetime.now(),
+        'ts'         : datetime.now(),
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def REMOTE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/\{\}\:\%\~]+$'
 
     if not re.search(folder_regex, field.data):
         raise ValidationError('Invalid filename syntax')
+
+
+    test_data = {
+        'timestamp'  : datetime.now(),
+        'ts'         : datetime.now(),
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
 def UPLOAD_IMAGE_validator(form, field):
