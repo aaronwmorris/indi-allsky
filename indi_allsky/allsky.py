@@ -22,6 +22,9 @@ import queue
 from multiprocessing import Queue
 from multiprocessing import Value
 
+from .version import __version__
+from .version import __config_version__
+
 from . import camera as camera_module
 
 from .image import ImageWorker
@@ -54,8 +57,6 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSky(object):
-
-    _version = 20221023.0
 
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
@@ -263,7 +264,7 @@ class IndiAllSky(object):
         c = json.loads(json_config)
 
         config_version = float(c.get('VERSION', 0.0))
-        if self._version != config_version:
+        if __config_version__ != config_version:
             logger.error('indi-allsky version does not match config, please rerun setup.sh')
             sys.exit(1)
 
@@ -309,17 +310,21 @@ class IndiAllSky(object):
 
 
     def _initialize(self):
-        uptime_s = time.time() - psutil.boot_time()
-        logger.info('System uptime: %ds', uptime_s)
+        logger.info('indi-allsky release: %s', str(__version__))
+        logger.info('indi-allsky config version: %s', str(__config_version__))
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
+
         logger.info('System CPUs: %d', psutil.cpu_count())
 
         memory_info = psutil.virtual_memory()
         memory_total_mb = int(memory_info[0] / 1024.0 / 1024.0)
 
         logger.info('System memory: %d MB', memory_total_mb)
+
+        uptime_s = time.time() - psutil.boot_time()
+        logger.info('System uptime: %ds', uptime_s)
 
 
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
