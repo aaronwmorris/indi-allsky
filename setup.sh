@@ -1266,9 +1266,18 @@ IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
 if [[ "$IMAGE_FOLDER" == "null" || -z "$IMAGE_FOLDER" ]]; then
     echo
     echo
-    echo "IMAGE_FOLDER is not defined in ${ALLSKY_ETC}/config.json"
+    echo "Image folder config is empty, attempting to correct"
     echo
-    exit 1
+    sleep 3
+
+    # old installs of indi-allsky stored the images in the git checkout folder
+    IMAGE_FOLDER="${ALLSKY_DIRECTORY}/html/images"
+
+    TMP_IMAGE_FOLDER=$(mktemp)
+    jq --arg image_folder "$IMAGE_FOLDER" '.IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/config.json" > $TMP_IMAGE_FOLDER
+    cp -f "$TMP_IMAGE_FOLDER" "${ALLSKY_ETC}/config.json"
+    chmod 660 "${ALLSKY_ETC}/config.json"
+    [[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
 fi
 
 echo "Detected image folder: $IMAGE_FOLDER"
@@ -1506,10 +1515,12 @@ chmod 775 "${IMAGE_FOLDER}/darks"
 [[ ! -d "${IMAGE_FOLDER}/export" ]] && mkdir "${IMAGE_FOLDER}/export"
 chmod 775 "${IMAGE_FOLDER}/export"
 
-for F in $IMAGE_FOLDER_FILES; do
-    cp -f "${ALLSKY_DIRECTORY}/html/images/${F}" "${IMAGE_FOLDER}/${F}"
-    chmod 664 "${IMAGE_FOLDER}/${F}"
-done
+if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
+    for F in $IMAGE_FOLDER_FILES; do
+        cp -f "${ALLSKY_DIRECTORY}/html/images/${F}" "${IMAGE_FOLDER}/${F}"
+        chmod 664 "${IMAGE_FOLDER}/${F}"
+    done
+fi
 
 
 echo "**** Setup DB ****"
