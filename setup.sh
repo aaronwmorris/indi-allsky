@@ -1260,8 +1260,17 @@ if [[ "$SQLALCHEMY_DATABASE_URI" == "null" ]]; then
     SQLALCHEMY_DATABASE_URI="$DB_URI_DEFAULT"
 fi
 
+
 # Detect IMAGE_FOLDER
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
+if [[ "$IMAGE_FOLDER" == "null" || -z "$IMAGE_FOLDER" ]]; then
+    echo
+    echo
+    echo "IMAGE_FOLDER is not defined in ${ALLSKY_ETC}/config.json"
+    echo
+    exit 1
+fi
+
 echo "Detected image folder: $IMAGE_FOLDER"
 
 
