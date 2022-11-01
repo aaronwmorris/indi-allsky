@@ -26,6 +26,8 @@ import numpy
 import astropy
 import flask
 
+from ..version import __version__
+
 from flask import render_template
 from flask import request
 from flask import jsonify
@@ -86,8 +88,6 @@ bp = Blueprint(
 
 
 class BaseView(View):
-
-    _release = 5.3
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
@@ -1494,7 +1494,7 @@ class SystemInfoView(TemplateView):
     def get_context(self):
         context = super(SystemInfoView, self).get_context()
 
-        context['release'] = self._release
+        context['release'] = str(__version__)
 
         context['uptime_str'] = self.getUptime()
 
