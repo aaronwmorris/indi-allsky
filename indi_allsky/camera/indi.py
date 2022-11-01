@@ -442,7 +442,7 @@ class IndiClient(PyIndi.BaseClient):
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)
-            self.set_switch(device, k, on_switches=v.get('on', []), off_switches=v.get('off', []))
+            self.set_switch(device, k, on_switches=v['on'], off_switches=v.get('off', []))
 
         ### Configure controls
         #self.set_controls(device, indi_config.get('CONTROLS', {}))
