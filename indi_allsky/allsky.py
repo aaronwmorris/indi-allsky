@@ -1,3 +1,4 @@
+import platform
 import sys
 import os
 import time
@@ -310,6 +311,16 @@ class IndiAllSky(object):
     def _initialize(self):
         uptime_s = time.time() - psutil.boot_time()
         logger.info('System uptime: %ds', uptime_s)
+
+        logger.info('Python version: %s', platform.python_version())
+        logger.info('Platform: %s', platform.machine())
+        logger.info('System CPUs: %d', psutil.cpu_count())
+
+        memory_info = psutil.virtual_memory()
+        memory_total_mb = int(memory_info[0] / 1024.0 / 1024.0)
+
+        logger.info('System memory: %d MB', memory_total_mb)
+
 
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
