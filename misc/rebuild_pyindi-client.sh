@@ -53,8 +53,19 @@ echo
 sleep 10
 
 
+
+START_TIME=$(date +%s)
+
+
 source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
 pip3 uninstall -y pyindi-client
 pip3 install --no-binary :all: --upgrade 'pyindi-client==1.9.1'
 #pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@xxxxxxx#egg=pyindi-client'
 
+
+END_TIME=$(date +%s)
+
+echo
+echo
+echo "Completed in $((END_TIME - START_TIME))s"
+echo
