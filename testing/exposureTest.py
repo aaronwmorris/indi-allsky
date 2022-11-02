@@ -232,7 +232,13 @@ class IndiClient(PyIndi.BaseClient):
         logger.warning('Setting CCD gain to %s', str(gain_value))
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd']:
+        if indi_exec in [
+            'indi_asi_ccd',
+            'indi_asi_single_ccd',
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_playerone_ccd',
+        ]:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
@@ -240,7 +246,12 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_sv305_ccd', 'indi_qhy_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
+        elif indi_exec in [
+            'indi_sv305_ccd',
+            'indi_qhy_ccd',
+            'indi_simulator_ccd',
+            'indi_rpicam',
+        ]:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
@@ -290,7 +301,18 @@ class IndiClient(PyIndi.BaseClient):
 
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
+        if indi_exec in [
+            'indi_asi_ccd',
+            'indi_asi_single_ccd',
+            'indi_sv305_ccd',
+            'indi_qhy_ccd',
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_simulator_ccd',
+            'indi_rpicam',
+            'indi_playerone_ccd',
+            'indi_sx_ccd',
+        ]:
             binning_config = {
                 "PROPERTIES" : {
                     "CCD_BINNING" : {
