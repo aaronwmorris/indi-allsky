@@ -390,7 +390,7 @@ class IndiClient(PyIndi.BaseClient):
         }[ctl_type]
 
         started = time.time()
-        while not(ctl):
+        while not ctl:
             ctl = getattr(device, attr)(name)
 
             if not ctl and 0 < timeout < time.time() - started:
@@ -480,7 +480,7 @@ class IndiExposureTest(object):
         self.indiclient.setServer(self._indi_server, self._indi_port)
 
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)
