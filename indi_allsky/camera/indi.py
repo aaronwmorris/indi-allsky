@@ -315,7 +315,7 @@ class IndiClient(PyIndi.BaseClient):
         #        #for t in p.getBLOB():
         #        #    logger.info("       %s(%s) = %d bytes", t.name, t.label, t.size)
 
-        #    #logger.warning('%s', pformat(properties))
+        #logger.warning('%s', pformat(properties))
 
         return properties
 
@@ -443,9 +443,6 @@ class IndiClient(PyIndi.BaseClient):
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)
             self.set_switch(device, k, on_switches=v['on'], off_switches=v.get('off', []))
-
-        ### Configure controls
-        #self.set_controls(device, indi_config.get('CONTROLS', {}))
 
         # Sleep after configuration
         time.sleep(sleep)

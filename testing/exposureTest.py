@@ -3,6 +3,7 @@
 import sys
 import logging
 import time
+from collections import OrderedDict
 import ctypes
 import PyIndi
 
@@ -45,13 +46,13 @@ CCD_BINMODE = 1
 #CCD_GAIN = [250]
 #CCD_BINMODE = 1
 
-INDI_CONFIG = {
+INDI_CONFIG = OrderedDict({
     "PROPERTIES" : {},
     "SWITCHES" : {}
-}
+})
 
 ### Debugging
-#INDI_CONFIG = {
+#INDI_CONFIG = OrderedDict({
 #    "PROPERTIES" : {},
 #    "SWITCHES" : {
 #        "DEBUG" : {
@@ -71,13 +72,13 @@ INDI_CONFIG = {
 #            "off" : [],
 #        },
 #    }
-#}
+#})
 
 ### simulator
 #CCD_GAIN = [100]
 #CCD_BINMODE = 1
 
-#INDI_CONFIG = {
+#INDI_CONFIG = OrderedDict({
 #    "PROPERTIES" : {
 #        "EQUATORIAL_PE" : {
 #            "RA_PE"  : 16.7175,
@@ -85,7 +86,7 @@ INDI_CONFIG = {
 #        },
 #    },
 #    "SWITCHES" : {}
-#}
+#})
 
 
 
@@ -221,9 +222,6 @@ class IndiClient(PyIndi.BaseClient):
             logger.info('Setting switch %s', k)
             self.set_switch(device, k, on_switches=v['on'], off_switches=v.get('off', []))
 
-        ### Configure controls
-        #self.set_controls(device, indi_config.get('CONTROLS', {}))
-
         # Sleep after configuration
         time.sleep(1.0)
 
@@ -232,7 +230,13 @@ class IndiClient(PyIndi.BaseClient):
         logger.warning('Setting CCD gain to %s', str(gain_value))
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_toupcam_ccd']:
+        if indi_exec in [
+            'indi_asi_ccd',
+            'indi_asi_single_ccd',
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_playerone_ccd',
+        ]:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
@@ -240,7 +244,12 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_sv305_ccd', 'indi_qhy_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
+        elif indi_exec in [
+            'indi_sv305_ccd',
+            'indi_qhy_ccd',
+            'indi_simulator_ccd',
+            'indi_rpicam',
+        ]:
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
@@ -290,7 +299,18 @@ class IndiClient(PyIndi.BaseClient):
 
         indi_exec = ccdDevice.getDriverExec()
 
-        if indi_exec in ['indi_asi_ccd', 'indi_asi_single_ccd', 'indi_sv305_ccd', 'indi_qhy_ccd', 'indi_toupcam_ccd', 'indi_simulator_ccd', 'indi_rpicam']:
+        if indi_exec in [
+            'indi_asi_ccd',
+            'indi_asi_single_ccd',
+            'indi_sv305_ccd',
+            'indi_qhy_ccd',
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_simulator_ccd',
+            'indi_rpicam',
+            'indi_playerone_ccd',
+            'indi_sx_ccd',
+        ]:
             binning_config = {
                 "PROPERTIES" : {
                     "CCD_BINNING" : {
@@ -390,7 +410,7 @@ class IndiClient(PyIndi.BaseClient):
         }[ctl_type]
 
         started = time.time()
-        while not(ctl):
+        while not ctl:
             ctl = getattr(device, attr)(name)
 
             if not ctl and 0 < timeout < time.time() - started:
@@ -480,7 +500,7 @@ class IndiExposureTest(object):
         self.indiclient.setServer(self._indi_server, self._indi_port)
 
         logger.info("Connecting to indiserver")
-        if (not(self.indiclient.connectServer())):
+        if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
             sys.exit(1)

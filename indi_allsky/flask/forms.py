@@ -1000,10 +1000,29 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
         raise ValidationError('SWITCHES attribute missing')
 
 
+    for k, v in json_data['PROPERTIES'].items():
+        if not isinstance(v, dict):
+            raise ValidationError('Property {0:s} value must be a dict'.format(k))
+
+
     for k, v in json_data['SWITCHES'].items():
+        if not isinstance(v, dict):
+            raise ValidationError('Switch {0:s} value must be a dict'.format(k))
+
         for k2 in v.keys():
-            if k2 not in ('on', 'off'):
+            if k2 not in ('on', 'off', '_on', '_off'):  # underscored values are not used
                 raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
+
+            if not isinstance(v[k2], list):
+                raise ValidationError('Switch {0:s} "{1:s}" value must be a list'.format(k, k2))
+
+            if k2 == 'on':
+                if len(v[k2]) == 0:
+                    raise ValidationError('Switch {0:s} "on" value have at least one item'.format(k))
+
+
+        if 'on' not in v.keys():
+            raise ValidationError('Switch {0:s} requires at least one "on" key'.format(k))
 
 
 
