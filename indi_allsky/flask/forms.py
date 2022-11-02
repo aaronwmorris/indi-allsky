@@ -1000,6 +1000,12 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
         raise ValidationError('SWITCHES attribute missing')
 
 
+    for k, v in json_data['PROPERTIES'].items():
+        for k2 in v.keys():
+            if not isinstance(v[k2], dict):
+                raise ValidationError('Property {0:s} "{1:s}" value must be a dict'.format(k, k2))
+
+
     for k, v in json_data['SWITCHES'].items():
         for k2 in v.keys():
             if k2 not in ('on', 'off', '_on', '_off'):  # underscored values are not used
