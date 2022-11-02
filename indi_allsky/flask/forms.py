@@ -1006,6 +1006,9 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 
     for k, v in json_data['SWITCHES'].items():
+        if not isinstance(v, dict):
+            raise ValidationError('Switch {0:s} value must be a dict'.format(k))
+
         for k2 in v.keys():
             if k2 not in ('on', 'off', '_on', '_off'):  # underscored values are not used
                 raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
