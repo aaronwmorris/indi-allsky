@@ -1002,7 +1002,7 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
     for k, v in json_data['PROPERTIES'].items():
         if not isinstance(v, dict):
-            raise ValidationError('Property {0:s} value must be a dict'.format(k, k2))
+            raise ValidationError('Property {0:s} value must be a dict'.format(k))
 
 
     for k, v in json_data['SWITCHES'].items():
