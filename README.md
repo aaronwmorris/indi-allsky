@@ -344,6 +344,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PASSWORD          |             | (str) Password for file tranfer |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
+| > LIBCURL_OPTIONS   | {}          | (dict) Additional libcurl options for pycurl based methods |
 | > REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
 | > REMOTE_METADATA_NAME       | latest_metadata.json | (str) Filename for remote metadata upload |
 | > REMOTE_METADATA_FOLDER     |      | (str) Remote folder to upload metadata |

@@ -166,7 +166,8 @@
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,
-        "UPLOAD_ENDOFNIGHT"      : false
+        "UPLOAD_ENDOFNIGHT"      : false,
+        "LIBCURL_OPTIONS"        : {}
     },
 
     "MQTTPUBLISH" : {

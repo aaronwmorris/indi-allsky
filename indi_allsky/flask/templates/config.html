@@ -1413,6 +1413,22 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__LIBCURL_OPTIONS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.FILETRANSFER__LIBCURL_OPTIONS(class='form-control bg-secondary', rows='6') }}
+            <div id="FILETRANSFER__LIBCURL_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div>libcurl options for use with PycURL classes</div>
+            <div>WARNING: Options are not validated</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.MQTTPUBLISH__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -1670,6 +1686,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
     'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER',
     'FILETRANSFER__UPLOAD_IMAGE',
+    'FILETRANSFER__LIBCURL_OPTIONS',
     'MQTTPUBLISH__TRANSPORT',
     'MQTTPUBLISH__HOST',
     'MQTTPUBLISH__PORT',

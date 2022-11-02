@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import cv2
 import numpy
+import pycurl
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -943,6 +944,26 @@ def UPLOAD_IMAGE_validator(form, field):
         raise ValidationError('Image Upload must be 0 or greater')
 
 
+def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
+    try:
+        json_data = json.loads(field.data)
+    except json.decoder.JSONDecodeError as e:
+        raise ValidationError(str(e))
+
+
+    for k, v in json_data.items():
+        if not isinstance(k, str):
+            raise ValidationError('Property names must be a str')
+
+        if not isinstance(v, (str, int, bool)):
+            raise ValidationError('Property {0:s} value must be a str, int, or boolean'.format(k))
+
+        try:
+            getattr(pycurl, k)
+        except AttributeError:
+            raise ValidationError('Invalid libcurl property: {0:s}'.format(k))
+
+
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
     topic_regex = r'^[a-zA-Z0-9_\-\/]+$'
 
@@ -1226,6 +1247,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
+    FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
