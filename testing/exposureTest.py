@@ -3,6 +3,7 @@
 import sys
 import logging
 import time
+from collections import OrderedDict
 import ctypes
 import PyIndi
 
@@ -45,13 +46,13 @@ CCD_BINMODE = 1
 #CCD_GAIN = [250]
 #CCD_BINMODE = 1
 
-INDI_CONFIG = {
+INDI_CONFIG = OrderedDict({
     "PROPERTIES" : {},
     "SWITCHES" : {}
-}
+})
 
 ### Debugging
-#INDI_CONFIG = {
+#INDI_CONFIG = OrderedDict({
 #    "PROPERTIES" : {},
 #    "SWITCHES" : {
 #        "DEBUG" : {
@@ -71,13 +72,13 @@ INDI_CONFIG = {
 #            "off" : [],
 #        },
 #    }
-#}
+#})
 
 ### simulator
 #CCD_GAIN = [100]
 #CCD_BINMODE = 1
 
-#INDI_CONFIG = {
+#INDI_CONFIG = OrderedDict({
 #    "PROPERTIES" : {
 #        "EQUATORIAL_PE" : {
 #            "RA_PE"  : 16.7175,
@@ -85,7 +86,7 @@ INDI_CONFIG = {
 #        },
 #    },
 #    "SWITCHES" : {}
-#}
+#})
 
 
 

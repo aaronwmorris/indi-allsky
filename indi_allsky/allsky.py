@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+from collections import OrderedDict
 #from pprint import pformat
 import math
 import signal
@@ -261,7 +262,7 @@ class IndiAllSky(object):
 
 
     def _parseConfig(self, json_config):
-        c = json.loads(json_config)
+        c = json.loads(json_config, object_pairs_hook=OrderedDict)
 
         config_version = float(c.get('VERSION', 0.0))
         if __config_version__ != config_version:
