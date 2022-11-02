@@ -51,6 +51,7 @@ if __name__ == "__main__":
         help='action',
         choices=(
             'run',
+            'connectOnly',
             'darks',
             'cameraReport',
             'generateNightTimelapse',

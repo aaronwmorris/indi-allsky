@@ -310,7 +310,7 @@ class IndiAllSky(object):
         return c
 
 
-    def _initialize(self):
+    def _initialize(self, connectOnly=False):
         logger.info('indi-allsky release: %s', str(__version__))
         logger.info('indi-allsky config version: %s', str(__config_version__))
 
@@ -363,9 +363,15 @@ class IndiAllSky(object):
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
+
+        if connectOnly:
+            return
+
+
         # add driver name to config
         self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
@@ -373,9 +379,11 @@ class IndiAllSky(object):
         # Disable debugging
         self.indiclient.disableDebugCcd()
 
+
         # Get Properties (this might be needed to initialize some cameras)
         ccd_properties = self.indiclient.getCcdDeviceProperties()
         self.config['CCD_PROPERTIES'] = ccd_properties
+
 
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode()
@@ -628,6 +636,15 @@ class IndiAllSky(object):
         elif self.config['CCD_SERVER'] in ['indi_asi_single_ccd']:
             if self.config['CCD_NAME'].startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+
+
+    def connectOnly(self):
+        self._initialize(connectOnly=True)
+
+        self.indiclient.disconnectServer()
+
+        sys.exit()
+
 
 
     def run(self):
