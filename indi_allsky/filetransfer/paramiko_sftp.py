@@ -90,10 +90,6 @@ class paramiko_sftp(GenericFileTransfer):
         remote_file_p = Path(remote_file)
 
 
-        if str(remote_file_p).startswith('~'):
-            logger.warning('paramiko does not support ~ for remote file paths')
-
-
         # Try to create remote folder
         dir_list = list(remote_file_p.parents)
         dir_list.reverse()  # need root dirs first
@@ -117,6 +113,9 @@ class paramiko_sftp(GenericFileTransfer):
         try:
             self.sftp.put(str(local_file_p), str(remote_file_p))
         except PermissionError as e:
+            raise TransferFailure(str(e)) from e
+        except FileNotFoundError as e:
+            logger.error('Upload failed.  Paramiko does not support ~ in remote paths')
             raise TransferFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
