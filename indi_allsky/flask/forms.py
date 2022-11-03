@@ -878,7 +878,7 @@ def FILETRANSFER__PRIVATE_KEY_validator(form, field):
     if not field.data:
         return
 
-    file_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+    file_name_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
     if not re.search(file_name_regex, field.data):
         raise ValidationError('Invalid filename syntax')
@@ -903,7 +903,7 @@ def FILETRANSFER__PUBLIC_KEY_validator(form, field):
     if not field.data:
         return
 
-    file_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+    file_name_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
     if not re.search(file_name_regex, field.data):
         raise ValidationError('Invalid filename syntax')
