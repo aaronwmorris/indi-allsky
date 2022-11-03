@@ -41,6 +41,16 @@ class pycurl_ftp(GenericFileTransfer):
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
 
+        # Apply custom options from config
+        libcurl_opts = self.config['FILETRANSFER'].get('LIBCURL_OPTIONS', {})
+        for k, v in libcurl_opts.items():
+            # Not catching any exceptions here
+            # Options are validated in web config
+            curlopt = getattr(pycurl, k)
+            self.client.setopt(curlopt, v)
+
+
+
     def close(self):
         super(pycurl_ftp, self).close()
 
