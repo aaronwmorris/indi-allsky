@@ -103,7 +103,8 @@ class pycurl_ftps(GenericFileTransfer):
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                #logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                pass
             else:
                 raise e from e
 

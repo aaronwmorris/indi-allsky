@@ -96,7 +96,8 @@ class pycurl_ftp(GenericFileTransfer):
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                #logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                pass
             else:
                 raise e from e
 
