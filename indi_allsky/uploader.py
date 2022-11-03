@@ -88,9 +88,10 @@ class FileUploader(Process):
             # Build parameters
             if action == 'upload':
                 connect_kwargs = {
-                    'hostname' : self.config['FILETRANSFER']['HOST'],
-                    'username' : self.config['FILETRANSFER']['USERNAME'],
-                    'password' : self.config['FILETRANSFER']['PASSWORD'],
+                    'hostname'    : self.config['FILETRANSFER']['HOST'],
+                    'username'    : self.config['FILETRANSFER']['USERNAME'],
+                    'password'    : self.config['FILETRANSFER']['PASSWORD'],
+                    'cert_bypass' : self.config['FILETRANSFER'].get('CERT_BYPASS', True),
                 }
 
                 put_kwargs = {
