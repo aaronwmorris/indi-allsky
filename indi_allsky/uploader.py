@@ -91,6 +91,8 @@ class FileUploader(Process):
                     'hostname'    : self.config['FILETRANSFER']['HOST'],
                     'username'    : self.config['FILETRANSFER']['USERNAME'],
                     'password'    : self.config['FILETRANSFER']['PASSWORD'],
+                    'private_key' : self.config['FILETRANSFER'].get('PRIVATE_KEY'),
+                    'public_key'  : self.config['FILETRANSFER'].get('PUBLIC_KEY'),
                     'cert_bypass' : self.config['FILETRANSFER'].get('CERT_BYPASS', True),
                 }
 
