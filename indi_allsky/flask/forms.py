@@ -961,6 +961,11 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
             raise ValidationError('Property {0:s} value must be a str or int'.format(k))
 
 
+        if k.startswith('#'):
+            # comment
+            continue
+
+
         if k.startswith('CURLOPT_'):
             # remove CURLOPT_ prefix
             k = k[8:]
@@ -1027,6 +1032,10 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 
     for k in json_data.keys():
+        if k.startswith('#'):
+            # comment
+            continue
+
         if k not in ('PROPERTIES', 'SWITCHES'):
             raise ValidationError('Only PROPERTIES and SWITCHES attributes allowed')
 
@@ -1051,7 +1060,11 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
             raise ValidationError('Switch {0:s} value must be a dict'.format(k))
 
         for k2 in v.keys():
-            if k2 not in ('on', 'off', '_on', '_off'):  # underscored values are not used
+            if k2.startswith('#'):
+                # comment
+                continue
+
+            if k2 not in ('on', 'off'):  # #indicates comment
                 raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
 
             if not isinstance(v[k2], list):

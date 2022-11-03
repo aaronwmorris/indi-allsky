@@ -55,6 +55,10 @@ class pycurl_sftp(GenericFileTransfer):
             # Not catching any exceptions here
             # Options are validated in web config
 
+            if k.startswith('#'):
+                # comment
+                continue
+
             if k.startswith('CURLOPT_'):
                 # remove CURLOPT_ prefix
                 k = k[8:]
