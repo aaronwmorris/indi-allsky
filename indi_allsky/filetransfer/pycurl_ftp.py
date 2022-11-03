@@ -30,6 +30,7 @@ class pycurl_ftp(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        #cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'ftp://{0:s}:{1:d}'.format(hostname, self._port)
 

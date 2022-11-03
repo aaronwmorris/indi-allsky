@@ -28,6 +28,7 @@ class python_ftpes(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        #cert_bypass = kwargs.get('cert_bypass')
 
 
         self.client = ftplib.FTP_TLS()

@@ -27,10 +27,15 @@ class paramiko_sftp(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        cert_bypass = kwargs.get('cert_bypass')
 
 
         self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+
+        if cert_bypass:
+            self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
 
         try:
             self.client.connect(hostname, port=self._port, username=username, password=password, timeout=self._timeout)

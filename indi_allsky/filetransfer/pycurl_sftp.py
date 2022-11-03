@@ -31,6 +31,7 @@ class pycurl_sftp(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        #cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'sftp://{0:s}:{1:d}'.format(hostname, self._port)
 
@@ -43,8 +44,10 @@ class pycurl_sftp(GenericFileTransfer):
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
         self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
 
-        #self.client.setopt(pycurl.SSH_KNOWNHOSTS, '/dev/null')
-        #self.client.setopt(pycurl.SSH_KEYFUNCTION, self.accept_new_hosts)
+        # fixme
+        #if cert_bypass:
+        #    self.client.setopt(pycurl.SSH_KNOWNHOSTS, '/dev/null')
+        #    self.client.setopt(pycurl.SSH_KEYFUNCTION, self.accept_new_hosts)
 
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 

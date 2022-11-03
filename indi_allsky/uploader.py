@@ -119,7 +119,7 @@ class FileUploader(Process):
                     'username'    : self.config['MQTTPUBLISH']['USERNAME'],
                     'password'    : self.config['MQTTPUBLISH']['PASSWORD'],
                     'tls'         : self.config['MQTTPUBLISH']['TLS'],
-                    'cert_bypass' : self.config['MQTTPUBLISH']['CERT_BYPASS'],
+                    'cert_bypass' : self.config['MQTTPUBLISH'].get('CERT_BYPASS', True),
                 }
 
                 put_kwargs = {

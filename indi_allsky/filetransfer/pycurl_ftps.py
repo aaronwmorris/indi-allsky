@@ -31,6 +31,7 @@ class pycurl_ftps(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'ftps://{0:s}:{1:d}'.format(hostname, self._port)
 
@@ -46,8 +47,10 @@ class pycurl_ftps(GenericFileTransfer):
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
         #self.client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
-        self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
-        self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
+
+        if cert_bypass:
+            self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
+            self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
 
         # Apply custom options from config

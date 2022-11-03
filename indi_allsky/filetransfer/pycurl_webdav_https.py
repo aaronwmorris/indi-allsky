@@ -31,6 +31,7 @@ class pycurl_webdav_https(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'https://{0:s}:{1:d}'.format(hostname, self._port)
 
@@ -50,8 +51,10 @@ class pycurl_webdav_https(GenericFileTransfer):
         self.client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
 
         #self.client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
-        self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
-        self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
+
+        if cert_bypass:
+            self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
+            self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
 
         # Apply custom options from config
