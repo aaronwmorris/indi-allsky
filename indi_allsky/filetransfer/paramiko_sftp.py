@@ -46,12 +46,13 @@ class paramiko_sftp(GenericFileTransfer):
 
 
         if private_key:
-            # ssh key
+            # ssh key auth
             connect_kwargs['key_filename'] = private_key
 
             if password:
-                connect_kwargs['passphrase'] = password
+                connect_kwargs['passphrase'] = password  # key passphrase
         else:
+            # password auth
             connect_kwargs['password'] = password
 
 

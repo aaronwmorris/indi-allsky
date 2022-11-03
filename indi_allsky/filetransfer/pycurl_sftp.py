@@ -31,6 +31,8 @@ class pycurl_sftp(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        private_key = kwargs.get('private_key')
+        public_key = kwargs.get('public_key')
         #cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'sftp://{0:s}:{1:d}'.format(hostname, self._port)
@@ -49,7 +51,20 @@ class pycurl_sftp(GenericFileTransfer):
         #    self.client.setopt(pycurl.SSH_KNOWNHOSTS, '/dev/null')
         #    self.client.setopt(pycurl.SSH_KEYFUNCTION, self.accept_new_hosts)
 
-        self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+
+        if private_key and public_key:
+            # ssh key auth
+            self.client.setopt(pycurl.SSH_AUTH_TYPES, pycurl.SSH_AUTH_PUBLICKEY)
+            self.client.setopt(pycurl.USERPWD, '{0:s}:'.format(username))  # colon on purpose
+            self.client.setopt(pycurl.SSH_PRIVATE_KEYFILE, private_key)
+            self.client.setopt(pycurl.SSH_PUBLIC_KEYFILE, public_key)
+
+            if password:
+                self.client.setopt(pycurl.KEYPASSWD, password)  # key passphrase
+        else:
+            # password auth
+            self.client.setopt(pycurl.SSH_AUTH_TYPES, pycurl.SSH_AUTH_PASSWORD)
+            self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
 
         # Apply custom options from config
