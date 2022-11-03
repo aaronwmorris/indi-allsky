@@ -36,6 +36,10 @@ class pycurl_webdav_https(GenericFileTransfer):
 
         self.client = pycurl.Curl()
         #self.client.setopt(pycurl.VERBOSE, 1)
+
+        # deprecated: will be replaced by PROTOCOLS_STR
+        self.client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS)
+
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
         self.client.setopt(pycurl.HTTPHEADER, ['Accept: */*', 'Connection: Keep-Alive'])
