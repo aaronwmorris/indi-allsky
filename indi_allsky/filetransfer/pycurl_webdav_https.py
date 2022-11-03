@@ -2,6 +2,7 @@ from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 from .exceptions import CertificateValidationFailure
+from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
@@ -31,11 +32,16 @@ class pycurl_webdav_https(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'https://{0:s}:{1:d}'.format(hostname, self._port)
 
         self.client = pycurl.Curl()
         #self.client.setopt(pycurl.VERBOSE, 1)
+
+        # deprecated: will be replaced by PROTOCOLS_STR
+        self.client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS)
+
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
         self.client.setopt(pycurl.HTTPHEADER, ['Accept: */*', 'Connection: Keep-Alive'])
@@ -46,8 +52,29 @@ class pycurl_webdav_https(GenericFileTransfer):
         self.client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
 
         #self.client.setopt(pycurl.SSLVERSION, pycurl.SSLVERSION_TLSv1_2)
-        self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
-        self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
+
+        if cert_bypass:
+            self.client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
+            self.client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
+
+
+        # Apply custom options from config
+        libcurl_opts = self.config['FILETRANSFER'].get('LIBCURL_OPTIONS', {})
+        for k, v in libcurl_opts.items():
+            # Not catching any exceptions here
+            # Options are validated in web config
+
+            if k.startswith('#'):
+                # comment
+                continue
+
+            if k.startswith('CURLOPT_'):
+                # remove CURLOPT_ prefix
+                k = k[8:]
+
+            curlopt = getattr(pycurl, k)
+            self.client.setopt(curlopt, v)
+
 
 
     def close(self):
@@ -139,6 +166,9 @@ class pycurl_webdav_https(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
+            elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
+                logger.error('Upload failed.  PycURL does not support relative path names')
+                raise TransferFailure(msg) from e
             else:
                 raise e from e
 

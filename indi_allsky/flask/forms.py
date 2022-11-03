@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import cv2
 import numpy
+import pycurl
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -873,6 +874,56 @@ def FILETRANSFER__TIMEOUT_validator(form, field):
         raise ValidationError('Timeout must be 60 or less')
 
 
+def FILETRANSFER__PRIVATE_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    file_name_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(file_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
+    file_name_p = Path(field.data)
+
+    try:
+        if not file_name_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not file_name_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(file_name_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def FILETRANSFER__PUBLIC_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    file_name_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(file_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
+    file_name_p = Path(field.data)
+
+    try:
+        if not file_name_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not file_name_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(file_name_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
 def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
     image_name_regex = r'^[a-zA-Z0-9_\.\-\{\}\:\%]+$'
 
@@ -943,6 +994,51 @@ def UPLOAD_IMAGE_validator(form, field):
         raise ValidationError('Image Upload must be 0 or greater')
 
 
+def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
+    try:
+        json_data = json.loads(field.data)
+    except json.decoder.JSONDecodeError as e:
+        raise ValidationError(str(e))
+
+
+    client = pycurl.Curl()  # test client
+
+    for k, v in json_data.items():
+        if not isinstance(k, str):
+            raise ValidationError('Property names must be a str')
+
+        if not isinstance(v, (str, int)):
+            raise ValidationError('Property {0:s} value must be a str or int'.format(k))
+
+
+        if k.startswith('#'):
+            # comment
+            continue
+
+
+        if k.startswith('CURLOPT_'):
+            # remove CURLOPT_ prefix
+            k = k[8:]
+
+
+        try:
+            curlopt = getattr(pycurl, k)
+        except AttributeError:
+            raise ValidationError('Invalid libcurl property: {0:s}'.format(k))
+
+        try:
+            client.setopt(curlopt, v)
+        except pycurl.error as e:
+            rc, msg = e.args
+
+            if rc in [pycurl.E_UNKNOWN_OPTION]:
+                raise ValidationError('Unknown libcurl option {0:s}'.format(k))
+            else:
+                raise ValidationError('Error: {0:s}'.format(msg))
+        except TypeError as e:
+            raise ValidationError('TypeError: {0:s} -  {1:s}'.format(k, str(e)))
+
+
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
     topic_regex = r'^[a-zA-Z0-9_\-\/]+$'
 
@@ -986,6 +1082,10 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 
     for k in json_data.keys():
+        if k.startswith('#'):
+            # comment
+            continue
+
         if k not in ('PROPERTIES', 'SWITCHES'):
             raise ValidationError('Only PROPERTIES and SWITCHES attributes allowed')
 
@@ -1010,7 +1110,11 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
             raise ValidationError('Switch {0:s} value must be a dict'.format(k))
 
         for k2 in v.keys():
-            if k2 not in ('on', 'off', '_on', '_off'):  # underscored values are not used
+            if k2.startswith('#'):
+                # comment
+                continue
+
+            if k2 not in ('on', 'off'):  # #indicates comment
                 raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
 
             if not isinstance(v[k2], list):
@@ -1211,7 +1315,11 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
     FILETRANSFER__USERNAME           = StringField('Username', validators=[FILETRANSFER__USERNAME_validator])
     FILETRANSFER__PASSWORD           = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[FILETRANSFER__PASSWORD_validator])
+    FILETRANSFER__PRIVATE_KEY        = StringField('Private Key', validators=[FILETRANSFER__PRIVATE_KEY_validator])
+    FILETRANSFER__PUBLIC_KEY         = StringField('Public Key', validators=[FILETRANSFER__PUBLIC_KEY_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
+    FILETRANSFER__CERT_BYPASS        = BooleanField('Disable Certificate Validation')
+    FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])
     FILETRANSFER__REMOTE_IMAGE_NAME  = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
     FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_METADATA_NAME     = StringField('Remote Metadata Name', validators=[DataRequired(), FILETRANSFER__REMOTE_METADATA_NAME_validator])

@@ -88,9 +88,12 @@ class FileUploader(Process):
             # Build parameters
             if action == 'upload':
                 connect_kwargs = {
-                    'hostname' : self.config['FILETRANSFER']['HOST'],
-                    'username' : self.config['FILETRANSFER']['USERNAME'],
-                    'password' : self.config['FILETRANSFER']['PASSWORD'],
+                    'hostname'    : self.config['FILETRANSFER']['HOST'],
+                    'username'    : self.config['FILETRANSFER']['USERNAME'],
+                    'password'    : self.config['FILETRANSFER']['PASSWORD'],
+                    'private_key' : self.config['FILETRANSFER'].get('PRIVATE_KEY'),
+                    'public_key'  : self.config['FILETRANSFER'].get('PUBLIC_KEY'),
+                    'cert_bypass' : self.config['FILETRANSFER'].get('CERT_BYPASS', True),
                 }
 
                 put_kwargs = {
@@ -105,7 +108,7 @@ class FileUploader(Process):
                     task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['FILETRANSFER']['CLASSNAME']))
                     return
 
-                client = client_class()
+                client = client_class(self.config)
                 client.timeout = self.config['FILETRANSFER']['TIMEOUT']
 
                 if self.config['FILETRANSFER']['PORT']:
@@ -118,7 +121,7 @@ class FileUploader(Process):
                     'username'    : self.config['MQTTPUBLISH']['USERNAME'],
                     'password'    : self.config['MQTTPUBLISH']['PASSWORD'],
                     'tls'         : self.config['MQTTPUBLISH']['TLS'],
-                    'cert_bypass' : self.config['MQTTPUBLISH']['CERT_BYPASS'],
+                    'cert_bypass' : self.config['MQTTPUBLISH'].get('CERT_BYPASS', True),
                 }
 
                 put_kwargs = {
@@ -135,7 +138,7 @@ class FileUploader(Process):
                     task.setFailed('Unknown filetransfer class: {0:s}'.format('paho_mqtt'))
                     return
 
-                client = client_class()
+                client = client_class(self.config)
 
                 if self.config['MQTTPUBLISH']['PORT']:
                     client.port = self.config['MQTTPUBLISH']['PORT']

@@ -152,7 +152,10 @@
         "PORT"                   : 0,
         "USERNAME"               : "",
         "PASSWORD"               : "",
+        "PRIVATE_KEY"            : "",
+        "PUBLIC_KEY"             : "",
         "TIMEOUT"                : 5.0,
+        "CERT_BYPASS"            : true,
         "REMOTE_IMAGE_NAME"      : "image.{0}",
         "REMOTE_IMAGE_FOLDER"        : "allsky",
         "REMOTE_METADATA_NAME"       : "latest_metadata.json",
@@ -166,7 +169,8 @@
         "UPLOAD_VIDEO"           : false,
         "UPLOAD_KEOGRAM"         : false,
         "UPLOAD_STARTRAIL"       : false,
-        "UPLOAD_ENDOFNIGHT"      : false
+        "UPLOAD_ENDOFNIGHT"      : false,
+        "LIBCURL_OPTIONS"        : {}
     },
 
     "MQTTPUBLISH" : {

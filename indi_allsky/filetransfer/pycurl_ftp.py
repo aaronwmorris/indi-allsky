@@ -1,6 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
@@ -30,14 +31,39 @@ class pycurl_ftp(GenericFileTransfer):
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs['password']
+        #cert_bypass = kwargs.get('cert_bypass')
 
         self.url = 'ftp://{0:s}:{1:d}'.format(hostname, self._port)
 
         self.client = pycurl.Curl()
         #self.client.setopt(pycurl.VERBOSE, 1)
+
+        # deprecated: will be replaced by PROTOCOLS_STR
+        self.client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_FTP)
+
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
 
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+
+
+        # Apply custom options from config
+        libcurl_opts = self.config['FILETRANSFER'].get('LIBCURL_OPTIONS', {})
+        for k, v in libcurl_opts.items():
+            # Not catching any exceptions here
+            # Options are validated in web config
+
+            if k.startswith('#'):
+                # comment
+                continue
+
+            if k.startswith('CURLOPT_'):
+                # remove CURLOPT_ prefix
+                k = k[8:]
+
+            curlopt = getattr(pycurl, k)
+            self.client.setopt(curlopt, v)
+
 
 
     def close(self):
@@ -72,7 +98,6 @@ class pycurl_ftp(GenericFileTransfer):
         f_localfile = io.open(str(local_file_p), 'rb')
 
         self.client.setopt(pycurl.URL, url)
-        self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
         #self.client.setopt(pycurl.PREQUOTE, pre_commands)
         self.client.setopt(pycurl.POSTQUOTE, post_commands)
         self.client.setopt(pycurl.UPLOAD, 1)
@@ -95,8 +120,12 @@ class pycurl_ftp(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
+                logger.error('Upload failed.  PycURL does not support relative path names')
+                raise TransferFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                #logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
+                pass
             else:
                 raise e from e
 

@@ -5,7 +5,8 @@ logger = logging.getLogger('indi_allsky')
 
 
 class GenericFileTransfer(object):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        self.config = args[0]
 
         self._port = 0
         self._timeout = 5.0

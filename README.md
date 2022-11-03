@@ -342,8 +342,12 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > PORT              | 0           | (int) Port for file transfer (null for protocol default) |
 | > USERNAME          |             | (str) Username for file tranfer |
 | > PASSWORD          |             | (str) Password for file tranfer |
+| > PRIVATE_KEY       |             | (str) Path to a private key file (ssh) |
+| > PUBLIC_KEY        |             | (str) Path to a public key file (ssh) |
 | > TIMEOUT           | 5.0         | (float) Timeout for file transfer before failing |
+| > CERT_BYPASS       | true        | (bool) Bypass certificate validation for file transfers |
 | > REMOTE_IMAGE_NAME | latest.{0}  | (str) Python template for remote file name of latest image, extension is automatically selected from IMAGE_FILE_TYPE |
+| > LIBCURL_OPTIONS   | {}          | (dict) Additional libcurl options for pycurl based methods |
 | > REMOTE_IMAGE_FOLDER        |      | (str) Remote folder to upload latest image |
 | > REMOTE_METADATA_NAME       | latest_metadata.json | (str) Filename for remote metadata upload |
 | > REMOTE_METADATA_FOLDER     |      | (str) Remote folder to upload metadata |
@@ -424,16 +428,15 @@ Common problems you might run into.
 
 indi-allsky supports several file transfer methods.  Additional file transfer methods are planned such as direct to YouTube uploads.
 
-| Protocol       | Class Name          | Port | Description |
-| -------------- | ------------------- | ---- | ----------- |
-| ftp            | pycurl_ftp          | 21   | FTP via pycurl |
-|                | python_ftp          | 21   | FTP via ftplib |
-| ftpes          | pycurl_ftpes        | 21   | FTPS (explicit) via pycurl |
-|                | python_ftpes        | 21   | FTPS (explicit) via ftplib |
-| ftps           | pycurl_ftps         | 990  | FTPS (implicit) via pycurl |
-| sftp           | pycurl_sftp         | 22   | SFTP via pycurl |
-|                | paramiko_sftp       | 22   | SFTP via paramiko |
-| webdav (https) | pycurl_webdav_https | 443  | HTTPS PUT via pycurl |
+https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
+
+| Protocol       | Port |
+| -------------- | ---- |
+| ftp            | 21   |
+| ftpes          | 21   |
+| ftps           | 990  |
+| sftp           | 22   |
+| webdav (https) | 443  |
 
 ## MQTT Publishing
 
