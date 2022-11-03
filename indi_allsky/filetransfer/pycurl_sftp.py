@@ -50,6 +50,11 @@ class pycurl_sftp(GenericFileTransfer):
         for k, v in libcurl_opts.items():
             # Not catching any exceptions here
             # Options are validated in web config
+
+            if k.startswith('CURLOPT_'):
+                # remove CURLOPT_ prefix
+                k = k[8:]
+
             curlopt = getattr(pycurl, k)
             self.client.setopt(curlopt, v)
 

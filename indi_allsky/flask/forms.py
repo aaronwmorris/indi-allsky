@@ -960,6 +960,12 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
         if not isinstance(v, (str, int)):
             raise ValidationError('Property {0:s} value must be a str or int'.format(k))
 
+
+        if k.startswith('CURLOPT_'):
+            # remove CURLOPT_ prefix
+            k = k[8:]
+
+
         try:
             curlopt = getattr(pycurl, k)
         except AttributeError:
