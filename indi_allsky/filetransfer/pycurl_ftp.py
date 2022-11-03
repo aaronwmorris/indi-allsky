@@ -1,6 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
@@ -119,8 +120,11 @@ class pycurl_ftp(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
+                logger.error('Upload failed.  PycURL does not support relative path names')
+                raise TransferFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                #logger.warning('PyCurl quoted commands encountered an error (safe to ignore)')
+                #logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
                 pass
             else:
                 raise e from e
