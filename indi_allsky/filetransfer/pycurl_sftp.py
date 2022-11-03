@@ -37,6 +37,8 @@ class pycurl_sftp(GenericFileTransfer):
         self.client = pycurl.Curl()
         #self.client.setopt(pycurl.VERBOSE, 1)
         self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
+
         #self.client.setopt(pycurl.SSH_KNOWNHOSTS, '/dev/null')
         #self.client.setopt(pycurl.SSH_KEYFUNCTION, self.accept_new_hosts)
 
@@ -79,7 +81,6 @@ class pycurl_sftp(GenericFileTransfer):
         f_localfile = io.open(str(local_file_p), 'rb')
 
         self.client.setopt(pycurl.URL, url)
-        self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
         #self.client.setopt(pycurl.PREQUOTE, pre_commands)
         self.client.setopt(pycurl.POSTQUOTE, post_commands)
         self.client.setopt(pycurl.UPLOAD, 1)

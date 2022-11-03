@@ -105,7 +105,7 @@ class FileUploader(Process):
                     task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['FILETRANSFER']['CLASSNAME']))
                     return
 
-                client = client_class()
+                client = client_class(self.config)
                 client.timeout = self.config['FILETRANSFER']['TIMEOUT']
 
                 if self.config['FILETRANSFER']['PORT']:
@@ -135,7 +135,7 @@ class FileUploader(Process):
                     task.setFailed('Unknown filetransfer class: {0:s}'.format('paho_mqtt'))
                     return
 
-                client = client_class()
+                client = client_class(self.config)
 
                 if self.config['MQTTPUBLISH']['PORT']:
                     client.port = self.config['MQTTPUBLISH']['PORT']
