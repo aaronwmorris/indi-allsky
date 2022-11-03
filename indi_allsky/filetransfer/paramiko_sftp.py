@@ -66,6 +66,10 @@ class paramiko_sftp(GenericFileTransfer):
         remote_file_p = Path(remote_file)
 
 
+        if str(remote_file_p).startswith('~'):
+            logger.warning('paramiko does not support ~ for remote file paths')
+
+
         # Try to create remote folder
         dir_list = list(remote_file_p.parents)
         dir_list.reverse()  # need root dirs first
