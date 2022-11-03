@@ -951,17 +951,31 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
         raise ValidationError(str(e))
 
 
+    client = pycurl.Curl()  # test client
+
     for k, v in json_data.items():
         if not isinstance(k, str):
             raise ValidationError('Property names must be a str')
 
-        if not isinstance(v, (str, int, bool)):
-            raise ValidationError('Property {0:s} value must be a str, int, or boolean'.format(k))
+        if not isinstance(v, (str, int)):
+            raise ValidationError('Property {0:s} value must be a str or int'.format(k))
 
         try:
-            getattr(pycurl, k)
+            curlopt = getattr(pycurl, k)
         except AttributeError:
             raise ValidationError('Invalid libcurl property: {0:s}'.format(k))
+
+        try:
+            client.setopt(curlopt, v)
+        except pycurl.error as e:
+            rc, msg = e.args
+
+            if rc in [pycurl.E_UNKNOWN_OPTION]:
+                raise ValidationError('Unknown libcurl option {0:s}'.format(k))
+            else:
+                raise ValidationError('Error: {0:s}'.format(msg))
+        except TypeError as e:
+            raise ValidationError('TypeError: {0:s} -  {1:s}'.format(k, str(e)))
 
 
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
