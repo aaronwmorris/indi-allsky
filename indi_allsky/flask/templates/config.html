@@ -1231,6 +1231,28 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PRIVATE_KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__PRIVATE_KEY(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PRIVATE_KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Private key for file transfer (SSH)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__PUBLIC_KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__PUBLIC_KEY(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__PUBLIC_KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Public key for file transfer (SSH)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__TIMEOUT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1694,6 +1716,8 @@ const field_names = [
     'FILETRANSFER__PORT',
     'FILETRANSFER__USERNAME',
     'FILETRANSFER__PASSWORD',
+    'FILETRANSFER__PRIVATE_KEY',
+    'FILETRANSFER__PUBLIC_KEY',
     'FILETRANSFER__TIMEOUT',
     'FILETRANSFER__REMOTE_IMAGE_NAME',
     'FILETRANSFER__REMOTE_IMAGE_FOLDER',

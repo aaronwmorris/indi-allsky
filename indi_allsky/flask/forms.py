@@ -874,6 +874,56 @@ def FILETRANSFER__TIMEOUT_validator(form, field):
         raise ValidationError('Timeout must be 60 or less')
 
 
+def FILETRANSFER__PRIVATE_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    file_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+
+    if not re.search(file_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
+    file_name_p = Path(field.data)
+
+    try:
+        if not file_name_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not file_name_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(file_name_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def FILETRANSFER__PUBLIC_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    file_name_regex = r'^[a-zA-Z0-9_\.\-]+$'
+
+    if not re.search(file_name_regex, field.data):
+        raise ValidationError('Invalid filename syntax')
+
+
+    file_name_p = Path(field.data)
+
+    try:
+        if not file_name_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not file_name_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(file_name_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
 def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
     image_name_regex = r'^[a-zA-Z0-9_\.\-\{\}\:\%]+$'
 
@@ -1265,6 +1315,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
     FILETRANSFER__USERNAME           = StringField('Username', validators=[FILETRANSFER__USERNAME_validator])
     FILETRANSFER__PASSWORD           = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[FILETRANSFER__PASSWORD_validator])
+    FILETRANSFER__PRIVATE_KEY        = StringField('Private Key', validators=[FILETRANSFER__PRIVATE_KEY_validator])
+    FILETRANSFER__PUBLIC_KEY         = StringField('Public Key', validators=[FILETRANSFER__PUBLIC_KEY_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__CERT_BYPASS        = BooleanField('Disable Certificate Validation')
     FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])

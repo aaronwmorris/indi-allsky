@@ -152,6 +152,8 @@
         "PORT"                   : 0,
         "USERNAME"               : "",
         "PASSWORD"               : "",
+        "PRIVATE_KEY"            : "",
+        "PUBLIC_KEY"             : "",
         "TIMEOUT"                : 5.0,
         "CERT_BYPASS"            : true,
         "REMOTE_IMAGE_NAME"      : "image.{0}",
