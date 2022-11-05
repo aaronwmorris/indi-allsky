@@ -188,6 +188,8 @@ echo "indi-allsky supports the following camera interfaces."
 echo
 echo "Note:  libcamera is generally only available on ARM SoCs like Raspberry Pi"
 echo
+
+# whiptail might not be installed yet
 PS3="Select a camera interface: "
 select camera_interface in indi libcamera_imx477; do
     if [ -n "$camera_interface" ]; then
