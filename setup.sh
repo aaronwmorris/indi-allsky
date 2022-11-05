@@ -11,7 +11,7 @@ export PATH
 #### config ####
 INDI_ALLSKY_VERSION="20221023.0"
 INDI_DRIVER_PATH="/usr/bin"
-INDISEVER_SERVICE_NAME="indiserver"
+INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
@@ -140,7 +140,7 @@ echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
-echo "INDISERVER_SERVICE_NAME: $INDISEVER_SERVICE_NAME"
+echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
 echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
@@ -1056,10 +1056,10 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
 fi
 
 
-if systemctl -q is-enabled "${INDISEVER_SERVICE_NAME}" 2>/dev/null; then
+if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="no"
-elif systemctl --user -q is-enabled "${INDISEVER_SERVICE_NAME}" 2>/dev/null; then
+elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # user
     if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 8 60 --defaultno; then
         INSTALL_INDISERVER="true"
@@ -1145,8 +1145,8 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
-    cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
+    cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
+    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
 else
     echo
@@ -1196,7 +1196,7 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 echo "**** Enabling services ****"
 sudo loginctl enable-linger $USER
 systemctl --user daemon-reload
-systemctl --user enable ${INDISEVER_SERVICE_NAME}.service
+systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
 systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
@@ -1315,7 +1315,7 @@ sed \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
  -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
- -e "s|%INDISEVER_SERVICE_NAME%|$INDISEVER_SERVICE_NAME|g" \
+ -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  "${ALLSKY_DIRECTORY}/flask.json_template" > $TMP4
