@@ -532,6 +532,9 @@ class ImageWorker(Process):
             #logger.warning('Metadata uploading disabled')
             return
 
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
+            logger.warning('Metadata uploading disabled when image upload is disabled')
+            return
 
         ### Only uploading metadata if image uploading is enabled
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
