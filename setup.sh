@@ -22,6 +22,7 @@ DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 DB_URI_DEFAULT="sqlite:///${DB_FILE}"
 INSTALL_INDI="true"
 INSTALL_LIBCAMERA="false"
+INSTALL_INDISERVER="true"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 DPC_STRENGTH="0"
@@ -35,7 +36,6 @@ DPC_STRENGTH="0"
 # 1 = Normal correction (default)
 # 2 = Strong correction
 ###
-
 
 
 function catch_error() {
@@ -1056,11 +1056,17 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
 fi
 
 
-
-# get list of drivers
-cd "$INDI_DRIVER_PATH"
-INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
-cd "$OLDPWD"
+if systemctl -q is-enabled "${INDISEVER_SERVICE_NAME}" 2>/dev/null; then
+    # system
+    INSTALL_INDISERVER="no"
+elif systemctl --user -q is-enabled "${INDISEVER_SERVICE_NAME}" 2>/dev/null; then
+    # user
+    if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 8 60 --defaultno; then
+        INSTALL_INDISERVER="true"
+    else
+        INSTALL_INDISERVER="false"
+    fi
+fi
 
 
 # find script directory for service setup
@@ -1098,7 +1104,14 @@ pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
-if [ "$CAMERA_INTERFACE" == "indi" ]; then
+
+# get list of drivers
+cd "$INDI_DRIVER_PATH"
+INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
+cd "$OLDPWD"
+
+
+if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     echo
     echo
     PS3="Select an INDI driver: "
@@ -1119,20 +1132,28 @@ fi
 # create users systemd folder
 [[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
 
-echo
-echo
-echo "**** Setting up indiserver service ****"
-TMP1=$(mktemp)
-sed \
- -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
- -e "s|%INDISERVER_USER%|$USER|g" \
- -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
- ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
+
+if [ "$INSTALL_INDISERVER" == "true" ]; then
+    echo
+    echo
+    echo "**** Setting up indiserver service ****"
+    TMP1=$(mktemp)
+    sed \
+     -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
+     -e "s|%INDISERVER_USER%|$USER|g" \
+     -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
+     ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
 
 
-cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
-chmod 644 "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
-[[ -f "$TMP1" ]] && rm -f "$TMP1"
+    cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
+    chmod 644 "${HOME}/.config/systemd/user/${INDISEVER_SERVICE_NAME}.service"
+    [[ -f "$TMP1" ]] && rm -f "$TMP1"
+else
+    echo
+    echo
+    echo
+    echo "! Bypassing indiserver setup"
+fi
 
 
 echo "**** Setting up indi-allsky service ****"
