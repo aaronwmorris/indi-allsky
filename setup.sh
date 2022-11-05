@@ -1109,21 +1109,18 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 # get list of drivers
 INDI_DRIVERS=""
 cd "$INDI_DRIVER_PATH"
-    for i in indi_*_ccd indi_rpicam*; do
-        INDI_DRIVERS="$INDI_DRIVERS $i"
-    done
+for I in indi_*_ccd indi_rpicam*; do
+    INDI_DRIVERS="$INDI_DRIVERS $I $I OFF "
+done
 cd "$OLDPWD"
 
+#echo $INDI_DRIVERS
 
+
+CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
-    echo
-    echo
-    PS3="Select an INDI driver: "
-    select indi_driver_path in $INDI_DRIVERS; do
-        if [ -f "${INDI_DRIVER_PATH}/${indi_driver_path}" ]; then
-            CCD_DRIVER=$indi_driver_path
-            break
-        fi
+    while [ -z "$CCD_DRIVER" ]; do
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 20 40 13 $INDI_DRIVERS 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything
