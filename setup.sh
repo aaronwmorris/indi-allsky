@@ -1062,7 +1062,7 @@ if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     INSTALL_INDISERVER="no"
 elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # user
-    if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 8 60 --defaultno; then
+    if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 0 0 --defaultno; then
         INSTALL_INDISERVER="true"
     else
         INSTALL_INDISERVER="false"
@@ -1120,7 +1120,7 @@ cd "$OLDPWD"
 CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "$CCD_DRIVER" ]; do
-        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 20 40 13 $INDI_DRIVERS 3>&1 1>&2 2>&3)
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 $INDI_DRIVERS 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything

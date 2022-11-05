@@ -24,7 +24,7 @@ cd "$OLDPWD"
 
 CCD_DRIVER=""
 while [ -z "$CCD_DRIVER" ]; do
-    CCD_DRIVER=$(whiptail --title "Camera Driver" --notags --nocancel --radiolist "Press space to select" 20 40 13 $INDI_DRIVERS 3>&1 1>&2 2>&3)
+    CCD_DRIVER=$(whiptail --title "Camera Driver" --notags --nocancel --radiolist "Press space to select" 0 0 0 $INDI_DRIVERS 3>&1 1>&2 2>&3)
 done
 echo $CCD_DRIVER
 
