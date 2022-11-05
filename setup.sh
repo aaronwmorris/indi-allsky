@@ -3,6 +3,7 @@
 #set -x  # command tracing
 #set -o errexit  # replace by trapping ERR
 #set -o nounset  # problems with python virtualenvs
+shopt -s nullglob
 
 PATH=/usr/bin:/bin
 export PATH
@@ -1106,8 +1107,11 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 # get list of drivers
+INDI_DRIVERS=""
 cd "$INDI_DRIVER_PATH"
-INDI_DRIVERS=$(ls indi_*_ccd indi_rpicam 2>/dev/null || true)
+    for i in indi_*_ccd indi_rpicam*; do
+        INDI_DRIVERS="$INDI_DRIVERS $i"
+    done
 cd "$OLDPWD"
 
 
