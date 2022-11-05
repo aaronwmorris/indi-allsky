@@ -1528,7 +1528,7 @@ class SystemInfoView(TemplateView):
 
         context['net_list'] = self.getNetworkIps()
 
-        context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISEVER_SERVICE_NAME'])
+        context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
         context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
 
@@ -1774,11 +1774,11 @@ class AjaxSystemInfoView(BaseView):
         service = request.json['SERVICE_HIDDEN']
         command = request.json['COMMAND_HIDDEN']
 
-        if service == app.config['INDISEVER_SERVICE_NAME']:
+        if service == app.config['INDISERVER_SERVICE_NAME']:
             if command == 'stop':
-                r = self.stopSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
+                r = self.stopSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             elif command == 'start':
-                r = self.startSystemdUnit(app.config['INDISEVER_SERVICE_NAME'])
+                r = self.startSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
