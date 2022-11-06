@@ -277,10 +277,6 @@ class IndiAllSkyDarks(object):
         ### Open file
         if filename_p.suffix in ['.fit']:
             hdulist = fits.open(filename_p)
-
-            if not hdulist[0].header.get('IMAGETYP'):
-                # Set this if not detected
-                hdulist[0].header['IMAGETYP'] = 'Dark Frame'
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
@@ -870,7 +866,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         dark_images = ccdproc.ImageFileCollection(tmp_fit_dir_p)
 
-        cal_darks = dark_images.files_filtered(imagetyp='Dark Frame', exptime=exposure, include_path=True)
+        cal_darks = dark_images.files_filtered(exptime=exposure, include_path=True)
 
 
         start = time.time()
