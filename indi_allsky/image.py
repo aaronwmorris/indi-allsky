@@ -229,7 +229,6 @@ class ImageWorker(Process):
                 hdulist = fits.open(filename_p)
 
                 #logger.info('HDU Header = %s', pformat(hdulist[0].header))
-                image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
@@ -239,7 +238,6 @@ class ImageWorker(Process):
 
                 scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
-                image_type = 'Light Frame'
                 image_bitpix = 8
                 image_bayerpat = None
             elif filename_p.suffix in ['.png']:
@@ -247,7 +245,6 @@ class ImageWorker(Process):
 
                 scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
-                image_type = 'Light Frame'
                 image_bitpix = 8
                 image_bayerpat = None
             elif filename_p.suffix in ['.dng']:
@@ -263,7 +260,6 @@ class ImageWorker(Process):
                 hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
-                hdulist[0].header['IMAGETYP'] = 'Light Frame'
                 hdulist[0].header['EXPTIME'] = float(exposure)
                 #hdulist[0].header['XBINNING'] = 1
                 #hdulist[0].header['YBINNING'] = 1
@@ -273,14 +269,13 @@ class ImageWorker(Process):
                     hdulist[0].header['XBAYROFF'] = 0
                     hdulist[0].header['YBAYROFF'] = 0
 
-                image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
 
 
             filename_p.unlink()  # no longer need the original file
-            logger.info('Detected image type: %s, bits: %d, cfa: %s', image_type, image_bitpix, str(image_bayerpat))
+            logger.info('Detected image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
 

@@ -277,6 +277,10 @@ class IndiAllSkyDarks(object):
         ### Open file
         if filename_p.suffix in ['.fit']:
             hdulist = fits.open(filename_p)
+
+            if not hdulist[0].header.get('IMAGETYP'):
+                # Set this if not detected
+                hdulist[0].header['IMAGETYP'] = 'Dark Frame'
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
