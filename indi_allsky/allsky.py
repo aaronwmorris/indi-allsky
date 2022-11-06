@@ -196,6 +196,7 @@ class IndiAllSky(object):
 
         # CFA/Debayer setting
         if not self.config.get('CFA_PATTERN'):
+            # this is not always populated
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
 
@@ -433,6 +434,7 @@ class IndiAllSky(object):
 
         # CFA/Debayer setting
         if not self.config.get('CFA_PATTERN'):
+            # this is not always populated
             self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
 
         logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
