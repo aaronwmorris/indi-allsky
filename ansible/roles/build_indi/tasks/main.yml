@@ -78,17 +78,29 @@
     - always
 
 
-- include_tasks: "common/main_pre.yml"
+- include_tasks:
+    file: "common/main_pre.yml"
+    apply:
+      tags:
+        - common
   tags:
     - common
 
 
-- include_tasks: "indi_core/main.yml"
+- include_tasks:
+    file: "indi_core/main.yml"
+    apply:
+      tags:
+        - indi_core
   tags:
     - indi_core
 
 
-- include_tasks: "indi_3rdparty/main.yml"
+- include_tasks:
+    file: "indi_3rdparty/main.yml"
+    apply:
+      tags:
+        - indi_3rdparty
   tags:
     - indi_3rdparty
 
