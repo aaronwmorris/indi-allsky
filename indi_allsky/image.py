@@ -229,8 +229,8 @@ class ImageWorker(Process):
                 hdulist = fits.open(filename_p)
 
                 #logger.info('HDU Header = %s', pformat(hdulist[0].header))
-                image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']
+                image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
                 scidata = hdulist[0].data
             elif filename_p.suffix in ['.jpg', '.jpeg']:
@@ -238,15 +238,15 @@ class ImageWorker(Process):
 
                 scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
-                image_type = 'Light Frame'
                 image_bitpix = 8
+                image_bayerpat = None
             elif filename_p.suffix in ['.png']:
                 self.indi_rgb = False
 
                 scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
-                image_type = 'Light Frame'
                 image_bitpix = 8
+                image_bayerpat = None
             elif filename_p.suffix in ['.dng']:
                 if not rawpy:
                     filename_p.unlink()
@@ -260,7 +260,6 @@ class ImageWorker(Process):
                 hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
-                hdulist[0].header['IMAGETYP'] = 'Light Frame'
                 hdulist[0].header['EXPTIME'] = float(exposure)
                 #hdulist[0].header['XBINNING'] = 1
                 #hdulist[0].header['YBINNING'] = 1
@@ -270,13 +269,13 @@ class ImageWorker(Process):
                     hdulist[0].header['XBAYROFF'] = 0
                     hdulist[0].header['YBAYROFF'] = 0
 
-                image_type = hdulist[0].header['IMAGETYP']
                 image_bitpix = hdulist[0].header['BITPIX']
+                image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
 
 
             filename_p.unlink()  # no longer need the original file
-            logger.info('Detected image type: %s, bits: %d', image_type, image_bitpix)
+            logger.info('Detected image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
 
@@ -306,7 +305,7 @@ class ImageWorker(Process):
                 self.sqm_value = self.calculateSqm(scidata, exposure)
 
                 # debayer
-                scidata = self.debayer(scidata)
+                scidata = self.debayer(scidata, image_bayerpat)
 
             else:
                 # data is probably RGB
@@ -1025,16 +1024,22 @@ class ImageWorker(Process):
         return scidata_calibrated
 
 
-    def debayer(self, scidata):
-        if not self.config['CFA_PATTERN']:
+    def debayer(self, scidata, image_bayerpat):
+        # sanity check
+        if not len(scidata.shape) == 2:
+            # color, already debayered
             return scidata
 
+        if not image_bayerpat:
+            return scidata
+
+
         if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
         elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[self.config['CFA_PATTERN']]
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
         else:
-            debayer_algorithm = self.__cfa_bgr_map[self.config['CFA_PATTERN']]
+            debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
 
         scidata_bgr = cv2.cvtColor(scidata, debayer_algorithm)
 

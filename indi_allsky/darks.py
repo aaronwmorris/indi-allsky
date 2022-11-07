@@ -866,7 +866,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         dark_images = ccdproc.ImageFileCollection(tmp_fit_dir_p)
 
-        cal_darks = dark_images.files_filtered(imagetyp='Dark Frame', exptime=exposure, include_path=True)
+        cal_darks = dark_images.files_filtered(exptime=exposure, include_path=True)
 
 
         start = time.time()
