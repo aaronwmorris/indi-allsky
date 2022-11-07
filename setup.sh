@@ -186,7 +186,8 @@ echo
 echo
 echo "indi-allsky supports the following camera interfaces."
 echo
-echo "Note:  libcamera is generally only available on ARM SoCs like Raspberry Pi"
+echo "indi: For astro/planetary cameras normally connected via USB"
+echo "libcamera: supports cameras connected via CSI interface on Raspberry Pi SoCs"
 echo
 
 # whiptail might not be installed yet
