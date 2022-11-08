@@ -19,6 +19,8 @@ obs = ephem.Observer()
 obs.lon = math.radians(LONGITUDE)
 obs.lat = math.radians(LATITUDE)
 
+#obs.elevation = -6371000  # center of earth
+#obs.pressure = 0  # disable atmospheric diffraction
 
 sun = ephem.Sun()
 moon = ephem.Moon()
@@ -26,8 +28,8 @@ moon = ephem.Moon()
 
 utcnow = datetime.utcnow() - timedelta(days=30)
 
-for x in range(20000):
-    utcnow = utcnow + timedelta(hours=2)
+for x in range(40000):
+    utcnow = utcnow + timedelta(hours=1)
 
     obs.date = utcnow
 
@@ -41,7 +43,7 @@ for x in range(20000):
     # separation of 1-3 degrees means a possible eclipse
     sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
-    if sun_moon_sep < 0.8:
+    if sun_moon_sep < 1.25:
         # Lunar
 
         if sun_alt > -6:
@@ -49,7 +51,7 @@ for x in range(20000):
             continue
 
         logger.info('Lunar: %s, separation: %0.3f, phase %0.2f', utcnow, sun_moon_sep, moon_phase)
-    elif sun_moon_sep > 179.5:
+    if sun_moon_sep > 179.0:
         # Solar
 
         if sun_alt < -6:
