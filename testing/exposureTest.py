@@ -97,7 +97,7 @@ INDI_CONFIG = OrderedDict({
 #    "PROPERTIES" : {},
 #    "TEXT" : {
 #        "ONLINE_PATH": {
-#            "URL_PATH": "rtsp://username:password@10.0.0.15:554/h264Preview_01_main"
+#            "URL_PATH": "http://10.11.12.13/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=abcdefg123456789&user=username&password=password"
 #        }
 #    },
 #    "SWITCHES" : {
@@ -105,12 +105,15 @@ INDI_CONFIG = OrderedDict({
 #            "on": ["IP Camera"]
 #        },
 #        "ONLINE_PROTOCOL": {
-#            "on": ["CUSTOM"],
-#            "off": ["HTTP"]
+#            "on": ["HTTP"],
+#            "off": ["CUSTOM"],
 #        },
 #    }
 #})
 
+### not working
+#            "#URL_PATH": "rtsp://username:password@10.11.12.13:554/h264Preview_01_main"
+#            "#URL_PATH": "rtmp://10.11.12.13:1935/bcs/channel0_main.bcs?channel=0&stream=0&user=username&password=password"
 
 
 logger = logging.getLogger(__name__)
