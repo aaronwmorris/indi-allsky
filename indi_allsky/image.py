@@ -1180,7 +1180,7 @@ class ImageWorker(Process):
 
 
         # Add eclipse indicator
-        if sun_moon_sep < 1.0 and self.night_v.value:
+        if sun_moon_sep < 1.5 and self.night_v.value:
             # Lunar eclipse (earth's penumbra is large)
             self.drawText(
                 data_bytes,
@@ -1191,7 +1191,7 @@ class ImageWorker(Process):
 
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
 
-        elif sun_moon_sep > 179.5 and not self.night_v.value:
+        elif sun_moon_sep > 179.1 and not self.night_v.value:
             # Solar eclipse
             self.drawText(
                 data_bytes,
