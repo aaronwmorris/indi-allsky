@@ -253,7 +253,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > DAY > GAIN        |             | (int) Gain/ISO for day time |
 | > DAY > BINNING     |             | (int) Bin mode for day time |
 | INDI_CONFIG_DEFAULTS |            | (dict) Indi default configuration parameters |
-| > PROPERTIES        |             | (dict) Indi properties |
+| > PROPERTIES        |             | (dict) Indi properties (number) |
+| > TEXT              |             | (dict) Indi properties (text) |
 | > SWITCHES          |             | (dict) Indi switches |
 | CCD_EXPOSURE_MAX    | 15.0        | (float) Maximum exposure time |
 | CCD_EXPOSURE_MIN    | Auto detected | (float) Minimum exposure time |

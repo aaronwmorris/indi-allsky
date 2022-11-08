@@ -22,8 +22,9 @@
     },
 
     "INDI_CONFIG_DEFAULTS" : {
+        "SWITCHES" : {},
         "PROPERTIES" : {},
-        "SWITCHES" : {}
+        "TEXT" : {}
     },
 
     "CCD_EXPOSURE_MAX"     : 15.00000,

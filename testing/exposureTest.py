@@ -47,9 +47,12 @@ CCD_BINMODE = 1
 #CCD_BINMODE = 1
 
 INDI_CONFIG = OrderedDict({
+    "SWITCHES" : {},
     "PROPERTIES" : {},
-    "SWITCHES" : {}
+    "TEXT" : {},
 })
+
+
 
 ### Debugging
 #INDI_CONFIG = OrderedDict({
@@ -86,6 +89,26 @@ INDI_CONFIG = OrderedDict({
 #        },
 #    },
 #    "SWITCHES" : {}
+#})
+
+
+### webcam
+#INDI_CONFIG = OrderedDict({
+#    "PROPERTIES" : {},
+#    "TEXT" : {
+#        "ONLINE_PATH": {
+#            "URL_PATH": "rtsp://username:password@10.0.0.15:554/h264Preview_01_main"
+#        }
+#    },
+#    "SWITCHES" : {
+#        "CAPTURE_DEVICE": {
+#            "on": ["IP Camera"]
+#        },
+#        "ONLINE_PROTOCOL": {
+#            "on": ["CUSTOM"],
+#            "off": ["HTTP"]
+#        },
+#    }
 #})
 
 
@@ -212,15 +235,21 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureDevice(self, device, indi_config):
+        ### Configure Device Switches
+        for k, v in indi_config.get('SWITCHES', {}).items():
+            logger.info('Setting switch %s', k)
+            self.set_switch(device, k, on_switches=v.get('on', []), off_switches=v.get('off', []))
+
         ### Configure Device Properties
         for k, v in indi_config.get('PROPERTIES', {}).items():
             logger.info('Setting property %s', k)
             self.set_number(device, k, v)
 
-        ### Configure Device Switches
-        for k, v in indi_config.get('SWITCHES', {}).items():
-            logger.info('Setting switch %s', k)
-            self.set_switch(device, k, on_switches=v['on'], off_switches=v.get('off', []))
+        ### Configure Device Text
+        for k, v in indi_config.get('TEXT', {}).items():
+            logger.info('Setting TEXT %s', k)
+            self.set_text(device, k, v)
+
 
         # Sleep after configuration
         time.sleep(1.0)
@@ -392,6 +421,18 @@ class IndiClient(PyIndi.BaseClient):
             c[index].setState(new_state)
 
         self.sendNewSwitch(c)
+
+        return c
+
+
+    def set_text(self, device, control_name, values, sync=True, timeout=None):
+        c = self.get_control(device, control_name, 'text')
+        for control_name, index in self.__map_indexes(c, values.keys()).items():
+            c[index].text = values[control_name]
+        self.sendNewText(c)
+
+        if sync:
+            self.__wait_for_ctl_statuses(c, timeout=timeout)
 
         return c
 
