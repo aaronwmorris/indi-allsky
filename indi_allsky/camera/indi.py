@@ -434,15 +434,21 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureDevice(self, device, indi_config, sleep=1.0):
-        ### Configure Device Properties
-        for k, v in indi_config.get('PROPERTIES', {}).items():
-            logger.info('Setting property %s', k)
-            self.set_number(device, k, v)
-
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)
             self.set_switch(device, k, on_switches=v.get('on', []), off_switches=v.get('off', []))
+
+        ### Configure Device Properties
+        for k, v in indi_config.get('PROPERTIES', {}).items():
+            logger.info('Setting property (number) %s', k)
+            self.set_number(device, k, v)
+
+        ### Configure Device Text
+        for k, v in indi_config.get('TEXT', {}).items():
+            logger.info('Setting property (text) %s', k)
+            self.set_text(device, k, v)
+
 
         # Sleep after configuration
         time.sleep(sleep)

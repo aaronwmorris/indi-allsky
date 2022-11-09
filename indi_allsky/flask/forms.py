@@ -1086,26 +1086,29 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
             # comment
             continue
 
-        if k not in ('PROPERTIES', 'SWITCHES'):
-            raise ValidationError('Only PROPERTIES and SWITCHES attributes allowed')
-
-    try:
-        json_data['PROPERTIES']
-    except KeyError:
-        raise ValidationError('PROPERTIES attribute missing')
-
-    try:
-        json_data['SWITCHES']
-    except KeyError:
-        raise ValidationError('SWITCHES attribute missing')
+        if k not in ('PROPERTIES', 'TEXT', 'SWITCHES'):
+            raise ValidationError('Only PROPERTIES, TEXT, and SWITCHES attributes allowed')
 
 
-    for k, v in json_data['PROPERTIES'].items():
+    for k, v in json_data.get('PROPERTIES', {}).items():
         if not isinstance(v, dict):
-            raise ValidationError('Property {0:s} value must be a dict'.format(k))
+            raise ValidationError('Number property {0:s} value must be a dict'.format(k))
 
+        for k2 in v.keys():
+            if k2.startswith('#'):
+                # comment
+                continue
 
-    for k, v in json_data['SWITCHES'].items():
+    for k, v in json_data.get('TEXT', {}).items():
+        if not isinstance(v, dict):
+            raise ValidationError('Text property {0:s} value must be a dict'.format(k))
+
+        for k2 in v.keys():
+            if k2.startswith('#'):
+                # comment
+                continue
+
+    for k, v in json_data.get('SWITCHES', {}).items():
         if not isinstance(v, dict):
             raise ValidationError('Switch {0:s} value must be a dict'.format(k))
 
@@ -1114,7 +1117,7 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
                 # comment
                 continue
 
-            if k2 not in ('on', 'off'):  # #indicates comment
+            if k2 not in ('on', 'off'):
                 raise ValidationError('Invalid switch configuration {0:s}'.format(k2))
 
             if not isinstance(v[k2], list):
