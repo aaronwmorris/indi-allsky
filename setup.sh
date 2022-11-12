@@ -799,8 +799,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
             libqhy \
             indi-playerone \
             libplayerone \
-            indi-sv305 \
-            libsv305 \
+            indi-svbony \
+            libsvbony \
             libaltaircam \
             libmallincam \
             libmicam \
@@ -920,8 +920,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
             libqhy \
             indi-playerone \
             libplayerone \
-            indi-sv305 \
-            libsv305 \
+            indi-svbony \
+            libsvbony \
             libaltaircam \
             libmallincam \
             libmicam \
@@ -1030,8 +1030,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
             libqhy \
             indi-playerone \
             libplayerone \
-            indi-sv305 \
-            libsv305 \
             libaltaircam \
             libmallincam \
             libmicam \
@@ -1040,6 +1038,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
             libtoupcam \
             indi-gphoto \
             indi-sx
+
+            # no packages for 18.04
+            #indi-sv305 \
+            #libsv305 \
     fi
 
 else
