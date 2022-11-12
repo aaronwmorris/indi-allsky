@@ -515,7 +515,8 @@ class IndiClient(PyIndi.BaseClient):
             gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
             index = gain_index_dict['Gain']
         elif indi_exec in [
-            'indi_sv305_ccd',
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
@@ -569,7 +570,8 @@ class IndiClient(PyIndi.BaseClient):
                 },
             }
         elif indi_exec in [
-            'indi_sv305_ccd',
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
@@ -634,7 +636,8 @@ class IndiClient(PyIndi.BaseClient):
         if indi_exec in [
             'indi_asi_ccd',
             'indi_asi_single_ccd',
-            'indi_sv305_ccd',
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
             'indi_qhy_ccd',
             'indi_toupcam_ccd',
             'indi_altair_ccd',
