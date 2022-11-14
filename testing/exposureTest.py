@@ -634,8 +634,15 @@ class IndiExposureTest(object):
             logger.info('Exposure state: %s', exposure_state)
 
 
-            for x in range(100):
+            # Loop to run for 7 seconds (prime number)
+            loop_end = time.time() + 7
+
+            while True:
+                time.sleep(0.05)
+
                 now = time.time()
+                if now >= loop_end:
+                    break
 
                 last_camera_ready = camera_ready
                 camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
@@ -679,8 +686,6 @@ class IndiExposureTest(object):
 
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
-
-                time.sleep(0.05)
 
             ### End Non-blocking mode ###
 
