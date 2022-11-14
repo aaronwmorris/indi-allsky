@@ -392,6 +392,9 @@ class IndiAllSky(object):
         self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
         self.indiclient.setCcdFrameType('FRAME_LIGHT')  # default frame type is light
 
+        # save config to defaults (disabled)
+        #self.indiclient.saveCcdConfig()
+
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info

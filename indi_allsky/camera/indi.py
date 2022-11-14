@@ -266,6 +266,18 @@ class IndiClient(PyIndi.BaseClient):
         self.disableDebug(self._ccd_device)
 
 
+    def saveCcdConfig(self):
+        save_config = {
+            "SWITCHES" : {
+                "CONFIG_PROCESS" : {
+                    "on"  : ['CONFIG_SAVE'],
+                }
+            }
+        }
+
+        self.configureDevice(self._ccd_device, save_config)
+
+
     def resetCcdFrame(self):
         reset_config = {
             "SWITCHES" : {

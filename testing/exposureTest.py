@@ -366,6 +366,17 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(ccdDevice, binning_config)
 
 
+    def saveConfig(self, ccd_device):
+        save_config = {
+            "SWITCHES" : {
+                "CONFIG_PROCESS" : {
+                    "on"  : ['CONFIG_SAVE'],
+                }
+            }
+        }
+
+        self.configureDevice(ccd_device, save_config)
+
 
     def setFrameType(self, ccd_device, frame_type):
         frame_config = {
@@ -576,6 +587,9 @@ class IndiExposureTest(object):
         self.indiclient.configureDevice(ccdDevice, INDI_CONFIG)
 
         self.indiclient.setFrameType(ccdDevice, 'FRAME_LIGHT')  # default frame type is light
+
+        #self.indiclient.saveConfig(ccdDevice)
+
         self.indiclient.setCcdGain(ccdDevice, CCD_GAIN[0])
         self.current_gain = CCD_GAIN[0]
 
