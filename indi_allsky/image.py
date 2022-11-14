@@ -284,9 +284,6 @@ class ImageWorker(Process):
 
             image_bit_depth = self.detectBitDepth(scidata)
 
-            image_height, image_width = scidata.shape[:2]
-            logger.info('Image: %d x %d', image_width, image_height)
-
 
             if len(scidata.shape) == 2:
                 # gray scale or bayered
@@ -327,6 +324,10 @@ class ImageWorker(Process):
                 self.sqm_value = self.calculateSqm(scidata, exposure)
 
                 calibrated = False
+
+
+            image_height, image_width = scidata.shape[:2]
+            logger.info('Image: %d x %d', image_width, image_height)
 
 
             ### IMAGE IS CALIBRATED ###
