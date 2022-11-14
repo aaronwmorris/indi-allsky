@@ -748,11 +748,15 @@ class IndiAllSky(object):
                 continue
 
 
-            # every ~10 seconds end this loop and run the code above
-            for x in range(200):
+            # Loop to run for 11 seconds (prime number)
+            loop_end = time.time() + 11
+
+            while True:
                 time.sleep(0.05)
 
                 now = time.time()
+                if now >= loop_end:
+                    break
 
                 last_camera_ready = camera_ready
                 camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
