@@ -392,6 +392,9 @@ class IndiAllSky(object):
         self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
         self.indiclient.setCcdFrameType('FRAME_LIGHT')  # default frame type is light
 
+        # save config to defaults (disabled)
+        #self.indiclient.saveCcdConfig()
+
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
@@ -748,11 +751,15 @@ class IndiAllSky(object):
                 continue
 
 
-            # every ~10 seconds end this loop and run the code above
-            for x in range(200):
+            # Loop to run for 11 seconds (prime number)
+            loop_end = time.time() + 11
+
+            while True:
                 time.sleep(0.05)
 
                 now = time.time()
+                if now >= loop_end:
+                    break
 
                 last_camera_ready = camera_ready
                 camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()

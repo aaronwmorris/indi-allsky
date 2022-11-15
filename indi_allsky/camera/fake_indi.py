@@ -119,6 +119,11 @@ class FakeIndiClient(object):
         self.disableDebug(self._ccd_device)
 
 
+    def saveCcdConfig(self):
+        # does nothing
+        pass
+
+
     def resetCcdFrame(self, *args, **kwargs):
         # does nothing
         pass

@@ -366,6 +366,17 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(ccdDevice, binning_config)
 
 
+    def saveConfig(self, ccd_device):
+        save_config = {
+            "SWITCHES" : {
+                "CONFIG_PROCESS" : {
+                    "on"  : ['CONFIG_SAVE'],
+                }
+            }
+        }
+
+        self.configureDevice(ccd_device, save_config)
+
 
     def setFrameType(self, ccd_device, frame_type):
         frame_config = {
@@ -576,6 +587,9 @@ class IndiExposureTest(object):
         self.indiclient.configureDevice(ccdDevice, INDI_CONFIG)
 
         self.indiclient.setFrameType(ccdDevice, 'FRAME_LIGHT')  # default frame type is light
+
+        #self.indiclient.saveConfig(ccdDevice)
+
         self.indiclient.setCcdGain(ccdDevice, CCD_GAIN[0])
         self.current_gain = CCD_GAIN[0]
 
@@ -634,8 +648,15 @@ class IndiExposureTest(object):
             logger.info('Exposure state: %s', exposure_state)
 
 
-            for x in range(100):
+            # Loop to run for 7 seconds (prime number)
+            loop_end = time.time() + 7
+
+            while True:
+                time.sleep(0.05)
+
                 now = time.time()
+                if now >= loop_end:
+                    break
 
                 last_camera_ready = camera_ready
                 camera_ready, exposure_state = self.indiclient.ctl_ready(exposure_ctl)
@@ -679,8 +700,6 @@ class IndiExposureTest(object):
 
                     logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
-
-                time.sleep(0.05)
 
             ### End Non-blocking mode ###
 
