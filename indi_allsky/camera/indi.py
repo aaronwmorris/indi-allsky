@@ -176,17 +176,20 @@ class IndiClient(PyIndi.BaseClient):
 
         ### get image data
         imgdata = bp.getblobdata()
-
         blobfile = io.BytesIO(imgdata)
         hdulist = fits.open(blobfile)
 
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
-        f_tmpfile_p = Path(f_tmpfile.name)
+        try:
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+            f_tmpfile_p = Path(f_tmpfile.name)
 
-        hdulist.writeto(f_tmpfile)
+            hdulist.writeto(f_tmpfile)
 
-        f_tmpfile.flush()
-        f_tmpfile.close()
+            f_tmpfile.flush()
+            f_tmpfile.close()
+        except OSError as e:
+            logger.error('OSError: %s', str(e))
+            return
 
 
         #elapsed_s = time.time() - start
