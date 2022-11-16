@@ -19,6 +19,7 @@ from ..flask import create_app
 #from ..flask.models import IndiAllSkyDbTaskQueueTable
 
 from ..exceptions import TimeOutException
+from ..exceptions import CameraException
 
 logger = logging.getLogger('indi_allsky')
 
@@ -442,8 +443,12 @@ class IndiClient(PyIndi.BaseClient):
         ccd_list = self._findCcds()
 
         logger.info('Found %d CCDs', len(ccd_list))
-        # set default device in indiclient
-        self._ccd_device = ccd_list[0]
+
+        try:
+            # set default device in indiclient
+            self._ccd_device = ccd_list[0]
+        except IndexError:
+            raise CameraException('No cameras found')
 
         return self._ccd_device
 
