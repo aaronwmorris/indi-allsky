@@ -10,3 +10,7 @@ class CalibrationNotFound(Exception):
 class TemperatureException(Exception):
     pass
 
+
+class CameraException(Exception):
+    pass
+

@@ -31,8 +31,10 @@ from . import camera as camera_module
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
+
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
+from .exceptions import CameraException
 
 #from flask import current_app as app
 from .flask import db
@@ -352,11 +354,10 @@ class IndiAllSky(object):
         # give devices a chance to register
         time.sleep(8)
 
-        # connect to all devices
-        self.indiclient.findCcd()
-
-        if not self.indiclient.ccd_device:
-            logger.error('No CCDs detected')
+        try:
+            self.indiclient.findCcd()
+        except CameraException as e:
+            logger.error('Camera error: %s', str(e))
             time.sleep(1)
             sys.exit(1)
 
@@ -977,11 +978,10 @@ class IndiAllSky(object):
         # give devices a chance to register
         time.sleep(8)
 
-        # connect to all devices
-        self.indiclient.findCcd()
-
-        if not self.indiclient.ccd_device:
-            logger.error('No CCDs detected')
+        try:
+            self.indiclient.findCcd()
+        except CameraException as e:
+            logger.error('Camera error: %s', str(e))
             time.sleep(1)
             sys.exit(1)
 
