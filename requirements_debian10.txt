@@ -6,7 +6,7 @@ astropy
 #https://www.piwheels.org/project/numpy/
 numpy<=1.21.4
 #https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless<=4.6.0.66
+opencv-python-headless
 #https://www.piwheels.org/project/scipy/
 scipy<=1.7.3
 ccdproc
