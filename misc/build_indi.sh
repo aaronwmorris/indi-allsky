@@ -80,6 +80,7 @@ START_TIME=$(date +%s)
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
+    VIRTUALENV_REQ=requirements.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -101,6 +102,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     PYTHON_BIN=python3
+    VIRTUALENV_REQ=requirements.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -122,6 +124,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
+    VIRTUALENV_REQ=requirements.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -142,7 +145,14 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libffi-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
+    echo
+    echo
+    echo "The python packages necessary for the ansible build will not complete on Debian 10"
+    echo
+    exit 1
+
     PYTHON_BIN=python3
+    VIRTUALENV_REQ=requirements_debian10.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -164,6 +174,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     PYTHON_BIN=python3
+    VIRTUALENV_REQ=requirements.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -185,6 +196,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     PYTHON_BIN=python3.9
+    VIRTUALENV_REQ=requirements.txt
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -218,7 +230,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/ansible" ]; then
 fi
 source ${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate
 pip3 install --upgrade pip setuptools wheel
-pip3 install -r ${ALLSKY_DIRECTORY}/ansible/requirements.txt
+pip3 install -r "${ALLSKY_DIRECTORY}/ansible/${VIRTUALENV_REQ}"
 
 
 echo
