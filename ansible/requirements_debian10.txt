@@ -1,0 +1,3 @@
+git+https://salsa.debian.org/apt-team/python-apt.git@aa2f8029#egg=python-apt
+ansible
+setuptools-rust
