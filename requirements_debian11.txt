@@ -9,7 +9,9 @@ numpy
 opencv-python-headless
 #https://www.piwheels.org/project/scipy/
 scipy<=1.8.1
-ccdproc
+#https://www.piwheels.org/project/ccdproc/
+#2.4.0 has problems
+ccdproc<=2.3.1
 python-dateutil
 ephem
 paramiko
