@@ -23,6 +23,7 @@ app = indi_allsky.flask.create_app()
 app.app_context().push()
 
 #from indi_allsky.flask import db
+from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
 from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
 
@@ -58,6 +59,9 @@ class ImportDarkFrames(object):
 
     def main(self):
         dark_dir = self.image_dir.joinpath('darks')
+
+        camera_id = self.select_camera('Which camera is to be used for the dark frames?')
+        logger.info('Selected: %d', camera_id)
 
         logger.info('Searching for files...')
 
@@ -217,7 +221,6 @@ class ImportDarkFrames(object):
                 logger.info('Selected: %d', bitpix)
 
 
-
             # import
             if frame_type == 'bpm':
                 self._miscDb.addBadPixelMap(
@@ -280,6 +283,20 @@ class ImportDarkFrames(object):
             # ask again
             logger.error('Invalid input')
             return self.select_choice(question, option_list)
+
+
+    def select_camera(self, question):
+        camera_query = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.asc())
+
+        if camera_query.count() == 0:
+            raise Exception('No cameras are recorded in the database')
+
+        camera_options = list()
+        for camera in camera_query:
+            camera_options.append([camera.id, camera.name])
+
+        return self.select_choice(question, camera_options)
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=[]):
