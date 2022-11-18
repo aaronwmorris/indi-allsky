@@ -112,8 +112,13 @@ class ImportDarkFrames(object):
                 pass
 
 
-            hdulist = fits.open(frame)
-            #logger.warning('Headers: %s', hdulist[0].header)
+            try:
+                hdulist = fits.open(frame)
+                #logger.warning('Headers: %s', hdulist[0].header)
+            except OSError:
+                logger.error('Error opening file: %s', frame)
+                continue
+
 
             try:
                 imagetyp = hdulist[0].header['IMAGETYP']
