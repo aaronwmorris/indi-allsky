@@ -95,7 +95,7 @@ class ImportDarkFrames(object):
 
                 logger.warning('File already imported as a dark frame')
                 #time.sleep(1.0)
-                #continue
+                continue
             except NoResultFound:
                 pass
 
@@ -107,7 +107,7 @@ class ImportDarkFrames(object):
 
                 logger.warning('File already imported as a bad pixel map')
                 #time.sleep(1.0)
-                #continue
+                continue
             except NoResultFound:
                 pass
 
