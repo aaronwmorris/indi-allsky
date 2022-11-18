@@ -610,6 +610,7 @@ class IndiAllSkyDarks(object):
 
         logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
+        logger.warning('Flushing in 10 seconds...', dark_frames_all.count())
 
         time.sleep(10.0)
 
