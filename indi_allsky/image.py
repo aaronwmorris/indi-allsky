@@ -260,9 +260,14 @@ class ImageWorker(Process):
                 hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
+                hdulist[0].header['IMAGETYP'] = 'Light Frame'
+                hdulist[0].header['INSTRUME'] = 'libcamera'
                 hdulist[0].header['EXPTIME'] = float(exposure)
-                #hdulist[0].header['XBINNING'] = 1
-                #hdulist[0].header['YBINNING'] = 1
+                hdulist[0].header['XBINNING'] = 1
+                hdulist[0].header['YBINNING'] = 1
+                hdulist[0].header['GAIN'] = float(self.gain_v.value)
+                hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+                hdulist[0].header['BITPIX'] = 16
 
                 if self.config['CFA_PATTERN']:
                     hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
