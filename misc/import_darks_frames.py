@@ -188,10 +188,10 @@ class ImportDarkFrames(object):
                 logger.info('Detected date: %s', date_obs)
             except KeyError:
                 logger.warning('Date not logged')
-                date_obs = datetime.utcnow()
+                date_obs = datetime.fromtimestamp(frame.stat().st_mtime)
             except ValueError:
                 logger.warning('Date cannot be parsed')
-                date_obs = datetime.utcnow()
+                date_obs = datetime.fromtimestamp(frame.stat().st_mtime)
 
 
             print('##########################################')
