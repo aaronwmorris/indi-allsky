@@ -12,6 +12,7 @@ import logging
 from astropy.io import fits
 
 from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.exc import IntegrityError
 
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
@@ -63,9 +64,6 @@ class ImportDarkFrames(object):
     def main(self):
         dark_dir = self.image_dir.joinpath('darks')
 
-        camera_id = self.select_camera('Which camera is to be used for the dark frames?')
-        logger.info('Selected: %d', camera_id)
-
         logger.info('Searching for files...')
 
         dark_file_list = list()
@@ -79,6 +77,12 @@ class ImportDarkFrames(object):
 
 
         logger.info('Found %d dark frame candidates', len(dark_file_list_ordered))
+
+
+        camera_id = self.select_camera('Which camera is to be used for the dark frames?')
+        #logger.info('Selected: %d', camera_id)
+
+
         for frame in dark_file_list_ordered:
             logger.info('Found fits: %s', frame)
 
@@ -195,7 +199,7 @@ class ImportDarkFrames(object):
                 ['skip', 'Skip'],
             ]
             frame_type = self.select_choice('What type of frame?', frame_options)
-            logger.info('Selected: %s', frame_type)
+            #logger.info('Selected: %s', frame_type)
 
 
             if frame_type == 'skip':
@@ -204,27 +208,27 @@ class ImportDarkFrames(object):
 
             if isinstance(exptime, type(None)):
                 exptime = self.select_int('What is the exposure?')
-                logger.info('Selected: %d', exptime)
+                #logger.info('Selected: %d', exptime)
 
 
             if isinstance(gain, type(None)):
                 gain = self.select_int('What is the gain?')
-                logger.info('Selected: %d', gain)
+                #logger.info('Selected: %d', gain)
 
 
             if isinstance(binning, type(None)):
                 binning = self.select_int('What is the bin mode?')
-                logger.info('Selected: %d', binning)
+                #logger.info('Selected: %d', binning)
 
 
             if isinstance(ccd_temp, type(None)):
                 ccd_temp = self.select_int('What is the temperature?')
-                logger.info('Selected: %d', ccd_temp)
+                #logger.info('Selected: %d', ccd_temp)
 
 
             if isinstance(bitpix, type(None)):
                 bitpix = self.select_int('What is the bit depth?')
-                logger.info('Selected: %d', bitpix)
+                #logger.info('Selected: %d', bitpix)
 
 
 
