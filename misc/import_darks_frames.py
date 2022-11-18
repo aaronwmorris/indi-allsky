@@ -127,7 +127,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                exptime = hdulist[0].header['EXPTIME']
+                exptime = float(hdulist[0].header['EXPTIME'])
                 logger.info('Detected exposure: %0.1f', exptime)
             except KeyError:
                 logger.warning('Exposure not logged')
@@ -135,7 +135,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                gain = hdulist[0].header['GAIN']
+                gain = int(hdulist[0].header['GAIN'])
                 logger.info('Detected gain: %d', gain)
             except KeyError:
                 logger.warning('Gain not logged')
@@ -143,7 +143,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                binning = hdulist[0].header['XBINNING']
+                binning = int(hdulist[0].header['XBINNING'])
                 logger.info('Detected bin mode: %d', binning)
             except KeyError:
                 logger.warning('Bin mode not logged')
@@ -151,7 +151,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                ccd_temp = hdulist[0].header['CCD-TEMP']
+                ccd_temp = float(hdulist[0].header['CCD-TEMP'])
                 logger.info('Detected temperature: %0.1f', ccd_temp)
             except KeyError:
                 logger.warning('Temperature not logged')
@@ -159,7 +159,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                bitpix = hdulist[0].header['BITPIX']
+                bitpix = int(hdulist[0].header['BITPIX'])
                 logger.info('Detected bit depth: %d', bitpix)
             except KeyError:
                 logger.warning('Bit depth not logged')
@@ -225,6 +225,24 @@ class ImportDarkFrames(object):
             if isinstance(bitpix, type(None)):
                 bitpix = self.select_int('What is the bit depth?')
                 logger.info('Selected: %d', bitpix)
+
+
+
+            print('\n')
+            print('Exposure:    {0:0.1f}'.format(exptime))
+            print('Gain:        {0:d}'.format(gain))
+            print('Bin mode:    {0:d}'.format(binning))
+            print('Temperature: {0:0.1f}'.format(ccd_temp))
+            print('Bit depth:   {0:d}'.format(bitpix))
+
+            answer_options = [
+                [False, 'No'],
+                [True, 'Yes'],
+            ]
+            do_import = self.select_choice('Import frame with the above parameters?', answer_options)
+
+            if not do_import:
+                continue
 
 
             # import
