@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+#import time
 from datetime import datetime
 from pathlib import Path
 from collections import OrderedDict
@@ -9,6 +10,8 @@ import json
 import logging
 
 from astropy.io import fits
+
+from sqlalchemy.orm.exc import NoResultFound
 
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
@@ -20,8 +23,8 @@ app = indi_allsky.flask.create_app()
 app.app_context().push()
 
 #from indi_allsky.flask import db
-#from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
-#from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
+from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
+from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
 
 
 logger = logging.getLogger('indi_allsky')
@@ -73,6 +76,31 @@ class ImportDarkFrames(object):
             logger.info('Found fits: %s', d)
 
 
+            # see if file is already imported
+            try:
+                IndiAllSkyDbDarkFrameTable.query\
+                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(d))\
+                    .one()
+
+                logger.warning('File already imported as a dark frame')
+                #time.sleep(1.0)
+                #continue
+            except NoResultFound:
+                pass
+
+
+            try:
+                IndiAllSkyDbBadPixelMapTable.query\
+                    .filter(IndiAllSkyDbBadPixelMapTable.filename == str(d))\
+                    .one()
+
+                logger.warning('File already imported as a bad pixel map')
+                #time.sleep(1.0)
+                #continue
+            except NoResultFound:
+                pass
+
+
             hdulist = fits.open(d)
             #logger.warning('Headers: %s', hdulist[0].header)
 
@@ -92,11 +120,11 @@ class ImportDarkFrames(object):
 
 
             try:
-                binning = hdulist[0].header['XBINNING']
-                logger.info('Detected bin mode: %d', binning)
+                exptime = hdulist[0].header['EXPTIME']
+                logger.info('Detected exposure: %0.1f', exptime)
             except KeyError:
-                logger.warning('Bin mode not logged')
-                binning = 1
+                logger.warning('Exposure not logged')
+                exptime = None
 
 
             try:
@@ -108,11 +136,11 @@ class ImportDarkFrames(object):
 
 
             try:
-                exptime = hdulist[0].header['EXPTIME']
-                logger.info('Detected exposure: %0.1f', exptime)
+                binning = hdulist[0].header['XBINNING']
+                logger.info('Detected bin mode: %d', binning)
             except KeyError:
-                logger.warning('Exposure not logged')
-                exptime = None
+                logger.warning('Bin mode not logged')
+                binning = None
 
 
             try:
@@ -152,32 +180,73 @@ class ImportDarkFrames(object):
 
 
             type_options = [
-                'Dark Frame',
-                'Bad Pixel Map',
-                'skip file',
+                ['dark', 'Dark Frame'],
+                ['bpm', 'Bad Pixel Map'],
+                ['skip', 'Skip'],
             ]
-            file_type = self.select_choice('What type of file is this?', type_options)
+            file_type = self.select_choice('What type of frame?', type_options)
+            logger.info('Selected: %s', file_type)
+
+
+            if file_type == 'skip':
+                continue
+
+
+            #if not exptime:
+            exptime = self.select_int('What is the exposure?')
+            logger.info('Selected: %d', exptime)
+
+
+            #if not gain:
+            gain = self.select_int('What is the gain?')
+            logger.info('Selected: %d', gain)
+
+
+            #if not binning:
+            binning = self.select_int('What is the bin mode?')
+            logger.info('Selected: %d', binning)
+
+
+            #if not ccd_temp:
+            ccd_temp = self.select_int('What is the temperature?')
+            logger.info('Selected: %d', ccd_temp)
+
+
+            #if not bitpix:
+            bitpix = self.select_int('What is the bit depth?')
+            logger.info('Selected: %d', bitpix)
+
+
+
+    def select_int(self, question):
+        #print('\n{0:s}\n'.format(question))
+
+        i = input('\n{0:s} '.format(question))
+
+        try:
+            return int(i)
+        except ValueError:
+            # ask again
+            logger.error('Invalid input')
+            return self.select_int(question)
+
 
 
     def select_choice(self, question, option_list):
         print('\n{0:s}\n'.format(question))
 
         for x, option in enumerate(option_list):
-            print('{0:d} - {1:s}'.format(x, option))
+            print('{0:d} - {1:s}'.format(x, option[1]))
 
         i = input('? ')
 
-
         try:
             i_int = int(i)
+            return option_list[i_int][0]
         except ValueError:
             # ask again
             logger.error('Invalid input')
             return self.select_choice(question, option_list)
-
-
-        try:
-            return option_list[i_int]
         except IndexError:
             # ask again
             logger.error('Invalid input')
