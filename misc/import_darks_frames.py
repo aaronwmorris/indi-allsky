@@ -72,14 +72,14 @@ class ImportDarkFrames(object):
 
 
         logger.info('Found %d dark frame candidates', len(dark_file_list_ordered))
-        for d in dark_file_list_ordered:
-            logger.info('Found fits: %s', d)
+        for frame in dark_file_list_ordered:
+            logger.info('Found fits: %s', frame)
 
 
             # see if file is already imported
             try:
                 IndiAllSkyDbDarkFrameTable.query\
-                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(d))\
+                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(frame))\
                     .one()
 
                 logger.warning('File already imported as a dark frame')
@@ -91,7 +91,7 @@ class ImportDarkFrames(object):
 
             try:
                 IndiAllSkyDbBadPixelMapTable.query\
-                    .filter(IndiAllSkyDbBadPixelMapTable.filename == str(d))\
+                    .filter(IndiAllSkyDbBadPixelMapTable.filename == str(frame))\
                     .one()
 
                 logger.warning('File already imported as a bad pixel map')
@@ -101,7 +101,7 @@ class ImportDarkFrames(object):
                 pass
 
 
-            hdulist = fits.open(d)
+            hdulist = fits.open(frame)
             #logger.warning('Headers: %s', hdulist[0].header)
 
             try:
@@ -179,42 +179,71 @@ class ImportDarkFrames(object):
                 date_obs = datetime.utcnow()
 
 
-            type_options = [
+            frame_options = [
                 ['dark', 'Dark Frame'],
                 ['bpm', 'Bad Pixel Map'],
                 ['skip', 'Skip'],
             ]
-            file_type = self.select_choice('What type of frame?', type_options)
-            logger.info('Selected: %s', file_type)
+            frame_type = self.select_choice('What type of frame?', frame_options)
+            logger.info('Selected: %s', frame_type)
 
 
-            if file_type == 'skip':
+            if frame_type == 'skip':
                 continue
 
 
-            #if not exptime:
-            exptime = self.select_int('What is the exposure?')
-            logger.info('Selected: %d', exptime)
+            if not exptime:
+                exptime = self.select_int('What is the exposure?')
+                logger.info('Selected: %d', exptime)
 
 
-            #if not gain:
-            gain = self.select_int('What is the gain?')
-            logger.info('Selected: %d', gain)
+            if not gain:
+                gain = self.select_int('What is the gain?')
+                logger.info('Selected: %d', gain)
 
 
-            #if not binning:
-            binning = self.select_int('What is the bin mode?')
-            logger.info('Selected: %d', binning)
+            if not binning:
+                binning = self.select_int('What is the bin mode?')
+                logger.info('Selected: %d', binning)
 
 
-            #if not ccd_temp:
-            ccd_temp = self.select_int('What is the temperature?')
-            logger.info('Selected: %d', ccd_temp)
+            if not ccd_temp:
+                ccd_temp = self.select_int('What is the temperature?')
+                logger.info('Selected: %d', ccd_temp)
 
 
-            #if not bitpix:
-            bitpix = self.select_int('What is the bit depth?')
-            logger.info('Selected: %d', bitpix)
+            if not bitpix:
+                bitpix = self.select_int('What is the bit depth?')
+                logger.info('Selected: %d', bitpix)
+
+
+
+            # import
+            if frame_type == 'bpm':
+                self._miscDb.addBadPixelMap(
+                    frame,
+                    camera_id,
+                    bitpix,
+                    exptime,
+                    gain,
+                    binning,
+                    ccd_temp,
+                )
+
+            elif frame_type == 'dark':
+                self._miscDb.addDarkFrame(
+                    frame,
+                    camera_id,
+                    bitpix,
+                    exptime,
+                    gain,
+                    binning,
+                    ccd_temp,
+                )
+
+            else:
+                raise Exception('This is impossible')
+
 
 
 
