@@ -17,6 +17,7 @@ from sqlalchemy.orm.exc import NoResultFound
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 import indi_allsky
+from indi_allsky.flask.miscDb import miscDb
 
 # setup flask context for db access
 app = indi_allsky.flask.create_app()
@@ -45,6 +46,8 @@ class ImportDarkFrames(object):
     def __init__(self, f_config_file):
         self.config = self._parseConfig(f_config_file.read())
         f_config_file.close()
+
+        self._miscDb = miscDb(self.config)
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -183,6 +186,9 @@ class ImportDarkFrames(object):
                 date_obs = datetime.utcnow()
 
 
+            print('##########################################')
+            print('\n\nFile: {0:s}\n'.format(str(frame)))
+
             frame_options = [
                 ['dark', 'Dark Frame'],
                 ['bpm', 'Bad Pixel Map'],
@@ -196,27 +202,27 @@ class ImportDarkFrames(object):
                 continue
 
 
-            if not exptime:
+            if isinstance(exptime, type(None)):
                 exptime = self.select_int('What is the exposure?')
                 logger.info('Selected: %d', exptime)
 
 
-            if not gain:
+            if isinstance(gain, type(None)):
                 gain = self.select_int('What is the gain?')
                 logger.info('Selected: %d', gain)
 
 
-            if not binning:
+            if isinstance(binning, type(None)):
                 binning = self.select_int('What is the bin mode?')
                 logger.info('Selected: %d', binning)
 
 
-            if not ccd_temp:
+            if isinstance(ccd_temp, type(None)):
                 ccd_temp = self.select_int('What is the temperature?')
                 logger.info('Selected: %d', ccd_temp)
 
 
-            if not bitpix:
+            if isinstance(bitpix, type(None)):
                 bitpix = self.select_int('What is the bit depth?')
                 logger.info('Selected: %d', bitpix)
 
