@@ -131,8 +131,7 @@ class ImportDarkFrames(object):
                 instrume = hdulist[0].header['INSTRUME']
                 logger.info('Detected camera: %s', instrume)
             except KeyError:
-                logger.warning('Camera not logged')
-                instrume = None
+                logger.warning('Camera name not logged')
 
 
             try:
