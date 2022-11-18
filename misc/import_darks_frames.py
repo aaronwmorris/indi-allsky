@@ -116,7 +116,7 @@ class ImportDarkFrames(object):
                 hdulist = fits.open(frame)
                 #logger.warning('Headers: %s', hdulist[0].header)
             except OSError:
-                logger.error('Error opening file: %s', frame)
+                logger.error('Error decoding fits data: %s', frame)
                 continue
 
 
