@@ -3,7 +3,7 @@
 # This file is monitored for changes via inotify
 # Updates should restart gunicorn automatically
 #
-# Version 00010
+# Version 00011
 #
 import logging
 
