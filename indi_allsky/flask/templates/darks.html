@@ -12,6 +12,7 @@ table, th, td {
 {% endblock %}
 
 {% block content %}
+<h3>Dark Frames</h3>
 <table>
 <tr>
     <th>ID</th>
@@ -22,6 +23,7 @@ table, th, td {
     <th>Exposure</th>
     <th>Bin mode</th>
     <th>Temp</th>
+    <th>File</th>
 </tr>
 {% for dark in darkframe_list %}
 <tr>
@@ -33,7 +35,39 @@ table, th, td {
     <td>{{ dark.exposure }}</td>
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
+    <td>{{ dark.filename|basename }}</td>
 </tr>
 {% endfor %}
 </table>
+
+<hr />
+
+<h3>Bad Pixel Maps</h3>
+<table>
+<tr>
+    <th>ID</th>
+    <th>Camera</th>
+    <th>Date</th>
+    <th>Bit Depth</th>
+    <th>Gain</th>
+    <th>Exposure</th>
+    <th>Bin mode</th>
+    <th>Temp</th>
+    <th>File</th>
+</tr>
+{% for bpm in bpm_list %}
+<tr>
+    <td>{{ bpm.id }}</td>
+    <td>{{ bpm.camera.name }}</td>
+    <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+    <td>{{ bpm.bitdepth }}</td>
+    <td>{{ bpm.gain }}</td>
+    <td>{{ bpm.exposure }}</td>
+    <td>{{ bpm.binmode }}</td>
+    <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
+    <td>{{ bpm.filename|basename }}</td>
+</tr>
+{% endfor %}
+</table>
+
 {% endblock %}

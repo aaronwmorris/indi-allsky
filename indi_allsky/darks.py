@@ -291,9 +291,13 @@ class IndiAllSkyDarks(object):
             hdulist = fits.HDUList([hdu])
 
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
+            hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            #hdulist[0].header['XBINNING'] = 1
-            #hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 16
 
             if self.config['CFA_PATTERN']:
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
@@ -606,6 +610,7 @@ class IndiAllSkyDarks(object):
 
         logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
+        logger.warning('Flushing in 10 seconds...', dark_frames_all.count())
 
         time.sleep(10.0)
 

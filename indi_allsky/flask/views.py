@@ -421,8 +421,18 @@ class DarkFramesView(TemplateView):
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
             )
 
+        bpm_list = IndiAllSkyDbBadPixelMapTable.query\
+            .join(IndiAllSkyDbCameraTable)\
+            .order_by(
+                IndiAllSkyDbCameraTable.id.desc(),
+                IndiAllSkyDbBadPixelMapTable.gain.asc(),
+                IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+            )
+
 
         context['darkframe_list'] = darkframe_list
+        context['bpm_list'] = bpm_list
+
         return context
 
 
