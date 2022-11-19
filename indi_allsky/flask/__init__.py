@@ -96,3 +96,8 @@ def create_app():
         db.create_all()  # Create sql tables for our data models
 
         return app
+
+
+@bp.app_template_filter()
+def basename(p):
+    return Path(p).name

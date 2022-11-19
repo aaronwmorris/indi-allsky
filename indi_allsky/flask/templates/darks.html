@@ -23,6 +23,7 @@ table, th, td {
     <th>Exposure</th>
     <th>Bin mode</th>
     <th>Temp</th>
+    <th>File</th>
 </tr>
 {% for dark in darkframe_list %}
 <tr>
@@ -34,6 +35,7 @@ table, th, td {
     <td>{{ dark.exposure }}</td>
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
+    <td>{{ dark.filename|basename }}</td>
 </tr>
 {% endfor %}
 </table>
@@ -51,6 +53,7 @@ table, th, td {
     <th>Exposure</th>
     <th>Bin mode</th>
     <th>Temp</th>
+    <th>File</th>
 </tr>
 {% for bpm in bpm_list %}
 <tr>
@@ -62,6 +65,7 @@ table, th, td {
     <td>{{ bpm.exposure }}</td>
     <td>{{ bpm.binmode }}</td>
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
+    <td>{{ bpm.filename|basename }}</td>
 </tr>
 {% endfor %}
 </table>
