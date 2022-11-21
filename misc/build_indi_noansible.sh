@@ -16,8 +16,14 @@ function handler_SIGINT() {
 trap handler_SIGINT SIGINT
 
 
-INDI_CORE_TAG="v1.9.8"
-INDI_3RDPARTY_TAG=$INDI_CORE_TAG
+if [ -n "${1:-}" ]; then
+    INDI_CORE_TAG="$1"
+    INDI_3RDPARTY_TAG=$INDI_CORE_TAG
+else
+    INDI_CORE_TAG="v1.9.8"
+    INDI_3RDPARTY_TAG=$INDI_CORE_TAG
+fi
+
 
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
