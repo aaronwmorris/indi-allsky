@@ -313,6 +313,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         sudo apt-get -y install \
             indi-full \
             libindi-dev \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
@@ -546,6 +547,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         sudo apt-get -y install \
             indi-full \
             libindi-dev \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
@@ -671,8 +673,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
-            indi-rpicam \
             libindi-dev \
+            indi-rpicam \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
@@ -793,6 +796,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         sudo apt-get -y install \
             indi-full \
             libindi-dev \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
@@ -914,6 +918,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         sudo apt-get -y install \
             indi-full \
             libindi-dev \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
@@ -1024,6 +1029,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         sudo apt-get -y install \
             indi-full \
             libindi-dev \
+            indi-webcam \
             indi-asi \
             libasi \
             indi-qhy \
