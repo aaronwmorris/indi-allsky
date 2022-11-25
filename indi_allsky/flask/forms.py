@@ -424,6 +424,20 @@ def WEB_EXTRA_TEXT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def IMAGE_ROTATE_validator(form, field):
+    if not field.data:
+        return
+
+    if field.data not in ['ROTATE_90_CLOCKWISE', 'ROTATE_90_COUNTERCLOCKWISE', 'ROTATE_180']:
+        raise ValidationError('Unknown rotation option')
+
+    # sanity check
+    try:
+        getattr(cv2, field.data)
+    except AttributeError as e:
+        raise ValidationError(str(e))
+
+
 def KEOGRAM_ANGLE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1163,6 +1177,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    IMAGE_ROTATE_choices = (
+        ('', 'Disabled'),
+        ('ROTATE_90_CLOCKWISE', '90° Clockwise'),
+        ('ROTATE_90_COUNTERCLOCKWISE', '90° Counterclockwise'),
+        ('ROTATE_180', '180°'),
+    )
+
     FFMPEG_VFSCALE_choices = (
         ('', 'None'),
         ('-1:2304', 'V 2304px (imx477)'),
@@ -1282,6 +1303,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_LABEL                      = BooleanField('Label Images')
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
     IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
+    IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])
