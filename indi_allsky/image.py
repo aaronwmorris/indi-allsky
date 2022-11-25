@@ -346,12 +346,21 @@ class ImageWorker(Process):
             #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
+            # rotation
+            if self.config.get('IMAGE_ROTATE'):
+                try:
+                    rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
+                    scidata = cv2.rotate(scidata, rotate_enum)
+                except AttributeError:
+                    logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+
+
             # verticle flip
-            if self.config['IMAGE_FLIP_V']:
+            if self.config.get('IMAGE_FLIP_V'):
                 scidata = cv2.flip(scidata, 0)
 
             # horizontal flip
-            if self.config['IMAGE_FLIP_H']:
+            if self.config.get('IMAGE_FLIP_H'):
                 scidata = cv2.flip(scidata, 1)
 
 
