@@ -309,6 +309,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_DEBAYER       | Auto detected | (string) OpenCV debayering algorithm |
 | NIGHT_GRAYSCALE     | false       | Convert image to grayscale at night|
 | DAYTIME_GRAYSCALE   | false       | Convert image to grayscale during day |
+| IMAGE_ROTATE        |             | (str) Image rotation (cv2 enum) |
 | IMAGE_FLIP_V        | true        | (bool) Flip images vertically |
 | IMAGE_FLIP_H        | true        | (bool) Flip images horizontally |
 | IMAGE_SCALE         | 100         | (percent) Image scaling factor |

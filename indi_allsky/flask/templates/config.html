@@ -836,6 +836,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_ROTATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.IMAGE_ROTATE(class='form-control bg-secondary') }}
+            <div id="IMAGE_ROTATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Image rotation options</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_FLIP_V.label }}
         </div>
         <div class="col-sm-2">
@@ -1690,6 +1703,7 @@ const field_names = [
     'IMAGE_FOLDER',
     'IMAGE_LABEL_TEMPLATE',
     'IMAGE_EXTRA_TEXT',
+    'IMAGE_ROTATE',
     'IMAGE_SCALE',
     'IMAGE_CROP_ROI_X1',
     'IMAGE_CROP_ROI_Y1',

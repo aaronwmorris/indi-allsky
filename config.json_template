@@ -105,6 +105,8 @@
     "comment_IMAGE_EXTRA_TEXT" : "File containing extra text to add to image",
     "IMAGE_EXTRA_TEXT" : "",
     "IMAGE_CROP_ROI"   : [],
+    "comment_IMAGE_ROTATE" : "empty, ROTATE_90_CLOCKWISE, ROTATE_90_COUNTERCLOCKWISE, ROTATE_180",
+    "IMAGE_ROTATE"     : "",
     "IMAGE_FLIP_V"     : true,
     "IMAGE_FLIP_H"     : true,
     "IMAGE_SCALE"      : 100,
