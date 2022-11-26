@@ -222,8 +222,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -344,8 +342,6 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -455,8 +451,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -580,8 +574,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -700,8 +692,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -822,8 +812,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3.9
 
@@ -943,8 +931,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3.8
 
