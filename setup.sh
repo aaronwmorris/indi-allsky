@@ -1083,9 +1083,9 @@ fi
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname "$0")
-cd "$SCRIPT_DIR" || exit
+cd "$SCRIPT_DIR" || catch_error
 ALLSKY_DIRECTORY=$PWD
-cd "$OLDPWD" || exit
+cd "$OLDPWD" || catch_error
 
 
 echo "**** Ensure path to git folder is traversable ****"
@@ -1119,11 +1119,11 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 # get list of drivers
 INDI_DRIVERS=""
-cd "$INDI_DRIVER_PATH" || exit
+cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam*; do
     INDI_DRIVERS="$INDI_DRIVERS $I $I OFF "
 done
-cd "$OLDPWD" || exit
+cd "$OLDPWD" || catch_error
 
 #echo $INDI_DRIVERS
 
@@ -1596,9 +1596,9 @@ if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
     flask db init
 
     # Move migrations out of git checkout
-    cd "${ALLSKY_DIRECTORY}/migrations/versions" || exit
+    cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
     find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
-    cd "$OLDPWD" || exit
+    cd "$OLDPWD" || catch_error
 
     # Cleanup old files
     find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
