@@ -241,6 +241,7 @@ echo
 
 cd "${ALLSKY_DIRECTORY}/ansible"
 
+# shellcheck disable=SC2068
 ansible-playbook -i inventory.yml site.yml --ask-become-pass -e "indi_core_git_version=${INDI_CORE_TAG}" -e "indi_3rdparty_git_version=${INDI_3RDPARTY_TAG}" $@
 
 
