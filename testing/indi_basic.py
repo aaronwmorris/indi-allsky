@@ -96,7 +96,7 @@ while not device_ccd:
     time.sleep(0.5)
 
 connection = None
-while not ccd_connection:
+while not connection:
     logger.info("Get CONNECTION control")
     connection = device_ccd.getSwitch("CONNECTION")
     time.sleep(0.5)
