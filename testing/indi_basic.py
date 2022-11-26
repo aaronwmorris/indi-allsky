@@ -125,8 +125,8 @@ while not equatorial_pe:
 
 logger.info("Set EQUATORIAL_PE to M13")
 
-equatorial_pe[0].value = 16.7175  # RA_PE
-equatorial_pe[1].value = 36.4233  # DEC_PE
+equatorial_pe[0].setValue(16.7175)  # RA_PE
+equatorial_pe[1].setValue(36.4233)  # DEC_PE
 indiclient.sendNewNumber(equatorial_pe)
 
 
@@ -141,7 +141,7 @@ while not ccd_directory_location:
 
 logger.info("Set CCD_DIRECTORY_LOCATION to /tmp")
 
-ccd_directory_location[0].text = "/tmp"  # LOCATION
+ccd_directory_location[0].setText("/tmp")  # LOCATION
 indiclient.sendNewText(ccd_directory_location)
 
 
