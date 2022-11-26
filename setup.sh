@@ -1241,7 +1241,7 @@ sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
 
 # 10 prefix so they are process before the defaults in 50
-sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/10-indi-allsky.conf"
+sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
 sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
 sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 
@@ -1251,7 +1251,7 @@ sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 sudo systemctl restart rsyslog
 
 
-sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky"
+sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
 sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
