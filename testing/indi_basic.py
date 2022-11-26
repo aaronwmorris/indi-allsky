@@ -74,7 +74,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
 
-# connect the server
+# connect to the server
 indiclient = IndiClient()
 indiclient.setServer(INDI_SERVER, INDI_PORT)
 
@@ -89,37 +89,36 @@ if not (indiclient.connectServer()):
 
 
 ### Connect the CCD
-logger.info("Connecting to ccd")
-
 device_ccd = None
 while not device_ccd:
+    logger.info("Connecting to %s", CCD)
     device_ccd = indiclient.getDevice(CCD)
     time.sleep(0.5)
 
-ccd_connect = None
-while not ccd_connect:
-    ccd_connect = device_ccd.getSwitch("CONNECTION")
+connection = None
+while not ccd_connection:
+    logger.info("Get CONNECTION control")
+    connection = device_ccd.getSwitch("CONNECTION")
     time.sleep(0.5)
 
 if not device_ccd.isConnected():
-    ccd_connect[0].setState(PyIndi.ISS_ON)   # CONNECT
-    ccd_connect[1].setState(PyIndi.ISS_OFF)  # DISCONNECT
-    indiclient.sendNewSwitch(ccd_connect)
+    connection[0].setState(PyIndi.ISS_ON)   # CONNECT
+    connection[1].setState(PyIndi.ISS_OFF)  # DISCONNECT
+    indiclient.sendNewSwitch(connection)
 
 
 while not device_ccd.isConnected():
-    time.sleep(0.5)
     logger.warning('Waiting on ccd connection')
+    time.sleep(0.5)
 
 logger.info("ccd connected")
 
 
 
 ### Number control test
-logger.info("Get EQUITORIAL_PE control (number)")
-
 equatorial_pe = None
 while not equatorial_pe:
+    logger.info("Get EQUITORIAL_PE control (number)")
     equatorial_pe = device_ccd.getNumber("EQUATORIAL_PE")
     time.sleep(0.5)
 
@@ -133,10 +132,9 @@ indiclient.sendNewNumber(equatorial_pe)
 
 
 ### Text control test
-logger.info("Get CCD_DIRECTORY_LOCATION control (text)")
-
 ccd_directory_location = None
 while not ccd_directory_location:
+    logger.info("Get CCD_DIRECTORY_LOCATION control (text)")
     ccd_directory_location = device_ccd.getText("CCD_DIRECTORY_LOCATION")
     time.sleep(0.5)
 
@@ -149,10 +147,9 @@ indiclient.sendNewText(ccd_directory_location)
 
 
 ### Switch control test
-logger.info("Get SIMULATE_BAYER control (switch)")
-
 simulate_bayer = None
 while not simulate_bayer:
+    logger.info("Get SIMULATE_BAYER control (switch)")
     simulate_bayer = device_ccd.getSwitch("SIMULATE_BAYER")
     time.sleep(0.5)
 
