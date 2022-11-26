@@ -155,7 +155,7 @@ echo
 echo
 
 if [[ "$(id -u)" == "0" ]]; then
-    echo "Please do not run $(basename $0) as root"
+    echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
     echo
     echo
@@ -163,7 +163,7 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 if [[ -n "$VIRTUAL_ENV" ]]; then
-    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Please do not run $(basename "$0") with a virtualenv active"
     echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
@@ -209,9 +209,9 @@ fi
 echo
 echo
 echo "Fixing git checkout permissions"
-sudo find "$(dirname $0)" ! -user "$USER" -exec chown "$USER" {} \;
-sudo find "$(dirname $0)" -type d ! -perm -555 -exec chmod ugo+rx {} \;
-sudo find "$(dirname $0)" -type f ! -perm -444 -exec chmod ugo+r {} \;
+sudo find "$(dirname "$0")" ! -user "$USER" -exec chown "$USER" {} \;
+sudo find "$(dirname "$0")" -type d ! -perm -555 -exec chmod ugo+rx {} \;
+sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 
@@ -1082,16 +1082,16 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
-cd "$SCRIPT_DIR"
+SCRIPT_DIR=$(dirname "$0")
+cd "$SCRIPT_DIR" || exit
 ALLSKY_DIRECTORY=$PWD
-cd "$OLDPWD"
+cd "$OLDPWD" || exit
 
 
 echo "**** Ensure path to git folder is traversable ****"
 # Web servers running as www-data or nobody need to be able to read files in the git checkout
 PARENT_DIR="$ALLSKY_DIRECTORY"
-while [ 1 ]; do
+while true; do
     if [ "$PARENT_DIR" == "/" ]; then
         break
     elif [ "$PARENT_DIR" == "." ]; then
@@ -1111,7 +1111,7 @@ chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky"
 fi
-source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
+source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
@@ -1119,11 +1119,11 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 # get list of drivers
 INDI_DRIVERS=""
-cd "$INDI_DRIVER_PATH"
+cd "$INDI_DRIVER_PATH" || exit
 for I in indi_*_ccd indi_rpicam*; do
     INDI_DRIVERS="$INDI_DRIVERS $I $I OFF "
 done
-cd "$OLDPWD"
+cd "$OLDPWD" || exit
 
 #echo $INDI_DRIVERS
 
@@ -1131,7 +1131,7 @@ cd "$OLDPWD"
 CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "$CCD_DRIVER" ]; do
-        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 $INDI_DRIVERS 3>&1 1>&2 2>&3)
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 "$INDI_DRIVERS" 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything
@@ -1154,7 +1154,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
-     ${ALLSKY_DIRECTORY}/service/indiserver.service > $TMP1
+     "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
     cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
@@ -1174,7 +1174,7 @@ sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- ${ALLSKY_DIRECTORY}/service/indi-allsky.service > $TMP2
+ "${ALLSKY_DIRECTORY}/service/indi-allsky.service" > "$TMP2"
 
 cp -f "$TMP2" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
 chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
@@ -1186,7 +1186,7 @@ TMP5=$(mktemp)
 sed \
  -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket > $TMP5
+ "${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket" > "$TMP5"
 
 cp -f "$TMP5" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
 chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
@@ -1198,7 +1198,7 @@ sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- ${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service > $TMP6
+ "${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.service" > "$TMP6"
 
 cp -f "$TMP6" "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
@@ -1206,7 +1206,7 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 
 
 echo "**** Enabling services ****"
-sudo loginctl enable-linger $USER
+sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
 systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
@@ -1218,7 +1218,7 @@ echo "**** Setup policy kit permissions ****"
 TMP8=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+ "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
 
 sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
 sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
@@ -1241,7 +1241,7 @@ sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
 
 # 10 prefix so they are process before the defaults in 50
-sudo cp -f ${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/10-indi-allsky.conf
+sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/10-indi-allsky.conf"
 sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
 sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 
@@ -1251,7 +1251,7 @@ sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 sudo systemctl restart rsyslog
 
 
-sudo cp -f ${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky
+sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky"
 sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
@@ -1269,7 +1269,7 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
         ln -s "${ALLSKY_ETC}/config.json" "${ALLSKY_DIRECTORY}/config.json"
     else
         # syntax check
-        cat "${ALLSKY_DIRECTORY}/config.json_template" | json_pp >/dev/null
+	json_pp < "${ALLSKY_DIRECTORY}/config.json_template" > /dev/null
 
         # create new config
         cp "${ALLSKY_DIRECTORY}/config.json_template" "${ALLSKY_ETC}/config.json"
@@ -1283,7 +1283,7 @@ sudo chmod 660 "${ALLSKY_ETC}/config.json"
 SQLALCHEMY_DATABASE_URI=$(jq -r '.SQLALCHEMY_DATABASE_URI' "${ALLSKY_ETC}/config.json")
 if [[ "$SQLALCHEMY_DATABASE_URI" == "null" ]]; then
     TMP_CONFIG1=$(mktemp)
-    jq --argjson db_uri "\"$DB_URI_DEFAULT\"" '.SQLALCHEMY_DATABASE_URI = $db_uri' "${ALLSKY_ETC}/config.json" > $TMP_CONFIG1
+    jq --argjson db_uri "\"$DB_URI_DEFAULT\"" '.SQLALCHEMY_DATABASE_URI = $db_uri' "${ALLSKY_ETC}/config.json" > "$TMP_CONFIG1"
     cp -f "$TMP_CONFIG1" "${ALLSKY_ETC}/config.json"
     sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
     sudo chmod 660 "${ALLSKY_ETC}/config.json"
@@ -1307,7 +1307,7 @@ if [[ "$IMAGE_FOLDER" == "null" || -z "$IMAGE_FOLDER" ]]; then
     IMAGE_FOLDER="${ALLSKY_DIRECTORY}/html/images"
 
     TMP_IMAGE_FOLDER=$(mktemp)
-    jq --arg image_folder "$IMAGE_FOLDER" '.IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/config.json" > $TMP_IMAGE_FOLDER
+    jq --arg image_folder "$IMAGE_FOLDER" '.IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/config.json" > "$TMP_IMAGE_FOLDER"
     cp -f "$TMP_IMAGE_FOLDER" "${ALLSKY_ETC}/config.json"
     chmod 660 "${ALLSKY_ETC}/config.json"
     [[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
@@ -1330,10 +1330,10 @@ sed \
  -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- "${ALLSKY_DIRECTORY}/flask.json_template" > $TMP4
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP4"
 
 # syntax check
-cat $TMP4 | json_pp >/dev/null
+json_pp < "$TMP4" >/dev/null
 
 cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
 #fi
@@ -1345,7 +1345,7 @@ sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 
 TMP7=$(mktemp)
-cat ${ALLSKY_DIRECTORY}/service/gunicorn.conf.py > $TMP7
+cat "${ALLSKY_DIRECTORY}/service/gunicorn.conf.py" > "$TMP7"
 
 cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
 chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
@@ -1370,7 +1370,7 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-     ${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl > $TMP3
+     "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
 
 
     if [[ ! -f "${ALLSKY_ETC}/nginx.passwd" ]]; then
@@ -1412,7 +1412,7 @@ else
      -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-     ${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf > $TMP3
+     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
 
 
     if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
@@ -1495,7 +1495,7 @@ else
             TMP9=$(mktemp)
             sed \
              -e 's|^\(.*\)[^#]\?\(listen.*\)|\1#\2|i' \
-             /etc/apache2/ports.conf_pre_indiallsky > $TMP9
+             /etc/apache2/ports.conf_pre_indiallsky > "$TMP9"
 
             sudo cp -f "$TMP9" /etc/apache2/ports.conf
             sudo chown root:root /etc/apache2/ports.conf
@@ -1596,9 +1596,9 @@ if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
     flask db init
 
     # Move migrations out of git checkout
-    cd "${ALLSKY_DIRECTORY}/migrations/versions"
+    cd "${ALLSKY_DIRECTORY}/migrations/versions" || exit
     find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
-    cd "$OLDPWD"
+    cd "$OLDPWD" || exit
 
     # Cleanup old files
     find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
@@ -1667,7 +1667,7 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
             echo "Disabling dpc in $JSON_FILE"
 
             TMP_JSON=$(mktemp)
-            jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > $TMP_JSON
+            jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > "$TMP_JSON"
             sudo cp -f "$TMP_JSON" "$JSON_FILE"
             sudo chown root:root "$JSON_FILE"
             sudo chmod 644 "$JSON_FILE"
@@ -1688,10 +1688,10 @@ fi
 
 
 # Disable raw frames with libcamera when running less than 1GB of memory
-MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print $2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp)
-    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_TYPE
+    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_TYPE"
     cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
@@ -1700,7 +1700,7 @@ fi
 if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
         TMP_LIBCAM_FFMPEG=$(mktemp)
-        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > $TMP_LIBCAM_FFMPEG
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_FFMPEG"
         cp -f "$TMP_LIBCAM_FFMPEG" "${ALLSKY_ETC}/config.json"
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
     fi
@@ -1720,14 +1720,14 @@ systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 echo "**** Update config camera interface ****"
 TMP_CAMERA_INT=$(mktemp)
-jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > $TMP_CAMERA_INT
+jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > "$TMP_CAMERA_INT"
 cp -f "$TMP_CAMERA_INT" "${ALLSKY_ETC}/config.json"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
 
 
 echo "**** Update config version ****"
 TMP_CONFIG2=$(mktemp)
-jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > $TMP_CONFIG2
+jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > "$TMP_CONFIG2"
 cp -f "$TMP_CONFIG2" "${ALLSKY_ETC}/config.json"
 [[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
 
@@ -1738,8 +1738,8 @@ sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
 
 # final config syntax check
-cat "${ALLSKY_ETC}/config.json" | json_pp >/dev/null
-cat "${ALLSKY_ETC}/flask.json" | json_pp >/dev/null
+json_pp < "${ALLSKY_ETC}/config.json" > /dev/null
+json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 echo
