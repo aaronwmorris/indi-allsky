@@ -2,7 +2,7 @@
 
 #set -x  # command tracing
 set -o errexit
-#set -o nounset
+set -o nounset
 
 
 PATH=/bin:/usr/bin
@@ -127,19 +127,19 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 echo "*** Setup wifi for specific country ***"
 #COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | sed -e "s/[\t\ ]/_/g")
-COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | awk {'print $1'})
+COUNTRIES=$(grep -v "^#" /usr/share/zoneinfo/iso3166.tab | awk "{print \$1}")
 PS3="Please select your country for proper wifi channel selection: "
 select code_country in $COUNTRIES; do
     if [[ -n "$code_country" ]]; then
-        #COUNTRY_CODE=$(echo $code_country | awk -F_ {'print $1'})
+        #COUNTRY_CODE=$(echo $code_country | awk -F_ "{print \$1}")
         COUNTRY_CODE=$code_country
         break
     fi
@@ -191,7 +191,7 @@ echo "**** Setup policy kit permissions ****"
 TMP8=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+ "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
 
 sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
 sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
@@ -201,7 +201,7 @@ sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi
 
 
 if [[ -f "/etc/dhcpcd.conf" ]]; then
-    if [[ ! $(grep -e "^denyinterfaces wlan0" /etc/dhcpcd.conf >/dev/null 2>&1) ]]; then
+    if ! grep -q -e "^denyinterfaces wlan0" /etc/dhcpcd.conf; then
         echo "denyinterfaces wlan0" | sudo tee -a /etc/dhcpcd.conf
         sudo systemctl daemon-reload
         sudo systemctl restart dhcpcd

@@ -2,7 +2,7 @@
 
 #set -x  # command tracing
 set -o errexit
-#set -o nounset
+set -o nounset
 
 
 PATH=/bin:/usr/bin
@@ -53,7 +53,7 @@ sudo true
 
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -64,7 +64,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -75,7 +75,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -86,7 +86,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -97,7 +97,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -108,7 +108,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
-    MOSQUITTO_USER=mosquitto
+    #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
     sudo apt-get update
@@ -125,10 +125,10 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 echo "**** Setup certificate ****"
@@ -186,7 +186,7 @@ sudo update-ca-certificates
 
 echo "**** Setup mosquitto config ****"
 TMP1=$(mktemp)
-cat ${ALLSKY_DIRECTORY}/misc/mosquitto_indi-allsky.conf > $TMP1
+cat "${ALLSKY_DIRECTORY}/misc/mosquitto_indi-allsky.conf" > "$TMP1"
 
 sudo cp -f "$TMP1" "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 sudo chown root:root "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"

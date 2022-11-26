@@ -35,7 +35,7 @@ echo
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
-    echo "Please do not run $(basename $0) as root"
+    echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
     echo
     echo
@@ -67,7 +67,7 @@ for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
         echo "Disabling dpc in $JSON_FILE"
 
         TMP_JSON=$(mktemp)
-        jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > $TMP_JSON
+        jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > "$TMP_JSON"
         sudo cp -f "$TMP_JSON" "$JSON_FILE"
         sudo chown root:root "$JSON_FILE"
         sudo chmod 644 "$JSON_FILE"
