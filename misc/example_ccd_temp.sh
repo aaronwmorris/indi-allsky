@@ -20,7 +20,7 @@ fi
 
 
 # write json data
-jq --null-input --argjson temp_c "$TEMP_C" '.temp = $temp_c' '{}' > $TEMP_JSON
+jq --null-input --argjson temp_c "$TEMP_C" '.temp = $temp_c' '{}' > "$TEMP_JSON"
 
 
 # you could also just use a string as long as it is valid json

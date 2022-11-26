@@ -10,7 +10,7 @@ export PATH
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
-    echo "Please do not run $(basename $0) as root"
+    echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
     echo
     echo
@@ -19,7 +19,7 @@ fi
 
 if [[ -n "$VIRTUAL_ENV" ]]; then
     echo
-    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Please do not run $(basename "$0") with a virtualenv active"
     echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
@@ -28,10 +28,10 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
@@ -57,7 +57,8 @@ sleep 10
 START_TIME=$(date +%s)
 
 
-source ${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate
+# shellcheck source=/dev/null
+source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 uninstall -y pyindi-client
 #pip3 install --no-binary :all: --upgrade 'pyindi-client==1.9.1'
 pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client'

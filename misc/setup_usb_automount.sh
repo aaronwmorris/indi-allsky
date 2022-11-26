@@ -2,7 +2,7 @@
 
 #set -x  # command tracing
 set -o errexit
-#set -o nounset
+set -o nounset
 
 
 PATH=/bin:/usr/bin
@@ -109,10 +109,10 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR/.."
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 
@@ -120,7 +120,7 @@ echo "**** Setup policy kit permissions ****"
 TMP8=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
- ${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla > $TMP8
+ "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
 
 sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
 sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
@@ -145,6 +145,7 @@ systemctl --user start udiskie-automount.service
 echo
 echo "Please insert your USB media now"
 echo
+# shellcheck disable=SC2034
 read -n1 -r -p "Press any key to continue..." anykey
 
 

@@ -2,7 +2,7 @@
 
 #set -x  # command tracing
 set -o errexit
-#set -o nounset
+set -o nounset
 
 
 PATH=/bin:/usr/bin
@@ -95,10 +95,10 @@ fi
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
-cd "$SCRIPT_DIR/.."
-ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+#SCRIPT_DIR=$(dirname "$0")
+#cd "$SCRIPT_DIR/.."
+#ALLSKY_DIRECTORY=$PWD
+#cd "$OLDPWD"
 
 
 echo "**** Enable Raspberry Pi i2c interface ****"
@@ -123,7 +123,7 @@ fi
 
 
 echo "**** Setup enable RTC cronjob at /etc/cron.d/enable_i2c_rtc ****"
-echo "@reboot root echo ds1307 "$DS1307_I2C" > /sys/class/i2c-adapter/i2c-${I2C_BUS}/new_device" | sudo tee /etc/cron.d/enable_i2c_rtc
+echo "@reboot root echo ds1307 $DS1307_I2C > /sys/class/i2c-adapter/i2c-${I2C_BUS}/new_device" | sudo tee /etc/cron.d/enable_i2c_rtc
 sudo chown root:root /etc/cron.d/enable_i2c_rtc
 sudo chmod 644 /etc/cron.d/enable_i2c_rtc
 

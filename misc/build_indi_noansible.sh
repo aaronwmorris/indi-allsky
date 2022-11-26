@@ -44,7 +44,7 @@ echo "######################################################"
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
-    echo "Please do not run $(basename $0) as root"
+    echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
     echo
     echo
@@ -76,14 +76,6 @@ if [ -f "/usr/bin/indiserver" ]; then
 fi
 
 
-# find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
-cd "${SCRIPT_DIR}/.."
-ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
-
-
-
 # Run sudo to ask for initial password
 sudo true
 
@@ -95,7 +87,7 @@ echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -140,7 +132,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -186,7 +178,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -232,7 +224,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -278,7 +270,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -323,7 +315,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
-        if dpkg -s $p >/dev/null 2>&1; then
+        if dpkg -s "$p" >/dev/null 2>&1; then
             echo
             echo
             echo "Package $p needs to be uninstalled"
@@ -381,7 +373,7 @@ sudo ldconfig
 
 
 
-MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk {'print $2'})
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "1536000" ]; then
     MAKE_CONCURRENT=1
 elif [ "$MEM_TOTAL" -lt "2560000" ]; then
@@ -423,7 +415,7 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
     $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_core"
 
     # Compile
-    make -j $MAKE_CONCURRENT
+    make -j "$MAKE_CONCURRENT"
     sudo make install
 
     cd "$OLDPWD"
@@ -460,7 +452,7 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
     $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
     # Compile
-    make -j $MAKE_CONCURRENT
+    make -j "$MAKE_CONCURRENT"
     sudo make install
 
     cd "$OLDPWD"
@@ -476,7 +468,7 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
     $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
     # Compile
-    make -j $MAKE_CONCURRENT
+    make -j "$MAKE_CONCURRENT"
     sudo make install
     cd "$OLDPWD"
     #### drivers ####

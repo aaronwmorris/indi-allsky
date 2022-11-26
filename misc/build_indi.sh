@@ -31,7 +31,7 @@ echo "######################################################"
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
-    echo "Please do not run $(basename $0) as root"
+    echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
     echo
     echo
@@ -40,7 +40,7 @@ fi
 
 if [[ -n "$VIRTUAL_ENV" ]]; then
     echo
-    echo "Please do not run $(basename $0) with a virtualenv active"
+    echo "Please do not run $(basename "$0") with a virtualenv active"
     echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
@@ -63,10 +63,10 @@ sleep 10
 
 
 # find script directory for service setup
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname "$0")
 cd "${SCRIPT_DIR}/.."
 ALLSKY_DIRECTORY=$PWD
-cd $OLDPWD
+cd "$OLDPWD"
 
 
 
@@ -228,7 +228,8 @@ chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/ansible" ]; then
     virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/ansible"
 fi
-source ${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate
+# shellcheck source=/dev/null
+source "${ALLSKY_DIRECTORY}/virtualenv/ansible/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/ansible/${VIRTUALENV_REQ}"
 
@@ -238,8 +239,9 @@ echo
 echo "The \"BECOME\" password is your sudo password"
 echo
 
-cd ${ALLSKY_DIRECTORY}/ansible
+cd "${ALLSKY_DIRECTORY}/ansible"
 
+# shellcheck disable=SC2068
 ansible-playbook -i inventory.yml site.yml --ask-become-pass -e "indi_core_git_version=${INDI_CORE_TAG}" -e "indi_3rdparty_git_version=${INDI_3RDPARTY_TAG}" $@
 
 

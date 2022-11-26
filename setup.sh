@@ -1105,20 +1105,21 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 # get list of drivers
-INDI_DRIVERS=""
+INDI_DRIVERS=()
 cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam*; do
-    INDI_DRIVERS="$INDI_DRIVERS $I $I OFF "
+    INDI_DRIVERS[${#INDI_DRIVERS[@]}]="$I $I OFF"
 done
 cd "$OLDPWD" || catch_error
 
-#echo $INDI_DRIVERS
+#echo ${INDI_DRIVERS[@]}
 
 
 CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "$CCD_DRIVER" ]; do
-        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 "$INDI_DRIVERS" 3>&1 1>&2 2>&3)
+        # shellcheck disable=SC2068
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_DRIVERS[@]} 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything
