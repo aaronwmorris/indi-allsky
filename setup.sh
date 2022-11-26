@@ -222,8 +222,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -344,8 +342,6 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -455,8 +451,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -580,8 +574,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -700,8 +692,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3
 
@@ -822,8 +812,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3.9
 
@@ -943,8 +931,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
-    APACHE_USER=www-data
-    APACHE_GROUP=www-data
 
     PYTHON_BIN=python3.8
 
@@ -1083,9 +1069,9 @@ fi
 
 # find script directory for service setup
 SCRIPT_DIR=$(dirname "$0")
-cd "$SCRIPT_DIR" || exit
+cd "$SCRIPT_DIR" || catch_error
 ALLSKY_DIRECTORY=$PWD
-cd "$OLDPWD" || exit
+cd "$OLDPWD" || catch_error
 
 
 echo "**** Ensure path to git folder is traversable ****"
@@ -1111,6 +1097,7 @@ chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky"
 fi
+# shellcheck source=/dev/null
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
@@ -1119,11 +1106,11 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 # get list of drivers
 INDI_DRIVERS=""
-cd "$INDI_DRIVER_PATH" || exit
+cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam*; do
     INDI_DRIVERS="$INDI_DRIVERS $I $I OFF "
 done
-cd "$OLDPWD" || exit
+cd "$OLDPWD" || catch_error
 
 #echo $INDI_DRIVERS
 
@@ -1241,7 +1228,7 @@ sudo chown -R $RSYSLOG_USER:$RSYSLOG_GROUP /var/log/indi-allsky
 
 
 # 10 prefix so they are process before the defaults in 50
-sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf /etc/rsyslog.d/10-indi-allsky.conf"
+sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
 sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
 sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 
@@ -1251,7 +1238,7 @@ sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 sudo systemctl restart rsyslog
 
 
-sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky /etc/logrotate.d/indi-allsky"
+sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
 sudo chown root:root /etc/logrotate.d/indi-allsky
 sudo chmod 644 /etc/logrotate.d/indi-allsky
 
@@ -1596,9 +1583,9 @@ if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
     flask db init
 
     # Move migrations out of git checkout
-    cd "${ALLSKY_DIRECTORY}/migrations/versions" || exit
+    cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
     find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
-    cd "$OLDPWD" || exit
+    cd "$OLDPWD" || catch_error
 
     # Cleanup old files
     find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
@@ -1688,7 +1675,7 @@ fi
 
 
 # Disable raw frames with libcamera when running less than 1GB of memory
-MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print $2}")
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_TYPE"
