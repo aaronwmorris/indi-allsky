@@ -13,6 +13,8 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
+from .models import IndiAllSkyDbFitsImageTable
+from .models import IndiAllSkyDbRawImageTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -356,6 +358,74 @@ class miscDb(object):
         db.session.commit()
 
         return startrail_video
+
+
+    def addFitsImage(self, filename, camera_id, dayDate, timeofday='night'):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.warning('File not found: %s', p_filename)
+
+
+        logger.info('Adding fits image %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        fits_image = IndiAllSkyDbFitsImageTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        db.session.add(fits_image)
+        db.session.commit()
+
+        return fits_image
+
+
+    def addRawImage(self, filename, camera_id, dayDate, timeofday='night'):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.warning('File not found: %s', p_filename)
+
+
+        logger.info('Adding raw image %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        if timeofday == 'night':
+            night = True
+        else:
+            night = False
+
+
+        fits_image = IndiAllSkyDbRawImageTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        db.session.add(fits_image)
+        db.session.commit()
+
+        return fits_image
 
 
     def addUploadedFlag(self, entry):
