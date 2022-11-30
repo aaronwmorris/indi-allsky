@@ -756,6 +756,14 @@ class ImageWorker(Process):
         ))
 
 
+        self._miscDb.addFitsImage(
+            filename,
+            camera_id,
+            exp_date,
+            night=bool(self.night_v.value),
+        )
+
+
         file_dir = filename.parent
         if not file_dir.exists():
             file_dir.mkdir(mode=0o755, parents=True)
@@ -769,7 +777,6 @@ class ImageWorker(Process):
 
         shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
         filename.chmod(0o644)
-
 
         Path(f_tmpfile.name).unlink()  # delete temp file
 
@@ -1693,6 +1700,14 @@ class ImageWorker(Process):
             date_str,
             self.config['IMAGE_EXPORT_RAW'],  # file suffix
         ))
+
+
+        self._miscDb.addRawImage(
+            filename,
+            camera_id,
+            exp_date,
+            night=bool(self.night_v.value),
+        )
 
 
         logger.info('RAW filename: %s', filename)

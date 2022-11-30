@@ -360,7 +360,7 @@ class miscDb(object):
         return startrail_video
 
 
-    def addFitsImage(self, filename, camera_id, dayDate, timeofday='night'):
+    def addFitsImage(self, filename, camera_id, createDate, night=True):
         if not filename:
             return
 
@@ -369,21 +369,23 @@ class miscDb(object):
             logger.warning('File not found: %s', p_filename)
 
 
+        if night:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
         logger.info('Adding fits image %s to DB', filename)
 
 
         filename_str = str(filename)  # might be a pathlib object
 
 
-        if timeofday == 'night':
-            night = True
-        else:
-            night = False
-
-
         fits_image = IndiAllSkyDbFitsImageTable(
             camera_id=camera_id,
             filename=filename_str,
+            createDate=createDate,
             dayDate=dayDate,
             night=night,
         )
@@ -394,7 +396,7 @@ class miscDb(object):
         return fits_image
 
 
-    def addRawImage(self, filename, camera_id, dayDate, timeofday='night'):
+    def addRawImage(self, filename, camera_id, createDate, night=True):
         if not filename:
             return
 
@@ -403,21 +405,23 @@ class miscDb(object):
             logger.warning('File not found: %s', p_filename)
 
 
+        if night:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
         logger.info('Adding raw image %s to DB', filename)
 
 
         filename_str = str(filename)  # might be a pathlib object
 
 
-        if timeofday == 'night':
-            night = True
-        else:
-            night = False
-
-
         fits_image = IndiAllSkyDbRawImageTable(
             camera_id=camera_id,
             filename=filename_str,
+            createDate=createDate,
             dayDate=dayDate,
             night=night,
         )
