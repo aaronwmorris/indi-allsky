@@ -461,10 +461,16 @@ class IndiClient(PyIndi.BaseClient):
 
         ### Configure Device Properties
         for k, v in indi_config.get('PROPERTIES', {}).items():
-            logger.info('Setting property (number) %s', k)
-            self.set_number(device, k, v)
+            if isinstance(v, (int, float)):
+                logger.info('Setting property (number) %s', k)
+                self.set_number(device, k, v)
+            elif isinstance(v, str):
+                logger.info('Setting property (text) %s', k)
+                self.set_text(device, k, v)
+            else:
+                raise Exception('Unknown property type for {0:s}'.format(k))
 
-        ### Configure Device Text
+        ### Configure Device Text (deprecated)
         for k, v in indi_config.get('TEXT', {}).items():
             logger.info('Setting property (text) %s', k)
             self.set_text(device, k, v)
