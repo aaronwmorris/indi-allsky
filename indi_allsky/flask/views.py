@@ -1927,12 +1927,15 @@ class AjaxSystemInfoView(BaseView):
 
 
     def flushImages(self):
+        file_count = 0
+
+        ### Images
         image_query = IndiAllSkyDbImageTable.query
 
-        image_count = image_query.count()
+        file_count += image_query.count()
 
-        for image in image_query:
-            image_filename = image.getFilesystemPath()
+        for i in image_query:
+            image_filename = i.getFilesystemPath()
             image_filename_p = Path(image_filename)
 
             if image_filename_p.exists():
@@ -1942,7 +1945,44 @@ class AjaxSystemInfoView(BaseView):
         image_query.delete()
         db.session.commit()
 
-        return image_count
+
+        ### FITS Images
+        fits_image_query = IndiAllSkyDbFitsImageTable.query
+
+        file_count += fits_image_query.count()
+
+        for i in fits_image_query:
+            image_filename = i.getFilesystemPath()
+            image_filename_p = Path(image_filename)
+
+            if image_filename_p.exists():
+                app.logger.info('Deleting %s', image_filename_p)
+                image_filename_p.unlink()
+
+
+        fits_image_query.delete()
+        db.session.commit()
+
+
+        ### RAW Images
+        raw_image_query = IndiAllSkyDbRawImageTable.query
+
+        file_count += raw_image_query.count()
+
+        for i in raw_image_query:
+            image_filename = i.getFilesystemPath()
+            image_filename_p = Path(image_filename)
+
+            if image_filename_p.exists():
+                app.logger.info('Deleting %s', image_filename_p)
+                image_filename_p.unlink()
+
+
+        raw_image_query.delete()
+        db.session.commit()
+
+
+        return file_count
 
 
     def flushTimelapses(self):
