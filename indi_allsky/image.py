@@ -336,7 +336,7 @@ class ImageWorker(Process):
 
 
             ### IMAGE IS CALIBRATED ###
-            self._export_raw_image(scidata, exp_date, camera_id, image_bitpix, image_bit_depth)
+            self._export_raw_image(scidata, exp_date, exposure, camera_id, image_bitpix, image_bit_depth)
 
             scidata = self._convert_16bit_to_8bit(scidata, image_bitpix, image_bit_depth)
 
@@ -760,6 +760,9 @@ class ImageWorker(Process):
             filename,
             camera_id,
             exp_date,
+            exposure,
+            self.gain_v.value,
+            self.bin_v.value,
             night=bool(self.night_v.value),
         )
 
@@ -1623,7 +1626,7 @@ class ImageWorker(Process):
         return (data_bytes_16 / div_factor).astype(numpy.uint8)
 
 
-    def _export_raw_image(self, scidata, exp_date, camera_id, image_bitpix, image_bit_depth):
+    def _export_raw_image(self, scidata, exp_date, exposure, camera_id, image_bitpix, image_bit_depth):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1706,6 +1709,9 @@ class ImageWorker(Process):
             filename,
             camera_id,
             exp_date,
+            exposure,
+            self.gain_v.value,
+            self.bin_v.value,
             night=bool(self.night_v.value),
         )
 

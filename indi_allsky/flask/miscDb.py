@@ -360,7 +360,7 @@ class miscDb(object):
         return startrail_video
 
 
-    def addFitsImage(self, filename, camera_id, createDate, night=True):
+    def addFitsImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
         if not filename:
             return
 
@@ -386,6 +386,9 @@ class miscDb(object):
             camera_id=camera_id,
             filename=filename_str,
             createDate=createDate,
+            exposure=exposure,
+            gain=gain,
+            binmode=binmode,
             dayDate=dayDate,
             night=night,
         )
@@ -396,7 +399,7 @@ class miscDb(object):
         return fits_image
 
 
-    def addRawImage(self, filename, camera_id, createDate, night=True):
+    def addRawImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
         if not filename:
             return
 
@@ -422,6 +425,9 @@ class miscDb(object):
             camera_id=camera_id,
             filename=filename_str,
             createDate=createDate,
+            exposure=exposure,
+            gain=gain,
+            binmode=binmode,
             dayDate=dayDate,
             night=night,
         )
