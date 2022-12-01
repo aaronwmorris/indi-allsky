@@ -49,7 +49,6 @@ CCD_BINMODE = 1
 INDI_CONFIG = OrderedDict({
     "SWITCHES" : {},
     "PROPERTIES" : {},
-    "TEXT" : {},
 })
 
 
@@ -94,8 +93,7 @@ INDI_CONFIG = OrderedDict({
 
 ### webcam
 #INDI_CONFIG = OrderedDict({
-#    "PROPERTIES" : {},
-#    "TEXT" : {
+#    "PROPERTIES" : {
 #        "ONLINE_PATH": {
 #            "URL_PATH": "http://10.11.12.13/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=abcdefg123456789&user=username&password=password"
 #        }
@@ -245,14 +243,14 @@ class IndiClient(PyIndi.BaseClient):
 
         ### Configure Device Properties
         for k, v in indi_config.get('PROPERTIES', {}).items():
-            logger.info('Setting property %s', k)
-            self.set_number(device, k, v)
-
-        ### Configure Device Text
-        for k, v in indi_config.get('TEXT', {}).items():
-            logger.info('Setting TEXT %s', k)
-            self.set_text(device, k, v)
-
+            if isinstance(v, (int, float)):
+                logger.info('Setting property (number) %s', k)
+                self.set_number(device, k, v)
+            elif isinstance(v, str):
+                logger.info('Setting property (text) %s', k)
+                self.set_text(device, k, v)
+            else:
+                raise Exception('Unknown property type for {0:s}'.format(k))
 
         # Sleep after configuration
         time.sleep(1.0)
