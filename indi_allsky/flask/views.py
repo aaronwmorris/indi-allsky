@@ -47,6 +47,8 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbBadPixelMapTable
+from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 
 from .models import TaskQueueQueue
@@ -2034,6 +2036,44 @@ class AjaxSystemInfoView(BaseView):
                 image_notfound_list.append(i)
 
 
+        ### FITS Images
+        fits_image_entries = IndiAllSkyDbFitsImageTable.query\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
+
+
+        fits_image_entries_count = fits_image_entries.count()
+        message_list.append('<p>FITS Images: {0:d}</p>'.format(fits_image_entries_count))
+
+        app.logger.info('Searching %d fits images...', fits_image_entries_count)
+        fits_image_notfound_list = list()
+        for i in fits_image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                fits_image_notfound_list.append(i)
+
+
+        ### Raw Images
+        raw_image_entries = IndiAllSkyDbRawImageTable.query\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
+
+
+        raw_image_entries_count = raw_image_entries.count()
+        message_list.append('<p>RAW Images: {0:d}</p>'.format(raw_image_entries_count))
+
+        app.logger.info('Searching %d raw images...', raw_image_entries_count)
+        raw_image_notfound_list = list()
+        for i in raw_image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                raw_image_notfound_list.append(i)
+
+
         ### Bad Pixel Maps
         badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
             .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
@@ -2145,6 +2185,8 @@ class AjaxSystemInfoView(BaseView):
 
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
+        app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
+        app.logger.warning('RAW Images not found: %d', len(raw_image_notfound_list))
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
@@ -2156,6 +2198,14 @@ class AjaxSystemInfoView(BaseView):
         ### DELETE ###
         message_list.append('<p>Removed {0:d} missing image entries</p>'.format(len(image_notfound_list)))
         [db.session.delete(i) for i in image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing FITS image entries</p>'.format(len(fits_image_notfound_list)))
+        [db.session.delete(i) for i in fits_image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing RAW image entries</p>'.format(len(raw_image_notfound_list)))
+        [db.session.delete(i) for i in raw_image_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))
