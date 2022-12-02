@@ -308,6 +308,8 @@ const field_names = [
     'DAY_SELECT',
     'HOUR_SELECT',
     'IMG_SELECT',
+    'FITS_SELECT',
+    'RAW_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -398,6 +400,16 @@ $("#HOUR_SELECT").on("change", function() {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
             img.src = fields['IMG_SELECT'].input.val();
 
             $("#loader_filter").css({'display' : 'none'});
@@ -445,6 +457,16 @@ $("#DAY_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -497,6 +519,16 @@ $("#MONTH_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -552,6 +584,16 @@ $("#YEAR_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -610,6 +652,16 @@ $("#FILTER_DETECTIONS").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
