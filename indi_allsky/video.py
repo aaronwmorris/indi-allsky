@@ -814,10 +814,10 @@ class VideoWorker(Process):
         self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
 
         old_fits_files_1 = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
-        old_fits_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
-        old_fits_nobpm = filter(lambda p: 'bpm' not in p.name, old_fits_files_nodarks)  # exclude bpms
-        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files_nobpm)))
-        for f in old_fits_files:
+        old_fits_files_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
+        old_fits_files_no_d_bpm = filter(lambda p: 'bpm' not in p.name, old_fits_files_nodarks)  # exclude bpms
+        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files_no_d_bpm)))
+        for f in old_fits_files_no_d_bpm:
             logger.info('Removing old fits image: %s', f)
 
             try:
