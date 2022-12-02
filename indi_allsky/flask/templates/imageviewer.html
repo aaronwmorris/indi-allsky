@@ -106,23 +106,25 @@ function init() {
 
         switch (e.which) {
             case arrow.left:
-                console.log('Previous image');
                 $('#IMG_SELECT option').each(function(index, element) {
-                    if (index == $("#IMG_SELECT")[0].options.length) {
+                    if (index == $("#IMG_SELECT")[0].options.length - 1) {
                         console.log('At latest image');
                     } else if (element.value == img_select_val) {
+                        console.log('Previous image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+                        return false;
                     };
                 });
 
                 break;
             case arrow.right:
-                console.log('Next image');
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == 0) {
                         console.log('At oldest image');
                     } else if (element.value == img_select_val) {
+                        console.log('Next image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+                        return false;
                     };
                 });
 
