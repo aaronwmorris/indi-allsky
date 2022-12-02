@@ -1385,7 +1385,10 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.strftime('%d')
             hour = form_datetime.strftime('%H')
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
 
         elif form_day:
@@ -1398,7 +1401,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -1412,7 +1418,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -1428,7 +1437,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         else:
             # this happens when filtering images on detections
@@ -1441,6 +1453,8 @@ class AjaxImageViewerView(BaseView):
                 json_data['DAY_SELECT'] = (('', None),)
                 json_data['HOUR_SELECT'] = (('', None),)
                 json_data['IMG_SELECT'] = (('', None),)
+                json_data['FITS_SELECT'] = (('', None),)
+                json_data['RAW_SELECT'] = (('', None),)
 
                 return json_data
 
@@ -1456,7 +1470,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
 
         return jsonify(json_data)
