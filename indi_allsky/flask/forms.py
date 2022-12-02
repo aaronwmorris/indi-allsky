@@ -1538,7 +1538,7 @@ class IndiAllskyImageViewer(FlaskForm):
 
                 fits_select = (str(fits_image.getUri()), i)
             except NoResultFound:
-                fits_select = (None, str(i))
+                fits_select = ('None', str(i))
 
             fits_choices.append(fits_select)
 
@@ -1551,7 +1551,7 @@ class IndiAllskyImageViewer(FlaskForm):
 
                 raw_select = (str(fits_image.getUri()), i)
             except NoResultFound:
-                raw_select = (None, i)
+                raw_select = ('None', i)
 
             raw_choices.append(raw_select)
 
