@@ -31,6 +31,8 @@ from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbStarTrailsVideoTable
+from .flask.models import IndiAllSkyDbFitsImageTable
+from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -660,10 +662,14 @@ class VideoWorker(Process):
     def expireData(self, task, img_folder):
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
+        cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
-            .filter(IndiAllSkyDbImageTable.createDate < cutoff_age_images)
-
+            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
+        old_fits_images = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
+        old_raw_images = IndiAllSkyDbRawImageTable.query\
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
@@ -693,6 +699,46 @@ class VideoWorker(Process):
 
 
         old_images.delete()  # mass delete
+        db.session.commit()
+
+
+        # fits images
+        logger.warning('Found %d expired FITS images to delete', old_fits_images.count())
+        for file_entry in old_fits_images:
+            #logger.info('Removing old image: %s', file_entry.filename)
+
+            file_p = Path(file_entry.getFilesystemPath())
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+
+        old_fits_images.delete()  # mass delete
+        db.session.commit()
+
+
+        # raw images
+        logger.warning('Found %d expired RAW images to delete', old_raw_images.count())
+        for file_entry in old_raw_images:
+            #logger.info('Removing old image: %s', file_entry.filename)
+
+            file_p = Path(file_entry.getFilesystemPath())
+
+            try:
+                file_p.unlink()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+            except FileNotFoundError as e:
+                logger.warning('File already removed: %s', str(e))
+
+
+        old_raw_images.delete()  # mass delete
         db.session.commit()
 
 
@@ -756,11 +802,18 @@ class VideoWorker(Process):
         db.session.commit()
 
 
+        ### The following code will need to be pruned eventually since we are deleting based on DB entries
         # Old fits image files need to be pruned
+
+
+        # ensure we do not delete images stored in DB
+        cutoff_age_images_minus_1day = cutoff_age_images - timedelta(days=1)
+
+
         fits_file_list = list()
         self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
 
-        old_fits_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), fits_file_list)
+        old_fits_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
         logger.warning('Found %d expired fits images to delete', len(list(old_fits_files)))
         for f in old_fits_files:
             logger.info('Removing old fits image: %s', f)
@@ -778,7 +831,7 @@ class VideoWorker(Process):
         export_file_list = list()
         self.getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
-        old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images.timestamp(), export_file_list)
+        old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), export_file_list)
         logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
         for f in old_export_files:
             logger.info('Removing old export image: %s', f)
