@@ -1698,7 +1698,8 @@ class ImageWorker(Process):
             hour_folder.mkdir(mode=0o755)
 
 
-        filename = hour_folder.joinpath(self.filename_t.format(
+        raw_filename_t = 'raw_{0:s}'.format(self.filename_t)
+        filename = hour_folder.joinpath(raw_filename_t.format(
             camera_id,
             date_str,
             self.config['IMAGE_EXPORT_RAW'],  # file suffix
