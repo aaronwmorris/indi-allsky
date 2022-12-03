@@ -405,7 +405,7 @@ class IndiClient(PyIndi.BaseClient):
         #logger.info('Name: %s, values: %s', name, str(values))
         c = self.get_control(device, name, 'number')
         for control_name, index in self.__map_indexes(c, values.keys()).items():
-            c[index].value = values[control_name]
+            c[index].setValue(values[control_name])
 
         self.sendNewNumber(c)
 
@@ -421,15 +421,15 @@ class IndiClient(PyIndi.BaseClient):
         is_exclusive = c.getRule() == PyIndi.ISR_ATMOST1 or c.getRule() == PyIndi.ISR_1OFMANY
         if is_exclusive :
             on_switches = on_switches[0:1]
-            off_switches = [s.name for s in c if s.name not in on_switches]
+            off_switches = [s.getName() for s in c if s.getName() not in on_switches]
 
         for index in range(0, len(c)):
             current_state = c[index].getState()
             new_state = current_state
 
-            if c[index].name in on_switches:
+            if c[index].getName() in on_switches:
                 new_state = PyIndi.ISS_ON
-            elif is_exclusive or c[index].name in off_switches:
+            elif is_exclusive or c[index].getName() in off_switches:
                 new_state = PyIndi.ISS_OFF
 
             c[index].setState(new_state)
@@ -442,7 +442,7 @@ class IndiClient(PyIndi.BaseClient):
     def set_text(self, device, control_name, values, sync=True, timeout=None):
         c = self.get_control(device, control_name, 'text')
         for control_name, index in self.__map_indexes(c, values.keys()).items():
-            c[index].text = values[control_name]
+            c[index].setText(values[control_name])
         self.sendNewText(c)
 
         if sync:
@@ -491,9 +491,9 @@ class IndiClient(PyIndi.BaseClient):
     def __map_indexes(self, ctl, values):
         result = {}
         for i, c in enumerate(ctl):
-            #logger.info('Value name: %s', c.name)  # useful to find value names
-            if c.name in values:
-                result[c.name] = i
+            #logger.info('Value name: %s', c.getName())  # useful to find value names
+            if c.getName() in values:
+                result[c.getName()] = i
         return result
 
 
