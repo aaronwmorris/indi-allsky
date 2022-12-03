@@ -30,7 +30,7 @@ from sqlalchemy import extract
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.types import Date
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask import current_app as app
 
@@ -40,6 +40,8 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
+from .models import IndiAllSkyDbFitsImageTable
+from .models import IndiAllSkyDbRawImageTable
 
 from . import db
 
@@ -1384,6 +1386,8 @@ class IndiAllskyImageViewer(FlaskForm):
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     IMG_SELECT           = SelectField('Image', choices=[], validators=[])
+    FITS_SELECT          = SelectField('FITS', choices=[], validators=[])  # hidden
+    RAW_SELECT           = SelectField('RAW', choices=[], validators=[])  # hidden
     FILTER_DETECTIONS    = BooleanField('Detections')
 
 
@@ -1508,26 +1512,51 @@ class IndiAllskyImageViewer(FlaskForm):
             .filter(createDate_hour == hour)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
-        images_choices = []
-        for i in images_query:
+        images_choices = list()
+        fits_choices = list()
+        raw_choices = list()
+        for i, img in enumerate(images_query):
             try:
-                uri = i.getUri()
+                uri = img.getUri()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
-            if i.detections:
-                entry_str = '{0:s} [*]'.format(i.createDate.strftime('%H:%M:%S'))
+            if img.detections:
+                entry_str = '{0:s} [*]'.format(img.createDate.strftime('%H:%M:%S'))
             else:
-                entry_str = i.createDate.strftime('%H:%M:%S')
+                entry_str = img.createDate.strftime('%H:%M:%S')
 
-            entry = (str(uri), entry_str)
-
-            images_choices.append(entry)
+            images_choices.append((str(uri), entry_str))
 
 
-        return images_choices
+            # look for fits
+            try:
+                fits_image = IndiAllSkyDbFitsImageTable.query\
+                    .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
+                    .one()
 
+                fits_select = (str(fits_image.getUri()), i)
+            except NoResultFound:
+                fits_select = ('None', str(i))
+
+            fits_choices.append(fits_select)
+
+
+            # look for raw
+            try:
+                fits_image = IndiAllSkyDbRawImageTable.query\
+                    .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
+                    .one()
+
+                raw_select = (str(fits_image.getUri()), i)
+            except NoResultFound:
+                raw_select = ('None', i)
+
+            raw_choices.append(raw_select)
+
+
+        return images_choices, fits_choices, raw_choices
 
 
 
@@ -1548,6 +1577,8 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
             self.DAY_SELECT.choices = (('', 'None'),)
             self.HOUR_SELECT.choices = (('', 'None'),)
             self.IMG_SELECT.choices = (('', 'None'),)
+            self.FITS_SELECT.choices = (('', 'None'),)
+            self.RAW_SELECT.choices = (('', 'None'),)
 
             return
 
@@ -1564,7 +1595,11 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         self.MONTH_SELECT.choices = self.getMonths(year)
         self.DAY_SELECT.choices = self.getDays(year, month)
         self.HOUR_SELECT.choices = self.getHours(year, month, day)
-        self.IMG_SELECT.choices = self.getImages(year, month, day, hour)
+
+        img_select, fits_select, raw_select = self.getImages(year, month, day, hour)
+        self.IMG_SELECT.choices = img_select
+        self.FITS_SELECT.choices = fits_select
+        self.RAW_SELECT.choices = raw_select
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)

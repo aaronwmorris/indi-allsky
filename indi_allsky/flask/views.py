@@ -47,6 +47,8 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbBadPixelMapTable
+from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 
 from .models import TaskQueueQueue
@@ -1383,7 +1385,10 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.strftime('%d')
             hour = form_datetime.strftime('%H')
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
 
         elif form_day:
@@ -1396,7 +1401,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -1410,7 +1418,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -1426,7 +1437,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
         else:
             # this happens when filtering images on detections
@@ -1439,6 +1453,8 @@ class AjaxImageViewerView(BaseView):
                 json_data['DAY_SELECT'] = (('', None),)
                 json_data['HOUR_SELECT'] = (('', None),)
                 json_data['IMG_SELECT'] = (('', None),)
+                json_data['FITS_SELECT'] = (('', None),)
+                json_data['RAW_SELECT'] = (('', None),)
 
                 return json_data
 
@@ -1454,7 +1470,10 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            json_data['IMG_SELECT'] = form_viewer.getImages(year, month, day, hour)
+            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
+            json_data['IMG_SELECT'] = img_select
+            json_data['FITS_SELECT'] = fits_select
+            json_data['RAW_SELECT'] = raw_select
 
 
         return jsonify(json_data)
@@ -1925,12 +1944,15 @@ class AjaxSystemInfoView(BaseView):
 
 
     def flushImages(self):
+        file_count = 0
+
+        ### Images
         image_query = IndiAllSkyDbImageTable.query
 
-        image_count = image_query.count()
+        file_count += image_query.count()
 
-        for image in image_query:
-            image_filename = image.getFilesystemPath()
+        for i in image_query:
+            image_filename = i.getFilesystemPath()
             image_filename_p = Path(image_filename)
 
             if image_filename_p.exists():
@@ -1940,7 +1962,44 @@ class AjaxSystemInfoView(BaseView):
         image_query.delete()
         db.session.commit()
 
-        return image_count
+
+        ### FITS Images
+        fits_image_query = IndiAllSkyDbFitsImageTable.query
+
+        file_count += fits_image_query.count()
+
+        for i in fits_image_query:
+            image_filename = i.getFilesystemPath()
+            image_filename_p = Path(image_filename)
+
+            if image_filename_p.exists():
+                app.logger.info('Deleting %s', image_filename_p)
+                image_filename_p.unlink()
+
+
+        fits_image_query.delete()
+        db.session.commit()
+
+
+        ### RAW Images
+        raw_image_query = IndiAllSkyDbRawImageTable.query
+
+        file_count += raw_image_query.count()
+
+        for i in raw_image_query:
+            image_filename = i.getFilesystemPath()
+            image_filename_p = Path(image_filename)
+
+            if image_filename_p.exists():
+                app.logger.info('Deleting %s', image_filename_p)
+                image_filename_p.unlink()
+
+
+        raw_image_query.delete()
+        db.session.commit()
+
+
+        return file_count
 
 
     def flushTimelapses(self):
@@ -2032,6 +2091,44 @@ class AjaxSystemInfoView(BaseView):
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
+
+
+        ### FITS Images
+        fits_image_entries = IndiAllSkyDbFitsImageTable.query\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
+
+
+        fits_image_entries_count = fits_image_entries.count()
+        message_list.append('<p>FITS Images: {0:d}</p>'.format(fits_image_entries_count))
+
+        app.logger.info('Searching %d fits images...', fits_image_entries_count)
+        fits_image_notfound_list = list()
+        for i in fits_image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                fits_image_notfound_list.append(i)
+
+
+        ### Raw Images
+        raw_image_entries = IndiAllSkyDbRawImageTable.query\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
+
+
+        raw_image_entries_count = raw_image_entries.count()
+        message_list.append('<p>RAW Images: {0:d}</p>'.format(raw_image_entries_count))
+
+        app.logger.info('Searching %d raw images...', raw_image_entries_count)
+        raw_image_notfound_list = list()
+        for i in raw_image_entries:
+            try:
+                self._validate_entry(i)
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                raw_image_notfound_list.append(i)
 
 
         ### Bad Pixel Maps
@@ -2145,6 +2242,8 @@ class AjaxSystemInfoView(BaseView):
 
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
+        app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
+        app.logger.warning('RAW Images not found: %d', len(raw_image_notfound_list))
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
@@ -2156,6 +2255,14 @@ class AjaxSystemInfoView(BaseView):
         ### DELETE ###
         message_list.append('<p>Removed {0:d} missing image entries</p>'.format(len(image_notfound_list)))
         [db.session.delete(i) for i in image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing FITS image entries</p>'.format(len(fits_image_notfound_list)))
+        [db.session.delete(i) for i in fits_image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing RAW image entries</p>'.format(len(raw_image_notfound_list)))
+        [db.session.delete(i) for i in raw_image_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))

@@ -10,7 +10,7 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20221106.0"
+INDI_ALLSKY_VERSION="20221129.0"
 INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
@@ -83,6 +83,19 @@ PGRP=$(id -ng)
 echo "###############################################"
 echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
+
+
+if [ -f "/usr/bin/indiserver" ]; then
+    # Do not upgrade INDI if it is already installed
+    INSTALL_INDI="false"
+
+    echo
+    echo
+    echo "INDI is already installed, not forcing package upgrades"
+    echo
+    echo
+    sleep 3
+fi
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
@@ -307,6 +320,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         dbus-user-session
 
 
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
@@ -416,6 +435,12 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         policykit-1 \
         dbus-user-session
 
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
@@ -536,6 +561,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         policykit-1 \
         dbus-user-session
 
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
@@ -662,6 +693,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         dbus-user-session
 
 
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
@@ -781,6 +818,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         policykit-1 \
         dbus-user-session
 
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
@@ -902,6 +945,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         dbus-user-session
 
 
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
             indi-full \
@@ -1010,6 +1059,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         policykit-1 \
         dbus-user-session
 
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
@@ -1556,9 +1611,8 @@ if [[ -f "${DB_FILE}" ]]; then
     sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
     echo "**** Backup DB prior to migration ****"
-    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql"
-    sqlite3 "${DB_FILE}" .dump > "$DB_BACKUP"
-    gzip "$DB_BACKUP"
+    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
+    sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
 fi
 
 

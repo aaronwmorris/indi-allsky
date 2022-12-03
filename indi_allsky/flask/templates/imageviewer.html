@@ -51,8 +51,49 @@ function init() {
             $('<a />', {
                 'href' : this.src,
                 'target' : '_blank',
-            }).html('Download')
+            }).html('Image')
         );
+
+
+        var image_index = -1;
+
+        $('#IMG_SELECT option').each(function(index, element) {
+            if (element.value == $("#IMG_SELECT").val()) {
+                image_index = index;
+                return false;
+            };
+        });
+
+
+        if (image_index > -1) {
+            // Add FITS download link if it exists
+            if ($("#FITS_SELECT")[0].options[image_index].value != "None") {
+                $('#fits_download').html(
+                    $('<a />', {
+                        'href' : $("#FITS_SELECT")[0].options[image_index].value,
+                        'target' : '_blank',
+                    }).html('FITS')
+                );
+            } else {
+                $('#fits_download').empty();
+            };
+
+            // Add RAW download link if it exists
+            if ($("#RAW_SELECT")[0].options[image_index].value != "None") {
+                $('#raw_download').html(
+                    $('<a />', {
+                        'href' : $("#RAW_SELECT")[0].options[image_index].value,
+                        'target' : '_blank',
+                    }).html('RAW')
+                );
+            } else {
+                $('#raw_download').empty();
+            };
+        } else {
+            // this should never happen, but just in case
+            $('#fits_download').empty();
+            $('#raw_download').empty();
+        };
 
     };
 
@@ -65,23 +106,25 @@ function init() {
 
         switch (e.which) {
             case arrow.left:
-                console.log('Previous image');
                 $('#IMG_SELECT option').each(function(index, element) {
-                    if (index == $("#IMG_SELECT")[0].options.length) {
+                    if (index == $("#IMG_SELECT")[0].options.length - 1) {
                         console.log('At latest image');
                     } else if (element.value == img_select_val) {
+                        console.log('Previous image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+                        return false;
                     };
                 });
 
                 break;
             case arrow.right:
-                console.log('Next image');
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == 0) {
                         console.log('At oldest image');
                     } else if (element.value == img_select_val) {
+                        console.log('Next image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+                        return false;
                     };
                 });
 
@@ -211,6 +254,10 @@ $( document ).ready(function() {
             {{ form_viewer.IMG_SELECT(class='form-control bg-secondary') }}
             <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div style="display: none;">
+            {{ form_viewer.FITS_SELECT(class='form-control bg-secondary', hidden='hidden') }}
+            {{ form_viewer.RAW_SELECT(class='form-control bg-secondary', hidden='hidden') }}
+        </div>
 
     </div>
 
@@ -245,7 +292,9 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-6"></div>
     <div class="col-sm-2">
-        <div id="img_download"></div>
+        <span id="img_download"></span>
+        <span id="fits_download"></span>
+        <span id="raw_download"></span>
     </div>
 </div>
 
@@ -259,6 +308,8 @@ const field_names = [
     'DAY_SELECT',
     'HOUR_SELECT',
     'IMG_SELECT',
+    'FITS_SELECT',
+    'RAW_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -349,6 +400,16 @@ $("#HOUR_SELECT").on("change", function() {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
             img.src = fields['IMG_SELECT'].input.val();
 
             $("#loader_filter").css({'display' : 'none'});
@@ -396,6 +457,16 @@ $("#DAY_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -448,6 +519,16 @@ $("#MONTH_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -503,6 +584,16 @@ $("#YEAR_SELECT").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -561,6 +652,16 @@ $("#FILTER_DETECTIONS").on("change", function() {
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
                 $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#FITS_SELECT").empty()
+            data['FITS_SELECT'].forEach(item => {
+                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+            });
+
+            $("#RAW_SELECT").empty()
+            data['RAW_SELECT'].forEach(item => {
+                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
             });
 
             img.src = fields['IMG_SELECT'].input.val();

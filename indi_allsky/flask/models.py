@@ -8,14 +8,26 @@ from flask import current_app as app
 from . import db
 
 
+__all__ = (
+    'IndiAllSkyDbCameraTable',
+    'IndiAllSkyDbImageTable',
+    'IndiAllSkyDbBadPixelMapTable',
+    'IndiAllSkyDbDarkFrameTable',
+    'IndiAllSkyDbVideoTable',
+    'IndiAllSkyDbKeogramTable',
+    'IndiAllSkyDbStarTrailsTable',
+    'IndiAllSkyDbStarTrailsVideoTable',
+    'IndiAllSkyDbFitsImageTable',
+    'IndiAllSkyDbRawImageTable',
+)
+
+
 class IndiAllSkyDbCameraTable(db.Model):
     __tablename__ = 'camera'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
-    #connectDate = db.Column(db.DateTime(timezone=True), nullable=True)
     connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
     minGain = db.Column(db.Integer, nullable=True)
     maxGain = db.Column(db.Integer, nullable=True)
@@ -32,6 +44,8 @@ class IndiAllSkyDbCameraTable(db.Model):
     startrailvideos = db.relationship('IndiAllSkyDbStarTrailsVideoTable', back_populates='camera')
     darkframes = db.relationship('IndiAllSkyDbDarkFrameTable', back_populates='camera')
     badpixelmaps = db.relationship('IndiAllSkyDbBadPixelMapTable', back_populates='camera')
+    fitsimages = db.relationship('IndiAllSkyDbFitsImageTable', back_populates='camera')
+    rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
 
 
 class IndiAllSkyDbImageTable(db.Model):
@@ -39,7 +53,6 @@ class IndiAllSkyDbImageTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
@@ -60,6 +73,13 @@ class IndiAllSkyDbImageTable(db.Model):
     detections = db.Column(db.Integer, server_default='0', nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
+
+    # SQLAlchemy tries to create these over and over
+    #db.Index('idx_image_createDate_Y', db.extract('year', createDate))
+    #db.Index('idx_image_createDate_m', db.extract('month', createDate))
+    #db.Index('idx_image_createDate_D', db.extract('day', createDate))
+    #db.Index('idx_image_createDate_h', db.extract('hour', createDate))
+
 
     def __repr__(self):
         return '<Image {0:s}>'.format(self.filename)
@@ -100,7 +120,6 @@ class IndiAllSkyDbDarkFrameTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
@@ -119,7 +138,6 @@ class IndiAllSkyDbBadPixelMapTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
@@ -138,7 +156,6 @@ class IndiAllSkyDbVideoTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -185,7 +202,6 @@ class IndiAllSkyDbKeogramTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -232,7 +248,6 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -279,7 +294,6 @@ class IndiAllSkyDbStarTrailsVideoTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    #createDate = db.Column(db.DateTime(timezone=True), nullable=False, index=True, server_default=db.func.now())
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -319,6 +333,106 @@ class IndiAllSkyDbStarTrailsVideoTable(db.Model):
         full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
 
         return full_filename_p
+
+
+class IndiAllSkyDbFitsImageTable(db.Model):
+    __tablename__ = 'fitsimage'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    dayDate = db.Column(db.Date, nullable=False, index=True)
+    exposure = db.Column(db.Float, nullable=False)
+    gain = db.Column(db.Integer, nullable=False)
+    binmode = db.Column(db.Integer, server_default='1', nullable=False)
+    night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='fitsimages')
+
+    def __repr__(self):
+        return '<FitsImage {0:s}>'.format(self.filename)
+
+
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
+class IndiAllSkyDbRawImageTable(db.Model):
+    __tablename__ = 'rawimage'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    dayDate = db.Column(db.Date, nullable=False, index=True)
+    exposure = db.Column(db.Float, nullable=False)
+    gain = db.Column(db.Integer, nullable=False)
+    binmode = db.Column(db.Integer, server_default='1', nullable=False)
+    night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='rawimages')
+
+    def __repr__(self):
+        return '<RawImage {0:s}>'.format(self.filename)
+
+
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUri(self):
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
 
 
 class TaskQueueState(enum.Enum):

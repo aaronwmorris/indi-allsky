@@ -422,7 +422,7 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
 
 
     # Cleanup
-    #[[ -d "$INDI_CORE_BUILD" ]] && rm -fR "$INDI_CORE_BUILD"
+    [[ -d "$INDI_CORE_BUILD" ]] && rm -fR "$INDI_CORE_BUILD"
 else
     echo
     echo
@@ -475,8 +475,8 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
 
 
     # Cleanup
-    #[[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
-    #[[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+    [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
+    [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
 else
     echo
     echo

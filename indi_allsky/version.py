@@ -1,3 +1,3 @@
-__version__ = "5.5"
-__config_version__ = 20221106.0
+__version__ = "5.6"
+__config_version__ = 20221129.0
 

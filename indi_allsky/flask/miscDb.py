@@ -13,6 +13,8 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
+from .models import IndiAllSkyDbFitsImageTable
+from .models import IndiAllSkyDbRawImageTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -356,6 +358,84 @@ class miscDb(object):
         db.session.commit()
 
         return startrail_video
+
+
+    def addFitsImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.warning('File not found: %s', p_filename)
+
+
+        if night:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
+        logger.info('Adding fits image %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        fits_image = IndiAllSkyDbFitsImageTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            createDate=createDate,
+            exposure=exposure,
+            gain=gain,
+            binmode=binmode,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        db.session.add(fits_image)
+        db.session.commit()
+
+        return fits_image
+
+
+    def addRawImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
+        if not filename:
+            return
+
+        p_filename = Path(filename)
+        if not p_filename.exists():
+            logger.warning('File not found: %s', p_filename)
+
+
+        if night:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
+        logger.info('Adding raw image %s to DB', filename)
+
+
+        filename_str = str(filename)  # might be a pathlib object
+
+
+        fits_image = IndiAllSkyDbRawImageTable(
+            camera_id=camera_id,
+            filename=filename_str,
+            createDate=createDate,
+            exposure=exposure,
+            gain=gain,
+            binmode=binmode,
+            dayDate=dayDate,
+            night=night,
+        )
+
+        db.session.add(fits_image)
+        db.session.commit()
+
+        return fits_image
 
 
     def addUploadedFlag(self, entry):
