@@ -74,11 +74,14 @@ class IndiAllSkyDbImageTable(db.Model):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
-    # SQLAlchemy tries to create these over and over
-    #db.Index('idx_image_createDate_Y', db.extract('year', createDate))
-    #db.Index('idx_image_createDate_m', db.extract('month', createDate))
-    #db.Index('idx_image_createDate_D', db.extract('day', createDate))
-    #db.Index('idx_image_createDate_h', db.extract('hour', createDate))
+    # SQLAlchemy tries to create this over and over
+    #db.Index(
+    #    'idx_image_createDate_YmdH',
+    #    db.extract('year', createDate),
+    #    db.extract('month', createDate),
+    #    db.extract('day', createDate),
+    #    db.extract('hour', createDate),
+    #)
 
 
     def __repr__(self):
@@ -162,6 +165,14 @@ class IndiAllSkyDbVideoTable(db.Model):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='videos')
+
+    # SQLAlchemy tries to create this over and over
+    #db.Index(
+    #    'idx_video_dayDate_Ym',
+    #    db.extract('year', dayDate),
+    #    db.extract('month', dayDate),
+    #)
+
 
     def __repr__(self):
         return '<Video {0:s}>'.format(self.filename)
