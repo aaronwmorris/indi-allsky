@@ -74,6 +74,13 @@ class IndiAllSkyDbImageTable(db.Model):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
+    # SQLAlchemy tries to create these over and over
+    #db.Index('idx_image_createDate_Y', db.extract('year', createDate))
+    #db.Index('idx_image_createDate_m', db.extract('month', createDate))
+    #db.Index('idx_image_createDate_D', db.extract('day', createDate))
+    #db.Index('idx_image_createDate_h', db.extract('hour', createDate))
+
+
     def __repr__(self):
         return '<Image {0:s}>'.format(self.filename)
 
