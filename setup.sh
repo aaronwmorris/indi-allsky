@@ -1159,22 +1159,22 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 
-# get list of drivers
-INDI_DRIVERS=()
+# get list of ccd drivers
+INDI_CCD_DRIVERS=()
 cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam*; do
-    INDI_DRIVERS[${#INDI_DRIVERS[@]}]="$I $I OFF"
+    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I $I OFF"
 done
 cd "$OLDPWD" || catch_error
 
-#echo ${INDI_DRIVERS[@]}
+#echo ${INDI_CCD_DRIVERS[@]}
 
 
 CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "$CCD_DRIVER" ]; do
         # shellcheck disable=SC2068
-        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_DRIVERS[@]} 3>&1 1>&2 2>&3)
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_CCD_DRIVERS[@]} 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything
@@ -1182,6 +1182,35 @@ else
 fi
 
 #echo $CCD_DRIVER
+
+
+
+# get list of gps drivers
+INDI_GPS_DRIVERS=("None None ON")
+cd "$INDI_DRIVER_PATH" || catch_error
+for I in indi_gps* indi_simulator_gps; do
+    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I $I OFF"
+done
+cd "$OLDPWD" || catch_error
+
+#echo ${INDI_GPS_DRIVERS[@]}
+
+
+GPS_DRIVER=""
+if [[ "$INSTALL_INDISERVER" == "true" ]]; then
+    while [ -z "$GPS_DRIVER" ]; do
+        # shellcheck disable=SC2068
+        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_GPS_DRIVERS[@]} 3>&1 1>&2 2>&3)
+    done
+fi
+
+#echo $GPS_DRIVER
+
+if [ "$GPS_DRIVER" == "None" ]; then
+    # Value needs to be empty for None
+    GPS_DRIVER=""
+fi
+
 
 
 # create users systemd folder
@@ -1197,6 +1226,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
+     -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
