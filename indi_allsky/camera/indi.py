@@ -639,13 +639,9 @@ class IndiClient(PyIndi.BaseClient):
         gps_long = float(geographic_coord[1].getValue())
         gps_elev = float(geographic_coord[2].getValue())
 
-        if gps_lat == 0.0 and gps_long == 0.0:
+        if not gps_lat and not gps_long:
             logger.warning('GPS fix not found')
             return self.latitude_v.value, self.longitude_v.value, 0.0
-
-        if gps_long > 180.0:
-            # put longitude in range of -180 to 180
-            gps_long = gps_long - 360.0
 
         logger.info("GPS location: lat %0.2f, long %0.2f, elev %0.2f", gps_lat, gps_long, gps_elev)
 

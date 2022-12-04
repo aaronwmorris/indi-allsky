@@ -1059,9 +1059,14 @@ class IndiAllSky(object):
     def getGpsPosition(self):
         gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
 
-        if abs(gps_lat - self.config['LOCATION_LATITUDE']) > 0.1:
+        if gps_long > 180.0:
+            # put longitude in range of -180 to 180
+            gps_long = gps_long - 360.0
+
+        # need 1/10 degree difference before updating location
+        if abs(gps_lat - self.latitude_v.value) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long)
-        elif abs(gps_long - self.config['LOCATION_LONGITUDE']) > 0.1:
+        elif abs(gps_long - self.longitude_v.value) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long)
 
         # Update shared values
