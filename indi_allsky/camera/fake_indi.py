@@ -279,7 +279,7 @@ class FakeIndiClient(object):
 
 
     def getGpsPosition(self):
-        return self.latitude_v.value, self.longitude_v.value, 0
+        return self.latitude_v.value, self.longitude_v.value, 0.0
 
 
     def getCcdTemperature(self):
