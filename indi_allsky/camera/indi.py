@@ -595,6 +595,18 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(self._telescope_device, *args, **kwargs)
 
 
+    def setTelescopeGps(self, gps_name):
+        gps_config = {
+            'TEXT' : {
+                'ACTIVE_DEVICES' : {
+                    'ACTIVE_GPS' : gps_name,
+                },
+            },
+        }
+
+        self.configureTelescopeDevice(gps_config)
+
+
     def configureGpsDevice(self, *args, **kwargs):
         if not self._gps_device:
             logger.warning('No GPS to configure')

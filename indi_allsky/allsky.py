@@ -442,6 +442,10 @@ class IndiAllSky(object):
 
             self.indiclient.configureGpsDevice(gps_config)
 
+            # Set Telescope GPS
+            self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
+
+
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id

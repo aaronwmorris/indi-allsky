@@ -268,6 +268,11 @@ class FakeIndiClient(object):
         pass
 
 
+    def setTelescopeGps(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
     def configureGpsDevice(self, *args, **kwargs):
         # does nothing
         pass
