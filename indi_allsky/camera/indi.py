@@ -603,14 +603,43 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(self._gps_device, *args, **kwargs)
 
 
-    def getCcdTemperature(self):
-        temp = self._ccd_device.getNumber("CCD_TEMPERATURE")
+    def refreshGps(self):
+        if not self._gps_device:
+            return
 
-        if isinstance(temp, type(None)):
+        refresh_config = {
+            'SWITCHES' : {
+                'GPS_REFRESH' : {
+                    'on' : ['REFRESH'],
+                },
+            },
+        }
+
+        self.configureGpsDevice(self, refresh_config)
+
+
+    def getGpsPosition(self):
+        if not self._gps_device:
+            return self.latitude_v.value, self.longitude_v.value, 0
+
+        geographic_coord = self._gps_device.getNumber("GEOGRAPHIC_COORD")
+        gps_lat = float(geographic_coord[0].getValue())
+        gps_long = float(geographic_coord[1].getValue())
+        gps_elev = float(geographic_coord[2].getValue())
+
+        logger.info("GPS location: lat %0.2f, long %0.2f, elev %0.2f", gps_lat, gps_long, gps_elev)
+
+        return gps_lat, gps_long, gps_elev
+
+
+    def getCcdTemperature(self):
+        ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
+
+        if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature: not supported")
             temp_val = -273.15  # absolute zero  :-)
         else:
-            temp_val = float(temp[0].value)
+            temp_val = float(ccd_temperature[0].getValue())
             logger.info("Sensor temperature: %0.1f", temp_val)
 
         return temp_val

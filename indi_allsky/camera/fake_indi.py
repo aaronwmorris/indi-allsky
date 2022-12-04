@@ -273,6 +273,15 @@ class FakeIndiClient(object):
         pass
 
 
+    def refreshGps(self):
+        # does nothing
+        pass
+
+
+    def getGpsPosition(self):
+        return self.latitude_v.value, self.longitude_v.value, 0
+
+
     def getCcdTemperature(self):
         temp_val = -273.15  # absolute zero  :-)
         return temp_val

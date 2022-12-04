@@ -792,6 +792,7 @@ class IndiAllSky(object):
 
 
             self.getSensorTemperature()
+            self.getGpsPosition()
 
 
             # Queue externally defined tasks
@@ -1026,6 +1027,21 @@ class IndiAllSky(object):
 
 
         return temp_float
+
+
+    def getGpsPosition(self):
+        gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
+
+
+        # Update shared values
+        with self.latitude_v.get_lock():
+            self.latitude_v.value = gps_lat
+
+        with self.longitude_v.get_lock():
+            self.longitude_v.value = gps_long
+
+
+        return gps_lat, gps_long, gps_elev
 
 
     def cameraReport(self):
