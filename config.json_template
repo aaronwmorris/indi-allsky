@@ -68,6 +68,7 @@
     "LOCATION_LATITUDE"  : 33,
     "LOCATION_LONGITUDE" : -84,
 
+    "TIMELAPSE_ENABLE"         : true,
     "DAYTIME_CAPTURE"          : true,
     "DAYTIME_TIMELAPSE"        : true,
     "DAYTIME_CONTRAST_ENHANCE" : false,
