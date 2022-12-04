@@ -1056,8 +1056,8 @@ class IndiAllSky(object):
                 logger.error('Error decoding json: %s', str(e))
                 return
 
-        c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
-        c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
+        c['LOCATION_LATITUDE'] = round(float(gps_lat), 4)
+        c['LOCATION_LONGITUDE'] = round(float(gps_long), 4)
 
         # save new config
         try:
