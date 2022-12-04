@@ -389,42 +389,6 @@ class IndiAllSky(object):
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
 
-        ### Telescope config
-        telescope_config = {
-            'SWITCHES' : {
-                'TELESCOPE_SLEW_RATE' : {
-                    'on' : ['4x'],
-                },
-                'TELESCOPE_TRACK_STATE' : {
-                    'on'  : ['TRACK_OFF'],
-                    'off' : ['TRACK_ON'],
-                },
-            },
-            'PROPERTIES' : {
-                'GEOGRAPHIC_COORD' : {
-                    'LAT' : self.latitude_v.value,
-                    'LONG' : self.longitude_v.value,
-                },
-                'TELESCOPE_INFO' : {
-                    'TELESCOPE_APERTURE' : 10,
-                    'TELESCOPE_FOCAL_LENGTH' : 10,
-                },
-                'TELESCOPE_PARK_POSITION' : {
-                    'PARK_HA'  : 0.0,
-                    'PARK_DEC' : self.latitude_v.value
-                },
-            },
-            'TEXT' : {
-                'SCOPE_CONFIG_NAME' : {
-                    'SCOPE_CONFIG_NAME' : 'indi-allsky',
-                },
-            },
-        }
-
-        self.indiclient.configureTelescopeDevice(telescope_config)
-        self.indiclient.parkTelescope()
-
-
         ### GPS config
         if self.indiclient.gps_device:
             gps_config = {
@@ -442,6 +406,67 @@ class IndiAllSky(object):
 
             self.indiclient.configureGpsDevice(gps_config)
 
+
+            # GPSD simulation
+            #sim_gps_config = {
+            #    'SWITCHES' : {
+            #        'SIMULATION' : {
+            #            'on'  : ['ENABLE'],
+            #            'off' : ['DISABLE'],
+            #        },
+            #    },
+            #    'PROPERTIES' : {
+            #        'SIM_GEOGRAPHIC_COORD' : {  # rio
+            #            'SIM_LAT'  : -22,  # requires integers
+            #            'SIM_LONG' : 317,
+            #            'SIM_ELEV' : 7,
+            #        },
+            #    },
+            #}
+
+            #self.indiclient.configureGpsDevice(sim_gps_config)
+
+
+
+        ### Telescope config
+        if self.indiclient.telescope_device:
+            telescope_config = {
+                'SWITCHES' : {
+                    'TELESCOPE_SLEW_RATE' : {
+                        'on' : ['4x'],
+                    },
+                    'TELESCOPE_TRACK_STATE' : {
+                        'on'  : ['TRACK_OFF'],
+                        'off' : ['TRACK_ON'],
+                    },
+                },
+                'PROPERTIES' : {
+                    'GEOGRAPHIC_COORD' : {
+                        'LAT' : self.latitude_v.value,
+                        'LONG' : self.longitude_v.value,
+                    },
+                    'TELESCOPE_INFO' : {
+                        'TELESCOPE_APERTURE' : 10,
+                        'TELESCOPE_FOCAL_LENGTH' : 10,
+                    },
+                    'TELESCOPE_PARK_POSITION' : {
+                        'PARK_HA'  : 0.0,
+                        'PARK_DEC' : self.latitude_v.value
+                    },
+                },
+                'TEXT' : {
+                    'SCOPE_CONFIG_NAME' : {
+                        'SCOPE_CONFIG_NAME' : 'indi-allsky',
+                    },
+                },
+            }
+
+            self.indiclient.configureTelescopeDevice(telescope_config)
+            self.indiclient.parkTelescope()
+
+
+
+        if self.indiclient.telescope_device and self.indiclient.gps_device:
             # Set Telescope GPS
             self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
 
