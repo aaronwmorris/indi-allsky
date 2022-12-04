@@ -362,9 +362,14 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
+        self.indiclient.findTelescope('Telescope Simulator')
+
+
+        logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
+        logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
+        self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
 
         if connectOnly:
             return
@@ -373,6 +378,40 @@ class IndiAllSky(object):
         # add driver name to config
         self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+
+        telescope_config = {
+            'SWITCHES' : {
+                'TELESCOPE_SLEW_RATE' : {
+                    'on' : ['4x'],
+                },
+                'TELESCOPE_TRACK_STATE' : {
+                    'on'  : ['TRACK_OFF'],
+                    'off' : ['TRACK_ON'],
+                },
+            },
+            'PROPERTIES' : {
+                'GEOGRAPHIC_COORD' : {
+                    'LAT' : float(self.config['LOCATION_LATITUDE']),
+                    'LONG' : float(self.config['LOCATION_LONGITUDE']),
+                },
+                'TELESCOPE_INFO' : {
+                    'TELESCOPE_APERTURE' : 10,
+                    'TELESCOPE_FOCAL_LENGTH' : 10,
+                },
+                'TELESCOPE_PARK_POSITION' : {
+                    'PARK_HA'  : 0.0,
+                    'PARK_DEC' : float(self.config['LOCATION_LATITUDE']),
+                },
+            },
+            'TEXT' : {
+                'SCOPE_CONFIG_NAME' : {
+                    'SCOPE_CONFIG_NAME' : 'indi-allsky',
+                },
+            },
+        }
+
+        self.indiclient.configureTelescopeDevice(telescope_config)
+        self.indiclient.parkTelescope()
 
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])

@@ -102,6 +102,8 @@ class IndiClient(PyIndi.BaseClient):
         self._ccd_device = None
         self._ctl_ccd_exposure = None
 
+        self._telescope_device = None
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -126,6 +128,15 @@ class IndiClient(PyIndi.BaseClient):
     @ccd_device.setter
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
+
+
+    @property
+    def telescope_device(self):
+        return self._telescope_device
+
+    @telescope_device.setter
+    def telescope_device(self, new_telescope_device):
+        self._telescope_device = new_telescope_device
 
 
     @property
@@ -246,6 +257,19 @@ class IndiClient(PyIndi.BaseClient):
 
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+
+
+    def parkTelescope(self):
+        park_config = {
+            'SWITCHES' : {
+                'TELESCOPE_PARK' : {
+                    'on'  : ['PARK'],
+                    'off' : ['UNPARK'],
+                },
+            }
+        }
+
+        self.configureTelescopeDevice(park_config)
 
 
     def updateCcdBlobMode(self, blobmode=PyIndi.B_ALSO, prop=None):
@@ -453,6 +477,37 @@ class IndiClient(PyIndi.BaseClient):
         return self._ccd_device
 
 
+    def _findTelescopes(self):
+        telescope_list = list()
+
+        for device in self.getDevices():
+            logger.info('Found device %s', device.getDeviceName())
+            device_interfaces = self.findDeviceInterfaces(device)
+
+            for k, v in self.__indi_interfaces.items():
+                if device_interfaces & k:
+                    logger.info(' Detected %s', v)
+                    if k == PyIndi.BaseDevice.TELESCOPE_INTERFACE:
+                        telescope_list.append(device)
+
+        return telescope_list
+
+
+    def findTelescope(self, telescope_name):
+        telescope_list = self._findTelescopes()
+
+        logger.info('Found %d Telescopess', len(telescope_list))
+
+        for t in telescope_list:
+            if t.getDeviceName() == telescope_name:
+                self._telescope_device = t
+                break
+        else:
+            logger.error('No telescopes found')
+
+        return self._telescope_device
+
+
     def configureDevice(self, device, indi_config, sleep=1.0):
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
@@ -476,6 +531,14 @@ class IndiClient(PyIndi.BaseClient):
 
     def configureCcdDevice(self, *args, **kwargs):
         self.configureDevice(self._ccd_device, *args, **kwargs)
+
+
+    def configureTelescopeDevice(self, *args, **kwargs):
+        if not self._telescope_device:
+            logger.warning('No telescope to configure')
+            return
+
+        self.configureDevice(self._telescope_device, *args, **kwargs)
 
 
     def getCcdTemperature(self):

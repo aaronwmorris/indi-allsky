@@ -32,6 +32,13 @@ class FakeIndiClient(object):
         }
 
 
+        self._telescope_device = None
+        self.telescope_info = {
+            'lat'           : 0.0,
+            'long'          : 0.0,
+        }
+
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -204,7 +211,18 @@ class FakeIndiClient(object):
         pass
 
 
+    def findTelescope(self, *args):
+        # override
+        # create FakeIndiTelescope object here
+        pass
+
+
     def configureCcdDevice(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
+    def configureTelescopeDevice(self, *args, **kwargs):
         # does nothing
         pass
 
@@ -256,14 +274,47 @@ class FakeIndiClient(object):
 
 
 
-class FakeIndiCcd(object):
+class FakeIndiDevice(object):
 
     def __init__(self):
-        super(FakeIndiCcd, self).__init__()
+        super(FakeIndiDevice, self).__init__()
 
         # these should be set
         self._device_name = 'UNDEFINED'
         self._driver_exec = 'UNDEFINED'
+
+
+    @property
+    def device_name(self):
+        return self._device_name
+
+    @device_name.setter
+    def device_name(self, new_device_name):
+        self._device_name = new_device_name
+
+
+    @property
+    def driver_exec(self):
+        return self._driver_exec
+
+    @driver_exec.setter
+    def driver_exec(self, new_driver_exec):
+        self._driver_exec = new_driver_exec
+
+
+    def getDeviceName(self):
+        return self._device_name
+
+
+    def getDriverExec(self):
+        return self._driver_exec
+
+
+
+class FakeIndiCcd(FakeIndiDevice):
+
+    def __init__(self):
+        super(FakeIndiCcd, self).__init__()
 
         self._width = None
         self._height = None
@@ -303,24 +354,6 @@ class FakeIndiCcd(object):
     @pixel.setter
     def pixel(self, new_pixel):
         self._pixel = float(new_pixel)
-
-
-    @property
-    def device_name(self):
-        return self._device_name
-
-    @device_name.setter
-    def device_name(self, new_device_name):
-        self._device_name = new_device_name
-
-
-    @property
-    def driver_exec(self):
-        return self._driver_exec
-
-    @driver_exec.setter
-    def driver_exec(self, new_driver_exec):
-        self._driver_exec = new_driver_exec
 
 
     @property
@@ -395,12 +428,30 @@ class FakeIndiCcd(object):
         self._bit_depth = int(new_bit_depth)
 
 
+class FakeIndiTelescope(FakeIndiDevice):
 
-    def getDeviceName(self):
-        return self._device_name
+    def __init__(self):
+        super(FakeIndiTelescope, self).__init__()
+
+        self._lat = 0.0
+        self._long = 0.0
 
 
-    def getDriverExec(self):
-        return self._driver_exec
+    @property
+    def lat(self):
+        return self._lat
+
+    @lat.setter
+    def lat(self, new_lat):
+        self._lat = float(new_lat)
+
+
+    @property
+    def long(self):
+        return self._long
+
+    @long.setter
+    def long(self, new_long):
+        self._long = float(new_long)
 
 

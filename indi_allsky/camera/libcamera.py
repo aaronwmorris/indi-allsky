@@ -8,6 +8,7 @@ import logging
 
 from .fake_indi import FakeIndiClient
 from .fake_indi import FakeIndiCcd
+from .fake_indi import FakeIndiTelescope
 
 from ..exceptions import TimeOutException
 
@@ -32,8 +33,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
 
 
-        self.device_name = 'CHANGEME'
-        self.driver_exec = 'indi_fake_ccd'
+        self.ccd_device_name = 'CHANGEME'
+        self.ccd_driver_exec = 'indi_fake_ccd'
 
         self.camera_info = {
             'width'         : 0,
@@ -45,6 +46,15 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
             'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'CHANGEME'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.telescope_info = {
+            'lat'           : float(self.config['LOCATION_LATITUDE']),
+            'long'          : float(self.config['LOCATION_LONGITUDE']),
         }
 
 
@@ -193,8 +203,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
 
     def findCcd(self):
         new_ccd = FakeIndiCcd()
-        new_ccd.device_name = self.device_name
-        new_ccd.driver_exec = self.driver_exec
+        new_ccd.device_name = self.ccd_device_name
+        new_ccd.driver_exec = self.ccd_driver_exec
 
         new_ccd.width = self.camera_info['width']
         new_ccd.height = self.camera_info['height']
@@ -214,14 +224,26 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         return self._ccd_device
 
 
+    def findTelescope(self, *args):
+        new_telescope = FakeIndiTelescope()
+        new_telescope.device_name = self.telescope_device_name
+        new_telescope.driver_exec = self.telescope_driver_exec
+
+        new_telescope.lat = self.telescope_info['lat']
+        new_telescope.long = self.telescope_info['long']
+
+        self._telescope_device = new_telescope
+
+        return self._telescope_device
+
 
 class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
-        self.device_name = 'libcamera_imx477'
-        self.driver_exec = 'indi_fake_ccd'
+        self.ccd_device_name = 'libcamera_imx477'
+        self.ccd_driver_exec = 'indi_fake_ccd'
 
         self.camera_info = {
             'width'         : 4056,
@@ -235,5 +257,8 @@ class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
 
 
