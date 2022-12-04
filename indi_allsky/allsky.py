@@ -430,7 +430,12 @@ class IndiAllSky(object):
         ### GPS config
         if self.indiclient.gps_device:
             gps_config = {
-                'PROPERTY' : {
+                'SWITCHES' : {
+                    'GPS_REFRESH' : {
+                        'on' : ['REFRESH'],
+                    },
+                },
+                'PROPERTIES' : {
                     'GPS_REFRESH_PERIOD' : {
                         'PERIOD' : 300,
                     },
