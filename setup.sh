@@ -1779,6 +1779,11 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
 fi
 
 
+echo "**** Ensure user is a member of the dialout group ****"
+# for GPS and serial port access
+sudo usermod -a -G dialout "$USER"
+
+
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
 # Not trying to push out the competition, these just cannot run at the same time :-)
 sudo systemctl stop allsky || true
