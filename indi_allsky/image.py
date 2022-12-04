@@ -481,6 +481,8 @@ class ImageWorker(Process):
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(self.sqm_value, 1),
                     'stars'    : len(blob_stars),
+                    'latitude' : round(self.latitude_v.value, 3),
+                    'longitude': round(self.longitude_v.value, 3),
                 }
 
                 self.mqtt_publish(latest_file, mqtt_data)
@@ -577,6 +579,8 @@ class ImageWorker(Process):
             'time'                : exp_date.strftime('%s'),
             'sqm_data'            : self.getSqmData(camera_id),
             'stars_data'          : self.getStarsData(camera_id),
+            'latitude'            : self.latitude_v.value,
+            'longitude'           : self.longitude_v.value,
         }
 
 
@@ -882,6 +886,8 @@ class ImageWorker(Process):
             'sqm'                 : self.sqm_value,
             'stars'               : len(blob_stars),
             'time'                : exp_date.strftime('%s'),
+            'latitude'            : self.latitude_v.value,
+            'longitude'           : self.longitude_v.value,
         }
 
 
@@ -1178,6 +1184,8 @@ class ImageWorker(Process):
             'moon_alt'     : self.moon_alt,
             'moon_phase'   : self.moon_phase,
             'sun_moon_sep' : sun_moon_sep,
+            'latitude'     : self.latitude_v.value,
+            'longitude'    : self.longitude_v.value,
         }
 
 
