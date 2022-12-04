@@ -363,13 +363,19 @@ class IndiAllSky(object):
 
 
         self.indiclient.findTelescope('Telescope Simulator')
-
+        self.indiclient.findGps()
 
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
-        logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
-        self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
+        if self.indiclient.telescope_device:
+            logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
+            self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
+
+        if self.indiclient.gps_device:
+            logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
+            self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
+
 
         if connectOnly:
             return
@@ -379,6 +385,8 @@ class IndiAllSky(object):
         self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
+
+        ### Telescope config
         telescope_config = {
             'SWITCHES' : {
                 'TELESCOPE_SLEW_RATE' : {
@@ -412,6 +420,19 @@ class IndiAllSky(object):
 
         self.indiclient.configureTelescopeDevice(telescope_config)
         self.indiclient.parkTelescope()
+
+
+        ### GPS config
+        if self.indiclient.gps_device:
+            gps_config = {
+                'PROPERTY' : {
+                    'GPS_REFRESH_PERIOD' : {
+                        'PERIOD' : 300,
+                    },
+                },
+            }
+
+            self.indiclient.configureGpsDevice(gps_config)
 
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])

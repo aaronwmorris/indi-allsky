@@ -9,6 +9,7 @@ import logging
 from .fake_indi import FakeIndiClient
 from .fake_indi import FakeIndiCcd
 from .fake_indi import FakeIndiTelescope
+from .fake_indi import FakeIndiGps
 
 from ..exceptions import TimeOutException
 
@@ -53,6 +54,15 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         self.telescope_driver_exec = 'indi_fake_telescope'
 
         self.telescope_info = {
+            'lat'           : float(self.config['LOCATION_LATITUDE']),
+            'long'          : float(self.config['LOCATION_LONGITUDE']),
+        }
+
+
+        self.gps_device_name = 'CHANGEME'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+        self.gps_info = {
             'lat'           : float(self.config['LOCATION_LATITUDE']),
             'long'          : float(self.config['LOCATION_LONGITUDE']),
         }
@@ -237,6 +247,20 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         return self._telescope_device
 
 
+    def findGps(self, *args):
+        new_gps = FakeIndiGps()
+        new_gps.device_name = self.gps_device_name
+        new_gps.driver_exec = self.gps_driver_exec
+
+        new_gps.lat = self.gps_info['lat']
+        new_gps.long = self.gps_info['long']
+
+        self._gps_device = new_gps
+
+        return self._gps_device
+
+
+
 class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
@@ -261,4 +285,6 @@ class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
         self.telescope_device_name = 'fake_telescope'
         self.telescope_driver_exec = 'indi_fake_telescope'
 
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
 

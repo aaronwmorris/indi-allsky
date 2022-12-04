@@ -38,6 +38,12 @@ class FakeIndiClient(object):
             'long'          : 0.0,
         }
 
+        self._gps_device = None
+        self.gps_info = {
+            'lat'           : 0.0,
+            'long'          : 0.0,
+        }
+
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -57,6 +63,24 @@ class FakeIndiClient(object):
     @ccd_device.setter
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
+
+
+    @property
+    def telescope_device(self):
+        return self._telescope_device
+
+    @telescope_device.setter
+    def telescope_device(self, new_telescope_device):
+        self._telescope_device = new_telescope_device
+
+
+    @property
+    def gps_device(self):
+        return self._gps_device
+
+    @gps_device.setter
+    def gps_device(self, new_gps_device):
+        self._gps_device = new_gps_device
 
 
     @property
@@ -217,12 +241,23 @@ class FakeIndiClient(object):
         pass
 
 
+    def findGps(self, *args):
+        # override
+        # create FakeIndiTelescope object here
+        pass
+
+
     def configureCcdDevice(self, *args, **kwargs):
         # does nothing
         pass
 
 
     def configureTelescopeDevice(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
+    def configureGpsDevice(self, *args, **kwargs):
         # does nothing
         pass
 
@@ -432,6 +467,33 @@ class FakeIndiTelescope(FakeIndiDevice):
 
     def __init__(self):
         super(FakeIndiTelescope, self).__init__()
+
+        self._lat = 0.0
+        self._long = 0.0
+
+
+    @property
+    def lat(self):
+        return self._lat
+
+    @lat.setter
+    def lat(self, new_lat):
+        self._lat = float(new_lat)
+
+
+    @property
+    def long(self):
+        return self._long
+
+    @long.setter
+    def long(self, new_long):
+        self._long = float(new_long)
+
+
+class FakeIndiGps(FakeIndiDevice):
+
+    def __init__(self):
+        super(FakeIndiGps, self).__init__()
 
         self._lat = 0.0
         self._long = 0.0

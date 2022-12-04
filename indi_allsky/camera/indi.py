@@ -103,6 +103,7 @@ class IndiClient(PyIndi.BaseClient):
         self._ctl_ccd_exposure = None
 
         self._telescope_device = None
+        self._gps_device = None
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -137,6 +138,15 @@ class IndiClient(PyIndi.BaseClient):
     @telescope_device.setter
     def telescope_device(self, new_telescope_device):
         self._telescope_device = new_telescope_device
+
+
+    @property
+    def gps_device(self):
+        return self._gps_device
+
+    @gps_device.setter
+    def gps_device(self, new_gps_device):
+        self._gps_device = new_gps_device
 
 
     @property
@@ -260,6 +270,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def parkTelescope(self):
+        if not self._telescope_device:
+            return
+
         park_config = {
             'SWITCHES' : {
                 'TELESCOPE_PARK' : {
@@ -508,6 +521,36 @@ class IndiClient(PyIndi.BaseClient):
         return self._telescope_device
 
 
+    def _findGpss(self):
+        gps_list = list()
+
+        for device in self.getDevices():
+            logger.info('Found device %s', device.getDeviceName())
+            device_interfaces = self.findDeviceInterfaces(device)
+
+            for k, v in self.__indi_interfaces.items():
+                if device_interfaces & k:
+                    logger.info(' Detected %s', v)
+                    if k == PyIndi.BaseDevice.GPS_INTERFACE:
+                        gps_list.append(device)
+
+        return gps_list
+
+
+    def findGps(self):
+        gps_list = self._findGpss()
+
+        logger.info('Found %d GPSs', len(gps_list))
+
+        try:
+            # set default device in indiclient
+            self._gps_device = gps_list[0]
+        except IndexError:
+            pass
+
+        return self._gps_device
+
+
     def configureDevice(self, device, indi_config, sleep=1.0):
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
@@ -539,6 +582,14 @@ class IndiClient(PyIndi.BaseClient):
             return
 
         self.configureDevice(self._telescope_device, *args, **kwargs)
+
+
+    def configureGpsDevice(self, *args, **kwargs):
+        if not self._gps_device:
+            logger.warning('No GPS to configure')
+            return
+
+        self.configureDevice(self._gps_device, *args, **kwargs)
 
 
     def getCcdTemperature(self):
