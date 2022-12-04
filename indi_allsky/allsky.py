@@ -144,10 +144,8 @@ class IndiAllSky(object):
         with io.open(self.config_file, 'r') as f_config_file:
             try:
                 c = self._parseConfig(f_config_file.read())
-                f_config_file.close()
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
-                f_config_file.close()
                 return
 
         # overwrite config
@@ -1032,6 +1030,10 @@ class IndiAllSky(object):
     def getGpsPosition(self):
         gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
 
+        if abs(gps_lat - self.config['LOCATION_LATITUDE']) > 0.1:
+            self.updateConfigLocation(gps_lat, gps_long)
+        elif abs(gps_long - self.config['LOCATION_LONGITUDE']) > 0.1:
+            self.updateConfigLocation(gps_lat, gps_long)
 
         # Update shared values
         with self.latitude_v.get_lock():
@@ -1042,6 +1044,30 @@ class IndiAllSky(object):
 
 
         return gps_lat, gps_long, gps_elev
+
+
+    def updateConfigLocation(self, gps_lat, gps_long):
+        logger.warning('Updating indi-allsky config with new geographic location')
+
+        with io.open(self.config_file, 'r') as f_config_file:
+            try:
+                c = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                return
+
+        c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
+        c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
+
+        # save new config
+        try:
+            with io.open(self.config_file, 'w') as f_config_file:
+                f_config_file.write(json.dumps(c, indent=4))
+
+            logger.info('Wrote new config.json')
+        except PermissionError as e:
+            logger.error('PermissionError: %s', str(e))
+            return
 
 
     def cameraReport(self):
