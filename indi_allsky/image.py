@@ -272,6 +272,8 @@ class ImageWorker(Process):
                 hdulist[0].header['GAIN'] = float(self.gain_v.value)
                 hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
                 hdulist[0].header['BITPIX'] = 16
+                hdulist[0].header['SITELAT'] = self.latitude_v.value
+                hdulist[0].header['SITELONG'] = self.longitude_v.value
 
                 if self.config['CFA_PATTERN']:
                     hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
