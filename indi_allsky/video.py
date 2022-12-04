@@ -50,7 +50,17 @@ class VideoWorker(Process):
     video_lockfile = '/tmp/timelapse_video.lock'
 
 
-    def __init__(self, idx, config, error_q, video_q, upload_q, bin_v):
+    def __init__(
+        self,
+        idx,
+        config,
+        error_q,
+        video_q,
+        upload_q,
+        latitude_v,
+        longitude_v,
+        bin_v,
+    ):
         super(VideoWorker, self).__init__()
 
         #self.threadID = idx
@@ -62,6 +72,9 @@ class VideoWorker(Process):
         self.error_q = error_q
         self.video_q = video_q
         self.upload_q = upload_q
+
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
         self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)
@@ -577,8 +590,8 @@ class VideoWorker(Process):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
 
         sun = ephem.Sun()
 

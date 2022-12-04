@@ -74,6 +74,9 @@ class IndiAllSky(object):
 
         self.indiclient = None
 
+        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
+        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -337,6 +340,8 @@ class IndiAllSky(object):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
+            self.latitude_v,
+            self.longitude_v,
             self.gain_v,
             self.bin_v,
         )
@@ -399,8 +404,8 @@ class IndiAllSky(object):
             },
             'PROPERTIES' : {
                 'GEOGRAPHIC_COORD' : {
-                    'LAT' : float(self.config['LOCATION_LATITUDE']),
-                    'LONG' : float(self.config['LOCATION_LONGITUDE']),
+                    'LAT' : self.latitude_v.value,
+                    'LONG' : self.longitude_v.value,
                 },
                 'TELESCOPE_INFO' : {
                     'TELESCOPE_APERTURE' : 10,
@@ -408,7 +413,7 @@ class IndiAllSky(object):
                 },
                 'TELESCOPE_PARK_POSITION' : {
                     'PARK_HA'  : 0.0,
-                    'PARK_DEC' : float(self.config['LOCATION_LATITUDE']),
+                    'PARK_DEC' : self.latitude_v.value
                 },
             },
             'TEXT' : {
@@ -558,6 +563,8 @@ class IndiAllSky(object):
             self.image_error_q,
             self.image_q,
             self.upload_q,
+            self.latitude_v,
+            self.longitude_v,
             self.exposure_v,
             self.gain_v,
             self.bin_v,
@@ -608,6 +615,8 @@ class IndiAllSky(object):
             self.video_error_q,
             self.video_q,
             self.upload_q,
+            self.latitude_v,
+            self.longitude_v,
             self.bin_v,
         )
         self.video_worker.start()
@@ -1104,8 +1113,8 @@ class IndiAllSky(object):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1119,8 +1128,8 @@ class IndiAllSky(object):
     def detectMoonMode(self):
         # detectNight() should be run first
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()

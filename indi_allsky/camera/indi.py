@@ -91,11 +91,22 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, image_q, gain_v, bin_v):
+    def __init__(
+        self,
+        config,
+        image_q,
+        latitude_v,
+        longitude_v,
+        gain_v,
+        bin_v,
+    ):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
+
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
         self.gain_v = gain_v
         self.bin_v = bin_v
 

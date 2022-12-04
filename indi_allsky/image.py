@@ -87,6 +87,8 @@ class ImageWorker(Process):
         image_q,
         upload_q,
         exposure_v,
+        latitude_v,
+        longitude_v,
         gain_v,
         bin_v,
         sensortemp_v,
@@ -105,6 +107,8 @@ class ImageWorker(Process):
 
         self.indi_rgb = True  # INDI returns array in the wrong order for cv2
 
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -1108,8 +1112,8 @@ class ImageWorker(Process):
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
 
 
         sun = ephem.Sun()

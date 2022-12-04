@@ -54,8 +54,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         self.telescope_driver_exec = 'indi_fake_telescope'
 
         self.telescope_info = {
-            'lat'           : float(self.config['LOCATION_LATITUDE']),
-            'long'          : float(self.config['LOCATION_LONGITUDE']),
+            'lat'           : self.latitude_v.value,
+            'long'          : self.longitude_v.value,
         }
 
 
@@ -63,8 +63,8 @@ class FakeIndiLibCameraGeneric(FakeIndiClient):
         self.gps_driver_exec = 'indi_fake_gps'
 
         self.gps_info = {
-            'lat'           : float(self.config['LOCATION_LATITUDE']),
-            'long'          : float(self.config['LOCATION_LONGITUDE']),
+            'lat'           : self.latitude_v.value,
+            'long'          : self.longitude_v.value,
         }
 
 
