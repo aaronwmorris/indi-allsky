@@ -11,6 +11,8 @@ from astropy.io import fits
 
 import PyIndi
 
+from .fake_indi import FakeIndiCcd
+
 #from ..flask import db
 from ..flask import create_app
 
@@ -563,6 +565,10 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureDevice(self, device, indi_config, sleep=1.0):
+        if type(device) is FakeIndiCcd:
+            # ignore configuration
+            return
+
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)

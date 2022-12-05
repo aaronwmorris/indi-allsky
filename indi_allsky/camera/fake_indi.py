@@ -370,6 +370,24 @@ class FakeIndiDevice(object):
         return self._driver_exec
 
 
+    def getSwitch(self, name):
+        if name == 'DEBUG':
+            vector = FakeIndiVectorSwitch('ENABLE', 'DISABLE')
+        else:
+            raise Exception('Unknown config switch')
+
+        return vector
+
+
+    def getNumber(self, name):
+        if name == 'CCD_TEMPERATURE':
+            vector = FakeIndiVectorNumber('CCD_TEMPERATURE_VALUE')
+            vector[0].setValue(-273.15)
+        else:
+            raise Exception('Unknown config number')
+
+        return vector
+
 
 class FakeIndiCcd(FakeIndiDevice):
 
@@ -541,4 +559,129 @@ class FakeIndiGps(FakeIndiDevice):
     def long(self, new_long):
         self._long = float(new_long)
 
+
+
+class FakeIndiVectorGeneric(object):
+    def __init__(self, *args):
+        self.index = None
+        self.options = list()
+
+        for option in args:
+            self.options.append(FakeIndiVectorOption(option))
+
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+
+    def __next__(self):
+        try:
+            x = self.options[self.index]
+            return x
+        except IndexError:
+            raise StopIteration
+
+
+    def __len__(self):
+        return len(self.options)
+
+
+    def __getitem__(self, index):
+        return self.options[index]
+
+
+
+class FakeIndiVectorSwitch(FakeIndiVectorGeneric):
+    def getRule(self, *args, **kwargs):
+        #return 1  # PyIndi.ISR_ATMOST1
+        #return 0  # PyIndi.ISR_1OFMANY
+        return 999  # bogus
+
+
+class FakeIndiVectorNumber(FakeIndiVectorGeneric):
+    pass
+
+
+class FakeIndiVectorOption(object):
+    # combining switch, number, and text
+
+    def __init__(self, name):
+        self._name = name
+        self._state = 0
+        self._value = 0
+        self._text = ''
+
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
+
+
+    def getName(self):
+        return self.name
+
+
+    ### switch
+
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = int(new_state)
+
+
+    def getState(self):
+        return self._state
+
+
+    def setState(self, new_state):
+        self.state = new_state
+
+
+    ### number
+
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        self._value = float(new_value)
+
+
+    def getValue(self):
+        return self.value
+
+
+    def setValue(self, new_value):
+        self.value = new_value
+
+
+    ### text
+
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, new_text):
+        self._text = str(new_text)
+
+
+    def getText(self):
+        return self.text
+
+
+    def setText(self, new_text):
+        self.text = new_text
 

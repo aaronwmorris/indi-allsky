@@ -27,6 +27,8 @@ obs.lat = math.radians(LATITUDE)
 obs.lon = math.radians(LONGITUDE)
 obs.date = utcnow
 
+logger.info('Latitude: %s', obs.lat.znorm)
+
 sun = ephem.Sun()
 sun.compute(obs)
 
