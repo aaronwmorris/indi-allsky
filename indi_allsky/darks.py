@@ -65,6 +65,10 @@ class IndiAllSkyDarks(object):
         self.indiclient = None
 
         self.camera_id = None
+
+        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
+        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -136,6 +140,8 @@ class IndiAllSkyDarks(object):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
+            self.latitude_v,
+            self.longitude_v,
             self.gain_v,
             self.bin_v,
         )
