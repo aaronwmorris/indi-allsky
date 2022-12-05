@@ -1,6 +1,6 @@
 # This file is targeted to Raspbian/Debian 10 and Python 3.7
 #pyindi-client==1.9.1
-git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client
+git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client
 #https://www.piwheels.org/project/astropy/
 astropy
 #https://www.piwheels.org/project/numpy/
