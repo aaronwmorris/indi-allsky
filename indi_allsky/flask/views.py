@@ -1614,7 +1614,19 @@ class SystemInfoView(TemplateView):
 
 
     def getCpuUsage(self):
-        return psutil.cpu_percent()
+        c = psutil.cpu_times_percent()
+
+        cpu_percent = {
+            'user'    : c.user,
+            'system'  : c.system,
+            'idle'    : c.idle,
+            'nice'    : c.nice,
+            'iowait'  : c.iowait,
+            'irq'     : c.irq,
+            'softirq' : c.softirq,
+        }
+
+        return cpu_percent
 
 
     def getLoadAverage(self):
