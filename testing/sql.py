@@ -88,8 +88,9 @@ class SqlTester(object):
         logger.info('SQL executed in %0.4f s', elapsed_s)
 
 
+        sql = image_lag_list.statement.compile(db.engine, compile_kwargs={ "literal_binds" : True })
         #logger.info('SQL: %s', timelapse_files_entries)
-        logger.info('SQL: %s', image_lag_list)
+        logger.info('SQL: %s', sql)
 
 
 if __name__ == "__main__":
