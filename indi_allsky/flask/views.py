@@ -1636,9 +1636,13 @@ class SystemInfoView(TemplateView):
     def getMemoryUsage(self):
         memory_info = psutil.virtual_memory()
 
-        memory_total = memory_info[0]
-        #memory_free = memory_info[1]
-        memory_percent = memory_info[2]
+        memory_total = memory_info.total
+        #memory_free = memory_info.free
+
+        memory_percent = {
+            'user_percent'    : (memory_info.used / memory_total) * 100.0,
+            'cached_percent'  : (memory_info.cached / memory_total) * 100.0,
+        }
 
         memory_total_mb = int(memory_total / 1024.0 / 1024.0)
 

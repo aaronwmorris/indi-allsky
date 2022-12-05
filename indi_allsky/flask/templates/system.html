@@ -80,6 +80,7 @@
         <span class="badge bg-success">Nice</span>
         <span class="badge bg-warning">I/O Wait</span>
     </div>
+</div>
 <hr />
 
 <div class="row">
@@ -112,7 +113,8 @@
     <div class="col-sm-1">System</div>
     <div class="col-sm-9">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage|int}}%">{{"%.0f"|format(mem_usage)}}%</div>
+            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage.user_percent|int}}%">{{"%.0f"|format(mem_usage.user_percent)}}%</div>
+            <div class="progress-bar progress-bar-striped bg-secondary" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage.cached_percent|int}}%">{{"%.0f"|format(mem_usage.cached_percent)}}%</div>
         </div>
     </div>
 </div>
@@ -124,6 +126,16 @@
         <div class="progress">
             <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%">{{"%.0f"|format(swap_usage)}}%</div>
         </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-9">
+        <span class="badge bg-success">Used</span>
+        <span class="badge bg-secondary">Cache</span>
+        <span class="badge bg-danger">Swap</span>
     </div>
 </div>
 
