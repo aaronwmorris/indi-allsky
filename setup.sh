@@ -85,19 +85,6 @@ echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
 
 
-if [ -f "/usr/bin/indiserver" ]; then
-    # Do not upgrade INDI if it is already installed
-    INSTALL_INDI="false"
-
-    echo
-    echo
-    echo "INDI is already installed, not forcing package upgrades"
-    echo
-    echo
-    sleep 3
-fi
-
-
 if [ -f "/usr/local/bin/indiserver" ]; then
     # Do not install INDI
     INSTALL_INDI="false"
