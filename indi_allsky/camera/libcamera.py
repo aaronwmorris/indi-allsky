@@ -25,6 +25,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self._exposure = None
 
+        self._ccd_gain = -1
+        self._ccd_bin = 1
+
         self.active_exposure = False
         self.current_exposure_file_p = None
 
@@ -64,6 +67,35 @@ class IndiClientLibCameraGeneric(IndiClient):
             'lat'           : self.latitude_v.value,
             'long'          : self.longitude_v.value,
         }
+
+
+    def getCcdGain(self):
+        return self._ccd_gain
+
+
+    def setCcdGain(self, new_gain_value):
+        self._ccd_gain = int(new_gain_value)
+
+        # Update shared gain value
+        with self.gain_v.get_lock():
+            self.gain_v.value = int(new_gain_value)
+
+
+    def setCcdBinning(self, new_bin_value):
+        if type(new_bin_value) is int:
+            new_bin_value = [new_bin_value, new_bin_value]
+        elif type(new_bin_value) is str:
+            new_bin_value = [int(new_bin_value), int(new_bin_value)]
+        elif not new_bin_value:
+            # Assume default
+            return
+
+
+        self._ccd_bin = int(new_bin_value[0])
+
+        # Update shared gain value
+        with self.bin_v.get_lock():
+            self.bin_v.value = int(new_bin_value[0])
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
