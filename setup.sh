@@ -27,6 +27,8 @@ INSTALL_INDISERVER="true"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 DPC_STRENGTH="0"
+PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
+PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 #### end config ####
 
 
@@ -1143,6 +1145,38 @@ fi
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
+
+
+
+# pyindi-client setup
+INDI_VERSIONS=(
+    "v1.9.9 v1.9.9 ON"
+    "v1.9.8 v1.9.8 OFF"
+    "v1.9.7 v1.9.7 OFF"
+    "skip skip OFF"
+)
+
+
+INDI_VERSION=""
+while [ -z "$INDI_VERSION" ]; do
+    # shellcheck disable=SC2068
+    INDI_VERSION=$(whiptail --title "Installed INDI Version for pyindi-client" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_VERSIONS[@]} 3>&1 1>&2 2>&3)
+done
+
+#echo "Selected: $INDI_VERSION"
+
+
+
+if [ "$INDI_VERSION" == "v1.9.9" ]; then
+    pip3 install "$PYINDI_1_9_9"
+elif [ "$INDI_VERSION" == "v1.9.8" ]; then
+    pip3 install "$PYINDI_1_9_8"
+elif [ "$INDI_VERSION" == "v1.9.7" ]; then
+    pip3 install "$PYINDI_1_9_8"
+else
+    # assuming skip
+    echo "Skipping pyindi-client install"
+fi
 
 
 
