@@ -232,7 +232,7 @@ class ImageWorker(Process):
             if filename_p.suffix in ['.fit']:
                 hdulist = fits.open(filename_p)
 
-                #logger.info('HDU Header = %s', pformat(hdulist[0].header))
+                #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
@@ -283,6 +283,15 @@ class ImageWorker(Process):
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
+
+            # Override these
+
+            hdulist[0].header['OBJECT'] = 'AllSky'
+            hdulist[0].header['TELESCOP'] = 'indi-allsky'
+
+
+
+            #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
 
 
             filename_p.unlink()  # no longer need the original file
