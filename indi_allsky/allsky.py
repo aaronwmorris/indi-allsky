@@ -434,11 +434,12 @@ class IndiAllSky(object):
 
 
         ### Telescope config
+        # park the telescope at zenith and stop tracking
         if self.indiclient.telescope_device:
             telescope_config = {
                 'SWITCHES' : {
                     'TELESCOPE_SLEW_RATE' : {
-                        'on' : ['4x'],
+                        'on' : ['4x'],  # zoom zoom
                     },
                     'TELESCOPE_TRACK_STATE' : {
                         'on'  : ['TRACK_OFF'],
