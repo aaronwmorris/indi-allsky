@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+#from datetime import timezone
 import time
 import functools
 import tempfile
@@ -270,8 +271,11 @@ class ImageWorker(Process):
                 hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
+                hdulist[0].header['EXTEND'] = True
                 hdulist[0].header['IMAGETYP'] = 'Light Frame'
                 hdulist[0].header['INSTRUME'] = 'libcamera'
+                hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+                hdulist[0].header['APTDIA'] = 10  # smallest possible value
                 hdulist[0].header['EXPTIME'] = float(exposure)
                 hdulist[0].header['XBINNING'] = 1
                 hdulist[0].header['YBINNING'] = 1
@@ -280,8 +284,10 @@ class ImageWorker(Process):
                 hdulist[0].header['BITPIX'] = 16
                 hdulist[0].header['SITELAT'] = self.latitude_v.value
                 hdulist[0].header['SITELONG'] = self.longitude_v.value
-                hdulist[0].header['OBJCTHA'] = self.ra_v.value
-                hdulist[0].header['OBJCTDEC'] = self.dec_v.value
+                hdulist[0].header['RA'] = self.ra_v.value
+                hdulist[0].header['DEC'] = self.dec_v.value
+                hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
 
                 if self.config['CFA_PATTERN']:
                     hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
