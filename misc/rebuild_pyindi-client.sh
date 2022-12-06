@@ -54,14 +54,39 @@ sleep 10
 
 
 
+INDI_VERSIONS=(
+    "v1.9.9 v1.9.9 ON"
+    "v1.9.8 v1.9.8 OFF"
+    "v1.9.7 v1.9.7 OFF"
+)
+
+
+INDI_VERSION=""
+while [ -z "$INDI_VERSION" ]; do
+    # shellcheck disable=SC2068
+    INDI_VERSION=$(whiptail --title "INDI Version" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_VERSIONS[@]} 3>&1 1>&2 2>&3)
+done
+
+echo "Selected: $INDI_VERSION"
+
+
+if [ "$INDI_VERSION" == "v1.9.8" ]; then
+    CLIENT_VERSION='git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client'
+elif [ "$INDI_VERSION" == "v1.9.7" ]; then
+    CLIENT_VERSION='git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client'
+else
+    # assuming 1.9.9 or newer
+    CLIENT_VERSION='git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client'
+fi
+
+
 START_TIME=$(date +%s)
 
 
 # shellcheck source=/dev/null
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 uninstall -y pyindi-client
-#pip3 install --no-binary :all: --upgrade 'pyindi-client==1.9.1'
-pip3 install --no-binary :all: --upgrade 'git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client'
+pip3 install --no-binary :all: --upgrade "$CLIENT_VERSION"
 
 
 END_TIME=$(date +%s)
