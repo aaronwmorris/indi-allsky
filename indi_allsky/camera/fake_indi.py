@@ -11,6 +11,8 @@ class FakeIndiClient(object):
         image_q,
         latitude_v,
         longitude_v,
+        ra_v,
+        dec_v,
         gain_v,
         bin_v,
     ):
@@ -21,6 +23,10 @@ class FakeIndiClient(object):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
+
         self.gain_v = gain_v
         self.bin_v = bin_v
 
@@ -285,6 +291,10 @@ class FakeIndiClient(object):
 
     def getGpsPosition(self):
         return self.latitude_v.value, self.longitude_v.value, 0.0
+
+
+    def getTelescopeRaDec(self):
+        return 0.0, 0.0
 
 
     def getCcdTemperature(self):

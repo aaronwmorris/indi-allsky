@@ -77,6 +77,9 @@ class IndiAllSky(object):
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
 
+        self.ra_v = Value('f', 0.0)
+        self.dec_v = Value('f', 0.0)
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -340,6 +343,8 @@ class IndiAllSky(object):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.gain_v,
             self.bin_v,
         )
@@ -597,6 +602,8 @@ class IndiAllSky(object):
             self.upload_q,
             self.latitude_v,
             self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.exposure_v,
             self.gain_v,
             self.bin_v,
@@ -819,6 +826,7 @@ class IndiAllSky(object):
 
 
             self.getSensorTemperature()
+            self.getTelescopeRaDec()
             self.getGpsPosition()
 
 
@@ -1086,6 +1094,20 @@ class IndiAllSky(object):
 
 
         return gps_lat, gps_long, gps_elev
+
+
+    def getTelescopeRaDec(self):
+        ra, dec = self.indiclient.getTelescopeRaDec()
+
+        # Update shared values
+        with self.ra_v.get_lock():
+            self.ra_v.value = ra
+
+        with self.dec_v.get_lock():
+            self.dec_v.value = dec
+
+
+        return ra, dec
 
 
     def updateConfigLocation(self, gps_lat, gps_long):

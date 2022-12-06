@@ -99,6 +99,8 @@ class IndiClient(PyIndi.BaseClient):
         image_q,
         latitude_v,
         longitude_v,
+        ra_v,
+        dec_v,
         gain_v,
         bin_v,
     ):
@@ -109,6 +111,10 @@ class IndiClient(PyIndi.BaseClient):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
+
         self.gain_v = gain_v
         self.bin_v = bin_v
 
@@ -652,6 +658,19 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("GPS location: lat %0.2f, long %0.2f, elev %0.2f", gps_lat, gps_long, gps_elev)
 
         return gps_lat, gps_long, gps_elev
+
+
+    def getTelescopeRaDec(self):
+        if not self._telescope_device:
+            return self.ra_v.value, self.dec_v.value
+
+        equatorial_eod_coord = self._telescope_device.getNumber("EQUATORIAL_EOD_COORD")
+        ra = float(equatorial_eod_coord[0].getValue())
+        dec = float(equatorial_eod_coord[1].getValue())
+
+        logger.info("Telescope Coord: RA %0.2f, Dec %0.2f", ra, dec)
+
+        return ra, dec
 
 
     def getCcdTemperature(self):

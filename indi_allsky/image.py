@@ -88,6 +88,8 @@ class ImageWorker(Process):
         upload_q,
         latitude_v,
         longitude_v,
+        ra_v,
+        dec_v,
         exposure_v,
         gain_v,
         bin_v,
@@ -109,6 +111,10 @@ class ImageWorker(Process):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
+
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -274,6 +280,8 @@ class ImageWorker(Process):
                 hdulist[0].header['BITPIX'] = 16
                 hdulist[0].header['SITELAT'] = self.latitude_v.value
                 hdulist[0].header['SITELONG'] = self.longitude_v.value
+                hdulist[0].header['OBJCTHA'] = self.ra_v.value
+                hdulist[0].header['OBJCTDEC'] = self.dec_v.value
 
                 if self.config['CFA_PATTERN']:
                     hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
