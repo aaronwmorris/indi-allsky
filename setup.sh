@@ -1199,7 +1199,7 @@ if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     done
 else
     # simulator will not affect anything
-    CCD_DRIVER=indi_ccd_simulator
+    CCD_DRIVER=indi_simulator_ccd
 fi
 
 #echo $CCD_DRIVER
