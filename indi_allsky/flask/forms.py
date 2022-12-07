@@ -709,6 +709,11 @@ def FFMPEG_VFSCALE_validator(form, field):
         raise ValidationError('Invalid scale option')
 
 
+def FFMPEG_CODEC_validator(form, field):
+    if field.data not in list(zip(*form.FFMPEG_CODEC_choices))[0]:
+        raise ValidationError('Invalid codec option')
+
+
 def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
     fonts = (
         'FONT_HERSHEY_SIMPLEX',
@@ -1204,6 +1209,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('iw*.25:ih*.25', '25%'),
     )
 
+    FFMPEG_CODEC_choices = (
+        ('libx264', 'x264'),
+        ('h264_omx', 'x264 (Hardware Accelerated - Pi ONLY)'),
+        ('libvpx', 'webm')
+    )
+
     ORB_PROPERTIES__MODE_choices = (
         ('ha', 'Hour Angle'),
         ('az', 'Azimuth'),
@@ -1333,6 +1344,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
     FFMPEG_VFSCALE                   = SelectField('FFMPEG Scaling', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
+    FFMPEG_CODEC                     = SelectField('FFMPEG Codec', choices=FFMPEG_CODEC_choices, validators=[FFMPEG_CODEC_validator])
     TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
     TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Font Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
     TEXT_PROPERTIES__FONT_X          = IntegerField('Font X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
