@@ -44,7 +44,7 @@ class TimelapseGenerator(object):
             '-f', 'image2',
             '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
             '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
-            '-vcodec', 'libx264',
+            '-vcodec', self.config['FFMPEG_CODEC'],
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',

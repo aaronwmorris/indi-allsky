@@ -188,7 +188,16 @@ class VideoWorker(Process):
             night = False
 
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.mp4'.format(camera_id, timespec, timeofday))
+        if self.config['FFMPEG_CODEC'] is 'libx264' or self.config['FFMPEG_CODEC'] is 'h264_omx':
+            video_format = 'mp4'
+        elif self.config['FFMPEG_CODEC'] is 'libvpx':
+            video_format = 'webm'
+        else:
+            logger.error('Invalid codec in config, timelapse generation failed')
+            task.setFailed('Invalid codec in config, timelapse generation failed')
+            return
+
+        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, video_format))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
