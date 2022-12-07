@@ -248,13 +248,8 @@ class VideoWorker(Process):
 
         if not ret:
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
-            logger.warning('Removing orphaned video db entry')
-            db.session.delete(video_entry)
-            db.session.commit()
-            return
-
-
-        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+        else:
+            task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
         self.uploadVideo(video_file)
