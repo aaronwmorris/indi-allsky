@@ -741,7 +741,7 @@
             {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">File type for timelapse images.  Restart gunicorn if you change this setting.<br /><b>Warning:  Some browsers do *NOT* support TIFF files.</b></div>
+        <div class="col-sm-8">File type for timelapse images.  Restart gunicorn if you change this setting.<br /><span class="badge rounded-pill bg-warning text-dark">Warning</span><b>Some browsers do *NOT* support TIFF files.</b></div>
     </div>
 
     <div class="form-group row">
@@ -1300,7 +1300,7 @@
         </div>
         <div class="col-sm-4">
             <div>libcurl options for use with PycURL classes</div>
-            <div>WARNING: Options are not fully validated</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not fully validated</div>
         </div>
     </div>
 
@@ -1617,7 +1617,10 @@
             {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
             <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-5">Extra options for libcamera-still.  WARNING: Options are not validated</div>
+        <div class="col-sm-5">
+            <div>Extra options for libcamera-still.</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
+        </div>
     </div>
 
     <hr />

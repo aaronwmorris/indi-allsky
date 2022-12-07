@@ -1614,7 +1614,19 @@ class SystemInfoView(TemplateView):
 
 
     def getCpuUsage(self):
-        return psutil.cpu_percent()
+        c = psutil.cpu_times_percent()
+
+        cpu_percent = {
+            'user'    : c.user,
+            'system'  : c.system,
+            'idle'    : c.idle,
+            'nice'    : c.nice,
+            'iowait'  : c.iowait,
+            'irq'     : c.irq,
+            'softirq' : c.softirq,
+        }
+
+        return cpu_percent
 
 
     def getLoadAverage(self):
@@ -1624,9 +1636,13 @@ class SystemInfoView(TemplateView):
     def getMemoryUsage(self):
         memory_info = psutil.virtual_memory()
 
-        memory_total = memory_info[0]
-        #memory_free = memory_info[1]
-        memory_percent = memory_info[2]
+        memory_total = memory_info.total
+        #memory_free = memory_info.free
+
+        memory_percent = {
+            'user_percent'    : (memory_info.used / memory_total) * 100.0,
+            'cached_percent'  : (memory_info.cached / memory_total) * 100.0,
+        }
 
         memory_total_mb = int(memory_total / 1024.0 / 1024.0)
 
@@ -1646,6 +1662,10 @@ class SystemInfoView(TemplateView):
 
         fs_data = list()
         for fs in fs_list:
+            if fs.mountpoint.startswith('/snap/'):
+                # skip snap filesystems
+                continue
+
             disk_usage = psutil.disk_usage(fs.mountpoint)
 
             data = {

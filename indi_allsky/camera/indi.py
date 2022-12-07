@@ -11,6 +11,8 @@ from astropy.io import fits
 
 import PyIndi
 
+from .fake_indi import FakeIndiCcd
+
 #from ..flask import db
 from ..flask import create_app
 
@@ -91,16 +93,36 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    def __init__(self, config, image_q, gain_v, bin_v):
+    def __init__(
+        self,
+        config,
+        image_q,
+        latitude_v,
+        longitude_v,
+        ra_v,
+        dec_v,
+        gain_v,
+        bin_v,
+    ):
         super(IndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
+
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
+
         self.gain_v = gain_v
         self.bin_v = bin_v
 
         self._ccd_device = None
         self._ctl_ccd_exposure = None
+
+        self._telescope_device = None
+        self._gps_device = None
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -126,6 +148,24 @@ class IndiClient(PyIndi.BaseClient):
     @ccd_device.setter
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
+
+
+    @property
+    def telescope_device(self):
+        return self._telescope_device
+
+    @telescope_device.setter
+    def telescope_device(self, new_telescope_device):
+        self._telescope_device = new_telescope_device
+
+
+    @property
+    def gps_device(self):
+        return self._gps_device
+
+    @gps_device.setter
+    def gps_device(self, new_gps_device):
+        self._gps_device = new_gps_device
 
 
     @property
@@ -246,6 +286,22 @@ class IndiClient(PyIndi.BaseClient):
 
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+
+
+    def parkTelescope(self):
+        if not self._telescope_device:
+            return
+
+        park_config = {
+            'SWITCHES' : {
+                'TELESCOPE_PARK' : {
+                    'on'  : ['PARK'],
+                    'off' : ['UNPARK'],
+                },
+            }
+        }
+
+        self.configureTelescopeDevice(park_config)
 
 
     def updateCcdBlobMode(self, blobmode=PyIndi.B_ALSO, prop=None):
@@ -453,7 +509,72 @@ class IndiClient(PyIndi.BaseClient):
         return self._ccd_device
 
 
+    def _findTelescopes(self):
+        telescope_list = list()
+
+        for device in self.getDevices():
+            logger.info('Found device %s', device.getDeviceName())
+            device_interfaces = self.findDeviceInterfaces(device)
+
+            for k, v in self.__indi_interfaces.items():
+                if device_interfaces & k:
+                    logger.info(' Detected %s', v)
+                    if k == PyIndi.BaseDevice.TELESCOPE_INTERFACE:
+                        telescope_list.append(device)
+
+        return telescope_list
+
+
+    def findTelescope(self, telescope_name):
+        telescope_list = self._findTelescopes()
+
+        logger.info('Found %d Telescopess', len(telescope_list))
+
+        for t in telescope_list:
+            if t.getDeviceName() == telescope_name:
+                self._telescope_device = t
+                break
+        else:
+            logger.error('No telescopes found')
+
+        return self._telescope_device
+
+
+    def _findGpss(self):
+        gps_list = list()
+
+        for device in self.getDevices():
+            logger.info('Found device %s', device.getDeviceName())
+            device_interfaces = self.findDeviceInterfaces(device)
+
+            for k, v in self.__indi_interfaces.items():
+                if device_interfaces & k:
+                    logger.info(' Detected %s', v)
+                    if k == PyIndi.BaseDevice.GPS_INTERFACE:
+                        gps_list.append(device)
+
+        return gps_list
+
+
+    def findGps(self):
+        gps_list = self._findGpss()
+
+        logger.info('Found %d GPSs', len(gps_list))
+
+        try:
+            # set default device in indiclient
+            self._gps_device = gps_list[0]
+        except IndexError:
+            pass
+
+        return self._gps_device
+
+
     def configureDevice(self, device, indi_config, sleep=1.0):
+        if type(device) is FakeIndiCcd:
+            # ignore configuration
+            return
+
         ### Configure Device Switches
         for k, v in indi_config.get('SWITCHES', {}).items():
             logger.info('Setting switch %s', k)
@@ -478,14 +599,88 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(self._ccd_device, *args, **kwargs)
 
 
-    def getCcdTemperature(self):
-        temp = self._ccd_device.getNumber("CCD_TEMPERATURE")
+    def configureTelescopeDevice(self, *args, **kwargs):
+        if not self._telescope_device:
+            logger.warning('No telescope to configure')
+            return
 
-        if isinstance(temp, type(None)):
+        self.configureDevice(self._telescope_device, *args, **kwargs)
+
+
+    def setTelescopeGps(self, gps_name):
+        gps_config = {
+            'TEXT' : {
+                'ACTIVE_DEVICES' : {
+                    'ACTIVE_GPS' : gps_name,
+                },
+            },
+        }
+
+        self.configureTelescopeDevice(gps_config)
+
+
+    def configureGpsDevice(self, *args, **kwargs):
+        if not self._gps_device:
+            logger.warning('No GPS to configure')
+            return
+
+        self.configureDevice(self._gps_device, *args, **kwargs)
+
+
+    def refreshGps(self):
+        if not self._gps_device:
+            return
+
+        refresh_config = {
+            'SWITCHES' : {
+                'GPS_REFRESH' : {
+                    'on' : ['REFRESH'],
+                },
+            },
+        }
+
+        self.configureGpsDevice(self, refresh_config)
+
+
+    def getGpsPosition(self):
+        if not self._gps_device:
+            return self.latitude_v.value, self.longitude_v.value, 0.0
+
+        geographic_coord = self._gps_device.getNumber("GEOGRAPHIC_COORD")
+        gps_lat = float(geographic_coord[0].getValue())
+        gps_long = float(geographic_coord[1].getValue())
+        gps_elev = float(geographic_coord[2].getValue())
+
+        if not gps_lat and not gps_long:
+            logger.warning('GPS fix not found')
+            return self.latitude_v.value, self.longitude_v.value, 0.0
+
+        logger.info("GPS location: lat %0.2f, long %0.2f, elev %0.2f", gps_lat, gps_long, gps_elev)
+
+        return gps_lat, gps_long, gps_elev
+
+
+    def getTelescopeRaDec(self):
+        if not self._telescope_device:
+            return self.ra_v.value, self.dec_v.value
+
+        equatorial_eod_coord = self._telescope_device.getNumber("EQUATORIAL_EOD_COORD")
+        ra = float(equatorial_eod_coord[0].getValue())
+        dec = float(equatorial_eod_coord[1].getValue())
+
+        logger.info("Telescope Coord: RA %0.2f, Dec %0.2f", ra, dec)
+
+        return ra, dec
+
+
+    def getCcdTemperature(self):
+        ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
+
+        if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature: not supported")
             temp_val = -273.15  # absolute zero  :-)
         else:
-            temp_val = float(temp[0].value)
+            temp_val = float(ccd_temperature[0].getValue())
             logger.info("Sensor temperature: %0.1f", temp_val)
 
         return temp_val
@@ -556,6 +751,8 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
             return fake_gain_info
+        elif indi_exec in ['indi_fake_ccd']:
+            return self.ccd_device.getCcdGain()
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -628,6 +825,8 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
             gain_config = {}
+        elif indi_exec in ['indi_fake_ccd']:
+            return self.ccd_device.setCcdGain(gain_value)
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -683,6 +882,8 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support bin settings')
             return
+        elif indi_exec in ['indi_fake_ccd']:
+            return self.ccd_device.setCcdBinMode(bin_value)
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 

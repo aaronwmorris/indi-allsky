@@ -6,8 +6,10 @@ import psutil
 from pathlib import Path
 import logging
 
-from .indi import IndiClient
+from .fake_indi import FakeIndiClient
 from .fake_indi import FakeIndiCcd
+from .fake_indi import FakeIndiTelescope
+from .fake_indi import FakeIndiGps
 
 from ..exceptions import TimeOutException
 
@@ -16,17 +18,14 @@ logger = logging.getLogger('indi_allsky')
 
 
 
-class IndiClientLibCameraGeneric(IndiClient):
+class FakeIndiLibCameraGeneric(FakeIndiClient):
 
     def __init__(self, *args, **kwargs):
-        super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
+        super(FakeIndiLibCameraGeneric, self).__init__(*args, **kwargs)
 
         self.libcamera_process = None
 
         self._exposure = None
-
-        self._ccd_gain = -1
-        self._ccd_bin = 1
 
         self.active_exposure = False
         self.current_exposure_file_p = None
@@ -67,35 +66,6 @@ class IndiClientLibCameraGeneric(IndiClient):
             'lat'           : self.latitude_v.value,
             'long'          : self.longitude_v.value,
         }
-
-
-    def getCcdGain(self):
-        return self._ccd_gain
-
-
-    def setCcdGain(self, new_gain_value):
-        self._ccd_gain = int(new_gain_value)
-
-        # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = int(new_gain_value)
-
-
-    def setCcdBinning(self, new_bin_value):
-        if type(new_bin_value) is int:
-            new_bin_value = [new_bin_value, new_bin_value]
-        elif type(new_bin_value) is str:
-            new_bin_value = [int(new_bin_value), int(new_bin_value)]
-        elif not new_bin_value:
-            # Assume default
-            return
-
-
-        self._ccd_bin = int(new_bin_value[0])
-
-        # Update shared gain value
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(new_bin_value[0])
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -264,66 +234,37 @@ class IndiClientLibCameraGeneric(IndiClient):
         return self._ccd_device
 
 
-    def getCcdInfo(self):
-        ccdinfo = dict()
+    def findTelescope(self, *args):
+        new_telescope = FakeIndiTelescope()
+        new_telescope.device_name = self.telescope_device_name
+        new_telescope.driver_exec = self.telescope_driver_exec
 
-        ccdinfo['CCD_EXPOSURE'] = dict()
-        ccdinfo['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE'] = {
-            'current' : None,
-            'min'     : self._ccd_device.min_exposure,
-            'max'     : self._ccd_device.max_exposure,
-            'step'    : None,
-            'format'  : None,
-        }
+        new_telescope.lat = self.telescope_info['lat']
+        new_telescope.long = self.telescope_info['long']
 
-        ccdinfo['CCD_INFO'] = dict()
-        ccdinfo['CCD_INFO']['CCD_MAX_X'] = dict()
-        ccdinfo['CCD_INFO']['CCD_MAX_Y'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = dict()
+        self._telescope_device = new_telescope
 
-        ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = {
-            'current' : self._ccd_device.bit_depth,
-            'min'     : None,
-            'max'     : None,
-            'step'    : None,
-            'format'  : None,
-        }
-
-        ccdinfo['CCD_CFA'] = dict()
-        ccdinfo['CCD_CFA']['CFA_TYPE'] = {
-            'text' : self._ccd_device.cfa,
-        }
-
-        ccdinfo['CCD_FRAME'] = dict()
-        ccdinfo['CCD_FRAME']['X'] = dict()
-        ccdinfo['CCD_FRAME']['Y'] = dict()
-        ccdinfo['CCD_FRAME']['WIDTH'] = dict()
-        ccdinfo['CCD_FRAME']['HEIGHT'] = dict()
-
-        ccdinfo['CCD_FRAME_TYPE'] = {
-            'FRAME_LIGHT' : 1,
-            'FRAME_BIAS'  : 0,
-            'FRAME_DARK'  : 0,
-            'FRAME_FLAT'  : 0,
-        }
-
-        ccdinfo['GAIN_INFO'] = {
-            'current' : 0,
-            'min'     : self._ccd_device.min_gain,
-            'max'     : self._ccd_device.max_gain,
-            'step'    : None,
-            'format'  : None,
-        }
-
-        return ccdinfo
+        return self._telescope_device
 
 
-class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
+    def findGps(self, *args):
+        new_gps = FakeIndiGps()
+        new_gps.device_name = self.gps_device_name
+        new_gps.driver_exec = self.gps_driver_exec
+
+        new_gps.lat = self.gps_info['lat']
+        new_gps.long = self.gps_info['long']
+
+        self._gps_device = new_gps
+
+        return self._gps_device
+
+
+
+class FakeIndiLibCameraImx477(FakeIndiLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
-        super(IndiClientLibCameraImx477, self).__init__(*args, **kwargs)
+        super(FakeIndiLibCameraImx477, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx477'
         self.ccd_driver_exec = 'indi_fake_ccd'

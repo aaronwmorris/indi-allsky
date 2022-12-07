@@ -5,11 +5,28 @@ logger = logging.getLogger('indi_allsky')
 
 class FakeIndiClient(object):
 
-    def __init__(self, config, image_q, gain_v, bin_v):
+    def __init__(
+        self,
+        config,
+        image_q,
+        latitude_v,
+        longitude_v,
+        ra_v,
+        dec_v,
+        gain_v,
+        bin_v,
+    ):
         super(FakeIndiClient, self).__init__()
 
         self.config = config
         self.image_q = image_q
+
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
+
         self.gain_v = gain_v
         self.bin_v = bin_v
 
@@ -32,6 +49,19 @@ class FakeIndiClient(object):
         }
 
 
+        self._telescope_device = None
+        self.telescope_info = {
+            'lat'           : 0.0,
+            'long'          : 0.0,
+        }
+
+        self._gps_device = None
+        self.gps_info = {
+            'lat'           : 0.0,
+            'long'          : 0.0,
+        }
+
+
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 65.0
@@ -50,6 +80,24 @@ class FakeIndiClient(object):
     @ccd_device.setter
     def ccd_device(self, new_ccd_device):
         self._ccd_device = new_ccd_device
+
+
+    @property
+    def telescope_device(self):
+        return self._telescope_device
+
+    @telescope_device.setter
+    def telescope_device(self, new_telescope_device):
+        self._telescope_device = new_telescope_device
+
+
+    @property
+    def gps_device(self):
+        return self._gps_device
+
+    @gps_device.setter
+    def gps_device(self, new_gps_device):
+        self._gps_device = new_gps_device
 
 
     @property
@@ -204,9 +252,49 @@ class FakeIndiClient(object):
         pass
 
 
+    def findTelescope(self, *args):
+        # override
+        # create FakeIndiTelescope object here
+        pass
+
+
+    def findGps(self, *args):
+        # override
+        # create FakeIndiTelescope object here
+        pass
+
+
     def configureCcdDevice(self, *args, **kwargs):
         # does nothing
         pass
+
+
+    def configureTelescopeDevice(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
+    def setTelescopeGps(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
+    def configureGpsDevice(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
+    def refreshGps(self):
+        # does nothing
+        pass
+
+
+    def getGpsPosition(self):
+        return self.latitude_v.value, self.longitude_v.value, 0.0
+
+
+    def getTelescopeRaDec(self):
+        return 0.0, 0.0
 
 
     def getCcdTemperature(self):
@@ -256,14 +344,65 @@ class FakeIndiClient(object):
 
 
 
-class FakeIndiCcd(object):
+class FakeIndiDevice(object):
 
     def __init__(self):
-        super(FakeIndiCcd, self).__init__()
+        super(FakeIndiDevice, self).__init__()
 
         # these should be set
         self._device_name = 'UNDEFINED'
         self._driver_exec = 'UNDEFINED'
+
+
+    @property
+    def device_name(self):
+        return self._device_name
+
+    @device_name.setter
+    def device_name(self, new_device_name):
+        self._device_name = new_device_name
+
+
+    @property
+    def driver_exec(self):
+        return self._driver_exec
+
+    @driver_exec.setter
+    def driver_exec(self, new_driver_exec):
+        self._driver_exec = new_driver_exec
+
+
+    def getDeviceName(self):
+        return self._device_name
+
+
+    def getDriverExec(self):
+        return self._driver_exec
+
+
+    def getSwitch(self, name):
+        if name == 'DEBUG':
+            vector = FakeIndiVectorSwitch('ENABLE', 'DISABLE')
+        else:
+            raise Exception('Unknown config switch')
+
+        return vector
+
+
+    def getNumber(self, name):
+        if name == 'CCD_TEMPERATURE':
+            vector = FakeIndiVectorNumber('CCD_TEMPERATURE_VALUE')
+            vector[0].setValue(-273.15)
+        else:
+            raise Exception('Unknown config number')
+
+        return vector
+
+
+class FakeIndiCcd(FakeIndiDevice):
+
+    def __init__(self):
+        super(FakeIndiCcd, self).__init__()
 
         self._width = None
         self._height = None
@@ -303,24 +442,6 @@ class FakeIndiCcd(object):
     @pixel.setter
     def pixel(self, new_pixel):
         self._pixel = float(new_pixel)
-
-
-    @property
-    def device_name(self):
-        return self._device_name
-
-    @device_name.setter
-    def device_name(self, new_device_name):
-        self._device_name = new_device_name
-
-
-    @property
-    def driver_exec(self):
-        return self._driver_exec
-
-    @driver_exec.setter
-    def driver_exec(self, new_driver_exec):
-        self._driver_exec = new_driver_exec
 
 
     @property
@@ -395,12 +516,182 @@ class FakeIndiCcd(object):
         self._bit_depth = int(new_bit_depth)
 
 
+class FakeIndiTelescope(FakeIndiDevice):
 
-    def getDeviceName(self):
-        return self._device_name
+    def __init__(self):
+        super(FakeIndiTelescope, self).__init__()
+
+        self._lat = 0.0
+        self._long = 0.0
 
 
-    def getDriverExec(self):
-        return self._driver_exec
+    @property
+    def lat(self):
+        return self._lat
 
+    @lat.setter
+    def lat(self, new_lat):
+        self._lat = float(new_lat)
+
+
+    @property
+    def long(self):
+        return self._long
+
+    @long.setter
+    def long(self, new_long):
+        self._long = float(new_long)
+
+
+class FakeIndiGps(FakeIndiDevice):
+
+    def __init__(self):
+        super(FakeIndiGps, self).__init__()
+
+        self._lat = 0.0
+        self._long = 0.0
+
+
+    @property
+    def lat(self):
+        return self._lat
+
+    @lat.setter
+    def lat(self, new_lat):
+        self._lat = float(new_lat)
+
+
+    @property
+    def long(self):
+        return self._long
+
+    @long.setter
+    def long(self, new_long):
+        self._long = float(new_long)
+
+
+
+class FakeIndiVectorGeneric(object):
+    def __init__(self, *args):
+        self.index = None
+        self.options = list()
+
+        for option in args:
+            self.options.append(FakeIndiVectorOption(option))
+
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+
+    def __next__(self):
+        try:
+            x = self.options[self.index]
+            return x
+        except IndexError:
+            raise StopIteration
+
+
+    def __len__(self):
+        return len(self.options)
+
+
+    def __getitem__(self, index):
+        return self.options[index]
+
+
+
+class FakeIndiVectorSwitch(FakeIndiVectorGeneric):
+    def getRule(self, *args, **kwargs):
+        #return 1  # PyIndi.ISR_ATMOST1
+        #return 0  # PyIndi.ISR_1OFMANY
+        return 999  # bogus
+
+
+class FakeIndiVectorNumber(FakeIndiVectorGeneric):
+    pass
+
+
+class FakeIndiVectorOption(object):
+    # combining switch, number, and text
+
+    def __init__(self, name):
+        self._name = name
+        self._state = 0
+        self._value = 0
+        self._text = ''
+
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
+
+
+    def getName(self):
+        return self.name
+
+
+    ### switch
+
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = int(new_state)
+
+
+    def getState(self):
+        return self._state
+
+
+    def setState(self, new_state):
+        self.state = new_state
+
+
+    ### number
+
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        self._value = float(new_value)
+
+
+    def getValue(self):
+        return self.value
+
+
+    def setValue(self, new_value):
+        self.value = new_value
+
+
+    ### text
+
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, new_text):
+        self._text = str(new_text)
+
+
+    def getText(self):
+        return self.text
+
+
+    def setText(self, new_text):
+        self.text = new_text
 

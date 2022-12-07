@@ -74,6 +74,12 @@ class IndiAllSky(object):
 
         self.indiclient = None
 
+        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
+        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+
+        self.ra_v = Value('f', 0.0)
+        self.dec_v = Value('f', 0.0)
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -141,10 +147,8 @@ class IndiAllSky(object):
         with io.open(self.config_file, 'r') as f_config_file:
             try:
                 c = self._parseConfig(f_config_file.read())
-                f_config_file.close()
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
-                f_config_file.close()
                 return
 
         # overwrite config
@@ -337,6 +341,10 @@ class IndiAllSky(object):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
+            self.latitude_v,
+            self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.gain_v,
             self.bin_v,
         )
@@ -362,8 +370,19 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
+        self.indiclient.findTelescope('Telescope Simulator')
+        self.indiclient.findGps()
+
+        logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
+
+        if self.indiclient.telescope_device:
+            logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
+            self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
+
+        if self.indiclient.gps_device:
+            logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
+            self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
 
 
         if connectOnly:
@@ -373,6 +392,90 @@ class IndiAllSky(object):
         # add driver name to config
         self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+
+
+        ### GPS config
+        if self.indiclient.gps_device:
+            gps_config = {
+                'SWITCHES' : {
+                    'GPS_REFRESH' : {
+                        'on' : ['REFRESH'],
+                    },
+                },
+                'PROPERTIES' : {
+                    'GPS_REFRESH_PERIOD' : {
+                        'PERIOD' : 300,
+                    },
+                },
+            }
+
+            self.indiclient.configureGpsDevice(gps_config)
+
+
+            # GPSD simulation
+            #sim_gps_config = {
+            #    'SWITCHES' : {
+            #        'SIMULATION' : {
+            #            'on'  : ['ENABLE'],
+            #            'off' : ['DISABLE'],
+            #        },
+            #    },
+            #    'PROPERTIES' : {
+            #        'SIM_GEOGRAPHIC_COORD' : {  # rio
+            #            'SIM_LAT'  : -22,  # requires integers
+            #            'SIM_LONG' : 317,
+            #            'SIM_ELEV' : 7,
+            #        },
+            #    },
+            #}
+
+            #self.indiclient.configureGpsDevice(sim_gps_config)
+
+
+
+        ### Telescope config
+        # park the telescope at zenith and stop tracking
+        if self.indiclient.telescope_device:
+            telescope_config = {
+                'SWITCHES' : {
+                    'TELESCOPE_SLEW_RATE' : {
+                        'on' : ['4x'],  # zoom zoom
+                    },
+                    'TELESCOPE_TRACK_STATE' : {
+                        'on'  : ['TRACK_OFF'],
+                        'off' : ['TRACK_ON'],
+                    },
+                },
+                'PROPERTIES' : {
+                    'GEOGRAPHIC_COORD' : {
+                        'LAT' : self.latitude_v.value,
+                        'LONG' : self.longitude_v.value,
+                    },
+                    'TELESCOPE_INFO' : {
+                        'TELESCOPE_APERTURE' : 10,
+                        'TELESCOPE_FOCAL_LENGTH' : 10,
+                    },
+                    'TELESCOPE_PARK_POSITION' : {
+                        'PARK_HA'  : 0.0,
+                        'PARK_DEC' : self.latitude_v.value
+                    },
+                },
+                'TEXT' : {
+                    'SCOPE_CONFIG_NAME' : {
+                        'SCOPE_CONFIG_NAME' : 'indi-allsky',
+                    },
+                },
+            }
+
+            self.indiclient.configureTelescopeDevice(telescope_config)
+            self.indiclient.parkTelescope()
+
+
+
+        if self.indiclient.telescope_device and self.indiclient.gps_device:
+            # Set Telescope GPS
+            self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
+
 
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
@@ -498,6 +601,10 @@ class IndiAllSky(object):
             self.image_error_q,
             self.image_q,
             self.upload_q,
+            self.latitude_v,
+            self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.exposure_v,
             self.gain_v,
             self.bin_v,
@@ -548,6 +655,8 @@ class IndiAllSky(object):
             self.video_error_q,
             self.video_q,
             self.upload_q,
+            self.latitude_v,
+            self.longitude_v,
             self.bin_v,
         )
         self.video_worker.start()
@@ -718,6 +827,8 @@ class IndiAllSky(object):
 
 
             self.getSensorTemperature()
+            self.getTelescopeRaDec()
+            self.getGpsPosition()
 
 
             # Queue externally defined tasks
@@ -954,6 +1065,76 @@ class IndiAllSky(object):
         return temp_float
 
 
+    def getGpsPosition(self):
+        update_position = False
+
+        gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
+
+        if gps_long > 180.0:
+            # put longitude in range of -180 to 180
+            gps_long = gps_long - 360.0
+
+        #logger.info('Lat: %0.2f, Long: %0.2f', self.latitude_v.value, self.longitude_v.value)
+
+        # need 1/10 degree difference before updating location
+        if abs(gps_lat - self.latitude_v.value) > 0.1:
+            self.updateConfigLocation(gps_lat, gps_long)
+            update_position = True
+        elif abs(gps_long - self.longitude_v.value) > 0.1:
+            self.updateConfigLocation(gps_lat, gps_long)
+            update_position = True
+
+
+        if update_position:
+            # Update shared values
+            with self.latitude_v.get_lock():
+                self.latitude_v.value = gps_lat
+
+            with self.longitude_v.get_lock():
+                self.longitude_v.value = gps_long
+
+
+        return gps_lat, gps_long, gps_elev
+
+
+    def getTelescopeRaDec(self):
+        ra, dec = self.indiclient.getTelescopeRaDec()
+
+        # Update shared values
+        with self.ra_v.get_lock():
+            self.ra_v.value = ra
+
+        with self.dec_v.get_lock():
+            self.dec_v.value = dec
+
+
+        return ra, dec
+
+
+    def updateConfigLocation(self, gps_lat, gps_long):
+        logger.warning('Updating indi-allsky config with new geographic location')
+
+        with io.open(self.config_file, 'r') as f_config_file:
+            try:
+                c = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                return
+
+        c['LOCATION_LATITUDE'] = float(gps_lat)
+        c['LOCATION_LONGITUDE'] = float(gps_long)
+
+        # save new config
+        try:
+            with io.open(self.config_file, 'w') as f_config_file:
+                f_config_file.write(json.dumps(c, indent=4))
+
+            logger.info('Wrote new config.json')
+        except PermissionError as e:
+            logger.error('PermissionError: %s', str(e))
+            return
+
+
     def cameraReport(self):
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
@@ -1044,8 +1225,8 @@ class IndiAllSky(object):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1059,8 +1240,8 @@ class IndiAllSky(object):
     def detectMoonMode(self):
         # detectNight() should be run first
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()

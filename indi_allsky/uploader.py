@@ -22,7 +22,13 @@ logger = logging.getLogger('indi_allsky')
 
 
 class FileUploader(Process):
-    def __init__(self, idx, config, error_q, upload_q):
+    def __init__(
+        self,
+        idx,
+        config,
+        error_q,
+        upload_q,
+    ):
         super(FileUploader, self).__init__()
 
         #self.threadID = idx

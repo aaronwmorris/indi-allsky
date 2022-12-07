@@ -21,6 +21,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Dark frames to remove hot pixels
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
+* GPS support
 * Publish data to an MQTT service for monitoring
 * Keograms
 * Star Trails
@@ -198,6 +199,11 @@ All media generated are logged in a local SQLite database stored in /var/lib/ind
 
 The database is managed via the python modules SQLAlchemy and alembic to provide migrations (schema upgrades) automatically in the setup.sh script.
 
+## GPS
+
+GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html) and GPSd integration.  Any GPS hardware supported by GPSd will work.
+
+FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
 
 ## Performance
 
@@ -225,6 +231,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 | Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
+| GPS               | GPSd          | https://gpsd.gitlab.io/gpsd/ |
 | Web interface     | Flask         | https://flask.palletsprojects.com/ |
 |                   | WTForms       | https://wtforms.readthedocs.io/ |
 |                   | Gunicorn      | https://gunicorn.org/ |

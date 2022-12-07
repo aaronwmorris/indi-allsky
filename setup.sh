@@ -27,6 +27,8 @@ INSTALL_INDISERVER="true"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 DPC_STRENGTH="0"
+PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
+PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 #### end config ####
 
 
@@ -83,19 +85,6 @@ PGRP=$(id -ng)
 echo "###############################################"
 echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
-
-
-if [ -f "/usr/bin/indiserver" ]; then
-    # Do not upgrade INDI if it is already installed
-    INSTALL_INDI="false"
-
-    echo
-    echo
-    echo "INDI is already installed, not forcing package upgrades"
-    echo
-    echo
-    sleep 3
-fi
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
@@ -1159,29 +1148,90 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 
-# get list of drivers
-INDI_DRIVERS=()
+# pyindi-client setup
+INDI_VERSIONS=(
+    "v1.9.9 v1.9.9 ON"
+    "v1.9.8 v1.9.8 OFF"
+    "v1.9.7 v1.9.7 OFF"
+    "skip skip OFF"
+)
+
+
+INDI_VERSION=""
+while [ -z "$INDI_VERSION" ]; do
+    # shellcheck disable=SC2068
+    INDI_VERSION=$(whiptail --title "Installed INDI Version for pyindi-client" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_VERSIONS[@]} 3>&1 1>&2 2>&3)
+done
+
+#echo "Selected: $INDI_VERSION"
+
+
+
+if [ "$INDI_VERSION" == "v1.9.9" ]; then
+    pip3 install "$PYINDI_1_9_9"
+elif [ "$INDI_VERSION" == "v1.9.8" ]; then
+    pip3 install "$PYINDI_1_9_8"
+elif [ "$INDI_VERSION" == "v1.9.7" ]; then
+    pip3 install "$PYINDI_1_9_8"
+else
+    # assuming skip
+    echo "Skipping pyindi-client install"
+fi
+
+
+
+# get list of ccd drivers
+INDI_CCD_DRIVERS=()
 cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam*; do
-    INDI_DRIVERS[${#INDI_DRIVERS[@]}]="$I $I OFF"
+    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I $I OFF"
 done
 cd "$OLDPWD" || catch_error
 
-#echo ${INDI_DRIVERS[@]}
+#echo ${INDI_CCD_DRIVERS[@]}
 
 
 CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "$CCD_DRIVER" ]; do
         # shellcheck disable=SC2068
-        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_DRIVERS[@]} 3>&1 1>&2 2>&3)
+        CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_CCD_DRIVERS[@]} 3>&1 1>&2 2>&3)
     done
 else
     # simulator will not affect anything
-    CCD_DRIVER=indi_ccd_simulator
+    CCD_DRIVER=indi_simulator_ccd
 fi
 
 #echo $CCD_DRIVER
+
+
+
+# get list of gps drivers
+INDI_GPS_DRIVERS=("None None ON")
+cd "$INDI_DRIVER_PATH" || catch_error
+for I in indi_gps* indi_simulator_gps; do
+    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I $I OFF"
+done
+cd "$OLDPWD" || catch_error
+
+#echo ${INDI_GPS_DRIVERS[@]}
+
+
+GPS_DRIVER=""
+if [[ "$INSTALL_INDISERVER" == "true" ]]; then
+    while [ -z "$GPS_DRIVER" ]; do
+        # shellcheck disable=SC2068
+        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_GPS_DRIVERS[@]} 3>&1 1>&2 2>&3)
+    done
+fi
+
+#echo $GPS_DRIVER
+
+if [ "$GPS_DRIVER" == "None" ]; then
+    # Value needs to be empty for None
+    GPS_DRIVER=""
+fi
+
 
 
 # create users systemd folder
@@ -1197,6 +1247,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
+     -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
@@ -1747,6 +1798,11 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
     fi
 fi
+
+
+echo "**** Ensure user is a member of the dialout group ****"
+# for GPS and serial port access
+sudo usermod -a -G dialout "$USER"
 
 
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"

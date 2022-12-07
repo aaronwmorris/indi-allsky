@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+#from datetime import timezone
 import time
 import functools
 import tempfile
@@ -86,6 +87,10 @@ class ImageWorker(Process):
         error_q,
         image_q,
         upload_q,
+        latitude_v,
+        longitude_v,
+        ra_v,
+        dec_v,
         exposure_v,
         gain_v,
         bin_v,
@@ -104,6 +109,12 @@ class ImageWorker(Process):
         self.upload_q = upload_q
 
         self.indi_rgb = True  # INDI returns array in the wrong order for cv2
+
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
+
+        self.ra_v = ra_v
+        self.dec_v = dec_v
 
         self.exposure_v = exposure_v
         self.gain_v = gain_v
@@ -228,7 +239,7 @@ class ImageWorker(Process):
             if filename_p.suffix in ['.fit']:
                 hdulist = fits.open(filename_p)
 
-                #logger.info('HDU Header = %s', pformat(hdulist[0].header))
+                #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
@@ -260,14 +271,23 @@ class ImageWorker(Process):
                 hdu = fits.PrimaryHDU(scidata)
                 hdulist = fits.HDUList([hdu])
 
+                hdulist[0].header['EXTEND'] = True
                 hdulist[0].header['IMAGETYP'] = 'Light Frame'
                 hdulist[0].header['INSTRUME'] = 'libcamera'
+                hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+                hdulist[0].header['APTDIA'] = 10  # smallest possible value
                 hdulist[0].header['EXPTIME'] = float(exposure)
                 hdulist[0].header['XBINNING'] = 1
                 hdulist[0].header['YBINNING'] = 1
                 hdulist[0].header['GAIN'] = float(self.gain_v.value)
                 hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
                 hdulist[0].header['BITPIX'] = 16
+                hdulist[0].header['SITELAT'] = self.latitude_v.value
+                hdulist[0].header['SITELONG'] = self.longitude_v.value
+                hdulist[0].header['RA'] = self.ra_v.value
+                hdulist[0].header['DEC'] = self.dec_v.value
+                hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
 
                 if self.config['CFA_PATTERN']:
                     hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
@@ -277,6 +297,15 @@ class ImageWorker(Process):
                 image_bitpix = hdulist[0].header['BITPIX']
                 image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
+
+            # Override these
+
+            hdulist[0].header['OBJECT'] = 'AllSky'
+            hdulist[0].header['TELESCOP'] = 'indi-allsky'
+
+
+
+            #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
 
 
             filename_p.unlink()  # no longer need the original file
@@ -477,6 +506,8 @@ class ImageWorker(Process):
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(self.sqm_value, 1),
                     'stars'    : len(blob_stars),
+                    'latitude' : round(self.latitude_v.value, 3),
+                    'longitude': round(self.longitude_v.value, 3),
                 }
 
                 self.mqtt_publish(latest_file, mqtt_data)
@@ -573,6 +604,8 @@ class ImageWorker(Process):
             'time'                : exp_date.strftime('%s'),
             'sqm_data'            : self.getSqmData(camera_id),
             'stars_data'          : self.getStarsData(camera_id),
+            'latitude'            : self.latitude_v.value,
+            'longitude'           : self.longitude_v.value,
         }
 
 
@@ -878,6 +911,8 @@ class ImageWorker(Process):
             'sqm'                 : self.sqm_value,
             'stars'               : len(blob_stars),
             'time'                : exp_date.strftime('%s'),
+            'latitude'            : self.latitude_v.value,
+            'longitude'           : self.longitude_v.value,
         }
 
 
@@ -1108,8 +1143,8 @@ class ImageWorker(Process):
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
 
 
         sun = ephem.Sun()
@@ -1174,6 +1209,8 @@ class ImageWorker(Process):
             'moon_alt'     : self.moon_alt,
             'moon_phase'   : self.moon_phase,
             'sun_moon_sep' : sun_moon_sep,
+            'latitude'     : self.latitude_v.value,
+            'longitude'    : self.longitude_v.value,
         }
 
 
