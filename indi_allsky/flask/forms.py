@@ -1203,7 +1203,6 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FFMPEG_CODEC_choices = (
         ('libx264', 'x264'),
-        ('h264_omx', 'x264 (Hardware Accelerated - Pi ONLY)'),
         ('libvpx', 'webm')
     )
 

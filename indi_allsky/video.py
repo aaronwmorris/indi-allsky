@@ -188,9 +188,9 @@ class VideoWorker(Process):
             night = False
 
 
-        if self.config['FFMPEG_CODEC'] is 'libx264' or self.config['FFMPEG_CODEC'] is 'h264_omx':
+        if self.config['FFMPEG_CODEC'] in ['libx264']:
             video_format = 'mp4'
-        elif self.config['FFMPEG_CODEC'] is 'libvpx':
+        elif self.config['FFMPEG_CODEC'] in ['libvpx']:
             video_format = 'webm'
         else:
             logger.error('Invalid codec in config, timelapse generation failed')
