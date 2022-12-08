@@ -302,6 +302,11 @@ class FakeIndiClient(object):
         return temp_val
 
 
+    def setCcdTemperature(self, *args):
+        # does nothing
+        return True
+
+
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         # override
         pass

@@ -677,11 +677,28 @@ class IndiClient(PyIndi.BaseClient):
         ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
 
         if isinstance(ccd_temperature, type(None)):
-            logger.warning("Sensor temperature: not supported")
+            logger.warning("Sensor temperature not supported")
             temp_val = -273.15  # absolute zero  :-)
         else:
-            temp_val = float(ccd_temperature[0].getValue())
+            temp_val = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
             logger.info("Sensor temperature: %0.1f", temp_val)
+
+        return temp_val
+
+
+    def setCcdTemperature(self, temp_val):
+        if temp_val < 50:
+            logger.error('Temperature value too low')
+            return False
+
+        ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
+
+        if isinstance(ccd_temperature, type(None)):
+            logger.warning("Sensor temperature not supported")
+            return False
+
+        # this needs to be done asynchronously
+        self.set_number(self._ccd_device, 'CCD_TEMPERATURE', {'CCD_TEMPERATURE_VALUE': float(temp_val)}, sync=False)
 
         return temp_val
 

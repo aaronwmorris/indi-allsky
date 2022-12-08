@@ -141,6 +141,14 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def CCD_TEMP_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -50:
+        raise ValidationError('Temperature must be greater than -50')
+
+
 def FOCUS_DELAY_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1259,6 +1267,8 @@ class IndiAllskyConfigForm(FlaskForm):
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    CCD_COOLING                      = BooleanField('CCD Cooling')
+    CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
     TARGET_ADU                       = IntegerField('Target ADU', validators=[DataRequired(), TARGET_ADU_validator])
