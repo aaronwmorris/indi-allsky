@@ -647,9 +647,9 @@ class IndiClient(PyIndi.BaseClient):
             return self.latitude_v.value, self.longitude_v.value, 0.0
 
         geographic_coord = self._gps_device.getNumber("GEOGRAPHIC_COORD")
-        gps_lat = float(geographic_coord[0].getValue())
-        gps_long = float(geographic_coord[1].getValue())
-        gps_elev = float(geographic_coord[2].getValue())
+        gps_lat = float(geographic_coord[0].getValue())   # LAT
+        gps_long = float(geographic_coord[1].getValue())  # LONG
+        gps_elev = float(geographic_coord[2].getValue())  # ELEV
 
         if not gps_lat and not gps_long:
             logger.warning('GPS fix not found')
@@ -665,8 +665,8 @@ class IndiClient(PyIndi.BaseClient):
             return self.ra_v.value, self.dec_v.value
 
         equatorial_eod_coord = self._telescope_device.getNumber("EQUATORIAL_EOD_COORD")
-        ra = float(equatorial_eod_coord[0].getValue())
-        dec = float(equatorial_eod_coord[1].getValue())
+        ra = float(equatorial_eod_coord[0].getValue())   # RA
+        dec = float(equatorial_eod_coord[1].getValue())  # DEC
 
         logger.info("Telescope Coord: RA %0.2f, Dec %0.2f", ra, dec)
 
@@ -675,6 +675,8 @@ class IndiClient(PyIndi.BaseClient):
 
     def getCcdTemperature(self):
         ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
+
+        time.sleep(0.1)
 
         if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature not supported")
@@ -686,12 +688,46 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
+    def enableCcdCooler(self):
+        ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
+
+        time.sleep(0.5)
+
+        if isinstance(ccd_cooler, type(None)):
+            logger.warning("Cooling not supported")
+            return False
+
+
+        ccd_cooler[0].setState(PyIndi.ISS_ON)   # COOLER_ON
+        ccd_cooler[1].setState(PyIndi.ISS_OFF)  # COOLER_OFF
+
+        self.sendNewSwitch(ccd_cooler)
+
+
+    def disableCcdCooler(self):
+        ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
+
+        time.sleep(0.5)
+
+        if isinstance(ccd_cooler, type(None)):
+            logger.warning("Cooling not supported")
+            return False
+
+
+        ccd_cooler[0].setState(PyIndi.ISS_OFF)  # COOLER_ON
+        ccd_cooler[1].setState(PyIndi.ISS_ON)   # COOLER_OFF
+
+        self.sendNewSwitch(ccd_cooler)
+
+
     def setCcdTemperature(self, temp_val):
         if temp_val < 50:
             logger.error('Temperature value too low')
             return False
 
         ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
+
+        time.sleep(0.1)
 
         if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature not supported")

@@ -302,6 +302,16 @@ class FakeIndiClient(object):
         return temp_val
 
 
+    def enableCcdCooler(self):
+        # does nothing
+        return True
+
+
+    def disableCcdCooler(self):
+        # does nothing
+        return True
+
+
     def setCcdTemperature(self, *args):
         # does nothing
         return True
