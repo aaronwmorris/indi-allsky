@@ -320,11 +320,19 @@ class VideoWorker(Process):
         else:
             night = False
 
+        if self.config['FFMPEG_CODEC'] in ['libx264']:
+            video_format = 'mp4'
+        elif self.config['FFMPEG_CODEC'] in ['libvpx']:
+            video_format = 'webm'
+        else:
+            logger.error('Invalid codec in config, timelapse generation failed')
+            task.setFailed('Invalid codec in config, timelapse generation failed')
+            return
 
 
         keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
         startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.mp4'.format(camera_id, timespec, timeofday))
+        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, video_format))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
