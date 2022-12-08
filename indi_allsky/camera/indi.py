@@ -689,6 +689,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def enableCcdCooler(self):
+        logger.warning('Enabling CCD cooling')
+
         ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
 
         time.sleep(0.5)
@@ -705,6 +707,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def disableCcdCooler(self):
+        logger.warning('Disabling CCD cooling')
+
         ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
 
         time.sleep(0.5)
@@ -721,7 +725,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdTemperature(self, temp_val):
-        if temp_val < 50:
+        logger.info('Setting CCD temperature to %0.2f', temp_val)
+
+        if temp_val < -50:
             logger.error('Temperature value too low')
             return False
 

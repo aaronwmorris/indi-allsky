@@ -1199,7 +1199,7 @@ class IndiAllSky(object):
 
         if self.night:
             # cooling
-            if self.config.get('CCD_COOLER'):
+            if self.config.get('CCD_COOLING'):
                 ccd_temp = self.config.get('CCD_TEMP', 15.0)
                 self.indiclient.enableCcdCooler()
                 self.indiclient.setCcdTemperature(ccd_temp)
