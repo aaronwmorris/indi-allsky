@@ -845,6 +845,8 @@ class IndiAllSky(object):
                     self._stopVideoWorker(terminate=self._terminate)
                     self._stopFileUploadWorker(terminate=self._terminate)
 
+                    self.indiclient.disableCcdCooler()  # safety
+
                     self.indiclient.disconnectServer()
 
                     sys.exit()
@@ -904,6 +906,8 @@ class IndiAllSky(object):
                     self._stopImageWorker(terminate=self._terminate)
                     self._stopVideoWorker(terminate=self._terminate)
                     self._stopFileUploadWorker(terminate=self._terminate)
+
+                    self.indiclient.disableCcdCooler()  # safety
 
                     self.indiclient.disconnectServer()
 
@@ -1193,10 +1197,14 @@ class IndiAllSky(object):
             return
 
 
-        # Sleep before reconfiguration
-        time.sleep(5.0)
-
         if self.night:
+            # cooling
+            if self.config.get('CCD_COOLER'):
+                ccd_temp = self.config.get('CCD_TEMP', 15.0)
+                self.indiclient.enableCcdCooler()
+                self.indiclient.setCcdTemperature(ccd_temp)
+
+
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
                 self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
@@ -1207,8 +1215,10 @@ class IndiAllSky(object):
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
+            self.indiclient.disableCcdCooler()
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+
 
 
         # Update shared values
@@ -1218,9 +1228,6 @@ class IndiAllSky(object):
         with self.moonmode_v.get_lock():
             self.moonmode_v.value = int(self.moonmode)
 
-
-        # Sleep after reconfiguration
-        time.sleep(5.0)
 
 
     def detectNight(self):
