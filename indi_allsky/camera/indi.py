@@ -465,7 +465,7 @@ class IndiClient(PyIndi.BaseClient):
 
         try:
             logger.info('Detecting bayer pattern')
-            ctl_CCD_CFA = self.get_control(self._ccd_device, 'CCD_CFA', 'text', timeout=5.0)
+            ctl_CCD_CFA = self.get_control(self._ccd_device, 'CCD_CFA', 'text', timeout=3.0)
 
             ccdinfo['CCD_CFA'] = dict()
             for i in ctl_CCD_CFA:
@@ -685,7 +685,11 @@ class IndiClient(PyIndi.BaseClient):
         if not self._gps_device:
             return self.latitude_v.value, self.longitude_v.value, 0.0
 
-        geographic_coord = self._gps_device.getNumber("GEOGRAPHIC_COORD")
+        try:
+            geographic_coord = self.get_control(self._telescope_device, 'GEOGRAPHIC_COORD', 'number', timeout=0.5)
+        except TimeOutException:
+            return self.latitude_v.value, self.longitude_v.value, 0.0
+
         gps_lat = float(geographic_coord[0].getValue())   # LAT
         gps_long = float(geographic_coord[1].getValue())  # LONG
         gps_elev = float(geographic_coord[2].getValue())  # ELEV
@@ -703,7 +707,11 @@ class IndiClient(PyIndi.BaseClient):
         if not self._telescope_device:
             return self.ra_v.value, self.dec_v.value
 
-        equatorial_eod_coord = self._telescope_device.getNumber("EQUATORIAL_EOD_COORD")
+        try:
+            equatorial_eod_coord = self.get_control(self._telescope_device, 'EQUATORIAL_EOD_COORD', 'number', timeout=0.5)
+        except TimeOutException:
+            return self.ra_v.value, self.dec_v.value
+
         ra = float(equatorial_eod_coord[0].getValue())   # RA
         dec = float(equatorial_eod_coord[1].getValue())  # DEC
 
@@ -713,14 +721,16 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def getCcdTemperature(self):
-        ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
 
-        if isinstance(ccd_temperature, type(None)):
+        try:
+            ccd_temperature = self.get_control(self._ccd_device, 'CCD_TEMPERATURE', 'number', timeout=0.2)
+        except TimeOutException:
             logger.warning("Sensor temperature not supported")
-            temp_val = -273.15  # absolute zero  :-)
-        else:
-            temp_val = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
-            logger.info("Sensor temperature: %0.1f", temp_val)
+            return -273.15  # absolute zero  :-)
+
+
+        temp_val = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
+        logger.info("Sensor temperature: %0.1f", temp_val)
 
         return temp_val
 
@@ -728,15 +738,17 @@ class IndiClient(PyIndi.BaseClient):
     def enableCcdCooler(self):
         logger.warning('Enabling CCD cooling')
 
-        ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
-
-        if isinstance(ccd_cooler, type(None)):
+        try:
+            ccd_cooler = self.get_control(self._ccd_device, 'CCD_COOLER', 'switch', timeout=2.0)
+        except TimeOutException:
             logger.warning("Cooling not supported")
             return False
 
+
         if ccd_cooler.getPermission() == PyIndi.IP_RO:
-            logger.warning("Cooling control %s is read only", ccd_cooler.getName())
+            logger.warning("Cooling control is read only")
             return False
+
 
         ccd_cooler[0].setState(PyIndi.ISS_ON)   # COOLER_ON
         ccd_cooler[1].setState(PyIndi.ISS_OFF)  # COOLER_OFF
@@ -747,15 +759,17 @@ class IndiClient(PyIndi.BaseClient):
     def disableCcdCooler(self):
         logger.warning('Disabling CCD cooling')
 
-        ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
-
-        if isinstance(ccd_cooler, type(None)):
+        try:
+            ccd_cooler = self.get_control(self._ccd_device, 'CCD_COOLER', 'switch', timeout=2.0)
+        except TimeOutException:
             logger.warning("Cooling not supported")
             return False
 
+
         if ccd_cooler.getPermission() == PyIndi.IP_RO:
-            logger.warning("Cooling control %s is read only", ccd_cooler.getName())
+            logger.warning("Cooling control is read only")
             return False
+
 
         ccd_cooler[0].setState(PyIndi.ISS_OFF)  # COOLER_ON
         ccd_cooler[1].setState(PyIndi.ISS_ON)   # COOLER_OFF
@@ -770,15 +784,18 @@ class IndiClient(PyIndi.BaseClient):
             logger.error('Temperature value too low')
             return False
 
-        ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
 
-        if isinstance(ccd_temperature, type(None)):
+        try:
+            ccd_temperature = self.get_control(self._ccd_device, 'CCD_TEMPERATURE', 'number', timeout=2.0)
+        except TimeOutException:
             logger.warning("Sensor temperature not supported")
             return False
 
+
         if ccd_temperature.getPermission() == PyIndi.IP_RO:
-            logger.warning("Temperature control %s is read only", ccd_temperature.getName())
+            logger.warning("Temperature control is read only")
             return False
+
 
         # this needs to be done asynchronously
         self.set_number(self._ccd_device, 'CCD_TEMPERATURE', {'CCD_TEMPERATURE_VALUE': float(temp_val)}, sync=False)
@@ -1031,7 +1048,7 @@ class IndiClient(PyIndi.BaseClient):
         c = self.get_control(device, name, 'number')
 
         if c.getPermission() == PyIndi.IP_RO:
-            logger.error('Number control %s is read only', c.getName())
+            logger.error('Number control %s is read only', name)
             return c
 
         for control_name, index in self.__map_indexes(c, values.keys()).items():
@@ -1049,7 +1066,7 @@ class IndiClient(PyIndi.BaseClient):
         c = self.get_control(device, name, 'switch')
 
         if c.getPermission() == PyIndi.IP_RO:
-            logger.error('Switch control %s is read only', c.getName())
+            logger.error('Switch control %s is read only', name)
             return c
 
         is_exclusive = c.getRule() == PyIndi.ISR_ATMOST1 or c.getRule() == PyIndi.ISR_1OFMANY
@@ -1073,11 +1090,11 @@ class IndiClient(PyIndi.BaseClient):
         return c
 
 
-    def set_text(self, device, control_name, values, sync=True, timeout=None):
-        c = self.get_control(device, control_name, 'text')
+    def set_text(self, device, name, values, sync=True, timeout=None):
+        c = self.get_control(device, name, 'text')
 
         if c.getPermission() == PyIndi.IP_RO:
-            logger.error('Text control %s is read only', c.getName())
+            logger.error('Text control %s is read only', name)
             return c
 
         for control_name, index in self.__map_indexes(c, values.keys()).items():
