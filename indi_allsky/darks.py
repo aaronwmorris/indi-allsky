@@ -243,7 +243,7 @@ class IndiAllSkyDarks(object):
 
 
     def _wait_for_image(self, exposure):
-        i_dict = self.image_q.get(timeout=15)
+        i_dict = self.image_q.get(timeout=10)
 
         ### Not using DB task queue for image processing to reduce database I/O
         #task_id = i_dict['task_id']
@@ -397,10 +397,10 @@ class IndiAllSkyDarks(object):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True)
+            self.shoot(7.0, sync=True, timeout=20.0)
 
 
-            i_dict = self.image_q.get(timeout=15)
+            i_dict = self.image_q.get(timeout=10)
 
             ### Not using DB task queue for image processing to reduce database I/O
             #task_id = i_dict['task_id']
@@ -518,6 +518,8 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
+        exposure_f = float(exposure)
+
         self.getSensorTemperature()
 
         exp_date = datetime.now()
@@ -556,14 +558,16 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            self.shoot(float(exposure), sync=True)
+            # wait for exposure up to 2.5 times
+            # some cameras have bugs
+            self.shoot(exposure_f, sync=True, timeout=exposure_f * 2.5)
 
             elapsed_s = time.time() - start
 
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
 
-            hdulist = self._wait_for_image(exposure)
+            hdulist = self._wait_for_image(exposure_f)
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
             image_bitpix = hdulist[0].header['BITPIX']
@@ -583,14 +587,14 @@ class IndiAllSkyDarks(object):
         s.bitmax = self._bitmax
         s.hotpixel_adu_percent = self._hotpixel_adu_percent
 
-        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
-        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
+        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
 
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
             self.camera_id,
             image_bitpix,
-            exposure,
+            exposure_f,
             self.gain_v.value,
             self.bin_v.value,
             self.sensortemp_v.value,
@@ -600,7 +604,7 @@ class IndiAllSkyDarks(object):
             full_dark_filename_p,
             self.camera_id,
             image_bitpix,
-            exposure,
+            exposure_f,
             self.gain_v.value,
             self.bin_v.value,
             self.sensortemp_v.value,

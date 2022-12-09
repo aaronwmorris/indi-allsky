@@ -126,7 +126,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
-        self._timeout = 65.0
+        self._timeout = 10.0
         self._exposure = 0.0
 
         self.exposureStartTime = None
@@ -1037,10 +1037,6 @@ class IndiClient(PyIndi.BaseClient):
             time.sleep(0.1)
 
         return ctl
-
-
-    def set_controls(self, device, controls):
-        self.set_number(device, 'CCD_CONTROLS', controls)
 
 
     def set_number(self, device, name, values, sync=True, timeout=None):
