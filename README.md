@@ -19,6 +19,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Generic web cameras
     * More to come
 * Dark frames to remove hot pixels
+* Camera temperature control (for cameras with active cooling)
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * GPS support
