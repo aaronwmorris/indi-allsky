@@ -734,6 +734,9 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning("Cooling not supported")
             return False
 
+        if ccd_cooler.getPermission() == PyIndi.IP_RO:
+            logger.warning("Cooling not supported")
+            return False
 
         ccd_cooler[0].setState(PyIndi.ISS_ON)   # COOLER_ON
         ccd_cooler[1].setState(PyIndi.ISS_OFF)  # COOLER_OFF
@@ -750,6 +753,9 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning("Cooling not supported")
             return False
 
+        if ccd_cooler.getPermission() == PyIndi.IP_RO:
+            logger.warning("Cooling not supported")
+            return False
 
         ccd_cooler[0].setState(PyIndi.ISS_OFF)  # COOLER_ON
         ccd_cooler[1].setState(PyIndi.ISS_ON)   # COOLER_OFF
@@ -768,6 +774,10 @@ class IndiClient(PyIndi.BaseClient):
 
         if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature not supported")
+            return False
+
+        if ccd_temperature.getPermission() == PyIndi.IP_RO:
+            logger.warning("Cooling not supported")
             return False
 
         # this needs to be done asynchronously
