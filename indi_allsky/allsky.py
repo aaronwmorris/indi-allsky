@@ -158,12 +158,41 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
+        with self.latitude_v.get_lock():
+            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
+
+        with self.longitude_v.get_lock():
+            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
+
+
         # reconfigure if needed
         self.reconfigureCcd()
 
         # add driver name to config
         self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+
+
+        ### Telescope config
+        # park the telescope at zenith
+        if self.indiclient.telescope_device:
+            telescope_config = {
+                'SWITCHES' : {},
+                'PROPERTIES' : {
+                    'GEOGRAPHIC_COORD' : {
+                        'LAT' : self.latitude_v.value,
+                        'LONG' : self.longitude_v.value,
+                    },
+                },
+            }
+
+            self.indiclient.configureTelescopeDevice(telescope_config)
+
+
+            self.indiclient.unparkTelescope()
+            self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
+            self.indiclient.parkTelescope()
+
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
         self.config['DB_CCD_ID'] = db_camera.id
