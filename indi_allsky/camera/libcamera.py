@@ -320,6 +320,25 @@ class IndiClientLibCameraGeneric(IndiClient):
         return ccdinfo
 
 
+    def enableCcdCooler(self):
+        # not supported
+        pass
+
+
+    def disableCcdCooler(self):
+        # not supported
+        pass
+
+
+    def getCcdTemperature(self):
+        temp_val = -273.15  # absolute zero  :-)
+        return temp_val
+
+
+    def setCcdTemperature(self, *args):
+        pass
+
+
 class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
