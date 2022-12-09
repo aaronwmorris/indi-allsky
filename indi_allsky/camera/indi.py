@@ -292,6 +292,8 @@ class IndiClient(PyIndi.BaseClient):
         if not self._telescope_device:
             return
 
+        logger.info('Parking telescope')
+
         park_config = {
             'SWITCHES' : {
                 'TELESCOPE_PARK' : {
@@ -302,6 +304,43 @@ class IndiClient(PyIndi.BaseClient):
         }
 
         self.configureTelescopeDevice(park_config)
+
+
+    def unparkTelescope(self):
+        if not self._telescope_device:
+            return
+
+        logger.info('Unparking telescope')
+
+        unpark_config = {
+            'SWITCHES' : {
+                'TELESCOPE_PARK' : {
+                    'on'   : ['UNPARK'],
+                    'off'  : ['PARK'],
+                },
+            }
+        }
+
+        self.configureTelescopeDevice(unpark_config)
+
+
+    def setTelescopeParkPosition(self, ra, dec):
+        if not self._telescope_device:
+            return
+
+        logger.info('Setting telescope park position to RA %0.2f, Dec %0.2f', ra, dec)
+
+        park_pos = {
+            'PROPERTIES' : {
+                'TELESCOPE_PARK_POSITION' : {
+                    'PARK_HA'  : float(ra),
+                    'PARK_DEC' : float(dec),
+                },
+            },
+        }
+
+
+        self.configureTelescopeDevice(park_pos)
 
 
     def updateCcdBlobMode(self, blobmode=PyIndi.B_ALSO, prop=None):

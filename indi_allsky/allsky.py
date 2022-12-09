@@ -455,10 +455,6 @@ class IndiAllSky(object):
                         'TELESCOPE_APERTURE' : 10,
                         'TELESCOPE_FOCAL_LENGTH' : 10,
                     },
-                    'TELESCOPE_PARK_POSITION' : {
-                        'PARK_HA'  : 0.0,
-                        'PARK_DEC' : self.latitude_v.value
-                    },
                 },
                 'TEXT' : {
                     'SCOPE_CONFIG_NAME' : {
@@ -468,6 +464,10 @@ class IndiAllSky(object):
             }
 
             self.indiclient.configureTelescopeDevice(telescope_config)
+
+
+            self.indiclient.unparkTelescope()
+            self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
             self.indiclient.parkTelescope()
 
 
