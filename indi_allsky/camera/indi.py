@@ -676,8 +676,6 @@ class IndiClient(PyIndi.BaseClient):
     def getCcdTemperature(self):
         ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
 
-        time.sleep(0.1)
-
         if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature not supported")
             temp_val = -273.15  # absolute zero  :-)
@@ -692,8 +690,6 @@ class IndiClient(PyIndi.BaseClient):
         logger.warning('Enabling CCD cooling')
 
         ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
-
-        time.sleep(0.5)
 
         if isinstance(ccd_cooler, type(None)):
             logger.warning("Cooling not supported")
@@ -710,8 +706,6 @@ class IndiClient(PyIndi.BaseClient):
         logger.warning('Disabling CCD cooling')
 
         ccd_cooler = self._ccd_device.getSwitch("CCD_COOLER")
-
-        time.sleep(0.5)
 
         if isinstance(ccd_cooler, type(None)):
             logger.warning("Cooling not supported")
@@ -732,8 +726,6 @@ class IndiClient(PyIndi.BaseClient):
             return False
 
         ccd_temperature = self._ccd_device.getNumber("CCD_TEMPERATURE")
-
-        time.sleep(0.1)
 
         if isinstance(ccd_temperature, type(None)):
             logger.warning("Sensor temperature not supported")
