@@ -188,10 +188,7 @@ class IndiAllSky(object):
 
             self.indiclient.configureTelescopeDevice(telescope_config)
 
-
-            self.indiclient.unparkTelescope()
-            self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
-            self.indiclient.parkTelescope()
+            self.reparkTelescope()
 
 
         db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
@@ -494,10 +491,7 @@ class IndiAllSky(object):
 
             self.indiclient.configureTelescopeDevice(telescope_config)
 
-
-            self.indiclient.unparkTelescope()
-            self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
-            self.indiclient.parkTelescope()
+            self.reparkTelescope()
 
 
 
@@ -1127,6 +1121,9 @@ class IndiAllSky(object):
                 self.longitude_v.value = gps_long
 
 
+            self.reparkTelescope()
+
+
         return gps_lat, gps_long, gps_elev
 
 
@@ -1166,6 +1163,15 @@ class IndiAllSky(object):
         except PermissionError as e:
             logger.error('PermissionError: %s', str(e))
             return
+
+
+    def reparkTelescope(self):
+        if not self.indiclient.telescope_device:
+            return
+
+        self.indiclient.unparkTelescope()
+        self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
+        self.indiclient.parkTelescope()
 
 
     def cameraReport(self):
