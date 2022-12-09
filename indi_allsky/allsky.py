@@ -1093,6 +1093,9 @@ class IndiAllSky(object):
 
 
     def getGpsPosition(self):
+        if not self.indiclient.gps_device:
+            return
+
         update_position = False
 
         gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
@@ -1128,6 +1131,9 @@ class IndiAllSky(object):
 
 
     def getTelescopeRaDec(self):
+        if not self.indiclient.telescope_device:
+            return
+
         ra, dec = self.indiclient.getTelescopeRaDec()
 
         # Update shared values
