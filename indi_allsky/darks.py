@@ -520,10 +520,11 @@ class IndiAllSkyDarks(object):
 
 
         # take night darks with cooling enabled
-        ccd_temp = self.config.get('CCD_TEMP', 15.0)
-        self.indiclient.enableCcdCooler()
-        logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
-        self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
+        if self.config.get('CCD_COOLING'):
+            ccd_temp = self.config.get('CCD_TEMP', 15.0)
+            self.indiclient.enableCcdCooler()
+            logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
+            self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
 
 
         ### NIGHT DARKS ###
