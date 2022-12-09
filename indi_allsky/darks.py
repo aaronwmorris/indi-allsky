@@ -481,8 +481,6 @@ class IndiAllSkyDarks(object):
         # 6  = date
         # 7  = extension
 
-        ### take darks
-
 
         night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only care about keys
         # keys are a tuple of (gain, binmode)
@@ -500,14 +498,13 @@ class IndiAllSkyDarks(object):
         )
 
 
-        ### NIGHT DARKS ###
-        for gain, binmode in night_darks_odict.keys():
-            self.indiclient.setCcdGain(gain)
-            self.indiclient.setCcdBinning(binmode)
+        ### take darks
 
-            for exposure in dark_exposures:
-                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
+        # take day darks with cooling disabled
+        self.indiclient.disableCcdCooler()
+        logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
+        time.sleep(5.0)
 
 
         ### DAY DARKS ###
@@ -519,6 +516,29 @@ class IndiAllSkyDarks(object):
             # day will rarely exceed 1 second
             for exposure in dark_exposures:
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+
+
+
+        # take night darks with cooling enabled
+        ccd_temp = self.config.get('CCD_TEMP', 15.0)
+        self.indiclient.enableCcdCooler()
+        logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
+        self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
+
+
+        ### NIGHT DARKS ###
+        for gain, binmode in night_darks_odict.keys():
+            self.indiclient.setCcdGain(gain)
+            self.indiclient.setCcdBinning(binmode)
+
+            for exposure in dark_exposures:
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
 
 
 

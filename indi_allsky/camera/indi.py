@@ -777,7 +777,7 @@ class IndiClient(PyIndi.BaseClient):
         self.sendNewSwitch(ccd_cooler)
 
 
-    def setCcdTemperature(self, temp_val):
+    def setCcdTemperature(self, temp_val, sync=False, timeout=None):
         logger.info('Setting CCD temperature to %0.2f', temp_val)
 
         if temp_val < -50:
@@ -797,8 +797,8 @@ class IndiClient(PyIndi.BaseClient):
             return False
 
 
-        # this needs to be done asynchronously
-        self.set_number(self._ccd_device, 'CCD_TEMPERATURE', {'CCD_TEMPERATURE_VALUE': float(temp_val)}, sync=False)
+        # this needs to be done asynchronously most of the time
+        self.set_number(self._ccd_device, 'CCD_TEMPERATURE', {'CCD_TEMPERATURE_VALUE': float(temp_val)}, sync=sync, timeout=timeout)
 
         return temp_val
 
