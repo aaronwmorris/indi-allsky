@@ -66,13 +66,16 @@ class IndiAllSkyDarks(object):
 
         self.camera_id = None
 
-        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
-        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
-
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
+
+        # not used, but required
+        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
+        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+        self.ra_v = Value('f', 0.0)
+        self.dec_v = Value('f', 0.0)
 
         self._miscDb = miscDb(self.config)
 
@@ -142,6 +145,8 @@ class IndiAllSkyDarks(object):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.gain_v,
             self.bin_v,
         )
