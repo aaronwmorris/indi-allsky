@@ -43,6 +43,8 @@
     "WBB_FACTOR"       : 1.0,
     "AUTO_WB"          : false,
 
+    "CCD_COOLING"      : false,
+    "CCD_TEMP"         : 15.0,
     "comment_TEMP_DISPLAY" : "c = celcius, f = fahrenheit, k = kelvin",
     "TEMP_DISPLAY"     : "c",
     "CCD_TEMP_SCRIPT"  : "",

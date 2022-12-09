@@ -455,10 +455,6 @@ class IndiAllSky(object):
                         'TELESCOPE_APERTURE' : 10,
                         'TELESCOPE_FOCAL_LENGTH' : 10,
                     },
-                    'TELESCOPE_PARK_POSITION' : {
-                        'PARK_HA'  : 0.0,
-                        'PARK_DEC' : self.latitude_v.value
-                    },
                 },
                 'TEXT' : {
                     'SCOPE_CONFIG_NAME' : {
@@ -468,6 +464,10 @@ class IndiAllSky(object):
             }
 
             self.indiclient.configureTelescopeDevice(telescope_config)
+
+
+            self.indiclient.unparkTelescope()
+            self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
             self.indiclient.parkTelescope()
 
 
@@ -730,7 +730,7 @@ class IndiAllSky(object):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True)
+            self.shoot(7.0, sync=True, timeout=20.0)
 
 
     def periodic_reconfigure(self):
@@ -845,6 +845,8 @@ class IndiAllSky(object):
                     self._stopVideoWorker(terminate=self._terminate)
                     self._stopFileUploadWorker(terminate=self._terminate)
 
+                    self.indiclient.disableCcdCooler()  # safety
+
                     self.indiclient.disconnectServer()
 
                     sys.exit()
@@ -904,6 +906,8 @@ class IndiAllSky(object):
                     self._stopImageWorker(terminate=self._terminate)
                     self._stopVideoWorker(terminate=self._terminate)
                     self._stopFileUploadWorker(terminate=self._terminate)
+
+                    self.indiclient.disableCcdCooler()  # safety
 
                     self.indiclient.disconnectServer()
 
@@ -1193,10 +1197,14 @@ class IndiAllSky(object):
             return
 
 
-        # Sleep before reconfiguration
-        time.sleep(5.0)
-
         if self.night:
+            # cooling
+            if self.config.get('CCD_COOLING'):
+                ccd_temp = self.config.get('CCD_TEMP', 15.0)
+                self.indiclient.enableCcdCooler()
+                self.indiclient.setCcdTemperature(ccd_temp)
+
+
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
                 self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
@@ -1207,8 +1215,10 @@ class IndiAllSky(object):
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
+            self.indiclient.disableCcdCooler()
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+
 
 
         # Update shared values
@@ -1218,9 +1228,6 @@ class IndiAllSky(object):
         with self.moonmode_v.get_lock():
             self.moonmode_v.value = int(self.moonmode)
 
-
-        # Sleep after reconfiguration
-        time.sleep(5.0)
 
 
     def detectNight(self):

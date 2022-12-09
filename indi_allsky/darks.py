@@ -66,13 +66,16 @@ class IndiAllSkyDarks(object):
 
         self.camera_id = None
 
-        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
-        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
-
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
+
+        # not used, but required
+        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
+        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+        self.ra_v = Value('f', 0.0)
+        self.dec_v = Value('f', 0.0)
 
         self._miscDb = miscDb(self.config)
 
@@ -142,6 +145,8 @@ class IndiAllSkyDarks(object):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.gain_v,
             self.bin_v,
         )
@@ -243,7 +248,7 @@ class IndiAllSkyDarks(object):
 
 
     def _wait_for_image(self, exposure):
-        i_dict = self.image_q.get(timeout=15)
+        i_dict = self.image_q.get(timeout=10)
 
         ### Not using DB task queue for image processing to reduce database I/O
         #task_id = i_dict['task_id']
@@ -397,10 +402,10 @@ class IndiAllSkyDarks(object):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True)
+            self.shoot(7.0, sync=True, timeout=20.0)
 
 
-            i_dict = self.image_q.get(timeout=15)
+            i_dict = self.image_q.get(timeout=10)
 
             ### Not using DB task queue for image processing to reduce database I/O
             #task_id = i_dict['task_id']
@@ -476,8 +481,6 @@ class IndiAllSkyDarks(object):
         # 6  = date
         # 7  = extension
 
-        ### take darks
-
 
         night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only care about keys
         # keys are a tuple of (gain, binmode)
@@ -495,14 +498,13 @@ class IndiAllSkyDarks(object):
         )
 
 
-        ### NIGHT DARKS ###
-        for gain, binmode in night_darks_odict.keys():
-            self.indiclient.setCcdGain(gain)
-            self.indiclient.setCcdBinning(binmode)
+        ### take darks
 
-            for exposure in dark_exposures:
-                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
 
+        # take day darks with cooling disabled
+        self.indiclient.disableCcdCooler()
+        logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
+        time.sleep(5.0)
 
 
         ### DAY DARKS ###
@@ -517,7 +519,32 @@ class IndiAllSkyDarks(object):
 
 
 
+        # take night darks with cooling enabled
+        ccd_temp = self.config.get('CCD_TEMP', 15.0)
+        self.indiclient.enableCcdCooler()
+        logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
+        self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
+
+
+        ### NIGHT DARKS ###
+        for gain, binmode in night_darks_odict.keys():
+            self.indiclient.setCcdGain(gain)
+            self.indiclient.setCcdBinning(binmode)
+
+            for exposure in dark_exposures:
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
+
+
+
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
+        exposure_f = float(exposure)
+
         self.getSensorTemperature()
 
         exp_date = datetime.now()
@@ -556,14 +583,18 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            self.shoot(float(exposure), sync=True)
+            # wait at least 10 seconds longer than the exposure (not sure if download times are included)
+            # sv305 has a bug which requires at least double the exposure time
+            timeout = (exposure_f * 2.0) + 10.0
+
+            self.shoot(exposure_f, sync=True, timeout=timeout)
 
             elapsed_s = time.time() - start
 
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
 
-            hdulist = self._wait_for_image(exposure)
+            hdulist = self._wait_for_image(exposure_f)
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
             image_bitpix = hdulist[0].header['BITPIX']
@@ -583,14 +614,14 @@ class IndiAllSkyDarks(object):
         s.bitmax = self._bitmax
         s.hotpixel_adu_percent = self._hotpixel_adu_percent
 
-        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
-        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
+        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
 
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
             self.camera_id,
             image_bitpix,
-            exposure,
+            exposure_f,
             self.gain_v.value,
             self.bin_v.value,
             self.sensortemp_v.value,
@@ -600,7 +631,7 @@ class IndiAllSkyDarks(object):
             full_dark_filename_p,
             self.camera_id,
             image_bitpix,
-            exposure,
+            exposure_f,
             self.gain_v.value,
             self.bin_v.value,
             self.sensortemp_v.value,

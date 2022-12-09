@@ -287,6 +287,30 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CCD_COOLING.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CCD_COOLING(class='form-check-input') }}
+                <div id="CCD_COOLING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Activate CCD Cooling (requires hardware support)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP(class='form-control bg-secondary') }}
+            <div id="CCD_TEMP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Temperature target</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1671,6 +1695,7 @@ const field_names = [
     'WBG_FACTOR',
     'WBB_FACTOR',
     'SCNR_ALGORITHM',
+    'CCD_TEMP',
     'TEMP_DISPLAY',
     'CCD_TEMP_SCRIPT',
     'TARGET_ADU',
@@ -1764,6 +1789,7 @@ const field_names = [
 const checkbox_field_names = [
     'FOCUS_MODE',
     'AUTO_WB',
+    'CCD_COOLING',
     'DETECT_STARS',
     'DETECT_METEORS',
     'DETECT_DRAW',

@@ -19,6 +19,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Generic web cameras
     * More to come
 * Dark frames to remove hot pixels
+* Camera temperature control (for cameras with active cooling)
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * GPS support
@@ -275,6 +276,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |
 | WBB_FACTOR          | 1.0         | (float) Blue Balance Adjustment Factor |
 | AUTO_WB             | false       | (bool) Automatic white balance adjustment |
+| CCD_COOLING         | false       | (bool) Enable CCD cooling |
+| CCD_TEMP            | 15.0        | (float) Target CCD temperature |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | CCD_TEMP_SCRIPT     |             | (str) External script used for CCD temperature.  Used when a camera does not support temperature measurements. |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |

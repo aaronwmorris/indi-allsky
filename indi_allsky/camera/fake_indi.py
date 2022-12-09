@@ -297,9 +297,39 @@ class FakeIndiClient(object):
         return 0.0, 0.0
 
 
+    def parkTelescope(self):
+        # does nothing
+        pass
+
+
+    def unparkTelescope(self):
+        # does nothing
+        pass
+
+
+    def setTelescopeParkPosition(self, *args, **kwargs):
+        # does nothing
+        pass
+
+
     def getCcdTemperature(self):
         temp_val = -273.15  # absolute zero  :-)
         return temp_val
+
+
+    def enableCcdCooler(self):
+        # does nothing
+        return True
+
+
+    def disableCcdCooler(self):
+        # does nothing
+        return True
+
+
+    def setCcdTemperature(self, *args):
+        # does nothing
+        return True
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
