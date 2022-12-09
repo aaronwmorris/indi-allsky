@@ -735,7 +735,7 @@ class IndiClient(PyIndi.BaseClient):
             return False
 
         if ccd_cooler.getPermission() == PyIndi.IP_RO:
-            logger.warning("Cooling not supported")
+            logger.warning("Cooling control %s is read only", ccd_cooler.getName())
             return False
 
         ccd_cooler[0].setState(PyIndi.ISS_ON)   # COOLER_ON
@@ -754,7 +754,7 @@ class IndiClient(PyIndi.BaseClient):
             return False
 
         if ccd_cooler.getPermission() == PyIndi.IP_RO:
-            logger.warning("Cooling not supported")
+            logger.warning("Cooling control %s is read only", ccd_cooler.getName())
             return False
 
         ccd_cooler[0].setState(PyIndi.ISS_OFF)  # COOLER_ON
@@ -777,7 +777,7 @@ class IndiClient(PyIndi.BaseClient):
             return False
 
         if ccd_temperature.getPermission() == PyIndi.IP_RO:
-            logger.warning("Cooling not supported")
+            logger.warning("Temperature control %s is read only", ccd_temperature.getName())
             return False
 
         # this needs to be done asynchronously
@@ -1029,6 +1029,11 @@ class IndiClient(PyIndi.BaseClient):
     def set_number(self, device, name, values, sync=True, timeout=None):
         #logger.info('Name: %s, values: %s', name, str(values))
         c = self.get_control(device, name, 'number')
+
+        if c.getPermission() == PyIndi.IP_RO:
+            logger.error('Number control %s is read only', c.getName())
+            return c
+
         for control_name, index in self.__map_indexes(c, values.keys()).items():
             c[index].setValue(values[control_name])
 
@@ -1042,6 +1047,10 @@ class IndiClient(PyIndi.BaseClient):
 
     def set_switch(self, device, name, on_switches=[], off_switches=[], sync=True, timeout=None):
         c = self.get_control(device, name, 'switch')
+
+        if c.getPermission() == PyIndi.IP_RO:
+            logger.error('Switch control %s is read only', c.getName())
+            return c
 
         is_exclusive = c.getRule() == PyIndi.ISR_ATMOST1 or c.getRule() == PyIndi.ISR_1OFMANY
         if is_exclusive :
@@ -1066,6 +1075,11 @@ class IndiClient(PyIndi.BaseClient):
 
     def set_text(self, device, control_name, values, sync=True, timeout=None):
         c = self.get_control(device, control_name, 'text')
+
+        if c.getPermission() == PyIndi.IP_RO:
+            logger.error('Text control %s is read only', c.getName())
+            return c
+
         for control_name, index in self.__map_indexes(c, values.keys()).items():
             c[index].setText(values[control_name])
 
