@@ -139,7 +139,7 @@ class VideoWorker(Process):
                     return
 
 
-            action = task.data['timespec']
+            action = task.data['action']
             timespec = task.data['timespec']
             img_folder = Path(task.data['img_folder'])
             timeofday = task.data['timeofday']
