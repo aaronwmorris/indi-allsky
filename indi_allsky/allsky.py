@@ -425,16 +425,12 @@ class IndiAllSky(object):
             gps_config = {
                 'PROPERTIES' : {
                     'GPS_REFRESH_PERIOD' : {
-                        'PERIOD' : 29,  # prime number
+                        'PERIOD' : 293,  # prime number
                     },
                 },
             }
 
             self.indiclient.configureGpsDevice(gps_config)
-
-            logger.warning('Giving GPS time to get a fix (30s)')
-            time.sleep(30)
-
             self.indiclient.refreshGps()
 
 
