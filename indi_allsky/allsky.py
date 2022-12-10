@@ -423,19 +423,19 @@ class IndiAllSky(object):
         ### GPS config
         if self.indiclient.gps_device:
             gps_config = {
-                'SWITCHES' : {
-                    'GPS_REFRESH' : {
-                        'on' : ['REFRESH'],
-                    },
-                },
                 'PROPERTIES' : {
                     'GPS_REFRESH_PERIOD' : {
-                        'PERIOD' : 300,
+                        'PERIOD' : 29,  # prime number
                     },
                 },
             }
 
             self.indiclient.configureGpsDevice(gps_config)
+
+            logger.warning('Giving GPS time to get a fix (30s)')
+            time.sleep(30)
+
+            self.indiclient.refreshGps()
 
 
             # GPSD simulation
