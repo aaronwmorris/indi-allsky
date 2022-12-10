@@ -336,12 +336,12 @@ class VideoWorker(Process):
 
         try:
             # delete old keogram entry if it exists
-            keogram_entry = IndiAllSkyDbKeogramTable.query\
+            old_keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
                 .one()
 
             logger.warning('Removing orphaned keogram db entry')
-            db.session.delete(keogram_entry)
+            db.session.delete(old_keogram_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -349,12 +349,12 @@ class VideoWorker(Process):
 
         try:
             # delete old star trail entry if it exists
-            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+            old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
                 .one()
 
             logger.warning('Removing orphaned star trail db entry')
-            db.session.delete(startrail_entry)
+            db.session.delete(old_startrail_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -362,12 +362,12 @@ class VideoWorker(Process):
 
         try:
             # delete old star trail video entry if it exists
-            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+            old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
                 .one()
 
             logger.warning('Removing orphaned star trail video db entry')
-            db.session.delete(startrail_video_entry)
+            db.session.delete(old_startrail_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -474,6 +474,7 @@ class VideoWorker(Process):
 
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
+                startrail_video_entry = None
 
 
         processing_elapsed_s = time.time() - processing_start
