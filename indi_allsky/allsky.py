@@ -1327,10 +1327,10 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateDayTimelapse(timespec, camera_id, keogram=False, task_state=TaskQueueState.MANUAL)
+        self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateDayTimelapse(self, timespec, camera_id, keogram=True, task_state=TaskQueueState.QUEUED):
+    def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1341,12 +1341,11 @@ class IndiAllSky(object):
         img_day_folder = img_base_folder.joinpath('day')
 
         jobdata = {
+            'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
-            'video'       : True,
-            'keogram'     : keogram,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1374,10 +1373,10 @@ class IndiAllSky(object):
             camera_id = int(camera_id)
 
 
-        self._generateNightTimelapse(timespec, camera_id, keogram=False, task_state=TaskQueueState.MANUAL)
+        self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateNightTimelapse(self, timespec, camera_id, keogram=True, task_state=TaskQueueState.QUEUED):
+    def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1388,12 +1387,11 @@ class IndiAllSky(object):
         img_day_folder = img_base_folder.joinpath('night')
 
         jobdata = {
+            'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
-            'video'       : True,
-            'keogram'     : keogram,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1435,12 +1433,11 @@ class IndiAllSky(object):
         img_day_folder = img_base_folder.joinpath('night')
 
         jobdata = {
+            'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'timeofday'   : 'night',
             'camera_id'   : camera_id,
-            'video'       : False,
-            'keogram'     : True,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1482,12 +1479,11 @@ class IndiAllSky(object):
         img_day_folder = img_base_folder.joinpath('day')
 
         jobdata = {
+            'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'timeofday'   : 'day',
             'camera_id'   : camera_id,
-            'video'       : False,
-            'keogram'     : True,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1514,13 +1510,11 @@ class IndiAllSky(object):
     def _expireData(self, task_state=TaskQueueState.QUEUED):
         # This will delete old images from the filesystem and DB
         jobdata = {
-            'expireData'   : True,
+            'action'       : 'expireData',
             'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'timeofday'    : None,  # Not needed
             'camera_id'    : None,  # Not needed
-            'video'        : False,
-            'keogram'      : False,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1549,7 +1543,7 @@ class IndiAllSky(object):
 
 
         file_list_darks = list()
-        self.getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darks, extension_list=['fit', 'fits'])
+        self._getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darks, extension_list=['fit', 'fits'])
 
 
         ### Dark frames
@@ -1610,7 +1604,7 @@ class IndiAllSky(object):
 
 
         file_list_videos = list()
-        self.getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
+        self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
 
 
         ### Bad pixel maps
@@ -1725,7 +1719,7 @@ class IndiAllSky(object):
 
         ### find all imaegs
         file_list_images = list()
-        self.getFolderFilesByExt(self.image_dir, file_list_images, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        self._getFolderFilesByExt(self.image_dir, file_list_images, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
 
         ### Keograms
@@ -1942,7 +1936,7 @@ class IndiAllSky(object):
             db.session.rollback()
 
 
-    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
+    def _getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 

@@ -139,14 +139,18 @@ class VideoWorker(Process):
                     return
 
 
+            action = task.data['timespec']
             timespec = task.data['timespec']
             img_folder = Path(task.data['img_folder'])
             timeofday = task.data['timeofday']
             camera_id = task.data['camera_id']
-            video = task.data.get('video', True)
-            keogram = task.data.get('keogram', True)
-            #startrail = task.data.get('startrail', True)
-            expireData = task.data.get('expireData', False)
+
+
+            try:
+                action_method = getattr(self, action)
+            except AttributeError:
+                logger.error('Unknown action: %s', action)
+                continue
 
 
             if not img_folder.exists():
@@ -155,21 +159,11 @@ class VideoWorker(Process):
                 continue
 
 
-            if expireData:
-                self.expireData(task, img_folder)
+            # perform the action
+            action_method(task, timespec, img_folder, timeofday, camera_id)
 
 
-            self.uploadAllskyEndOfNight(timeofday)
-
-
-            if video:
-                task.setRunning()
-                self.generateVideo(task, timespec, img_folder, timeofday, camera_id)
-
-
-            if keogram:
-                task.setRunning()
-                self.generateKeogramStarTrails(task, timespec, img_folder, timeofday, camera_id)
+            #self.uploadAllskyEndOfNight(timeofday)
 
 
             self._releaseLock()
@@ -177,6 +171,8 @@ class VideoWorker(Process):
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -252,7 +248,7 @@ class VideoWorker(Process):
             task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
             ### Upload ###
-            self.uploadVideo(video_file)
+            self._uploadVideo(video_file)
 
             self._miscDb.addUploadedFlag(video_entry)
         except TimelapseException:
@@ -262,7 +258,7 @@ class VideoWorker(Process):
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
 
 
-    def uploadVideo(self, video_file):
+    def _uploadVideo(self, video_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -303,6 +299,8 @@ class VideoWorker(Process):
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -487,7 +485,7 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self.uploadKeogram(keogram_file)
+                self._uploadKeogram(keogram_file)
                 self._miscDb.addUploadedFlag(keogram_entry)
             else:
                 keogram_entry.success = False
@@ -496,7 +494,7 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self.uploadStarTrail(startrail_file)
+                self._uploadStarTrail(startrail_file)
                 self._miscDb.addUploadedFlag(startrail_entry)
             else:
                 startrail_entry.success = False
@@ -505,7 +503,7 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self.uploadStarTrailVideo(startrail_video_file)
+                self._uploadStarTrailVideo(startrail_video_file)
                 self._miscDb.addUploadedFlag(startrail_video_entry)
             else:
                 # success flag set above
@@ -515,7 +513,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def uploadKeogram(self, keogram_file):
+    def _uploadKeogram(self, keogram_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -556,7 +554,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : task.id})
 
 
-    def uploadStarTrail(self, startrail_file):
+    def _uploadStarTrail(self, startrail_file):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -596,11 +594,13 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : task.id})
 
 
-    def uploadStarTrailVideo(self, startrail_video_file):
-        self.uploadVideo(startrail_video_file)
+    def _uploadStarTrailVideo(self, startrail_video_file):
+        self._uploadVideo(startrail_video_file)
 
 
-    def uploadAllskyEndOfNight(self, timeofday):
+    def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         if timeofday != 'night':
             # Only upload at end of night
             return
@@ -700,8 +700,12 @@ class VideoWorker(Process):
 
         self.upload_q.put({'task_id' : task.id})
 
+        task.setSuccess('Uploaded EndOfNight data')
 
-    def expireData(self, task, img_folder):
+
+    def expireData(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
@@ -853,7 +857,7 @@ class VideoWorker(Process):
 
 
         fits_file_list = list()
-        self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
+        self._getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
 
         old_fits_files_1 = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
         old_fits_files_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
@@ -873,7 +877,7 @@ class VideoWorker(Process):
         export_folder_p = Path(self.config['IMAGE_EXPORT_FOLDER'])
 
         export_file_list = list()
-        self.getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        self._getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
         old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), export_file_list)
         logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
@@ -889,8 +893,8 @@ class VideoWorker(Process):
 
         # Remove empty folders
         dir_list = list()
-        self.getFolderFolders(img_folder, dir_list)
-        self.getFolderFolders(export_folder_p, dir_list)
+        self._getFolderFolders(img_folder, dir_list)
+        self._getFolderFolders(export_folder_p, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
@@ -903,10 +907,10 @@ class VideoWorker(Process):
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
-        task.setSuccess('Expired images')
+        task.setSuccess('Expired data')
 
 
-    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
+    def _getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 
@@ -918,14 +922,14 @@ class VideoWorker(Process):
             if item.is_file() and item.suffix in dot_extension_list:
                 file_list.append(item)
             elif item.is_dir():
-                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+                self._getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def getFolderFolders(self, folder, dir_list):
+    def _getFolderFolders(self, folder, dir_list):
         for item in Path(folder).iterdir():
             if item.is_dir():
                 dir_list.append(item)
-                self.getFolderFolders(item, dir_list)  # recursion
+                self._getFolderFolders(item, dir_list)  # recursion
 
 
     def _load_detection_mask(self):
