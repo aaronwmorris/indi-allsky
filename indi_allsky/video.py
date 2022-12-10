@@ -163,9 +163,6 @@ class VideoWorker(Process):
             action_method(task, timespec, img_folder, timeofday, camera_id)
 
 
-            #self.uploadAllskyEndOfNight(timeofday)
-
-
             self._releaseLock()
 
 

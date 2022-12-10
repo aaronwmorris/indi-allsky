@@ -824,20 +824,23 @@ class IndiAllSky(object):
             ### Change between day and night
             if self.night_v.value != int(self.night):
                 if self.generate_timelapse_flag:
-                    self._expireData()  # cleanup old images and folders
                     self._flushOldTasks()  # cleanup old tasks in DB
+                    self._expireData()  # cleanup old images and folders
 
                 if not self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
+                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'])
+                    self._generateNightKeogram(timespec, self.config['DB_CCD_ID'])
+                    self._uploadAllskyEndOfNight()
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'], keogram=True)
+                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'])
+                    self._generateDayKeogram(timespec, self.config['DB_CCD_ID'])
 
 
             # this is to prevent expiring images at startup
@@ -1514,6 +1517,27 @@ class IndiAllSky(object):
             'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'timeofday'    : None,  # Not needed
+            'camera_id'    : None,  # Not needed
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
+
+
+    def _uploadAllskyEndOfNight(self, task_state=TaskQueueState.QUEUED):
+        # This will delete old images from the filesystem and DB
+        jobdata = {
+            'action'       : 'uploadAllskyEndOfNight',
+            'img_folder'   : str(self.img_dir),  # not needed
+            'timespec'     : None,  # Not needed
+            'timeofday'    : 'night',
             'camera_id'    : None,  # Not needed
         }
 
