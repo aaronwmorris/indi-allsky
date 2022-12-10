@@ -678,7 +678,7 @@ class IndiClient(PyIndi.BaseClient):
             },
         }
 
-        self.configureGpsDevice(self, refresh_config)
+        self.configureGpsDevice(refresh_config)
 
 
     def getGpsPosition(self):
