@@ -41,6 +41,9 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from .exceptions import TimelapseException
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -243,19 +246,20 @@ class VideoWorker(Process):
         )
 
 
-        tg = TimelapseGenerator(self.config)
-        ret = tg.generate(video_file, timelapse_files)
-
-        if not ret:
-            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
-        else:
+        try:
+            tg = TimelapseGenerator(self.config)
+            tg.generate(video_file, timelapse_files)
             task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
-        ### Upload ###
-        self.uploadVideo(video_file)
+            ### Upload ###
+            self.uploadVideo(video_file)
 
-        self._miscDb.addUploadedFlag(video_entry)
+            self._miscDb.addUploadedFlag(video_entry)
+        except TimelapseException:
+            video_entry.success = False
+            db.session.commit()
 
+            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
 
 
     def uploadVideo(self, video_file):
@@ -411,6 +415,9 @@ class VideoWorker(Process):
                 d_dayDate,
                 timeofday=timeofday,
             )
+        else:
+            startrail_entry = None
+            startrail_video_entry = None
 
 
         stg = StarTrailGenerator(self.config, self.bin_v, mask=self._detection_mask)
@@ -460,8 +467,16 @@ class VideoWorker(Process):
                     timeofday=timeofday,
                 )
 
-                st_tg = TimelapseGenerator(self.config)
-                st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                try:
+                    st_tg = TimelapseGenerator(self.config)
+                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                except TimelapseException:
+                    logger.error('Failed to generate startrails timelapse')
+
+                    startrail_video_entry.success = False
+                    db.session.commit()
+
+
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', self.st_frame_count)
 
@@ -470,19 +485,31 @@ class VideoWorker(Process):
         logger.warning('Total keogram/star trail processing in %0.1f s', processing_elapsed_s)
 
 
-        if keogram_file.exists():
-            self.uploadKeogram(keogram_file)
-            self._miscDb.addUploadedFlag(keogram_entry)
+        if keogram_entry:
+            if keogram_file.exists():
+                self.uploadKeogram(keogram_file)
+                self._miscDb.addUploadedFlag(keogram_entry)
+            else:
+                keogram_entry.success = False
+                db.session.commit()
 
 
-        if night and startrail_file.exists():
-            self.uploadStarTrail(startrail_file)
-            self._miscDb.addUploadedFlag(startrail_entry)
+        if startrail_entry and night:
+            if startrail_file.exists():
+                self.uploadStarTrail(startrail_file)
+                self._miscDb.addUploadedFlag(startrail_entry)
+            else:
+                startrail_entry.success = False
+                db.session.commit()
 
 
-        if night and startrail_video_file.exists():
-            self.uploadStarTrailVideo(startrail_video_file)
-            self._miscDb.addUploadedFlag(startrail_video_entry)
+        if startrail_video_entry and night:
+            if startrail_video_file.exists():
+                self.uploadStarTrailVideo(startrail_video_file)
+                self._miscDb.addUploadedFlag(startrail_video_entry)
+            else:
+                # success flag set above
+                pass
 
 
         task.setSuccess('Generated keogram and/or star trail')
