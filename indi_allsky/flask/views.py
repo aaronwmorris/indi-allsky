@@ -2587,21 +2587,37 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
-            jobdata = {
+            jobdata_video = {
+                'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : True,
-                'keogram'     : True,
             }
 
-            task = IndiAllSkyDbTaskQueueTable(
+            jobdata_kst = {
+                'action'      : 'generateKeogramStarTrails',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+            }
+
+
+            task_video = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
-                data=jobdata,
+                data=jobdata_video,
             )
-            db.session.add(task)
+            task_kst = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata_kst,
+            )
+
+            db.session.add(task_video)
+            db.session.add(task_kst)
+
             db.session.commit()
 
             message = {
@@ -2627,12 +2643,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
+                'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : True,
-                'keogram'     : False,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2666,12 +2681,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
+                'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : False,
-                'keogram'     : True,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
