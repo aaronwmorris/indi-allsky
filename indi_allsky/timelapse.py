@@ -62,17 +62,34 @@ class TimelapseGenerator(object):
         cmd.append('{0:s}'.format(str(video_file)))
 
 
-        ffmpeg_subproc = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            preexec_fn=lambda: os.nice(19),
-        )
+        try:
+            ffmpeg_subproc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.nice(19),
+                check=True
+            )
+            elapsed_s = time.time() - start
+            logger.info('Timelapse generated in %0.4f s', elapsed_s)
 
-        elapsed_s = time.time() - start
-        logger.info('Timelapse generated in %0.4f s', elapsed_s)
+            logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+        except subprocess.CalledProcessError as e:
+            elapsed_s = time.time() - start
 
-        logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+            logger.info('FFMPEG ran for %0.4f s', elapsed_s)
+            logger.error('FFMPEG failed to generate timelapse, return code: %d', e.returncode)
+            logger.error('FFMPEG output: %s', e.stdout)
+
+            # Check if video file was created
+            video_file_path = Path(str(video_file))
+            if video_file_path.is_file():
+                logger.error('FFMPEG created broken video file, cleaning up')
+                video_file_path.unlink()
+            return False
+        return True
+
+
 
 
     def cleanup(self):

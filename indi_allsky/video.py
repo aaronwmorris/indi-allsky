@@ -244,10 +244,12 @@ class VideoWorker(Process):
 
 
         tg = TimelapseGenerator(self.config)
-        tg.generate(video_file, timelapse_files)
+        ret = tg.generate(video_file, timelapse_files)
 
-
-        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+        if not ret:
+            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
+        else:
+            task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
         self.uploadVideo(video_file)
