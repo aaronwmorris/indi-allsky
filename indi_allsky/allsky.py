@@ -1535,7 +1535,7 @@ class IndiAllSky(object):
         # This will delete old images from the filesystem and DB
         jobdata = {
             'action'       : 'uploadAllskyEndOfNight',
-            'img_folder'   : str(self.img_dir),  # not needed
+            'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
             'timeofday'    : 'night',
             'camera_id'    : None,  # Not needed
