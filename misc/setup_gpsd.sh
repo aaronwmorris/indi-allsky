@@ -133,6 +133,11 @@ sudo systemctl restart gpsd
 
 
 
+echo "**** Ensure user is a member of the dialout group ****"
+# for GPS and serial port access
+sudo usermod -a -G dialout "$USER"
+
+
 
 echo
 echo
