@@ -2194,7 +2194,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
-            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+            .filter(IndiAllSkyDbVideoTable.success == True)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())  # noqa: E712
 
         video_entries_count = video_entries.count()
         message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
@@ -2230,7 +2231,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
-            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
+            .filter(IndiAllSkyDbStarTrailsTable.success == True)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())  # noqa: E712
 
         startrail_entries_count = startrail_entries.count()
         message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
@@ -2248,7 +2250,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrail videos
         startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
-            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == True)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())  # noqa: E712
 
         startrail_video_entries_count = startrail_video_entries.count()
         message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
