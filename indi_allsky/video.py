@@ -473,7 +473,7 @@ class VideoWorker(Process):
 
 
             else:
-                logger.error('Not enough frames to generate star trails timelapse: %d', self.st_frame_count)
+                logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
 
 
         processing_elapsed_s = time.time() - processing_start
