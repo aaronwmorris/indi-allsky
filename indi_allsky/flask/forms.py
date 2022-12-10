@@ -1897,7 +1897,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if video_entry_night:
-                day_night_str = '{0:s} [T]'.format(day_night_str)
+                if not video_entry_night.success:
+                    day_night_str = '{0:s} [!]'.format(day_night_str)
+                else:
+                    day_night_str = '{0:s} [T]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
@@ -1908,7 +1911,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if video_entry_day:
-                day_day_str = '{0:s} [T]'.format(day_day_str)
+                if not video_entry_day.success:
+                    day_day_str = '{0:s} [!]'.format(day_day_str)
+                else:
+                    day_day_str = '{0:s} [T]'.format(day_day_str)
             else:
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
@@ -1919,7 +1925,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if keogram_entry_night:
-                day_night_str = '{0:s} [K]'.format(day_night_str)
+                if not keogram_entry_night.success:
+                    day_night_str = '{0:s} [!]'.format(day_night_str)
+                else:
+                    day_night_str = '{0:s} [K]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
@@ -1930,7 +1939,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if keogram_entry_day:
-                day_day_str = '{0:s} [K]'.format(day_day_str)
+                if not keogram_entry_day.success:
+                    day_day_str = '{0:s} [!]'.format(day_day_str)
+                else:
+                    day_day_str = '{0:s} [K]'.format(day_day_str)
             else:
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
@@ -1941,7 +1953,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if startrail_entry_night:
-                day_night_str = '{0:s} [S]'.format(day_night_str)
+                if not startrail_entry_night.success:
+                    day_night_str = '{0:s} [!]'.format(day_night_str)
+                else:
+                    day_night_str = '{0:s} [S]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
@@ -1952,7 +1967,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 .first()
 
             if startrail_video_entry_night:
-                day_night_str = '{0:s} [ST]'.format(day_night_str)
+                if not startrail_video_entry_night.success:
+                    day_night_str = '{0:s} [!]'.format(day_night_str)
+                else:
+                    day_night_str = '{0:s} [ST]'.format(day_night_str)
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
