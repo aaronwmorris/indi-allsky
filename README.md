@@ -280,6 +280,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | CCD_TEMP            | 15.0        | (float) Target CCD temperature |
 | TEMP_DISPLAY        | c           | (str) Temperature display conversion c = celcius, f = fahrenheit, k = kelvin |
 | CCD_TEMP_SCRIPT     |             | (str) External script used for CCD temperature.  Used when a camera does not support temperature measurements. |
+| GPS_TIMESYNC        | false       | (bool) Sync system time from GPS |
 | TARGET_ADU          | varies      | (int) Target image brightness to calculate exposure time |
 | TARGET_ADU_DEV      | 10          | (int) Deviation +/- from target ADU to recalculate exposure time (night) |
 | TARGET_ADU_DEV_DAY  | 20          | (int) Deviation +/- from target ADU to recalculate exposure time (day) |
@@ -332,6 +333,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
 | FFMPEG_BITRATE      | 2500k       | (kilobytes) Target data rate for timelapse video compression |
 | FFMPEG_VFSCALE      | ""          | (str) Scaling option for ffmpeg |
+| FFMPEG_CODEC        | libx264     | (str) Codec for encoding timelapse videos |
 | TEXT_PROPERTIES     |             | (dict) Default text properties (font, size, etc) |
 | > FONT_FACE         |             | (str) OpenCV font name |
 | > FONT_HEIGHT       | 30          | (pixels) Font height |

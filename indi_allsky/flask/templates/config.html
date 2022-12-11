@@ -337,6 +337,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.GPS_TIMESYNC.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
+                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Sync system time from GPS (requires GPS module)</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TARGET_ADU.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1802,6 +1817,7 @@ const checkbox_field_names = [
     'FOCUS_MODE',
     'AUTO_WB',
     'CCD_COOLING',
+    'GPS_TIMESYNC',
     'DETECT_STARS',
     'DETECT_METEORS',
     'DETECT_DRAW',
