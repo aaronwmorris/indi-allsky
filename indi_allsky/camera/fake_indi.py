@@ -293,6 +293,10 @@ class FakeIndiClient(object):
         return self.latitude_v.value, self.longitude_v.value, 0.0
 
 
+    def getGpsTime(self):
+        return None, None
+
+
     def getTelescopeRaDec(self):
         return 0.0, 0.0
 

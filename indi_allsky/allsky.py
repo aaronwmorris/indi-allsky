@@ -14,6 +14,7 @@ from datetime import timedelta
 from collections import OrderedDict
 #from pprint import pformat
 import math
+import dbus
 import signal
 import logging
 
@@ -766,6 +767,11 @@ class IndiAllSky(object):
 
         logger.warning('Periodic reconfigure triggered')
 
+
+        if self.config.get('GPS_TIMESYNC'):
+            self.validateGpsTime()
+
+
         if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
@@ -1504,6 +1510,47 @@ class IndiAllSky(object):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+
+
+    def validateGpsTime(self):
+        if not self.indiclient.gps_device:
+            logger.error('No GPS device for time sync')
+            return
+
+
+        self.indiclient.refreshGps()
+        gps_utc, gps_offset = self.indiclient.getGpsTime()
+
+
+        if not gps_utc:
+            logger.error('GPS did not return time data')
+            return
+
+
+        system_utcnow = datetime.utcnow()
+
+
+        # if there is a delta of more than 60 seconds, update system time
+        if abs(system_utcnow.timestamp() - gps_utc.timestamp()) > 60:
+            logger.warning('Setting system time to %s (UTC)', gps_utc)
+            self.setTimeSystemd(gps_utc)
+
+
+    def setTimeSystemd(self, new_datetime_utc):
+        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
+        epoch_msec = epoch * 1000000
+
+        system_bus = dbus.SystemBus()
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        logger.warning('Disabling NTP time sync')
+        manager.SetNTP(False, False)  # disable time sync
+        time.sleep(5.0)  # give enough time for time sync to diable
+
+        r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
 
 
     def expireData(self):
