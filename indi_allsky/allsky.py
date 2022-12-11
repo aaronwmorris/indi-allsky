@@ -159,10 +159,10 @@ class IndiAllSky(object):
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         with self.latitude_v.get_lock():
-            self.latitude_v.value = round(float(self.config['LOCATION_LATITUDE']), 3)
+            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
 
         with self.longitude_v.get_lock():
-            self.longitude_v.value = round(float(self.config['LOCATION_LONGITUDE']), 3)
+            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
 
 
         # reconfigure if needed
@@ -1156,8 +1156,8 @@ class IndiAllSky(object):
                 logger.error('Error decoding json: %s', str(e))
                 return
 
-        c['LOCATION_LATITUDE'] = float(gps_lat)
-        c['LOCATION_LONGITUDE'] = float(gps_long)
+        c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
+        c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
 
         # save new config
         try:
