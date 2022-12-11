@@ -2194,7 +2194,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
-            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+            .filter(IndiAllSkyDbVideoTable.success == True)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())  # noqa: E712
 
         video_entries_count = video_entries.count()
         message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
@@ -2230,7 +2231,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
-            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
+            .filter(IndiAllSkyDbStarTrailsTable.success == True)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())  # noqa: E712
 
         startrail_entries_count = startrail_entries.count()
         message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
@@ -2248,7 +2250,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrail videos
         startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
-            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == True)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())  # noqa: E712
 
         startrail_video_entries_count = startrail_video_entries.count()
         message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
@@ -2584,21 +2587,37 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
-            jobdata = {
+            jobdata_video = {
+                'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : True,
-                'keogram'     : True,
             }
 
-            task = IndiAllSkyDbTaskQueueTable(
+            jobdata_kst = {
+                'action'      : 'generateKeogramStarTrails',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'timeofday'   : night_day_str,
+                'camera_id'   : self.camera_id,
+            }
+
+
+            task_video = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
-                data=jobdata,
+                data=jobdata_video,
             )
-            db.session.add(task)
+            task_kst = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata_kst,
+            )
+
+            db.session.add(task_video)
+            db.session.add(task_kst)
+
             db.session.commit()
 
             message = {
@@ -2624,12 +2643,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
+                'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : True,
-                'keogram'     : False,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2663,12 +2681,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
+                'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'timeofday'   : night_day_str,
                 'camera_id'   : self.camera_id,
-                'video'       : False,
-                'keogram'     : True,
             }
 
             task = IndiAllSkyDbTaskQueueTable(

@@ -14,3 +14,7 @@ class TemperatureException(Exception):
 class CameraException(Exception):
     pass
 
+
+class TimelapseException(Exception):
+    pass
+

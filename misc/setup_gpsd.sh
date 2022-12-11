@@ -13,7 +13,12 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
-GPS_SERIAL_PORT="/dev/ttyACM0"
+
+if [ -n "${1-}" ]; then
+    GPS_SERIAL_PORT="$1"
+else
+    GPS_SERIAL_PORT="/dev/ttyACM0"
+fi
 
 
 echo
@@ -45,6 +50,13 @@ echo
 echo
 
 
+if [ ! -c "$GPS_SERIAL_PORT" ]; then
+    echo "WARNING: $GPS_SERIAL_PORT is not a valid device"
+    echo
+    echo
+fi
+
+
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
@@ -58,6 +70,7 @@ echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -65,6 +78,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -72,6 +86,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -79,6 +94,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -86,6 +102,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -93,6 +110,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
+        telnet \
         gpsd \
         gpsd-tools \
         gpsd-clients
@@ -133,7 +151,15 @@ sudo systemctl restart gpsd
 
 
 
+echo "**** Ensure user is a member of the dialout group ****"
+# for GPS and serial port access
+sudo usermod -a -G dialout "$USER"
 
+
+
+echo
+echo
+echo "Use \"cgps\" to test your GPS adapter"
 echo
 echo
 echo "GPSD is now installed... enjoy"

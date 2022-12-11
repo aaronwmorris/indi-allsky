@@ -41,6 +41,9 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from .exceptions import TimelapseException
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -136,14 +139,18 @@ class VideoWorker(Process):
                     return
 
 
+            action = task.data['action']
             timespec = task.data['timespec']
             img_folder = Path(task.data['img_folder'])
             timeofday = task.data['timeofday']
             camera_id = task.data['camera_id']
-            video = task.data.get('video', True)
-            keogram = task.data.get('keogram', True)
-            #startrail = task.data.get('startrail', True)
-            expireData = task.data.get('expireData', False)
+
+
+            try:
+                action_method = getattr(self, action)
+            except AttributeError:
+                logger.error('Unknown action: %s', action)
+                continue
 
 
             if not img_folder.exists():
@@ -152,21 +159,8 @@ class VideoWorker(Process):
                 continue
 
 
-            if expireData:
-                self.expireData(task, img_folder)
-
-
-            self.uploadAllskyEndOfNight(timeofday)
-
-
-            if video:
-                task.setRunning()
-                self.generateVideo(task, timespec, img_folder, timeofday, camera_id)
-
-
-            if keogram:
-                task.setRunning()
-                self.generateKeogramStarTrails(task, timespec, img_folder, timeofday, camera_id)
+            # perform the action
+            action_method(task, timespec, img_folder, timeofday, camera_id)
 
 
             self._releaseLock()
@@ -174,6 +168,8 @@ class VideoWorker(Process):
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -243,20 +239,23 @@ class VideoWorker(Process):
         )
 
 
-        tg = TimelapseGenerator(self.config)
-        tg.generate(video_file, timelapse_files)
+        try:
+            tg = TimelapseGenerator(self.config)
+            tg.generate(video_file, timelapse_files)
+            task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
+            ### Upload ###
+            self._uploadVideo(video_file)
+
+            self._miscDb.addUploadedFlag(video_entry)
+        except TimelapseException:
+            video_entry.success = False
+            db.session.commit()
+
+            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
 
 
-        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
-
-        ### Upload ###
-        self.uploadVideo(video_file)
-
-        self._miscDb.addUploadedFlag(video_entry)
-
-
-
-    def uploadVideo(self, video_file):
+    def _uploadVideo(self, video_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -297,6 +296,8 @@ class VideoWorker(Process):
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -335,12 +336,12 @@ class VideoWorker(Process):
 
         try:
             # delete old keogram entry if it exists
-            keogram_entry = IndiAllSkyDbKeogramTable.query\
+            old_keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
                 .one()
 
             logger.warning('Removing orphaned keogram db entry')
-            db.session.delete(keogram_entry)
+            db.session.delete(old_keogram_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -348,12 +349,12 @@ class VideoWorker(Process):
 
         try:
             # delete old star trail entry if it exists
-            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+            old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
                 .one()
 
             logger.warning('Removing orphaned star trail db entry')
-            db.session.delete(startrail_entry)
+            db.session.delete(old_startrail_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -361,12 +362,12 @@ class VideoWorker(Process):
 
         try:
             # delete old star trail video entry if it exists
-            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+            old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
                 .one()
 
             logger.warning('Removing orphaned star trail video db entry')
-            db.session.delete(startrail_video_entry)
+            db.session.delete(old_startrail_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -409,6 +410,9 @@ class VideoWorker(Process):
                 d_dayDate,
                 timeofday=timeofday,
             )
+        else:
+            startrail_entry = None
+            startrail_video_entry = None
 
 
         stg = StarTrailGenerator(self.config, self.bin_v, mask=self._detection_mask)
@@ -458,35 +462,56 @@ class VideoWorker(Process):
                     timeofday=timeofday,
                 )
 
-                st_tg = TimelapseGenerator(self.config)
-                st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                try:
+                    st_tg = TimelapseGenerator(self.config)
+                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                except TimelapseException:
+                    logger.error('Failed to generate startrails timelapse')
+
+                    startrail_video_entry.success = False
+                    db.session.commit()
+
+
             else:
-                logger.error('Not enough frames to generate star trails timelapse: %d', self.st_frame_count)
+                logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
+                startrail_video_entry = None
 
 
         processing_elapsed_s = time.time() - processing_start
         logger.warning('Total keogram/star trail processing in %0.1f s', processing_elapsed_s)
 
 
-        if keogram_file.exists():
-            self.uploadKeogram(keogram_file)
-            self._miscDb.addUploadedFlag(keogram_entry)
+        if keogram_entry:
+            if keogram_file.exists():
+                self._uploadKeogram(keogram_file)
+                self._miscDb.addUploadedFlag(keogram_entry)
+            else:
+                keogram_entry.success = False
+                db.session.commit()
 
 
-        if night and startrail_file.exists():
-            self.uploadStarTrail(startrail_file)
-            self._miscDb.addUploadedFlag(startrail_entry)
+        if startrail_entry and night:
+            if startrail_file.exists():
+                self._uploadStarTrail(startrail_file)
+                self._miscDb.addUploadedFlag(startrail_entry)
+            else:
+                startrail_entry.success = False
+                db.session.commit()
 
 
-        if night and startrail_video_file.exists():
-            self.uploadStarTrailVideo(startrail_video_file)
-            self._miscDb.addUploadedFlag(startrail_video_entry)
+        if startrail_video_entry and night:
+            if startrail_video_file.exists():
+                self._uploadStarTrailVideo(startrail_video_file)
+                self._miscDb.addUploadedFlag(startrail_video_entry)
+            else:
+                # success flag set above
+                pass
 
 
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def uploadKeogram(self, keogram_file):
+    def _uploadKeogram(self, keogram_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -527,7 +552,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : task.id})
 
 
-    def uploadStarTrail(self, startrail_file):
+    def _uploadStarTrail(self, startrail_file):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -567,11 +592,13 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : task.id})
 
 
-    def uploadStarTrailVideo(self, startrail_video_file):
-        self.uploadVideo(startrail_video_file)
+    def _uploadStarTrailVideo(self, startrail_video_file):
+        self._uploadVideo(startrail_video_file)
 
 
-    def uploadAllskyEndOfNight(self, timeofday):
+    def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         if timeofday != 'night':
             # Only upload at end of night
             return
@@ -671,8 +698,12 @@ class VideoWorker(Process):
 
         self.upload_q.put({'task_id' : task.id})
 
+        task.setSuccess('Uploaded EndOfNight data')
 
-    def expireData(self, task, img_folder):
+
+    def expireData(self, task, timespec, img_folder, timeofday, camera_id):
+        task.setRunning()
+
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
@@ -824,7 +855,7 @@ class VideoWorker(Process):
 
 
         fits_file_list = list()
-        self.getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
+        self._getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
 
         old_fits_files_1 = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
         old_fits_files_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
@@ -844,7 +875,7 @@ class VideoWorker(Process):
         export_folder_p = Path(self.config['IMAGE_EXPORT_FOLDER'])
 
         export_file_list = list()
-        self.getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        self._getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 
         old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), export_file_list)
         logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
@@ -860,8 +891,8 @@ class VideoWorker(Process):
 
         # Remove empty folders
         dir_list = list()
-        self.getFolderFolders(img_folder, dir_list)
-        self.getFolderFolders(export_folder_p, dir_list)
+        self._getFolderFolders(img_folder, dir_list)
+        self._getFolderFolders(export_folder_p, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
@@ -874,10 +905,10 @@ class VideoWorker(Process):
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
-        task.setSuccess('Expired images')
+        task.setSuccess('Expired data')
 
 
-    def getFolderFilesByExt(self, folder, file_list, extension_list=None):
+    def _getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [self.config['IMAGE_FILE_TYPE']]
 
@@ -889,14 +920,14 @@ class VideoWorker(Process):
             if item.is_file() and item.suffix in dot_extension_list:
                 file_list.append(item)
             elif item.is_dir():
-                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+                self._getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
-    def getFolderFolders(self, folder, dir_list):
+    def _getFolderFolders(self, folder, dir_list):
         for item in Path(folder).iterdir():
             if item.is_dir():
                 dir_list.append(item)
-                self.getFolderFolders(item, dir_list)  # recursion
+                self._getFolderFolders(item, dir_list)  # recursion
 
 
     def _load_detection_mask(self):

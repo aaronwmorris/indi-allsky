@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import logging
 
+from .exceptions import TimelapseException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -24,6 +26,8 @@ class TimelapseGenerator(object):
 
 
     def generate(self, video_file, file_list):
+        video_file_p = Path(video_file)
+
         # Exclude empty files
         file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
@@ -59,20 +63,34 @@ class TimelapseGenerator(object):
 
 
         # finally add filename
-        cmd.append('{0:s}'.format(str(video_file)))
+        cmd.append('{0:s}'.format(str(video_file_p)))
 
 
-        ffmpeg_subproc = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            preexec_fn=lambda: os.nice(19),
-        )
+        try:
+            ffmpeg_subproc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.nice(19),
+                check=True
+            )
+            elapsed_s = time.time() - start
+            logger.info('Timelapse generated in %0.4f s', elapsed_s)
 
-        elapsed_s = time.time() - start
-        logger.info('Timelapse generated in %0.4f s', elapsed_s)
+            logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+        except subprocess.CalledProcessError as e:
+            elapsed_s = time.time() - start
 
-        logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+            logger.info('FFMPEG ran for %0.4f s', elapsed_s)
+            logger.error('FFMPEG failed to generate timelapse, return code: %d', e.returncode)
+            logger.error('FFMPEG output: %s', e.stdout)
+
+            # Check if video file was created
+            if video_file_p.is_file():
+                logger.error('FFMPEG created broken video file, cleaning up')
+                video_file_p.unlink()
+
+            raise TimelapseException('FFMPEG return code %d', e.returncode)
 
 
     def cleanup(self):
