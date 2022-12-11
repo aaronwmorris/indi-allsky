@@ -1628,7 +1628,7 @@ class IndiAllSky(object):
 
 
         file_list_videos = list()
-        self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
+        self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4', 'webm'])
 
 
         ### Bad pixel maps
