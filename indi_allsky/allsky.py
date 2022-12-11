@@ -750,6 +750,10 @@ class IndiAllSky(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
+        if self.config.get('GPS_TIMESYNC'):
+            self.validateGpsTime()
+
+
         if self.config['CCD_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
