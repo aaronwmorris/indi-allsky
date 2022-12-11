@@ -159,10 +159,10 @@ class IndiAllSky(object):
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         with self.latitude_v.get_lock():
-            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
+            self.latitude_v.value = round(float(self.config['LOCATION_LATITUDE']), 3)
 
         with self.longitude_v.get_lock():
-            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
+            self.longitude_v.value = round(float(self.config['LOCATION_LONGITUDE']), 3)
 
 
         # reconfigure if needed
