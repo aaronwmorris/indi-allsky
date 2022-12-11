@@ -1531,17 +1531,29 @@ class IndiAllSky(object):
             return
 
 
-        system_utcnow = datetime.utcnow()
+        if isinstance(gps_offset, type(None)):
+            logger.error('Abort system time update due to missing GPS offset')
+            return
 
 
-        time_offset = abs(system_utcnow.timestamp() - gps_utc.timestamp())
-        logger.info('Time offset: %ds', int(time_offset))
+        # not quite sure why we need to
+        # 1. apply the offset
+        # 2. subtract
+        gps_utc_timestamp = gps_utc.timestamp() - int(gps_offset * 3600)
+
+
+        systemtime_utc = datetime.utcnow()
+        logger.info('System time: %s', systemtime_utc)
+
+        time_offset = systemtime_utc.timestamp() - gps_utc_timestamp
+        logger.info('GPS time offset: %ds', int(time_offset))
+
 
         # if there is a delta of more than 60 seconds, update system time
-        if time_offset > 60:
+        if abs(time_offset) > 60:
             logger.warning('Setting system time to %s (UTC)', gps_utc)
 
-            # This will not result in a perfect sync.  Due to delays in commands,
+            # This may not result in a perfect sync.  Due to delays in commands,
             # time can still be off by several seconds
             self.setTimeSystemd(gps_utc)
 

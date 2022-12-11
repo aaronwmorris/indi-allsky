@@ -725,6 +725,9 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning('GPS fix not found')
             return None, None
 
+        if not gps_offset:
+            logger.error('GPS time offset not defined')
+
 
         # example string: 2022-12-11T14:00:50.000Z
         try:
