@@ -686,7 +686,7 @@ class IndiClient(PyIndi.BaseClient):
             return self.latitude_v.value, self.longitude_v.value, 0.0
 
         try:
-            geographic_coord = self.get_control(self._telescope_device, 'GEOGRAPHIC_COORD', 'number', timeout=0.5)
+            geographic_coord = self.get_control(self._gps_device, 'GEOGRAPHIC_COORD', 'number', timeout=0.5)
         except TimeOutException:
             return self.latitude_v.value, self.longitude_v.value, 0.0
 
