@@ -340,6 +340,10 @@ class IndiAllSky(object):
             c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'
 
 
+        if not c.get('FFMPEG_CODEC'):
+            c['FFMPEG_CODEC'] = 'libx264'
+
+
         return c
 
 
