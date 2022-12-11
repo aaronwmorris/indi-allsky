@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from collections import OrderedDict
 #from pprint import pformat
 import math
@@ -1531,21 +1532,10 @@ class IndiAllSky(object):
             return
 
 
-        if isinstance(gps_offset, type(None)):
-            logger.error('Abort system time update due to missing GPS offset')
-            return
-
-
-        # not quite sure why we need to
-        # 1. apply the offset
-        # 2. subtract
-        gps_utc_timestamp = gps_utc.timestamp() - int(gps_offset * 3600)
-
-
-        systemtime_utc = datetime.utcnow()
+        systemtime_utc = datetime.now().astimezone(tz=timezone.utc)
         logger.info('System time: %s', systemtime_utc)
 
-        time_offset = systemtime_utc.timestamp() - gps_utc_timestamp
+        time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
         logger.info('GPS time offset: %ds', int(time_offset))
 
 
