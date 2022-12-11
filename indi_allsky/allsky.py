@@ -340,6 +340,10 @@ class IndiAllSky(object):
             c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'
 
 
+        if not c.get('FFMPEG_CODEC'):
+            c['FFMPEG_CODEC'] = 'libx264'
+
+
         return c
 
 
@@ -1624,7 +1628,7 @@ class IndiAllSky(object):
 
 
         file_list_videos = list()
-        self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4'])
+        self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4', 'webm'])
 
 
         ### Bad pixel maps
