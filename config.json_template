@@ -49,6 +49,8 @@
     "TEMP_DISPLAY"     : "c",
     "CCD_TEMP_SCRIPT"  : "",
 
+    "GPS_TIMESYNC"     : false,
+
     "comment_TARGET_ADU" : "Average channel brightness target",
     "TARGET_ADU" : 75,
     "comment_TARGET_ADU_DEV" : "Allowed deviation from the mean before recalculating",

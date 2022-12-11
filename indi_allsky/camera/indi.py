@@ -3,6 +3,7 @@ import io
 import tempfile
 import ctypes
 from datetime import datetime
+from dateutil import parser
 from pathlib import Path
 import logging
 #from pprint import pformat
@@ -705,6 +706,46 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("GPS location: lat %0.2f, long %0.2f, elev %0.2f", gps_lat, gps_long, gps_elev)
 
         return gps_lat, gps_long, gps_elev
+
+
+    def getGpsTime(self):
+        if not self._gps_device:
+            return None, None
+
+        try:
+            time_utc = self.get_control(self._gps_device, 'TIME_UTC', 'text', timeout=0.5)
+        except TimeOutException:
+            return None, None
+
+        gps_utc = str(time_utc[0].getText())   # UTC
+        gps_offset = str(time_utc[1].getText())  # OFFSET
+
+
+        if not gps_utc:
+            logger.warning('GPS fix not found')
+            return None, None
+
+        if not gps_offset:
+            logger.error('GPS time offset not defined')
+
+
+        # example string: 2022-12-11T14:00:50.000Z
+        try:
+            gps_utc_dt = parser.isoparse(gps_utc)
+        except ValueError:
+            logger.error('Unable to parse GPS time: %s', gps_utc)
+            gps_utc_dt = None
+
+        try:
+            gps_offset_f = float(gps_offset)
+        except ValueError:
+            logger.error('Unknown GPS time offset: %s', gps_offset)
+            gps_offset_f = None
+
+
+        logger.info('GPS time (utc): %s, local offset: %s', str(gps_utc_dt), str(gps_offset_f))
+
+        return gps_utc_dt, gps_offset_f
 
 
     def getTelescopeRaDec(self):

@@ -14,6 +14,7 @@ from datetime import timedelta
 from collections import OrderedDict
 #from pprint import pformat
 import math
+import dbus
 import signal
 import logging
 
@@ -749,6 +750,10 @@ class IndiAllSky(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
+        if self.config.get('GPS_TIMESYNC'):
+            self.validateGpsTime()
+
+
         if self.config['CCD_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
@@ -765,6 +770,11 @@ class IndiAllSky(object):
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
 
         logger.warning('Periodic reconfigure triggered')
+
+
+        if self.config.get('GPS_TIMESYNC'):
+            self.validateGpsTime()
+
 
         if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
@@ -1504,6 +1514,65 @@ class IndiAllSky(object):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+
+
+    def validateGpsTime(self):
+        if not self.indiclient.gps_device:
+            logger.error('No GPS device for time sync')
+            return
+
+
+        self.indiclient.refreshGps()
+        gps_utc, gps_offset = self.indiclient.getGpsTime()
+
+
+        if not gps_utc:
+            logger.error('GPS did not return time data')
+            return
+
+
+        if isinstance(gps_offset, type(None)):
+            logger.error('Abort system time update due to missing GPS offset')
+            return
+
+
+        # not quite sure why we need to
+        # 1. apply the offset
+        # 2. subtract
+        gps_utc_timestamp = gps_utc.timestamp() - int(gps_offset * 3600)
+
+
+        systemtime_utc = datetime.utcnow()
+        logger.info('System time: %s', systemtime_utc)
+
+        time_offset = systemtime_utc.timestamp() - gps_utc_timestamp
+        logger.info('GPS time offset: %ds', int(time_offset))
+
+
+        # if there is a delta of more than 60 seconds, update system time
+        if abs(time_offset) > 60:
+            logger.warning('Setting system time to %s (UTC)', gps_utc)
+
+            # This may not result in a perfect sync.  Due to delays in commands,
+            # time can still be off by several seconds
+            self.setTimeSystemd(gps_utc)
+
+
+    def setTimeSystemd(self, new_datetime_utc):
+        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
+        epoch_msec = epoch * 1000000
+
+        system_bus = dbus.SystemBus()
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        logger.warning('Disabling NTP time sync')
+        manager.SetNTP(False, False)  # disable time sync
+        time.sleep(5.0)  # give enough time for time sync to diable
+
+        r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
 
 
     def expireData(self):
