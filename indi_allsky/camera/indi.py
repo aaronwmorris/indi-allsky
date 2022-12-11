@@ -726,6 +726,7 @@ class IndiClient(PyIndi.BaseClient):
             return None, None
 
 
+        # example string: 2022-12-11T14:00:50.000Z
         try:
             gps_utc_dt = parser.isoparse(gps_utc)
         except ValueError:
