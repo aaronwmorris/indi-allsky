@@ -556,15 +556,15 @@ class ImageWorker(Process):
             'remote_file' : str(remote_file_p),
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
         if image_entry:
             # image was not saved
@@ -639,15 +639,15 @@ class ImageWorker(Process):
             'remove_local' : True,
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def mqtt_publish(self, latest_file, mq_data):
@@ -664,15 +664,15 @@ class ImageWorker(Process):
             'mq_data'     : mq_data,
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        mqtt_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(mqtt_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : mqtt_task.id})
 
 
     def getSqmData(self, camera_id):
