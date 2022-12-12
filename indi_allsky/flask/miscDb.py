@@ -230,6 +230,7 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
+            # this is a normal condition, DB entry is created before file exists
             logger.warning('File not found: %s', p_filename)
 
 
@@ -264,6 +265,7 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
+            # this is a normal condition, DB entry is created before file exists
             logger.warning('File not found: %s', p_filename)
 
 
@@ -298,6 +300,7 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
+            # this is a normal condition, DB entry is created before file exists
             logger.warning('File not found: %s', p_filename)
 
 
@@ -332,6 +335,7 @@ class miscDb(object):
 
         p_filename = Path(filename)
         if not p_filename.exists():
+            # this is a normal condition, DB entry is created before file exists
             logger.warning('File not found: %s', p_filename)
 
 
