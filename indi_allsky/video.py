@@ -293,15 +293,15 @@ class VideoWorker(Process):
             'remote_file' : str(remote_file_p),
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
@@ -558,15 +558,15 @@ class VideoWorker(Process):
             'remote_file' : str(remote_file_p),
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def _uploadStarTrail(self, startrail_file):
@@ -598,15 +598,15 @@ class VideoWorker(Process):
             'remote_file' : str(remote_file_p),
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def _uploadStarTrailVideo(self, startrail_video_file):
@@ -622,10 +622,12 @@ class VideoWorker(Process):
 
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT'):
             logger.warning('End of Night uploading disabled')
+            task.setFailed('End of Night uploading disabled')
             return
 
         if not self.config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER'):
             logger.error('End of Night folder not configured')
+            task.setFailed('End of Night folder not configured')
             return
 
 
@@ -705,15 +707,15 @@ class VideoWorker(Process):
             'remove_local'   : True,
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.QUEUED,
             data=jobdata,
         )
-        db.session.add(task)
+        db.session.add(upload_task)
         db.session.commit()
 
-        self.upload_q.put({'task_id' : task.id})
+        self.upload_q.put({'task_id' : upload_task.id})
 
         task.setSuccess('Uploaded EndOfNight data')
 
