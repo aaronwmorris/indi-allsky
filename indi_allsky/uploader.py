@@ -53,10 +53,8 @@ class FileUploader(Process):
         #raise Exception('Test exception handling in worker')
 
         while True:
-            time.sleep(0.7)  # sleep every loop
-
             try:
-                u_dict = self.upload_q.get_nowait()
+                u_dict = self.upload_q.get(timeout=31)  # prime number
             except queue.Empty:
                 continue
 
