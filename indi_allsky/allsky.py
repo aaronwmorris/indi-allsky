@@ -898,7 +898,7 @@ class IndiAllSky(object):
                     # processes will start at the next loop
 
 
-                time.sleep(60)
+                time.sleep(59)  # prime number
                 continue
 
 

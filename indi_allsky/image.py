@@ -174,10 +174,8 @@ class ImageWorker(Process):
         #raise Exception('Test exception handling in worker')
 
         while True:
-            time.sleep(0.05)  # sleep every loop
-
             try:
-                i_dict = self.image_q.get_nowait()
+                i_dict = self.image_q.get(timeout=23)  # prime number
             except queue.Empty:
                 continue
 
