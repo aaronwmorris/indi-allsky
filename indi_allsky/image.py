@@ -1075,11 +1075,13 @@ class ImageProcessor(object):
         try:
             self.image_list[i]
         except IndexError:
+            # start over
             self.image_index = 0
+            return self.image_index
 
         self.image_index = i
 
-        return i
+        return self.image_index
 
 
     def addImage(self, filename, exposure, exp_date, exp_elapsed, camera_id):
