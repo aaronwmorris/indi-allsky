@@ -286,7 +286,7 @@ class ImageWorker(Process):
 
             # star detection
             if self.night_v.value and self.config.get('DETECT_STARS', True):
-                blob_stars = self.image_processor.detectObjects()
+                blob_stars = self.image_processor.detectStars()
             else:
                 blob_stars = list()
 
