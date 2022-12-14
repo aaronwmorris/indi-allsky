@@ -106,8 +106,6 @@ class ImageWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        self.image_processor = ImageProcessor(self.config, latitude_v, longitude_v, ra_v, dec_v, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v)
-
         self.sun_alt = 0.0
         self.moon_alt = 0.0
         self.moon_phase = 0.0
@@ -127,6 +125,10 @@ class ImageWorker(Process):
 
         self._detection_mask = self._load_detection_mask()
         self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
+
+
+        self.image_processor = ImageProcessor(self.config, latitude_v, longitude_v, ra_v, dec_v, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, mask=self._detection_mask)
+
 
         self._miscDb = miscDb(self.config)
 
@@ -1015,6 +1017,7 @@ class ImageProcessor(object):
         sensortemp_v,
         night_v,
         moonmode_v,
+        mask=None,
     ):
         self.config = config
 
@@ -1031,6 +1034,7 @@ class ImageProcessor(object):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
+        self._detection_mask = mask
 
         image_count = self.config.get('IMAGE_STACK', 1)
 
@@ -2023,6 +2027,5 @@ class ImageProcessor(object):
 
 
         return extra_lines
-
 
 
