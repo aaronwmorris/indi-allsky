@@ -223,7 +223,8 @@ class ImageWorker(Process):
 
 
             if self.config.get('IMAGE_SAVE_FITS'):
-                self.image_processor.write_fit()
+                i_ref = self.image_processor.getLatestImage()
+                self.image_processor.write_fit(i_ref)
 
                 ### Do not write image files if fits are enabled
                 continue
@@ -347,7 +348,8 @@ class ImageWorker(Process):
             self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
 
 
-            latest_file, new_filename = self.write_img(scidata, exp_date, camera_id)
+            i_ref = self.image_processor.getLatestImage()
+            latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
 
             if new_filename:
                 image_entry = self._miscDb.addImage(
@@ -365,7 +367,7 @@ class ImageWorker(Process):
                     self.moon_phase,
                     night=bool(self.night_v.value),
                     adu_roi=self.config['ADU_ROI'],
-                    calibrated=calibrated,
+                    calibrated=i_ref['calibrated'],
                     sqm=self.sqm_value,
                     stars=len(blob_stars),
                     detections=len(image_lines),
@@ -608,8 +610,56 @@ class ImageWorker(Process):
         return stars_data
 
 
+    def write_fit(self, i_ref):
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
-    def write_img(self, scidata, exp_date, camera_id):
+        i_ref['hdulist'].writeto(f_tmpfile)
+
+        f_tmpfile.flush()
+        f_tmpfile.close()
+
+
+        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
+        # raw light
+        folder = self.getImageFolder(i_ref['exp_date'])
+        filename = folder.joinpath(self.filename_t.format(
+            i_ref['camera_id'],
+            date_str,
+            'fit',
+        ))
+
+
+        self._miscDb.addFitsImage(
+            filename,
+            i_ref['camera_id'],
+            i_ref['exp_date'],
+            i_ref['exposure'],
+            self.gain_v.value,
+            self.bin_v.value,
+            night=bool(self.night_v.value),
+        )
+
+
+        file_dir = filename.parent
+        if not file_dir.exists():
+            file_dir.mkdir(mode=0o755, parents=True)
+
+        logger.info('fit filename: %s', filename)
+
+
+        if filename.exists():
+            logger.error('File exists: %s (skipping)', filename)
+            return
+
+        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+        filename.chmod(0o644)
+
+        Path(f_tmpfile.name).unlink()  # delete temp file
+
+        logger.info('Finished writing fit file')
+
+
+    def write_img(self, data, i_ref):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -621,11 +671,11 @@ class ImageWorker(Process):
 
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(tmpfile_name), scidata, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
@@ -660,10 +710,10 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self.getImageFolder(exp_date)
+        folder = self.getImageFolder(i_ref['exp_date'])
 
-        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(self.filename_t.format(camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
+        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
+        filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
 
         #logger.info('Image filename: %s', filename)
 
@@ -861,33 +911,6 @@ class ImageWorker(Process):
         logger.warning('New calculated exposure: %0.6f', new_exposure)
         with self.exposure_v.get_lock():
             self.exposure_v.value = new_exposure
-
-
-    def equalizeHistogram(self, data_bytes):
-        if len(data_bytes.shape) == 2:
-            # mono
-            return cv2.equalizeHist(data_bytes)
-
-        # color, apply to luminance
-        lab = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2LAB)
-
-        l, a, b = cv2.split(lab)
-
-        cl = cv2.equalizeHist(l)
-
-        new_lab = cv2.merge((cl, a, b))
-
-        return cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
-
-
-    def equalizeHistogramColor(self, data_bytes):
-        if len(data_bytes.shape) == 2:
-            # mono
-            return data_bytes
-
-        ycrcb_img = cv2.cvtColor(data_bytes, cv2.COLOR_BGR2YCrCb)
-        ycrcb_img[:, :, 0] = cv2.equalizeHist(ycrcb_img[:, :, 0])
-        return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
 
 
     def _generateAduMask(self, img):
@@ -1206,6 +1229,10 @@ class ImageProcessor(object):
         return image_bit_depth
 
 
+    def getLatestImage(self):
+        return self.image_tuple[self.image_index]
+
+
     def calibrate(self):
         i_ref = self.image_tuple[self.image_index]
 
@@ -1354,59 +1381,6 @@ class ImageProcessor(object):
         data_calibrated = cv2.subtract(data, master_dark)
 
         return data_calibrated
-
-
-    def write_fit(self):
-        i_ref = self.image_tuple[self.image_index]
-
-
-
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
-
-        i_ref['hdulist'].writeto(f_tmpfile)
-
-        f_tmpfile.flush()
-        f_tmpfile.close()
-
-
-        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
-        # raw light
-        folder = self.getImageFolder(i_ref['exp_date'])
-        filename = folder.joinpath(self.filename_t.format(
-            i_ref['camera_id'],
-            date_str,
-            'fit',
-        ))
-
-
-        self._miscDb.addFitsImage(
-            filename,
-            i_ref['camera_id'],
-            i_ref['exp_date'],
-            i_ref['exposure'],
-            self.gain_v.value,
-            self.bin_v.value,
-            night=bool(self.night_v.value),
-        )
-
-
-        file_dir = filename.parent
-        if not file_dir.exists():
-            file_dir.mkdir(mode=0o755, parents=True)
-
-        logger.info('fit filename: %s', filename)
-
-
-        if filename.exists():
-            logger.error('File exists: %s (skipping)', filename)
-            return
-
-        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
-        filename.chmod(0o644)
-
-        Path(f_tmpfile.name).unlink()  # delete temp file
-
-        logger.info('Finished writing fit file')
 
 
     def calculateSqm(self):
@@ -1676,17 +1650,17 @@ class ImageProcessor(object):
         self.image = cv2.merge([wbb, wbg, wbr])
 
 
-    def white_balance_bgr_2(self):
-        if len(self.image.shape) == 2:
-            # mono
-            return
+    #def white_balance_bgr_2(self):
+    #    if len(self.image.shape) == 2:
+    #        # mono
+    #        return
 
-        lab = cv2.cvtColor(self.image, cv2.COLOR_BGR2LAB)
-        avg_a = numpy.average(lab[:, :, 1])
-        avg_b = numpy.average(lab[:, :, 2])
-        lab[:, :, 1] = lab[:, :, 1] - ((avg_a - 128) * (lab[:, :, 0] / 255.0) * 1.1)
-        lab[:, :, 2] = lab[:, :, 2] - ((avg_b - 128) * (lab[:, :, 0] / 255.0) * 1.1)
-        self.image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    #    lab = cv2.cvtColor(self.image, cv2.COLOR_BGR2LAB)
+    #    avg_a = numpy.average(lab[:, :, 1])
+    #    avg_b = numpy.average(lab[:, :, 2])
+    #    lab[:, :, 1] = lab[:, :, 1] - ((avg_a - 128) * (lab[:, :, 0] / 255.0) * 1.1)
+    #    lab[:, :, 2] = lab[:, :, 2] - ((avg_b - 128) * (lab[:, :, 0] / 255.0) * 1.1)
+    #    self.image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
 
     def median_blur(self):
@@ -1762,6 +1736,33 @@ class ImageProcessor(object):
         new_lab = cv2.merge((cl, a, b))
 
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    #def equalizeHistogram(self, data):
+    #    if len(data.shape) == 2:
+    #        # mono
+    #        return cv2.equalizeHist(data)
+
+    #    # color, apply to luminance
+    #    lab = cv2.cvtColor(data, cv2.COLOR_BGR2LAB)
+
+    #    l, a, b = cv2.split(lab)
+
+    #    cl = cv2.equalizeHist(l)
+
+    #    new_lab = cv2.merge((cl, a, b))
+
+    #    return cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    #def equalizeHistogramColor(self, data):
+    #    if len(data.shape) == 2:
+    #        # mono
+    #        return data_bytes
+
+    #    ycrcb_img = cv2.cvtColor(data, cv2.COLOR_BGR2YCrCb)
+    #    ycrcb_img[:, :, 0] = cv2.equalizeHist(ycrcb_img[:, :, 0])
+    #    return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
 
 
     def scale_image(self):
