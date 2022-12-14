@@ -1039,7 +1039,7 @@ class ImageProcessor(object):
         self._image = None
 
         # contains the raw image data
-        self.image_tuple = tuple(range(image_count))
+        self.image_list = list(range(image_count))
         self.image_index = -1
 
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
@@ -1061,7 +1061,7 @@ class ImageProcessor(object):
 
     @property
     def shape(self):
-        return self.image_tuple[self.image_index]['hdulist'].data.shape
+        return self.image_list[self.image_index]['hdulist'].data.shape
 
     @shape.setter
     def shape(self, *args):
@@ -1196,7 +1196,7 @@ class ImageProcessor(object):
 
         self.image = None  # clear data
         self._nextIndex()
-        self.image_tuple[self.image_index] = image_data
+        self.image_list[self.image_index] = image_data
 
 
     def _detectBitDepth(self, hdulist):
@@ -1233,11 +1233,11 @@ class ImageProcessor(object):
 
 
     def getLatestImage(self):
-        return self.image_tuple[self.image_index]
+        return self.image_list[self.image_index]
 
 
     def calibrate(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
             # already calibrated
@@ -1387,14 +1387,14 @@ class ImageProcessor(object):
 
 
     def calculateSqm(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         sqm_value = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
         return sqm_value
 
 
     def stack(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
         image_bitpix = i_ref['image_bitpix']
 
 
@@ -1407,7 +1407,7 @@ class ImageProcessor(object):
 
 
         image_data = list()
-        for i in self.image_tuple:
+        for i in self.image_list:
             image_data.append(i['hdulist'][0].data)
 
 
@@ -1421,7 +1421,7 @@ class ImageProcessor(object):
 
 
     def debayer(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         # sanity check
         if not len(self.image.shape) == 2:
@@ -1429,7 +1429,7 @@ class ImageProcessor(object):
             return
 
 
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
         image_bayerpat = i_ref['image_bayerpat']
 
 
@@ -1450,7 +1450,7 @@ class ImageProcessor(object):
 
 
     def export_raw_image(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         self._export_raw_image(i_ref['exp_date'], i_ref['exposure'], i_ref['camera_id'], i_ref['image_bitpix'], i_ref['image_bit_depth'])
 
@@ -1560,7 +1560,7 @@ class ImageProcessor(object):
 
 
     def convert_16bit_to_8bit(self):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         self._convert_16bit_to_8bit(i_ref['image_bitpix'], i_ref['image_bit_depth'])
 
@@ -1781,7 +1781,7 @@ class ImageProcessor(object):
 
 
     def image_text(self, blob_stars, image_lines):
-        i_ref = self.image_tuple[self.image_index]
+        i_ref = self.getLatestImage()
 
         self._image_text(i_ref['exposure'], i_ref['exp_date'], i_ref['exp_elapsed'], blob_stars, image_lines)
 
