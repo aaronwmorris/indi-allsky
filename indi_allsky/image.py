@@ -221,7 +221,7 @@ class ImageWorker(Process):
 
             if self.config.get('IMAGE_SAVE_FITS'):
                 i_ref = self.image_processor.getLatestImage()
-                self.image_processor.write_fit(i_ref)
+                self.write_fit(i_ref)
 
                 ### Do not write image files if fits are enabled
                 continue
