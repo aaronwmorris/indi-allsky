@@ -214,9 +214,6 @@ class ImageWorker(Process):
                 continue
 
 
-            filename_p.unlink()  # no longer need the original file
-
-
             processing_start = time.time()
 
 
@@ -1158,6 +1155,8 @@ class ImageProcessor(object):
         hdulist[0].header['OBJECT'] = 'AllSky'
         hdulist[0].header['TELESCOP'] = 'indi-allsky'
 
+
+        filename_p.unlink()  # no longer need the original file
 
 
         #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
