@@ -60,8 +60,6 @@ logger = logging.getLogger('indi_allsky')
 
 class ImageWorker(Process):
 
-    dark_temperature_range = 5.0  # dark must be within this range
-
     sqm_history_minutes = 30
     stars_history_minutes = 30
 
@@ -985,6 +983,8 @@ class ImageWorker(Process):
 
 
 class ImageProcessor(object):
+
+    dark_temperature_range = 5.0  # dark must be within this range
 
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
