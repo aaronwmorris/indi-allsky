@@ -117,8 +117,6 @@ class ImageWorker(Process):
 
         self.image_count = 0
 
-        self._orb = IndiAllskyOrbGenerator(self.config)
-
         self.sqm_value = 0
 
         self._detection_mask = self._load_detection_mask()
@@ -1042,6 +1040,7 @@ class ImageProcessor(object):
         self.image_list = list(range(image_count))
         self.image_index = -1
 
+        self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
