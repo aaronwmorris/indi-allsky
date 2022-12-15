@@ -793,9 +793,9 @@ class ImageWorker(Process):
 
             adu = m_avg
         else:
-            scidata_mono = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
+            data_mono = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
 
-            m_avg = cv2.mean(src=scidata_mono, mask=self._adu_mask)[0]
+            m_avg = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
 
             logger.info('Greyscale mean: %0.2f', m_avg)
 
@@ -1063,7 +1063,12 @@ class ImageProcessor(object):
 
 
 
-    def _nextIndex(self):
+    def _incrementIndex(self):
+        if not self.night_v.value:
+            # single image mode during the day
+            self.image_list = [None]  # flush
+
+
         i = self.image_index + 1
 
         try:
@@ -1079,6 +1084,8 @@ class ImageProcessor(object):
 
 
     def addImage(self, filename, exposure, exp_date, exp_elapsed, camera_id):
+        self.image = None  # clear current data
+
         filename_p = Path(filename)
 
         indi_rgb = True  # INDI returns array in the wrong order for cv2
@@ -1091,18 +1098,18 @@ class ImageProcessor(object):
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
-            scidata = hdulist[0].data
+            data = hdulist[0].data
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             indi_rgb = False
 
-            scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             image_bitpix = 8
             image_bayerpat = None
         elif filename_p.suffix in ['.png']:
             indi_rgb = False
 
-            scidata = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             image_bitpix = 8
             image_bayerpat = None
@@ -1113,10 +1120,10 @@ class ImageProcessor(object):
 
             # DNG raw
             raw = rawpy.imread(str(filename_p))
-            scidata = raw.raw_image
+            data = raw.raw_image
 
             # create a new fits container for DNG data
-            hdu = fits.PrimaryHDU(scidata)
+            hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
             hdulist[0].header['EXTEND'] = True
@@ -1193,8 +1200,7 @@ class ImageProcessor(object):
             'stars'            : list(),  # populated later
         }
 
-        self.image = None  # clear data
-        self._nextIndex()
+        self._incrementIndex()
         self.image_list[self.image_index] = image_data
 
 
@@ -1392,8 +1398,9 @@ class ImageProcessor(object):
 
 
     def stack(self):
-        i_ref = self.getLatestImage()
+        # during the day time, there should only be a single item in list (see _incrementIndex())
 
+        i_ref = self.getLatestImage()
 
         if len(self.image_list) == 1:
             # no reason to stack a single image
