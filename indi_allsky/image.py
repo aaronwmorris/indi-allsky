@@ -213,7 +213,7 @@ class ImageWorker(Process):
             processing_start = time.time()
 
 
-            self.image_processor.addImage(filename_p, exposure, exp_date, exp_elapsed, camera_id)
+            self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera_id)
             self.image_processor.calibrate()
 
 
@@ -1083,7 +1083,7 @@ class ImageProcessor(object):
         return self.image_index
 
 
-    def addImage(self, filename, exposure, exp_date, exp_elapsed, camera_id):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera_id):
         self.image = None  # clear current data
 
         filename_p = Path(filename)
