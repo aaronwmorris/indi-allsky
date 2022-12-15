@@ -1026,13 +1026,13 @@ class ImageProcessor(object):
 
         self._detection_mask = mask
 
-        image_count = self.config.get('IMAGE_STACK', 1)
+        self.stack_count = self.config.get('IMAGE_STACK', 3)
 
         # contains the current stacked image
         self._image = None
 
         # contains the raw image data
-        self.image_list = list(range(image_count))
+        self.image_list = [None for x in range(self.stack_count)]
         self.image_index = -1
 
         self._orb = IndiAllskyOrbGenerator(self.config)
@@ -1066,7 +1066,7 @@ class ImageProcessor(object):
     def _incrementIndex(self):
         if not self.night_v.value:
             # single image mode during the day
-            self.image_list = [None]  # flush
+            self.image_list = [None for x in range(self.stack_count)]  # flush
 
 
         i = self.image_index + 1
@@ -1398,11 +1398,22 @@ class ImageProcessor(object):
 
 
     def stack(self):
-        # during the day time, there should only be a single item in list (see _incrementIndex())
+        # during the day time, there should only be a single object in list (see _incrementIndex())
 
         i_ref = self.getLatestImage()
 
-        if len(self.image_list) == 1:
+        stack_data = list()
+        for i in self.image_list:
+            if isinstance(i, type(None)):
+                continue
+
+            stack_data.append(i['hdulist'][0].data)
+
+
+        stack_data_len = len(stack_data)
+        assert stack_data_len > 0  # canary
+
+        if stack_data_len == 1:
             # no reason to stack a single image
             self.image = i_ref['hdulist'][0].data
             return
@@ -1417,11 +1428,6 @@ class ImageProcessor(object):
             numpy_type = numpy.uint8
         else:
             raise Exception('Unknown bits per pixel')
-
-
-        stack_data = list()
-        for i in self.image_list:
-            stack_data.append(i['hdulist'][0].data)
 
 
         start = time.time()
