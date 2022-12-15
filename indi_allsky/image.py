@@ -388,11 +388,11 @@ class ImageWorker(Process):
                 self.mqtt_publish(latest_file, mqtt_data)
 
 
-                self.upload_image(latest_file, exp_date, image_entry=image_entry)
-                self.upload_metadata(i_ref, exposure, exp_date, adu, adu_average, camera_id)
+                self.upload_image(i_ref, latest_file, image_entry=image_entry)
+                self.upload_metadata(i_ref, adu, adu_average)
 
 
-    def upload_image(self, latest_file, exp_date, image_entry=None):
+    def upload_image(self, i_ref, latest_file, image_entry=None):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
@@ -410,8 +410,8 @@ class ImageWorker(Process):
         ]
 
         file_data_dict = {
-            'timestamp'    : exp_date,
-            'ts'           : exp_date,  # shortcut
+            'timestamp'    : i_ref['exp_date'],
+            'ts'           : i_ref['exp_date'],  # shortcut
             'ext'          : self.config['IMAGE_FILE_TYPE'],
         }
 
@@ -446,7 +446,7 @@ class ImageWorker(Process):
             self._miscDb.addUploadedFlag(image_entry)
 
 
-    def upload_metadata(self, i_ref, exposure, exp_date, adu, adu_average, camera_id):
+    def upload_metadata(self, i_ref, adu, adu_average):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
@@ -468,7 +468,7 @@ class ImageWorker(Process):
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
-            'exposure'            : exposure,
+            'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
@@ -476,9 +476,9 @@ class ImageWorker(Process):
             'adu_average'         : adu_average,
             'sqm'                 : i_ref['sqm_value'],
             'stars'               : len(i_ref['stars']),
-            'time'                : exp_date.strftime('%s'),
-            'sqm_data'            : self.getSqmData(camera_id),
-            'stars_data'          : self.getStarsData(camera_id),
+            'time'                : i_ref['exp_date'].strftime('%s'),
+            'sqm_data'            : self.getSqmData(i_ref['camera_id']),
+            'stars_data'          : self.getStarsData(i_ref['camera_id']),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
         }
@@ -496,8 +496,8 @@ class ImageWorker(Process):
 
 
         file_data_dict = {
-            'timestamp'    : exp_date,
-            'ts'           : exp_date,  # shortcut
+            'timestamp'    : i_ref['exp_date'],
+            'ts'           : i_ref['exp_date'],  # shortcut
         }
 
         # Replace parameters in names
