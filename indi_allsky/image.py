@@ -226,7 +226,7 @@ class ImageWorker(Process):
 
 
 
-            #sqm_value = self.image_processor.calculateSqm()
+            self.image_processor.calculateSqm()
 
             self.image_processor.stack()
 
@@ -339,11 +339,10 @@ class ImageWorker(Process):
 
             #task.setSuccess('Image processed')
 
-
-            self.write_status_json(exposure, exp_date, adu, adu_average, blob_stars)  # write json status file
-
-
             i_ref = self.image_processor.getLatestImage()
+
+            self.write_status_json(i_ref, adu, adu_average, blob_stars)  # write json status file
+
             latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
 
             if new_filename:
@@ -363,7 +362,7 @@ class ImageWorker(Process):
                     night=bool(self.night_v.value),
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=i_ref['calibrated'],
-                    sqm=self.sqm_value,
+                    sqm=i_ref['sqm_value'],
                     stars=len(blob_stars),
                     detections=len(image_lines),
                 )
@@ -384,7 +383,7 @@ class ImageWorker(Process):
                     'moonphase': round(self.moon_phase, 1),
                     'moonmode' : bool(self.moonmode_v.value),
                     'night'    : bool(self.night_v.value),
-                    'sqm'      : round(self.sqm_value, 1),
+                    'sqm'      : round(i_ref['sqm_value'], 1),
                     'stars'    : len(blob_stars),
                     'latitude' : round(self.latitude_v.value, 3),
                     'longitude': round(self.longitude_v.value, 3),
@@ -394,7 +393,7 @@ class ImageWorker(Process):
 
 
                 self.upload_image(latest_file, exp_date, image_entry=image_entry)
-                self.upload_metadata(exposure, exp_date, adu, adu_average, blob_stars, camera_id)
+                self.upload_metadata(i_ref, exposure, exp_date, adu, adu_average, blob_stars, camera_id)
 
 
     def upload_image(self, latest_file, exp_date, image_entry=None):
@@ -451,7 +450,7 @@ class ImageWorker(Process):
             self._miscDb.addUploadedFlag(image_entry)
 
 
-    def upload_metadata(self, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
+    def upload_metadata(self, i_ref, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
@@ -479,7 +478,7 @@ class ImageWorker(Process):
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
-            'sqm'                 : self.sqm_value,
+            'sqm'                 : i_ref['sqm_value'],
             'stars'               : len(blob_stars),
             'time'                : exp_date.strftime('%s'),
             'sqm_data'            : self.getSqmData(camera_id),
@@ -728,7 +727,7 @@ class ImageWorker(Process):
         return latest_file, filename
 
 
-    def write_status_json(self, exposure, exp_date, adu, adu_average, blob_stars):
+    def write_status_json(self, i_ref, adu, adu_average, blob_stars):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -736,15 +735,15 @@ class ImageWorker(Process):
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
-            'exposure'            : exposure,
+            'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : self.target_adu,
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
-            'sqm'                 : self.sqm_value,
+            'sqm'                 : i_ref['sqm_value'],
             'stars'               : len(blob_stars),
-            'time'                : exp_date.strftime('%s'),
+            'time'                : i_ref['exp_date'].strftime('%s'),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
         }
@@ -1193,6 +1192,7 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'image_bit_depth'  : image_bit_depth,
             'indi_rgb'         : indi_rgb,
+            'sqm_value'        : None,
         }
 
         self.image = None  # clear data
@@ -1390,8 +1390,7 @@ class ImageProcessor(object):
     def calculateSqm(self):
         i_ref = self.getLatestImage()
 
-        sqm_value = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
-        return sqm_value
+        i_ref['sqm_value'] = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
 
 
     def stack(self):
@@ -1784,10 +1783,10 @@ class ImageProcessor(object):
     def image_text(self, blob_stars, image_lines):
         i_ref = self.getLatestImage()
 
-        self._image_text(i_ref['exposure'], i_ref['exp_date'], i_ref['exp_elapsed'], blob_stars, image_lines)
+        self._image_text(i_ref, blob_stars, image_lines)
 
 
-    def _image_text(self, exposure, exp_date, exp_elapsed, blob_stars, image_lines):
+    def _image_text(self, i_ref, blob_stars, image_lines):
         # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
@@ -1812,7 +1811,7 @@ class ImageProcessor(object):
             # indicate focus mode is enabled in indi-allsky
             self.drawText(
                 self.image,
-                exp_date.strftime('%H:%M:%S'),
+                i_ref['exp_date'].strftime('%H:%M:%S'),
                 (image_width - 125, image_height - 10),
                 tuple(color_bgr),
             )
@@ -1877,13 +1876,13 @@ class ImageProcessor(object):
 
 
         label_data = {
-            'timestamp'    : exp_date,
-            'ts'           : exp_date,  # shortcut
-            'exposure'     : exposure,
+            'timestamp'    : i_ref['exp_date'],
+            'ts'           : i_ref['exp_date'],  # shortcut
+            'exposure'     : i_ref['exposure'],
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
-            'sqm'          : self.sqm_value,
+            'sqm'          : i_ref['sqm_value'],
             'stars'        : len(blob_stars),
             'detections'   : str(bool(len(image_lines))),
             'sun_alt'      : self.sun_alt,
