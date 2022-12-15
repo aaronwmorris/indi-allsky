@@ -1393,6 +1393,14 @@ class ImageProcessor(object):
 
     def stack(self):
         i_ref = self.getLatestImage()
+
+
+        if len(self.image_list) == 1:
+            # no reason to stack a single image
+            self.image = i_ref['hdulist'][0].data
+            return
+
+
         image_bitpix = i_ref['image_bitpix']
 
 
@@ -1404,18 +1412,18 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        image_data = list()
+        stack_data = list()
         for i in self.image_list:
-            image_data.append(i['hdulist'][0].data)
+            stack_data.append(i['hdulist'][0].data)
 
 
         start = time.time()
 
-        avg_image = numpy.average(image_data, axis=0)
-        self.image = numpy.floor(avg_image).astype(numpy_type)
+        avg_image = numpy.average(stack_data, axis=0)  # average stack
+        self.image = numpy.floor(avg_image).astype(numpy_type)  # no floats
 
         elapsed_s = time.time() - start
-        logger.info('Images average stacked in %0.4f s', elapsed_s)
+        logger.info('Stacked %d images (average) in %0.4f s', len(stack_data), elapsed_s)
 
 
     def debayer(self):
