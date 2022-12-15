@@ -328,6 +328,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_SAVE_FITS     | false       | (bool) Save raw FITS image data |
 | IMAGE_EXPORT_RAW    | ""          | (string) Export raw images this file format |
 | IMAGE_EXPORT_FOLDER |             | (string) Folder to export raw tiff files |
+| IMAGE_STACK_METHOD  | average     | (string) Method to use for image stacking |
+| IMAGE_STACK_COUNT   | 1           | (int) Number of images to stack (1 = disabled) |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | TIMELAPSE_EXPIRE_DAYS    | 365    | (days) Number of days to keep timelapse, keogram, and star trails before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
