@@ -1026,7 +1026,8 @@ class ImageProcessor(object):
 
         self._detection_mask = mask
 
-        self.stack_count = self.config.get('IMAGE_STACK', 1)
+        self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
+        self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
         # contains the current stacked image
         self._image = None
@@ -1432,11 +1433,20 @@ class ImageProcessor(object):
 
         start = time.time()
 
-        avg_image = numpy.average(stack_data, axis=0)  # average stack
-        self.image = numpy.floor(avg_image).astype(numpy_type)  # no floats
+
+        stacker = ImageStacker()
+
+        try:
+            stacker_method = getattr(stacker, self.stack_method)
+            self.image = stacker_method(stack_data, numpy_type)
+        except AttributeError:
+            logger.error('Unknown stacking method: %s', self.stack_method)
+            self.image = i_ref['hdulist'][0].data
+            return
+
 
         elapsed_s = time.time() - start
-        logger.info('Stacked %d images (average) in %0.4f s', len(stack_data), elapsed_s)
+        logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data), self.stack_method, elapsed_s)
 
 
     def debayer(self):
@@ -2048,4 +2058,20 @@ class ImageProcessor(object):
 
         return extra_lines
 
+
+class ImageStacker(object):
+
+    def average(self, stack_data, numpy_type):
+        avg_image = numpy.average(stack_data, axis=0)
+        return numpy.floor(avg_image).astype(numpy_type)  # no floats
+
+
+    def maximum(self, stack_data, numpy_type):
+        image_max = stack_data[0]
+
+        # compare with remaining images
+        for i in stack_data[1:]:
+            image_max = numpy.maximum(image_max, i)
+
+        return image_max
 
