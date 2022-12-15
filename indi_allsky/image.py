@@ -1026,7 +1026,7 @@ class ImageProcessor(object):
 
         self._detection_mask = mask
 
-        self.stack_count = self.config.get('IMAGE_STACK', 3)
+        self.stack_count = self.config.get('IMAGE_STACK', 1)
 
         # contains the current stacked image
         self._image = None
