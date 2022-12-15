@@ -277,16 +277,12 @@ class ImageWorker(Process):
 
             # line detection
             if self.night_v.value and self.config.get('DETECT_METEORS'):
-                image_lines = self.image_processor.detectLines()
-            else:
-                image_lines = list()
+                self.image_processor.detectLines()
 
 
             # star detection
             if self.night_v.value and self.config.get('DETECT_STARS', True):
-                blob_stars = self.image_processor.detectStars()
-            else:
-                blob_stars = list()
+                self.image_processor.detectStars()
 
 
             # additional draw code
@@ -330,7 +326,7 @@ class ImageWorker(Process):
             # denoise
             #self.image_processor.fastDenoise()
 
-            self.image_processor.image_text(blob_stars, image_lines)
+            self.image_processor.image_text()
 
 
             processing_elapsed_s = time.time() - processing_start
@@ -341,7 +337,7 @@ class ImageWorker(Process):
 
             i_ref = self.image_processor.getLatestImage()
 
-            self.write_status_json(i_ref, adu, adu_average, blob_stars)  # write json status file
+            self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
             latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
 
@@ -363,8 +359,8 @@ class ImageWorker(Process):
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=i_ref['calibrated'],
                     sqm=i_ref['sqm_value'],
-                    stars=len(blob_stars),
-                    detections=len(image_lines),
+                    stars=len(i_ref['stars']),
+                    detections=len(i_ref['lines']),
                 )
             else:
                 # images not being saved
@@ -384,7 +380,7 @@ class ImageWorker(Process):
                     'moonmode' : bool(self.moonmode_v.value),
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(i_ref['sqm_value'], 1),
-                    'stars'    : len(blob_stars),
+                    'stars'    : len(i_ref['stars']),
                     'latitude' : round(self.latitude_v.value, 3),
                     'longitude': round(self.longitude_v.value, 3),
                 }
@@ -393,7 +389,7 @@ class ImageWorker(Process):
 
 
                 self.upload_image(latest_file, exp_date, image_entry=image_entry)
-                self.upload_metadata(i_ref, exposure, exp_date, adu, adu_average, blob_stars, camera_id)
+                self.upload_metadata(i_ref, exposure, exp_date, adu, adu_average, camera_id)
 
 
     def upload_image(self, latest_file, exp_date, image_entry=None):
@@ -450,7 +446,7 @@ class ImageWorker(Process):
             self._miscDb.addUploadedFlag(image_entry)
 
 
-    def upload_metadata(self, i_ref, exposure, exp_date, adu, adu_average, blob_stars, camera_id):
+    def upload_metadata(self, i_ref, exposure, exp_date, adu, adu_average, camera_id):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
@@ -479,7 +475,7 @@ class ImageWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref['sqm_value'],
-            'stars'               : len(blob_stars),
+            'stars'               : len(i_ref['stars']),
             'time'                : exp_date.strftime('%s'),
             'sqm_data'            : self.getSqmData(camera_id),
             'stars_data'          : self.getStarsData(camera_id),
@@ -727,7 +723,7 @@ class ImageWorker(Process):
         return latest_file, filename
 
 
-    def write_status_json(self, i_ref, adu, adu_average, blob_stars):
+    def write_status_json(self, i_ref, adu, adu_average):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
@@ -742,7 +738,7 @@ class ImageWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref['sqm_value'],
-            'stars'               : len(blob_stars),
+            'stars'               : len(i_ref['stars']),
             'time'                : i_ref['exp_date'].strftime('%s'),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
@@ -1192,7 +1188,9 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'image_bit_depth'  : image_bit_depth,
             'indi_rgb'         : indi_rgb,
-            'sqm_value'        : None,
+            'sqm_value'        : None,    # populated later
+            'lines'            : list(),  # populated later
+            'stars'            : list(),  # populated later
         }
 
         self.image = None  # clear data
@@ -1585,11 +1583,13 @@ class ImageProcessor(object):
 
 
     def detectLines(self):
-        return self._lineDetect.detectLines(self.image)
+        i_ref = self.getLatestImage()
+        i_ref['lines'] = self._lineDetect.detectLines(self.image)
 
 
     def detectStars(self):
-        return self._stars.detectObjects(self.image)
+        i_ref = self.getLatestImage()
+        i_ref['stars'] = self._stars.detectObjects(self.image)
 
 
     def drawDetections(self):
@@ -1780,13 +1780,13 @@ class ImageProcessor(object):
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def image_text(self, blob_stars, image_lines):
+    def image_text(self):
         i_ref = self.getLatestImage()
 
-        self._image_text(i_ref, blob_stars, image_lines)
+        self._image_text(i_ref)
 
 
-    def _image_text(self, i_ref, blob_stars, image_lines):
+    def _image_text(self, i_ref):
         # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
@@ -1883,8 +1883,8 @@ class ImageProcessor(object):
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref['sqm_value'],
-            'stars'        : len(blob_stars),
-            'detections'   : str(bool(len(image_lines))),
+            'stars'        : len(i_ref['stars']),
+            'detections'   : str(bool(len(i_ref['lines']))),
             'sun_alt'      : self.sun_alt,
             'moon_alt'     : self.moon_alt,
             'moon_phase'   : self.moon_phase,
