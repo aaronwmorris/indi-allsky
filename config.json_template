@@ -106,7 +106,7 @@
     "comment_IMAGE_DIR" : "local base folder for images, empty for current dir",
     "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
     "IMAGE_LABEL"      : true,
-    "IMAGE_LABEL_TEMPLATE" : "{timestamp:%Y.%m.%d %H:%M:%S}\nLat {latitude:0.1f} Long {longitude:0.1f}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}\nStacking {stack_method:s}\nStack Count {stack_count:d}",
+    "IMAGE_LABEL_TEMPLATE" : "{timestamp:%Y.%m.%d %H:%M:%S}\nLat {latitude:0.1f} Long {longitude:0.1f}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}\nStacking {stack_method:s}",
     "comment_IMAGE_EXTRA_TEXT" : "File containing extra text to add to image",
     "IMAGE_EXTRA_TEXT" : "",
     "IMAGE_CROP_ROI"   : [],
