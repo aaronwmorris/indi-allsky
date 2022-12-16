@@ -670,8 +670,9 @@ def IMAGE_CROP_ROI_validator(form, field):
 
 def IMAGE_STACK_METHOD_validator(form, field):
     stack_methods = (
-        'average',
         'maximum',
+        'average',
+        'minimum',
     )
 
     if field.data not in stack_methods:
@@ -1215,8 +1216,9 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     IMAGE_STACK_METHOD_choices = (
-        ('average', 'Average'),
         ('maximum', 'Maximum'),
+        ('average', 'Average'),
+        ('minimum', 'Minimum'),
     )
 
     IMAGE_STACK_COUNT_choices = (

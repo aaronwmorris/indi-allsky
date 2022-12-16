@@ -124,7 +124,8 @@
     "IMAGE_EXPORT_RAW"    : "",
     "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
 
-    "IMAGE_STACK_METHOD"  : "average",
+    "comment_IMAGE_STACK_METHOD"  : "maximum, average, or minimum",
+    "IMAGE_STACK_METHOD"  : "maximum",
     "IMAGE_STACK_COUNT"   : 1,
 
     "IMAGE_EXPIRE_DAYS"     : 30,
