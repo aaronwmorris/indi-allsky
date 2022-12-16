@@ -611,7 +611,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureDevice(self, device, indi_config, sleep=1.0):
-        if type(device) is FakeIndiCcd:
+        if isinstance(device, FakeIndiCcd):
             # ignore configuration
             return
 
