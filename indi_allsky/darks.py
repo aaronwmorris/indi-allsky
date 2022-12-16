@@ -884,7 +884,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        avg_image = numpy.average(image_data, axis=0)
+        avg_image = numpy.mean(image_data, axis=0)
         data = numpy.floor(avg_image).astype(numpy_type)  # no floats
 
         elapsed_s = time.time() - start

@@ -2076,9 +2076,14 @@ class ImageProcessor(object):
 
 class ImageStacker(object):
 
-    def average(self, stack_data, numpy_type):
-        avg_image = numpy.average(stack_data, axis=0)
-        return numpy.floor(avg_image).astype(numpy_type)  # no floats
+    def average(self, *args, **kwargs):
+        # alias for mean
+        self.mean(*args, **kwargs)
+
+
+    def mean(self, stack_data, numpy_type):
+        mean_image = numpy.mean(stack_data, axis=0)
+        return numpy.floor(mean_image).astype(numpy_type)  # no floats
 
 
     def maximum(self, stack_data, numpy_type):
