@@ -1923,9 +1923,21 @@ class ImageProcessor(object):
             'sun_moon_sep' : sun_moon_sep,
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
-            'stack_method' : self.config.get('IMAGE_STACK_METHOD', 'average').capitalize(),
-            'stack_count'  : self.config.get('IMAGE_STACK_COUNT', 1),
         }
+
+
+        # stacking data
+        if self.night_v.value:
+            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
+                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
+                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
+            else:
+                label_data['stack_method'] = 'Off'
+                label_data['stack_count'] = 0
+        else:
+            # stacking disabled during the day
+            label_data['stack_method'] = 'Off'
+            label_data['stack_count'] = 0
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
