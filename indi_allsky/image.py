@@ -2109,8 +2109,8 @@ class ImageStacker(object):
         cv2.rectangle(
             img=right_mask,
             pt1=(0, 0),
-            pt2=(half_width, image_height),
-            #pt2=(half_width - 1, image_height),  # ensure a black line is down the center
+            #pt2=(half_width, image_height),
+            pt2=(half_width - 1, image_height),  # ensure a black line is down the center
             color=255,
             thickness=cv2.FILLED,
         )
