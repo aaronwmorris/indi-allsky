@@ -395,6 +395,10 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'moon_alt'   : 0.0,
         'moon_phase' : 0.0,
         'sun_moon_sep' : 0.0,
+        'latitude'   : 0.0,
+        'longitude'  : 0.0,
+        'stack_method' : 'foo',
+        'stack_count'  : 1,
     }
 
     try:

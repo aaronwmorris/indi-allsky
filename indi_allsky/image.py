@@ -1923,6 +1923,8 @@ class ImageProcessor(object):
             'sun_moon_sep' : sun_moon_sep,
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'stack_method' : self.config.get('IMAGE_STACK_METHOD', 'average').capitalize(),
+            'stack_count'  : self.config.get('IMAGE_STACK_COUNT', 1),
         }
 
 
