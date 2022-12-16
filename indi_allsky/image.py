@@ -1552,6 +1552,10 @@ class ImageProcessor(object):
             return
 
 
+        if self.config.get('IMAGE_STACK_SPLIT'):
+            self.image = stacker.splitscreen(i_ref['hdulist'][0].data, self.image)
+
+
         elapsed_s = time.time() - start
         logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data), self.stack_method, elapsed_s)
 
@@ -2080,4 +2084,37 @@ class ImageStacker(object):
             image_min = numpy.minimum(image_min, i)
 
         return image_min
+
+
+    def splitscreen(self, original, stacked):
+        image_height, image_width = original.shape[:2]
+
+
+        half_width = int(image_width / 2)
+
+        # left side
+        left_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=left_mask,
+            pt1=(0, 0),
+            pt2=(half_width, image_height),
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_left = cv2.bitwise_and(original, original, mask=left_mask)
+
+        # right side
+        right_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=right_mask,
+            pt1=(half_width + 1, 0),
+            pt2=(image_width, image_height),
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_right = cv2.bitwise_and(stacked, stacked, mask=left_mask)
+
+        return numpy.maximum(masked_left, masked_right)
 
