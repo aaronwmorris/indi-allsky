@@ -2063,7 +2063,7 @@ class ImageProcessor(object):
 class ImageStacker(object):
 
     def average(self, stack_data, numpy_type):
-        avg_image = numpy.mean(stack_data, axis=0)
+        avg_image = sum(stack_data) / len(stack_data)
         return numpy.floor(avg_image).astype(numpy_type)  # no floats
 
 
