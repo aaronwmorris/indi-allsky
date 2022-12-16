@@ -45,6 +45,8 @@ class IndiAllskyDetectLines(object):
         # apply the gradient to the image
         masked_img = (original_img * self._sqm_gradient_mask).astype(numpy.uint8)
 
+        #cv2.imwrite('/tmp/masked.jpg', masked_img, [cv2.IMWRITE_JPEG_QUALITY, 90])  # debugging
+
 
         if len(original_img.shape) == 2:
             img_gray = masked_img
@@ -125,15 +127,15 @@ class IndiAllskyDetectLines(object):
     def _generateSqmGradientMask(self, img):
         image_height, image_width = img.shape[:2]
 
-        if self.config.get('IMAGE_STACK_SPLIT'):
-            # draw line down middle of mask for the split between panes
+        if self.config.get('IMAGE_STACK_COUNT', 1) > 1 and self.config.get('IMAGE_STACK_SPLIT'):
+            # mask center line split between panes
             half_width = int(image_width / 2)
             cv2.line(
                 img=self._sqm_mask,
                 pt1=(half_width, 0),
                 pt2=(half_width, image_height),
-                color=(255),  # mono
-                thickness=5,
+                color=(0),  # mono
+                thickness=71,
             )
 
         # blur the mask to prevent mask edges from being detected as lines
