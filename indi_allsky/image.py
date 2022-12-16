@@ -2096,8 +2096,8 @@ class ImageStacker(object):
         left_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
         cv2.rectangle(
             img=left_mask,
-            pt1=(0, 0),
-            pt2=(half_width, image_height),
+            pt1=(half_width + 1, 0),
+            pt2=(image_width, image_height),
             color=255,
             thickness=cv2.FILLED,
         )
@@ -2108,8 +2108,8 @@ class ImageStacker(object):
         right_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
         cv2.rectangle(
             img=right_mask,
-            pt1=(half_width + 1, 0),
-            pt2=(image_width, image_height),
+            pt1=(0, 0),
+            pt2=(half_width, image_height),
             color=255,
             thickness=cv2.FILLED,
         )
