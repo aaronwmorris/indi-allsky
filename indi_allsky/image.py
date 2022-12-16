@@ -2114,7 +2114,7 @@ class ImageStacker(object):
             thickness=cv2.FILLED,
         )
 
-        masked_right = cv2.bitwise_and(stacked, stacked, mask=left_mask)
+        masked_right = cv2.bitwise_and(stacked, stacked, mask=right_mask)
 
         return numpy.maximum(masked_left, masked_right)
 
