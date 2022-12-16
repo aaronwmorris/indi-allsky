@@ -2064,11 +2064,20 @@ class ImageStacker(object):
 
 
     def maximum(self, stack_data, numpy_type):
-        image_max = stack_data[0]
+        image_max = stack_data[0]  # start with first image
 
         # compare with remaining images
         for i in stack_data[1:]:
             image_max = numpy.maximum(image_max, i)
 
         return image_max
+
+    def minimum(self, stack_data, numpy_type):
+        image_min = stack_data[0]  # start with first image
+
+        # compare with remaining images
+        for i in stack_data[1:]:
+            image_min = numpy.minimum(image_min, i)
+
+        return image_min
 
