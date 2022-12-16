@@ -127,6 +127,7 @@
     "comment_IMAGE_STACK_METHOD"  : "maximum, average, or minimum",
     "IMAGE_STACK_METHOD"  : "maximum",
     "IMAGE_STACK_COUNT"   : 1,
+    "IMAGE_STACK_SPLIT"   : false,
 
     "IMAGE_EXPIRE_DAYS"     : 30,
     "TIMELAPSE_EXPIRE_DAYS" : 365,
