@@ -2078,7 +2078,7 @@ class ImageStacker(object):
 
     def average(self, *args, **kwargs):
         # alias for mean
-        self.mean(*args, **kwargs)
+        return self.mean(*args, **kwargs)
 
 
     def mean(self, stack_data, numpy_type):
