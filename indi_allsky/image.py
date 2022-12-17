@@ -104,9 +104,13 @@ class ImageWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        self.sun_alt = 0.0
-        self.moon_alt = 0.0
-        self.moon_phase = 0.0
+        # shared between objects
+        self.astrometric_data = {
+            'sun_alt'       : 0.0,
+            'moon_alt'      : 0.0,
+            'moon_phase'    : 0.0,
+            'sun_moon_sep'  : 90.0,
+        }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -123,7 +127,7 @@ class ImageWorker(Process):
         self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
 
-        self.image_processor = ImageProcessor(self.config, latitude_v, longitude_v, ra_v, dec_v, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, mask=self._detection_mask)
+        self.image_processor = ImageProcessor(self.config, latitude_v, longitude_v, ra_v, dec_v, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, self.astrometric_data, mask=self._detection_mask)
 
 
         self._miscDb = miscDb(self.config)
@@ -354,7 +358,7 @@ class ImageWorker(Process):
                     adu,
                     self.target_adu_found,  # stable
                     bool(self.moonmode_v.value),
-                    self.moon_phase,
+                    self.astrometric_data['moon_phase'],
                     night=bool(self.night_v.value),
                     adu_roi=self.config['ADU_ROI'],
                     calibrated=i_ref['calibrated'],
@@ -374,9 +378,9 @@ class ImageWorker(Process):
                     'gain'     : self.gain_v.value,
                     'bin'      : self.bin_v.value,
                     'temp'     : round(self.sensortemp_v.value, 1),
-                    'sunalt'   : round(self.sun_alt, 1),
-                    'moonalt'  : round(self.moon_alt, 1),
-                    'moonphase': round(self.moon_phase, 1),
+                    'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
+                    'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
+                    'moonphase': round(self.astrometric_data['moon_phase'], 1),
                     'moonmode' : bool(self.moonmode_v.value),
                     'night'    : bool(self.night_v.value),
                     'sqm'      : round(i_ref['sqm_value'], 1),
@@ -1114,6 +1118,7 @@ class ImageProcessor(object):
         sensortemp_v,
         night_v,
         moonmode_v,
+        astrometric_data,
         mask=None,
     ):
         self.config = config
@@ -1130,6 +1135,8 @@ class ImageProcessor(object):
         self.sensortemp_v = sensortemp_v
         self.night_v = night_v
         self.moonmode_v = moonmode_v
+
+        self.astrometric_data = astrometric_data
 
         self._detection_mask = mask
 
@@ -1862,19 +1869,19 @@ class ImageProcessor(object):
         sun = ephem.Sun()
         obs.date = utcnow
         sun.compute(obs)
-        self.sun_alt = math.degrees(sun.alt)
+        self.astrometric_data['sun_alt'] = math.degrees(sun.alt)
 
 
 
         moon = ephem.Moon()
         #obs.date = utcnow
         moon.compute(obs)
-        self.moon_alt = math.degrees(moon.alt)
-        self.moon_phase = moon.moon_phase * 100.0
+        self.astrometric_data['moon_alt'] = math.degrees(moon.alt)
+        self.astrometric_data['moon_phase'] = moon.moon_phase * 100.0
 
 
         # separation of 1-3 degrees means a possible eclipse
-        sun_moon_sep = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
+        self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
         ### ORBS
@@ -1917,10 +1924,10 @@ class ImageProcessor(object):
             'sqm'          : i_ref['sqm_value'],
             'stars'        : len(i_ref['stars']),
             'detections'   : str(bool(len(i_ref['lines']))),
-            'sun_alt'      : self.sun_alt,
-            'moon_alt'     : self.moon_alt,
-            'moon_phase'   : self.moon_phase,
-            'sun_moon_sep' : sun_moon_sep,
+            'sun_alt'      : self.astrometric_data['sun_alt'],
+            'moon_alt'     : self.astrometric_data['moon_alt'],
+            'moon_phase'   : self.astrometric_data['moon_phase'],
+            'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
         }
@@ -1968,7 +1975,7 @@ class ImageProcessor(object):
 
 
         # Add eclipse indicator
-        if sun_moon_sep < 1.25 and self.night_v.value:
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
             # Lunar eclipse (earth's penumbra is large)
             self.drawText(
                 self.image,
@@ -1979,7 +1986,7 @@ class ImageProcessor(object):
 
             line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
 
-        elif sun_moon_sep > 179.0 and not self.night_v.value:
+        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
             # Solar eclipse
             self.drawText(
                 self.image,
