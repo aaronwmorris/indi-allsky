@@ -395,6 +395,10 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'moon_alt'   : 0.0,
         'moon_phase' : 0.0,
         'sun_moon_sep' : 0.0,
+        'latitude'   : 0.0,
+        'longitude'  : 0.0,
+        'stack_method' : 'foo',
+        'stack_count'  : 1,
     }
 
     try:
@@ -666,6 +670,29 @@ def IMAGE_CROP_ROI_validator(form, field):
 
     if field.data < 0:
         raise ValidationError('Crop Region of Interest must be 0 or greater')
+
+
+def IMAGE_STACK_METHOD_validator(form, field):
+    stack_methods = (
+        'maximum',
+        'average',
+        'minimum',
+    )
+
+    if field.data not in stack_methods:
+        raise ValidationError('Invalid selection')
+
+
+def IMAGE_STACK_COUNT_validator(form, field):
+    try:
+        stack_count = int(field.data)
+    except ValueError:
+        raise ValidationError('Invalid data')
+
+    if stack_count < 1:
+        raise ValidationError('Stack count too low')
+
+    # not validating max
 
 
 def IMAGE_EXPIRE_DAYS_validator(form, field):
@@ -1192,6 +1219,20 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    IMAGE_STACK_METHOD_choices = (
+        ('maximum', 'Maximum'),
+        ('average', 'Average'),
+        ('minimum', 'Minimum'),
+    )
+
+    IMAGE_STACK_COUNT_choices = (
+        ('1', 'Disabled'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+    )
+
     IMAGE_ROTATE_choices = (
         ('', 'Disabled'),
         ('ROTATE_90_CLOCKWISE', '90° Clockwise'),
@@ -1339,6 +1380,9 @@ class IndiAllskyConfigForm(FlaskForm):
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
     IMAGE_EXPORT_RAW                 = SelectField('Export raw image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
+    IMAGE_STACK_METHOD               = SelectField('Image stacking method', choices=IMAGE_STACK_METHOD_choices, validators=[DataRequired(), IMAGE_STACK_METHOD_validator])
+    IMAGE_STACK_COUNT                = SelectField('Stack count', choices=IMAGE_STACK_COUNT_choices, validators=[DataRequired(), IMAGE_STACK_COUNT_validator])
+    IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])

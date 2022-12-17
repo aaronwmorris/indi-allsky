@@ -648,7 +648,7 @@ class IndiAllSkyDarks(object):
 
         logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
         logger.warning('Found %d dark frames to flush', dark_frames_all.count())
-        logger.warning('Flushing in 10 seconds...', dark_frames_all.count())
+        logger.warning('Flushing in 10 seconds...')
 
         time.sleep(10.0)
 
@@ -884,8 +884,8 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        avg_image = numpy.average(image_data, axis=0)
-        data = numpy.floor(avg_image).astype(numpy_type)
+        avg_image = numpy.mean(image_data, axis=0)
+        data = numpy.floor(avg_image).astype(numpy_type)  # no floats
 
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)

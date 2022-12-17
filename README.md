@@ -20,6 +20,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * More to come
 * Dark frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
+* Multi-image stacking
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * GPS support
@@ -162,6 +163,20 @@ Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able 
 
 ## Focus Mode
 Focus mode is a special setting that generates images more often and implements a Variance of Laplacian scoring algorithm on the image to assist with focusing the camera.  Images are not saved when focus mode is enabled.
+
+## Stacking
+indi-allsky supports image stacking to increase details and contrast in the image.
+
+The following stacking modes are provided:
+* Maximum - The maximum value of each pixel in the stack is used.  Increases contrast of stars and sky overall.  Extends the effect of satellite/airplane trails, meteors, and other phenomena.
+* Average - The average value of each pixel is used in the resulting image.
+* Minimum - The minimum value of each pixel is used.  This has the effect of removing airplane and satellite trails (and meteors).
+
+The `Stack split screen` option will split the image into two panes.  The left pane will show the original image data and the right pane will contain the stacked data.
+
+Regarding performance, stacking does have an impact to memory and CPU utilization.  indi-allsky stores the RAW images used for the stack in memory.  A single 1920x1080 (1K) image is approximately 8MB.  Four 1K images will require 32MB of memory.  A single 4056x3040 (4K) RAW image is ~25MB, four would require 100MB of memory (at all times).
+
+CPU utilization and memory is reasonable for stacking 1K images on Raspberry Pi 3 (1GB) hardware, but 4K stacking starts to significantly impact response times.  Strongly recommend Raspberry Pi 4 with 2+GB of memory for 4K images.
 
 ## Web Interface
 
@@ -328,6 +343,8 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_SAVE_FITS     | false       | (bool) Save raw FITS image data |
 | IMAGE_EXPORT_RAW    | ""          | (string) Export raw images this file format |
 | IMAGE_EXPORT_FOLDER |             | (string) Folder to export raw tiff files |
+| IMAGE_STACK_METHOD  | average     | (string) Method to use for image stacking |
+| IMAGE_STACK_COUNT   | 1           | (int) Number of images to stack (1 = disabled) |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | TIMELAPSE_EXPIRE_DAYS    | 365    | (days) Number of days to keep timelapse, keogram, and star trails before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |
