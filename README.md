@@ -20,6 +20,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * More to come
 * Dark frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
+* Multi-image stacking
 * Timelapse video generation
 * Network file transfers - Upload images and videos to remote site
 * GPS support
@@ -162,6 +163,16 @@ Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able 
 
 ## Focus Mode
 Focus mode is a special setting that generates images more often and implements a Variance of Laplacian scoring algorithm on the image to assist with focusing the camera.  Images are not saved when focus mode is enabled.
+
+## Stacking
+indi-allsky supports image stacking to increase details and contrast in the image.
+
+The following stacking modes are provided:
+* Maximum - The maximum value of each pixel in the stack is used.  Increases contrast of stars and sky overall.  Extends the effect of satellite/airplane trails, meteors, and other phenomena.
+* Average - The average value of each pixel is used in the resulting image.
+* Minimum - The minimum value of each pixel is used.  This has the effect of removing airplane and satellite trails (and meteors).
+
+The `Stack split screen` option will split the image into two panes.  The left pane will show the original image data and the right pane will contain the stacked data.
 
 ## Web Interface
 
