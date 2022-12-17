@@ -1116,6 +1116,16 @@ def MQTTPUBLISH__QOS_validator(form, field):
         raise ValidationError('Invalid QoS')
 
 
+def FITSHEADER_KEY_validator(form, field):
+    header_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(header_regex, field.data):
+        raise ValidationError('Invalid characters in header')
+
+    if len(field.data) > 8:
+        raise ValidationError('Header must be 8 characters or less')
+
+
 def LIBCAMERA__IMAGE_FILE_TYPE_validator(form, field):
     if field.data not in ('dng', 'jpg', 'png'):
         raise ValidationError('Please select a valid file type')
@@ -1437,6 +1447,16 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
+    FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
+    FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
+    FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
+    FITSHEADERS__1__VAL              = StringField('FITS Header 2 Value', validators=[])
+    FITSHEADERS__2__KEY              = StringField('FITS Header 3', validators=[DataRequired(), FITSHEADER_KEY_validator])
+    FITSHEADERS__2__VAL              = StringField('FITS Header 3 Value', validators=[])
+    FITSHEADERS__3__KEY              = StringField('FITS Header 4', validators=[DataRequired(), FITSHEADER_KEY_validator])
+    FITSHEADERS__3__VAL              = StringField('FITS Header 4 Value', validators=[])
+    FITSHEADERS__4__KEY              = StringField('FITS Header 5', validators=[DataRequired(), FITSHEADER_KEY_validator])
+    FITSHEADERS__4__VAL              = StringField('FITS Header 5 Value', validators=[])
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])

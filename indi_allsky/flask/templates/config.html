@@ -1702,6 +1702,85 @@
         <div class="col-sm-8">File type for libcamera acquistion.  This has no effect when using indi.</div>
     </div>
 
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__0__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__0__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__0__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__0__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__0__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__1__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__1__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__1__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__1__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__1__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__2__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__2__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__2__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__2__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__2__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__3__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__3__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__3__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__3__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__3__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__4__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__4__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__4__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__4__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__4__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <hr />
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
@@ -1854,6 +1933,16 @@ const field_names = [
     'MQTTPUBLISH__PASSWORD',
     'MQTTPUBLISH__BASE_TOPIC',
     'MQTTPUBLISH__QOS',
+    'FITSHEADERS__0__KEY',
+    'FITSHEADERS__0__VAL',
+    'FITSHEADERS__1__KEY',
+    'FITSHEADERS__1__VAL',
+    'FITSHEADERS__2__KEY',
+    'FITSHEADERS__2__VAL',
+    'FITSHEADERS__3__KEY',
+    'FITSHEADERS__3__VAL',
+    'FITSHEADERS__4__KEY',
+    'FITSHEADERS__4__VAL',
     'LIBCAMERA__IMAGE_FILE_TYPE',
     'LIBCAMERA__EXTRA_OPTIONS',
     'INDI_CONFIG_DEFAULTS',

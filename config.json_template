@@ -138,6 +138,15 @@
     "FFMPEG_VFSCALE"   : "",
     "FFMPEG_CODEC"     : "libx264",
 
+    "comment_FITSHEADERS" : "index 0 = key, index 1 = value.  keys must be 8 chars or less",
+    "FITSHEADERS" : [
+        [ "INSTRUME", "indi-allsky" ],
+        [ "OBSERVER", "" ],
+        [ "SITE", "" ],
+        [ "OBJECT", "" ],
+        [ "NOTES", "" ]
+    ],
+
     "TEXT_PROPERTIES" : {
         "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
         "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
