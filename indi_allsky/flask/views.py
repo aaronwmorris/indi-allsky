@@ -1032,36 +1032,36 @@ class ConfigView(FormView):
         fitsheaders = self.indi_allsky_config.get('FITSHEADERS', [])
 
         try:
-            form_data['FITSHEADERS__0__KEY'] = fitsheaders[0][0]
-            form_data['FITSHEADERS__0__VAL'] = fitsheaders[0][1]
+            form_data['FITSHEADERS__0__KEY'] = str(fitsheaders[0][0]).upper()
+            form_data['FITSHEADERS__0__VAL'] = str(fitsheaders[0][1])
         except IndexError:
             form_data['FITSHEADERS__0__KEY'] = 'INSTRUME'
             form_data['FITSHEADERS__0__VAL'] = 'indi-allsky'
 
         try:
-            form_data['FITSHEADERS__1__KEY'] = fitsheaders[1][0]
-            form_data['FITSHEADERS__1__VAL'] = fitsheaders[1][1]
+            form_data['FITSHEADERS__1__KEY'] = str(fitsheaders[1][0]).upper()
+            form_data['FITSHEADERS__1__VAL'] = str(fitsheaders[1][1])
         except IndexError:
             form_data['FITSHEADERS__1__KEY'] = 'OBSERVER'
             form_data['FITSHEADERS__1__VAL'] = ''
 
         try:
-            form_data['FITSHEADERS__2__KEY'] = fitsheaders[2][0]
-            form_data['FITSHEADERS__2__VAL'] = fitsheaders[2][1]
+            form_data['FITSHEADERS__2__KEY'] = str(fitsheaders[2][0]).upper()
+            form_data['FITSHEADERS__2__VAL'] = str(fitsheaders[2][1])
         except IndexError:
             form_data['FITSHEADERS__2__KEY'] = 'SITE'
             form_data['FITSHEADERS__2__VAL'] = ''
 
         try:
-            form_data['FITSHEADERS__3__KEY'] = fitsheaders[3][0]
-            form_data['FITSHEADERS__3__VAL'] = fitsheaders[3][1]
+            form_data['FITSHEADERS__3__KEY'] = str(fitsheaders[3][0]).upper()
+            form_data['FITSHEADERS__3__VAL'] = str(fitsheaders[3][1])
         except IndexError:
             form_data['FITSHEADERS__3__KEY'] = 'OBJECT'
             form_data['FITSHEADERS__3__VAL'] = ''
 
         try:
-            form_data['FITSHEADERS__4__KEY'] = fitsheaders[4][0]
-            form_data['FITSHEADERS__4__VAL'] = fitsheaders[4][1]
+            form_data['FITSHEADERS__4__KEY'] = str(fitsheaders[4][0]).upper()
+            form_data['FITSHEADERS__4__VAL'] = str(fitsheaders[4][1])
         except IndexError:
             form_data['FITSHEADERS__4__KEY'] = 'NOTES'
             form_data['FITSHEADERS__4__VAL'] = ''

@@ -1274,10 +1274,33 @@ class ImageProcessor(object):
         hdulist[0].header['TELESCOP'] = 'indi-allsky'
 
 
-        filename_p.unlink()  # no longer need the original file
+        # Add headers from config
+        fitsheaders = self.config.get('FITSHEADERS', [])
+        for header in fitsheaders:
+            try:
+                k = str(header[0]).upper()
+                v = str(header[1])
+            except IndexError:
+                logger.error('Invalid header information')
+                continue
+
+            if not k:
+                # skipping empty values
+                continue
+
+            if not v:
+                # skipping empty values
+                continue
+
+            hdulist[0].header[k] = v
 
 
         #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
+
+
+        filename_p.unlink()  # no longer need the original file
+
+
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
