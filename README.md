@@ -403,6 +403,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | > QOS                 | 0           | (int) MQTT QoS for messages |
 | > TLS                 | true        | (bool) Use TLS for MQTT connection |
 | > CERT_BYPASS         | true        | (bool) Bypass certificate validation for MQTT connection |
+| FITSHEADERS           |             | (array) FITS headers
 | LIBCAMERA             |             | (dict) libcamera configuration |
 | > IMAGE_FILE_TYPE     | dng         | (str) Image type for libcamera |
 | > EXTRA_OPTIONS       |             | (str) Extra options for libcamera-still |

@@ -1027,6 +1027,46 @@ class ConfigView(FormView):
         orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
+
+        # FITS headers
+        fitsheaders = self.indi_allsky_config.get('FITSHEADERS', [])
+
+        try:
+            form_data['FITSHEADERS__0__KEY'] = str(fitsheaders[0][0]).upper()
+            form_data['FITSHEADERS__0__VAL'] = str(fitsheaders[0][1])
+        except IndexError:
+            form_data['FITSHEADERS__0__KEY'] = 'INSTRUME'
+            form_data['FITSHEADERS__0__VAL'] = 'indi-allsky'
+
+        try:
+            form_data['FITSHEADERS__1__KEY'] = str(fitsheaders[1][0]).upper()
+            form_data['FITSHEADERS__1__VAL'] = str(fitsheaders[1][1])
+        except IndexError:
+            form_data['FITSHEADERS__1__KEY'] = 'OBSERVER'
+            form_data['FITSHEADERS__1__VAL'] = ''
+
+        try:
+            form_data['FITSHEADERS__2__KEY'] = str(fitsheaders[2][0]).upper()
+            form_data['FITSHEADERS__2__VAL'] = str(fitsheaders[2][1])
+        except IndexError:
+            form_data['FITSHEADERS__2__KEY'] = 'SITE'
+            form_data['FITSHEADERS__2__VAL'] = ''
+
+        try:
+            form_data['FITSHEADERS__3__KEY'] = str(fitsheaders[3][0]).upper()
+            form_data['FITSHEADERS__3__VAL'] = str(fitsheaders[3][1])
+        except IndexError:
+            form_data['FITSHEADERS__3__KEY'] = 'OBJECT'
+            form_data['FITSHEADERS__3__VAL'] = ''
+
+        try:
+            form_data['FITSHEADERS__4__KEY'] = str(fitsheaders[4][0]).upper()
+            form_data['FITSHEADERS__4__VAL'] = str(fitsheaders[4][1])
+        except IndexError:
+            form_data['FITSHEADERS__4__KEY'] = 'NOTES'
+            form_data['FITSHEADERS__4__VAL'] = ''
+
+
         # libcurl options as json text
         filetransfer__libcurl_options = self.indi_allsky_config.get('FILETRANSFER', {}).get('LIBCURL_OPTIONS', {})
         form_data['FILETRANSFER__LIBCURL_OPTIONS'] = json.dumps(filetransfer__libcurl_options, indent=4)
@@ -1089,6 +1129,8 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('LIBCAMERA'):
             self.indi_allsky_config['LIBCAMERA'] = {}
 
+        if not self.indi_allsky_config.get('FITSHEADERS'):
+            self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
 
         # update data
         self.indi_allsky_config['SQLALCHEMY_DATABASE_URI']              = str(request.json['SQLALCHEMY_DATABASE_URI'])
@@ -1217,6 +1259,16 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['MQTTPUBLISH']['QOS']                   = int(request.json['MQTTPUBLISH__QOS'])
         self.indi_allsky_config['MQTTPUBLISH']['TLS']                   = bool(request.json['MQTTPUBLISH__TLS'])
         self.indi_allsky_config['MQTTPUBLISH']['CERT_BYPASS']           = bool(request.json['MQTTPUBLISH__CERT_BYPASS'])
+        self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
+        self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
+        self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
+        self.indi_allsky_config['FITSHEADERS'][1][1]                    = str(request.json['FITSHEADERS__1__VAL'])
+        self.indi_allsky_config['FITSHEADERS'][2][0]                    = str(request.json['FITSHEADERS__2__KEY'])
+        self.indi_allsky_config['FITSHEADERS'][2][1]                    = str(request.json['FITSHEADERS__2__VAL'])
+        self.indi_allsky_config['FITSHEADERS'][3][0]                    = str(request.json['FITSHEADERS__3__KEY'])
+        self.indi_allsky_config['FITSHEADERS'][3][1]                    = str(request.json['FITSHEADERS__3__VAL'])
+        self.indi_allsky_config['FITSHEADERS'][4][0]                    = str(request.json['FITSHEADERS__4__KEY'])
+        self.indi_allsky_config['FITSHEADERS'][4][1]                    = str(request.json['FITSHEADERS__4__VAL'])
         self.indi_allsky_config['LIBCAMERA']['IMAGE_FILE_TYPE']         = str(request.json['LIBCAMERA__IMAGE_FILE_TYPE'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
 
