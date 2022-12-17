@@ -1139,7 +1139,7 @@ class ImageProcessor(object):
         # contains the current stacked image
         self._image = None
 
-        # contains the raw image data
+        # contains the raw image data, like a ring buffer
         self.image_list = [None for x in range(self.stack_count)]
         self.image_index = -1
 

@@ -174,6 +174,8 @@ The following stacking modes are provided:
 
 The `Stack split screen` option will split the image into two panes.  The left pane will show the original image data and the right pane will contain the stacked data.
 
+Regarding performance, stacking does have an impact to memory and CPU utilization.  indi-allsky stores the RAW images used for the stack in memory.  A single 1920x1080 (1K) image is approximately 8MB.  Four 1K images will require 32MB of memory.  A single 4K RAW image is ~25MB, four would require 100MB of memory (at all times).
+
 ## Web Interface
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
