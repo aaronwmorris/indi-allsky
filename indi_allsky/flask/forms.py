@@ -1226,7 +1226,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     IMAGE_STACK_COUNT_choices = (
-        ('1', '1 (disabled)'),
+        ('1', 'Disabled'),
         ('2', '2'),
         ('3', '3'),
         ('4', '4'),

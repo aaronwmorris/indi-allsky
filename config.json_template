@@ -126,6 +126,7 @@
 
     "comment_IMAGE_STACK_METHOD"  : "maximum, average, or minimum",
     "IMAGE_STACK_METHOD"  : "maximum",
+    "comment_IMAGE_STACK_COUNT"   : "1 = disabled",
     "IMAGE_STACK_COUNT"   : 1,
     "IMAGE_STACK_SPLIT"   : false,
 
