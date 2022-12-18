@@ -2145,12 +2145,15 @@ class ImageStacker(object):
     def register(self, stack_hdulist_list):
         target = stack_hdulist_list[0]
 
+        # detection_sigma default = 5
+        # max_control_points default = 50
+        # min_area default = 5
 
         reg_start = time.time()
 
         reg_data_list = [target[0].data]  # add target to final list
         for stack in stack_hdulist_list[1:]:
-            reg_data, footprint = astroalign.register(stack[0], target[0], detection_sigma=10)
+            reg_data, footprint = astroalign.register(stack[0], target[0], detection_sigma=5, max_control_points=50, min_area=5)
             reg_data_list.append(reg_data)
 
 
