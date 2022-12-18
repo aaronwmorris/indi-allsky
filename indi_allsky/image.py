@@ -1561,7 +1561,7 @@ class ImageProcessor(object):
         stacker = ImageStacker()
 
 
-        if self.config.get('IMAGE_STACK_ALIGN') and self.exposure_v.value > 10.0:
+        if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > 10.0:
             # only perform registration once the exposure exceeds 10 seconds
 
             try:
