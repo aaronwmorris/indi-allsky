@@ -21,6 +21,8 @@ from multiprocessing import Process
 import queue
 
 from astropy.io import fits
+import astroalign
+
 import cv2
 import numpy
 
@@ -1528,18 +1530,18 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-        stack_data = list()
+        stack_hdulist_list = list()
         for i in self.image_list:
             if isinstance(i, type(None)):
                 continue
 
-            stack_data.append(i['hdulist'][0].data)
+            stack_hdulist_list.append(i['hdulist'])
 
 
-        stack_data_len = len(stack_data)
-        assert stack_data_len > 0  # canary
+        stack_list_len = len(stack_hdulist_list)
+        assert stack_list_len > 0  # canary
 
-        if stack_data_len == 1:
+        if stack_list_len == 1:
             # no reason to stack a single image
             self.image = i_ref['hdulist'][0].data
             return
@@ -1556,14 +1558,30 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        start = time.time()
-
-
         stacker = ImageStacker()
+
+
+        # need just the data
+        if self.config.get('IMAGE_STACK_ALIGN'):
+            try:
+                stack_data_list = stacker.register(stack_hdulist_list)
+            except astroalign.MaxIterError as e:
+                logger.error('Image registration failure: %s', str(e))
+                stack_data_list = [x[0].data for x in stack_hdulist_list]
+            except ValueError as e:
+                logger.error('Image registration failure: %s', str(e))
+                stack_data_list = [x[0].data for x in stack_hdulist_list]
+        else:
+            # stack unaligned images
+            stack_data_list = [x[0].data for x in stack_hdulist_list]
+
+
+        stack_start = time.time()
+
 
         try:
             stacker_method = getattr(stacker, self.stack_method)
-            self.image = stacker_method(stack_data, numpy_type)
+            self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
             self.image = i_ref['hdulist'][0].data
@@ -1574,8 +1592,8 @@ class ImageProcessor(object):
             self.image = stacker.splitscreen(i_ref['hdulist'][0].data, self.image)
 
 
-        elapsed_s = time.time() - start
-        logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data), self.stack_method, elapsed_s)
+        stack_elapsed_s = time.time() - stack_start
+        logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data_list), self.stack_method, stack_elapsed_s)
 
 
     def debayer(self):
@@ -2099,28 +2117,46 @@ class ImageStacker(object):
         return self.average(*args, **kwargs)
 
 
-    def average(self, stack_data, numpy_type):
-        mean_image = numpy.mean(stack_data, axis=0)
+    def average(self, stack_data_list, numpy_type):
+        mean_image = numpy.mean(stack_data_list, axis=0)
         return numpy.floor(mean_image).astype(numpy_type)  # no floats
 
 
-    def maximum(self, stack_data, numpy_type):
-        image_max = stack_data[0]  # start with first image
+    def maximum(self, stack_data_list, numpy_type):
+        image_max = stack_data_list[0]  # start with first image
 
         # compare with remaining images
-        for i in stack_data[1:]:
+        for i in stack_data_list[1:]:
             image_max = numpy.maximum(image_max, i)
 
         return image_max
 
-    def minimum(self, stack_data, numpy_type):
-        image_min = stack_data[0]  # start with first image
+    def minimum(self, stack_data_list, numpy_type):
+        image_min = stack_data_list[0]  # start with first image
 
         # compare with remaining images
-        for i in stack_data[1:]:
+        for i in stack_data_list[1:]:
             image_min = numpy.minimum(image_min, i)
 
         return image_min
+
+
+    def register(self, stack_hdulist_list):
+        target = stack_hdulist_list[0]
+
+
+        reg_start = time.time()
+
+        reg_data_list = [target[0].data]  # add target to final list
+        for stack in stack_hdulist_list[1:]:
+            reg_data, footprint = astroalign.register(stack[0], target[0])
+            reg_data_list.append(reg_data)
+
+
+        reg_elapsed_s = time.time() - reg_start
+        logger.info('Registered %d images in %0.4f s', len(stack_hdulist_list), reg_elapsed_s)
+
+        return reg_data_list
 
 
     def splitscreen(self, original, stacked):
