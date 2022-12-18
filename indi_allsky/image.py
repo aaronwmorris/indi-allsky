@@ -2146,17 +2146,44 @@ class ImageStacker(object):
 
 
     def register(self, stack_i_ref_list):
-        reference_image = stack_i_ref_list[0]
+        reference_i_ref = stack_i_ref_list[0]
 
-        # detection_sigma default = 5
-        # max_control_points default = 50
-        # min_area default = 5
+        reference_crop = self._crop(reference_i_ref['hdulist'][0].data)
 
         reg_start = time.time()
 
-        reg_data_list = [reference_image['hdulist'][0].data]  # add target to final list
-        for stack in stack_i_ref_list[1:]:
-            reg_data, footprint = astroalign.register(stack['hdulist'][0], reference_image['hdulist'][0], detection_sigma=5, max_control_points=50, min_area=5)
+        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
+        for i_ref in stack_i_ref_list[1:]:
+            i_crop = self._crop = i_ref['hdulist'][0].data
+
+            # detection_sigma default = 5
+            # max_control_points default = 50
+            # min_area default = 5
+
+            ### Find transform using a crop of the image
+            transform, (source_list, target_list) = astroalign.find_transform(
+                i_crop,
+                reference_crop,
+                detection_sigma=5,
+                max_control_points=50,
+                min_area=5,
+            )
+
+            reg_data, footprint = astroalign.apply_transform(
+                transform,
+                i_ref['hdulist'][0],
+                reference_i_ref['hdulist'][0],
+            )
+
+            ### Register full image
+            #reg_data, footprint = astroalign.register(
+            #    i_ref['hdulist'][0],
+            #    reference_i_ref['hdulist'][0],
+            #    detection_sigma=5,
+            #    max_control_points=50,
+            #    min_area=5,
+            #)
+
             reg_data_list.append(reg_data)
 
 
@@ -2198,4 +2225,19 @@ class ImageStacker(object):
         masked_right = cv2.bitwise_and(stacked, stacked, mask=right_mask)
 
         return numpy.maximum(masked_left, masked_right)
+
+
+    def _crop(self, image):
+        image_height, image_width = image.shape[:2]
+
+        x1 = int((image_width / 3) - (image_width / 3))
+        y1 = int((image_height / 3) - (image_height / 3))
+        x2 = int((image_width / 3) + (image_width / 3))
+        y2 = int((image_height / 3) + (image_height / 3))
+
+
+        return image[
+            y1:y2,
+            x1:x2,
+        ]
 
