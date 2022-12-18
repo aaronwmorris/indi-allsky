@@ -1146,9 +1146,8 @@ class ImageProcessor(object):
         # contains the current stacked image
         self._image = None
 
-        # contains the raw image data, like a ring buffer
-        self.image_list = [None for x in range(self.stack_count)]
-        self.image_index = -1
+        # contains the raw image data, data will be newest to oldest
+        self.image_list = [None]  # element will be removed on first image
 
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
@@ -1170,7 +1169,7 @@ class ImageProcessor(object):
 
     @property
     def shape(self):
-        return self.image_list[self.image_index]['hdulist'].data.shape
+        return self.image_list[0]['hdulist'].data.shape
 
     @shape.setter
     def shape(self, *args):
@@ -1178,30 +1177,19 @@ class ImageProcessor(object):
 
 
 
-    def _incrementIndex(self):
-        if not self.night_v.value:
-            # single image mode during the day
-            self.image_list = [None for x in range(self.stack_count)]  # flush
-
-
-        i = self.image_index + 1
-
-        try:
-            self.image_list[i]
-        except IndexError:
-            # start over
-            self.image_index = 0
-            return self.image_index
-
-        self.image_index = i
-
-        return self.image_index
-
-
     def add(self, filename, exposure, exp_date, exp_elapsed, camera_id):
-        self.image = None  # clear current data
-
         filename_p = Path(filename)
+
+
+        # clear old data as soon as possible
+        self.image = None  # clear current data
+        if self.night_v.value:
+            if len(self.image_list) == self.stack_count:
+                self.image_list.pop()  # remove last element
+        else:
+            # daytime
+            self.image_list.clear()  # daytime only has one image
+
 
         indi_rgb = True  # INDI returns array in the wrong order for cv2
 
@@ -1338,8 +1326,8 @@ class ImageProcessor(object):
             'stars'            : list(),  # populated later
         }
 
-        self._incrementIndex()
-        self.image_list[self.image_index] = image_data
+
+        self.image_list.insert(0, image_data)  # new image is first in list
 
 
     def _detectBitDepth(self, hdulist):
@@ -1376,7 +1364,7 @@ class ImageProcessor(object):
 
 
     def getLatestImage(self):
-        return self.image_list[self.image_index]
+        return self.image_list[0]
 
 
     def calibrate(self):
