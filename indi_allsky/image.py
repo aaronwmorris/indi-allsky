@@ -1092,6 +1092,8 @@ class ImageProcessor(object):
 
     dark_temperature_range = 5.0  # dark must be within this range
 
+    registration_exposure_thresh = 5.0
+
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'RGGB' : cv2.COLOR_BAYER_BG2BGR,
@@ -1530,15 +1532,15 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-        stack_hdulist_list = list()
+        stack_i_ref_list = list()
         for i in self.image_list:
             if isinstance(i, type(None)):
                 continue
 
-            stack_hdulist_list.append(i['hdulist'])
+            stack_i_ref_list.append(i)
 
 
-        stack_list_len = len(stack_hdulist_list)
+        stack_list_len = len(stack_i_ref_list)
         assert stack_list_len > 0  # canary
 
         if stack_list_len == 1:
@@ -1561,20 +1563,21 @@ class ImageProcessor(object):
         stacker = ImageStacker()
 
 
-        if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > 10.0:
-            # only perform registration once the exposure exceeds 10 seconds
+        if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
+            # only perform registration once the exposure exceeds 5 seconds
 
             try:
-                stack_data_list = stacker.register(stack_hdulist_list)
+                stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
+                stack_data_list = stacker.register(stack_i_ref_list)
             except astroalign.MaxIterError as e:
                 logger.error('Image registration failure: %s', str(e))
-                stack_data_list = [x[0].data for x in stack_hdulist_list]
+                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
             except ValueError as e:
                 logger.error('Image registration failure: %s', str(e))
-                stack_data_list = [x[0].data for x in stack_hdulist_list]
+                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
         else:
             # stack unaligned images
-            stack_data_list = [x[0].data for x in stack_hdulist_list]
+            stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
 
 
         stack_start = time.time()
@@ -2142,8 +2145,8 @@ class ImageStacker(object):
         return image_min
 
 
-    def register(self, stack_hdulist_list):
-        target = stack_hdulist_list[0]
+    def register(self, stack_i_ref_list):
+        target = stack_i_ref_list[0]
 
         # detection_sigma default = 5
         # max_control_points default = 50
@@ -2151,14 +2154,14 @@ class ImageStacker(object):
 
         reg_start = time.time()
 
-        reg_data_list = [target[0].data]  # add target to final list
-        for stack in stack_hdulist_list[1:]:
-            reg_data, footprint = astroalign.register(stack[0], target[0], detection_sigma=5, max_control_points=50, min_area=5)
+        reg_data_list = [target['hdulist'][0].data]  # add target to final list
+        for stack in stack_i_ref_list[1:]:
+            reg_data, footprint = astroalign.register(stack['hdulist'][0], target['hdulist'][0], detection_sigma=5, max_control_points=50, min_area=5)
             reg_data_list.append(reg_data)
 
 
         reg_elapsed_s = time.time() - reg_start
-        logger.info('Registered %d images in %0.4f s', len(stack_hdulist_list), reg_elapsed_s)
+        logger.info('Registered %d images in %0.4f s', len(stack_i_ref_list), reg_elapsed_s)
 
         return reg_data_list
 
