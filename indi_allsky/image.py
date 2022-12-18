@@ -2146,7 +2146,7 @@ class ImageStacker(object):
 
 
     def register(self, stack_i_ref_list):
-        target = stack_i_ref_list[0]
+        reference_image = stack_i_ref_list[0]
 
         # detection_sigma default = 5
         # max_control_points default = 50
@@ -2154,14 +2154,14 @@ class ImageStacker(object):
 
         reg_start = time.time()
 
-        reg_data_list = [target['hdulist'][0].data]  # add target to final list
+        reg_data_list = [reference_image['hdulist'][0].data]  # add target to final list
         for stack in stack_i_ref_list[1:]:
-            reg_data, footprint = astroalign.register(stack['hdulist'][0], target['hdulist'][0], detection_sigma=5, max_control_points=50, min_area=5)
+            reg_data, footprint = astroalign.register(stack['hdulist'][0], reference_image['hdulist'][0], detection_sigma=5, max_control_points=50, min_area=5)
             reg_data_list.append(reg_data)
 
 
         reg_elapsed_s = time.time() - reg_start
-        logger.info('Registered %d images in %0.4f s', len(stack_i_ref_list), reg_elapsed_s)
+        logger.info('Registered %d+1 images in %0.4f s', len(stack_i_ref_list) - 1, reg_elapsed_s)  # reference image is not aligned
 
         return reg_data_list
 
