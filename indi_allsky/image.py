@@ -2150,7 +2150,7 @@ class ImageStacker(object):
 
         reg_data_list = [target[0].data]  # add target to final list
         for stack in stack_hdulist_list[1:]:
-            reg_data, footprint = astroalign.register(stack[0], target[0])
+            reg_data, footprint = astroalign.register(stack[0], target[0], detection_sigma=10)
             reg_data_list.append(reg_data)
 
 
