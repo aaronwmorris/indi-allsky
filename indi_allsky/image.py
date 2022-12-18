@@ -227,10 +227,6 @@ class ImageWorker(Process):
                 i_ref = self.image_processor.getLatestImage()
                 self.write_fit(i_ref)
 
-                ### Do not write image files if fits are enabled
-                continue
-
-
 
             self.image_processor.calculateSqm()
 
