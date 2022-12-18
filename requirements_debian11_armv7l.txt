@@ -9,6 +9,7 @@ opencv-python-headless
 scipy<=1.8.1
 #https://www.piwheels.org/project/ccdproc/
 ccdproc
+astroalign
 python-dateutil
 ephem
 paramiko
