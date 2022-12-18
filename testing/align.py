@@ -18,6 +18,9 @@ class Align(object):
     def __init__(self, method):
         self.method = method
 
+        self.transform = None
+
+
     def main(self, output, inputfiles):
 
         hdulist_list = list()
@@ -30,14 +33,15 @@ class Align(object):
 
 
 
-        mask = self._generateMask(hdulist_list[0])
-        for h in hdulist_list:
-            h[0].mask = mask
+        #mask = self._generateMask(hdulist_list[0])
+        #for h in hdulist_list:
+        #    h[0].mask = mask
 
 
         start = time.time()
 
-        reference_hdulist = hdulist_list.pop(0)
+        reference_hdulist = hdulist_list[0]
+
 
         #reference_bitdepth = self._detectBitDepth(reference_hdulist[0].data)
         #reference_8bit = self._convert_16bit_to_8bit(reference_hdulist[0].data, 16, reference_bitdepth)
@@ -45,11 +49,25 @@ class Align(object):
 
 
         reg_list = list()
-        for hdulist in hdulist_list:
+        # add original target
+        reg_list.append(reference_hdulist[0].data)
+
+        for hdulist in hdulist_list[1:]:
             # detection_sigma default = 5
             # max_control_points default = 50
             # min_area default = 5
             reg_start = time.time()
+
+
+            ### Reusing the tranform does not appear to work
+            #if isinstance(self.transform, type(None)):
+            #    self.transform, (source_list, target_list) = astroalign.find_transform(hdulist[0], reference_hdulist[0])
+
+            #reg_image, footprint = astroalign.apply_transform(
+            #    self.transform,
+            #    hdulist[0],
+            #    reference_hdulist[0],
+            #)
 
             reg_image, footprint = astroalign.register(
                 hdulist[0],
@@ -57,7 +75,7 @@ class Align(object):
                 detection_sigma=5,
                 max_control_points=50,
                 min_area=5,
-                propagate_mask=True,
+                #propagate_mask=True,
             )
 
             reg_elapsed_s = time.time() - reg_start
@@ -65,9 +83,6 @@ class Align(object):
 
             reg_list.append(reg_image)
 
-
-        # add original target
-        reg_list.append(reference_hdulist[0].data)
 
 
         stacker = ImageStacker()
@@ -127,6 +142,21 @@ class Align(object):
         div_factor = int((2 ** image_bit_depth) / 255)
 
         return (data / div_factor).astype(numpy.uint8)
+
+
+    def _crop(self, image):
+        image_height, image_width = image.shape[:2]
+
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
+
+
+        return image[
+            y1:y2,
+            x1:x2,
+        ]
 
 
     def _generateMask(self, hdulist):
