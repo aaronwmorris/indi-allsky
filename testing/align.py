@@ -20,41 +20,54 @@ class Align(object):
 
     def main(self, output, inputfiles):
 
-        data_list = list()
+        hdulist_list = list()
         for i in inputfiles:
             filename_p = Path(i)
 
             hdulist = fits.open(filename_p)
 
-            data_list.append(hdulist)
+            hdulist_list.append(hdulist)
+
+
+
+        mask = self._generateMask(hdulist_list[0])
+        for h in hdulist_list:
+            h[0].mask = mask
 
 
         start = time.time()
 
-        target = data_list.pop(0)
+        reference_hdulist = hdulist_list.pop(0)
 
-        #target_bitdepth = self._detectBitDepth(target[0].data)
-        #target_8bit = self._convert_16bit_to_8bit(target[0].data, 16, target_bitdepth)
-        #cv2.imwrite('original.png', target_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        #reference_bitdepth = self._detectBitDepth(reference_hdulist[0].data)
+        #reference_8bit = self._convert_16bit_to_8bit(reference_hdulist[0].data, 16, reference_bitdepth)
+        #cv2.imwrite('original.png', reference_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
         reg_list = list()
-        for hdulist in data_list:
+        for hdulist in hdulist_list:
             # detection_sigma default = 5
             # max_control_points default = 50
             # min_area default = 5
             reg_start = time.time()
 
-            reg_image, footprint = astroalign.register(hdulist[0], target[0], detection_sigma=5, max_control_points=50, min_area=5)
+            reg_image, footprint = astroalign.register(
+                hdulist[0],
+                reference_hdulist[0],
+                detection_sigma=5,
+                max_control_points=50,
+                min_area=5,
+                propagate_mask=True,
+            )
 
             reg_elapsed_s = time.time() - reg_start
-            logger.info('Images registered in %0.4f s', reg_elapsed_s)
+            logger.info('Image registered in %0.4f s', reg_elapsed_s)
 
             reg_list.append(reg_image)
 
 
         # add original target
-        reg_list.append(target[0].data)
+        reg_list.append(reference_hdulist[0].data)
 
 
         stacker = ImageStacker()
@@ -115,6 +128,31 @@ class Align(object):
 
         return (data / div_factor).astype(numpy.uint8)
 
+
+    def _generateMask(self, hdulist):
+        logger.info('Generating mask')
+
+        image_height, image_width = hdulist[0].data.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
+
+
+        return numpy.invert(mask.astype(bool))
 
 
 class ImageStacker(object):
