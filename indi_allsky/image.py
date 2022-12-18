@@ -1561,8 +1561,9 @@ class ImageProcessor(object):
         stacker = ImageStacker()
 
 
-        # need just the data
-        if self.config.get('IMAGE_STACK_ALIGN'):
+        if self.config.get('IMAGE_STACK_ALIGN') and self.exposure_v.value > 10.0:
+            # only perform registration once the exposure exceeds 10 seconds
+
             try:
                 stack_data_list = stacker.register(stack_hdulist_list)
             except astroalign.MaxIterError as e:
