@@ -65,29 +65,28 @@ class Align(object):
                 ### Reusing the tranform does not appear to work
                 #if isinstance(self.transform, type(None)):
                 #    self.transform, (source_list, target_list) = astroalign.find_transform(
-                #    hdulist[0],
-                #    reference_hdulist[0],
-                #    detection_sigma=5,
-                #    max_control_points=50,
-                #    min_area=5,
-                #)
-                #reg_image, footprint = astroalign.apply_transform(
-                #    self.transform,
-                #    hdulist[0],
-                #    reference_hdulist[0],
-                #)
-
+                #        hdulist[0],
+                #        reference_hdulist[0],
+                #        detection_sigma=5,
+                #        max_control_points=50,
+                #        min_area=5,
+                #    )
 
                 ### Find transform using a crop of the image
                 hdu_crop = self._crop(hdulist[0].data)
-                transform, (source_list, target_list) = astroalign.find_transform(hdu_crop, ref_crop)
-                reg_image, footprint = astroalign.apply_transform(
-                    transform,
-                    hdulist[0],
-                    reference_hdulist[0],
+                self.transform, (source_list, target_list) = astroalign.find_transform(
+                    hdu_crop,
+                    ref_crop,
                     detection_sigma=5,
                     max_control_points=50,
                     min_area=5,
+                )
+
+                ### Apply transform
+                reg_image, footprint = astroalign.apply_transform(
+                    self.transform,
+                    hdulist[0],
+                    reference_hdulist[0],
                 )
 
 
