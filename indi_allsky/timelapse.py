@@ -48,6 +48,8 @@ class TimelapseGenerator(object):
             '-loglevel', 'level+warning',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
+            #'-start_number', '0',
+            #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
             '-vcodec', '{0:s}'.format(self.config['FFMPEG_CODEC']),
             '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),

@@ -66,7 +66,8 @@ class TimelapseGenerator(object):
             '-loglevel', 'level+warning',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
-            '-start_number', '0',
+            #'-start_number', '0',
+            #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), 'jpg'),
             '-c:v', 'libx264',
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
@@ -76,7 +77,7 @@ class TimelapseGenerator(object):
         ]
 
 
-        logger.info(cmd)
+        logger.info('Command: %s', ' '.join(cmd))
 
 
         try:
