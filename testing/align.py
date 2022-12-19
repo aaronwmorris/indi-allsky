@@ -21,7 +21,8 @@ class Align(object):
         self.transform = None
 
 
-    def main(self, output, inputfiles):
+    def main(self, output, reference, inputfiles):
+        reference_hdulist = fits.open(reference)
 
         hdulist_list = list()
         for i in inputfiles:
@@ -39,8 +40,6 @@ class Align(object):
 
 
         start = time.time()
-
-        reference_hdulist = hdulist_list[0]
 
 
         #reference_bitdepth = self._detectBitDepth(reference_hdulist[0].data)
@@ -259,6 +258,13 @@ if __name__ == "__main__":
         required=True,
     )
     argparser.add_argument(
+        '--reference',
+        '-r',
+        help='reference',
+        type=str,
+        required=True,
+    )
+    argparser.add_argument(
         '--method',
         '-m',
         help='method',
@@ -274,6 +280,6 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    a = Align(args.method).main(args.output, args.inputfiles)
+    a = Align(args.method).main(args.output, args.reference, args.inputfiles)
 
 
