@@ -2226,10 +2226,10 @@ class ImageStacker(object):
     def _crop(self, image):
         image_height, image_width = image.shape[:2]
 
-        x1 = int((image_width / 2) - (image_width / 2))
-        y1 = int((image_height / 2) - (image_height / 2))
-        x2 = int((image_width / 2) + (image_width / 2))
-        y2 = int((image_height / 2) + (image_height / 2))
+        x1 = int((image_width / 3) - (image_width / 3))
+        y1 = int((image_height / 3) - (image_height / 3))
+        x2 = int((image_width / 3) + (image_width / 3))
+        y2 = int((image_height / 3) + (image_height / 3))
 
 
         return image[

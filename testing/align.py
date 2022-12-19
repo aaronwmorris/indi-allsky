@@ -52,6 +52,7 @@ class Align(object):
         reg_list = list()
         # add original target
         reg_list.append(reference_hdulist[0].data)
+
         #ref_crop = self._crop(reference_hdulist[0].data)
 
 
