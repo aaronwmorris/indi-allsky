@@ -1562,15 +1562,8 @@ class ImageProcessor(object):
         if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
             # only perform registration once the exposure exceeds 5 seconds
 
-            try:
-                stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
-                stack_data_list = stacker.register(stack_i_ref_list)
-            except astroalign.MaxIterError as e:
-                logger.error('Image registration failure: %s', str(e))
-                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
-            except ValueError as e:
-                logger.error('Image registration failure: %s', str(e))
-                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+            stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
+            stack_data_list = stacker.register(stack_i_ref_list)
         else:
             # stack unaligned images
             stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
@@ -2144,11 +2137,12 @@ class ImageStacker(object):
     def register(self, stack_i_ref_list):
         reference_i_ref = stack_i_ref_list[0]
 
+        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
+
         reference_crop = self._crop(reference_i_ref['hdulist'][0].data)
 
         reg_start = time.time()
 
-        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
         for i_ref in stack_i_ref_list[1:]:
             i_crop = self._crop = i_ref['hdulist'][0].data
 
@@ -2156,29 +2150,36 @@ class ImageStacker(object):
             # max_control_points default = 50
             # min_area default = 5
 
-            ### Find transform using a crop of the image
-            transform, (source_list, target_list) = astroalign.find_transform(
-                i_crop,
-                reference_crop,
-                detection_sigma=7,
-                max_control_points=100,
-                min_area=15,
-            )
+            try:
+                ### Find transform using a crop of the image
+                transform, (source_list, target_list) = astroalign.find_transform(
+                    i_crop,
+                    reference_crop,
+                    detection_sigma=7,
+                    max_control_points=100,
+                    min_area=15,
+                )
 
-            reg_data, footprint = astroalign.apply_transform(
-                transform,
-                i_ref['hdulist'][0],
-                reference_i_ref['hdulist'][0],
-            )
+                reg_data, footprint = astroalign.apply_transform(
+                    transform,
+                    i_ref['hdulist'][0],
+                    reference_i_ref['hdulist'][0],
+                )
 
-            ### Register full image
-            #reg_data, footprint = astroalign.register(
-            #    i_ref['hdulist'][0],
-            #    reference_i_ref['hdulist'][0],
-            #    detection_sigma=7,
-            #    max_control_points=100,
-            #    min_area=15,
-            #)
+                ### Register full image
+                #reg_data, footprint = astroalign.register(
+                #    i_ref['hdulist'][0],
+                #    reference_i_ref['hdulist'][0],
+                #    detection_sigma=7,
+                #    max_control_points=100,
+                #    min_area=15,
+                #)
+            except astroalign.MaxIterError as e:
+                logger.error('Image registration failure: %s', str(e))
+                continue
+            except ValueError as e:
+                logger.error('Image registration failure: %s', str(e))
+                continue
 
             reg_data_list.append(reg_data)
 
