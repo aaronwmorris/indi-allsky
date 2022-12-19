@@ -66,6 +66,7 @@ class TimelapseGenerator(object):
             '-loglevel', 'level+warning',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
+            '-start_number', '0',
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), 'jpg'),
             '-c:v', 'libx264',
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
@@ -91,7 +92,7 @@ class TimelapseGenerator(object):
 
 
         processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
+        logger.warning('Total timelapse processing in %0.1f s', processing_elapsed_s)
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
