@@ -25,7 +25,9 @@ class Align(object):
         reference_hdulist = fits.open(reference)
 
         hdulist_list = list()
-        for i in inputfiles:
+
+        file_list = sorted([Path(x) for x in inputfiles], key=lambda p: p.stat().st_mtime)
+        for i in file_list:
             filename_p = Path(i)
 
             hdulist = fits.open(filename_p)
@@ -66,9 +68,9 @@ class Align(object):
                 #    self.transform, (source_list, target_list) = astroalign.find_transform(
                 #        hdulist[0],
                 #        reference_hdulist[0],
-                #        detection_sigma=5,
-                #        max_control_points=50,
-                #        min_area=5,
+                #        detection_sigma=7,
+                #        max_control_points=100,
+                #        min_area=15,
                 #    )
 
                 ### Find transform using a crop of the image
@@ -76,9 +78,9 @@ class Align(object):
                 #self.transform, (source_list, target_list) = astroalign.find_transform(
                 #    hdu_crop,
                 #    ref_crop,
-                #    detection_sigma=5,
-                #    max_control_points=50,
-                #    min_area=5,
+                #    detection_sigma=7,
+                #    max_control_points=100,
+                #    min_area=15,
                 #)
 
                 ### Apply transform
