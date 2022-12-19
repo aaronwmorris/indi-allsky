@@ -178,7 +178,7 @@ Regarding performance, stacking does have an impact to memory and CPU utilizatio
 
 CPU utilization and memory is reasonable for stacking 1K images on Raspberry Pi 3 (1GB) hardware, but 4K stacking starts to significantly impact response times.  Strongly recommend Raspberry Pi 4 with 2+GB of memory for 4K images.
 
-Registration (alignment) requires significantly more CPU time and doubles the memory requirement since the registered images must also be stored in memory.
+Registration (alignment) requires significantly more CPU time and doubles the memory requirement since the registered images must also be stored in memory.  Registering one 1920x1080 (1K) image (reference + image) requires 2-3 seconds on Raspberry Pi 3 hardware.
 
 ## Web Interface
 

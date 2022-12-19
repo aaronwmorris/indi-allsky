@@ -63,27 +63,37 @@ class TimelapseGenerator(object):
         cmd = [
             'ffmpeg',
             '-y',
+            '-loglevel', 'level+warning',
             '-f', 'image2',
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
+            #'-start_number', '0',
+            #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), 'jpg'),
             '-c:v', 'libx264',
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
-            #'-preset', 'medium',
-            #'-crf', '23',
             '-pix_fmt', 'yuv420p',
+            '-movflags', '+faststart',
             '{0:s}'.format(str(outfile_p)),
         ]
 
-        ffmpeg_subproc = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            preexec_fn=lambda: os.nice(19),
-        )
+
+        logger.info('Command: %s', ' '.join(cmd))
+
+
+        try:
+            ffmpeg_subproc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                preexec_fn=lambda: os.nice(19),
+            )
+        except subprocess.CalledProcessError as e:
+            logger.error('FFMPEG output: %s', e.stdout)
+            sys.exit(1)
 
 
         processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
+        logger.warning('Total timelapse processing in %0.1f s', processing_elapsed_s)
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
