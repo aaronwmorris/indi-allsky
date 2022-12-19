@@ -283,6 +283,7 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    a = Align(args.method).main(args.output, args.reference, args.inputfiles)
+    a = Align(args.method)
+    a.main(args.output, args.reference, args.inputfiles)
 
 
