@@ -178,6 +178,8 @@ Regarding performance, stacking does have an impact to memory and CPU utilizatio
 
 CPU utilization and memory is reasonable for stacking 1K images on Raspberry Pi 3 (1GB) hardware, but 4K stacking starts to significantly impact response times.  Strongly recommend Raspberry Pi 4 with 2+GB of memory for 4K images.
 
+Registration (alignment) requires significantly more CPU time and doubles the memory requirement since the registered images must also be stored in memory.
+
 ## Web Interface
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
@@ -237,6 +239,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 | Image processing  | OpenCV        | https://opencv.org/ |
 |                   | opencv-python | https://github.com/opencv/opencv-python |
 |                   | astropy       | https://www.astropy.org/ |
+|                   | astroalign    | https://astroalign.quatrope.org/ |
 |                   | ccdproc       | https://ccdproc.readthedocs.io/ |
 |                   | numpy         | https://numpy.org/ |
 | Video processing  | ffmpeg        | https://www.ffmpeg.org/ |

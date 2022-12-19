@@ -21,6 +21,8 @@ from multiprocessing import Process
 import queue
 
 from astropy.io import fits
+import astroalign
+
 import cv2
 import numpy
 
@@ -224,10 +226,6 @@ class ImageWorker(Process):
             if self.config.get('IMAGE_SAVE_FITS'):
                 i_ref = self.image_processor.getLatestImage()
                 self.write_fit(i_ref)
-
-                ### Do not write image files if fits are enabled
-                continue
-
 
 
             self.image_processor.calculateSqm()
@@ -1090,6 +1088,8 @@ class ImageProcessor(object):
 
     dark_temperature_range = 5.0  # dark must be within this range
 
+    registration_exposure_thresh = 5.0
+
     __cfa_bgr_map = {
         'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'RGGB' : cv2.COLOR_BAYER_BG2BGR,
@@ -1146,9 +1146,8 @@ class ImageProcessor(object):
         # contains the current stacked image
         self._image = None
 
-        # contains the raw image data, like a ring buffer
-        self.image_list = [None for x in range(self.stack_count)]
-        self.image_index = -1
+        # contains the raw image data, data will be newest to oldest
+        self.image_list = [None]  # element will be removed on first image
 
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
@@ -1170,7 +1169,7 @@ class ImageProcessor(object):
 
     @property
     def shape(self):
-        return self.image_list[self.image_index]['hdulist'].data.shape
+        return self.image_list[0]['hdulist'].data.shape
 
     @shape.setter
     def shape(self, *args):
@@ -1178,30 +1177,19 @@ class ImageProcessor(object):
 
 
 
-    def _incrementIndex(self):
-        if not self.night_v.value:
-            # single image mode during the day
-            self.image_list = [None for x in range(self.stack_count)]  # flush
-
-
-        i = self.image_index + 1
-
-        try:
-            self.image_list[i]
-        except IndexError:
-            # start over
-            self.image_index = 0
-            return self.image_index
-
-        self.image_index = i
-
-        return self.image_index
-
-
     def add(self, filename, exposure, exp_date, exp_elapsed, camera_id):
-        self.image = None  # clear current data
-
         filename_p = Path(filename)
+
+
+        # clear old data as soon as possible
+        self.image = None  # clear current data
+        if self.night_v.value:
+            if len(self.image_list) == self.stack_count:
+                self.image_list.pop()  # remove last element
+        else:
+            # daytime
+            self.image_list.clear()  # daytime only has one image
+
 
         indi_rgb = True  # INDI returns array in the wrong order for cv2
 
@@ -1338,8 +1326,8 @@ class ImageProcessor(object):
             'stars'            : list(),  # populated later
         }
 
-        self._incrementIndex()
-        self.image_list[self.image_index] = image_data
+
+        self.image_list.insert(0, image_data)  # new image is first in list
 
 
     def _detectBitDepth(self, hdulist):
@@ -1376,7 +1364,7 @@ class ImageProcessor(object):
 
 
     def getLatestImage(self):
-        return self.image_list[self.image_index]
+        return self.image_list[0]
 
 
     def calibrate(self):
@@ -1540,18 +1528,18 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-        stack_data = list()
+        stack_i_ref_list = list()
         for i in self.image_list:
             if isinstance(i, type(None)):
                 continue
 
-            stack_data.append(i['hdulist'][0].data)
+            stack_i_ref_list.append(i)
 
 
-        stack_data_len = len(stack_data)
-        assert stack_data_len > 0  # canary
+        stack_list_len = len(stack_i_ref_list)
+        assert stack_list_len > 0  # canary
 
-        if stack_data_len == 1:
+        if stack_list_len == 1:
             # no reason to stack a single image
             self.image = i_ref['hdulist'][0].data
             return
@@ -1568,14 +1556,32 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        start = time.time()
-
-
         stacker = ImageStacker()
+
+
+        if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
+            # only perform registration once the exposure exceeds 5 seconds
+
+            try:
+                stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
+                stack_data_list = stacker.register(stack_i_ref_list)
+            except astroalign.MaxIterError as e:
+                logger.error('Image registration failure: %s', str(e))
+                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+            except ValueError as e:
+                logger.error('Image registration failure: %s', str(e))
+                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+        else:
+            # stack unaligned images
+            stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+
+
+        stack_start = time.time()
+
 
         try:
             stacker_method = getattr(stacker, self.stack_method)
-            self.image = stacker_method(stack_data, numpy_type)
+            self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
             self.image = i_ref['hdulist'][0].data
@@ -1586,8 +1592,8 @@ class ImageProcessor(object):
             self.image = stacker.splitscreen(i_ref['hdulist'][0].data, self.image)
 
 
-        elapsed_s = time.time() - start
-        logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data), self.stack_method, elapsed_s)
+        stack_elapsed_s = time.time() - stack_start
+        logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data_list), self.stack_method, stack_elapsed_s)
 
 
     def debayer(self):
@@ -2111,28 +2117,76 @@ class ImageStacker(object):
         return self.average(*args, **kwargs)
 
 
-    def average(self, stack_data, numpy_type):
-        mean_image = numpy.mean(stack_data, axis=0)
+    def average(self, stack_data_list, numpy_type):
+        mean_image = numpy.mean(stack_data_list, axis=0)
         return numpy.floor(mean_image).astype(numpy_type)  # no floats
 
 
-    def maximum(self, stack_data, numpy_type):
-        image_max = stack_data[0]  # start with first image
+    def maximum(self, stack_data_list, numpy_type):
+        image_max = stack_data_list[0]  # start with first image
 
         # compare with remaining images
-        for i in stack_data[1:]:
+        for i in stack_data_list[1:]:
             image_max = numpy.maximum(image_max, i)
 
         return image_max
 
-    def minimum(self, stack_data, numpy_type):
-        image_min = stack_data[0]  # start with first image
+    def minimum(self, stack_data_list, numpy_type):
+        image_min = stack_data_list[0]  # start with first image
 
         # compare with remaining images
-        for i in stack_data[1:]:
+        for i in stack_data_list[1:]:
             image_min = numpy.minimum(image_min, i)
 
         return image_min
+
+
+    def register(self, stack_i_ref_list):
+        reference_i_ref = stack_i_ref_list[0]
+
+        reference_crop = self._crop(reference_i_ref['hdulist'][0].data)
+
+        reg_start = time.time()
+
+        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
+        for i_ref in stack_i_ref_list[1:]:
+            i_crop = self._crop = i_ref['hdulist'][0].data
+
+            # detection_sigma default = 5
+            # max_control_points default = 50
+            # min_area default = 5
+
+            ### Find transform using a crop of the image
+            transform, (source_list, target_list) = astroalign.find_transform(
+                i_crop,
+                reference_crop,
+                detection_sigma=5,
+                max_control_points=50,
+                min_area=5,
+            )
+
+            reg_data, footprint = astroalign.apply_transform(
+                transform,
+                i_ref['hdulist'][0],
+                reference_i_ref['hdulist'][0],
+            )
+
+            ### Register full image
+            #reg_data, footprint = astroalign.register(
+            #    i_ref['hdulist'][0],
+            #    reference_i_ref['hdulist'][0],
+            #    detection_sigma=5,
+            #    max_control_points=50,
+            #    min_area=5,
+            #)
+
+            reg_data_list.append(reg_data)
+
+
+        reg_elapsed_s = time.time() - reg_start
+        logger.info('Registered %d+1 images in %0.4f s', len(stack_i_ref_list) - 1, reg_elapsed_s)  # reference image is not aligned
+
+        return reg_data_list
 
 
     def splitscreen(self, original, stacked):
@@ -2167,4 +2221,19 @@ class ImageStacker(object):
         masked_right = cv2.bitwise_and(stacked, stacked, mask=right_mask)
 
         return numpy.maximum(masked_left, masked_right)
+
+
+    def _crop(self, image):
+        image_height, image_width = image.shape[:2]
+
+        x1 = int((image_width / 3) - (image_width / 3))
+        y1 = int((image_height / 3) - (image_height / 3))
+        x2 = int((image_width / 3) + (image_width / 3))
+        y2 = int((image_height / 3) + (image_height / 3))
+
+
+        return image[
+            y1:y2,
+            x1:x2,
+        ]
 

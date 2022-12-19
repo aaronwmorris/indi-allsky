@@ -10,6 +10,8 @@ scipy<=1.7.3
 #https://www.piwheels.org/project/ccdproc/
 #2.4.0 requires astropy 5.0, not compatible with python 3.7
 ccdproc<=2.3.1
+astroalign
+bottleneck
 python-dateutil
 ephem
 paramiko
