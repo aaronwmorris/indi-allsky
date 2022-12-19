@@ -2160,9 +2160,9 @@ class ImageStacker(object):
             transform, (source_list, target_list) = astroalign.find_transform(
                 i_crop,
                 reference_crop,
-                detection_sigma=5,
-                max_control_points=50,
-                min_area=5,
+                detection_sigma=7,
+                max_control_points=100,
+                min_area=15,
             )
 
             reg_data, footprint = astroalign.apply_transform(
@@ -2175,9 +2175,9 @@ class ImageStacker(object):
             #reg_data, footprint = astroalign.register(
             #    i_ref['hdulist'][0],
             #    reference_i_ref['hdulist'][0],
-            #    detection_sigma=5,
-            #    max_control_points=50,
-            #    min_area=5,
+            #    detection_sigma=7,
+            #    max_control_points=100,
+            #    min_area=15,
             #)
 
             reg_data_list.append(reg_data)
@@ -2226,10 +2226,10 @@ class ImageStacker(object):
     def _crop(self, image):
         image_height, image_width = image.shape[:2]
 
-        x1 = int((image_width / 3) - (image_width / 3))
-        y1 = int((image_height / 3) - (image_height / 3))
-        x2 = int((image_width / 3) + (image_width / 3))
-        y2 = int((image_height / 3) + (image_height / 3))
+        x1 = int((image_width / 2) - (image_width / 2))
+        y1 = int((image_height / 2) - (image_height / 2))
+        x2 = int((image_width / 2) + (image_width / 2))
+        y2 = int((image_height / 2) + (image_height / 2))
 
 
         return image[
