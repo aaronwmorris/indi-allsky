@@ -51,7 +51,7 @@ class Align(object):
         reg_list = list()
         # add original target
         reg_list.append(reference_hdulist[0].data)
-        ref_crop = self._crop(reference_hdulist[0].data)
+        #ref_crop = self._crop(reference_hdulist[0].data)
 
 
         for hdulist in hdulist_list[1:]:
@@ -73,32 +73,32 @@ class Align(object):
                 #    )
 
                 ### Find transform using a crop of the image
-                hdu_crop = self._crop(hdulist[0].data)
-                self.transform, (source_list, target_list) = astroalign.find_transform(
-                    hdu_crop,
-                    ref_crop,
-                    detection_sigma=5,
-                    max_control_points=50,
-                    min_area=5,
-                )
-
-                ### Apply transform
-                reg_image, footprint = astroalign.apply_transform(
-                    self.transform,
-                    hdulist[0],
-                    reference_hdulist[0],
-                )
-
-
-                ## Register full image
-                #reg_image, footprint = astroalign.register(
-                #    hdulist[0],
-                #    reference_hdulist[0],
+                #hdu_crop = self._crop(hdulist[0].data)
+                #self.transform, (source_list, target_list) = astroalign.find_transform(
+                #    hdu_crop,
+                #    ref_crop,
                 #    detection_sigma=5,
                 #    max_control_points=50,
                 #    min_area=5,
-                #    #propagate_mask=True,
                 #)
+
+                ### Apply transform
+                #reg_image, footprint = astroalign.apply_transform(
+                #    self.transform,
+                #    hdulist[0],
+                #    reference_hdulist[0],
+                #)
+
+
+                ## Register full image
+                reg_image, footprint = astroalign.register(
+                    hdulist[0],
+                    reference_hdulist[0],
+                    detection_sigma=7,
+                    max_control_points=100,
+                    min_area=15,
+                    #propagate_mask=True,
+                )
             except astroalign.MaxIterError as e:
                 logger.error('Error registering: %s', str(e))
                 continue
@@ -172,10 +172,10 @@ class Align(object):
     def _crop(self, image):
         image_height, image_width = image.shape[:2]
 
-        x1 = int((image_width / 2) - (image_width / 2))
-        y1 = int((image_height / 2) - (image_height / 2))
-        x2 = int((image_width / 2) + (image_width / 2))
-        y2 = int((image_height / 2) + (image_height / 2))
+        x1 = int((image_width / 3) - (image_width / 3))
+        y1 = int((image_height / 3) - (image_height / 3))
+        x2 = int((image_width / 3) + (image_width / 3))
+        y2 = int((image_height / 3) + (image_height / 3))
 
 
         return image[
