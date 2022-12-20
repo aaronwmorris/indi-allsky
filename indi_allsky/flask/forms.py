@@ -399,6 +399,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'longitude'  : 0.0,
         'stack_method' : 'foo',
         'stack_count'  : 1,
+        'sidereal_time' : 'foo',
     }
 
     try:

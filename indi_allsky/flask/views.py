@@ -161,6 +161,7 @@ class BaseView(View):
         else:
             night = True
 
+
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
             return '<span class="text-muted">SLEEPING</span>'
 
@@ -198,6 +199,7 @@ class BaseView(View):
         sun.compute(obs)
         moon.compute(obs)
 
+        data['sidereal_time'] = str(obs.sidereal_time())
 
         # sun
         sun_alt = math.degrees(sun.alt)

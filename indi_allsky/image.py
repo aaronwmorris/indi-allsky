@@ -112,6 +112,7 @@ class ImageWorker(Process):
             'moon_alt'      : 0.0,
             'moon_phase'    : 0.0,
             'sun_moon_sep'  : 90.0,
+            'sidereal_time' : 'unset',
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
@@ -385,6 +386,7 @@ class ImageWorker(Process):
                     'stars'    : len(i_ref['stars']),
                     'latitude' : round(self.latitude_v.value, 3),
                     'longitude': round(self.longitude_v.value, 3),
+                    'sidereal_time': self.astrometric_data['sidereal_time'],
                 }
 
                 self.mqtt_publish(latest_file, mqtt_data)
@@ -483,6 +485,7 @@ class ImageWorker(Process):
             'stars_data'          : self.getStarsData(i_ref['camera_id']),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
+            'sidereal_time'       : self.astrometric_data['sidereal_time'],
         }
 
 
@@ -1948,6 +1951,9 @@ class ImageProcessor(object):
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
+        self.astrometric_data['sidereal_time'] = str(obs.sidereal_time())
+
+
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
         if orb_mode == 'ha':
@@ -1994,6 +2000,7 @@ class ImageProcessor(object):
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'sidereal_time': self.astrometric_data['sidereal_time'],
         }
 
 
