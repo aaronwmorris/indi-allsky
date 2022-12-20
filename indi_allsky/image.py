@@ -1841,9 +1841,17 @@ class ImageProcessor(object):
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _splitscreen(self, left_data, right_data):
-        image_height, image_width = left_data.shape[:2]
+    def _splitscreen(self, original_data, stacked_data):
+        # if flip horizontal is set, this data will swap sides later
+        if self.config.get('IMAGE_FLIP_H'):
+            left_data = stacked_data
+            right_data = original_data
+        else:
+            left_data = original_data
+            right_data = stacked_data
 
+
+        image_height, image_width = left_data.shape[:2]
 
         half_width = int(image_width / 2)
 
