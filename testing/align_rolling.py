@@ -22,6 +22,8 @@ class AlignRolling(object):
         self.transform = None
 
         self.stack_count = 10
+        self.split_screen = True
+
         self.image_list = list()
 
         if not self.output_dir_p.is_dir():
@@ -114,6 +116,11 @@ class AlignRolling(object):
             elapsed_s = time.time() - start
             logger.info('Images aligned in %0.4f s', elapsed_s)
 
+
+            if self.split_screen:
+                stacked_img = self._splitscreen(reference_hdulist[0].data, stacked_img)
+
+
             stacked_bitdepth = self._detectBitDepth(stacked_img)
             stacked_img_8bit = self._convert_16bit_to_8bit(stacked_img, 16, stacked_bitdepth)
 
@@ -199,6 +206,40 @@ class AlignRolling(object):
         ]
 
 
+    def splitscreen(self, left_data, right_data):
+        image_height, image_width = left_data.shape[:2]
+
+
+        half_width = int(image_width / 2)
+
+        # left side
+        left_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=left_mask,
+            pt1=(0, 0),
+            #pt2=(half_width, image_height),
+            pt2=(half_width - 1, image_height),  # ensure a black line is down the center
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_left = cv2.bitwise_and(left_data, left_data, mask=left_mask)
+
+        # right side
+        right_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=right_mask,
+            pt1=(half_width + 1, 0),
+            pt2=(image_width, image_height),
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_right = cv2.bitwise_and(right_data, right_data, mask=right_mask)
+
+        return numpy.maximum(masked_left, masked_right)
+
+
 class ImageStacker(object):
 
     def mean(self, *args, **kwargs):
@@ -228,7 +269,6 @@ class ImageStacker(object):
             image_min = numpy.minimum(image_min, i)
 
         return image_min
-
 
 
 if __name__ == "__main__":
