@@ -30,7 +30,9 @@ class AlignRolling(object):
 
     def main(self, inputfiles):
         file_list = sorted([Path(x) for x in inputfiles], key=lambda p: p.stat().st_mtime)
-        for i, fit in enumerate(file_list):
+
+        i = 0
+        for fit in file_list:
             self.add(fit)
 
             if len(self.image_list) != self.stack_count:
@@ -116,8 +118,11 @@ class AlignRolling(object):
             stacked_img_8bit = self._convert_16bit_to_8bit(stacked_img, 16, stacked_bitdepth)
 
 
-            out_file = self.output_dir_p.joinpath('{0:05d}.jpg'.format(i))
-            cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
+            out_file = self.output_dir_p.joinpath('{0:05d}.png'.format(i))
+            #cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
+            cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+            i += 1
 
 
 
