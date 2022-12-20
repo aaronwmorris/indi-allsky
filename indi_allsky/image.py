@@ -1582,7 +1582,7 @@ class ImageProcessor(object):
 
 
         if self.config.get('IMAGE_STACK_SPLIT'):
-            self.image = stacker.splitscreen(i_ref['hdulist'][0].data, self.image)
+            self.image = self._splitscreen(i_ref['hdulist'][0].data, self.image)
 
 
         stack_elapsed_s = time.time() - stack_start
@@ -1839,6 +1839,48 @@ class ImageProcessor(object):
         logger.info('New size: %d x %d', new_width, new_height)
 
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+    def _splitscreen(self, original_data, stacked_data):
+        # if flip horizontal is set, this data will swap sides later
+        if self.config.get('IMAGE_FLIP_H'):
+            left_data = stacked_data
+            right_data = original_data
+        else:
+            left_data = original_data
+            right_data = stacked_data
+
+
+        image_height, image_width = left_data.shape[:2]
+
+        half_width = int(image_width / 2)
+
+        # left side
+        left_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=left_mask,
+            pt1=(0, 0),
+            #pt2=(half_width, image_height),
+            pt2=(half_width - 1, image_height),  # ensure a black line is down the center
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_left = cv2.bitwise_and(left_data, left_data, mask=left_mask)
+
+        # right side
+        right_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        cv2.rectangle(
+            img=right_mask,
+            pt1=(half_width + 1, 0),
+            pt2=(image_width, image_height),
+            color=255,
+            thickness=cv2.FILLED,
+        )
+
+        masked_right = cv2.bitwise_and(right_data, right_data, mask=right_mask)
+
+        return numpy.maximum(masked_left, masked_right)
 
 
     def image_text(self):
@@ -2188,40 +2230,6 @@ class ImageStacker(object):
         logger.info('Registered %d+1 images in %0.4f s', len(stack_i_ref_list) - 1, reg_elapsed_s)  # reference image is not aligned
 
         return reg_data_list
-
-
-    def splitscreen(self, original, stacked):
-        image_height, image_width = original.shape[:2]
-
-
-        half_width = int(image_width / 2)
-
-        # left side
-        left_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
-        cv2.rectangle(
-            img=left_mask,
-            pt1=(half_width + 1, 0),
-            pt2=(image_width, image_height),
-            color=255,
-            thickness=cv2.FILLED,
-        )
-
-        masked_left = cv2.bitwise_and(original, original, mask=left_mask)
-
-        # right side
-        right_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
-        cv2.rectangle(
-            img=right_mask,
-            pt1=(0, 0),
-            #pt2=(half_width, image_height),
-            pt2=(half_width - 1, image_height),  # ensure a black line is down the center
-            color=255,
-            thickness=cv2.FILLED,
-        )
-
-        masked_right = cv2.bitwise_and(stacked, stacked, mask=right_mask)
-
-        return numpy.maximum(masked_left, masked_right)
 
 
     def _crop(self, image):
