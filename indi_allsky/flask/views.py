@@ -485,6 +485,7 @@ class RollingAduView(TemplateView):
                 func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
                 func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
             )\
             .filter(
                 and_(

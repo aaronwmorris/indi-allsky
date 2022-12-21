@@ -12,6 +12,7 @@ table, th, td {
 {% endblock %}
 
 {% block content %}
+<h4>Image stats in 15 minute blocks</h4>
 <table>
 <tr>
     <th>Date</th>
@@ -19,14 +20,16 @@ table, th, td {
     <th>Exposure Avg</th>
     <th>ADU Avg</th>
     <th>SQM Avg</th>
+    <th>Stars Avg</th>
 </tr>
 {% for adu in rolling_adu_list %}
 <tr>
     <td>{{ adu.dt.strftime('%Y-%m-%d %H:%M') }}</td>
     <td>{{ adu.i_count }}</td>
     <td>{{ "%0.4f"|format(adu.exposure_avg) }}</td>
-    <td>{{ "%0.4f"|format(adu.adu_avg) }}</td>
-    <td>{{ "%0.4f"|format(adu.sqm_avg) }}</td>
+    <td>{{ "%0.2f"|format(adu.adu_avg) }}</td>
+    <td>{{ "%0.2f"|format(adu.sqm_avg) }}</td>
+    <td>{{ "%0.1f"|format(adu.stars_avg) }}</td>
 </tr>
 {% endfor %}
 </table>
