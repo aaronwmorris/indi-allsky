@@ -477,6 +477,7 @@ class RollingAduView(TemplateView):
         now_minus_3d = datetime.now() - timedelta(days=3)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
+        # this should give us average exposure, adu in 15 minute sets, during the night
         rolling_adu_list = IndiAllSkyDbImageTable.query\
             .add_columns(
                 IndiAllSkyDbImageTable.createDate.label('dt'),
@@ -484,6 +485,7 @@ class RollingAduView(TemplateView):
                 func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
                 func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
             )\
             .filter(
                 and_(
@@ -495,7 +497,7 @@ class RollingAduView(TemplateView):
                 )
             )\
             .group_by(cast(func.strftime('%s', IndiAllSkyDbImageTable.createDate), Integer) / 900)\
-            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
         context['rolling_adu_list'] = rolling_adu_list
 
