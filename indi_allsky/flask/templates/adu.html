@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Image Historical ADU{% endblock %}
+
+{% block head %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<table>
+<tr>
+    <th>Date</th>
+    <th>Count</th>
+    <th>Exposure Avg</th>
+    <th>ADU Avg</th>
+    <th>SQM Avg</th>
+</tr>
+{% for adu in rolling_adu_list %}
+<tr>
+    <td>{{ adu.dt.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td>{{ adu.i_count }}</td>
+    <td>{{ "%0.4f"|format(adu.exposure_avg) }}</td>
+    <td>{{ "%0.4f"|format(adu.adu_avg) }}</td>
+    <td>{{ "%0.4f"|format(adu.sqm_avg) }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

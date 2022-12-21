@@ -55,7 +55,10 @@ from .models import TaskQueueQueue
 from .models import TaskQueueState
 
 from sqlalchemy import func
-#from sqlalchemy import extract
+from sqlalchemy import extract
+from sqlalchemy import cast
+from sqlalchemy import and_
+from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
 #from sqlalchemy.orm.exc import NoResultFound
@@ -466,6 +469,37 @@ class ImageLagView(TemplateView):
 
         return context
 
+
+class RollingAduView(TemplateView):
+    def get_context(self):
+        context = super(RollingAduView, self).get_context()
+
+        now_minus_3d = datetime.now() - timedelta(days=3)
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        rolling_adu_list = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                IndiAllSkyDbImageTable.createDate.label('dt'),
+                func.count(IndiAllSkyDbImageTable.id).label('i_count'),
+                func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
+                func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+            )\
+            .filter(
+                and_(
+                    IndiAllSkyDbImageTable.createDate > now_minus_3d,
+                    or_(
+                        createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                        createDate_hour <= 4,
+                    )
+                )
+            )\
+            .group_by(cast(func.strftime('%s', IndiAllSkyDbImageTable.createDate), Integer) / 900)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+        context['rolling_adu_list'] = rolling_adu_list
+
+        return context
 
 
 class SqmView(TemplateView):
@@ -2881,4 +2915,5 @@ bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view(
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
+bp.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 
