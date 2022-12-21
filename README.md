@@ -113,6 +113,9 @@ source virtualenv/indi-allsky/bin/activate
 ./allsky.py run
 ```
 
+## Updating
+https://github.com/aaronwmorris/indi-allsky/wiki/Updating-indi-allsky
+
 ### Logs
 * When indi-allsky is run from the command line, logs are sent to STDERR by default.
 * When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in /var/log/indi-allsky/indi-allsky.log and rotated daily.
@@ -413,13 +416,12 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 
 ## Tested Hardware
 
-I have extensively tested the ZWO ASI290MM and the Svbony SV305.  3-4 weeks of steady runtime with no intervention are common.  The only reason I restart my cameras are code updates (or power failures).
+3-4 weeks of constant runtime with no intervention are common.  The only reason I restart my cameras are code updates (or power failures).
 
 The hardware below has at least been plugged in and tested for correct detection and CFA decoding.
 
 | Vendor   | Model               | Rating | Notes |
 | -------- | ------------------- | ------ | ----- |
-| Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
 | ZWO      | ASI120MC-S          | B      | https://github.com/aaronwmorris/indi-allsky/wiki/ASI120MC-S-Camera-Issues |
 | ZWO      | ASI290MM            | A      |       |
 | ZWO      | ASI178MM            | A      |       |
@@ -429,17 +431,24 @@ The hardware below has at least been plugged in and tested for correct detection
 | ZWO      | ASI183MM Pro        | A      |       |
 | ZWO      | ASI183MC Pro        | A      |       |
 | QHY      | QHY5LII-M           | A      |       |
+| Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
+| Altair   | GPCAM3 290C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for full resolution |
+| Altair   | GPCAM3 224C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for full resolution |
 | Altair   | GPCAM2 290M         | A      |       |
+| Touptek  | G3CMOS06300KPA (IMX178) | A  |       |
 | Touptek  | G-1200-KMB          | A      |       |
-| Starlight Xpress | Superstar   | A      |       |
 | Player One   | Mars-C          | A      |       |
+| Player One   | Neptune-C       | A      |       |
+| Starlight Xpress | Superstar   | A      |       |
 | Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
 | Raspberry Pi | HQ Camera (libcamera) | A      | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
 | Waveshare    | imx378 (libcamera)    | A      | Select libcamera_imx477 interface |
+| ArduCam  | 64MP HawkEye        | A      | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
-| Generic  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
+| IP Cameras | indi_webcam_ccd   | B      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for operation |
+| Webcams  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
 | indi     | indi_simulator_ccd  |        | CCD Simulator.  Install GSC to generate sample images. |
 
 If you have an INDI supported camera from a vendor not listed, open an enhancement request and I can work with you to support the camera.
@@ -451,8 +460,8 @@ Common problems you might run into.
 * The indi-allsky python processes consume ~500MB of RAM.
     * 1K (1920x1080) h.264 encoding with ffmpeg requires an additional ~500MB of RAM.  1GB of RAM should be the bare minimum system memory.  You should also have 100-500MB of additional swap space to prevent running out of memory during encoding.  2GB of RAM recommended.
     * 4K (3840x2160) h.264 encoding requires an additional 2+GB of RAM.  4GB of RAM recommended.
-    * Above 4K resolution requires greater than 4GB of RAM.
-* In Raspbian 10 (legacy), the h.264 codec in ffmpeg has a maximum frame size of 4096×2304 (AVC level 5.1).  If your camera generates higher resolution images, you will need to scale the frames or use the Region of Interest (RoI) options to reduce the frame size.
+    * 8K resolution (ArduCam 64MP HawkEye) requires 8GB of RAM for full resolution video processing.
+* In Raspbian 10 (legacy), the h.264 codec in ffmpeg has a maximum frame size of 4096×2304 (AVC level 5.1).  If your camera generates higher resolution images, you will need to scale the video  or use the Region of Interest (RoI) options to reduce the frame size.
     * NEW: indi-allsky now has the ability to scale the native resolution images during the ffmpeg encoding phase, so you do not need to pre-scale your images.
     * The RaspberryPi HQ camera has a bin1 image size of 4056x3040.  Setting IMAGE_SCALE to 75 in the config results in a image size of 3042x2280.  Alternatively, you can center crop the image using IMAGE_CROP_ROI set to [0, 368, 4056, 2672] for an image size of 4056×2304.
 * ffmpeg in Raspbian 11 enables AVC level 6.0+ which permits h.264 resolutions up to 8192×4320 (you must have sufficient system memory)
