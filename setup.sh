@@ -172,6 +172,14 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
     exit 1
 fi
 
+if ! ping -c 1 $(hostname -s) >/dev/null 2>&1; then
+    echo "To avoid the benign warnings 'Name or service not known sudo: unable to resolve host'"
+    echo "Add the following line to your /etc/hosts file:"
+    echo "127.0.0.1       localhost $(hostname -s)"
+    echo
+    echo
+fi
+
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
