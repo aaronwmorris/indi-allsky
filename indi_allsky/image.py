@@ -1143,6 +1143,8 @@ class ImageProcessor(object):
 
         self._detection_mask = mask
 
+        self.focus_mode = self.config.get('FOCUS_MODE', False)
+
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
@@ -1523,13 +1525,23 @@ class ImageProcessor(object):
     def calculateSqm(self):
         i_ref = self.getLatestImage()
 
+        if self.focus_mode:
+            # disable processing in focus mode
+            i_ref['sqm_value'] = 0
+            return
+
         i_ref['sqm_value'] = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
 
 
     def stack(self):
-        # during the day time, there should only be a single object in list (see _incrementIndex())
-
         i_ref = self.getLatestImage()
+
+
+        if self.focus_mode:
+            # disable processing in focus mode
+            self.image = i_ref['hdulist'][0].data
+            return
+
 
         stack_i_ref_list = list()
         for i in self.image_list:
@@ -1648,15 +1660,31 @@ class ImageProcessor(object):
 
     def detectLines(self):
         i_ref = self.getLatestImage()
+
+        if self.focus_mode:
+            # disable processing in focus mode
+            i_ref['lines'] = list
+            return
+
         i_ref['lines'] = self._lineDetect.detectLines(self.image)
 
 
     def detectStars(self):
         i_ref = self.getLatestImage()
+
+        if self.focus_mode:
+            # disable processing in focus mode
+            i_ref['stars'] = list()
+            return
+
         i_ref['stars'] = self._stars.detectObjects(self.image)
 
 
     def drawDetections(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         self.image = self._draw.main(self.image)
 
 
@@ -1678,6 +1706,10 @@ class ImageProcessor(object):
 
 
     def scnr(self, algo):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         try:
             scnr_function = getattr(self._scnr, algo)
             self.image = scnr_function(self.image)
@@ -1686,6 +1718,11 @@ class ImageProcessor(object):
 
 
     def white_balance_manual_bgr(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
         if len(self.image.shape) == 2:
             # mono
             return
@@ -1730,25 +1767,37 @@ class ImageProcessor(object):
     #    self.image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
 
-    def median_blur(self):
-        data_blur = cv2.medianBlur(self.image, ksize=3)
-        self.image = data_blur
+    #def median_blur(self):
+    #    if self.focus_mode:
+    #        # disable processing in focus mode
+    #        return
+
+    #    data_blur = cv2.medianBlur(self.image, ksize=3)
+    #    self.image = data_blur
 
 
-    def fastDenoise(self):
-        data_denoise = cv2.fastNlMeansDenoisingColored(
-            self.image,
-            None,
-            h=3,
-            hColor=3,
-            templateWindowSize=7,
-            searchWindowSize=21,
-        )
+    #def fastDenoise(self):
+    #    if self.focus_mode:
+    #        # disable processing in focus mode
+    #        return
 
-        self.image = data_denoise
+    #    data_denoise = cv2.fastNlMeansDenoisingColored(
+    #        self.image,
+    #        None,
+    #        h=3,
+    #        hColor=3,
+    #        templateWindowSize=7,
+    #        searchWindowSize=21,
+    #    )
+
+    #    self.image = data_denoise
 
 
     def white_balance_auto_bgr(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         if len(self.image.shape) == 2:
             # mono
             return
@@ -1785,6 +1834,10 @@ class ImageProcessor(object):
 
 
     def contrast_clahe(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         ### ohhhh, contrasty
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
 
@@ -1806,6 +1859,10 @@ class ImageProcessor(object):
 
 
     #def equalizeHistogram(self, data):
+    #    if self.focus_mode:
+    #        # disable processing in focus mode
+    #        return
+
     #    if len(data.shape) == 2:
     #        # mono
     #        return cv2.equalizeHist(data)
@@ -1823,6 +1880,10 @@ class ImageProcessor(object):
 
 
     #def equalizeHistogramColor(self, data):
+    #    if self.focus_mode:
+    #        # disable processing in focus mode
+    #        return
+
     #    if len(data.shape) == 2:
     #        # mono
     #        return data_bytes
@@ -1833,6 +1894,10 @@ class ImageProcessor(object):
 
 
     def scale_image(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         image_height, image_width = self.image.shape[:2]
 
         logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
@@ -1887,6 +1952,8 @@ class ImageProcessor(object):
 
 
     def image_text(self):
+        # this needs to be enabled during focus mode
+
         i_ref = self.getLatestImage()
 
         self._image_text(i_ref)
