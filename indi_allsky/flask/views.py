@@ -1897,7 +1897,7 @@ class TaskQueueView(TemplateView):
             .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_3d)\
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
             .filter(~IndiAllSkyDbTaskQueueTable.queue.in_(exclude_queues))\
-            .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+            .order_by(IndiAllSkyDbTaskQueueTable.createDate.desc())
 
 
         task_list = list()
