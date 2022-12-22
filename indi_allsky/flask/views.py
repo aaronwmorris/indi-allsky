@@ -1891,10 +1891,10 @@ class TaskQueueView(TemplateView):
             TaskQueueQueue.UPLOAD,
         )
 
-        now_minus_1h = datetime.now() - timedelta(hours=1)
+        now_minus_3d = datetime.now() - timedelta(days=3)
 
         tasks = IndiAllSkyDbTaskQueueTable.query\
-            .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_1h)\
+            .filter(IndiAllSkyDbTaskQueueTable.createDate > now_minus_3d)\
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
             .filter(~IndiAllSkyDbTaskQueueTable.queue.in_(exclude_queues))\
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
