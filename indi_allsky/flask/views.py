@@ -401,7 +401,7 @@ class IndexView(TemplateView):
 
         context['user_message'] = ''  # default message
         if latest_image_p.exists():
-            max_age = datetime.now() - timedelta(minutes=15)
+            max_age = datetime.now() - timedelta(minutes=5)
             if latest_image_p.stat().st_mtime < max_age.timestamp():
                 context['user_message'] = 'Image is out of date'
 
