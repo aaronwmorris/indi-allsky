@@ -73,6 +73,7 @@ from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
+from .forms import IndiAllskyLogViewerForm
 
 
 bp = Blueprint(
@@ -2831,10 +2832,10 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
+        zoom = int(request.args.get('zoom', 2))
+
         json_data = dict()
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
-
-        zoom = int(request.args.get('zoom', 2))
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
@@ -2880,6 +2881,64 @@ class JsonFocusView(JsonView):
         return jsonify(json_data)
 
 
+class LogView(TemplateView):
+
+    def get_context(self):
+        context = super(LogView, self).get_context()
+
+        context['form_logviewer'] = IndiAllskyLogViewerForm()
+
+        return context
+
+
+class JsonLogView(JsonView):
+
+    def __init__(self, **kwargs):
+        super(JsonLogView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        line_size = 150  # assuming lines have an average length
+
+        lines = int(request.args.get('lines', 500))
+
+        json_data = dict()
+
+
+        if lines > 5000:
+            # sanity check
+            lines = 5000
+
+
+        read_bytes = lines * line_size
+
+
+        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
+
+        log_file_size = log_file_p.stat().st_size
+        if log_file_size < read_bytes:
+            # just read the whole file
+            #app.logger.info('Returning %d bytes of log data', log_file_size)
+            log_file_seek = 0
+        else:
+            #app.logger.info('Returning %d bytes of log data', read_bytes)
+            log_file_seek = log_file_size - read_bytes
+
+
+        log_file_f = io.open(log_file_p, 'r')
+        log_file_f.seek(log_file_seek)
+        log_lines = log_file_f.readlines()
+
+        log_file_f.close()
+
+        log_lines.pop(0)  # skip the first partial line
+        log_lines.reverse()  # newer lines first
+
+        json_data['log'] = ''.join(log_lines)
+
+        return jsonify(json_data)
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2902,6 +2961,8 @@ bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', temp
 bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
 bp.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+bp.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
+bp.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
 
 bp.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
 bp.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))
