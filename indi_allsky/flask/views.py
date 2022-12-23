@@ -967,6 +967,7 @@ class ConfigView(FormView):
             'MQTTPUBLISH__CERT_BYPASS'       : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('CERT_BYPASS', True),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
+            'RELOAD_ON_SAVE'                 : False,
         }
 
 
@@ -1319,6 +1320,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
 
+        # Not a config option
+        reload_on_save                                                  = bool(request.json['RELOAD_ON_SAVE'])
+
 
         # ADU_ROI
         adu_roi_x1 = int(request.json['ADU_ROI_X1'])
@@ -1391,12 +1395,28 @@ class AjaxConfigView(BaseView):
             return jsonify(error_data), 400
 
 
-        message = {
-            'success-message' : 'Wrote new config',
-        }
+        if reload_on_save:
+            self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+
+            message = {
+                'success-message' : 'Wrote new config,  Reloading indi-allsky service.',
+            }
+        else:
+            message = {
+                'success-message' : 'Wrote new config',
+            }
+
 
         return jsonify(message)
 
+
+    def hupSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.ReloadUnit(unit, 'fail')
+
+        return r
 
 
 class AjaxSetTimeView(BaseView):
