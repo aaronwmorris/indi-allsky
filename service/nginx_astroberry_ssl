@@ -8,6 +8,7 @@ server {
     root %DOCROOT_FOLDER%;
 
     ### Comment this section to permit HTTP access to indi-allsky
+    ###  SESSION_COOKIE_SECURE will have to be set to "false" in flash config
     return 302 https://$host:%HTTPS_PORT%$request_uri;
     ###
 
@@ -76,7 +77,8 @@ server {
     ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
     ssl_prefer_server_ciphers on;
 
-    #add_header Strict-Transport-Security "max-age=604800; includeSubDomains" always;  # 1 week
+    # 1 week HSTS header
+    add_header Strict-Transport-Security "max-age=604800; includeSubDomains" always;
 
     rewrite ^/$ /indi-allsky;
 
