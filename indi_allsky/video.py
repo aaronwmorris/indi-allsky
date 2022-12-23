@@ -90,27 +90,23 @@ class VideoWorker(Process):
 
         self._shutdown = False
 
-        signal.signal(signal.SIGHUP, self.sighup_handler)
-        signal.signal(signal.SIGTERM, self.sigterm_handler)
-        signal.signal(signal.SIGINT, self.sigint_handler)
 
 
-
-    def sighup_handler(self, signum, frame):
+    def sighup_handler_worker(self, signum, frame):
         logger.warning('Caught HUP signal')
 
         # set flag for program to stop processes
         self._shutdown = True
 
 
-    def sigterm_handler(self, signum, frame):
+    def sigterm_handler_worker(self, signum, frame):
         logger.warning('Caught TERM signal')
 
         # set flag for program to stop processes
         self._shutdown = True
 
 
-    def sigint_handler(self, signum, frame):
+    def sigint_handler_worker(self, signum, frame):
         logger.warning('Caught INT signal')
 
         # set flag for program to stop processes
@@ -120,6 +116,12 @@ class VideoWorker(Process):
 
 
     def run(self):
+        # setup signal handling after detaching from the main process
+        signal.signal(signal.SIGHUP, self.sighup_handler_worker)
+        signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
+        signal.signal(signal.SIGINT, self.sigint_handler_worker)
+
+
         ### use this as a method to log uncaught exceptions
         try:
             self.saferun()
