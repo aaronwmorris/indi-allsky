@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Log Viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+<script type="text/javascript">
+var json_data = {
+    'log' : null,
+};
+var refreshInterval = 15000;
+var lines = 25;
+
+function init() {
+    loadLog();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['log'] == null) {
+        await sleep(100);
+    }
+
+    showLog(json_data['log']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showLog(log_data) {
+    console.log('Updating log data');
+
+    if (log_data == null) {
+        console.log('No data');
+        return;
+    }
+
+    pre_div = $('<pre />');
+
+    $('<div />', {
+        'text'  : log_data,
+    }).appendTo(pre_div);
+
+    $("#log_data").html(pre_div);
+}
+
+
+function loadLog() {
+    console.log('Loading log data');
+    loadJS("{{ url_for('indi_allsky.js_log_view') }}", {'lines' : lines}, function() {});
+    setTimeout(loadLog, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data;
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_logviewer" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_logviewer.REFRESH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_logviewer.REFRESH_SELECT(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_logviewer.LINES_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_logviewer.LINES_SELECT(class='form-control bg-secondary') }}
+        </div>
+    </div>
+</form>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-12">
+        <div id="log_data"></div>
+    </div>
+</div>
+
+<script>
+$("#REFRESH_SELECT").on("change", function() {
+    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
+    console.log('Changing refresh interval: ' + refreshInterval);
+});
+
+$("#LINES_SELECT").on("change", function() {
+    lines = $('#LINES_SELECT').val();
+    console.log('Changing lines: ' + lines);
+});
+</script>
+
+
+{% endblock %}

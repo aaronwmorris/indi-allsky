@@ -70,6 +70,11 @@
                         <a href="{{ url_for('indi_allsky.system_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/wrench.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">System</span> </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('indi_allsky.log_view') }}" class="nav-link px-sm-0 px-2">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/terminal-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Log</span> </a>
+                    </li>
+                </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
                     <div>Status: {{ indi_allsky_status|safe }}</div>

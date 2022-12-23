@@ -2123,3 +2123,24 @@ class IndiAllskyFocusForm(FlaskForm):
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
     REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[3][0], validators=[])
 
+
+class IndiAllskyLogViewerForm(FlaskForm):
+    LINES_SELECT_choices = (
+        (25, '25'),
+        (100, '100'),
+        (500, '500'),
+        (1000, '1000'),
+        (2000, '2000'),
+        (5000, '5000'),
+    )
+    REFRESH_SELECT_choices = (
+        (5, '5s'),
+        (15, '15s'),
+        (30, '30s'),
+        (60, '60s'),
+    )
+
+
+    LINES_SELECT      = SelectField('Lines', choices=LINES_SELECT_choices, default=LINES_SELECT_choices[0][0], validators=[])
+    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[1][0], validators=[])
+
