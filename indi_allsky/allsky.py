@@ -124,14 +124,16 @@ class IndiAllSky(object):
 
         self.generate_timelapse_flag = False   # This is updated once images have been generated
 
-        signal.signal(signal.SIGALRM, self.sigalarm_handler)
-        signal.signal(signal.SIGHUP, self.sighup_handler)
-        signal.signal(signal.SIGTERM, self.sigterm_handler)
-        signal.signal(signal.SIGINT, self.sigint_handler)
 
-        self._restart = False
+        self._reload = False
         self._shutdown = False
         self._terminate = False
+
+        signal.signal(signal.SIGALRM, self.sigalarm_handler_main)
+        signal.signal(signal.SIGHUP, self.sighup_handler_main)
+        signal.signal(signal.SIGTERM, self.sigterm_handler_main)
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
 
 
     @property
@@ -143,7 +145,7 @@ class IndiAllSky(object):
         self._pidfile = str(new_pidfile)
 
 
-    def sighup_handler(self, signum, frame):
+    def sighup_handler_main(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
         with io.open(self.config_file, 'r') as f_config_file:
@@ -261,10 +263,10 @@ class IndiAllSky(object):
 
 
         # set flag for program to restart processes
-        self._restart = True
+        self._reload = True
 
 
-    def sigterm_handler(self, signum, frame):
+    def sigterm_handler_main(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
 
         # set flag for program to stop processes
@@ -272,14 +274,14 @@ class IndiAllSky(object):
         self._terminate = True
 
 
-    def sigint_handler(self, signum, frame):
+    def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
         # set flag for program to stop processes
         self._shutdown = True
 
 
-    def sigalarm_handler(self, signum, frame):
+    def sigalarm_handler_main(self, signum, frame):
         raise TimeOutException()
 
 
@@ -619,7 +621,7 @@ class IndiAllSky(object):
 
         self.image_worker_idx += 1
 
-        logger.info('Starting ImageWorker process')
+        logger.info('Starting ImageWorker process %d', self.image_worker_idx)
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
@@ -673,7 +675,7 @@ class IndiAllSky(object):
 
         self.video_worker_idx += 1
 
-        logger.info('Starting VideoWorker process')
+        logger.info('Starting VideoWorker process %d', self.video_worker_idx)
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
@@ -889,9 +891,9 @@ class IndiAllSky(object):
                     sys.exit()
 
 
-                if self._restart:
+                if self._reload:
                     logger.warning('Restarting processes')
-                    self._restart = False
+                    self._reload = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
@@ -952,9 +954,9 @@ class IndiAllSky(object):
 
 
                 # restart here to ensure camera is not taking images
-                if self._restart:
+                if self._reload:
                     logger.warning('Restarting processes')
-                    self._restart = False
+                    self._reload = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
