@@ -166,6 +166,9 @@ class BaseView(View):
             night = True
 
 
+        if self.indi_allsky_config.get('FOCUS_MODE', False):
+            return '<span class="text-warning">FOCUS MODE</span>'
+
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
             return '<span class="text-muted">SLEEPING</span>'
 
