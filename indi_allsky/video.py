@@ -10,6 +10,7 @@ from datetime import timezone
 from pathlib import Path
 import tempfile
 import fcntl
+import signal
 import errno
 import traceback
 import logging
@@ -87,6 +88,37 @@ class VideoWorker(Process):
         self._detection_mask = self._load_detection_mask()
 
 
+        self._shutdown = False
+
+        signal.signal(signal.SIGHUP, self.sighup_handler)
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+        signal.signal(signal.SIGINT, self.sigint_handler)
+
+
+
+    def sighup_handler(self, signum, frame):
+        logger.warning('Caught HUP signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigterm_handler(self, signum, frame):
+        logger.warning('Caught TERM signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigint_handler(self, signum, frame):
+        logger.warning('Caught INT signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+
+
     def run(self):
         ### use this as a method to log uncaught exceptions
         try:
@@ -106,7 +138,13 @@ class VideoWorker(Process):
             except queue.Empty:
                 continue
 
+
             if v_dict.get('stop'):
+                logger.warning('Goodbye')
+                return
+
+            if self._shutdown:
+                logger.warning('Goodbye')
                 return
 
 

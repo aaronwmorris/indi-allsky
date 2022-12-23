@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import copy
 import math
+import signal
 import logging
 import traceback
 #from pprint import pformat
@@ -141,6 +142,34 @@ class ImageWorker(Process):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+        self._shutdown = False
+
+        signal.signal(signal.SIGHUP, self.sighup_handler)
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+        signal.signal(signal.SIGINT, self.sigint_handler)
+
+
+
+    def sighup_handler(self, signum, frame):
+        logger.warning('Caught HUP signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigterm_handler(self, signum, frame):
+        logger.warning('Caught TERM signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigint_handler(self, signum, frame):
+        logger.warning('Caught INT signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
 
     def run(self):
         ### use this as a method to log uncaught exceptions
@@ -162,8 +191,15 @@ class ImageWorker(Process):
             except queue.Empty:
                 continue
 
+
             if i_dict.get('stop'):
+                logger.warning('Goodbye')
                 return
+
+            if self._shutdown:
+                logger.warning('Goodbye')
+                return
+
 
             ### Not using DB task queue for image processing to reduce database I/O
             #task_id = i_dict['task_id']

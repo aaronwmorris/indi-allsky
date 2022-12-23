@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+import signal
 import traceback
 import logging
 
@@ -39,6 +40,35 @@ class FileUploader(Process):
         self.upload_q = upload_q
 
 
+        self._shutdown = False
+
+        signal.signal(signal.SIGHUP, self.sighup_handler)
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+        signal.signal(signal.SIGINT, self.sigint_handler)
+
+
+
+    def sighup_handler(self, signum, frame):
+        logger.warning('Caught HUP signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigterm_handler(self, signum, frame):
+        logger.warning('Caught TERM signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigint_handler(self, signum, frame):
+        logger.warning('Caught INT signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
     def run(self):
         ### use this as a method to log uncaught exceptions
         try:
@@ -60,6 +90,11 @@ class FileUploader(Process):
 
 
             if u_dict.get('stop'):
+                logger.warning('Goodbye')
+                return
+
+            if self._shutdown:
+                logger.warning('Goodbye')
                 return
 
 

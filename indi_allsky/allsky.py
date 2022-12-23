@@ -124,14 +124,16 @@ class IndiAllSky(object):
 
         self.generate_timelapse_flag = False   # This is updated once images have been generated
 
+
+        self._reload = False
+        self._shutdown = False
+        self._terminate = False
+
         signal.signal(signal.SIGALRM, self.sigalarm_handler)
         signal.signal(signal.SIGHUP, self.sighup_handler)
         signal.signal(signal.SIGTERM, self.sigterm_handler)
         signal.signal(signal.SIGINT, self.sigint_handler)
 
-        self._restart = False
-        self._shutdown = False
-        self._terminate = False
 
 
     @property
@@ -261,7 +263,7 @@ class IndiAllSky(object):
 
 
         # set flag for program to restart processes
-        self._restart = True
+        self._reload = True
 
 
     def sigterm_handler(self, signum, frame):
@@ -889,9 +891,9 @@ class IndiAllSky(object):
                     sys.exit()
 
 
-                if self._restart:
+                if self._reload:
                     logger.warning('Restarting processes')
-                    self._restart = False
+                    self._reload = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
@@ -952,9 +954,9 @@ class IndiAllSky(object):
 
 
                 # restart here to ensure camera is not taking images
-                if self._restart:
+                if self._reload:
                     logger.warning('Restarting processes')
-                    self._restart = False
+                    self._reload = False
                     self._stopImageWorker()
                     self._stopVideoWorker()
                     self._stopFileUploadWorker()
