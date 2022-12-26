@@ -13,8 +13,8 @@ pre {
 var json_data = {
     'log' : null,
 };
-var refreshInterval = 15000;
-var lines = 25;
+var refreshInterval;  // set later
+var lines;  // set later
 
 function init() {
     loadLog();
@@ -83,6 +83,29 @@ function loadJS(url, data, onDone, onError) {
 
 
 $( document ).ready(function() {
+    if(localStorage) {
+        log_settings = localStorage.getItem("log_settings");
+        if(log_settings) {
+            page_settings = JSON.parse(log_settings);
+        } else {
+            page_settings = new Object();
+            page_settings["refreshInterval"] = 15000;
+            page_settings["lines"] = 25;
+
+            localStorage.setItem("log_settings", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["refreshInterval"] !== "undefined") {
+        $("#REFRESH_SELECT").val(page_settings["refreshInterval"] / 1000);
+    }
+    if(typeof page_settings["lines"] !== "undefined") {
+        $("#LINES_SELECT").val(page_settings["lines"]);
+    }
+
+    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
+    lines = $('#LINES_SELECT').val();
+
     init();
 });
 
@@ -119,11 +142,21 @@ $( document ).ready(function() {
 $("#REFRESH_SELECT").on("change", function() {
     refreshInterval = $('#REFRESH_SELECT').val() * 1000;
     console.log('Changing refresh interval: ' + refreshInterval);
+
+    if(localStorage) {
+        page_settings["refreshInterval"] = refreshInterval;
+        localStorage.setItem("log_settings", JSON.stringify(page_settings));
+    }
 });
 
 $("#LINES_SELECT").on("change", function() {
     lines = $('#LINES_SELECT').val();
     console.log('Changing lines: ' + lines);
+
+    if(localStorage) {
+        page_settings["lines"] = lines;
+        localStorage.setItem("log_settings", JSON.stringify(page_settings));
+    }
 });
 </script>
 
