@@ -365,6 +365,11 @@ form_settime_field_names.forEach(item => {
     };
 });
 
+form_settime_fields['form_settime_global'] = {
+    'input' : form_settime_failureMessage,
+    'error' : form_settime_failureMessage,
+};
+
 // Checkboxes
 form_settime_checkbox_field_names.forEach(item => {
     form_settime_fields[item] = {
@@ -421,6 +426,8 @@ $('#form_settime').on('submit', function() {
                 form_settime_fields[key].error.html(errors[key][0]);
                 form_settime_fields[key].error.css({'display' : 'block'});
             });
+
+            $("#loader_settime").css({'display' : 'none'});
         },
     });
 
@@ -621,6 +628,7 @@ field_names.forEach(item => {
 });
 
 fields['form_global'] = {
+    'input' : failureMessage,
     'error' : failureMessage,
 };
 
@@ -665,6 +673,7 @@ function button_click(service, command) {
             $("#button_validate_db").prop('disabled', false);
             $("#button_flush_images").prop('disabled', false);
             $("#button_flush_timelapses").prop('disabled', false);
+
             $("#loader_shutdown").css({'display' : 'none'});
         },
         error: function(data){
@@ -674,6 +683,8 @@ function button_click(service, command) {
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
             });
+
+            $("#loader_shutdown").css({'display' : 'none'});
         },
     });
 
