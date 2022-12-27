@@ -96,6 +96,10 @@ class TimelapseGenerator(object):
             raise TimelapseException('FFMPEG return code %d', e.returncode)
 
 
+        # set default permissions
+        video_file_p.chmod(0o644)
+
+
     def cleanup(self):
         # delete all existing symlinks and sequence folder
         self.seqfolder.cleanup()

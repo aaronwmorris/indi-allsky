@@ -13,6 +13,8 @@ ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
 PrivateTmp=true
+Nice=10
+UMask=0022
 
 [Install]
 WantedBy=default.target

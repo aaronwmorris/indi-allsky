@@ -4,6 +4,7 @@ import math
 import time
 #import copy
 from datetime import datetime
+from pathlib import Path
 import logging
 from pprint import pformat
 
@@ -126,6 +127,8 @@ class KeogramGenerator(object):
 
 
     def finalize(self, outfile):
+        outfile_p = Path(outfile)
+
         logger.info('Images processed for keogram in %0.1f s', self.image_processing_elapsed_s)
 
         # trim off the top and bottom bars
@@ -143,18 +146,22 @@ class KeogramGenerator(object):
 
         write_img_start = time.time()
 
-        logger.warning('Creating keogram: %s', outfile)
+        logger.warning('Creating keogram: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(outfile), keogram_resized, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+
+
+        # set default permissions
+        outfile_p.chmod(0o644)
 
 
     def rotate(self, image):
