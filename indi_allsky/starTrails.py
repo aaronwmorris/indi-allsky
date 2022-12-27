@@ -207,6 +207,8 @@ class StarTrailGenerator(object):
 
 
     def finalize(self, outfile):
+        outfile_p = Path(outfile)
+
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
         logger.warning('Excluded %d images', self.excluded_images)
 
@@ -218,18 +220,22 @@ class StarTrailGenerator(object):
 
         write_img_start = time.time()
 
-        logger.warning('Creating star trail: %s', outfile)
+        logger.warning('Creating star trail: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
         write_img_elapsed_s = time.time() - write_img_start
         logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+
+
+        # set default permissions
+        outfile_p.chmod(0o644)
 
 
     def cleanup(self):

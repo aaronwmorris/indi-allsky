@@ -8,6 +8,7 @@ ExecStart=%INDI_DRIVER_PATH%/indiserver indi_simulator_telescope %INDI_CCD_DRIVE
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
 PrivateTmp=true
+UMask=0022
  
 [Install]
 WantedBy=default.target
