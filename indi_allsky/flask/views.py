@@ -1437,7 +1437,14 @@ class AjaxSetTimeView(BaseView):
 
         app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
 
-        self.setTimeSystemd(new_datetime_utc)
+        try:
+            self.setTimeSystemd(new_datetime_utc)
+        except dbus.exceptions.DBusException as e:
+            # manually build this error
+            form_errors = {
+                'form_settime_global' : [str(e)],
+            }
+            return jsonify(form_errors), 400
 
         # form passed validation
         message = {

@@ -1547,7 +1547,10 @@ class IndiAllSky(object):
 
             # This may not result in a perfect sync.  Due to delays in commands,
             # time can still be off by several seconds
-            self.setTimeSystemd(gps_utc)
+            try:
+                self.setTimeSystemd(gps_utc)
+            except dbus.exceptions.DBusException as e:
+                logger.error('DBus Error: %s', str(e))
 
 
     def setTimeSystemd(self, new_datetime_utc):
