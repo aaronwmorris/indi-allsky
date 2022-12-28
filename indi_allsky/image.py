@@ -1197,6 +1197,7 @@ class ImageProcessor(object):
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
+        self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
 
 
 
@@ -1608,14 +1609,11 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        stacker = IndiAllskyStacker()
-
-
         if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
             # only perform registration once the exposure exceeds 5 seconds
 
             stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
-            stack_data_list = stacker.register(stack_i_ref_list)
+            stack_data_list = self._stacker.register(stack_i_ref_list)
         else:
             # stack unaligned images
             stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
@@ -1625,7 +1623,7 @@ class ImageProcessor(object):
 
 
         try:
-            stacker_method = getattr(stacker, self.stack_method)
+            stacker_method = getattr(self._stacker, self.stack_method)
             self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
