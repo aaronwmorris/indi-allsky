@@ -76,8 +76,8 @@ class IndiAllskyStacker(object):
                     i_masked,
                     reference_masked,
                     detection_sigma=5,
-                    max_control_points=150,
-                    min_area=15,
+                    max_control_points=50,
+                    min_area=10,
                 )
 
                 logger.info(
@@ -99,8 +99,8 @@ class IndiAllskyStacker(object):
                 #    i_ref['hdulist'][0],
                 #    reference_i_ref['hdulist'][0],
                 #    detection_sigma=5,
-                #    max_control_points=150,
-                #    min_area=15,
+                #    max_control_points=50,
+                #    min_area=10,
                 #)
             except astroalign.MaxIterError as e:
                 logger.error('Image registration failure: %s', str(e))

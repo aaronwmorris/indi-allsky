@@ -69,9 +69,9 @@ class Align(object):
                 #    self.transform, (source_list, target_list) = astroalign.find_transform(
                 #        hdulist[0],
                 #        reference_hdulist[0],
-                #        detection_sigma=7,
-                #        max_control_points=100,
-                #        min_area=15,
+                #        detection_sigma=5,
+                #        max_control_points=50,
+                #        min_area=10,
                 #    )
 
                 ### Find transform using a crop of the image
@@ -80,8 +80,8 @@ class Align(object):
                     hdu_crop,
                     ref_crop,
                     detection_sigma=5,
-                    max_control_points=150,
-                    min_area=15,
+                    max_control_points=50,
+                    min_area=10,
                 )
 
                 logger.info(
@@ -104,9 +104,9 @@ class Align(object):
                 #reg_image, footprint = astroalign.register(
                 #    hdulist[0],
                 #    reference_hdulist[0],
-                #    detection_sigma=7,
-                #    max_control_points=100,
-                #    min_area=15,
+                #    detection_sigma=5,
+                #    max_control_points=50,
+                #    min_area=10,
                 #    #propagate_mask=True,
                 #)
             except astroalign.MaxIterError as e:
