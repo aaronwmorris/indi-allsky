@@ -75,10 +75,20 @@ class AlignRolling(object):
                     self.transform, (source_list, target_list) = astroalign.find_transform(
                         hdu_crop,
                         ref_crop,
-                        detection_sigma=7,
-                        max_control_points=100,
+                        detection_sigma=5,
+                        max_control_points=150,
                         min_area=15,
                     )
+
+
+                    logger.info(
+                        'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                        len(target_list),
+                        self.transform.rotation,
+                        self.transform.translation[0], self.transform.translation[1],
+                        self.transform.scale,
+                    )
+
 
                     ### Apply transform
                     reg_image, footprint = astroalign.apply_transform(
@@ -92,8 +102,8 @@ class AlignRolling(object):
                     #reg_image, footprint = astroalign.register(
                     #    hdulist[0],
                     #    reference_hdulist[0],
-                    #    detection_sigma=7,
-                    #    max_control_points=100,
+                    #    detection_sigma=5,
+                    #    max_control_points=150,
                     #    min_area=15,
                     #)
                 except astroalign.MaxIterError as e:
