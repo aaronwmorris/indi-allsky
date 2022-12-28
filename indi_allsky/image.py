@@ -894,11 +894,11 @@ class ImageWorker(Process):
         try:
             os.link(str(latest_file), str(filename))
         except OSError as e:
-            if e.errno != errno.EXDEV:
+            if e.errno == errno.EXDEV:
+                # different filesystems, copy file instead
+                shutil.copy2(str(latest_file), str(filename))
+            else:
                 raise
-
-            # different filesystems, copy file instead
-            shutil.copy2(str(latest_file), str(filename))
 
         filename.chmod(0o644)
 
