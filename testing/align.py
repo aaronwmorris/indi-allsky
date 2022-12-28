@@ -10,6 +10,10 @@ import astroalign
 import logging
 
 
+astroalign.NUM_NEAREST_NEIGHBORS = 5
+astroalign.PIXEL_TOL = 2
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
