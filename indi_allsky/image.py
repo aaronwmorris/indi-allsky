@@ -2308,9 +2308,17 @@ class ImageStacker(object):
                 transform, (source_list, target_list) = astroalign.find_transform(
                     i_crop,
                     reference_crop,
-                    detection_sigma=7,
-                    max_control_points=100,
+                    detection_sigma=5,
+                    max_control_points=150,
                     min_area=15,
+                )
+
+                logger.info(
+                    'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                    len(target_list),
+                    transform.rotation,
+                    transform.translation[0], transform.translation[1],
+                    transform.scale,
                 )
 
                 reg_data, footprint = astroalign.apply_transform(

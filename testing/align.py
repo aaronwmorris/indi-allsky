@@ -53,7 +53,7 @@ class Align(object):
         # add original target
         reg_list.append(reference_hdulist[0].data)
 
-        #ref_crop = self._crop(reference_hdulist[0].data)
+        ref_crop = self._crop(reference_hdulist[0].data)
 
 
         for hdulist in hdulist_list[1:]:
@@ -75,32 +75,40 @@ class Align(object):
                 #    )
 
                 ### Find transform using a crop of the image
-                #hdu_crop = self._crop(hdulist[0].data)
-                #self.transform, (source_list, target_list) = astroalign.find_transform(
-                #    hdu_crop,
-                #    ref_crop,
-                #    detection_sigma=7,
-                #    max_control_points=100,
-                #    min_area=15,
-                #)
+                hdu_crop = self._crop(hdulist[0].data)
+                self.transform, (source_list, target_list) = astroalign.find_transform(
+                    hdu_crop,
+                    ref_crop,
+                    detection_sigma=5,
+                    max_control_points=150,
+                    min_area=15,
+                )
+
+                logger.info(
+                    'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                    len(target_list),
+                    self.transform.rotation,
+                    self.transform.translation[0], self.transform.translation[1],
+                    self.transform.scale,
+                )
 
                 ### Apply transform
-                #reg_image, footprint = astroalign.apply_transform(
-                #    self.transform,
-                #    hdulist[0],
-                #    reference_hdulist[0],
-                #)
+                reg_image, footprint = astroalign.apply_transform(
+                    self.transform,
+                    hdulist[0],
+                    reference_hdulist[0],
+                )
 
 
                 ## Register full image
-                reg_image, footprint = astroalign.register(
-                    hdulist[0],
-                    reference_hdulist[0],
-                    detection_sigma=7,
-                    max_control_points=100,
-                    min_area=15,
-                    #propagate_mask=True,
-                )
+                #reg_image, footprint = astroalign.register(
+                #    hdulist[0],
+                #    reference_hdulist[0],
+                #    detection_sigma=7,
+                #    max_control_points=100,
+                #    min_area=15,
+                #    #propagate_mask=True,
+                #)
             except astroalign.MaxIterError as e:
                 logger.error('Error registering: %s', str(e))
                 continue
