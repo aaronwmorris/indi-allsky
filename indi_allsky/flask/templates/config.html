@@ -707,6 +707,39 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Alignment sensitivity</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Alignment points</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Alignment point minimum area</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_STACK_SPLIT.label }}
         </div>
         <div class="col-sm-2">
@@ -1924,6 +1957,9 @@ const field_names = [
     'IMAGE_EXPORT_FOLDER',
     'IMAGE_STACK_METHOD',
     'IMAGE_STACK_COUNT',
+    'IMAGE_ALIGN_DETECTSIGMA',
+    'IMAGE_ALIGN_POINTS',
+    'IMAGE_ALIGN_SOURCEMINAREA',
     'IMAGE_EXPIRE_DAYS',
     'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',

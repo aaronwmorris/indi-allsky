@@ -696,6 +696,39 @@ def IMAGE_STACK_COUNT_validator(form, field):
     # not validating max
 
 
+def IMAGE_ALIGN_DETECTSIGMA_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 2:
+        raise ValidationError('Detection Sigma must be 3 or greater')
+
+    if field.data > 20:
+        raise ValidationError('Detection Sigma must be 20 or less')
+
+
+def IMAGE_ALIGN_POINTS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 25:
+        raise ValidationError('Detection points must be 25 or greater')
+
+    if field.data > 200:
+        raise ValidationError('Detection points must be 200 or less')
+
+
+def IMAGE_ALIGN_SOURCEMINAREA_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 3:
+        raise ValidationError('Source min area must be 3 or greater')
+
+    if field.data > 25:
+        raise ValidationError('Source min area must be 25 or less')
+
+
 def IMAGE_EXPIRE_DAYS_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -1394,6 +1427,9 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STACK_METHOD               = SelectField('Image stacking method', choices=IMAGE_STACK_METHOD_choices, validators=[DataRequired(), IMAGE_STACK_METHOD_validator])
     IMAGE_STACK_COUNT                = SelectField('Stack count', choices=IMAGE_STACK_COUNT_choices, validators=[DataRequired(), IMAGE_STACK_COUNT_validator])
     IMAGE_STACK_ALIGN                = BooleanField('Register images')
+    IMAGE_ALIGN_DETECTSIGMA          = IntegerField('Alignment sensitivity', validators=[DataRequired(), IMAGE_ALIGN_DETECTSIGMA_validator])
+    IMAGE_ALIGN_POINTS               = IntegerField('Alignment points', validators=[DataRequired(), IMAGE_ALIGN_POINTS_validator])
+    IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum detection point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])
