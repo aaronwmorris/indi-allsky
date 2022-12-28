@@ -47,6 +47,37 @@ class IndiAllskyStacker(object):
         self._min_area = int(new_min_area)
 
 
+    @property
+    def MIN_MATCHES_FRACTION(self):
+        # default 0.8
+        return astroalign.MIN_MATCHES_FRACTION
+
+    @MIN_MATCHES_FRACTION.setter
+    def MIN_MATCHES_FRACTION(self, new_MIN_MATCHES_FRACTION):
+        astroalign.MIN_MATCHES_FRACTION = float(new_MIN_MATCHES_FRACTION)
+
+
+    @property
+    def NUM_NEAREST_NEIGHBORS(self):
+        # default 5
+        return astroalign.NUM_NEAREST_NEIGHBORS
+
+    @NUM_NEAREST_NEIGHBORS.setter
+    def NUM_NEAREST_NEIGHBORS(self, new_NUM_NEAREST_NEIGHBORS):
+        astroalign.NUM_NEAREST_NEIGHBORS = int(new_NUM_NEAREST_NEIGHBORS)
+
+
+    @property
+    def PIXEL_TOL(self):
+        # default 2
+        return astroalign.PIXEL_TOL
+
+    @PIXEL_TOL.setter
+    def PIXEL_TOL(self, new_PIXEL_TOL):
+        astroalign.PIXEL_TOL = int(new_PIXEL_TOL)
+
+
+
     def mean(self, *args, **kwargs):
         # alias for average
         return self.average(*args, **kwargs)
