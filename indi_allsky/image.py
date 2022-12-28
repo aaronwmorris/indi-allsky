@@ -1,3 +1,4 @@
+#import os
 import io
 import json
 from pathlib import Path
@@ -686,6 +687,10 @@ class ImageWorker(Process):
         shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
         filename.chmod(0o644)
 
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
+
+
         Path(f_tmpfile.name).unlink()  # delete temp file
 
         logger.info('Finished writing fit file')
@@ -698,6 +703,14 @@ class ImageWorker(Process):
         if not self.config.get('IMAGE_EXPORT_FOLDER'):
             logger.error('IMAGE_EXPORT_FOLDER not defined')
             return
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_EXPORT_RAW']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+        tmpfile_name.unlink()  # remove tempfile, will be reused below
+
 
         data = i_ref['hdulist'][0].data
 
@@ -737,6 +750,21 @@ class ImageWorker(Process):
                 scaled_data = data
         else:
             raise Exception('Unsupported bit depth')
+
+
+
+        write_img_start = time.time()
+
+        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
+
 
 
         export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
@@ -785,17 +813,14 @@ class ImageWorker(Process):
 
         logger.info('RAW filename: %s', filename)
 
-        write_img_start = time.time()
+        shutil.copy2(str(tmpfile_name), str(filename))
+        filename.chmod(0o644)
 
-        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
-            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
-        elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
-            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
-        else:
-            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
-        write_img_elapsed_s = time.time() - write_img_start
-        logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
+        ### Cleanup
+        tmpfile_name.unlink()
 
 
     def write_img(self, data, i_ref):
@@ -862,6 +887,9 @@ class ImageWorker(Process):
 
         shutil.copy2(str(tmpfile_name), str(filename))
         filename.chmod(0o644)
+
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
         ### Cleanup
