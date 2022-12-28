@@ -1,4 +1,5 @@
-#import os
+import os
+import errno
 import io
 import json
 from pathlib import Path
@@ -647,9 +648,9 @@ class ImageWorker(Process):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
-
-        f_tmpfile.flush()
         f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
 
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
@@ -682,16 +683,16 @@ class ImageWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
+            tmpfile_p.unlink()
             return
 
-        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+
+        shutil.move(str(tmpfile_p), str(filename))
         filename.chmod(0o644)
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
-
-        Path(f_tmpfile.name).unlink()  # delete temp file
 
         logger.info('Finished writing fit file')
 
@@ -709,7 +710,6 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
         tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
 
 
         data = i_ref['hdulist'][0].data
@@ -813,14 +813,17 @@ class ImageWorker(Process):
 
         logger.info('RAW filename: %s', filename)
 
-        shutil.copy2(str(tmpfile_name), str(filename))
+        if filename.exists():
+            logger.error('File exists: %s (skipping)', filename)
+            tmpfile_name.unlink()
+            return
+
+
+        shutil.move(str(tmpfile_name), str(filename))
         filename.chmod(0o644)
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
-
-        ### Cleanup
-        tmpfile_name.unlink()
 
 
     def write_img(self, data, i_ref):
@@ -828,7 +831,6 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
         tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
 
 
         write_img_start = time.time()
@@ -855,7 +857,8 @@ class ImageWorker(Process):
         except FileNotFoundError:
             pass
 
-        shutil.copy2(str(tmpfile_name), str(latest_file))
+
+        shutil.move(str(tmpfile_name), str(latest_file))
         latest_file.chmod(0o644)
 
 
@@ -883,17 +886,25 @@ class ImageWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
+            tmpfile_name.unlink()
             return latest_file, None
 
-        shutil.copy2(str(tmpfile_name), str(filename))
+
+        # Use a hardlink, there is a good chance these are on the same filesystem
+        try:
+            os.link(str(latest_file), str(filename))
+        except OSError as e:
+            if e.errno != errno.EXDEV:
+                raise
+
+            # different filesystems, copy file instead
+            shutil.copy2(str(latest_file), str(filename))
+
         filename.chmod(0o644)
+
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
-
-
-        ### Cleanup
-        tmpfile_name.unlink()
 
         #logger.info('Finished writing files')
 
