@@ -220,7 +220,7 @@ class AlignRolling(object):
         ]
 
 
-    def splitscreen(self, left_data, right_data):
+    def _splitscreen(self, left_data, right_data):
         image_height, image_width = left_data.shape[:2]
 
 
