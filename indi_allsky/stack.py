@@ -15,6 +15,37 @@ class IndiAllskyStacker(object):
 
         self._sqm_mask = mask
 
+        self._detection_sigma = 5
+        self._max_control_points = 50
+        self._min_area = 10
+
+
+    @property
+    def detection_sigma(self):
+        return self._detection_sigma
+
+    @detection_sigma.setter
+    def detection_sigma(self, new_detection_sigma):
+        self._detection_simga = int(new_detection_sigma)
+
+
+    @property
+    def max_control_points(self):
+        return self._max_control_points
+
+    @max_control_points.setter
+    def max_control_points(self, new_max_control_points):
+        self._max_control_points = int(new_max_control_points)
+
+
+    @property
+    def min_area(self):
+        return self._min_area
+
+    @min_area.setter
+    def min_area(self, new_min_area):
+        self._min_area = int(new_min_area)
+
 
     def mean(self, *args, **kwargs):
         # alias for average
@@ -75,9 +106,9 @@ class IndiAllskyStacker(object):
                 transform, (source_list, target_list) = astroalign.find_transform(
                     i_masked,
                     reference_masked,
-                    detection_sigma=5,
-                    max_control_points=50,
-                    min_area=10,
+                    detection_sigma=self.detection_sigma,
+                    max_control_points=self.max_control_points,
+                    min_area=self.min_area,
                 )
 
                 logger.info(
@@ -98,9 +129,9 @@ class IndiAllskyStacker(object):
                 #reg_data, footprint = astroalign.register(
                 #    i_ref['hdulist'][0],
                 #    reference_i_ref['hdulist'][0],
-                #    detection_sigma=5,
-                #    max_control_points=50,
-                #    min_area=10,
+                #    detection_sigma=self.detection_simga,
+                #    max_control_points=self.max_control_points,
+                #    min_area=self.min_area,
                 #)
             except astroalign.MaxIterError as e:
                 logger.error('Image registration failure: %s', str(e))

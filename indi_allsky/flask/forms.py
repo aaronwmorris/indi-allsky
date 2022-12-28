@@ -1429,7 +1429,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STACK_ALIGN                = BooleanField('Register images')
     IMAGE_ALIGN_DETECTSIGMA          = IntegerField('Alignment sensitivity', validators=[DataRequired(), IMAGE_ALIGN_DETECTSIGMA_validator])
     IMAGE_ALIGN_POINTS               = IntegerField('Alignment points', validators=[DataRequired(), IMAGE_ALIGN_POINTS_validator])
-    IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum detection point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
+    IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])

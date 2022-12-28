@@ -1197,7 +1197,11 @@ class ImageProcessor(object):
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
+
         self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
+        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
+        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
+        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
 
 
