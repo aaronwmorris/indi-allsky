@@ -1669,7 +1669,8 @@ class ImageProcessor(object):
 
 
             # if the registration takes longer than the exposure period, kill it
-            signal.alarm(int(self.config['EXPOSURE_PERIOD']))
+            # 3 seconds is the assumed time it normally takes to process an image
+            signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
 
             try:
                 stack_data_list = self._stacker.register(stack_i_ref_list)
