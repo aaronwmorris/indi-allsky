@@ -43,6 +43,7 @@ from multiprocessing import Process
 import queue
 
 from .exceptions import TimelapseException
+from .exceptions import TimeOutException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -113,6 +114,9 @@ class VideoWorker(Process):
         self._shutdown = True
 
 
+    def sigalarm_handler_worker(self, signum, frame):
+        raise TimeOutException()
+
 
 
     def run(self):
@@ -120,6 +124,7 @@ class VideoWorker(Process):
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
         ### use this as a method to log uncaught exceptions
