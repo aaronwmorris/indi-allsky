@@ -1673,10 +1673,12 @@ class ImageProcessor(object):
 
             try:
                 stack_data_list = self._stacker.register(stack_i_ref_list)
-                signal.alarm(0)
             except TimeOutException:
                 # stack unaligned images
+                logger.error('Registration exceeded the exposure period, cancel alignment')
                 stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+
+            signal.alarm(0)
         else:
             # stack unaligned images
             stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
