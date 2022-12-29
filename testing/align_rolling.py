@@ -10,6 +10,10 @@ import astroalign
 import logging
 
 
+astroalign.NUM_NEAREST_NEIGHBORS = 5
+astroalign.PIXEL_TOL = 2
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
@@ -65,9 +69,9 @@ class AlignRolling(object):
                     #    self.transform, (source_list, target_list) = astroalign.find_transform(
                     #        hdulist[0],
                     #        reference_hdulist[0],
-                    #        detection_sigma=7,
-                    #        max_control_points=100,
-                    #        min_area=15,
+                    #        detection_sigma=5,
+                    #        max_control_points=50,
+                    #        min_area=10,
                     #    )
 
                     ### Find transform using a crop of the image
@@ -75,10 +79,20 @@ class AlignRolling(object):
                     self.transform, (source_list, target_list) = astroalign.find_transform(
                         hdu_crop,
                         ref_crop,
-                        detection_sigma=7,
-                        max_control_points=100,
-                        min_area=15,
+                        detection_sigma=5,
+                        max_control_points=50,
+                        min_area=10,
                     )
+
+
+                    logger.info(
+                        'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                        len(target_list),
+                        self.transform.rotation,
+                        self.transform.translation[0], self.transform.translation[1],
+                        self.transform.scale,
+                    )
+
 
                     ### Apply transform
                     reg_image, footprint = astroalign.apply_transform(
@@ -92,9 +106,9 @@ class AlignRolling(object):
                     #reg_image, footprint = astroalign.register(
                     #    hdulist[0],
                     #    reference_hdulist[0],
-                    #    detection_sigma=7,
-                    #    max_control_points=100,
-                    #    min_area=15,
+                    #    detection_sigma=5,
+                    #    max_control_points=50,
+                    #    min_area=10,
                     #)
                 except astroalign.MaxIterError as e:
                     logger.error('Error registering: %s', str(e))
@@ -194,10 +208,10 @@ class AlignRolling(object):
     def _crop(self, image):
         image_height, image_width = image.shape[:2]
 
-        x1 = int((image_width / 3) - (image_width / 3))
-        y1 = int((image_height / 3) - (image_height / 3))
-        x2 = int((image_width / 3) + (image_width / 3))
-        y2 = int((image_height / 3) + (image_height / 3))
+        x1 = int((image_width / 2) - (image_width / 3))
+        y1 = int((image_height / 2) - (image_height / 3))
+        x2 = int((image_width / 2) + (image_width / 3))
+        y2 = int((image_height / 2) + (image_height / 3))
 
 
         return image[
@@ -206,7 +220,7 @@ class AlignRolling(object):
         ]
 
 
-    def splitscreen(self, left_data, right_data):
+    def _splitscreen(self, left_data, right_data):
         image_height, image_width = left_data.shape[:2]
 
 

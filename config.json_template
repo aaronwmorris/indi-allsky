@@ -129,6 +129,9 @@
     "comment_IMAGE_STACK_COUNT"   : "1 = disabled",
     "IMAGE_STACK_COUNT"   : 1,
     "IMAGE_STACK_ALIGN"   : false,
+    "IMAGE_ALIGN_DETECTSIGMA" : 5,
+    "IMAGE_ALIGN_POINTS" : 50,
+    "IMAGE_ALIGN_SOURCEMINAREA" : 10,
     "IMAGE_STACK_SPLIT"   : false,
 
     "IMAGE_EXPIRE_DAYS"     : 30,

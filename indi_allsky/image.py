@@ -1,3 +1,5 @@
+import os
+import errno
 import io
 import json
 from pathlib import Path
@@ -22,7 +24,6 @@ from multiprocessing import Process
 import queue
 
 from astropy.io import fits
-import astroalign
 
 import cv2
 import numpy
@@ -33,6 +34,7 @@ from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
+from .stack import IndiAllskyStacker
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -646,9 +648,9 @@ class ImageWorker(Process):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
-
-        f_tmpfile.flush()
         f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
 
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
@@ -681,12 +683,16 @@ class ImageWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
+            tmpfile_p.unlink()
             return
 
-        shutil.copy2(f_tmpfile.name, str(filename))  # copy file in place
+
+        shutil.move(str(tmpfile_p), str(filename))
         filename.chmod(0o644)
 
-        Path(f_tmpfile.name).unlink()  # delete temp file
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
+
 
         logger.info('Finished writing fit file')
 
@@ -698,6 +704,13 @@ class ImageWorker(Process):
         if not self.config.get('IMAGE_EXPORT_FOLDER'):
             logger.error('IMAGE_EXPORT_FOLDER not defined')
             return
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_EXPORT_RAW']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+
 
         data = i_ref['hdulist'][0].data
 
@@ -737,6 +750,21 @@ class ImageWorker(Process):
                 scaled_data = data
         else:
             raise Exception('Unsupported bit depth')
+
+
+
+        write_img_start = time.time()
+
+        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+        else:
+            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
+
 
 
         export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
@@ -785,17 +813,17 @@ class ImageWorker(Process):
 
         logger.info('RAW filename: %s', filename)
 
-        write_img_start = time.time()
+        if filename.exists():
+            logger.error('File exists: %s (skipping)', filename)
+            tmpfile_name.unlink()
+            return
 
-        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
-            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
-        elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
-            cv2.imwrite(str(filename), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
-        else:
-            raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 
-        write_img_elapsed_s = time.time() - write_img_start
-        logger.info('Raw image written in %0.4f s', write_img_elapsed_s)
+        shutil.move(str(tmpfile_name), str(filename))
+        filename.chmod(0o644)
+
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
     def write_img(self, data, i_ref):
@@ -803,7 +831,6 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
         tmpfile_name = Path(f_tmpfile.name)
-        tmpfile_name.unlink()  # remove tempfile, will be reused below
 
 
         write_img_start = time.time()
@@ -830,7 +857,8 @@ class ImageWorker(Process):
         except FileNotFoundError:
             pass
 
-        shutil.copy2(str(tmpfile_name), str(latest_file))
+
+        shutil.move(str(tmpfile_name), str(latest_file))
         latest_file.chmod(0o644)
 
 
@@ -858,14 +886,28 @@ class ImageWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
+            tmpfile_name.unlink()
             return latest_file, None
 
-        shutil.copy2(str(tmpfile_name), str(filename))
+
+        try:
+            # Use a hardlink, there is a good chance these are on the same filesystem
+            os.link(str(latest_file), str(filename))
+        except OSError as e:
+            if e.errno == errno.EXDEV:
+                # different filesystems, copy file instead
+                shutil.copy2(str(latest_file), str(filename))
+            else:
+                raise
+        except PermissionError:
+            # possibly a FAT filesystem, copy instead
+            shutil.copy2(str(latest_file), str(filename))
+
         filename.chmod(0o644)
 
 
-        ### Cleanup
-        tmpfile_name.unlink()
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
         #logger.info('Finished writing files')
 
@@ -1197,6 +1239,11 @@ class ImageProcessor(object):
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
+
+        self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
+        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
+        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
+        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
 
 
@@ -1608,14 +1655,11 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        stacker = ImageStacker()
-
-
         if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
             # only perform registration once the exposure exceeds 5 seconds
 
             stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
-            stack_data_list = stacker.register(stack_i_ref_list)
+            stack_data_list = self._stacker.register(stack_i_ref_list)
         else:
             # stack unaligned images
             stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
@@ -1625,7 +1669,7 @@ class ImageProcessor(object):
 
 
         try:
-            stacker_method = getattr(stacker, self.stack_method)
+            stacker_method = getattr(self._stacker, self.stack_method)
             self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
@@ -2255,105 +2299,4 @@ class ImageProcessor(object):
 
         return extra_lines
 
-
-class ImageStacker(object):
-
-    def mean(self, *args, **kwargs):
-        # alias for average
-        return self.average(*args, **kwargs)
-
-
-    def average(self, stack_data_list, numpy_type):
-        mean_image = numpy.mean(stack_data_list, axis=0)
-        return numpy.floor(mean_image).astype(numpy_type)  # no floats
-
-
-    def maximum(self, stack_data_list, numpy_type):
-        image_max = stack_data_list[0]  # start with first image
-
-        # compare with remaining images
-        for i in stack_data_list[1:]:
-            image_max = numpy.maximum(image_max, i)
-
-        return image_max
-
-    def minimum(self, stack_data_list, numpy_type):
-        image_min = stack_data_list[0]  # start with first image
-
-        # compare with remaining images
-        for i in stack_data_list[1:]:
-            image_min = numpy.minimum(image_min, i)
-
-        return image_min
-
-
-    def register(self, stack_i_ref_list):
-        reference_i_ref = stack_i_ref_list[0]
-
-        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
-
-        reference_crop = self._crop(reference_i_ref['hdulist'][0].data)
-
-        reg_start = time.time()
-
-        for i_ref in stack_i_ref_list[1:]:
-            i_crop = self._crop = i_ref['hdulist'][0].data
-
-            # detection_sigma default = 5
-            # max_control_points default = 50
-            # min_area default = 5
-
-            try:
-                ### Find transform using a crop of the image
-                transform, (source_list, target_list) = astroalign.find_transform(
-                    i_crop,
-                    reference_crop,
-                    detection_sigma=7,
-                    max_control_points=100,
-                    min_area=15,
-                )
-
-                reg_data, footprint = astroalign.apply_transform(
-                    transform,
-                    i_ref['hdulist'][0],
-                    reference_i_ref['hdulist'][0],
-                )
-
-                ### Register full image
-                #reg_data, footprint = astroalign.register(
-                #    i_ref['hdulist'][0],
-                #    reference_i_ref['hdulist'][0],
-                #    detection_sigma=7,
-                #    max_control_points=100,
-                #    min_area=15,
-                #)
-            except astroalign.MaxIterError as e:
-                logger.error('Image registration failure: %s', str(e))
-                continue
-            except ValueError as e:
-                logger.error('Image registration failure: %s', str(e))
-                continue
-
-            reg_data_list.append(reg_data)
-
-
-        reg_elapsed_s = time.time() - reg_start
-        logger.info('Registered %d+1 images in %0.4f s', len(stack_i_ref_list) - 1, reg_elapsed_s)  # reference image is not aligned
-
-        return reg_data_list
-
-
-    def _crop(self, image):
-        image_height, image_width = image.shape[:2]
-
-        x1 = int((image_width / 3) - (image_width / 3))
-        y1 = int((image_height / 3) - (image_height / 3))
-        x2 = int((image_width / 3) + (image_width / 3))
-        y2 = int((image_height / 3) + (image_height / 3))
-
-
-        return image[
-            y1:y2,
-            x1:x2,
-        ]
 

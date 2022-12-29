@@ -351,6 +351,11 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | IMAGE_EXPORT_FOLDER |             | (string) Folder to export raw tiff files |
 | IMAGE_STACK_METHOD  | average     | (string) Method to use for image stacking |
 | IMAGE_STACK_COUNT   | 1           | (int) Number of images to stack (1 = disabled) |
+| IMAGE_STACK_ALIGN   | false       | (bool) Register/align images |
+| IMAGE_ALIGN_DETECTSIGMA | 5       | (int) Alignment sensitivity |
+| IMAGE_ALIGN_POINTS  | 50          | (int) Alignment sensitivity |
+| IMAGE_ALIGN_SOURCEMINAREA | 10    | (int) Alignment point minimum area |
+| IMAGE_STACK_SPLIT   | false       | (bool) Split screen stack |
 | IMAGE_EXPIRE_DAYS   | 30          | (days) Number of days to keep original images before deleting |
 | TIMELAPSE_EXPIRE_DAYS    | 365    | (days) Number of days to keep timelapse, keogram, and star trails before deleting |
 | FFMPEG_FRAMERATE    | 25          | (fps) Target frames per second for timelapse videos |

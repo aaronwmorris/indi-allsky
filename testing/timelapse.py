@@ -10,6 +10,9 @@ from pathlib import Path
 import subprocess
 
 
+IMAGE_FILETYPE = 'jpg'
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
@@ -54,7 +57,7 @@ class TimelapseGenerator(object):
 
 
         for i, f in enumerate(file_list_ordered):
-            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, 'jpg'))
+            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
             p_symlink.symlink_to(f)
 
 
@@ -68,7 +71,7 @@ class TimelapseGenerator(object):
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
             #'-start_number', '0',
             #'-pattern_type', 'glob',
-            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), 'jpg'),
+            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
             '-c:v', 'libx264',
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
             '-pix_fmt', 'yuv420p',
@@ -104,7 +107,7 @@ class TimelapseGenerator(object):
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
-            extension_list = ['jpg']
+            extension_list = [IMAGE_FILETYPE]
 
         logger.info('Searching for image files in %s', folder)
 
