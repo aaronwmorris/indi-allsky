@@ -860,6 +860,7 @@ class ImageWorker(Process):
         latest_file = self.image_dir.joinpath('latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
         try:
+            # needs to be deleted in case file has other hard links (like below)
             latest_file.unlink()
         except FileNotFoundError:
             pass
@@ -872,14 +873,12 @@ class ImageWorker(Process):
         ### disable timelapse images in focus mode
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
-            tmpfile_name.unlink()  # cleanup temp file
             return None, None
 
 
         ### Do not write daytime image files if daytime timelapse is disabled
         if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
             logger.info('Daytime timelapse is disabled')
-            tmpfile_name.unlink()  # cleanup temp file
             return latest_file, None
 
 
@@ -893,7 +892,6 @@ class ImageWorker(Process):
 
         if filename.exists():
             logger.error('File exists: %s (skipping)', filename)
-            tmpfile_name.unlink()
             return latest_file, None
 
 
