@@ -890,8 +890,8 @@ class ImageWorker(Process):
             return latest_file, None
 
 
-        # Use a hardlink, there is a good chance these are on the same filesystem
         try:
+            # Use a hardlink, there is a good chance these are on the same filesystem
             os.link(str(latest_file), str(filename))
         except OSError as e:
             if e.errno == errno.EXDEV:
@@ -899,6 +899,9 @@ class ImageWorker(Process):
                 shutil.copy2(str(latest_file), str(filename))
             else:
                 raise
+        except PermissionError:
+            # possibly a FAT filesystem, copy instead
+            shutil.copy2(str(latest_file), str(filename))
 
         filename.chmod(0o644)
 
