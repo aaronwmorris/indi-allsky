@@ -18,6 +18,9 @@ from . import filetransfer
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .exceptions import TimeOutException
+
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -65,11 +68,17 @@ class FileUploader(Process):
         self._shutdown = True
 
 
+    def sigalarm_handler_worker(self, signum, frame):
+        raise TimeOutException()
+
+
+
     def run(self):
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
         ### use this as a method to log uncaught exceptions

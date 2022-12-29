@@ -51,6 +51,7 @@ from sqlalchemy import func
 #from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import CalibrationNotFound
+from .exceptions import TimeOutException
 
 
 try:
@@ -168,11 +169,17 @@ class ImageWorker(Process):
         self._shutdown = True
 
 
+    def sigalarm_handler_worker(self, signum, frame):
+        raise TimeOutException()
+
+
+
     def run(self):
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
         signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
         ### use this as a method to log uncaught exceptions
@@ -1659,7 +1666,17 @@ class ImageProcessor(object):
             # only perform registration once the exposure exceeds 5 seconds
 
             stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
-            stack_data_list = self._stacker.register(stack_i_ref_list)
+
+
+            # if the registration takes longer than the exposure period, kill it
+            signal.alarm(self.config['EXPOSURE_PERIOD'])
+
+            try:
+                stack_data_list = self._stacker.register(stack_i_ref_list)
+                signal.alarm(0)
+            except TimeOutException:
+                # stack unaligned images
+                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
         else:
             # stack unaligned images
             stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
