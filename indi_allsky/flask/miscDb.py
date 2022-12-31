@@ -486,6 +486,7 @@ class miscDb(object):
             item=item,
             category=category,
             notification=notification,
+            expire=now + expire,
         )
 
         db.session.add(new_notice)
