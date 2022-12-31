@@ -498,3 +498,46 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
         self.state = TaskQueueState.EXPIRED
         db.session.commit()
 
+
+
+class NotificationCategory(enum.Enum):
+    GENERAL = 'general'
+    MISC    = 'misc'
+    CAMERA  = 'camera'
+    WORKER  = 'worker'
+    MEDIA   = 'media'
+    DISK    = 'disk'
+    UPLOAD  = 'upload'
+    OFFLINE = 'offline'
+
+
+class IndiAllSkyDbNotificationTable(db.Model):
+    __tablename__ = 'notification'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    ack = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    expired = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    category = db.Column(db.Enum(NotificationCategory, length=20, native_enum=False), nullable=False, index=True)
+    item = db.Column(db.String(length=32), nullable=False, index=True)
+    notification = db.Column(db.String(length=255), nullable=False)
+
+
+    def setAck(self):
+        self.ack = True
+        db.session.commit()
+
+
+    def setExpired(self):
+        self.expired = True
+        db.session.commit()
+
+
+class IndiAllSkyDbStateTable(db.Model):
+    __tablename__ = 'state'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    key = db.Column(db.String(length=32), unique=True, nullable=False, index=True)
+    value = db.Column(db.String(length=255), nullable=False)
+
