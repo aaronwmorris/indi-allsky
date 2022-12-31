@@ -124,6 +124,37 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
+
+
+var notification_data = {
+    "id" : null,
+    "notification" : "",
+};
+
+function loadNotification(getData, onDone, onError) {
+    if(!getData)getData={};
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
+        contentType: "application/json",
+        data: getData,
+        success: function(data){
+            notification_data = data;
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
+// Load notifications when ready
+$( document ).ready(function() {
+    loadNotification();
+});
+
 </script>
   </body>
 </html>

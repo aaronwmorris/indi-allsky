@@ -2984,9 +2984,7 @@ class AjaxNotificationView(BaseView):
 
 
     def __init__(self, **kwargs):
-        super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
-
-        self.camera_id = self.getLatestCamera()
+        super(AjaxNotificationView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):
