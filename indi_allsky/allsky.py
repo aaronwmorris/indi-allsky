@@ -8,6 +8,7 @@ import re
 import psutil
 import tempfile
 import subprocess
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -69,10 +70,13 @@ class IndiAllSky(object):
 
 
     def __init__(self, f_config_file):
-        self.config = self._parseConfig(f_config_file.read())
+        self.config, config_md5 = self._parseConfig(f_config_file.read())
         f_config_file.close()
 
         self.config_file = f_config_file.name
+
+        self._miscDb = miscDb(self.config)
+        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
 
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
@@ -115,8 +119,6 @@ class IndiAllSky(object):
 
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
 
-        self._miscDb = miscDb(self.config)
-
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -150,15 +152,20 @@ class IndiAllSky(object):
     def sighup_handler_main(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
+
         with io.open(self.config_file, 'r') as f_config_file:
             try:
-                c = self._parseConfig(f_config_file.read())
+                c, config_md5 = self._parseConfig(f_config_file.read())
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
                 return
 
+
         # overwrite config
         self.config = c
+
+        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+
 
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -176,7 +183,10 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+
         self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
 
 
         ### Telescope config
@@ -199,6 +209,7 @@ class IndiAllSky(object):
 
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
         self.config['DB_CAMERA_ID'] = db_camera.id
+        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -302,11 +313,16 @@ class IndiAllSky(object):
             pid_f.flush()
 
 
-        self._miscDb.setState('pid', pid)
+        self._miscDb.setState('PID', pid)
 
 
     def _parseConfig(self, json_config):
         c = json.loads(json_config, object_pairs_hook=OrderedDict)
+
+
+        # set this after parsing json
+        c_md5 = hashlib.md5(json_config.encode())
+
 
         config_version = float(c.get('VERSION', 0.0))
         if __config_version__ != config_version:
@@ -355,7 +371,7 @@ class IndiAllSky(object):
             c['FFMPEG_CODEC'] = 'libx264'
 
 
-        return c
+        return c, c_md5
 
 
     def _initialize(self, connectOnly=False):
@@ -432,7 +448,10 @@ class IndiAllSky(object):
 
         # add driver name to config
         self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+
         self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
 
 
         ### GPS config
@@ -514,6 +533,7 @@ class IndiAllSky(object):
 
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
         self.config['DB_CAMERA_ID'] = db_camera.id
+        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
