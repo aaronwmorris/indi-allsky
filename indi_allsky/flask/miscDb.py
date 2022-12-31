@@ -17,6 +17,7 @@ from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbNotificationTable
+from .models import IndiAllSkyDbStateTable
 
 #from .models import NotificationCategory
 
@@ -495,5 +496,37 @@ class miscDb(object):
         logger.info('Added %s notification: %d', category.value, new_notice.id)
 
         return new_notice
+
+
+    def setState(self, key, value):
+        now = datetime.now()
+
+        try:
+            state = IndiAllSkyDbStateTable.query\
+                .filter(IndiAllSkyDbStateTable.key == key)\
+                .one()
+
+            state.value = value
+            state.createDate = now
+        except NoResultFound:
+            state = IndiAllSkyDbStateTable(
+                key=key,
+                value=value,
+                createDate=now,
+            )
+
+            db.session.add(state)
+
+
+        db.session.commit()
+
+
+    def getState(self, key):
+        # not catching NoResultFound
+        state = IndiAllSkyDbStateTable.query\
+            .filter(IndiAllSkyDbStateTable.key == key)\
+            .one()
+
+        return state
 
 
