@@ -3010,7 +3010,7 @@ class AjaxNotificationView(BaseView):
 
             notice = IndiAllSkyDbNotificationTable.query\
                 .filter(IndiAllSkyDbNotificationTable.ack == false())\
-                .filter(IndiAllSkyDbNotificationTable.expireDate < now)\
+                .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
                 .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
                 .first()
 
@@ -3026,7 +3026,7 @@ class AjaxNotificationView(BaseView):
 
             data = {
                 'id' : notice.id,
-                'category' : str(notice.category),
+                'category' : notice.category.value,
                 'notification' : notice.notification,
             }
 
