@@ -295,9 +295,14 @@ class IndiAllSky(object):
         except FileNotFoundError:
             pass
 
+        pid = os.getpid()
+
         with io.open(str(pidfile_p), 'w') as pid_f:
-            pid_f.write('{0:d}'.format(os.getpid()))
+            pid_f.write('{0:d}'.format(pid))
             pid_f.flush()
+
+
+        self._miscDb.setState('pid', pid)
 
 
     def _parseConfig(self, json_config):
