@@ -847,6 +847,8 @@ class IndiAllSky(object):
         camera_ready = False
         last_camera_ready = False
         exposure_state = 'unset'
+        check_exposure_state = time.time() + 300  # check in 5 minutes
+
 
         ### main loop starts
         while True:
@@ -920,6 +922,16 @@ class IndiAllSky(object):
 
                     self.indiclient.disconnectServer()
 
+
+                    now = datetime.now()
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        expire=timedelta(hours=1),
+                    )
+
+
                     sys.exit()
 
 
@@ -934,6 +946,20 @@ class IndiAllSky(object):
 
                 time.sleep(59)  # prime number
                 continue
+
+
+            # check exposure state every 5 minutes
+            if check_exposure_state < loop_start_time:
+                check_exposure_state = time.time() + 300  # next check in 5 minutes
+
+                camera_last_ready_s = int(loop_start_time - camera_ready_time)
+                if camera_last_ready_s > 300:
+                    self._miscDb.addNotification(
+                        NotificationCategory.CAMERA,
+                        'last_ready',
+                        'WARNING: Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
+                        expire=timedelta(minutes=30),
+                    )
 
 
             # Loop to run for 11 seconds (prime number)
@@ -981,6 +1007,15 @@ class IndiAllSky(object):
                     self.indiclient.disableCcdCooler()  # safety
 
                     self.indiclient.disconnectServer()
+
+
+                    now = datetime.now()
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        expire=timedelta(hours=1),
+                    )
 
                     sys.exit()
 
