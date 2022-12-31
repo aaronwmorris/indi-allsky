@@ -119,6 +119,24 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="notificationLabel">title</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">body</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Acknowledge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -127,7 +145,7 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 
 
 var notification_data = {
-    "id" : null,
+    "id" : 0,
     "notification" : "",
 };
 
@@ -142,17 +160,27 @@ function loadNotification(getData, onDone, onError) {
         contentType: "application/json",
         data: getData,
         success: function(data){
-            notification_data = data;
+            //notification_data = data;
+            onDone(data);
         },
         error: function(data){
-            onError(data.status);
+            onError(data);
         },
     });
 }
 
+function showNotification(data) {
+    notification_modal = $("#notificationModal");
+    notificationTitle = notificationModal.querySelector('.modal-title');
+    notificationBody = notificationModal.querySelector('.modal-body');
+    notificationTitle.textContent = "TITLE";
+    notificationBody.textContent = "FOOBAR";
+    notification_modal.modal('show');
+}
+
 // Load notifications when ready
 $( document ).ready(function() {
-    loadNotification();
+    loadNotification({}, showNotification);
 });
 
 </script>

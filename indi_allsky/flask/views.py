@@ -3016,7 +3016,8 @@ class AjaxNotificationView(BaseView):
 
             if not notice:
                 no_data = {
-                    'id' : None,
+                    'id' : 0,
+                    'notification' : '',
                 }
                 return jsonify(no_data)
 
