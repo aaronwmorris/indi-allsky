@@ -100,13 +100,6 @@ fields['form_global'] = {
 };
 
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
-
-
 function populate_videos(video_list) {
     $("#videos_div").empty();
 

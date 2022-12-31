@@ -131,7 +131,7 @@
       <div class="modal-body">body</div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Acknowledge</button>
+        <button id="ack_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Acknowledge</button>
       </div>
     </div>
   </div>
@@ -143,6 +143,11 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
 
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
 
 function ackNotification(notice_id, onDone, onError) {
     postData = {
@@ -154,7 +159,7 @@ function ackNotification(notice_id, onDone, onError) {
 
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
         contentType: "application/json",
         data: JSON.stringify(postData),
         success: function(data){
@@ -164,7 +169,7 @@ function ackNotification(notice_id, onDone, onError) {
             onError(data);
         },
     });
-});
+}
 
 
 
@@ -191,6 +196,9 @@ function showNotification(data) {
     if ( data.id == 0 ) {
         return;
     };
+
+    $("#ack_button").off();
+    $("#ack_button").on("click", ackNotification(data.id));
 
     notification_modal = $("#notificationModal");
     notificationTitle = notificationModal.querySelector('.modal-title');

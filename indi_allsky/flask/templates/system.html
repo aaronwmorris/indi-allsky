@@ -634,14 +634,6 @@ fields['form_global'] = {
 
 
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
-
-
-
 function button_click(service, command) {
     // hide all errors
     failureMessage.css({'display' : 'none'});

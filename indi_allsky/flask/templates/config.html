@@ -2077,14 +2077,6 @@ fields['form_global'] = {
 };
 
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
-
-
-
 $('#form_config').on('submit', function() {
 
     // hide all errors
