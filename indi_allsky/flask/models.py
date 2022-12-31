@@ -501,14 +501,14 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
 
 
 class NotificationCategory(enum.Enum):
-    GENERAL = 'general'
-    MISC    = 'misc'
-    CAMERA  = 'camera'
-    WORKER  = 'worker'
-    MEDIA   = 'media'
-    DISK    = 'disk'
-    UPLOAD  = 'upload'
-    OFFLINE = 'offline'
+    GENERAL    = 'General'
+    MISC       = 'Miscellaneous'
+    CAMERA     = 'Camera'
+    WORKER     = 'Worker'
+    MEDIA      = 'Media'    # image and video related
+    DISK       = 'Disk'
+    UPLOAD     = 'Upload'   # file transfer related
+    STATE      = 'State'
 
 
 class IndiAllSkyDbNotificationTable(db.Model):
@@ -517,7 +517,7 @@ class IndiAllSkyDbNotificationTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     ack = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
-    expired = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    expireDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime', '+12 hours'))"))
     category = db.Column(db.Enum(NotificationCategory, length=20, native_enum=False), nullable=False, index=True)
     item = db.Column(db.String(length=32), nullable=False, index=True)
     notification = db.Column(db.String(length=255), nullable=False)

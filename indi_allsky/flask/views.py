@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
+from .models import IndiAllSkyDbNotificationTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -61,7 +62,9 @@ from sqlalchemy import and_
 from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import false
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
@@ -2975,6 +2978,60 @@ class JsonLogView(JsonView):
         return jsonify(json_data)
 
 
+
+class AjaxNotificationView(BaseView):
+    methods = ['GET', 'POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+
+
+    def dispatch_request(self):
+        if request.method == 'POST':
+            notice_id = int(request.json['ack_notice'])
+
+            try:
+                notice = IndiAllSkyDbNotificationTable.query\
+                    .filter(IndiAllSkyDbNotificationTable.id == notice_id)\
+                    .one()
+            except NoResultFound:
+                return jsonify({}), 400
+
+
+            notice.setAck()
+
+            return jsonify({})
+
+        elif request.method == 'GET':
+            # return a single result, newest first
+            notice = IndiAllSkyDbNotificationTable.query\
+                .filter(IndiAllSkyDbNotificationTable.ack == false())\
+                .filter(IndiAllSkyDbNotificationTable.expired == false())\
+                .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
+                .first()
+
+
+            if not notice:
+                no_data = {
+                    'id' : None,
+                }
+                return jsonify(no_data)
+
+
+            data = {
+                'id' : notice.id,
+                'notification' : notice.notification,
+            }
+
+            return jsonify(data)
+        else:
+            return jsonify({}), 400
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -3009,6 +3066,7 @@ bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_vi
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
