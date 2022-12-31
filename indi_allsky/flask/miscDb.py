@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 import logging
 #from pprint import pformat
@@ -15,6 +16,9 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbNotificationTable
+
+#from .models import NotificationCategory
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -27,7 +31,7 @@ class miscDb(object):
 
 
     def addCamera(self, camera_name):
-        now = datetime.datetime.now()
+        now = datetime.now()
 
         try:
             camera = IndiAllSkyDbCameraTable.query\
@@ -105,9 +109,9 @@ class miscDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            dayDate = (datetime.datetime.now() - datetime.timedelta(hours=12)).date()
+            dayDate = (datetime.now() - timedelta(hours=12)).date()
         else:
-            dayDate = datetime.datetime.now().date()
+            dayDate = datetime.now().date()
 
 
         image = IndiAllSkyDbImageTable(
@@ -375,7 +379,7 @@ class miscDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+            dayDate = (createDate - timedelta(hours=12)).date()
         else:
             dayDate = createDate.date()
 
@@ -414,7 +418,7 @@ class miscDb(object):
 
         if night:
             # day date for night is offset by 12 hours
-            dayDate = (createDate - datetime.timedelta(hours=12)).date()
+            dayDate = (createDate - timedelta(hours=12)).date()
         else:
             dayDate = createDate.date()
 
@@ -461,4 +465,34 @@ class miscDb(object):
                 raise
 
         return camera.id
+
+
+    def addNotification(self, category, item, notification, expire=timedelta(hours=12)):
+        now = datetime.now()
+
+        # look for existing notification
+        notice = IndiAllSkyDbNotificationTable.query\
+            .filter(IndiAllSkyDbNotificationTable.item == item)\
+            .filter(IndiAllSkyDbNotificationTable.category == category)\
+            .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
+            .first()
+
+        if notice:
+            logger.warning('Not adding existing notification')
+            return
+
+
+        new_notice = IndiAllSkyDbNotificationTable(
+            item=item,
+            category=category,
+            notification=notification,
+        )
+
+        db.session.add(new_notice)
+        db.session.commit()
+
+        logger.info('Added %s notification: %d', category.value, new_notice.id)
+
+        return new_notice
+
 

@@ -44,6 +44,8 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
+from .flask.models import NotificationCategory
+
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -642,6 +644,16 @@ class IndiAllSky(object):
         self.image_worker.start()
 
 
+        if self.image_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'ImageWorker',
+                'WARNING: ImageWorker was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
+
+
     def _stopImageWorker(self, terminate=False):
         if not self.image_worker:
             return
@@ -689,6 +701,16 @@ class IndiAllSky(object):
         self.video_worker.start()
 
 
+        if self.video_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'VideoWorker',
+                'WARNING: VideoWorker was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
+
+
     def _stopVideoWorker(self, terminate=False):
         if not self.video_worker:
             return
@@ -731,6 +753,16 @@ class IndiAllSky(object):
         )
 
         self.upload_worker.start()
+
+
+        if self.upload_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'FileUploader',
+                'WARNING: FileUploader was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
 
 
     def _stopFileUploadWorker(self, terminate=False):
