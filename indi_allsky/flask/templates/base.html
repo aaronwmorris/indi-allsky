@@ -199,7 +199,8 @@ function showNotification(data) {
 
     $("#ack_button").off();
     $("#ack_button").on("click", function() {
-        ackNotification(data.id);
+        // show next notification (not working)
+        ackNotification(data.id, showNotification);
     });
 
     notification_modal = $("#notificationModal");

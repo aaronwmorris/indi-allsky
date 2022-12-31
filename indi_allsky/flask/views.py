@@ -3033,13 +3033,14 @@ class AjaxNotificationView(BaseView):
             notice = IndiAllSkyDbNotificationTable.query\
                 .filter(IndiAllSkyDbNotificationTable.id == notice_id)\
                 .one()
+
+            notice.setAck()
         except NoResultFound:
-            return jsonify({}), 400
+            pass
 
 
-        notice.setAck()
-
-        return jsonify({})
+        # return next notification
+        return self.get()
 
 
 
