@@ -501,17 +501,20 @@ class miscDb(object):
     def setState(self, key, value):
         now = datetime.now()
 
+        # all values must be strings
+        value_str = str(value)
+
         try:
             state = IndiAllSkyDbStateTable.query\
                 .filter(IndiAllSkyDbStateTable.key == key)\
                 .one()
 
-            state.value = value
+            state.value = value_str
             state.createDate = now
         except NoResultFound:
             state = IndiAllSkyDbStateTable(
                 key=key,
-                value=value,
+                value=value_str,
                 createDate=now,
             )
 
