@@ -19,6 +19,9 @@ __all__ = (
     'IndiAllSkyDbStarTrailsVideoTable',
     'IndiAllSkyDbFitsImageTable',
     'IndiAllSkyDbRawImageTable',
+    'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
+    'NotificationCategory', 'IndiAllSkyDbNotificationTable',
+    'IndiAllSkyDbStateTable',
 )
 
 

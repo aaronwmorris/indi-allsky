@@ -54,6 +54,7 @@ from .models import IndiAllSkyDbNotificationTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
+#from .models import NotificationCategory
 
 from sqlalchemy import func
 from sqlalchemy import extract
@@ -3017,6 +3018,7 @@ class AjaxNotificationView(BaseView):
             if not notice:
                 no_data = {
                     'id' : 0,
+                    'category' : '',
                     'notification' : '',
                 }
                 return jsonify(no_data)
@@ -3024,6 +3026,7 @@ class AjaxNotificationView(BaseView):
 
             data = {
                 'id' : notice.id,
+                'category' : str(notice.category),
                 'notification' : notice.notification,
             }
 

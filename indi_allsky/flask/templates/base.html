@@ -146,6 +146,7 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 
 var notification_data = {
     "id" : 0,
+    "category" : "",
     "notification" : "",
 };
 
@@ -170,11 +171,15 @@ function loadNotification(getData, onDone, onError) {
 }
 
 function showNotification(data) {
+    if ( data.id == 0 ) {
+        return;
+    };
+
     notification_modal = $("#notificationModal");
     notificationTitle = notificationModal.querySelector('.modal-title');
     notificationBody = notificationModal.querySelector('.modal-body');
-    notificationTitle.textContent = "TITLE";
-    notificationBody.textContent = "FOOBAR";
+    notificationTitle.textContent = "Notification: " + data.category;
+    notificationBody.textContent = data.notification;
     notification_modal.modal('show');
 }
 
