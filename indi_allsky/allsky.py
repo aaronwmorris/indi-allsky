@@ -175,8 +175,8 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
 
         ### Telescope config
@@ -197,8 +197,8 @@ class IndiAllSky(object):
             self.reparkTelescope()
 
 
-        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
-        self.config['DB_CCD_ID'] = db_camera.id
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        self.config['DB_CAMERA_ID'] = db_camera.id
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -431,8 +431,8 @@ class IndiAllSky(object):
 
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
 
         ### GPS config
@@ -512,8 +512,8 @@ class IndiAllSky(object):
 
 
 
-        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
-        self.config['DB_CCD_ID'] = db_camera.id
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        self.config['DB_CAMERA_ID'] = db_camera.id
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
@@ -794,7 +794,7 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CCD_SERVER'] in ['indi_rpicam']:
+        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -816,13 +816,13 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
+        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CCD_NAME'].startswith('ZWO CCD ASI120'):
+            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CCD_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CCD_NAME'].startswith('ZWO ASI120'):
+        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
+            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
@@ -883,16 +883,16 @@ class IndiAllSky(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'])
-                    self._generateNightKeogram(timespec, self.config['DB_CCD_ID'])
+                    self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                    self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
                     self._uploadAllskyEndOfNight()
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'])
-                    self._generateDayKeogram(timespec, self.config['DB_CCD_ID'])
+                    self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                    self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
 
 
             # this is to prevent expiring images at startup

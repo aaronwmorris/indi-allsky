@@ -453,8 +453,8 @@ class miscDb(object):
 
 
     def getCurrentCameraId(self):
-        if self.config.get('DB_CCD_ID'):
-            return self.config['DB_CCD_ID']
+        if self.config.get('DB_CAMERA_ID'):
+            return self.config['DB_CAMERA_ID']
         else:
             try:
                 camera = IndiAllSkyDbCameraTable.query\

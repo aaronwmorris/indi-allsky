@@ -514,7 +514,7 @@ class ImageWorker(Process):
 
 
         metadata = {
-            'device'              : self.config['CCD_NAME'],
+            'device'              : self.config['CAMERA_NAME'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
@@ -923,7 +923,7 @@ class ImageWorker(Process):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
-            'device'              : self.config['CCD_NAME'],
+            'device'              : self.config['CAMERA_NAME'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
