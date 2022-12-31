@@ -144,11 +144,29 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 })
 
 
-var notification_data = {
-    "id" : 0,
-    "category" : "",
-    "notification" : "",
-};
+function ackNotification(notice_id, onDone, onError) {
+    postData = {
+        'notice_id' : notice_id
+    };
+
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(postData),
+        success: function(data){
+            onDone(data);
+        },
+        error: function(data){
+            onError(data);
+        },
+    });
+});
+
+
 
 function loadNotification(getData, onDone, onError) {
     if(!getData)getData={};
@@ -161,7 +179,6 @@ function loadNotification(getData, onDone, onError) {
         contentType: "application/json",
         data: getData,
         success: function(data){
-            //notification_data = data;
             onDone(data);
         },
         error: function(data){

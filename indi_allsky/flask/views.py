@@ -2990,7 +2990,7 @@ class AjaxNotificationView(BaseView):
 
     def dispatch_request(self):
         if request.method == 'POST':
-            notice_id = int(request.json['ack_notice'])
+            notice_id = request.json['notice_id']
 
             try:
                 notice = IndiAllSkyDbNotificationTable.query\
