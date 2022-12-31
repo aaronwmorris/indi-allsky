@@ -7,6 +7,7 @@ import json
 import time
 import math
 import base64
+import hashlib
 from pathlib import Path
 from collections import OrderedDict
 import socket
@@ -38,6 +39,7 @@ from flask.views import View
 from flask import current_app as app
 
 from . import db
+from .miscDb import miscDb
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -54,7 +56,7 @@ from .models import IndiAllSkyDbNotificationTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
-#from .models import NotificationCategory
+from .models import NotificationCategory
 
 from sqlalchemy import func
 from sqlalchemy import extract
@@ -102,18 +104,40 @@ class BaseView(View):
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
 
-        self.indi_allsky_config = self.get_indi_allsky_config()
+        self.indi_allsky_config, indi_allsky_config_md5 = self.get_indi_allsky_config()
+
+        self._miscDb = miscDb(self.indi_allsky_config)
+
+        self.check_config(indi_allsky_config_md5)
 
 
     def get_indi_allsky_config(self):
         with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            config = f_config_file.read()
+
             try:
-                indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+                indi_allsky_config = json.loads(config, object_pairs_hook=OrderedDict)
             except json.JSONDecodeError as e:
                 app.logger.error('Error decoding json: %s', str(e))
                 return dict()
 
-        return indi_allsky_config
+            config_md5 = hashlib.md5(config.encode())
+
+        return indi_allsky_config, config_md5
+
+
+    def check_config(self, web_md5):
+        db_md5 = self._miscDb.getState('CONFIG_MD5')
+
+        if db_md5 == web_md5.hexdigest():
+            return
+
+        self._miscDb.addNotification(
+            NotificationCategory.STATE,
+            'config_md5',
+            'Config updated: indi-allsky needs to be reloaded',
+            expire=timedelta(minutes=30),
+        )
 
 
     def get_indiallsky_pid(self):
