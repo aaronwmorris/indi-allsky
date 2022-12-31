@@ -198,7 +198,9 @@ function showNotification(data) {
     };
 
     $("#ack_button").off();
-    $("#ack_button").on("click", ackNotification(data.id));
+    $("#ack_button").on("click", function() {
+        ackNotification(data.id);
+    });
 
     notification_modal = $("#notificationModal");
     notificationTitle = notificationModal.querySelector('.modal-title');
