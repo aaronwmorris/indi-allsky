@@ -516,8 +516,8 @@ class IndiAllSkyDbNotificationTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    ack = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     expireDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime', '+12 hours'))"))
+    ack = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     category = db.Column(db.Enum(NotificationCategory, length=20, native_enum=False), nullable=False, index=True)
     item = db.Column(db.String(length=32), nullable=False, index=True)
     notification = db.Column(db.String(length=255), nullable=False)

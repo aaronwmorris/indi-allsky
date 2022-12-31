@@ -3007,9 +3007,11 @@ class AjaxNotificationView(BaseView):
 
         elif request.method == 'GET':
             # return a single result, newest first
+            now = datetime.now()
+
             notice = IndiAllSkyDbNotificationTable.query\
                 .filter(IndiAllSkyDbNotificationTable.ack == false())\
-                .filter(IndiAllSkyDbNotificationTable.expired == false())\
+                .filter(IndiAllSkyDbNotificationTable.expireDate < now)\
                 .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
                 .first()
 
