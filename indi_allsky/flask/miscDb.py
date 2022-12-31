@@ -501,19 +501,22 @@ class miscDb(object):
     def setState(self, key, value):
         now = datetime.now()
 
+        # all keys must be upper-case
+        key_upper = str(key).upper()
+
         # all values must be strings
         value_str = str(value)
 
         try:
             state = IndiAllSkyDbStateTable.query\
-                .filter(IndiAllSkyDbStateTable.key == key)\
+                .filter(IndiAllSkyDbStateTable.key == key_upper)\
                 .one()
 
             state.value = value_str
             state.createDate = now
         except NoResultFound:
             state = IndiAllSkyDbStateTable(
-                key=key,
+                key=key_upper,
                 value=value_str,
                 createDate=now,
             )
@@ -525,9 +528,12 @@ class miscDb(object):
 
 
     def getState(self, key):
+        # all values must be upper-case strings
+        key_upper = str(key).upper()
+
         # not catching NoResultFound
         state = IndiAllSkyDbStateTable.query\
-            .filter(IndiAllSkyDbStateTable.key == key)\
+            .filter(IndiAllSkyDbStateTable.key == key_upper)\
             .one()
 
         return state
