@@ -2990,49 +2990,57 @@ class AjaxNotificationView(BaseView):
 
     def dispatch_request(self):
         if request.method == 'POST':
-            notice_id = request.json['notice_id']
-
-            try:
-                notice = IndiAllSkyDbNotificationTable.query\
-                    .filter(IndiAllSkyDbNotificationTable.id == notice_id)\
-                    .one()
-            except NoResultFound:
-                return jsonify({}), 400
-
-
-            notice.setAck()
-
-            return jsonify({})
-
+            return self.post()
         elif request.method == 'GET':
-            # return a single result, newest first
-            now = datetime.now()
-
-            notice = IndiAllSkyDbNotificationTable.query\
-                .filter(IndiAllSkyDbNotificationTable.ack == false())\
-                .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
-                .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
-                .first()
-
-
-            if not notice:
-                no_data = {
-                    'id' : 0,
-                    'category' : '',
-                    'notification' : '',
-                }
-                return jsonify(no_data)
-
-
-            data = {
-                'id' : notice.id,
-                'category' : notice.category.value,
-                'notification' : notice.notification,
-            }
-
-            return jsonify(data)
+            return self.get()
         else:
             return jsonify({}), 400
+
+
+    def get(self):
+        # return a single result, newest first
+        now = datetime.now()
+
+        notice = IndiAllSkyDbNotificationTable.query\
+            .filter(IndiAllSkyDbNotificationTable.ack == false())\
+            .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
+            .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
+            .first()
+
+
+        if not notice:
+            no_data = {
+                'id' : 0,
+                'category' : '',
+                'notification' : '',
+            }
+            return jsonify(no_data)
+
+
+        data = {
+            'id' : notice.id,
+            'category' : notice.category.value,
+            'notification' : notice.notification,
+        }
+
+        return jsonify(data)
+
+
+    def post(self):
+        notice_id = request.json['notice_id']
+
+        try:
+            notice = IndiAllSkyDbNotificationTable.query\
+                .filter(IndiAllSkyDbNotificationTable.id == notice_id)\
+                .one()
+        except NoResultFound:
+            return jsonify({}), 400
+
+
+        notice.setAck()
+
+        return jsonify({})
+
 
 
 
