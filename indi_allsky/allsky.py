@@ -852,6 +852,8 @@ class IndiAllSky(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
+        self._systemHealthCheck()
+
         if self.config.get('GPS_TIMESYNC'):
             self.validateGpsTime()
 
@@ -948,6 +950,7 @@ class IndiAllSky(object):
                     self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
                     self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
                     self._uploadAllskyEndOfNight()
+                    self._systemHealthCheck()
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
@@ -955,6 +958,7 @@ class IndiAllSky(object):
                     timespec = today_ref.strftime('%Y%m%d')
                     self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
                     self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
+                    self._systemHealthCheck()
 
 
             # this is to prevent expiring images at startup
@@ -1752,6 +1756,27 @@ class IndiAllSky(object):
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
             'timeofday'    : 'night',
+            'camera_id'    : None,  # Not needed
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
+
+
+    def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
+        # This will delete old images from the filesystem and DB
+        jobdata = {
+            'action'       : 'systemHealthCheck',
+            'img_folder'   : str(self.image_dir),  # not needed
+            'timespec'     : None,  # Not needed
+            'timeofday'    : None,  # Not needed
             'camera_id'    : None,  # Not needed
         }
 

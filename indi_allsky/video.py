@@ -779,8 +779,10 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self):
+    def systemHealthCheck(self, task, timespec, img_folder, timeofday, camera_id):
         # check filesystems
+        logger.info('Performing system health check')
+
         fs_list = psutil.disk_partitions()
 
         for fs in fs_list:
