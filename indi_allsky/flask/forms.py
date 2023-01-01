@@ -31,6 +31,8 @@ from sqlalchemy import func
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.types import Date
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import false
 
 from flask import current_app as app
 
@@ -1796,9 +1798,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         # add time of day filter
         if timeofday == 'day':
-            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == False)  # noqa: E712
+            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == false())
         elif timeofday == 'night':
-            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == True)  # noqa: E712
+            videos_query = videos_query.filter(IndiAllSkyDbVideoTable.night == true())
         else:
             pass
 

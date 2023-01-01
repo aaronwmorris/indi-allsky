@@ -66,7 +66,7 @@ from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
 from sqlalchemy.orm.exc import NoResultFound
-#from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.expression import false
 
 from .forms import IndiAllskyConfigForm
@@ -2365,8 +2365,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
-            .filter(IndiAllSkyDbVideoTable.success == True)\
-            .order_by(IndiAllSkyDbVideoTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbVideoTable.success == true())\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
         video_entries_count = video_entries.count()
         message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
@@ -2402,8 +2402,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
-            .filter(IndiAllSkyDbStarTrailsTable.success == True)\
-            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbStarTrailsTable.success == true())\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
         startrail_entries_count = startrail_entries.count()
         message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
@@ -2421,8 +2421,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrail videos
         startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.success == True)\
-            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == true())\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
 
         startrail_video_entries_count = startrail_video_entries.count()
         message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
@@ -3029,6 +3029,7 @@ class AjaxNotificationView(BaseView):
         # return a single result, newest first
         now = datetime.now()
 
+        # this MUST ALWAYS return the newest result
         notice = IndiAllSkyDbNotificationTable.query\
             .filter(IndiAllSkyDbNotificationTable.ack == false())\
             .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
