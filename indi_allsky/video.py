@@ -790,14 +790,18 @@ class VideoWorker(Process):
                 # skip snap filesystems
                 continue
 
+            if fs.mountpoint.startswith('/boot'):
+                # skip boot filesystem
+                continue
+
             disk_usage = psutil.disk_usage(fs.mountpoint)
 
-            if disk_usage.percent >= 95:
+            if disk_usage.percent >= 90:
                 self._miscDb.addNotification(
                     NotificationCategory.DISK,
                     fs.mountpoint,
-                    'Filesystem {0:s} is >95% full'.format(fs.mountpoint),
-                    expire=timedelta(minutes=710),  # should run every 12 hours
+                    'Filesystem {0:s} is >90% full'.format(fs.mountpoint),
+                    expire=timedelta(minutes=715),  # should run every ~12 hours
                 )
 
 
@@ -808,7 +812,7 @@ class VideoWorker(Process):
                 NotificationCategory.MISC,
                 'swap',
                 'Swap memory is >90% full',
-                expire=timedelta(minutes=710),  # should run every 12 hours
+                expire=timedelta(minutes=715),  # should run every ~12 hours
             )
 
 
