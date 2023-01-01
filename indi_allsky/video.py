@@ -26,6 +26,8 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import NotificationCategory
+
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
@@ -74,6 +76,9 @@ class VideoWorker(Process):
         os.nice(19)  # lower priority
 
         self.config = config
+
+        self._miscDb = miscDb(self.config)
+
         self.error_q = error_q
         self.video_q = video_q
         self.upload_q = upload_q
@@ -81,8 +86,6 @@ class VideoWorker(Process):
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
         self.bin_v = bin_v
-
-        self._miscDb = miscDb(self.config)
 
         self.f_lock = None
 
@@ -303,6 +306,13 @@ class VideoWorker(Process):
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'timelapse_video',
+                'Timelapse video failed to generate',
+                expire=timedelta(hours=12),
+            )
 
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
 
@@ -531,7 +541,12 @@ class VideoWorker(Process):
                     startrail_video_entry.success = False
                     db.session.commit()
 
-
+                    self._miscDb.addNotification(
+                        NotificationCategory.MEDIA,
+                        'startrail_video',
+                        'Startrails timelapse video failed to generate',
+                        expire=timedelta(hours=12),
+                    )
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
                 startrail_video_entry = None

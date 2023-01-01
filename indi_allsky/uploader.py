@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 from pathlib import Path
 import signal
 import traceback
@@ -9,9 +10,12 @@ from multiprocessing import Process
 import queue
 
 #from .flask import db
+from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import NotificationCategory
+
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from . import filetransfer
@@ -39,6 +43,9 @@ class FileUploader(Process):
         self.name = 'FileUploader{0:03d}'.format(idx)
 
         self.config = config
+
+        self._miscDb = miscDb(self.config)
+
         self.error_q = error_q
         self.upload_q = upload_q
 
@@ -206,16 +213,40 @@ class FileUploader(Process):
                 logger.error('Connection failure: %s', e)
                 client.close()
                 task.setFailed('Connection failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'connection',
+                    'File transfer connection failure: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
                 task.setFailed('Authentication failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'authentication',
+                    'File transfer authentication failure: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
             except filetransfer.exceptions.CertificateValidationFailure as e:
                 logger.error('Certificate validation failure: %s', e)
                 client.close()
                 task.setFailed('Certificate validation failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'certificate',
+                    'File transfer certificate validation failed: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
 
             # Upload file
@@ -225,26 +256,66 @@ class FileUploader(Process):
                 logger.error('Connection failure: %s', e)
                 client.close()
                 task.setFailed('Connection failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'connection',
+                    'File transfer connection failure: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
                 task.setFailed('Authentication failure')
-                return
-            except filetransfer.exceptions.TransferFailure as e:
-                logger.error('Tranfer failure: %s', e)
-                client.close()
-                task.setFailed('Tranfer failure')
-                return
-            except filetransfer.exceptions.PermissionFailure as e:
-                logger.error('Permission failure: %s', e)
-                client.close()
-                task.setFailed('Permission failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'authentication',
+                    'File transfer authentication failure: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
             except filetransfer.exceptions.CertificateValidationFailure as e:
                 logger.error('Certificate validation failure: %s', e)
                 client.close()
                 task.setFailed('Certificate validation failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'certificate',
+                    'File transfer certificate validation failed: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
+                return
+            except filetransfer.exceptions.TransferFailure as e:
+                logger.error('Tranfer failure: %s', e)
+                client.close()
+                task.setFailed('Tranfer failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'filetransfer',
+                    'File transfer failed: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
+                return
+            except filetransfer.exceptions.PermissionFailure as e:
+                logger.error('Permission failure: %s', e)
+                client.close()
+                task.setFailed('Permission failure')
+
+                self._miscDb.addNotification(
+                    NotificationCategory.UPLOAD,
+                    'permission',
+                    'File transfer permission failure: {0:s}'.format(str(e)),
+                    expire=timedelta(hours=1),
+                )
+
                 return
 
 
