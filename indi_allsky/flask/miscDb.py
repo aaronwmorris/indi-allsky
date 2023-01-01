@@ -536,6 +536,6 @@ class miscDb(object):
             .filter(IndiAllSkyDbStateTable.key == key_upper)\
             .one()
 
-        return state
+        return state.value
 
 
