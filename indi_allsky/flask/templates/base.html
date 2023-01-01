@@ -153,7 +153,7 @@ $.ajaxSetup({
 
 function ackNotification(notice_id, onDone, onError) {
     postData = {
-        'notice_id' : notice_id
+        'ack_id' : notice_id
     };
 
     if(!onDone)onDone=function(){};

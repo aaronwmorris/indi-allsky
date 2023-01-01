@@ -3067,8 +3067,6 @@ class AjaxNotificationView(BaseView):
         if not notice:
             no_data = {
                 'id' : 0,
-                'category' : '',
-                'notification' : '',
             }
             return jsonify(no_data)
 
@@ -3084,11 +3082,11 @@ class AjaxNotificationView(BaseView):
 
 
     def post(self):
-        notice_id = request.json['notice_id']
+        ack_id = request.json['ack_id']
 
         try:
             notice = IndiAllSkyDbNotificationTable.query\
-                .filter(IndiAllSkyDbNotificationTable.id == notice_id)\
+                .filter(IndiAllSkyDbNotificationTable.id == ack_id)\
                 .one()
 
             notice.setAck()
