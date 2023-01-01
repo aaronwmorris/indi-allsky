@@ -127,7 +127,11 @@ class BaseView(View):
 
 
     def check_config(self, web_md5):
-        db_md5 = self._miscDb.getState('CONFIG_MD5')
+        try:
+            db_md5 = self._miscDb.getState('CONFIG_MD5')
+        except NoResultFound:
+            app.logger.error('Unable to get CONFIG_MD5')
+            return
 
         if db_md5 == web_md5.hexdigest():
             return
