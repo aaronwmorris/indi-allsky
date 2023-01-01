@@ -4,33 +4,29 @@
 
 {% block head %}
 <style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
 </style>
 {% endblock %}
 
 {% block content %}
 <h4>Image stats in 15 minute blocks</h4>
-<table>
-<tr>
-    <th>Date</th>
-    <th>Count</th>
-    <th>Exposure Avg</th>
-    <th>ADU Avg</th>
-    <th>SQM Avg</th>
-    <th>Stars Avg</th>
-</tr>
+<div class="container">
+<div class="row">
+    <div class="col-sm-2 fw-bold">Date</div>
+    <div class="col-sm-1 fw-bold">Count</div>
+    <div class="col-sm-2 fw-bold">Exposure Avg</div>
+    <div class="col-sm-1 fw-bold">ADU Avg</div>
+    <div class="col-sm-1 fw-bold">SQM Avg</div>
+    <div class="col-sm-1 fw-bold">Stars Avg</div>
+</div>
 {% for adu in rolling_adu_list %}
-<tr>
-    <td>{{ adu.dt.strftime('%Y-%m-%d %H:%M') }}</td>
-    <td>{{ adu.i_count }}</td>
-    <td>{{ "%0.4f"|format(adu.exposure_avg) }}</td>
-    <td>{{ "%0.2f"|format(adu.adu_avg) }}</td>
-    <td>{{ "%0.2f"|format(adu.sqm_avg) }}</td>
-    <td>{{ "%0.1f"|format(adu.stars_avg) }}</td>
-</tr>
+<div class="row">
+    <div class="col-sm-2">{{ adu.dt.strftime('%Y-%m-%d %H:%M') }}</div>
+    <div class="col-sm-1">{{ adu.i_count }}</div>
+    <div class="col-sm-2">{{ "%0.4f"|format(adu.exposure_avg) }}</div>
+    <div class="col-sm-1">{{ "%0.2f"|format(adu.adu_avg) }}</div>
+    <div class="col-sm-1">{{ "%0.2f"|format(adu.sqm_avg) }}</div>
+    <div class="col-sm-1">{{ "%0.1f"|format(adu.stars_avg) }}</div>
+</div>
 {% endfor %}
-</table>
+</div>
 {% endblock %}

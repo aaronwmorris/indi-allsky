@@ -4,30 +4,26 @@
 
 {% block head %}
 <style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
 </style>
 {% endblock %}
 
 {% block content %}
-<table>
-<tr>
-    <th>ID</th>
-    <th>Date</th>
-    <th>Queue</th>
-    <th>State</th>
-    <th>Result</th>
-</tr>
+<div class="container">
+<div class="row">
+    <div class="col-1 fw-bold">ID</div>
+    <div class="col-sm-2 fw-bold">Date</div>
+    <div class="col-sm-1 fw-bold">Queue</div>
+    <div class="col-sm-1 fw-bold">State</div>
+    <div class="col-sm-7 fw-bold">Result</div>
+</div>
 {% for task in task_list %}
-<tr>
-    <td>{{ task.id }}</td>
-    <td>{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ task.queue }}</td>
-    <td>{{ task.state }}</td>
-    <td>{{ task.result }}</td>
-</tr>
+<div class="row">
+    <div class="col-1">{{ task.id }}</div>
+    <div class="col-sm-2">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-sm-1">{{ task.queue }}</div>
+    <div class="col-sm-1">{{ task.state }}</div>
+    <div class="col-sm-7">{{ task.result }}</div>
+</div>
 {% endfor %}
-</table>
+</div>
 {% endblock %}

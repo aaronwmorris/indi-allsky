@@ -4,30 +4,26 @@
 
 {% block head %}
 <style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
 </style>
 {% endblock %}
 
 {% block content %}
-<table>
-<tr>
-    <th>ID</th>
-    <th>Date</th>
-    <th>Exposure</th>
-    <th>Diff</th>
-    <th>Elapsed</th>
-</tr>
+<div class="container">
+<div class="row">
+    <div class="col-1 fw-bold">ID</div>
+    <div class="col-2 fw-bold">Date</div>
+    <div class="col-2 fw-bold">Exposure</div>
+    <div class="col-1 fw-bold">Diff</div>
+    <div class="col-1 fw-bold">Elapsed</>
+</div>
 {% for image in image_lag_list %}
-<tr>
-    <td>{{ image.id }}</td>
-    <td>{{ image.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ "%0.7f"|format(image.exposure) }}</td>
-    <td>{{ image.lag_diff }}</td>
-    <td>{{ "%0.2f"|format(image.exp_elapsed | float) }}</td>
-</tr>
+<div class="row">
+    <div class="col-1">{{ image.id }}</div>
+    <div class="col-2">{{ image.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-2">{{ "%0.7f"|format(image.exposure) }}</div>
+    <div class="col-1">{{ image.lag_diff }}</div>
+    <div class="col-1">{{ "%0.2f"|format(image.exp_elapsed | float) }}</div>
+</div>
 {% endfor %}
-</table>
+</div>
 {% endblock %}
