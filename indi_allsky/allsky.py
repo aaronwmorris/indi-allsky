@@ -76,6 +76,22 @@ class IndiAllSky(object):
         self.config_file = f_config_file.name
 
         self._miscDb = miscDb(self.config)
+
+
+        config_version = float(self.config.get('VERSION', 0.0))
+        if __config_version__ != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            sys.exit(1)
+
+
         self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
 
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
@@ -159,6 +175,20 @@ class IndiAllSky(object):
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
                 return
+
+
+        config_version = float(c.get('VERSION', 0.0))
+        if __config_version__ != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            return
 
 
         # overwrite config
@@ -317,17 +347,13 @@ class IndiAllSky(object):
 
 
     def _parseConfig(self, json_config):
+        # WARNING:  database configuration may not be ready
         c = json.loads(json_config, object_pairs_hook=OrderedDict)
 
 
         # set this after parsing json
         c_md5 = hashlib.md5(json_config.encode())
 
-
-        config_version = float(c.get('VERSION', 0.0))
-        if __config_version__ != config_version:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
-            sys.exit(1)
 
         # set any new config defaults which might not be in the config
 
@@ -414,6 +440,14 @@ class IndiAllSky(object):
         if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'no_indiserver',
+                'WARNING: indiserver service is not active',
+                expire=timedelta(hours=2),
+            )
+
             sys.exit(1)
 
         # give devices a chance to register
@@ -423,6 +457,14 @@ class IndiAllSky(object):
             self.indiclient.findCcd()
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
+
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                'no_camera',
+                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                expire=timedelta(hours=2),
+            )
+
             time.sleep(1)
             sys.exit(1)
 
@@ -1307,6 +1349,14 @@ class IndiAllSky(object):
         if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'no_indiserver',
+                'WARNING: indiserver service is not active',
+                expire=timedelta(hours=2),
+            )
+
             sys.exit(1)
 
         # give devices a chance to register
@@ -1316,6 +1366,14 @@ class IndiAllSky(object):
             self.indiclient.findCcd()
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
+
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                'no_camera',
+                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                expire=timedelta(hours=2),
+            )
+
             time.sleep(1)
             sys.exit(1)
 
