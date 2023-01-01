@@ -3007,6 +3007,33 @@ class JsonLogView(JsonView):
         return jsonify(json_data)
 
 
+class NotificationsView(TemplateView):
+    def get_context(self):
+        context = super(NotificationsView, self).get_context()
+
+
+        notices = IndiAllSkyDbNotificationTable.query\
+            .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
+            .limit(50)
+
+
+        notice_list = list()
+        for notice in notices:
+            n = {
+                'id'            : notice.id,
+                'createDate'    : notice.createDate,
+                'expireDate'    : notice.expireDate,
+                'category'      : notice.category.value,
+                'ack'           : notice.ack,
+                'notification'  : notice.notification,
+            }
+
+            notice_list.append(n)
+
+        context['notice_list'] = notice_list
+
+        return context
+
 
 class AjaxNotificationView(BaseView):
     methods = ['GET', 'POST']
@@ -3115,4 +3142,5 @@ bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', templa
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
+bp.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 

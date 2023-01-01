@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Notifications{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-1 fw-bold">ID</div>
+    <div class="col-sm-1 fw-bold">Category</div>
+    <div class="col-sm-2 fw-bold">Create</div>
+    <div class="col-sm-2 fw-bold">Expire</div>
+    <div class="col-1 fw-bold">Acked</div>
+    <div class="col-sm-5 fw-bold">Notification</div>
+</div>
+{% for notice in notice_list %}
+<div class="row">
+    <div class="col-1">{{ notice.id }}</div>
+    <div class="col-sm-1">{{ notice.category }}</div>
+    <div class="col-sm-2">{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-sm-2">{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-1">{{ notice.ack }}</div>
+    <div class="col-sm-5">{{ notice.notification }}</div>
+</div>
+{% endfor %}
+{% endblock %}
