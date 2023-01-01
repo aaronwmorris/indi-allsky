@@ -3074,9 +3074,10 @@ class AjaxNotificationView(BaseView):
 
 
         data = {
-            'id' : notice.id,
-            'category' : notice.category.value,
-            'notification' : notice.notification,
+            'id'            : notice.id,
+            'createDate'    : notice.createDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'category'      : notice.category.value,
+            'notification'  : notice.notification,
         }
 
         return jsonify(data)

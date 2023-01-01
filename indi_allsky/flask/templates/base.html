@@ -124,10 +124,14 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="notificationLabel">title</h1>
+        <h1 class="modal-title fs-5" id="notificationLabel"></h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">body</div>
+      <div class="modal-body">
+        <div id="notification_date"></div>
+        <br />
+        <div id="notification_body"></div>
+      </div>
       <div class="modal-footer">
         <button id="ack_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Acknowledge</button>
       </div>
@@ -203,9 +207,13 @@ function showNotification(data) {
 
     notification_modal = $("#notificationModal");
     notificationTitle = notificationModal.querySelector('.modal-title');
-    notificationBody = notificationModal.querySelector('.modal-body');
+    notificationDate = notificationModal.querySelector('#notification_date');
+    notificationBody = notificationModal.querySelector('#notification_body');
+
     notificationTitle.textContent = "Notification: " + data.category;
+    notificationDate.textContent = "Date: " + data.createDate;
     notificationBody.textContent = data.notification;
+
     notification_modal.modal('show');
 }
 
