@@ -762,7 +762,18 @@ class ImageWorker(Process):
 
         write_img_start = time.time()
 
-        if self.config['IMAGE_EXPORT_RAW'] in ('png',):
+        if self.config['IMAGE_EXPORT_RAW'] in ('jpg', 'jpeg'):
+            if i_ref['image_bitpix'] == 8:
+                scaled_data_8 = scaled_data
+            else:
+                # jpeg has to be 8 bits
+                logger.info('Resampling image from %d to 8 bits', i_ref['image_bitpix'])
+
+                div_factor = int((2 ** i_ref['image_bit_depth']) / 255)
+                scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
+
+            cv2.imwrite(str(tmpfile_name), scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+        elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
