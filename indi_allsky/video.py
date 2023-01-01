@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
+import psutil
 import tempfile
 import fcntl
 import signal
@@ -776,6 +777,37 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
         task.setSuccess('Uploaded EndOfNight data')
+
+
+    def systemHealthCheck(self):
+        # check filesystems
+        fs_list = psutil.disk_partitions()
+
+        for fs in fs_list:
+            if fs.mountpoint.startswith('/snap/'):
+                # skip snap filesystems
+                continue
+
+            disk_usage = psutil.disk_usage(fs.mountpoint)
+
+            if disk_usage.percent >= 95:
+                self._miscDb.addNotification(
+                    NotificationCategory.DISK,
+                    fs.mountpoint,
+                    'Filesystem {0:s} is >95% full'.format(fs.mountpoint),
+                    expire=timedelta(hours=24),
+                )
+
+
+        # check swap capacity
+        swap_info = psutil.swap_memory()
+        if swap_info.percent >= 90:
+            self._miscDb.addNotification(
+                NotificationCategory.MISC,
+                'swap',
+                'Swap memory is >90% full',
+                expire=timedelta(hours=12),
+            )
 
 
     def expireData(self, task, timespec, img_folder, timeofday, camera_id):
