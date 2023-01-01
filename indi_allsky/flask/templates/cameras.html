@@ -4,26 +4,22 @@
 
 {% block head %}
 <style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
 </style>
 {% endblock %}
 
 {% block content %}
-<table>
-<tr>
-    <th>ID</th>
-    <th>Camera</th>
-    <th>Connect Date</th>
-</tr>
+<div class="container">
+<div class="row">
+    <div class="col-1 fw-bold">ID</div>
+    <div class="col-2 fw-bold">Camera</div>
+    <div class="col-2 fw-bold">Connect Date</div>
+</div>
 {% for camera in camera_list %}
-<tr>
-    <td>{{ camera.id }}</td>
-    <td>{{ camera.name }}</td>
-    <td>{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-</tr>
+<div class="row">
+    <div class="col-1">{{ camera.id }}</div>
+    <div class="col-2">{{ camera.name }}</div>
+    <div class="col-2">{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+</div>
 {% endfor %}
-</table>
+</div>
 {% endblock %}

@@ -7,6 +7,7 @@ import json
 import time
 import math
 import base64
+import hashlib
 from pathlib import Path
 from collections import OrderedDict
 import socket
@@ -38,6 +39,7 @@ from flask.views import View
 from flask import current_app as app
 
 from . import db
+from .miscDb import miscDb
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -50,9 +52,11 @@ from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
+from .models import IndiAllSkyDbNotificationTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
+from .models import NotificationCategory
 
 from sqlalchemy import func
 from sqlalchemy import extract
@@ -61,7 +65,9 @@ from sqlalchemy import and_
 from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import false
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
@@ -98,18 +104,44 @@ class BaseView(View):
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
 
-        self.indi_allsky_config = self.get_indi_allsky_config()
+        self.indi_allsky_config, indi_allsky_config_md5 = self.get_indi_allsky_config()
+
+        self._miscDb = miscDb(self.indi_allsky_config)
+
+        self.check_config(indi_allsky_config_md5)
 
 
     def get_indi_allsky_config(self):
         with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
+            config = f_config_file.read()
+
             try:
-                indi_allsky_config = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
+                indi_allsky_config = json.loads(config, object_pairs_hook=OrderedDict)
             except json.JSONDecodeError as e:
                 app.logger.error('Error decoding json: %s', str(e))
                 return dict()
 
-        return indi_allsky_config
+            config_md5 = hashlib.md5(config.encode())
+
+        return indi_allsky_config, config_md5
+
+
+    def check_config(self, web_md5):
+        try:
+            db_md5 = self._miscDb.getState('CONFIG_MD5')
+        except NoResultFound:
+            app.logger.error('Unable to get CONFIG_MD5')
+            return
+
+        if db_md5 == web_md5.hexdigest():
+            return
+
+        self._miscDb.addNotification(
+            NotificationCategory.STATE,
+            'config_md5',
+            'Config updated: indi-allsky needs to be reloaded',
+            expire=timedelta(minutes=30),
+        )
 
 
     def get_indiallsky_pid(self):
@@ -2333,8 +2365,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
-            .filter(IndiAllSkyDbVideoTable.success == True)\
-            .order_by(IndiAllSkyDbVideoTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbVideoTable.success == true())\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
         video_entries_count = video_entries.count()
         message_list.append('<p>Timelapses: {0:d}</p>'.format(video_entries_count))
@@ -2370,8 +2402,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
-            .filter(IndiAllSkyDbStarTrailsTable.success == True)\
-            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbStarTrailsTable.success == true())\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
         startrail_entries_count = startrail_entries.count()
         message_list.append('<p>Star trails: {0:d}</p>'.format(startrail_entries_count))
@@ -2389,8 +2421,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrail videos
         startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.success == True)\
-            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())  # noqa: E712
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == true())\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
 
         startrail_video_entries_count = startrail_video_entries.count()
         message_list.append('<p>Star trail timelapses: {0:d}</p>'.format(startrail_video_entries_count))
@@ -2975,6 +3007,99 @@ class JsonLogView(JsonView):
         return jsonify(json_data)
 
 
+class NotificationsView(TemplateView):
+    def get_context(self):
+        context = super(NotificationsView, self).get_context()
+
+
+        notices = IndiAllSkyDbNotificationTable.query\
+            .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
+            .limit(50)
+
+
+        notice_list = list()
+        for notice in notices:
+            n = {
+                'id'            : notice.id,
+                'createDate'    : notice.createDate,
+                'expireDate'    : notice.expireDate,
+                'category'      : notice.category.value,
+                'ack'           : notice.ack,
+                'notification'  : notice.notification,
+            }
+
+            notice_list.append(n)
+
+        context['notice_list'] = notice_list
+
+        return context
+
+
+class AjaxNotificationView(BaseView):
+    methods = ['GET', 'POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxNotificationView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if request.method == 'POST':
+            return self.post()
+        elif request.method == 'GET':
+            return self.get()
+        else:
+            return jsonify({}), 400
+
+
+    def get(self):
+        # return a single result, newest first
+        now = datetime.now()
+
+        # this MUST ALWAYS return the newest result
+        notice = IndiAllSkyDbNotificationTable.query\
+            .filter(IndiAllSkyDbNotificationTable.ack == false())\
+            .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
+            .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
+            .first()
+
+
+        if not notice:
+            no_data = {
+                'id' : 0,
+            }
+            return jsonify(no_data)
+
+
+        data = {
+            'id'            : notice.id,
+            'createDate'    : notice.createDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'category'      : notice.category.value,
+            'notification'  : notice.notification,
+        }
+
+        return jsonify(data)
+
+
+    def post(self):
+        ack_id = request.json['ack_id']
+
+        try:
+            notice = IndiAllSkyDbNotificationTable.query\
+                .filter(IndiAllSkyDbNotificationTable.id == ack_id)\
+                .one()
+
+            notice.setAck()
+        except NoResultFound:
+            pass
+
+
+        # return next notification
+        return self.get()
+
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2993,7 +3118,6 @@ bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_v
 bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
-bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
 bp.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
@@ -3009,10 +3133,13 @@ bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_vi
 bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 
 # hidden
 bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
+bp.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 

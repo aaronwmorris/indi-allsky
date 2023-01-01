@@ -222,7 +222,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
-            'camera_id'   : self.config['DB_CCD_ID'],
+            'camera_id'   : self.config['DB_CAMERA_ID'],
             'filename_t'  : self._filename_t,
         }
 

@@ -8,6 +8,7 @@ import re
 import psutil
 import tempfile
 import subprocess
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -44,6 +45,8 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
+from .flask.models import NotificationCategory
+
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -67,10 +70,29 @@ class IndiAllSky(object):
 
 
     def __init__(self, f_config_file):
-        self.config = self._parseConfig(f_config_file.read())
+        self.config, config_md5 = self._parseConfig(f_config_file.read())
         f_config_file.close()
 
         self.config_file = f_config_file.name
+
+        self._miscDb = miscDb(self.config)
+
+
+        config_version = float(self.config.get('VERSION', 0.0))
+        if __config_version__ != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            sys.exit(1)
+
+
+        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
 
         self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
 
@@ -113,8 +135,6 @@ class IndiAllSky(object):
 
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
 
-        self._miscDb = miscDb(self.config)
-
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -148,15 +168,34 @@ class IndiAllSky(object):
     def sighup_handler_main(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
+
         with io.open(self.config_file, 'r') as f_config_file:
             try:
-                c = self._parseConfig(f_config_file.read())
+                c, config_md5 = self._parseConfig(f_config_file.read())
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
                 return
 
+
+        config_version = float(c.get('VERSION', 0.0))
+        if __config_version__ != config_version:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            return
+
+
         # overwrite config
         self.config = c
+
+        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+
 
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -173,8 +212,11 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+
+        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
 
 
         ### Telescope config
@@ -195,8 +237,9 @@ class IndiAllSky(object):
             self.reparkTelescope()
 
 
-        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
-        self.config['DB_CCD_ID'] = db_camera.id
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        self.config['DB_CAMERA_ID'] = db_camera.id
+        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -293,18 +336,24 @@ class IndiAllSky(object):
         except FileNotFoundError:
             pass
 
+        pid = os.getpid()
+
         with io.open(str(pidfile_p), 'w') as pid_f:
-            pid_f.write('{0:d}'.format(os.getpid()))
+            pid_f.write('{0:d}'.format(pid))
             pid_f.flush()
 
 
+        self._miscDb.setState('PID', pid)
+
+
     def _parseConfig(self, json_config):
+        # WARNING:  database configuration may not be ready
         c = json.loads(json_config, object_pairs_hook=OrderedDict)
 
-        config_version = float(c.get('VERSION', 0.0))
-        if __config_version__ != config_version:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
-            sys.exit(1)
+
+        # set this after parsing json
+        c_md5 = hashlib.md5(json_config.encode())
+
 
         # set any new config defaults which might not be in the config
 
@@ -348,7 +397,7 @@ class IndiAllSky(object):
             c['FFMPEG_CODEC'] = 'libx264'
 
 
-        return c
+        return c, c_md5
 
 
     def _initialize(self, connectOnly=False):
@@ -391,6 +440,14 @@ class IndiAllSky(object):
         if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'no_indiserver',
+                'WARNING: indiserver service is not active',
+                expire=timedelta(hours=2),
+            )
+
             sys.exit(1)
 
         # give devices a chance to register
@@ -400,6 +457,14 @@ class IndiAllSky(object):
             self.indiclient.findCcd()
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
+
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                'no_camera',
+                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                expire=timedelta(hours=2),
+            )
+
             time.sleep(1)
             sys.exit(1)
 
@@ -424,8 +489,11 @@ class IndiAllSky(object):
 
 
         # add driver name to config
-        self.config['CCD_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CCD_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+
+        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
 
 
         ### GPS config
@@ -505,8 +573,9 @@ class IndiAllSky(object):
 
 
 
-        db_camera = self._miscDb.addCamera(self.config['CCD_NAME'])
-        self.config['DB_CCD_ID'] = db_camera.id
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        self.config['DB_CAMERA_ID'] = db_camera.id
+        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
@@ -642,6 +711,16 @@ class IndiAllSky(object):
         self.image_worker.start()
 
 
+        if self.image_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'ImageWorker',
+                'WARNING: ImageWorker was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
+
+
     def _stopImageWorker(self, terminate=False):
         if not self.image_worker:
             return
@@ -689,6 +768,16 @@ class IndiAllSky(object):
         self.video_worker.start()
 
 
+        if self.video_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'VideoWorker',
+                'WARNING: VideoWorker was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
+
+
     def _stopVideoWorker(self, terminate=False):
         if not self.video_worker:
             return
@@ -733,6 +822,16 @@ class IndiAllSky(object):
         self.upload_worker.start()
 
 
+        if self.upload_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                'FileUploader',
+                'WARNING: FileUploader was restarted more than 10 times',
+                expire=timedelta(hours=2),
+            )
+
+
     def _stopFileUploadWorker(self, terminate=False):
         if not self.upload_worker:
             return
@@ -753,11 +852,13 @@ class IndiAllSky(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
+        self._systemHealthCheck()
+
         if self.config.get('GPS_TIMESYNC'):
             self.validateGpsTime()
 
 
-        if self.config['CCD_SERVER'] in ['indi_rpicam']:
+        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -779,13 +880,13 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CCD_SERVER'] in ['indi_asi_ccd']:
+        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CCD_NAME'].startswith('ZWO CCD ASI120'):
+            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CCD_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CCD_NAME'].startswith('ZWO ASI120'):
+        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
+            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
@@ -815,6 +916,8 @@ class IndiAllSky(object):
         camera_ready = False
         last_camera_ready = False
         exposure_state = 'unset'
+        check_exposure_state = time.time() + 300  # check in 5 minutes
+
 
         ### main loop starts
         while True:
@@ -844,16 +947,18 @@ class IndiAllSky(object):
                     ### Generate timelapse at end of night
                     yesterday_ref = datetime.now() - timedelta(days=1)
                     timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, self.config['DB_CCD_ID'])
-                    self._generateNightKeogram(timespec, self.config['DB_CCD_ID'])
+                    self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                    self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
                     self._uploadAllskyEndOfNight()
+                    self._systemHealthCheck()
 
                 elif self.night and self.generate_timelapse_flag:
                     ### Generate timelapse at end of day
                     today_ref = datetime.now()
                     timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, self.config['DB_CCD_ID'])
-                    self._generateDayKeogram(timespec, self.config['DB_CCD_ID'])
+                    self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                    self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
+                    self._systemHealthCheck()
 
 
             # this is to prevent expiring images at startup
@@ -888,6 +993,16 @@ class IndiAllSky(object):
 
                     self.indiclient.disconnectServer()
 
+
+                    now = datetime.now()
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        expire=timedelta(hours=1),
+                    )
+
+
                     sys.exit()
 
 
@@ -902,6 +1017,20 @@ class IndiAllSky(object):
 
                 time.sleep(59)  # prime number
                 continue
+
+
+            # check exposure state every 5 minutes
+            if check_exposure_state < loop_start_time:
+                check_exposure_state = time.time() + 300  # next check in 5 minutes
+
+                camera_last_ready_s = int(loop_start_time - camera_ready_time)
+                if camera_last_ready_s > 300:
+                    self._miscDb.addNotification(
+                        NotificationCategory.CAMERA,
+                        'last_ready',
+                        'WARNING: Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
+                        expire=timedelta(minutes=30),
+                    )
 
 
             # Loop to run for 11 seconds (prime number)
@@ -949,6 +1078,15 @@ class IndiAllSky(object):
                     self.indiclient.disableCcdCooler()  # safety
 
                     self.indiclient.disconnectServer()
+
+
+                    now = datetime.now()
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        expire=timedelta(hours=1),
+                    )
 
                     sys.exit()
 
@@ -1215,6 +1353,14 @@ class IndiAllSky(object):
         if not self.indiclient.connectServer():
             logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
             logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'no_indiserver',
+                'WARNING: indiserver service is not active',
+                expire=timedelta(hours=2),
+            )
+
             sys.exit(1)
 
         # give devices a chance to register
@@ -1224,6 +1370,14 @@ class IndiAllSky(object):
             self.indiclient.findCcd()
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
+
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                'no_camera',
+                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                expire=timedelta(hours=2),
+            )
+
             time.sleep(1)
             sys.exit(1)
 
@@ -1602,6 +1756,27 @@ class IndiAllSky(object):
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
             'timeofday'    : 'night',
+            'camera_id'    : None,  # Not needed
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
+
+
+    def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
+        # This will delete old images from the filesystem and DB
+        jobdata = {
+            'action'       : 'systemHealthCheck',
+            'img_folder'   : str(self.image_dir),  # not needed
+            'timespec'     : None,  # Not needed
+            'timeofday'    : None,  # Not needed
             'camera_id'    : None,  # Not needed
         }
 

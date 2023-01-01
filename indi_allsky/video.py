@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
+import psutil
 import tempfile
 import fcntl
 import signal
@@ -26,6 +27,8 @@ from .flask.miscDb import miscDb
 
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
+from .flask.models import NotificationCategory
+
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
@@ -74,6 +77,9 @@ class VideoWorker(Process):
         os.nice(19)  # lower priority
 
         self.config = config
+
+        self._miscDb = miscDb(self.config)
+
         self.error_q = error_q
         self.video_q = video_q
         self.upload_q = upload_q
@@ -81,8 +87,6 @@ class VideoWorker(Process):
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
         self.bin_v = bin_v
-
-        self._miscDb = miscDb(self.config)
 
         self.f_lock = None
 
@@ -303,6 +307,13 @@ class VideoWorker(Process):
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'timelapse_video',
+                'Timelapse video failed to generate',
+                expire=timedelta(hours=12),
+            )
 
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
 
@@ -531,7 +542,12 @@ class VideoWorker(Process):
                     startrail_video_entry.success = False
                     db.session.commit()
 
-
+                    self._miscDb.addNotification(
+                        NotificationCategory.MEDIA,
+                        'startrail_video',
+                        'Startrails timelapse video failed to generate',
+                        expire=timedelta(hours=12),
+                    )
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
                 startrail_video_entry = None
@@ -761,6 +777,43 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
         task.setSuccess('Uploaded EndOfNight data')
+
+
+    def systemHealthCheck(self, task, timespec, img_folder, timeofday, camera_id):
+        # check filesystems
+        logger.info('Performing system health check')
+
+        fs_list = psutil.disk_partitions()
+
+        for fs in fs_list:
+            if fs.mountpoint.startswith('/snap/'):
+                # skip snap filesystems
+                continue
+
+            if fs.mountpoint.startswith('/boot'):
+                # skip boot filesystem
+                continue
+
+            disk_usage = psutil.disk_usage(fs.mountpoint)
+
+            if disk_usage.percent >= 90:
+                self._miscDb.addNotification(
+                    NotificationCategory.DISK,
+                    fs.mountpoint,
+                    'Filesystem {0:s} is >90% full'.format(fs.mountpoint),
+                    expire=timedelta(minutes=715),  # should run every ~12 hours
+                )
+
+
+        # check swap capacity
+        swap_info = psutil.swap_memory()
+        if swap_info.percent >= 90:
+            self._miscDb.addNotification(
+                NotificationCategory.MISC,
+                'swap',
+                'Swap memory is >90% full',
+                expire=timedelta(minutes=715),  # should run every ~12 hours
+            )
 
 
     def expireData(self, task, timespec, img_folder, timeofday, camera_id):

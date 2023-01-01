@@ -9,6 +9,7 @@
 
     "comment_SESSION_COOKIE_SECURE" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,
+    "SESSION_COOKIE_SAMESITE" : "Lax",
     "TEMPLATES_AUTO_RELOAD" : true,
     "SECRET_KEY" : "%SECRET_KEY%",
 

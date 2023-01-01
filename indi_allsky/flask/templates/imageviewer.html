@@ -339,13 +339,6 @@ fields['form_global'] = {
 };
 
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
-
-
 $("#IMG_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});

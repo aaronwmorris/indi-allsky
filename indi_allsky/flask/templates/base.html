@@ -119,11 +119,109 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="notificationLabel"></h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="notification_date"></div>
+        <br />
+        <div id="notification_body"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="ack_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Acknowledge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+function ackNotification(notice_id, onDone, onError) {
+    postData = {
+        'ack_id' : notice_id
+    };
+
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(postData),
+        success: function(data){
+            onDone(data);
+        },
+        error: function(data){
+            onError(data);
+        },
+    });
+}
+
+
+
+function loadNotification(getData, onDone, onError) {
+    if(!getData)getData={};
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
+        contentType: "application/json",
+        data: getData,
+        success: function(data){
+            onDone(data);
+        },
+        error: function(data){
+            onError(data);
+        },
+    });
+}
+
+function showNotification(data) {
+    if ( data.id == 0 ) {
+        return;
+    };
+
+    $("#ack_button").off();
+    $("#ack_button").on("click", function() {
+        // show next notification (not working)
+        ackNotification(data.id, showNotification);
+    });
+
+    notification_modal = $("#notificationModal");
+    notificationTitle = notificationModal.querySelector('.modal-title');
+    notificationDate = notificationModal.querySelector('#notification_date');
+    notificationBody = notificationModal.querySelector('#notification_body');
+
+    notificationTitle.textContent = "Notification: " + data.category;
+    notificationDate.textContent = "Date: " + data.createDate;
+    notificationBody.textContent = data.notification;
+
+    notification_modal.modal('show');
+}
+
+// Load notifications when ready
+$( document ).ready(function() {
+    loadNotification({}, showNotification);
+});
+
 </script>
   </body>
 </html>
