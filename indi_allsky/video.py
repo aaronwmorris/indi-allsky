@@ -797,7 +797,7 @@ class VideoWorker(Process):
                     NotificationCategory.DISK,
                     fs.mountpoint,
                     'Filesystem {0:s} is >95% full'.format(fs.mountpoint),
-                    expire=timedelta(hours=24),
+                    expire=timedelta(minutes=710),  # should run every 12 hours
                 )
 
 
@@ -808,7 +808,7 @@ class VideoWorker(Process):
                 NotificationCategory.MISC,
                 'swap',
                 'Swap memory is >90% full',
-                expire=timedelta(hours=12),
+                expire=timedelta(minutes=710),  # should run every 12 hours
             )
 
 
