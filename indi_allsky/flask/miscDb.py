@@ -78,15 +78,13 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding image %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding image %s to DB', filename_p)
 
 
         # If temp is 0, write null
@@ -117,7 +115,7 @@ class miscDb(object):
 
         image = IndiAllSkyDbImageTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             createDate=createDate,
             dayDate=dayDate,
             exposure=exposure,
@@ -149,15 +147,14 @@ class miscDb(object):
 
         #logger.info('####### Exposure: %s', pformat(exposure))
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding dark frame %s to DB', filename)
+        logger.info('Adding dark frame %s to DB', filename_p)
 
-
-        filename_str = str(filename)  # might be a pathlib object
 
         exposure_int = int(exposure)
 
@@ -172,7 +169,7 @@ class miscDb(object):
 
         dark = IndiAllSkyDbDarkFrameTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             bitdepth=bitdepth,
             exposure=exposure_int,
             gain=gain,
@@ -192,15 +189,14 @@ class miscDb(object):
 
         #logger.info('####### Exposure: %s', pformat(exposure))
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding bad pixel map %s to DB', filename)
+        logger.info('Adding bad pixel map %s to DB', filename_p)
 
-
-        filename_str = str(filename)  # might be a pathlib object
 
         exposure_int = int(exposure)
 
@@ -215,7 +211,7 @@ class miscDb(object):
 
         bpm = IndiAllSkyDbBadPixelMapTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             bitdepth=bitdepth,
             exposure=exposure_int,
             gain=gain,
@@ -233,16 +229,14 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            # this is a normal condition, DB entry is created before file exists
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    # this is a normal condition, DB entry is created before file exists
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding video %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding video %s to DB', filename_p)
 
 
         if timeofday == 'night':
@@ -253,7 +247,7 @@ class miscDb(object):
 
         video = IndiAllSkyDbVideoTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             dayDate=dayDate,
             night=night,
         )
@@ -268,16 +262,14 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            # this is a normal condition, DB entry is created before file exists
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    # this is a normal condition, DB entry is created before file exists
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding keogram %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding keogram %s to DB', filename_p)
 
 
         if timeofday == 'night':
@@ -288,7 +280,7 @@ class miscDb(object):
 
         keogram = IndiAllSkyDbKeogramTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             dayDate=dayDate,
             night=night,
         )
@@ -303,16 +295,14 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            # this is a normal condition, DB entry is created before file exists
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    # this is a normal condition, DB entry is created before file exists
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding star trail %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding star trail %s to DB', filename_p)
 
 
         if timeofday == 'night':
@@ -323,7 +313,7 @@ class miscDb(object):
 
         startrail = IndiAllSkyDbStarTrailsTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             dayDate=dayDate,
             night=night,
         )
@@ -338,16 +328,14 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            # this is a normal condition, DB entry is created before file exists
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    # this is a normal condition, DB entry is created before file exists
+        #    logger.warning('File not found: %s', filename_p)
 
 
-        logger.info('Adding star trail video %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding star trail video %s to DB', filename_p)
 
 
         if timeofday == 'night':
@@ -358,7 +346,7 @@ class miscDb(object):
 
         startrail_video = IndiAllSkyDbStarTrailsVideoTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             dayDate=dayDate,
             night=night,
         )
@@ -373,9 +361,10 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    logger.warning('File not found: %s', filename_p)
 
 
         if night:
@@ -385,15 +374,12 @@ class miscDb(object):
             dayDate = createDate.date()
 
 
-        logger.info('Adding fits image %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding fits image %s to DB', filename_p)
 
 
         fits_image = IndiAllSkyDbFitsImageTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             createDate=createDate,
             exposure=exposure,
             gain=gain,
@@ -412,9 +398,10 @@ class miscDb(object):
         if not filename:
             return
 
-        p_filename = Path(filename)
-        if not p_filename.exists():
-            logger.warning('File not found: %s', p_filename)
+        filename_p = Path(filename)
+
+        #if not filename_p.exists():
+        #    logger.warning('File not found: %s', filename_p)
 
 
         if night:
@@ -424,15 +411,12 @@ class miscDb(object):
             dayDate = createDate.date()
 
 
-        logger.info('Adding raw image %s to DB', filename)
-
-
-        filename_str = str(filename)  # might be a pathlib object
+        logger.info('Adding raw image %s to DB', filename_p)
 
 
         fits_image = IndiAllSkyDbRawImageTable(
             camera_id=camera_id,
-            filename=filename_str,
+            filename=str(filename_p),
             createDate=createDate,
             exposure=exposure,
             gain=gain,
