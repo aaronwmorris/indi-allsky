@@ -217,7 +217,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'connection',
-                    'File transfer connection failure: {0:s}'.format(str(e)),
+                    '{0:s} file transfer connection failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -230,7 +230,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'authentication',
-                    'File transfer authentication failure: {0:s}'.format(str(e)),
+                    '{0:s} file transfer authentication failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -243,7 +243,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'certificate',
-                    'File transfer certificate validation failed: {0:s}'.format(str(e)),
+                    '{0:s} file transfer certificate validation failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -260,7 +260,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'connection',
-                    'File transfer connection failure: {0:s}'.format(str(e)),
+                    '{0:s} file transfer connection failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -273,7 +273,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'authentication',
-                    'File transfer authentication failure: {0:s}'.format(str(e)),
+                    '{0:s} file transfer authentication failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -286,7 +286,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'certificate',
-                    'File transfer certificate validation failed: {0:s}'.format(str(e)),
+                    '{0:s} file transfer certificate validation failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -299,7 +299,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'filetransfer',
-                    'File transfer failed: {0:s}'.format(str(e)),
+                    '{0:s} file transfer failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
@@ -312,7 +312,7 @@ class FileUploader(Process):
                 self._miscDb.addNotification(
                     NotificationCategory.UPLOAD,
                     'permission',
-                    'File transfer permission failure: {0:s}'.format(str(e)),
+                    '{0:s} file transfer permission failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
                 )
 
