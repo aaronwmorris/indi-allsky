@@ -719,7 +719,8 @@ class ImageWorker(Process):
         tmpfile_name = Path(f_tmpfile.name)
 
 
-        data = i_ref['hdulist'][0].data
+        data = self.image_processor.non_stacked_image
+
 
         if i_ref['image_bitpix'] == 8:
             # nothing to scale
@@ -1245,6 +1246,7 @@ class ImageProcessor(object):
 
         # contains the current stacked image
         self._image = None
+        self._non_stacked_image = None  # used when raw exports are enabled
 
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
@@ -1273,6 +1275,15 @@ class ImageProcessor(object):
 
 
     @property
+    def non_stacked_image(self):
+        return self._non_stacked_image
+
+    @non_stacked_image.setter
+    def non_stacked_image(self, new_non_stacked_image):
+        self._non_stacked_image = new_non_stacked_image
+
+
+    @property
     def shape(self):
         return self.image_list[0]['hdulist'].data.shape
 
@@ -1287,7 +1298,10 @@ class ImageProcessor(object):
 
 
         # clear old data as soon as possible
-        self.image = None  # clear current data
+        self.image = None
+        self.non_stacked_image = None
+
+
         if self.night_v.value:
             if len(self.image_list) == self.stack_count:
                 self.image_list.pop()  # remove last element
@@ -1643,6 +1657,11 @@ class ImageProcessor(object):
             return
 
 
+        if self.config.get('IMAGE_EXPORT_RAW'):
+            # set aside non-stacked data for raw export
+            self.non_stacked_image = i_ref['hdulist'][0].data
+
+
         stack_i_ref_list = list()
         for i in self.image_list:
             if isinstance(i, type(None)):
@@ -1739,8 +1758,13 @@ class ImageProcessor(object):
         else:
             debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
 
-        debayered_data_bgr = cv2.cvtColor(self.image, debayer_algorithm)
-        self.image = debayered_data_bgr
+
+        self.image = cv2.cvtColor(self.image, debayer_algorithm)
+
+
+        # for raw export
+        if not isinstance(self.non_stacked_image, type(None)):
+            self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
     def convert_16bit_to_8bit(self):
