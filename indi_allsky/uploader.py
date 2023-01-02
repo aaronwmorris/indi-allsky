@@ -221,7 +221,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
@@ -234,7 +234,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.CertificateValidationFailure as e:
                 logger.error('Certificate validation failure: %s', e)
                 client.close()
@@ -247,7 +247,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
 
             # Upload file
             try:
@@ -264,7 +264,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.AuthenticationFailure as e:
                 logger.error('Authentication failure: %s', e)
                 client.close()
@@ -277,7 +277,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.CertificateValidationFailure as e:
                 logger.error('Certificate validation failure: %s', e)
                 client.close()
@@ -290,7 +290,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.TransferFailure as e:
                 logger.error('Tranfer failure: %s', e)
                 client.close()
@@ -303,7 +303,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
             except filetransfer.exceptions.PermissionFailure as e:
                 logger.error('Permission failure: %s', e)
                 client.close()
@@ -316,7 +316,7 @@ class FileUploader(Process):
                     expire=timedelta(hours=1),
                 )
 
-                return
+                continue
 
 
             # close file transfer client

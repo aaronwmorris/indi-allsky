@@ -998,7 +998,7 @@ class IndiAllSky(object):
                     self._miscDb.addNotification(
                         NotificationCategory.STATE,
                         'indi-allsky',
-                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        'indi-allsky was shutdown',
                         expire=timedelta(hours=1),
                     )
 
@@ -1084,7 +1084,7 @@ class IndiAllSky(object):
                     self._miscDb.addNotification(
                         NotificationCategory.STATE,
                         'indi-allsky',
-                        'indi-allsky was shut down at {0:s}'.format(str(now)),
+                        'indi-allsky was shutdown',
                         expire=timedelta(hours=1),
                     )
 
