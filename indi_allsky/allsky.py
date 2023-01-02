@@ -446,7 +446,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.GENERAL,
                 'no_indiserver',
-                'Unable to connect to indiserver {0:s}:{1:d}'.format(host, port),
+                'Unable to connect to indiserver at {0:s}:{1:d}'.format(host, port),
                 expire=timedelta(hours=2),
             )
 
@@ -463,7 +463,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'No camera was detected.  Is the correct camera driver selected?',
+                'No camera was detected.',
                 expire=timedelta(hours=2),
             )
 
