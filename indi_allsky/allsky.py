@@ -438,13 +438,15 @@ class IndiAllSky(object):
         # connect to indi server
         logger.info("Connecting to indiserver")
         if not self.indiclient.connectServer():
-            logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
-            logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+            host = self.indiclient.getHost()
+            port = self.indiclient.getPort()
+
+            logger.error("No indiserver available at %s:%d", host, port)
 
             self._miscDb.addNotification(
                 NotificationCategory.GENERAL,
                 'no_indiserver',
-                'WARNING: indiserver service is not active',
+                'Unable to connect to indiserver at {0:s}:{1:d}'.format(host, port),
                 expire=timedelta(hours=2),
             )
 
@@ -461,7 +463,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                'No camera was detected.',
                 expire=timedelta(hours=2),
             )
 
@@ -979,6 +981,10 @@ class IndiAllSky(object):
             self._queueManualTasks()
 
 
+            # Update watchdog
+            self._miscDb.setState('WATCHDOG', int(loop_start_time))
+
+
             if not self.night and not self.config['DAYTIME_CAPTURE']:
                 logger.info('Daytime capture is disabled')
                 self.generate_timelapse_flag = False
@@ -1028,8 +1034,8 @@ class IndiAllSky(object):
                     self._miscDb.addNotification(
                         NotificationCategory.CAMERA,
                         'last_ready',
-                        'WARNING: Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
-                        expire=timedelta(minutes=30),
+                        'Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
+                        expire=timedelta(minutes=60),
                     )
 
 
@@ -1374,7 +1380,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'WARNING: No camera was detected.  Is the correct camera driver selected?',
+                'No camera was detected.  Is the correct camera driver selected?',
                 expire=timedelta(hours=2),
             )
 
