@@ -1648,6 +1648,7 @@ class ImageProcessor(object):
 
 
     def stack(self):
+        # self.image and self.non_stacked_image are first populated by this method
         i_ref = self.getLatestImage()
 
 
