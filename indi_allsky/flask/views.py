@@ -201,6 +201,23 @@ class BaseView(View):
         if self.indi_allsky_config.get('FOCUS_MODE', False):
             return '<span class="text-warning">FOCUS MODE</span>'
 
+
+        try:
+            watchdog_ts = int(self._miscDb.getState('WATCHDOG'))
+
+            if time.time() > (watchdog_ts + 300):
+                # this notification is only supposed to fire if the program is
+                # running normally and the watchdog timestamp is older than 5 minutes
+                self._miscDb.addNotification(
+                    NotificationCategory.GENERAL,
+                    'watchdog',
+                    'Watchdog expired.  indi-allsky may be in a failed state.',
+                    expire=timedelta(minutes=60),
+                )
+        except NoResultFound:
+            pass
+
+
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
             return '<span class="text-muted">SLEEPING</span>'
 
