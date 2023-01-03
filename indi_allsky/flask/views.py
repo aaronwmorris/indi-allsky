@@ -147,22 +147,25 @@ class BaseView(View):
     def get_indiallsky_pid(self):
         indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
 
+
         try:
             with io.open(str(indi_allsky_pid_p), 'r') as pid_f:
                 pid = pid_f.readline()
                 pid = pid.rstrip()
-
         except FileNotFoundError:
             return False, None
         except PermissionError:
             return None, None
 
+
         pid_mtime = indi_allsky_pid_p.stat().st_mtime
+
 
         try:
             pid_int = int(pid)
         except ValueError:
             return None, pid_mtime
+
 
         return pid_int, pid_mtime
 
@@ -204,18 +207,15 @@ class BaseView(View):
             return '<span class="text-warning">FOCUS MODE</span>'
 
 
-        try:
-            if time.time() > (pid_mtime + 300):
-                # this notification is only supposed to fire if the program is
-                # running normally and the watchdog timestamp is older than 5 minutes
-                self._miscDb.addNotification(
-                    NotificationCategory.GENERAL,
-                    'watchdog',
-                    'Watchdog expired.  indi-allsky may be in a failed state.',
-                    expire=timedelta(minutes=60),
-                )
-        except NoResultFound:
-            pass
+        if time.time() > (pid_mtime + 300):
+            # this notification is only supposed to fire if the program is
+            # running normally and the watchdog timestamp is older than 5 minutes
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'watchdog',
+                'Watchdog expired.  indi-allsky may be in a failed state.',
+                expire=timedelta(minutes=60),
+            )
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
