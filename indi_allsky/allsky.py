@@ -94,7 +94,7 @@ class IndiAllSky(object):
 
         self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
 
-        self._pidfile = '/var/lib/indi-allsky/indi-allsky.pid'
+        self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
         self.indiclient = None
 
@@ -157,12 +157,12 @@ class IndiAllSky(object):
 
 
     @property
-    def pidfile(self):
-        return self._pidfile
+    def pid_file(self):
+        return self._pid_file
 
-    @pidfile.setter
-    def pidfile(self, new_pidfile):
-        self._pidfile = str(new_pidfile)
+    @pid_file.setter
+    def pid_file(self, new_pid_file):
+        self._pid_file = Path(new_pid_file)
 
 
     def sighup_handler_main(self, signum, frame):
@@ -329,21 +329,20 @@ class IndiAllSky(object):
 
 
     def write_pid(self):
-        pidfile_p = Path(self._pidfile)
-
-        try:
-            pidfile_p.unlink()
-        except FileNotFoundError:
-            pass
-
         pid = os.getpid()
 
-        with io.open(str(pidfile_p), 'w') as pid_f:
-            pid_f.write('{0:d}'.format(pid))
-            pid_f.flush()
+        try:
+            with io.open(str(self.pid_file), 'w') as pid_f:
+                pid_f.write('{0:d}'.format(pid))
+        except PermissionError as e:
+            logger.error('Unable to write pid file: %s', str(e))
+            sys.exit(1)
 
+
+        self.pid_file.chmod(0o644)
 
         self._miscDb.setState('PID', pid)
+        self._miscDb.setState('PID_FILE', self.pid_file)
 
 
     def _parseConfig(self, json_config):
@@ -981,8 +980,8 @@ class IndiAllSky(object):
             self._queueManualTasks()
 
 
-            # Update watchdog
-            self._miscDb.setState('WATCHDOG', int(loop_start_time))
+            # Use pid file timestamp as watchdog
+            self.pid_file.touch(mode=0o644, exist_ok=True)
 
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:

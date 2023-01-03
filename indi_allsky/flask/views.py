@@ -153,20 +153,22 @@ class BaseView(View):
                 pid = pid.rstrip()
 
         except FileNotFoundError:
-            return False
+            return False, None
         except PermissionError:
-            return None
+            return None, None
+
+        pid_mtime = indi_allsky_pid_p.stat().st_mtime
 
         try:
             pid_int = int(pid)
         except ValueError:
-            return None
+            return None, pid_mtime
 
-        return pid_int
+        return pid_int, pid_mtime
 
 
     def get_indi_allsky_status(self):
-        pid = self.get_indiallsky_pid()
+        pid, pid_mtime = self.get_indiallsky_pid()
 
         if isinstance(pid, type(None)):
             return '<span class="text-warning">UNKNOWN</span>'
@@ -203,9 +205,7 @@ class BaseView(View):
 
 
         try:
-            watchdog_ts = int(self._miscDb.getState('WATCHDOG'))
-
-            if time.time() > (watchdog_ts + 300):
+            if time.time() > (pid_mtime + 300):
                 # this notification is only supposed to fire if the program is
                 # running normally and the watchdog timestamp is older than 5 minutes
                 self._miscDb.addNotification(
