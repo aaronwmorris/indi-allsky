@@ -536,6 +536,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def findCcd(self):
+        logger.info('Searching for available cameras')
+
         ccd_list = self._findCcds()
 
         logger.info('Found %d CCDs', len(ccd_list))
