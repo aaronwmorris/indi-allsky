@@ -79,21 +79,26 @@ SUPPORTED_INDI_VERSIONS=(
 
 # try to detect installed indiversion
 DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep "INDI Library" | awk "{print \$3}")
+echo
+echo
 echo "Detected INDI version: $DETECTED_INDIVERSION"
-sleep 3
+sleep 5
 
 INDI_VERSIONS=()
 for v in "${SUPPORTED_INDI_VERSIONS[@]}"; do
     if [ "$v" == "$DETECTED_INDIVERSION" ]; then
+        # allow the version to be selected
         INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v ON"
+
+        #INDI_VERSION=$v
+        #break
     else
         INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v OFF"
     fi
 done
 
 
-INDI_VERSION=""
-while [ -z "$INDI_VERSION" ]; do
+while [ -z "${INDI_VERSION:-}" ]; do
     # shellcheck disable=SC2068
     INDI_VERSION=$(whiptail --title "Installed INDI Version for pyindi-client" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_VERSIONS[@]} 3>&1 1>&2 2>&3)
 done
@@ -109,13 +114,13 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "v1.9.9" ]; then
+if [ "$INDI_VERSION" == "1.9.9" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-binary :all: --upgrade "$PYINDI_1_9_9"
-elif [ "$INDI_VERSION" == "v1.9.8" ]; then
+elif [ "$INDI_VERSION" == "1.9.8" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-binary :all: --upgrade "$PYINDI_1_9_8"
-elif [ "$INDI_VERSION" == "v1.9.7" ]; then
+elif [ "$INDI_VERSION" == "1.9.7" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-binary :all: --upgrade "$PYINDI_1_9_8"
 else
