@@ -172,7 +172,7 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
     exit 1
 fi
 
-if ! ping -c 1 $(hostname -s) >/dev/null 2>&1; then
+if ! ping -c 1 "$(hostname -s)" >/dev/null 2>&1; then
     echo "To avoid the benign warnings 'Name or service not known sudo: unable to resolve host'"
     echo "Add the following line to your /etc/hosts file:"
     echo "127.0.0.1       localhost $(hostname -s)"
@@ -1157,12 +1157,28 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 # pyindi-client setup
-INDI_VERSIONS=(
-    "v1.9.9 v1.9.9 ON"
-    "v1.9.8 v1.9.8 OFF"
-    "v1.9.7 v1.9.7 OFF"
-    "skip skip OFF"
+SUPPORTED_INDI_VERSIONS=(
+    "1.9.9"
+    "1.9.8"
+    "1.9.7"
+    "skip"
 )
+
+# try to detect installed indiversion
+DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep "INDI Library" | awk "{print \$3}")
+echo "Detected INDI version: $DETECTED_INDIVERSION"
+sleep 3
+
+
+INDI_VERSIONS=()
+for v in "${SUPPORTED_INDI_VERSIONS[@]}"; do
+    if [ "$v" == "$DETECTED_INDIVERSION" ]; then
+        INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v ON"
+    else
+        INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v OFF"
+    fi
+done
+
 
 
 INDI_VERSION=""

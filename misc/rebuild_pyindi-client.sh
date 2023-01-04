@@ -7,11 +7,11 @@ set -o errexit
 PATH=/bin:/usr/bin
 export PATH
 
-
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 
 
+INDI_DRIVER_PATH="/usr/bin"
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
@@ -47,6 +47,17 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     exit 1
 fi
 
+if [ -f "/usr/local/bin/indiserver" ]; then
+    INDI_DRIVER_PATH="/usr/local/bin"
+
+    echo
+    echo
+    echo "Detected a custom installation of INDI in /usr/local/bin"
+    echo
+    echo
+    sleep 3
+fi
+
 
 echo
 echo
@@ -58,13 +69,27 @@ echo
 sleep 10
 
 
-
-INDI_VERSIONS=(
-    "v1.9.9 v1.9.9 ON"
-    "v1.9.8 v1.9.8 OFF"
-    "v1.9.7 v1.9.7 OFF"
-    "skip skip OFF"
+# pyindi-client setup
+SUPPORTED_INDI_VERSIONS=(
+    "1.9.9"
+    "1.9.8"
+    "1.9.7"
+    "skip"
 )
+
+# try to detect installed indiversion
+DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep "INDI Library" | awk "{print \$3}")
+echo "Detected INDI version: $DETECTED_INDIVERSION"
+sleep 3
+
+INDI_VERSIONS=()
+for v in "${SUPPORTED_INDI_VERSIONS[@]}"; do
+    if [ "$v" == "$DETECTED_INDIVERSION" ]; then
+        INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v ON"
+    else
+        INDI_VERSIONS[${#INDI_VERSIONS[@]}]="$v $v OFF"
+    fi
+done
 
 
 INDI_VERSION=""
