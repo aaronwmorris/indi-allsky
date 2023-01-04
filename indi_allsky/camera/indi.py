@@ -520,24 +520,24 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def _findCcds(self):
+        logger.info('Searching for available cameras')
+
         ccd_list = list()
 
         for device in self.getDevices():
-            logger.info('Found device %s', device.getDeviceName())
+            #logger.info('Found device %s', device.getDeviceName())
             device_interfaces = self.findDeviceInterfaces(device)
 
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
-                    logger.info(' Detected %s', v)
                     if k == PyIndi.BaseDevice.CCD_INTERFACE:
+                        logger.info(' Detected %s', device.getDeviceName())
                         ccd_list.append(device)
 
         return ccd_list
 
 
     def findCcd(self):
-        logger.info('Searching for available cameras')
-
         ccd_list = self._findCcds()
 
         logger.info('Found %d CCDs', len(ccd_list))
@@ -552,16 +552,18 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def _findTelescopes(self):
+        logger.info('Searching for available telescopes/mounts')
+
         telescope_list = list()
 
         for device in self.getDevices():
-            logger.info('Found device %s', device.getDeviceName())
+            #logger.info('Found device %s', device.getDeviceName())
             device_interfaces = self.findDeviceInterfaces(device)
 
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
-                    logger.info(' Detected %s', v)
                     if k == PyIndi.BaseDevice.TELESCOPE_INTERFACE:
+                        logger.info(' Detected %s', device.getDeviceName())
                         telescope_list.append(device)
 
         return telescope_list
@@ -583,16 +585,18 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def _findGpss(self):
+        logger.info('Searching for available GPS interfaces')
+
         gps_list = list()
 
         for device in self.getDevices():
-            logger.info('Found device %s', device.getDeviceName())
+            #logger.info('Found device %s', device.getDeviceName())
             device_interfaces = self.findDeviceInterfaces(device)
 
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
-                    logger.info(' Detected %s', v)
                     if k == PyIndi.BaseDevice.GPS_INTERFACE:
+                        logger.info(' Detected %s', device.getDeviceName())
                         gps_list.append(device)
 
         return gps_list
