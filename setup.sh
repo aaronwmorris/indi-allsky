@@ -1165,7 +1165,8 @@ SUPPORTED_INDI_VERSIONS=(
 )
 
 # try to detect installed indiversion
-DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep "INDI Library" | awk "{print \$3}")
+#DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
+DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
 echo
 echo
 echo "Detected INDI version: $DETECTED_INDIVERSION"

@@ -64,7 +64,7 @@ class StretchTest(object):
         cv2.imwrite(str(outputfile_p), stretched_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
-    def _convert_16bit_to_8bit(data, image_bitpix, image_bit_depth):
+    def _convert_16bit_to_8bit(self, data, image_bitpix, image_bit_depth):
         if image_bitpix == 8:
             return
 

@@ -11,7 +11,7 @@ PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyind
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 
 
-INDI_DRIVER_PATH="/usr/bin"
+#INDI_DRIVER_PATH="/usr/bin"
 
 if [[ "$(id -u)" == "0" ]]; then
     echo
@@ -48,7 +48,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 fi
 
 if [ -f "/usr/local/bin/indiserver" ]; then
-    INDI_DRIVER_PATH="/usr/local/bin"
+    #INDI_DRIVER_PATH="/usr/local/bin"
 
     echo
     echo
@@ -78,7 +78,8 @@ SUPPORTED_INDI_VERSIONS=(
 )
 
 # try to detect installed indiversion
-DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep "INDI Library" | awk "{print \$3}")
+#DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
+DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
 echo
 echo
 echo "Detected INDI version: $DETECTED_INDIVERSION"

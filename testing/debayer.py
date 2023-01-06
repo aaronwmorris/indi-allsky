@@ -1,0 +1,130 @@
+#!/usr/bin/env python3
+
+import sys
+import argparse
+from pathlib import Path
+import cv2
+import numpy
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging
+
+
+class Debayer(object):
+
+    __cfa_bgr_map = {
+        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
+        'RGGB' : cv2.COLOR_BAYER_BG2BGR,
+        'BGGR' : cv2.COLOR_BAYER_RG2BGR,
+        'GBRG' : cv2.COLOR_BAYER_GR2BGR,
+    }
+
+    def __init__(self, bayerpat):
+        self.debayer_algorithm = self.__cfa_bgr_map[bayerpat]
+
+
+    def main(self, input_file, output_file):
+        inputfile_p = Path(input_file)
+        if not inputfile_p.exists():
+            logger.error('%s does not exist', inputfile_p)
+            sys.exit(1)
+
+        outputfile_p = Path(output_file)
+        if outputfile_p.exists():
+            logger.error('%s file already exists', outputfile_p)
+            sys.exit(1)
+
+
+        data = cv2.imread(str(inputfile_p), cv2.IMREAD_UNCHANGED)
+
+        image_bit_depth = self._detectBitDepth(data)
+
+        data_bgr = cv2.cvtColor(data, self.debayer_algorithm)
+
+        data_bgr_8 = self._convert_16bit_to_8bit(data_bgr, 16, image_bit_depth)
+
+        if output_file.endswith('jpg'):
+            cv2.imwrite(str(outputfile_p), data_bgr_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        elif output_file.endswith('png'):
+            cv2.imwrite(str(outputfile_p), data_bgr_8, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        else:
+            logger.error('Unknown output file type')
+            sys.exit(1)
+
+
+    def _convert_16bit_to_8bit(self, data, image_bitpix, image_bit_depth):
+        if image_bitpix == 8:
+            return
+
+        logger.info('Resampling image from %d to 8 bits', image_bitpix)
+
+        div_factor = int((2 ** image_bit_depth) / 255)
+
+        return (data / div_factor).astype(numpy.uint8)
+
+
+    def _detectBitDepth(self, data):
+        ### This will need some rework if cameras return signed int data
+        max_val = numpy.amax(data)
+        logger.info('Image max value: %d', int(max_val))
+
+        if max_val > 32768:
+            image_bit_depth = 16
+        elif max_val > 16384:
+            image_bit_depth = 15
+        elif max_val > 8192:
+            image_bit_depth = 14
+        elif max_val > 4096:
+            image_bit_depth = 13
+        elif max_val > 2096:
+            image_bit_depth = 12
+        elif max_val > 1024:
+            image_bit_depth = 11
+        elif max_val > 512:
+            image_bit_depth = 10
+        elif max_val > 256:
+            image_bit_depth = 9
+        else:
+            image_bit_depth = 8
+
+        logger.info('Detected bit depth: %d', image_bit_depth)
+
+        return image_bit_depth
+
+
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        'input',
+        help='Input file',
+        type=str,
+    )
+    argparser.add_argument(
+        '--output',
+        '-o',
+        help='output file',
+        type=str,
+        required=True,
+    )
+    argparser.add_argument(
+        '--bayerpat',
+        '-b',
+        help='bayer patten',
+        type=str,
+        choices=(
+            'GRBG',
+            'RGGB',
+            'BGGR',
+            'GBRG',
+        ),
+        required=True,
+    )
+
+    args = argparser.parse_args()
+
+
+    d = Debayer(args.bayerpat)
+    d.main(args.input, args.output)
+
