@@ -38,7 +38,7 @@ class Debayer(object):
             sys.exit(1)
 
 
-        if input_file.endswith('fit') or input_file.endswith('fits'):
+        if inputfile_p.suffix == '.fit' or inputfile_p.suffix == '.fits':
             # fits
             hdulist = fits.open(inputfile_p)
             data = hdulist[0].data
@@ -58,15 +58,19 @@ class Debayer(object):
             sys.exit(1)
 
 
+        #data = cv2.flip(data, 0)  # verticle flip
+        #data = cv2.flip(data, 1)  # horizontal flip
+
+
         image_bit_depth = self._detectBitDepth(data)
 
         data_bgr = cv2.cvtColor(data, self.debayer_algorithm)
-
         data_bgr_8 = self._convert_16bit_to_8bit(data_bgr, image_bitpix, image_bit_depth)
 
-        if output_file.endswith('jpg'):
+
+        if outputfile_p.suffix == '.jpg':
             cv2.imwrite(str(outputfile_p), data_bgr_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        elif output_file.endswith('png'):
+        elif outputfile_p.suffix == '.png':
             cv2.imwrite(str(outputfile_p), data_bgr_8, [cv2.IMWRITE_PNG_COMPRESSION, 9])
         else:
             logger.error('Unknown output file type')
