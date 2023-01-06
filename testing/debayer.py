@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 import cv2
 import numpy
+from astropy.io import fits
 import logging
 
 
@@ -37,13 +38,31 @@ class Debayer(object):
             sys.exit(1)
 
 
-        data = cv2.imread(str(inputfile_p), cv2.IMREAD_UNCHANGED)
+        if input_file.endswith('fit') or input_file.endswith('fits'):
+            # fits
+            hdulist = fits.open(inputfile_p)
+            data = hdulist[0].data
+
+            image_bitpix = hdulist[0].header['BITPIX']
+
+            logger.warning('FITS BAYERPAT: %s', hdulist[0].header.get('BAYERPAT'))
+        else:
+            # hopefully a png
+            data = cv2.imread(str(inputfile_p), cv2.IMREAD_UNCHANGED)
+
+            image_bitpix = 16  # assumption
+
+
+        if isinstance(data, type(None)):
+            logger.error('File is not valid image data: %s', inputfile_p)
+            sys.exit(1)
+
 
         image_bit_depth = self._detectBitDepth(data)
 
         data_bgr = cv2.cvtColor(data, self.debayer_algorithm)
 
-        data_bgr_8 = self._convert_16bit_to_8bit(data_bgr, 16, image_bit_depth)
+        data_bgr_8 = self._convert_16bit_to_8bit(data_bgr, image_bitpix, image_bit_depth)
 
         if output_file.endswith('jpg'):
             cv2.imwrite(str(outputfile_p), data_bgr_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
