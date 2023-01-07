@@ -449,7 +449,7 @@ class IndiAllSky(object):
         time.sleep(8)
 
         try:
-            self.indiclient.findCcd()
+            self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
 
@@ -464,7 +464,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        self.indiclient.findTelescope('Telescope Simulator')
+        self.indiclient.findTelescope(telescope_name='Telescope Simulator')
         self.indiclient.findGps()
 
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
@@ -568,7 +568,7 @@ class IndiAllSky(object):
 
 
 
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        db_camera = self._miscDb.addCamera(camera_name=self.config['CAMERA_NAME'])
         self.config['DB_CAMERA_ID'] = db_camera.id
         self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
@@ -1358,7 +1358,7 @@ class IndiAllSky(object):
         time.sleep(8)
 
         try:
-            self.indiclient.findCcd()
+            self.indiclient.findCcd(self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
 

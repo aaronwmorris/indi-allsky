@@ -241,7 +241,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         return False
 
 
-    def findCcd(self):
+    def findCcd(self, *args, **kwargs):
         new_ccd = FakeIndiCcd()
         new_ccd.device_name = self.ccd_device_name
         new_ccd.driver_exec = self.ccd_driver_exec
