@@ -456,7 +456,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'No camera was detected.',
+                'Camera was not detected.',
                 expire=timedelta(hours=2),
             )
 
@@ -1365,7 +1365,7 @@ class IndiAllSky(object):
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'No camera was detected.  Is the correct camera driver selected?',
+                'Camera was not detected.',
                 expire=timedelta(hours=2),
             )
 

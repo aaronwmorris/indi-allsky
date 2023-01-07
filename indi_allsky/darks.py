@@ -21,6 +21,7 @@ from multiprocessing import Queue
 from multiprocessing import Value
 
 from .exceptions import TemperatureException
+from .exceptions import CameraException
 
 from . import camera as camera_module
 
@@ -164,8 +165,13 @@ class IndiAllSkyDarks(object):
         # give devices a chance to register
         time.sleep(8)
 
-        # connect to all devices
-        self.indiclient.findCcd()
+
+        try:
+            self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
+        except CameraException as e:
+            logger.error('Camera error: %s', str(e))
+            sys.exit(1)
+
 
         if not self.indiclient.ccd_device:
             logger.error('No CCDs detected')
