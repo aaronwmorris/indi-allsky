@@ -548,7 +548,7 @@ class IndiClient(PyIndi.BaseClient):
                     self._ccd_device = ccd
                     return self._ccd_device
             else:
-                raise CameraException('Camera not found: %s', camera_name)
+                raise CameraException('Camera not found: {0:s}'.format(camera_name))
 
 
         # if no camera name is passed, just return the first found
@@ -623,7 +623,7 @@ class IndiClient(PyIndi.BaseClient):
                     self._gps_device = gps
                     return self._gps_device
             else:
-                raise CameraException('GPS not found: %s', gps_name)
+                raise CameraException('GPS not found: {0:s}'.format(gps_name))
 
 
         # if no gps name is passed, just return the first found
