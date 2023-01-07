@@ -1274,8 +1274,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
     CFA_PATTERN_choices = (
         ('', 'Auto Detect'),
-        ('GRBG', 'GRBG'),
         ('RGGB', 'RGGB'),
+        ('GRBG', 'GRBG'),
         ('BGGR', 'BGGR'),
         ('GBRG', 'GBRG'),
     )
