@@ -246,19 +246,19 @@ class FakeIndiClient(object):
         return ccdinfo
 
 
-    def findCcd(self):
+    def findCcd(self, *args, **kwargs):
         # override
         # create FakeIndiCcd object here
         pass
 
 
-    def findTelescope(self, *args):
+    def findTelescope(self, *args, **kwargs):
         # override
         # create FakeIndiTelescope object here
         pass
 
 
-    def findGps(self, *args):
+    def findGps(self, *args, **kwargs):
         # override
         # create FakeIndiTelescope object here
         pass

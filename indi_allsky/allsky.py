@@ -273,12 +273,6 @@ class IndiAllSky(object):
         logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
 
 
-        # CFA/Debayer setting
-        if not self.config.get('CFA_PATTERN'):
-            # this is not always populated
-            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
-
-
         # Validate gain settings
         ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
         ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
@@ -455,14 +449,14 @@ class IndiAllSky(object):
         time.sleep(8)
 
         try:
-            self.indiclient.findCcd()
+            self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
 
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'No camera was detected.',
+                'Camera was not detected.',
                 expire=timedelta(hours=2),
             )
 
@@ -470,7 +464,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        self.indiclient.findTelescope('Telescope Simulator')
+        self.indiclient.findTelescope(telescope_name='Telescope Simulator')
         self.indiclient.findGps()
 
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
@@ -574,7 +568,7 @@ class IndiAllSky(object):
 
 
 
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+        db_camera = self._miscDb.addCamera(camera_name=self.config['CAMERA_NAME'])
         self.config['DB_CAMERA_ID'] = db_camera.id
         self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
@@ -634,14 +628,6 @@ class IndiAllSky(object):
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
 
         logger.info('Default CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_DEF']))
-
-
-        # CFA/Debayer setting
-        if not self.config.get('CFA_PATTERN'):
-            # this is not always populated
-            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
-
-        logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
 
 
         # Validate gain settings
@@ -1372,14 +1358,14 @@ class IndiAllSky(object):
         time.sleep(8)
 
         try:
-            self.indiclient.findCcd()
+            self.indiclient.findCcd(self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
             logger.error('Camera error: %s', str(e))
 
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
                 'no_camera',
-                'No camera was detected.  Is the correct camera driver selected?',
+                'Camera was not detected.',
                 expire=timedelta(hours=2),
             )
 

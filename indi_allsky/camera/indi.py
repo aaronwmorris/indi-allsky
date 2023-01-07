@@ -537,11 +537,21 @@ class IndiClient(PyIndi.BaseClient):
         return ccd_list
 
 
-    def findCcd(self):
+    def findCcd(self, camera_name=None):
         ccd_list = self._findCcds()
 
         logger.info('Found %d CCDs', len(ccd_list))
 
+        if camera_name:
+            for ccd in ccd_list:
+                if ccd.getDeviceName().lower() == camera_name.lower():
+                    self._ccd_device = ccd
+                    return self._ccd_device
+            else:
+                raise CameraException('Camera not found: {0:s}'.format(camera_name))
+
+
+        # if no camera name is passed, just return the first found
         try:
             # set default device in indiclient
             self._ccd_device = ccd_list[0]
@@ -569,13 +579,13 @@ class IndiClient(PyIndi.BaseClient):
         return telescope_list
 
 
-    def findTelescope(self, telescope_name):
+    def findTelescope(self, telescope_name='Telescope Simulator'):
         telescope_list = self._findTelescopes()
 
         logger.info('Found %d Telescopess', len(telescope_list))
 
         for t in telescope_list:
-            if t.getDeviceName() == telescope_name:
+            if t.getDeviceName().lower() == telescope_name.lower():
                 self._telescope_device = t
                 break
         else:
@@ -602,11 +612,21 @@ class IndiClient(PyIndi.BaseClient):
         return gps_list
 
 
-    def findGps(self):
+    def findGps(self, gps_name=None):
         gps_list = self._findGpss()
 
         logger.info('Found %d GPSs', len(gps_list))
 
+        if gps_name:
+            for gps in gps_list:
+                if gps.getDeviceName().lower() == gps_name.lower():
+                    self._gps_device = gps
+                    return self._gps_device
+            else:
+                raise CameraException('GPS not found: {0:s}'.format(gps_name))
+
+
+        # if no gps name is passed, just return the first found
         try:
             # set default device in indiclient
             self._gps_device = gps_list[0]

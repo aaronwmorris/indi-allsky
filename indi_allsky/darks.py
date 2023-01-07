@@ -21,6 +21,7 @@ from multiprocessing import Queue
 from multiprocessing import Value
 
 from .exceptions import TemperatureException
+from .exceptions import CameraException
 
 from . import camera as camera_module
 
@@ -164,8 +165,13 @@ class IndiAllSkyDarks(object):
         # give devices a chance to register
         time.sleep(8)
 
-        # connect to all devices
-        self.indiclient.findCcd()
+
+        try:
+            self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
+        except CameraException as e:
+            logger.error('Camera error: %s', str(e))
+            sys.exit(1)
+
 
         if not self.indiclient.ccd_device:
             logger.error('No CCDs detected')
@@ -200,13 +206,6 @@ class IndiAllSkyDarks(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
-
-
-        # CFA/Debayer setting
-        if not self.config.get('CFA_PATTERN'):
-            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
-
-        logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
 
 
         # Validate gain settings
@@ -310,8 +309,12 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
             hdulist[0].header['BITPIX'] = 16
 
-            if self.config['CFA_PATTERN']:
+            if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
+            elif self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
+                hdulist[0].header['BAYERPAT'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
 

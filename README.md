@@ -274,6 +274,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | CAMERA_INTERFACE    | indi        | (str) Default camera interface |
 | INDI_SERVER         | localhost   | (str) Hostname for INDI server |
 | INDI_PORT           | 7624        | (int) Port for INDI server |
+| INDI_CAMERA_NAME    |             | (str) Camera name (if multiple cameras connected) |
 | CCD_CONFIG          |             | (dict) Indi configuration parameters for CCD |
 | > NIGHT > GAIN      |             | (int) Gain/ISO for night time |
 | > NIGHT > BINNING   |             | (int) Bin mode for night time |
@@ -292,6 +293,7 @@ All configuration is read from /etc/indi-allsky/config.json .  You can find conf
 | EXPOSURE_PERIOD_DAY | 15.0        | (float) Seconds between beginning of each exposure (Day) |
 | FOCUS_MODE          | false       | (bool) Focus mode is used to take exposures as quickly as possible to aid in focusing |
 | FOCUS_DELAY         | 4.0         | (float) Delay between exposures during focus mode |
+| CFA_PATTERN         |             | (str) Override CFA pattern |
 | SCNR_ALGORITHM      |             | (str) SCNR (green reduction) algorithm |
 | WBR_FACTOR          | 1.0         | (float) Red Balance Adjustment Factor |
 | WBG_FACTOR          | 1.0         | (float) Green Balance Adjustment Factor |

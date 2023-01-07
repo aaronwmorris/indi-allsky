@@ -3,6 +3,7 @@
 
     "INDI_SERVER" : "localhost",
     "INDI_PORT"   : 7624,
+    "INDI_CAMERA_NAME" : "",
 
     "SQLALCHEMY_DATABASE_URI" : null,
 
@@ -36,6 +37,8 @@
     "FOCUS_MODE"           : false,
     "FOCUS_DELAY"          : 4.0,
 
+    "comment_CFA_PATTERN" : "None, GRBG, RGGB, BGGR, GBRG",
+    "CFA_PATTERN"      : "",
     "comment_SCNR_ALGORITHM" : "empty string, average_neutral, or maximum_neutral",
     "SCNR_ALGORITHM"   : "",
     "WBR_FACTOR"       : 1.0,

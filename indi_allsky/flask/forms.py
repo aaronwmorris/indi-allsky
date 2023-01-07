@@ -81,6 +81,16 @@ def INDI_PORT_validator(form, field):
         raise ValidationError('Port must be less than 65535')
 
 
+def INDI_CAMERA_NAME_validator(form, field):
+    if not field.data:
+        return
+
+    camera_regex = r'^[a-zA-Z0-9\ \-]+$'
+
+    if not re.search(camera_regex, field.data):
+        raise ValidationError('Invalid camera name')
+
+
 def ccd_GAIN_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -157,6 +167,15 @@ def FOCUS_DELAY_validator(form, field):
 
     if field.data < 1.0:
         raise ValidationError('Focus delay must be 1.0 or more')
+
+
+def CFA_PATTERN_validator(form, field):
+    if not field.data:
+        return
+
+    cfa_list = ('GRBG', 'RGGB', 'BGGR', 'GBRG')
+    if field.data not in cfa_list:
+        raise ValidationError('Please select a valid pattern')
 
 
 def WB_FACTOR_validator(form, field):
@@ -1253,6 +1272,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ('tif', 'TIFF'),
     )
 
+    CFA_PATTERN_choices = (
+        ('', 'Auto Detect'),
+        ('RGGB', 'RGGB'),
+        ('GRBG', 'GRBG'),
+        ('BGGR', 'BGGR'),
+        ('GBRG', 'GBRG'),
+    )
+
     SCNR_ALGORITHM_choices = (
         ('', 'Disabled'),
         ('average_neutral', 'Average Neutral'),
@@ -1347,6 +1374,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
+    INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
@@ -1360,6 +1388,7 @@ class IndiAllskyConfigForm(FlaskForm):
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
+    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
