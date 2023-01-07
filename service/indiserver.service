@@ -4,7 +4,7 @@ After=network.target
  
 [Service]
 #User=%INDISERVER_USER%
-ExecStart=%INDI_DRIVER_PATH%/indiserver indi_simulator_telescope %INDI_CCD_DRIVER% %INDI_GPS_DRIVER%
+ExecStart=%INDI_DRIVER_PATH%/indiserver -p 7624 indi_simulator_telescope %INDI_CCD_DRIVER% %INDI_GPS_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
 PrivateTmp=true
