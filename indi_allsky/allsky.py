@@ -273,12 +273,6 @@ class IndiAllSky(object):
         logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
 
 
-        # CFA/Debayer setting
-        if not self.config.get('CFA_PATTERN'):
-            # this is not always populated
-            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
-
-
         # Validate gain settings
         ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
         ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
@@ -634,14 +628,6 @@ class IndiAllSky(object):
             self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
 
         logger.info('Default CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_DEF']))
-
-
-        # CFA/Debayer setting
-        if not self.config.get('CFA_PATTERN'):
-            # this is not always populated
-            self.config['CFA_PATTERN'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text')
-
-        logger.info('CCD CFA: {0:s}'.format(str(self.config['CFA_PATTERN'])))
 
 
         # Validate gain settings

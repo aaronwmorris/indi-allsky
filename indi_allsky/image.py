@@ -1366,8 +1366,12 @@ class ImageProcessor(object):
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
-            if self.config['CFA_PATTERN']:
+            if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
+            elif self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
+                hdulist[0].header['BAYERPAT'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
 
@@ -1744,7 +1748,14 @@ class ImageProcessor(object):
 
 
         i_ref = self.getLatestImage()
-        image_bayerpat = i_ref['image_bayerpat']
+
+
+        if self.config.get('CFA_PATTERN'):
+            # override detected bayer pattern
+            logger.warning('Overriding CFA pattern: %s', self.config['CFA_PATTERN'])
+            image_bayerpat = self.config['CFA_PATTERN']
+        else:
+            image_bayerpat = i_ref['image_bayerpat']
 
 
         if not image_bayerpat:
