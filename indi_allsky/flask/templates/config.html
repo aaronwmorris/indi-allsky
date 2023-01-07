@@ -58,6 +58,16 @@
         </div>
         <div class="col-sm-8">INDI port (default: 7624)</div>
     </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.INDI_CAMERA_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.INDI_CAMERA_NAME(class='form-control bg-secondary') }}
+            <div id="INDI_CAMERA_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">Leave blank to select first detected camera</div>
+    </div>
 
     <hr />
 
@@ -217,6 +227,17 @@
     </div>
 
     <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CFA_PATTERN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CFA_PATTERN(class='form-control bg-secondary') }}
+            <div id="CFA_PATTERN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
+    </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1895,6 +1916,7 @@ const field_names = [
     'CAMERA_INTERFACE',
     'INDI_SERVER',
     'INDI_PORT',
+    'INDI_CAMERA_NAME',
     'CCD_CONFIG__NIGHT__GAIN',
     'CCD_CONFIG__NIGHT__BINNING',
     'CCD_CONFIG__MOONMODE__GAIN',
@@ -1910,6 +1932,7 @@ const field_names = [
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
+    'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'CCD_TEMP',
     'TEMP_DISPLAY',
