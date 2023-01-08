@@ -573,8 +573,7 @@ class IndiAllSky(object):
 
 
 
-
-        # Get Properties (this might be needed to initialize some cameras)
+        # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
         self.config['CCD_PROPERTIES'] = ccd_properties
 
