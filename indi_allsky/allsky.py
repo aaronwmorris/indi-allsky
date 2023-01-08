@@ -237,9 +237,6 @@ class IndiAllSky(object):
             self.reparkTelescope()
 
 
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
-        self.config['DB_CAMERA_ID'] = db_camera.id
-        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Get Properties
         ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -248,6 +245,13 @@ class IndiAllSky(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
+
+
+        # need to get camera info before adding to DB
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
+        self.config['DB_CAMERA_ID'] = db_camera.id
+        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+
 
         # Update focus mode
         self.focus_mode = self.config.get('FOCUS_MODE', False)
@@ -568,17 +572,24 @@ class IndiAllSky(object):
 
 
 
-        db_camera = self._miscDb.addCamera(camera_name=self.config['CAMERA_NAME'])
+
+        # Get Properties (this might be needed to initialize some cameras)
+        ccd_properties = self.indiclient.getCcdDeviceProperties()
+        self.config['CCD_PROPERTIES'] = ccd_properties
+
+
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo()
+        self.config['CCD_INFO'] = ccd_info
+
+
+        # need to get camera info before adding to DB
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
         self.config['DB_CAMERA_ID'] = db_camera.id
         self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
-
-
-        # Get Properties (this might be needed to initialize some cameras)
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
 
 
         # set BLOB mode to BLOB_ALSO
@@ -589,10 +600,6 @@ class IndiAllSky(object):
 
         # save config to defaults (disabled)
         #self.indiclient.saveCcdConfig()
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # set minimum exposure
@@ -1332,6 +1339,10 @@ class IndiAllSky(object):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
+            self.latitude_v,
+            self.longitude_v,
+            self.ra_v,
+            self.dec_v,
             self.gain_v,
             self.bin_v,
         )
@@ -1792,7 +1803,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
         except NoResultFound:
-            camera = self._miscDb.addCamera('Import camera')
+            camera = self._miscDb.addCamera({}, camera_name='Import camera')
             camera_id = camera.id
 
 

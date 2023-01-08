@@ -31,7 +31,7 @@ class miscDb(object):
         self.config = config
 
 
-    def addCamera(self, camera_name):
+    def addCamera(self, camera_name, ccd_info):
         now = datetime.now()
 
         try:
@@ -46,6 +46,18 @@ class miscDb(object):
             )
 
             db.session.add(camera)
+
+
+        # populate camera info
+        camera.minExposure = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
+        camera.maxExposure = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
+        camera.minGain = int(ccd_info['GAIN_INFO']['min'])
+        camera.maxGain = int(ccd_info['GAIN_INFO']['max'])
+        camera.width = int(ccd_info['CCD_FRAME']['WIDTH']['max'])
+        camera.height = int(ccd_info['CCD_FRAME']['HEIGHT']['max'])
+        camera.bits = int(ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+        camera.pixelSize = float(ccd_info['CCD_INFO']['CCD_PIXEL_SIZE']['current'])
+
 
         db.session.commit()
 
