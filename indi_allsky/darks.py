@@ -186,26 +186,30 @@ class IndiAllSkyDarks(object):
         self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
         self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
 
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'])
+
+        # Get Properties
+        ccd_properties = self.indiclient.getCcdDeviceProperties()
+        self.config['CCD_PROPERTIES'] = ccd_properties
+
+
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo()
+        self.config['CCD_INFO'] = ccd_info
+
+
+        # need to get camera info before adding to DB
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
         self.config['DB_CAMERA_ID'] = db_camera.id
         self.camera_id = db_camera.id
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
 
-        # Get Properties (this might be needed to initialize some cameras)
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
-
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode()
 
         self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
         self.indiclient.setCcdFrameType('FRAME_DARK')
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # Validate gain settings

@@ -13,12 +13,22 @@
     <div class="col-1 fw-bold">ID</div>
     <div class="col-2 fw-bold">Camera</div>
     <div class="col-2 fw-bold">Connect Date</div>
+    <div class="col-1 fw-bold">Size</div>
+    <div class="col-1 fw-bold">Pixels</div>
+    <div class="col-1 fw-bold">Bits</div>
+    <div class="col-1 fw-bold">Gain</div>
+    <div class="col-2 fw-bold">Exposure</div>
 </div>
 {% for camera in camera_list %}
 <div class="row">
     <div class="col-1">{{ camera.id }}</div>
     <div class="col-2">{{ camera.name }}</div>
     <div class="col-2">{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-1">{{ camera.width | int }}x{{ camera.height | int}}</div>
+    <div class="col-1">{{ "%0.2f"|format(camera.pixelSize | float)}}</div>
+    <div class="col-1">{{ camera.bits | int }}</div>
+    <div class="col-1">{{ camera.minGain | int }}-{{ camera.maxGain | int }}</div>
+    <div class="col-2">{{ "%0.6f"|format(camera.minExposure | float) }}-{{ "%0.1f"|format(camera.maxExposure | float) }}</div>
 </div>
 {% endfor %}
 </div>

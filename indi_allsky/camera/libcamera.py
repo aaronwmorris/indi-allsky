@@ -279,14 +279,34 @@ class IndiClientLibCameraGeneric(IndiClient):
         ccdinfo['CCD_INFO'] = dict()
         ccdinfo['CCD_INFO']['CCD_MAX_X'] = dict()
         ccdinfo['CCD_INFO']['CCD_MAX_Y'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = dict()
-        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = dict()
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = {
+            'current' : self._ccd_device.pixel,
+            'min'     : self._ccd_device.pixel,
+            'max'     : self._ccd_device.pixel,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = {
+            'current' : self._ccd_device.pixel,
+            'min'     : self._ccd_device.pixel,
+            'max'     : self._ccd_device.pixel,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = {
+            'current' : self._ccd_device.pixel,
+            'min'     : self._ccd_device.pixel,
+            'max'     : self._ccd_device.pixel,
+            'step'    : None,
+            'format'  : None,
+        }
 
         ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = {
             'current' : self._ccd_device.bit_depth,
-            'min'     : None,
-            'max'     : None,
+            'min'     : self._ccd_device.bit_depth,
+            'max'     : self._ccd_device.bit_depth,
             'step'    : None,
             'format'  : None,
         }
@@ -299,8 +319,22 @@ class IndiClientLibCameraGeneric(IndiClient):
         ccdinfo['CCD_FRAME'] = dict()
         ccdinfo['CCD_FRAME']['X'] = dict()
         ccdinfo['CCD_FRAME']['Y'] = dict()
-        ccdinfo['CCD_FRAME']['WIDTH'] = dict()
-        ccdinfo['CCD_FRAME']['HEIGHT'] = dict()
+
+        ccdinfo['CCD_FRAME']['WIDTH'] = {
+            'current' : self._ccd_device.width,
+            'min'     : self._ccd_device.width,
+            'max'     : self._ccd_device.width,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['CCD_FRAME']['HEIGHT'] = {
+            'current' : self._ccd_device.height,
+            'min'     : self._ccd_device.height,
+            'max'     : self._ccd_device.height,
+            'step'    : None,
+            'format'  : None,
+        }
 
         ccdinfo['CCD_FRAME_TYPE'] = {
             'FRAME_LIGHT' : 1,
@@ -310,7 +344,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         }
 
         ccdinfo['GAIN_INFO'] = {
-            'current' : 0,
+            'current' : self._ccd_device.min_gain,
             'min'     : self._ccd_device.min_gain,
             'max'     : self._ccd_device.max_gain,
             'step'    : None,
