@@ -49,14 +49,15 @@ class miscDb(object):
 
 
         # populate camera info
-        camera.minExposure = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
-        camera.maxExposure = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
-        camera.minGain = int(ccd_info['GAIN_INFO']['min'])
-        camera.maxGain = int(ccd_info['GAIN_INFO']['max'])
-        camera.width = int(ccd_info['CCD_FRAME']['WIDTH']['max'])
-        camera.height = int(ccd_info['CCD_FRAME']['HEIGHT']['max'])
-        camera.bits = int(ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-        camera.pixelSize = float(ccd_info['CCD_INFO']['CCD_PIXEL_SIZE']['current'])
+        if ccd_info:
+            camera.minExposure = float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min'))
+            camera.maxExposure = float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max'))
+            camera.minGain = int(ccd_info.get('GAIN_INFO', {}).get('min'))
+            camera.maxGain = int(ccd_info.get('GAIN_INFO', {}).get('max'))
+            camera.width = int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max'))
+            camera.height = int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max'))
+            camera.bits = int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current'))
+            camera.pixelSize = float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current'))
 
 
         db.session.commit()

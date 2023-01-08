@@ -242,6 +242,7 @@ class IndiAllSky(object):
         ccd_properties = self.indiclient.getCcdDeviceProperties()
         self.config['CCD_PROPERTIES'] = ccd_properties
 
+
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.config['CCD_INFO'] = ccd_info
@@ -587,6 +588,7 @@ class IndiAllSky(object):
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
         self.config['DB_CAMERA_ID'] = db_camera.id
         self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+
 
         # Disable debugging
         self.indiclient.disableDebugCcd()
@@ -1803,7 +1805,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
         except NoResultFound:
-            camera = self._miscDb.addCamera({}, camera_name='Import camera')
+            camera = self._miscDb.addCamera('Import camera', None)
             camera_id = camera.id
 
 
