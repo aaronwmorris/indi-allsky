@@ -34,9 +34,10 @@ class UserManager(object):
         pass
 
 
-    def add(self):
+    def adduser(self, username=None):
 
-        username = input('Username: ')
+        if not username:
+            username = input('Username: ')
 
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
@@ -46,14 +47,20 @@ class UserManager(object):
             logger.warning('User already exists: %s', username)
             sys.exit(1)
 
-        password = getpass.getpass('Password (not echoed):')
+        password1 = getpass.getpass('Password (not echoed):')
+        password2 = getpass.getpass('Password (again):')
+
+        if password1 != password2:
+            logger.error('Password does not match')
+            sys.exit(1)
+
 
         name = input('Name: ')
         email = input('Email: ')
 
 
-        hashed_password = argon2.hash(password)
-        logger.info('Hash: %s', hashed_password)
+        hashed_password = argon2.hash(password1)
+        #logger.info('Hash: %s', hashed_password)
 
         user = IndiAllSkyDbUserTable(
             username=username,
@@ -69,9 +76,10 @@ class UserManager(object):
         db.session.commit()
 
 
-    def resetPassword(self):
+    def resetpass(self, username=None):
 
-        username = input('Username: ')
+        if not username:
+            username = input('Username: ')
 
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
@@ -83,20 +91,26 @@ class UserManager(object):
             sys.exit(1)
 
 
-        password = getpass.getpass('Password (not echoed):')
+        password1 = getpass.getpass('Password (not echoed):')
+        password2 = getpass.getpass('Password (again):')
 
-        hashed_password = argon2.hash(password)
-        logger.info('Hash: %s', hashed_password)
+        if password1 != password2:
+            logger.error('Password does not match')
+            sys.exit(1)
+
+
+        hashed_password = argon2.hash(password1)
+        #logger.info('Hash: %s', hashed_password)
 
 
         existing_user.password = hashed_password
         db.session.commit()
 
 
+    def setadmin(self, username=None):
 
-    def setAdmin(self):
-
-        username = input('Username: ')
+        if not username:
+            username = input('Username: ')
 
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
@@ -111,9 +125,10 @@ class UserManager(object):
         db.session.commit()
 
 
-    def removeAdmin(self):
+    def removeadmin(self, username=None):
 
-        username = input('Username: ')
+        if not username:
+            username = input('Username: ')
 
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
@@ -136,17 +151,24 @@ if __name__ == "__main__":
         help='action',
         type=str,
         choices=(
-            'add',
-            'resetPassword',
-            'setAdmin',
-            'removeAdmin',
+            'adduser',
+            'resetpass',
+            'setadmin',
+            'removeadmin',
         ),
     )
+    argparser.add_argument(
+        '--username',
+        '-u',
+        help='username',
+        type=str,
+    )
+
 
     args = argparser.parse_args()
 
     um = UserManager()
 
     action_func = getattr(um, args.action)
-    action_func()
+    action_func(username=args.username)
 
