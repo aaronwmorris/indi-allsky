@@ -82,7 +82,7 @@ from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
 
 
-bp = Blueprint(
+bp_allsky = Blueprint(
     'indi_allsky',
     __name__,
     template_folder='templates',
@@ -3122,45 +3122,45 @@ class AjaxNotificationView(BaseView):
 
 
 # images are normally served directly by the web server, this is a backup method
-@bp.route('/images/<path:path>')  # noqa: E302
+@bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
     app.logger.warning('Serving image file: %s', path)
     return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
 
 
 
-bp.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
-bp.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
-bp.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
-bp.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
-bp.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
-bp.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
-bp.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
-bp.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
-bp.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
-bp.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
-bp.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
-bp.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
-bp.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
-bp.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
-bp.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
+bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
+bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
+bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
+bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
+bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
+bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
+bp_allsky.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
+bp_allsky.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
+bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
+bp_allsky.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
+bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
+bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
+bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
 
-bp.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
-bp.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))
+bp_allsky.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
+bp_allsky.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))
 
-bp.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
-bp.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
-bp.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
-bp.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
-bp.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
-bp.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
-bp.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
+bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
+bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 
 # hidden
-bp.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
-bp.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
-bp.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
-bp.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
-bp.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
-bp.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
+bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
+bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
+bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
+bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
+bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 

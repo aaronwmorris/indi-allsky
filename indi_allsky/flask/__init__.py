@@ -11,7 +11,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
 
-from .views import bp  # noqa: E402
+from .views import bp_allsky  # noqa: E402
 
 
 dictConfig({
@@ -82,7 +82,7 @@ def create_app():
 
     csrf.init_app(app)
 
-    app.register_blueprint(bp)
+    app.register_blueprint(bp_allsky)
 
     db.init_app(app)
     migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
@@ -98,6 +98,6 @@ def create_app():
         return app
 
 
-@bp.app_template_filter()
+@bp_allsky.app_template_filter()
 def basename(p):
     return Path(p).name
