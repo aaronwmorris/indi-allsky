@@ -1,5 +1,7 @@
 import time
 import random
+from datetime import datetime
+
 from passlib.hash import argon2
 
 from flask import request
@@ -19,6 +21,8 @@ from flask_login import login_required
 
 from .base_views import BaseView
 from .base_views import TemplateView
+
+from . import db
 
 from .models import IndiAllSkyDbUserTable
 
@@ -88,9 +92,22 @@ class LoginView(TemplateView):
             return jsonify(form_errors), 400
 
 
+        if not user.is_active:
+            form_errors = form_login.errors  # this must be a property
+            form_errors['form_global'] = ['User is disabled']
+            return jsonify(form_errors), 400
+
+
         app.logger.info('User successfully authenticated: %s', user.username)
 
         login_user(user, remember=True)
+
+
+        # record the login
+        now = datetime.now()
+        user.loginDate = now
+        user.loginIp = request.remote_addr
+        db.session.commit()
 
 
         next_url = request.args.get('next')

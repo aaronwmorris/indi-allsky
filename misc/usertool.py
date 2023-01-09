@@ -6,7 +6,7 @@ from pathlib import Path
 import getpass
 from passlib.hash import argon2
 #import time
-#from datetime import datetime
+from datetime import datetime
 #from datetime import timedelta
 import logging
 
@@ -62,9 +62,13 @@ class UserManager(object):
         hashed_password = argon2.hash(password1)
         #logger.info('Hash: %s', hashed_password)
 
+        now = datetime.now()
+
         user = IndiAllSkyDbUserTable(
             username=username,
             password=hashed_password,
+            createDate=now,
+            passwordDate=now,
             name=name,
             email=email,
             active=True,
@@ -103,7 +107,10 @@ class UserManager(object):
         #logger.info('Hash: %s', hashed_password)
 
 
+        now = datetime.now()
+
         existing_user.password = hashed_password
+        existing_user.passwordDate = now
         db.session.commit()
 
 
