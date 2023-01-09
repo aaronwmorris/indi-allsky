@@ -61,8 +61,8 @@ class LoginView(TemplateView):
             return jsonify(form_errors), 400
 
 
-        user = IndiAllskyDbUserTable.query\
-            .filter(IndiAllskyDbUserTable.username == request.json['USERNAME'])\
+        user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == request.json['USERNAME'])\
             .first()
 
         if not user:
@@ -79,9 +79,19 @@ class LoginView(TemplateView):
         login_user(user, remember=True)
 
 
-        next = request.args.get('next')
-        if not is_safe_url(next):
-            return jsonify({}), 400
+        next_url = request.args.get('next')
+
+        if not is_safe_url(next_url):
+            data = {
+                'redirect' : url_for('indi_allsky.index_view'),
+            }
+            return jsonify(data)
+
+
+        data = {
+            'redirect' : next_url,
+        }
+        return jsonify(data)
 
 
 
