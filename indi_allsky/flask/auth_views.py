@@ -104,9 +104,15 @@ class LoginView(TemplateView):
 
 
         # record the login
+        if request.headers.get('X-Forwarded-For'):
+            remote_addr = request.headers.get('X-Forwarded-For')
+        else:
+            remote_addr = request.remote_addr
+
+
         now = datetime.now()
         user.loginDate = now
-        user.loginIp = request.remote_addr
+        user.loginIp = remote_addr
         db.session.commit()
 
 

@@ -553,7 +553,7 @@ class IndiAllSkyDbUserTable(db.Model):
     passwordDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
     apikeyDate = db.Column(db.DateTime(timezone=False), nullable=True)
     loginDate = db.Column(db.DateTime(timezone=False), nullable=True)
-    loginIp = db.Column(db.String(45), nullable=True)
+    loginIp = db.Column(db.String(255), nullable=True)  # X-Forwarded-For may contain multiple IPs
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, index=True)
