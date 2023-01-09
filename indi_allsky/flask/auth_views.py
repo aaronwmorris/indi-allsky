@@ -1,3 +1,5 @@
+import time
+import random
 from passlib.hash import argon2
 
 from flask import request
@@ -9,7 +11,7 @@ from flask import abort
 #from flask import render_template
 #from flask import flash
 from flask import jsonify
-#from flask import current_app as app
+from flask import current_app as app
 
 from flask_login import login_user
 from flask_login import logout_user
@@ -35,6 +37,8 @@ bp_auth_allsky = Blueprint(
 
 
 class LoginView(TemplateView):
+    methods = ['GET', 'POST']
+
     def get_context(self):
         context = super(LoginView, self).get_context()
 
@@ -53,11 +57,15 @@ class LoginView(TemplateView):
 
 
     def post(self):
+        # simple timing attack prevention
+        random_sleep = random.randint(0, 250) / 1000.0
+        time.sleep(random_sleep)
+
         form_login = IndiAllskyLoginForm(data=request.json)
 
         if not form_login.validate():
             form_errors = form_login.errors  # this must be a property
-            form_errors['form_global'] = ['Invalid username or password']
+            form_errors['form_global'] = ['Please fix errors above']
             return jsonify(form_errors), 400
 
 
@@ -65,23 +73,29 @@ class LoginView(TemplateView):
             .filter(IndiAllSkyDbUserTable.username == request.json['USERNAME'])\
             .first()
 
+
         if not user:
             form_errors = form_login.errors  # this must be a property
             form_errors['form_global'] = ['Invalid username or password']
             return jsonify(form_errors), 400
 
+
         if not argon2.verify(request.json['PASSWORD'], user.password):
+            app.logger.info('Password entered: %s', request.json['PASSWORD'])
+            app.logger.warning('User failed authentication: %s', user.username)
             form_errors = form_login.errors  # this must be a property
             form_errors['form_global'] = ['Invalid username or password']
             return jsonify(form_errors), 400
 
+
+        app.logger.info('User successfully authenticated: %s', user.username)
 
         login_user(user, remember=True)
 
 
         next_url = request.args.get('next')
 
-        if not is_safe_url(next_url):
+        if not is_safe_url(next_url, {'*'}):
             data = {
                 'redirect' : url_for('indi_allsky.index_view'),
             }

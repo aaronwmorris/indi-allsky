@@ -67,6 +67,30 @@ class UserManager(object):
         db.session.commit()
 
 
+    def reset(self):
+
+        username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        password = getpass.getpass('Password (not echoed):')
+
+        hashed_password = argon2.hash(password)
+        logger.info('Hash: %s', hashed_password)
+
+
+        existing_user.password = hashed_password
+        db.session.commit()
+
+
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
@@ -76,6 +100,7 @@ if __name__ == "__main__":
         type=str,
         choices=(
             'add',
+            'reset',
         ),
     )
 

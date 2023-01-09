@@ -39,8 +39,12 @@
         <div class="col-sm-3">
             <button class="btn btn-primary">Submit</button>
         </div>
-    </div>
 
+        <div class="col-sm-8">
+            <div id="success-message" class="text-success" style="display: none;"></div>
+            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
 </form>
 
 
@@ -77,6 +81,13 @@ fields['form_global'] = {
 };
 
 
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    }
+});
+
+
 $('#form_login').on('submit', function() {
 
     // hide all errors
@@ -104,11 +115,9 @@ $('#form_login').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.html(data['success-message']);
-            successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                successMessage.css({'display' : 'none'});
-            }, 10000);
+            if (data.redirect) {
+                window.location.replace(data.redirect);
+            }
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
