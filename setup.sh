@@ -1496,15 +1496,6 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
 
 
-    if [[ ! -f "${ALLSKY_ETC}/nginx.passwd" ]]; then
-        # nginx does not like bcrypt
-        sudo htpasswd -cbm "${ALLSKY_ETC}/nginx.passwd" admin secret
-    fi
-
-    sudo chmod 664 "${ALLSKY_ETC}/nginx.passwd"
-    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/nginx.passwd"
-
-
     #sudo cp -f /etc/nginx/sites-available/astroberry_ssl "/etc/nginx/sites-available/astroberry_ssl_$(date +%Y%m%d_%H%M%S)"
     sudo cp -f "$TMP3" /etc/nginx/sites-available/indi-allsky_ssl
     sudo chown root:root /etc/nginx/sites-available/indi-allsky_ssl
@@ -1536,14 +1527,6 @@ else
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
-
-
-    if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
-        sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
-    fi
-
-    sudo chmod 664 "${ALLSKY_ETC}/apache.passwd"
-    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
 
 
     if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
