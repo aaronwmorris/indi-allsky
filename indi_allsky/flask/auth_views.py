@@ -1,3 +1,4 @@
+from passlib.hash import argon2
 
 from flask import request
 from flask import Blueprint
@@ -5,7 +6,7 @@ from flask import redirect
 from flask import url_for
 from is_safe_url import is_safe_url
 from flask import abort
-from flask import render_template
+#from flask import render_template
 #from flask import flash
 from flask import jsonify
 #from flask import current_app as app
@@ -16,6 +17,8 @@ from flask_login import login_required
 
 from .base_views import BaseView
 from .base_views import TemplateView
+
+from .models import IndiAllSkyDbUserTable
 
 from .forms import IndiAllskyLoginForm
 
@@ -54,11 +57,26 @@ class LoginView(TemplateView):
 
         if not form_login.validate():
             form_errors = form_login.errors  # this must be a property
-            form_errors['form_global'] = ['Please fix the errors above']
+            form_errors['form_global'] = ['Invalid username or password']
             return jsonify(form_errors), 400
 
 
-        login_user(user)
+        user = IndiAllskyDbUserTable.query\
+            .filter(IndiAllskyDbUserTable.username == request.json['USERNAME'])\
+            .first()
+
+        if not user:
+            form_errors = form_login.errors  # this must be a property
+            form_errors['form_global'] = ['Invalid username or password']
+            return jsonify(form_errors), 400
+
+        if not argon2.verify(request.json['PASSWORD'], user.password):
+            form_errors = form_login.errors  # this must be a property
+            form_errors['form_global'] = ['Invalid username or password']
+            return jsonify(form_errors), 400
+
+
+        login_user(user, remember=True)
 
 
         next = request.args.get('next')
@@ -70,10 +88,9 @@ class LoginView(TemplateView):
 class LogoutView(BaseView):
     decorators = [login_required]
 
-    def get_context(self):
-        super(LogoutView, self).get_context()
-
+    def dispatch_request(self):
         logout_user()
+
         return redirect(url_for('indi_allsky.index_view'))
 
 
