@@ -9,9 +9,16 @@
 
     "comment_SESSION_COOKIE_SECURE" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,
+    "SESSION_COOKIE_HTTPONLY" : true,
     "SESSION_COOKIE_SAMESITE" : "Lax",
     "TEMPLATES_AUTO_RELOAD" : true,
     "SECRET_KEY" : "%SECRET_KEY%",
+
+    "REMEMBER_COOKIE_DURATION" : 86400,
+    "comment_REMEMBER_COOKIE_SECURE" : "True will prevent using http-only mode",
+    "REMEMBER_COOKIE_SECURE" : true,
+    "REMEMBER_COOKIE_HTTPONLY" : true,
+    "REMEMBER_COOKIE_SAMESITE" : "Lax",
 
     "INDI_ALLSKY_CONFIG" : "%ALLSKY_ETC%/config.json",
     "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
