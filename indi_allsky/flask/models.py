@@ -22,6 +22,7 @@ __all__ = (
     'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
+    'IndiAllSkyDbUserTable',
 )
 
 
@@ -542,4 +543,31 @@ class IndiAllSkyDbStateTable(db.Model):
     key = db.Column(db.String(length=32), primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     value = db.Column(db.String(length=255), nullable=False)
+
+
+class IndiAllSkyDbUserTable(db.Model):
+    __tablename__ = 'user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    name = db.Column(db.String(255))
+    active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+
+
+    def is_active(self):
+        return self.active
+
+
+    def get_id(self):
+        return self.id
+
+
+    def is_authenticated(self):
+        return True
+
+
+    def is_anonymous(self):
+        return False
 

@@ -7,11 +7,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
+from flask_login import LoginManager
+
 db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
 
 from .views import bp_allsky  # noqa: E402
+from .auth_views import bp_auth_allsky  # noqa: E402
 
 
 dictConfig({
@@ -83,9 +86,24 @@ def create_app():
     csrf.init_app(app)
 
     app.register_blueprint(bp_allsky)
+    app.register_blueprint(bp_auth_allsky)
 
     db.init_app(app)
     migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
+
+
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
+
+    from .models import IndiAllSkyDbUserTable
+
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        # since the user_id is just the primary key of our user table, use it in the query for the user
+        return IndiAllskyDbUserTable.query.get(int(user_id))
+
 
     with app.app_context():
         from sqlalchemy import event
