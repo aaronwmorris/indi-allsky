@@ -1870,12 +1870,8 @@ echo
 
 if [[ "$HTTPS_PORT" -eq 443 ]]; then
     echo "    https://$(hostname -s).local/indi-allsky/"
-    echo
-    echo "    https://$(hostname -s).local/indi-allsky/public  (unauthenticated access)"
 else
     echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/"
-    echo
-    echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/public  (unauthenticated access)"
 
 fi
 
