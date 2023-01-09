@@ -14,40 +14,19 @@ server {
 
     rewrite ^/$ /indi-allsky;
 
-    auth_basic "Allsky";
-    auth_basic_user_file %ALLSKY_ETC%/nginx.passwd;
-
 
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
-        autoindex on;
+        autoindex off;
     }
 
     location /indi-allsky/static {
         alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
         autoindex off;
-        auth_basic "off";
     }
 
     location /indi-allsky {
         try_files $uri @proxy_to_indi_allsky;
-    }
-
-
-    # Allow non-authenticated access to latest image
-    location /indi-allsky/public {
-        try_files $uri @proxy_to_indi_allsky;
-        auth_basic "off";
-    }
-
-    location /indi-allsky/images/latest.jpg {
-        alias %IMAGE_FOLDER%/latest.jpg;
-        auth_basic "off";
-    }
-
-    location /indi-allsky/images/latest.png {
-        alias %IMAGE_FOLDER%/latest.png;
-        auth_basic "off";
     }
 
 
@@ -59,7 +38,6 @@ server {
       proxy_set_header Host $http_host;
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
-      auth_basic "off";
     }
 }
 
@@ -88,34 +66,16 @@ server {
 
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
-        autoindex on;
+        autoindex off;
     }
 
     location /indi-allsky/static {
         alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
         autoindex off;
-        auth_basic "off";
     }
 
     location /indi-allsky {
         try_files $uri @proxy_to_indi_allsky;
-    }
-
-
-    # Allow non-authenticated access to latest image
-    location /indi-allsky/public {
-        try_files $uri @proxy_to_indi_allsky;
-        auth_basic "off";
-    }
-
-    location /indi-allsky/images/latest.jpg {
-        alias %IMAGE_FOLDER%/latest.jpg;
-        auth_basic "off";
-    }
-
-    location /indi-allsky/images/latest.png {
-        alias %IMAGE_FOLDER%/latest.png;
-        auth_basic "off";
     }
 
 
@@ -127,6 +87,5 @@ server {
       proxy_set_header Host $http_host;
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
-      auth_basic "off";
     }
 }
