@@ -31,8 +31,10 @@ from flask import request
 from flask import jsonify
 from flask import Blueprint
 from flask import send_from_directory
-
 from flask import current_app as app
+
+from flask_login import login_required
+from flask_login import current_user
 
 from . import db
 
@@ -543,6 +545,8 @@ class JsonChartView(JsonView):
 
 
 class ConfigView(FormView):
+    decorators = [login_required]
+
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
@@ -838,6 +842,7 @@ class ConfigView(FormView):
 
 class AjaxConfigView(BaseView):
     methods = ['POST']
+    decorators = [login_required]
 
     def dispatch_request(self):
         form_config = IndiAllskyConfigForm(data=request.json)
@@ -1138,6 +1143,7 @@ class AjaxConfigView(BaseView):
 
 class AjaxSetTimeView(BaseView):
     methods = ['POST']
+    decorators = [login_required]
 
     def dispatch_request(self):
         form_settime = IndiAllskySetDateTimeForm(data=request.json)
@@ -1386,6 +1392,8 @@ class AjaxVideoViewerView(BaseView):
 
 
 class SystemInfoView(TemplateView):
+    decorators = [login_required]
+
     def get_context(self):
         context = super(SystemInfoView, self).get_context()
 
@@ -1623,6 +1631,8 @@ class SystemInfoView(TemplateView):
 
 
 class TaskQueueView(TemplateView):
+    decorators = [login_required]
+
     def get_context(self):
         context = super(TaskQueueView, self).get_context()
 
@@ -1667,6 +1677,7 @@ class TaskQueueView(TemplateView):
 
 class AjaxSystemInfoView(BaseView):
     methods = ['POST']
+    decorators = [login_required]
 
     def dispatch_request(self):
         form_system = IndiAllskySystemInfoForm(data=request.json)
@@ -2181,6 +2192,8 @@ class AjaxSystemInfoView(BaseView):
 
 
 class TimelapseGeneratorView(TemplateView):
+    decorators = [login_required]
+
     def __init__(self, **kwargs):
         super(TimelapseGeneratorView, self).__init__(**kwargs)
 
@@ -2235,6 +2248,7 @@ class TimelapseGeneratorView(TemplateView):
 
 class AjaxTimelapseGeneratorView(BaseView):
     methods = ['POST']
+    decorators = [login_required]
 
 
     def __init__(self, **kwargs):
@@ -2561,6 +2575,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 class FocusView(TemplateView):
+    decorators = [login_required]
 
     def get_context(self):
         context = super(FocusView, self).get_context()
@@ -2571,6 +2586,7 @@ class FocusView(TemplateView):
 
 
 class JsonFocusView(JsonView):
+    decorators = [login_required]
 
     def __init__(self, **kwargs):
         super(JsonFocusView, self).__init__(**kwargs)
@@ -2629,6 +2645,7 @@ class JsonFocusView(JsonView):
 
 
 class LogView(TemplateView):
+    decorators = [login_required]
 
     def get_context(self):
         context = super(LogView, self).get_context()
@@ -2639,6 +2656,7 @@ class LogView(TemplateView):
 
 
 class JsonLogView(JsonView):
+    decorators = [login_required]
 
     def __init__(self, **kwargs):
         super(JsonLogView, self).__init__(**kwargs)
@@ -2687,6 +2705,8 @@ class JsonLogView(JsonView):
 
 
 class NotificationsView(TemplateView):
+    decorators = [login_required]
+
     def get_context(self):
         context = super(NotificationsView, self).get_context()
 
@@ -2717,12 +2737,22 @@ class NotificationsView(TemplateView):
 class AjaxNotificationView(BaseView):
     methods = ['GET', 'POST']
 
+    # manually handle if user is logged in
+    #decorators = [login_required]
+
 
     def __init__(self, **kwargs):
         super(AjaxNotificationView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):
+        if not current_user.is_authenticated:
+            no_data = {
+                'id' : 0,
+            }
+            return jsonify(no_data)
+
+
         if request.method == 'POST':
             return self.post()
         elif request.method == 'GET':
