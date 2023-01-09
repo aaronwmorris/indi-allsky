@@ -847,6 +847,12 @@ class AjaxConfigView(BaseView):
     def dispatch_request(self):
         form_config = IndiAllskyConfigForm(data=request.json)
 
+        if not current_user.is_admin:
+            form_errors = form_config.errors  # this must be a property
+            form_errors['form_global'] = ['You do not have permission to make configuration changes']
+            return jsonify(form_errors), 400
+
+
         if not form_config.validate():
             form_errors = form_config.errors  # this must be a property
             form_errors['form_global'] = ['Please fix the errors above']
@@ -1147,6 +1153,12 @@ class AjaxSetTimeView(BaseView):
 
     def dispatch_request(self):
         form_settime = IndiAllskySetDateTimeForm(data=request.json)
+
+        if not current_user.is_admin:
+            form_errors = form_settime.errors  # this must be a property
+            form_errors['form_settime_global'] = ['You do not have permission to make configuration changes']
+            return jsonify(form_errors), 400
+
 
         if not form_settime.validate():
             form_errors = form_settime.errors  # this must be a property
@@ -1681,6 +1693,13 @@ class AjaxSystemInfoView(BaseView):
 
     def dispatch_request(self):
         form_system = IndiAllskySystemInfoForm(data=request.json)
+
+
+        if not current_user.is_admin:
+            form_errors = form_system.errors  # this must be a property
+            form_errors['form_global'] = ['You do not have permission to make configuration changes']
+            return jsonify(form_errors), 400
+
 
         if not form_system.validate():
             form_errors = form_system.errors  # this must be a property
