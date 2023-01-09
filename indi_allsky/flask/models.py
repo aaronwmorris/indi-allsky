@@ -553,21 +553,37 @@ class IndiAllSkyDbUserTable(db.Model):
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, index=True)
     name = db.Column(db.String(255))
+    apikey = db.Column(db.String(255))
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
 
 
+    @property
     def is_active(self):
         return self.active
 
 
-    def get_id(self):
-        return self.id
-
-
+    @property
     def is_authenticated(self):
         return True
 
 
+    @property
     def is_anonymous(self):
         return False
+
+
+    @property
+    def is_staff(self):
+        return self.staff
+
+
+    @property
+    def is_admin(self):
+        return self.admin
+
+
+    def get_id(self):
+        return self.id
 

@@ -61,13 +61,15 @@ class UserManager(object):
             name=name,
             email=email,
             active=True,
+            staff=True,
+            admin=False,
         )
 
         db.session.add(user)
         db.session.commit()
 
 
-    def reset(self):
+    def resetPassword(self):
 
         username = input('Username: ')
 
@@ -92,6 +94,41 @@ class UserManager(object):
 
 
 
+    def setAdmin(self):
+
+        username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        existing_user.admin = True
+        db.session.commit()
+
+
+    def removeAdmin(self):
+
+        username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        existing_user.admin = False
+        db.session.commit()
+
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
@@ -100,7 +137,9 @@ if __name__ == "__main__":
         type=str,
         choices=(
             'add',
-            'reset',
+            'resetPassword',
+            'setAdmin',
+            'removeAdmin',
         ),
     )
 
