@@ -18,6 +18,7 @@ from flask import current_app as app
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import login_required
+from flask_login import current_user
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -55,10 +56,16 @@ class LoginView(TemplateView):
         if request.method == 'POST':
             return self.post()
         elif request.method == 'GET':
-            return super(LoginView, self).dispatch_request()
+            return self.get()
         else:
             return abort(400)
 
+
+    def get(self):
+        if current_user.is_authenticated:
+            return redirect(url_for('indi_allsky.index_view'))
+
+        return super(LoginView, self).dispatch_request()
 
     def post(self):
         # simple timing attack prevention
