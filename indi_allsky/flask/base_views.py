@@ -20,6 +20,8 @@ from flask_login import current_user
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .misc import login_optional
+
 from .models import NotificationCategory
 
 from .models import IndiAllSkyDbCameraTable
@@ -29,6 +31,7 @@ from .miscDb import miscDb
 
 
 class BaseView(View):
+    decorators = [login_optional]  # auth based on app.config['INDI_ALLSKY_AUTH_ALL_VIEWS']
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)

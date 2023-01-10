@@ -43,6 +43,7 @@ bp_auth_allsky = Blueprint(
 
 class LoginView(TemplateView):
     methods = ['GET', 'POST']
+    decorators = []
 
     def get_context(self):
         context = super(LoginView, self).get_context()
@@ -66,6 +67,7 @@ class LoginView(TemplateView):
             return redirect(url_for('indi_allsky.index_view'))
 
         return super(LoginView, self).dispatch_request()
+
 
     def post(self):
         # simple timing attack prevention
@@ -141,8 +143,7 @@ class LoginView(TemplateView):
 
 
 class LogoutView(BaseView):
-    # manually handle if user is logged in
-    #decorators = [login_required]
+    decorators = []  # manually handle if user is logged in
 
     def dispatch_request(self):
         if not current_user.is_authenticated:

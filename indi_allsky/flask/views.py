@@ -2764,9 +2764,7 @@ class NotificationsView(TemplateView):
 
 class AjaxNotificationView(BaseView):
     methods = ['GET', 'POST']
-
-    # manually handle if user is logged in
-    #decorators = [login_required]
+    decorators = []  # manually handle if user is logged in
 
 
     def __init__(self, **kwargs):
