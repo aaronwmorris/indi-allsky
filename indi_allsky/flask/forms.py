@@ -2225,4 +2225,5 @@ def LOGIN__USERNAME_validator(form, field):
 class IndiAllskyLoginForm(FlaskForm):
     USERNAME          = StringField('Username', validators=[DataRequired(), LOGIN__USERNAME_validator])
     PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[DataRequired(), FILETRANSFER__PASSWORD_validator])
+    NEXT              = HiddenField('Next')
 

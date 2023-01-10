@@ -25,6 +25,7 @@
             {{ form_login.USERNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
+            {{ form_login.NEXT(class='form-control bg-secondary') }}
             {{ form_login.USERNAME(class='form-control bg-secondary') }}
             <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -64,6 +65,7 @@ const field_names = [
     'csrf_token',
     'USERNAME',
     'PASSWORD',
+    'NEXT',
 ];
 const checkbox_field_names = [];
 

@@ -47,7 +47,7 @@ class LoginView(TemplateView):
     def get_context(self):
         context = super(LoginView, self).get_context()
 
-        context['form_login'] = IndiAllskyLoginForm()
+        context['form_login'] = IndiAllskyLoginForm(NEXT=request.args.get('next', ''))
 
         return context
 
@@ -92,7 +92,7 @@ class LoginView(TemplateView):
 
 
         if not argon2.verify(request.json['PASSWORD'], user.password):
-            app.logger.info('Password entered: %s', request.json['PASSWORD'])
+            #app.logger.info('Password entered: %s', request.json['PASSWORD'])
             app.logger.warning('User failed authentication: %s', user.username)
             form_errors = form_login.errors  # this must be a property
             form_errors['form_global'] = ['Invalid username or password']
@@ -123,9 +123,10 @@ class LoginView(TemplateView):
         db.session.commit()
 
 
-        next_url = request.args.get('next')
+        next_url = request.json['NEXT']
 
-        if not is_safe_url(next_url, {'*'}):
+        if not next_url or not is_safe_url(next_url, {'*'}):
+            app.logger.warning('Next URL failed validation: %s', next_url)
             data = {
                 'redirect' : url_for('indi_allsky.index_view'),
             }
