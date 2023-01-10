@@ -30,7 +30,9 @@ class IndiAllSkyDbCameraTable(db.Model):
     __tablename__ = 'camera'
 
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(length=36), unique=True, index=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False)
+    friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
     connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
     minGain = db.Column(db.Integer, nullable=True)

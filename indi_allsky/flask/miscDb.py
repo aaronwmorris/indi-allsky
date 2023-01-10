@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+import uuid
 import logging
 #from pprint import pformat
 
@@ -39,10 +40,15 @@ class miscDb(object):
                 .filter(IndiAllSkyDbCameraTable.name == camera_name)\
                 .one()
             camera.connectDate = now
+
+            if not camera.uuid:
+                camera.uuid = str(uuid.uuid4())
+
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
                 name=camera_name,
                 connectDate=now,
+                uuid=str(uuid.uuid4()),
             )
 
             db.session.add(camera)
