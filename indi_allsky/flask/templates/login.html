@@ -1,60 +1,64 @@
 <!doctype html>
 <html>
-<title>{% block title %}{% endblock %}</title>
+<title>Login</title>
   <head>
 <link href="{{ url_for('indi_allsky.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.6.3.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='js/bootstrap.bundle.min.js') }}"></script>
-    {% block head %}{% endblock %}
+<style>
+html, body {
+    height: 100%;
+};
+</style>
   </head>
   <body class="bg-dark bg-opacity-75">
 
-<div class="row">
-    <div class="col-sm-2 offset-sm-3"> </div>
-    <div class="col-sm-4">INDI-AllSky Login</div>
-</div>
+<div class="row h-100 justify-content-center">
+  <div class="col-4 align-self-center">
+  <div class="card card-block bg-dark bg-opacity-25">
+    <div class="text-center fw-bold">INDI-AllSky Login</div>
 
-<form id="form_login" onSubmit="return false;">
-    {{ form_login.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
+    <form id="form_login" onSubmit="return false;">
+        {{ form_login.csrf_token }}
+        <div class="text-danger my-2" id="csrf_token-error"></div>
 
-    <div class="form-group row">
-        <div class="col-sm-1 offset-sm-4">
-            {{ form_login.USERNAME.label(class='col-form-label') }}
+        <div class="form-group row">
+            <div class="col-2 offset-1">
+                {{ form_login.USERNAME.label(class='col-form-label') }}
+            </div>
+            <div class="col-8">
+                {{ form_login.NEXT(class='form-control bg-secondary') }}
+                {{ form_login.USERNAME(class='form-control bg-secondary') }}
+                <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
         </div>
-        <div class="col-sm-3">
-            {{ form_login.NEXT(class='form-control bg-secondary') }}
-            {{ form_login.USERNAME(class='form-control bg-secondary') }}
-            <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-1 offset-sm-4">
-            {{ form_login.PASSWORD.label(class='col-form-label') }}
+        <div class="form-group row">
+            <div class="col-sm-2 offset-1">
+                {{ form_login.PASSWORD.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-8">
+                {{ form_login.PASSWORD(class='form-control bg-secondary') }}
+                <div id="PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
         </div>
-        <div class="col-sm-3">
-            {{ form_login.PASSWORD(class='form-control bg-secondary') }}
-            <div id="PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-1 offset-sm-4"></div>
-        <div class="col-sm-3">
-            <button class="btn btn-primary">Submit</button>
+        <div class="form-group">
+            <div class="text-center">
+                <button class="btn btn-primary">Submit</button>
+            </div>
         </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-1 offset-sm-4"></div>
-        <div class="col-sm-4">
-            <div id="success-message" class="text-success" style="display: none;"></div>
-            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div class="form-group">
+            <div class="text-center">
+                <div id="success-message" class="text-success" style="display: none;"></div>
+                <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
         </div>
-    </div>
-</form>
+    </form>
+  </div>
+  </div>
 </div>
 
 <script>
