@@ -17,7 +17,7 @@ from flask import current_app as app
 
 from flask_login import login_user
 from flask_login import logout_user
-from flask_login import login_required
+#from flask_login import login_required
 from flask_login import current_user
 
 from .base_views import BaseView
@@ -141,9 +141,13 @@ class LoginView(TemplateView):
 
 
 class LogoutView(BaseView):
-    decorators = [login_required]
+    # manually handle if user is logged in
+    #decorators = [login_required]
 
     def dispatch_request(self):
+        if not current_user.is_authenticated:
+            return redirect(url_for('indi_allsky.index_view'))
+
         logout_user()
 
         return redirect(url_for('indi_allsky.index_view'))
