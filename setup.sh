@@ -1852,6 +1852,17 @@ json_pp < "${ALLSKY_ETC}/config.json" > /dev/null
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
+USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
+if [ "$USER_COUNT" -eq 0 ]; then
+    while [ -z "${WEB_USER:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 0 3>&1 1>&2 2>&3)
+    done
+
+    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER"
+    "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
+fi
+
 echo
 echo
 echo
