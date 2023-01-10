@@ -15,6 +15,7 @@ INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+FLASK_AUTH_ALL_VIEWS="true"
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
@@ -1440,6 +1441,12 @@ echo "Detected image folder: $IMAGE_FOLDER"
 
 
 echo "**** Flask config ****"
+
+if ! whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
+    FLASK_AUTH_ALL_VIEWS="false"
+fi
+
+
 TMP4=$(mktemp)
 #if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
@@ -1453,6 +1460,7 @@ sed \
  -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP4"
 
 # syntax check

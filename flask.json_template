@@ -26,7 +26,7 @@
     "INDI_ALLSKY_IMAGE_FOLDER" : "%IMAGE_FOLDER%",
     "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json",
     "INDI_ALLSKY_PID" : "%DB_FOLDER%/indi-allsky.pid",
-    "INDI_ALLSKY_AUTH_ALL_VIEWS" : true,
+    "INDI_ALLSKY_AUTH_ALL_VIEWS" : %FLASK_AUTH_ALL_VIEWS%,
 
     "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
 
