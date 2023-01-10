@@ -26,22 +26,6 @@
                         <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
-                    <!--
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-5 bi-bootstrap"></i><span class="ms-1 d-none d-sm-inline">Bootstrap</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li><a class="dropdown-item" href="#">New project...</a></li>
-                            <li><a class="dropdown-item" href="#">Settings</a></li>
-                            <li><a class="dropdown-item" href="#">Profile</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#">Sign out</a></li>
-                        </ul>
-                    </li>
-                    -->
                     <li>
                         <a href="{{ url_for('indi_allsky.sqm_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
@@ -77,6 +61,7 @@
                 </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
+                    <hr />
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
                     <div>Sidereal: {{astrometric_data.sidereal_time}}</div>
@@ -85,24 +70,8 @@
                     <div>Moon: {{"%0.1f"|format(astrometric_data.moon_alt)}}&deg; {{ astrometric_data.moon_rising_sign|safe }}</div>
                     <div data-bs-toggle="tooltip" data-bs-placement="right" title="{{"%.0f"|format(astrometric_data.moon_phase_percent)}}%">Phase: {{astrometric_data.moon_phase}} {{ astrometric_data.moon_phase_sign|safe }}</div>
                     {{ web_extra_text|safe }}
+                    <div>User: {{ username_text|safe }}</div>
                 </div>
-                <!--
-                <div class="dropdown py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/mdo.png" alt="hugenerd" width="28" height="28" class="rounded-circle">
-                        <span class="d-none d-sm-inline mx-1">Joe</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                        <li><a class="dropdown-item" href="#">New project...</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#">Sign out</a></li>
-                    </ul>
-                </div>
-                -->
             </div>
         </div>
         <div class="col d-flex flex-column h-sm-100">

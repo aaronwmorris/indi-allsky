@@ -13,8 +13,10 @@ from collections import OrderedDict
 from flask import render_template
 from flask import jsonify
 from flask.views import View
-
+from flask import url_for
 from flask import current_app as app
+
+from flask_login import current_user
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -108,6 +110,7 @@ class TemplateView(BaseView):
             'indi_allsky_status' : self.get_indi_allsky_status(),
             'astrometric_data'   : self.get_astrometric_info(),
             'web_extra_text'     : self.get_web_extra_text(),
+            'username_text'      : self.get_user_info(),
         }
         return context
 
@@ -345,6 +348,13 @@ class TemplateView(BaseView):
         #app.logger.info('Extra Text: %s', extra_text)
 
         return extra_text
+
+
+    def get_user_info(self):
+        if not current_user.is_authenticated:
+            return '<a href="{0:s}">Login</a>'.format(url_for('auth_indi_allsky.login_view'))
+
+        return current_user.username
 
 
 class FormView(TemplateView):
