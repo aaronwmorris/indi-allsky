@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
+from .models import IndiAllSkyDbUserTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -2826,6 +2827,20 @@ class AjaxNotificationView(BaseView):
         return self.get()
 
 
+class UsersView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(UsersView, self).get_context()
+
+
+        user_list = IndiAllSkyDbUserTable.query\
+            .order_by(IndiAllSkyDbUserTable.createDate.asc())
+
+        context['user_list'] = user_list
+
+        return context
+
 
 
 # images are normally served directly by the web server, this is a backup method
@@ -2870,4 +2885,5 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
+bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 
