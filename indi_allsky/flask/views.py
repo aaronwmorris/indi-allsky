@@ -30,6 +30,8 @@ from ..version import __version__
 from flask import request
 from flask import jsonify
 from flask import Blueprint
+from flask import redirect
+from flask import url_for
 from flask import send_from_directory
 from flask import current_app as app
 
@@ -116,6 +118,12 @@ class IndexView(TemplateView):
                 context['user_message'] = 'Image is out of date'
 
         return context
+
+
+class PublicIndexView(BaseView):
+    # Legacy redirect
+    def dispatch_request(self):
+        return redirect(url_for('indi_allsky.index_view'))
 
 
 class CamerasView(TemplateView):
@@ -2842,7 +2850,6 @@ class UsersView(TemplateView):
         return context
 
 
-
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2867,8 +2874,7 @@ bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_vi
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
 
-bp_allsky.add_url_rule('/public', view_func=IndexView.as_view('public_index_view', template_name='public_index.html'))
-bp_allsky.add_url_rule('/public/loop', view_func=ImageLoopView.as_view('public_image_loop_view', template_name='public_loop.html'))
+bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
 bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
