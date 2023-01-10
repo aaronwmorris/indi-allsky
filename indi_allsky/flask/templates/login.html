@@ -10,12 +10,18 @@
   </head>
   <body class="bg-dark bg-opacity-75">
 
+<div class="row">
+    <div class="col-sm-2 offset-sm-5">
+        <span class="fs-5 d-none d-sm-inline">INDI-AllSky Login</span>
+    </div>
+</div>
+
 <form id="form_login" onSubmit="return false;">
     {{ form_login.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
     <div class="form-group row">
-        <div class="col-sm-1">
+        <div class="col-sm-1 offset-sm-4">
             {{ form_login.USERNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -25,7 +31,7 @@
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-1">
+        <div class="col-sm-1 offset-sm-4">
             {{ form_login.PASSWORD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -35,7 +41,7 @@
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-1"></div>
+        <div class="col-sm-1 offset-sm-4"></div>
         <div class="col-sm-3">
             <button class="btn btn-primary">Submit</button>
         </div>
@@ -49,7 +55,7 @@
         </div>
     </div>
 </form>
-
+</div>
 
 <script>
 const successMessage = $('#success-message');
