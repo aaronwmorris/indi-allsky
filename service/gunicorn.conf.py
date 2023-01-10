@@ -1,5 +1,5 @@
 worker_class       = 'gthread'
-threads            = 4
+threads            = 8
 timeout            = 180
 syslog             = True
 syslog_addr        = 'unix:///dev/log'
