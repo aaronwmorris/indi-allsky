@@ -2213,3 +2213,17 @@ class IndiAllskyLogViewerForm(FlaskForm):
     LINES_SELECT      = SelectField('Lines', choices=LINES_SELECT_choices, default=LINES_SELECT_choices[0][0], validators=[])
     REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[1][0], validators=[])
 
+
+
+def LOGIN__USERNAME_validator(form, field):
+    username_regex = r'^[a-zA-Z0-9\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
+class IndiAllskyLoginForm(FlaskForm):
+    USERNAME          = StringField('Username', validators=[DataRequired(), LOGIN__USERNAME_validator])
+    PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[DataRequired(), FILETRANSFER__PASSWORD_validator])
+    NEXT              = HiddenField('Next')
+

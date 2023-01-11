@@ -36,3 +36,6 @@ paho-mqtt
 setuptools-rust
 #https://www.piwheels.org/project/bcrypt/
 bcrypt<=3.2.2
+passlib[argon2]
+flask-login
+is-safe-url

@@ -9,15 +9,24 @@
 
     "comment_SESSION_COOKIE_SECURE" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,
+    "SESSION_COOKIE_HTTPONLY" : true,
     "SESSION_COOKIE_SAMESITE" : "Lax",
     "TEMPLATES_AUTO_RELOAD" : true,
     "SECRET_KEY" : "%SECRET_KEY%",
+
+    "REMEMBER_COOKIE_DURATION" : 604800,
+    "comment_REMEMBER_COOKIE_SECURE" : "True will prevent using http-only mode",
+    "REMEMBER_COOKIE_SECURE" : true,
+    "REMEMBER_COOKIE_HTTPONLY" : true,
+    "REMEMBER_COOKIE_SAMESITE" : "Lax",
+    "SESSION_PROTECTION" : "strong",
 
     "INDI_ALLSKY_CONFIG" : "%ALLSKY_ETC%/config.json",
     "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
     "INDI_ALLSKY_IMAGE_FOLDER" : "%IMAGE_FOLDER%",
     "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json",
     "INDI_ALLSKY_PID" : "%DB_FOLDER%/indi-allsky.pid",
+    "INDI_ALLSKY_AUTH_ALL_VIEWS" : %FLASK_AUTH_ALL_VIEWS%,
 
     "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
 

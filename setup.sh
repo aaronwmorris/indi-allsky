@@ -10,11 +10,12 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20221230.0"
+INDI_ALLSKY_VERSION="20230109.0"
 INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+FLASK_AUTH_ALL_VIEWS="true"
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
@@ -1440,6 +1441,12 @@ echo "Detected image folder: $IMAGE_FOLDER"
 
 
 echo "**** Flask config ****"
+
+if ! whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
+    FLASK_AUTH_ALL_VIEWS="false"
+fi
+
+
 TMP4=$(mktemp)
 #if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
@@ -1453,6 +1460,7 @@ sed \
  -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP4"
 
 # syntax check
@@ -1496,15 +1504,6 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
 
 
-    if [[ ! -f "${ALLSKY_ETC}/nginx.passwd" ]]; then
-        # nginx does not like bcrypt
-        sudo htpasswd -cbm "${ALLSKY_ETC}/nginx.passwd" admin secret
-    fi
-
-    sudo chmod 664 "${ALLSKY_ETC}/nginx.passwd"
-    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/nginx.passwd"
-
-
     #sudo cp -f /etc/nginx/sites-available/astroberry_ssl "/etc/nginx/sites-available/astroberry_ssl_$(date +%Y%m%d_%H%M%S)"
     sudo cp -f "$TMP3" /etc/nginx/sites-available/indi-allsky_ssl
     sudo chown root:root /etc/nginx/sites-available/indi-allsky_ssl
@@ -1536,14 +1535,6 @@ else
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
-
-
-    if [[ ! -f "${ALLSKY_ETC}/apache.passwd" ]]; then
-        sudo htpasswd -cbB "${ALLSKY_ETC}/apache.passwd" admin secret
-    fi
-
-    sudo chmod 664 "${ALLSKY_ETC}/apache.passwd"
-    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/apache.passwd"
 
 
     if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
@@ -1869,6 +1860,17 @@ json_pp < "${ALLSKY_ETC}/config.json" > /dev/null
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
+USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
+if [ "$USER_COUNT" -eq 0 ]; then
+    while [ -z "${WEB_USER:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)
+    done
+
+    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER"
+    "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
+fi
+
 echo
 echo
 echo
@@ -1887,12 +1889,8 @@ echo
 
 if [[ "$HTTPS_PORT" -eq 443 ]]; then
     echo "    https://$(hostname -s).local/indi-allsky/"
-    echo
-    echo "    https://$(hostname -s).local/indi-allsky/public  (unauthenticated access)"
 else
     echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/"
-    echo
-    echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/public  (unauthenticated access)"
 
 fi
 

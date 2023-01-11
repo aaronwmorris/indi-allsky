@@ -187,9 +187,7 @@ Registration (alignment) requires significantly more CPU time and doubles the me
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
 
-The default credentials for accessing the web interface are user `admin` and password `secret`
-
-An unauthenticated public access URL is also available at https://raspberrypi.local/indi-allsky/public  (actual hostname may vary)
+Most views do not require authentication.  Credentials for accessing the privileged areas are defined upon the first setup of the software.
 
 ### Home Page
 ![](./content/webui_home.png)

@@ -22,6 +22,7 @@ __all__ = (
     'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
+    'IndiAllSkyDbUserTable',
 )
 
 
@@ -29,7 +30,9 @@ class IndiAllSkyDbCameraTable(db.Model):
     __tablename__ = 'camera'
 
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(length=36), unique=True, index=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False)
+    friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
     connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
     minGain = db.Column(db.Integer, nullable=True)
@@ -542,4 +545,52 @@ class IndiAllSkyDbStateTable(db.Model):
     key = db.Column(db.String(length=32), primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     value = db.Column(db.String(length=255), nullable=False)
+
+
+class IndiAllSkyDbUserTable(db.Model):
+    __tablename__ = 'user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
+    passwordDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
+    apikeyDate = db.Column(db.DateTime(timezone=False), nullable=True)
+    loginDate = db.Column(db.DateTime(timezone=False), nullable=True)
+    loginIp = db.Column(db.String(255), nullable=True)  # X-Forwarded-For may contain multiple IPs
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    name = db.Column(db.String(255))
+    apikey = db.Column(db.String(255))
+    active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+
+
+    @property
+    def is_active(self):
+        return self.active
+
+
+    @property
+    def is_authenticated(self):
+        return True
+
+
+    @property
+    def is_anonymous(self):
+        return False
+
+
+    @property
+    def is_staff(self):
+        return self.staff
+
+
+    @property
+    def is_admin(self):
+        return self.admin
+
+
+    def get_id(self):
+        return self.id
 
