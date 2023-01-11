@@ -39,6 +39,16 @@ class UserManager(object):
         pass
 
 
+    def list(self, **kwargs):
+
+        user_list = IndiAllSkyDbUserTable.query\
+            .order_by(IndiAllSkyDbUserTable.createDate.desc())
+
+
+        for user in user_list:
+            print('{0:d} - {1:s} ({2:s})'.format(user.id, user.username, user.name))
+
+
     def adduser(self, username=None):
 
         while True:
@@ -119,6 +129,24 @@ class UserManager(object):
         db.session.commit()
 
 
+    def deleteuser(self, username=None):
+
+        if not username:
+            username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        db.session.delete(existing_user)
+        db.session.commit()
+
+
     def resetpass(self, username=None):
 
         if not username:
@@ -189,6 +217,41 @@ class UserManager(object):
         db.session.commit()
 
 
+    def setactive(self, username=None):
+
+        if not username:
+            username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        existing_user.active = True
+        db.session.commit()
+
+
+    def setinactive(self, username=None):
+
+        if not username:
+            username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        existing_user.active = False
+        db.session.commit()
+
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
@@ -197,10 +260,14 @@ if __name__ == "__main__":
         help='action',
         type=str,
         choices=(
+            'list',
             'adduser',
+            'deleteuser',
             'resetpass',
             'setadmin',
             'removeadmin',
+            'setactive',
+            'setinactive',
         ),
     )
     argparser.add_argument(
