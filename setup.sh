@@ -203,7 +203,7 @@ echo
 
 # whiptail might not be installed yet
 PS3="Select a camera interface: "
-select camera_interface in indi libcamera_imx477; do
+select camera_interface in indi libcamera; do
     if [ -n "$camera_interface" ]; then
         CAMERA_INTERFACE=$camera_interface
         break
@@ -211,8 +211,21 @@ select camera_interface in indi libcamera_imx477; do
 done
 
 
+# more specific libcamera selection
+if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+    echo
+    PS3="Select a libcamera interface: "
+    select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
+        if [ -n "$libcamera_interface" ]; then
+            # overwrite variable
+            CAMERA_INTERFACE=$libcamera_interface
+            break
+        fi
+    done
+fi
 
-if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+
+if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
     INSTALL_LIBCAMERA="true"
 fi
 
@@ -365,7 +378,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
-    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -609,7 +622,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ=requirements_debian10.txt
 
 
-    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -738,7 +751,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     fi
 
 
-    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -864,7 +877,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     fi
 
 
-    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -990,7 +1003,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
 
 
-    if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -1447,8 +1460,10 @@ if ! whiptail --title "Web Authentication" --yesno "Do you want to require authe
 fi
 
 
-TMP4=$(mktemp)
-#if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
+TMP_FLASK=$(mktemp)
+TMP_FLASK_2=$(mktemp)
+TMP_FLASK_MERGE=$(mktemp)
+
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
@@ -1461,18 +1476,33 @@ sed \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
- "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP4"
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 # syntax check
-json_pp < "$TMP4" >/dev/null
+json_pp < "$TMP_FLASK" >/dev/null
 
-cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
-#fi
+
+if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
+    # attempt to merge configs giving preference to the original config (listed 2nd)
+    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
+    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
+else
+    # new config
+    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
+fi
+
+
+# always replace the DB URI
+jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
+cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
+
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
-[[ -f "$TMP4" ]] && rm -f "$TMP4"
+[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
+[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
 
 
 TMP7=$(mktemp)
@@ -1752,7 +1782,7 @@ if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
 fi
 
 
-if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
     echo "**** Enable Raspberry Pi camera interface ****"
     sudo raspi-config nonint do_camera 0
 
@@ -1771,6 +1801,10 @@ if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
         imx477
         imx477_noir
         imx519
+        imx708
+        imx708_noir
+        imx708_wide
+        imx708_wide_noir
     "
 
     for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
@@ -1810,7 +1844,7 @@ if [ "$MEM_TOTAL" -lt "768000" ]; then
 fi
 
 # 25% ffmpeg scaling with libcamera when running 1GB of memory
-if [ "$CAMERA_INTERFACE" == "libcamera_imx477" ]; then
+if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
         TMP_LIBCAM_FFMPEG=$(mktemp)
         jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_FFMPEG"
