@@ -220,6 +220,9 @@ class IndiClientLibCameraGeneric(IndiClient):
                 for line in stdout.readlines():
                     logger.error('libcamera-still error: %s', line)
 
+            ccdtemp = subprocess.check_output(['grep', 'SensorTemperature'], stdin=self.libcamera_process.stdout).decode('ascii')
+            ccdtemp = float(ccdtemp.replace(' ', '').replace(',\n', '').split(':')[1])
+            self.setCcdTemperature(ccdtemp)
 
             # read metadata to get sensor temperature
             if self.current_metadata_file_p:
