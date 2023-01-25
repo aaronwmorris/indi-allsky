@@ -237,7 +237,12 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.current_metadata_file_p.unlink(missing_ok=True)
 
 
-            self._temp_val = float(metadata_dict.get(self._sensor_temp_metadata_key, -273.15))
+            try:
+                self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
+            except KeyError:
+                logger.error('libcamera sensor temperature key not found')
+            except ValueError:
+                logger.error('Unable to parse libcamera sensor temperature')
 
 
             self._queueImage()
