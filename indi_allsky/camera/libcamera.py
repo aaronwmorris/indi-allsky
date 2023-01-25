@@ -400,3 +400,126 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
         self.gps_device_name = 'fake_gps'
         self.gps_driver_exec = 'indi_fake_gps'
 
+
+class IndiClientLibCameraImx378(IndiClientLibCameraImx477):
+    # this model is almost identical to the imx477
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx378, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx378'
+
+
+class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCamera64mpHawkeye, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_64mp_hawkeye'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 9152,
+            'height'        : 6944,
+            'pixel'         : 0.8,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
+
+class IndiClientLibCameraImx407(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx407, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx407'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 4608,
+            'height'        : 2592,
+            'pixel'         : 1.4,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 112.0,
+            'cfa'           : 'BGGR',  # untested
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
+class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx290, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx290'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 1920,
+            'height'        : 1080,
+            'pixel'         : 2.9,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'GRGB',
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
+class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx462, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx462'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 1920,
+            'height'        : 1080,
+            'pixel'         : 2.9,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'RGGB',
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
