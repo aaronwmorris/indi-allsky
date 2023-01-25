@@ -32,6 +32,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._ccd_bin = 1
 
         self._temp_val = -273.15  # absolute zero  :-)
+        self._sensor_temp_metadata_key = 'SensorTemperature'
 
         self.active_exposure = False
         self.current_exposure_file_p = None
@@ -236,7 +237,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.current_metadata_file_p.unlink(missing_ok=True)
 
 
-            self._temp_val = float(metadata_dict.get('SensorTemperature', -273.15))
+            self._temp_val = float(metadata_dict.get(self._sensor_temp_metadata_key, -273.15))
 
 
             self._queueImage()
