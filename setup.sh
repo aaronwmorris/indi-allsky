@@ -1460,8 +1460,9 @@ if ! whiptail --title "Web Authentication" --yesno "Do you want to require authe
 fi
 
 
-TMP4=$(mktemp)
-#if [[ ! -f "${ALLSKY_ETC}/flask.json" ]]; then
+TMP_FLASK=$(mktemp)
+TMP_FLASK_MERGE=$(mktemp)
+
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
@@ -1474,18 +1475,27 @@ sed \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
- "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP4"
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 # syntax check
-json_pp < "$TMP4" >/dev/null
+json_pp < "$TMP_FLASK" >/dev/null
 
-cp -f "$TMP4" "${ALLSKY_ETC}/flask.json"
-#fi
+
+if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
+    # attempt to merge configs giving preference to the original config (listed 2nd)
+    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
+    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
+else
+    # new config
+    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
+fi
+
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
-[[ -f "$TMP4" ]] && rm -f "$TMP4"
+[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
 
 
 TMP7=$(mktemp)
