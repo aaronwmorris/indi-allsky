@@ -225,7 +225,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             if self.current_metadata_file_p:
                 try:
                     with io.open(self.current_metadata_file_p, 'r') as f_metadata:
-                        metadata_dict = json.loads(f_metadata, object_pairs_hook=OrderedDict)
+                        metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
                 except FileNotFoundError as e:
                     logger.error('Metadata file not found: %s', str(e))
                 except PermissionError as e:
