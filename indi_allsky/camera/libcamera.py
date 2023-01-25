@@ -28,6 +28,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._ccd_gain = -1
         self._ccd_bin = 1
 
+        self._temp_val = -273.15  # absolute zero  :-)
+
         self.active_exposure = False
         self.current_exposure_file_p = None
 
@@ -134,6 +136,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
+                '--metadata', '-',
             ]
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
@@ -147,6 +150,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
+                '--metadata', '-',
             ]
         else:
             raise Exception('Invalid image type')
@@ -204,6 +208,9 @@ class IndiClientLibCameraGeneric(IndiClient):
                 for line in stdout.readlines():
                     logger.error('libcamera-still error: %s', line)
 
+            ccdtemp = subprocess.check_output(['grep', 'SensorTemperature'], stdin=self.libcamera_process.stdout).decode('ascii')
+            ccdtemp = float(ccdtemp.replace(' ', '').replace(',\n', '').split(':')[1])
+            self.setCcdTemperature(ccdtemp)
 
             self._queueImage()
 
@@ -365,12 +372,11 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdTemperature(self):
-        temp_val = -273.15  # absolute zero  :-)
-        return temp_val
+        return self._temp_val
 
 
-    def setCcdTemperature(self, *args):
-        pass
+    def setCcdTemperature(self, gain_value):
+        self._temp_val = gain_value
 
 
 class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
