@@ -1461,6 +1461,7 @@ fi
 
 
 TMP_FLASK=$(mktemp)
+TMP_FLASK_2=$(mktemp)
 TMP_FLASK_MERGE=$(mktemp)
 
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
@@ -1491,10 +1492,16 @@ else
 fi
 
 
+# always replace the DB URI
+jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
+cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
+
+
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
 [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
 
 
