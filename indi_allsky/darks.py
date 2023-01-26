@@ -52,6 +52,8 @@ class IndiAllSkyDarks(object):
         self.config = json.loads(f_config.read())
         f_config.close()
 
+        self._daytime = True  # build daytime dark library
+
         self._count = 10
         self._temp_delta = 5.0
         self._time_delta = 5
@@ -134,6 +136,15 @@ class IndiAllSkyDarks(object):
     @hotpixel_adu_percent.setter
     def hotpixel_adu_percent(self, new_hotpixel_adu_percent):
         self._hotpixel_adu_percent = int(new_hotpixel_adu_percent)
+
+
+    @property
+    def daytime(self):
+        return self._daytime
+
+    @daytime.setter
+    def daytime(self, new_daytime):
+        self._daytime = bool(new_daytime)
 
 
 
@@ -489,7 +500,7 @@ class IndiAllSkyDarks(object):
         # 7  = extension
 
 
-        night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set so that we get night first, we only care about keys
+        night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set, we only care about keys
         # keys are a tuple of (gain, binmode)
 
         # if NIGHT and MOONMODE have the same parameters, no need to double the work
@@ -509,20 +520,24 @@ class IndiAllSkyDarks(object):
 
 
         # take day darks with cooling disabled
-        self.indiclient.disableCcdCooler()
-        logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
-        time.sleep(5.0)
+        if self.daytime:
+            self.indiclient.disableCcdCooler()
+            logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
+            time.sleep(8.0)
 
 
-        ### DAY DARKS ###
-        day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
-        if day_params not in night_darks_odict.keys():
-            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
-            self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+            ### DAY DARKS ###
+            day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
+            if day_params not in night_darks_odict.keys():
+                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
-            # day will rarely exceed 1 second
-            for exposure in dark_exposures:
-                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                # day will rarely exceed 1 second
+                for exposure in dark_exposures:
+                    self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+        else:
+            logger.warning('Daytime dark processing is disabled')
+            time.sleep(8.0)
 
 
 
