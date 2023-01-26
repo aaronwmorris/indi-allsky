@@ -1395,7 +1395,7 @@ sudo chmod 644 /etc/logrotate.d/indi-allsky
 
 echo "**** Indi-allsky config ****"
 [[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
-sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
+sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 775 "${ALLSKY_ETC}"
 
 if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
@@ -1406,7 +1406,7 @@ if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
         ln -s "${ALLSKY_ETC}/config.json" "${ALLSKY_DIRECTORY}/config.json"
     else
         # syntax check
-	json_pp < "${ALLSKY_DIRECTORY}/config.json_template" > /dev/null
+        json_pp < "${ALLSKY_DIRECTORY}/config.json_template" > /dev/null
 
         # create new config
         cp "${ALLSKY_DIRECTORY}/config.json_template" "${ALLSKY_ETC}/config.json"
@@ -1703,7 +1703,7 @@ fi
 echo "**** Setup DB ****"
 [[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
 sudo chmod 775 "$DB_FOLDER"
-sudo chown "$USER":"$PGRP" "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
 sudo chmod 775 "$DB_FOLDER/backup"
 sudo chown "$USER":"$PGRP" "${DB_FOLDER}/backup"
