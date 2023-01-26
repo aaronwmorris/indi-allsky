@@ -1,6 +1,9 @@
+import io
 from datetime import datetime
+from collections import OrderedDict
 import time
 import tempfile
+import json
 import subprocess
 import psutil
 from pathlib import Path
@@ -28,8 +31,12 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._ccd_gain = -1
         self._ccd_bin = 1
 
+        self._temp_val = -273.15  # absolute zero  :-)
+        self._sensor_temp_metadata_key = 'SensorTemperature'
+
         self.active_exposure = False
         self.current_exposure_file_p = None
+        self.current_metadata_file_p = None
 
         memory_info = psutil.virtual_memory()
         self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
@@ -110,14 +117,19 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         try:
             image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=True)
-            image_tmp_p = Path(image_tmp_f.name)
             image_tmp_f.close()
+            image_tmp_p = Path(image_tmp_f.name)
+
+            metadata_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=True)
+            metadata_tmp_f.close()
+            metadata_tmp_p = Path(metadata_tmp_f.name)
         except OSError as e:
             logger.error('OSError: %s', str(e))
             return
 
 
         self.current_exposure_file_p = image_tmp_p
+        self.current_metadata_file_p = metadata_tmp_p
 
 
         self._exposure = exposure
@@ -134,6 +146,8 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
+                '--metadata', str(metadata_tmp_p),
+                '--metadata-format', 'json',
             ]
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
@@ -147,6 +161,8 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--awbgains', '1,1',  # disable awb
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
+                '--metadata', str(metadata_tmp_p),
+                '--metadata-format', 'json',
             ]
         else:
             raise Exception('Invalid image type')
@@ -203,6 +219,33 @@ class IndiClientLibCameraGeneric(IndiClient):
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
                     logger.error('libcamera-still error: %s', line)
+
+
+            # read metadata to get sensor temperature
+            if self.current_metadata_file_p:
+                try:
+                    with io.open(self.current_metadata_file_p, 'r') as f_metadata:
+                        metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
+                except FileNotFoundError as e:
+                    logger.error('Metadata file not found: %s', str(e))
+                    metadata_dict = dict()
+                except PermissionError as e:
+                    logger.error('Permission erro: %s', str(e))
+                    metadata_dict = dict()
+                except json.JSONDecodeError as e:
+                    logger.error('Error decoding json: %s', str(e))
+                    metadata_dict = dict()
+
+
+            self.current_metadata_file_p.unlink(missing_ok=True)
+
+
+            try:
+                self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
+            except KeyError:
+                logger.error('libcamera sensor temperature key not found')
+            except ValueError:
+                logger.error('Unable to parse libcamera sensor temperature')
 
 
             self._queueImage()
@@ -365,11 +408,11 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdTemperature(self):
-        temp_val = -273.15  # absolute zero  :-)
-        return temp_val
+        return self._temp_val
 
 
-    def setCcdTemperature(self, *args):
+    def setCcdTemperature(self, new_temp):
+        # not supported
         pass
 
 
