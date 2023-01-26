@@ -439,11 +439,11 @@ class ImageWorker(Process):
 
                 # publish cpu info
                 cpu_info = psutil.cpu_times_percent()
-                mqtt_data['cpu/user'] = cpu_info.user
-                mqtt_data['cpu/system'] = cpu_info.system
-                mqtt_data['cpu/nice'] = cpu_info.nice
-                mqtt_data['cpu/iowait'] = cpu_info.iowait  # io wait is not true cpu usage, not including in total
-                mqtt_data['cpu/total'] = cpu_info.user + cpu_info.system + cpu_info.nice
+                mqtt_data['cpu/user'] = round(cpu_info.user, 1)
+                mqtt_data['cpu/system'] = round(cpu_info.system, 1)
+                mqtt_data['cpu/nice'] = round(cpu_info.nice, 1)
+                mqtt_data['cpu/iowait'] = round(cpu_info.iowait, 1)  # io wait is not true cpu usage, not including in total
+                mqtt_data['cpu/total'] = round(cpu_info.user + cpu_info.system + cpu_info.nice, 1)
 
 
                 # publish memory info
@@ -451,9 +451,9 @@ class ImageWorker(Process):
                 memory_total = memory_info.total
                 memory_free = memory_info.free
 
-                mqtt_data['memory/user'] = (memory_info.used / memory_total) * 100.0
-                mqtt_data['memory/cached'] = (memory_info.cached / memory_total) * 100.0
-                mqtt_data['memory/total'] = 100 - ((memory_free * 100) / memory_total)
+                mqtt_data['memory/user'] = round((memory_info.used / memory_total) * 100.0, 1)
+                mqtt_data['memory/cached'] = round((memory_info.cached / memory_total) * 100.0, 1)
+                mqtt_data['memory/total'] = round(100 - ((memory_free * 100) / memory_total), 1)
 
 
                 # publish disk info
@@ -467,11 +467,11 @@ class ImageWorker(Process):
                     disk_usage = psutil.disk_usage(fs.mountpoint)
 
                     if fs.mountpoint == '/':
-                        mqtt_data['disk/root'] = disk_usage.percent  # hopefully there is not a /root filesystem
+                        mqtt_data['disk/root'] = round(disk_usage.percent, 1)  # hopefully there is not a /root filesystem
                         continue
                     else:
                         # slash is included with filesystem name
-                        mqtt_data['disk{0:s}'.format(fs.mountpoint)] = disk_usage.percent
+                        mqtt_data['disk{0:s}'.format(fs.mountpoint)] = round(disk_usage.percent, 1)
 
 
                 self.mqtt_publish(latest_file, mqtt_data)
