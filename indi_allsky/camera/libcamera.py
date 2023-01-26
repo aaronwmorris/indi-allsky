@@ -228,10 +228,13 @@ class IndiClientLibCameraGeneric(IndiClient):
                         metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
                 except FileNotFoundError as e:
                     logger.error('Metadata file not found: %s', str(e))
+                    metadata_dict = dict()
                 except PermissionError as e:
                     logger.error('Permission erro: %s', str(e))
+                    metadata_dict = dict()
                 except json.JSONDecodeError as e:
                     logger.error('Error decoding json: %s', str(e))
+                    metadata_dict = dict()
 
 
             self.current_metadata_file_p.unlink(missing_ok=True)
