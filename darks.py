@@ -29,7 +29,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
-        help='action',
+        help='dark frame algorithm, sigmaclip is recommended',
         choices=(
             'flush',
             'average',
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         default=5.0,
     )
     argparser.add_argument(
-        '--time_delta',
+        '--Time_delta',
         '-T',
         help='time delta between dark frame exposures',
         type=int,
@@ -75,14 +75,31 @@ if __name__ == "__main__":
     )
 
 
+    daytime_parser = argparser.add_mutually_exclusive_group(required=False)
+    daytime_parser.add_argument(
+        '--daytime',
+        help='enable daytime darks (default)',
+        dest='daytime',
+        action='store_true',
+    )
+    daytime_parser.add_argument(
+        '--no-daytime',
+        help='disable daytime darks',
+        dest='daytime',
+        action='store_false',
+    )
+    daytime_parser.set_defaults(daytime=True)
+
+
     args = argparser.parse_args()
 
 
     iad = IndiAllSkyDarks(args.config)
     iad.count = args.count
     iad.temp_delta = args.temp_delta
-    iad.time_delta = args.time_delta
+    iad.time_delta = args.Time_delta
     iad.bitmax = args.bitmax
+    iad.daytime = args.daytime
 
     action_func = getattr(iad, args.action)
     action_func()
