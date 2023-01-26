@@ -10,6 +10,7 @@ import time
 import functools
 import tempfile
 import shutil
+import psutil
 import copy
 import math
 import signal
@@ -434,6 +435,44 @@ class ImageWorker(Process):
                     'longitude': round(self.longitude_v.value, 3),
                     'sidereal_time': self.astrometric_data['sidereal_time'],
                 }
+
+
+                # publish cpu info
+                cpu_info = psutil.cpu_times_percent()
+                mqtt_data['cpu/user'] = cpu_info.user
+                mqtt_data['cpu/system'] = cpu_info.system
+                mqtt_data['cpu/nice'] = cpu_info.nice
+                mqtt_data['cpu/iowait'] = cpu_info.iowait  # io wait is not true cpu usage, not including in total
+                mqtt_data['cpu/total'] = cpu_info.user + cpu_info.system + cpu_info.nice
+
+
+                # publish memory info
+                memory_info = psutil.virtual_memory()
+                memory_total = memory_info.total
+                memory_free = memory_info.free
+
+                mqtt_data['memory/user'] = (memory_info.used / memory_total) * 100.0
+                mqtt_data['memory/cached'] = (memory_info.cached / memory_total) * 100.0
+                mqtt_data['memory/total'] = 100 - ((memory_free * 100) / memory_total)
+
+
+                # publish disk info
+                fs_list = psutil.disk_partitions()
+
+                for fs in fs_list:
+                    if fs.mountpoint.startswith('/snap/'):
+                        # skip snap filesystems
+                        continue
+
+                    disk_usage = psutil.disk_usage(fs.mountpoint)
+
+                    if fs.mountpoint == '/':
+                        mqtt_data['disk/root'] = disk_usage.percent  # hopefully there is not a /root filesystem
+                        continue
+                    else:
+                        # slash is included with filesystem name
+                        mqtt_data['disk{0:s}'.format(fs.mountpoint)] = disk_usage.percent
+
 
                 self.mqtt_publish(latest_file, mqtt_data)
 
