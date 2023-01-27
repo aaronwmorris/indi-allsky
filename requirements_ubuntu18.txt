@@ -1,21 +1,21 @@
-# This file is targeted to Ubuntu 18 and Python 3.6
-#https://www.piwheels.org/project/astropy/
+### This file is targeted to Ubuntu 18 and Python 3.6
+# https://www.piwheels.org/project/astropy/
 astropy
-#https://www.piwheels.org/project/numpy/
+# https://www.piwheels.org/project/numpy/
 numpy<=1.18.5
-#https://www.piwheels.org/project/opencv-python-headless/
+# https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless<=4.5.5.64
-#https://www.piwheels.org/project/scipy/
+# https://www.piwheels.org/project/scipy/
 scipy<=1.8.1
-#https://www.piwheels.org/project/ccdproc/
-#2.4.0 requires astropy 5.0, not compatible with python 3.7
+# https://www.piwheels.org/project/ccdproc/
+# 2.4.0 requires astropy 5.0, not compatible with python 3.7
 ccdproc<=2.3.1
 astroalign
 bottleneck
 python-dateutil
 ephem
 paramiko
-#https://www.piwheels.org/project/pycurl/
+# https://www.piwheels.org/project/pycurl/
 pycurl<=7.44.1
 imageio
 imageio-ffmpeg
@@ -29,12 +29,12 @@ Flask
 Flask-SQLAlchemy<=2.5.1
 Flask-Migrate
 Flask-WTF
-#https://www.piwheels.org/project/cryptography/
+# https://www.piwheels.org/project/cryptography/
 cryptography<=37.0.4
 dbus-python
 paho-mqtt
 setuptools-rust
-#https://www.piwheels.org/project/bcrypt/
+# https://www.piwheels.org/project/bcrypt/
 bcrypt<=3.2.2
 passlib[argon2]
 flask-login
