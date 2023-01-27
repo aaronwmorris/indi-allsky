@@ -18,3 +18,7 @@ class CameraException(Exception):
 class TimelapseException(Exception):
     pass
 
+
+class ConfigSaveException(Exception):
+    pass
+
