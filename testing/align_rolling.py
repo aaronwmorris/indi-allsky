@@ -30,6 +30,11 @@ class AlignRolling(object):
 
         self.image_list = list()
 
+        self.hist_rotation_n = numpy.array([])
+        self._history_max_vals = 10  # number of entries to use to calculate average
+        self._rotation_dev = 10  # rotation may not exceed this deviation
+
+
         if not self.output_dir_p.is_dir():
             raise Exception('%s is not a folder', self.output_dir_p)
 
@@ -92,6 +97,28 @@ class AlignRolling(object):
                         self.transform.translation[0], self.transform.translation[1],
                         self.transform.scale,
                     )
+
+
+                    logger.info('Rotation history: %d', self.hist_rotation_n.shape[0])
+
+                    if self.hist_rotation_n.shape[0] >= self._history_max_vals:
+                        # need at least this many values to establish an average
+                        rotation_diff_mean = numpy.mean(numpy.diff(self.hist_rotation_n))
+
+                        logger.info('Average rotation delta: %0.8f', rotation_diff_mean)
+
+                        rotation_dev_limit = rotation_diff_mean * self._rotation_dev
+
+
+                        # if the new rotation exceeds the deviation limit, do not apply the transform
+                        if (self.transform.rotation - self.hist_rotation_n[-1]) > rotation_dev_limit:
+                            logger.error('Rotation exceeded limit of %0.8f', rotation_dev_limit)
+                            continue
+
+
+                    # add new rotation value
+                    self.hist_rotation_n = numpy.append(self.hist_rotation_n, [self.transform.rotation])
+                    self.hist_rotation_n = numpy.delete(self.hist_rotation_n, numpy.s_[:(self._history_max_vals * -1)])  # remove oldest values, up to history_max_vals
 
 
                     ### Apply transform
