@@ -7,6 +7,7 @@ import json
 import re
 import psutil
 import tempfile
+import shutil
 import subprocess
 import hashlib
 from pathlib import Path
@@ -38,6 +39,7 @@ from .uploader import FileUploader
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
 from .exceptions import CameraException
+from .exceptions import ConfigSaveException
 
 #from flask import current_app as app
 from .flask import db
@@ -1144,6 +1146,44 @@ class IndiAllSky(object):
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
+    def save_indi_allsky_config(self, config):
+        logger.warning('Saving new config file')
+
+        config_file_p = Path(self.config_file)
+        config_file_old_p = Path('{0:s}_old'.format(str(self.config_file)))
+        config_dir_p = config_file_p.parent
+
+
+        # write to temp file to ensure there is space available
+        try:
+            config_temp_f = tempfile.NamedTemporaryFile(dir=config_dir_p, mode='w', delete=False, suffix='.json')
+            config_temp_f.write(json.dumps(config, indent=4))
+            config_temp_f.close()
+
+            config_temp_p = Path(config_temp_f.name)
+        except PermissionError as e:
+            logger.error('Unable to save config file: %s', str(e))
+            raise ConfigSaveException(str(e))
+        except OSError as e:
+            logger.error('Unable to save config file: %s', str(e))
+            raise ConfigSaveException(str(e))
+
+
+        try:
+            # make a backup
+            shutil.copy2(str(config_file_p), str(config_file_old_p))
+            config_file_old_p.chmod(0o640)
+
+            shutil.move(str(config_temp_p), str(config_file_p))
+            config_file_p.chmod(0o640)
+        except PermissionError as e:
+            logger.error('Unable to save config file: %s', str(e))
+            raise ConfigSaveException(str(e))
+        except OSError as e:
+            logger.error('Unable to save config file: %s', str(e))
+            raise ConfigSaveException(str(e))
+
+
     def getSensorTemperature(self):
         temp_val = self.indiclient.getCcdTemperature()
 
@@ -1321,14 +1361,12 @@ class IndiAllSky(object):
         c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
         c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
 
+
         # save new config
         try:
-            with io.open(self.config_file, 'w') as f_config_file:
-                f_config_file.write(json.dumps(c, indent=4))
-
+            self.save_indi_allsky_config(c)
             logger.info('Wrote new config.json')
-        except PermissionError as e:
-            logger.error('PermissionError: %s', str(e))
+        except ConfigSaveException:
             return
 
 

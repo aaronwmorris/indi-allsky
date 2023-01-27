@@ -63,7 +63,7 @@ class BaseView(View):
         app.logger.warning('Saving new config file')
 
         config_file_p = Path(app.config['INDI_ALLSKY_CONFIG'])
-        config_file_old_p = Path('{0:s}_old'.format(app.config['INDI_ALLSKY_CONFIG']))
+        config_file_old_p = Path('{0:s}_old'.format(str(app.config['INDI_ALLSKY_CONFIG'])))
         config_dir_p = config_file_p.parent
 
 
