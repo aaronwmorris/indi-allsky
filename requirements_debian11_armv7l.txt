@@ -1,20 +1,20 @@
-# This file is targeted to Raspbian/Debian 11 and Python 3.9 (armv7l)
-#https://www.piwheels.org/project/astropy/
+### This file is targeted to Raspbian/Debian 11 and Python 3.9 (armv7l)
+# https://www.piwheels.org/project/astropy/
 astropy
-#https://www.piwheels.org/project/numpy/
+# https://www.piwheels.org/project/numpy/
 numpy
-#https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless
-#https://www.piwheels.org/project/scipy/
+# https://www.piwheels.org/project/opencv-python-headless/
+opencv-python-headless<=4.6.0.66
+# https://www.piwheels.org/project/scipy/
 scipy<=1.8.1
-#https://www.piwheels.org/project/ccdproc/
+# https://www.piwheels.org/project/ccdproc/
 ccdproc
 astroalign
 bottleneck
 python-dateutil
 ephem
 paramiko
-#https://www.piwheels.org/project/pycurl/
+# https://www.piwheels.org/project/pycurl/
 pycurl
 imageio
 imageio-ffmpeg
@@ -27,11 +27,12 @@ Flask
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
+# https://www.piwheels.org/project/cryptography/
 cryptography
 dbus-python
 paho-mqtt
 setuptools-rust
-#https://www.piwheels.org/project/bcrypt/
+# https://www.piwheels.org/project/bcrypt/
 bcrypt<=3.2.2
 passlib[argon2]
 flask-login
