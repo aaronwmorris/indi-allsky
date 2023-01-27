@@ -362,6 +362,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempaverage(self):
+        # disable daytime darks processing when doing temperature calibrated frames
+        self.daytime = False
+
         self._initialize()
         self._pre_run_tasks()
 
@@ -396,6 +399,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempsigmaclip(self):
+        # disable daytime darks processing when doing temperature calibrated frames
+        self.daytime = False
+
         self._initialize()
         self._pre_run_tasks()
 
