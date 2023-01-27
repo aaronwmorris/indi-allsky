@@ -85,6 +85,8 @@ from .base_views import TemplateView
 from .base_views import FormView
 from .base_views import JsonView
 
+from ..exceptions import ConfigSaveException
+
 
 bp_allsky = Blueprint(
     'indi_allsky',
@@ -1119,13 +1121,9 @@ class AjaxConfigView(BaseView):
 
         # save new config
         try:
-            with io.open(app.config['INDI_ALLSKY_CONFIG'], 'w') as f_config_file:
-                f_config_file.write(json.dumps(self.indi_allsky_config, indent=4))
-                f_config_file.flush()
-
+            self.save_indi_allsky_config(self.indi_allsky_config)
             app.logger.info('Wrote new config.json')
-        except PermissionError as e:
-            app.logger.error('PermissionError: %s', str(e))
+        except ConfigSaveException as e:
             error_data = {
                 'form_global' : [str(e)],
             }
