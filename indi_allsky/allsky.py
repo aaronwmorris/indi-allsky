@@ -597,7 +597,15 @@ class IndiAllSky(object):
         self.indiclient.updateCcdBlobMode()
 
         self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        self.indiclient.setCcdFrameType('FRAME_LIGHT')  # default frame type is light
+
+
+        try:
+            self.indiclient.setCcdFrameType('FRAME_LIGHT')  # default frame type is light
+        except TimeOutException:
+            # this is an optional step
+            # occasionally the CCD_FRAME_TYPE property is not available during initialization
+            logger.warning('Unable to set CCD_FRAME_TYPE to Light')
+
 
         # save config to defaults (disabled)
         #self.indiclient.saveCcdConfig()

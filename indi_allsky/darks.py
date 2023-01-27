@@ -20,6 +20,7 @@ from astropy.stats import mad_std
 from multiprocessing import Queue
 from multiprocessing import Value
 
+from .exceptions import TimeOutException
 from .exceptions import TemperatureException
 from .exceptions import CameraException
 
@@ -220,7 +221,14 @@ class IndiAllSkyDarks(object):
         self.indiclient.updateCcdBlobMode()
 
         self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        self.indiclient.setCcdFrameType('FRAME_DARK')
+
+
+        try:
+            self.indiclient.setCcdFrameType('FRAME_DARK')
+        except TimeOutException:
+            # this is an optional step
+            # occasionally the CCD_FRAME_TYPE property is not available during initialization
+            logger.warning('Unable to set CCD_FRAME_TYPE to Dark')
 
 
         # Validate gain settings
