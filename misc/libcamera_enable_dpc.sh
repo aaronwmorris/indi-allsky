@@ -58,6 +58,10 @@ LIBCAMERA_CAMERAS="
     imx477
     imx477_noir
     imx519
+    imx708
+    imx708_noir
+    imx708_wide
+    imx708_wide_noir
 "
 
 for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
