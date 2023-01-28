@@ -1341,12 +1341,13 @@ class ImageProcessor(object):
         self.non_stacked_image = None
 
 
-        if self.night_v.value:
-            if len(self.image_list) == self.stack_count:
-                self.image_list.pop()  # remove last element
+        if self.night_v.value and not self.moonmode_v.value:
+            # just in case the array grows beyond the desired size
+            while len(self.image_list) >= self.stack_count:
+                self.image_list.pop()
         else:
-            # daytime
-            self.image_list.clear()  # daytime only has one image
+            # disable stacking during daytime and moonmode
+            self.image_list.clear()
 
 
         indi_rgb = True  # INDI returns array in the wrong order for cv2
