@@ -32,7 +32,7 @@ class AlignRolling(object):
 
         self.hist_rotation = list()
         self._rotation_dev = 3  # rotation may not exceed this deviation
-        self._history_min_vals = 25
+        self._history_min_vals = 15
 
 
         if not self.output_dir_p.is_dir():
@@ -61,6 +61,7 @@ class AlignRolling(object):
 
 
             last_rotation = 0
+
             for hdulist in self.image_list[1:]:
                 # detection_sigma default = 5
                 # max_control_points default = 50
@@ -120,14 +121,14 @@ class AlignRolling(object):
                         if rotation > (rotation_mean + rotation_stddev_limit)\
                                 or rotation < (rotation_mean - rotation_stddev_limit):
 
-                            logger.error('Rotation exceeded limit of %0.8f', rotation_stddev_limit)
+                            logger.error('Rotation exceeded limit of +/- %0.8f', rotation_stddev_limit)
                             last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
                             continue
 
 
-
                     self.hist_rotation.append(rotation)  # only add known good rotation values
                     last_rotation = self.transform.rotation
+
 
 
                     ### Apply transform
