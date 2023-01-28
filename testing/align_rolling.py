@@ -3,6 +3,7 @@
 import time
 from pathlib import Path
 import argparse
+import functools
 import cv2
 import numpy
 from astropy.io import fits
@@ -30,9 +31,9 @@ class AlignRolling(object):
 
         self.image_list = list()
 
-        self.hist_rotation_n = numpy.array([])
-        self._history_max_vals = 50  # number of entries to use to calculate average
+        self.hist_rotation = list()
         self._rotation_dev = 3  # rotation may not exceed this deviation
+        self._history_min_vals = 25
 
 
         if not self.output_dir_p.is_dir():
@@ -91,46 +92,42 @@ class AlignRolling(object):
                     )
 
 
-                    #logger.info(
-                    #    'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
-                    #    len(target_list),
-                    #    self.transform.rotation,
-                    #    self.transform.translation[0], self.transform.translation[1],
-                    #    self.transform.scale,
-                    #)
+                    logger.info(
+                        'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                        len(target_list),
+                        self.transform.rotation,
+                        self.transform.translation[0], self.transform.translation[1],
+                        self.transform.scale,
+                    )
 
 
 
                     # add new rotation value
-                    rot_diff = self.transform.rotation - last_rotation
-                    logger.info('Last rotation: %0.8f', rot_diff)
-
-                    self.hist_rotation_n = numpy.append(self.hist_rotation_n, [rot_diff])
-                    self.hist_rotation_n = numpy.delete(self.hist_rotation_n, numpy.s_[:(self._history_max_vals * -1)])  # remove oldest values, up to history_max_vals
+                    rotation = self.transform.rotation - last_rotation
+                    #logger.info('Last rotation: %0.8f', rotation)
 
 
-
-                    logger.info('Rotation history: %d', self.hist_rotation_n.shape[0])
-
-                    if self.hist_rotation_n.shape[0] >= self._history_max_vals:
+                    if len(self.hist_rotation) >= self._history_min_vals:
                         # need at least this many values to establish an average
-                        rotation_mean = numpy.mean(self.hist_rotation_n)
-                        rotation_std = numpy.std(self.hist_rotation_n)
+                        rotation_mean = functools.reduce(lambda a, b: a + b, self.hist_rotation) / len(self.hist_rotation)
+                        rotation_std = numpy.std(self.hist_rotation)
 
-                        logger.info('Rotation standard deviation: %0.8f', rotation_std)
+                        #logger.info('Rotation standard deviation: %0.8f', rotation_std)
 
                         rotation_stddev_limit = rotation_std * self._rotation_dev
 
 
                         # if the new rotation exceeds the deviation limit, do not apply the transform
-                        if rot_diff > rotation_mean + rotation_stddev_limit\
-                                or rot_diff < rotation_mean - rotation_stddev_limit:
+                        if rotation > (rotation_mean + rotation_stddev_limit)\
+                                or rotation < (rotation_mean - rotation_stddev_limit):
 
                             logger.error('Rotation exceeded limit of %0.8f', rotation_stddev_limit)
+                            last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
                             continue
 
 
 
+                    self.hist_rotation.append(rotation)  # only add known good rotation values
                     last_rotation = self.transform.rotation
 
 
