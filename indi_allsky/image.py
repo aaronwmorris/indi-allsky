@@ -2258,7 +2258,7 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_v.value:
+        if self.night_v.value and not self.moonmode_v:
             if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
                 label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
                 label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
@@ -2266,7 +2266,7 @@ class ImageProcessor(object):
                 label_data['stack_method'] = 'Off'
                 label_data['stack_count'] = 0
         else:
-            # stacking disabled during the day
+            # stacking disabled during the day and moonmode
             label_data['stack_method'] = 'Off'
             label_data['stack_count'] = 0
 

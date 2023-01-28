@@ -696,7 +696,10 @@
             {{ form_config.IMAGE_STACK_METHOD(class='form-control bg-secondary') }}
             <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Method to use for image stacking</div>
+        <div class="col-sm-8">
+            <div>Method to use for image stacking</div>
+            <div><span class="badge rounded-pill bg-info">Note</span>Stacking disabled during daytime and moon mode</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -707,7 +710,9 @@
             {{ form_config.IMAGE_STACK_COUNT(class='form-control bg-secondary') }}
             <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Number of images to be stacked</div>
+        <div class="col-sm-8">
+            <div>Number of images to be stacked</div>
+        </div>
     </div>
 
     <div class="form-group row">
