@@ -3,7 +3,6 @@
 import time
 from pathlib import Path
 import argparse
-import functools
 import cv2
 import numpy
 from astropy.io import fits
@@ -109,7 +108,7 @@ class AlignRolling(object):
 
                     if len(self.hist_rotation) >= self._history_min_vals:
                         # need at least this many values to establish an average
-                        rotation_mean = functools.reduce(lambda a, b: a + b, self.hist_rotation) / len(self.hist_rotation)
+                        rotation_mean = numpy.mean(self.hist_rotation)
                         rotation_std = numpy.std(self.hist_rotation)
 
                         #logger.info('Rotation standard deviation: %0.8f', rotation_std)
