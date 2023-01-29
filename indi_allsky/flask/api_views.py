@@ -6,6 +6,7 @@ import hashlib
 
 from flask import request
 from flask import Blueprint
+from flask import jsonify
 from flask import abort
 from flask import current_app as app
 
@@ -28,11 +29,33 @@ bp_api_allsky = Blueprint(
 
 
 class UploadApiView(BaseView):
-    methods = ['POST']
     decorators = []
 
 
-    def dispatch_request(self):
+    def dispatch_request(self, entry_id):
+        self.authorize()
+
+        # we are now authenticated
+
+        if request.method == 'POST':
+            return self.post()
+        elif request.method == 'PUT':
+            return self.put(entry_id)
+        else:
+            return jsonify({}), 400
+
+
+    def post(self):
+        #datetime = str(request.json['NEW_DATETIME'])
+        pass
+
+
+    def put(self):
+        #media_file = request.files.get('media')
+        pass
+
+
+    def authorize(self):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             app.logger.error('Missing Authoriation header')
@@ -72,12 +95,9 @@ class UploadApiView(BaseView):
                 return abort(400)
 
 
-        # we are now authenticated
-        metadata_file = request.files.get('metadata')
-        media_file = request.files.get('media')
+class ImageUploadApiView(UploadApiView):
+    pass
 
 
-        return '', 204
-
-
-bp_api_allsky.add_url_rule('/upload', view_func=UploadApiView.as_view('upload_view'))
+bp_api_allsky.add_url_rule('/upload/image', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['POST'], defaults={'id': None})
+bp_api_allsky.add_url_rule('/upload/image/<int:id>', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['PUT'])
