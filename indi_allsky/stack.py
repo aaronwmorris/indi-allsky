@@ -19,6 +19,10 @@ class IndiAllskyStacker(object):
         self._max_control_points = 50
         self._min_area = 10
 
+        self.hist_rotation = list()
+        self._rotation_dev = 3  # rotation may not exceed this deviation
+        self._history_min_vals = 15
+
 
     @property
     def detection_sigma(self):
@@ -124,6 +128,9 @@ class IndiAllskyStacker(object):
 
         reg_start = time.time()
 
+
+        last_rotation = 0
+
         for i_ref in stack_i_ref_list[1:]:
             #i_masked = self._crop(i_ref['hdulist'][0].data)
             i_masked = cv2.bitwise_and(i_ref['hdulist'][0].data, i_ref['hdulist'][0].data, mask=self._sqm_mask)
@@ -149,6 +156,36 @@ class IndiAllskyStacker(object):
                     transform.translation[0], transform.translation[1],
                     transform.scale,
                 )
+
+
+                # add new rotation value
+                rotation = self.transform.rotation - last_rotation
+                #logger.info('Last rotation: %0.8f', rotation)
+
+
+                if len(self.hist_rotation) >= self._history_min_vals:
+                    # need at least this many values to establish an average
+                    rotation_mean = numpy.mean(self.hist_rotation)
+                    rotation_std = numpy.std(self.hist_rotation)
+
+                    #logger.info('Rotation standard deviation: %0.8f', rotation_std)
+
+                    rotation_stddev_limit = rotation_std * self._rotation_dev
+
+
+                    # if the new rotation exceeds the deviation limit, do not apply the transform
+                    if rotation > (rotation_mean + rotation_stddev_limit)\
+                            or rotation < (rotation_mean - rotation_stddev_limit):
+
+                        logger.error('Rotation exceeded limit of +/- %0.8f', rotation_stddev_limit)
+                        last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
+                        continue
+
+
+                self.hist_rotation.append(rotation)  # only add known good rotation values
+                last_rotation = self.transform.rotation
+
+
 
                 reg_data, footprint = astroalign.apply_transform(
                     transform,

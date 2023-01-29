@@ -30,6 +30,11 @@ class AlignRolling(object):
 
         self.image_list = list()
 
+        self.hist_rotation = list()
+        self._rotation_dev = 3  # rotation may not exceed this deviation
+        self._history_min_vals = 15
+
+
         if not self.output_dir_p.is_dir():
             raise Exception('%s is not a folder', self.output_dir_p)
 
@@ -54,6 +59,8 @@ class AlignRolling(object):
 
             ref_crop = self._crop(reference_hdulist[0].data)
 
+
+            last_rotation = 0
 
             for hdulist in self.image_list[1:]:
                 # detection_sigma default = 5
@@ -92,6 +99,36 @@ class AlignRolling(object):
                         self.transform.translation[0], self.transform.translation[1],
                         self.transform.scale,
                     )
+
+
+
+                    # add new rotation value
+                    rotation = self.transform.rotation - last_rotation
+                    #logger.info('Last rotation: %0.8f', rotation)
+
+
+                    if len(self.hist_rotation) >= self._history_min_vals:
+                        # need at least this many values to establish an average
+                        rotation_mean = numpy.mean(self.hist_rotation)
+                        rotation_std = numpy.std(self.hist_rotation)
+
+                        #logger.info('Rotation standard deviation: %0.8f', rotation_std)
+
+                        rotation_stddev_limit = rotation_std * self._rotation_dev
+
+
+                        # if the new rotation exceeds the deviation limit, do not apply the transform
+                        if rotation > (rotation_mean + rotation_stddev_limit)\
+                                or rotation < (rotation_mean - rotation_stddev_limit):
+
+                            logger.error('Rotation exceeded limit of +/- %0.8f', rotation_stddev_limit)
+                            last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
+                            continue
+
+
+                    self.hist_rotation.append(rotation)  # only add known good rotation values
+                    last_rotation = self.transform.rotation
+
 
 
                     ### Apply transform
