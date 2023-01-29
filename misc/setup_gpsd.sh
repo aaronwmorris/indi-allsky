@@ -104,7 +104,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get -y install \
         telnet \
         gpsd \
-        gpsd-tools \
         gpsd-clients
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
@@ -112,7 +111,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     sudo apt-get -y install \
         telnet \
         gpsd \
-        gpsd-tools \
         gpsd-clients
 
 else
