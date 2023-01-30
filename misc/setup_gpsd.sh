@@ -130,10 +130,12 @@ fi
 # Comment out the DEVICE directives
 TMP_DEV=$(mktemp)
 sed \
+ -e 's|^[^#]\?\(GPSD_OPTIONS=.*\)|#\1|i' \
  -e 's|^[^#]\?\(DEVICES=.*\)|#\1|i' \
  /etc/default/gpsd > "$TMP_DEV"
 
 
+echo "GPSD_OPTIONS=\"-n\"" >> "$TMP_DEV"
 echo "DEVICES=\"$GPS_SERIAL_PORT\"" >> "$TMP_DEV"
 
 
