@@ -10,18 +10,62 @@ canvas {
     height: auto;
 };
 </style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
 var json_data = {
     'image_b64'  : null,
     'blur_score' : 0.0,
     'focus_mode' : false,
 };
+var focus_data = [];
 var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
 var blur_score = 0.0
 var fullscreen = false;  //initial state
 
 function init() {
+    ctx_focus = $('#focus-chart')[0].getContext('2d');
+    focus_chart = new Chart(ctx_focus, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Focus',
+                pointRadius: 3,
+                backgroundColor: "rgba(192, 0, 0, 1)",
+                borderColor: "rgba(128, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                    ticks: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
     loadNextImage();
     loop();
 }
@@ -46,20 +90,20 @@ function showImage(image_b64) {
         return;
     }
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
+    var image_canvas = document.getElementById("image-canvas");
+    var context = image_canvas.getContext("2d");
 
     var img = new Image();
     img.src = "data:image/jpg;base64," + image_b64;
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
+        image_canvas.setAttribute("width", window.innerWidth);
+        image_canvas.setAttribute("height", window.innerHeight);
 
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
+        var hRatio = image_canvas.width  / this.width;
+        var vRatio = image_canvas.height / this.height;
         var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
 
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
@@ -68,8 +112,8 @@ function showImage(image_b64) {
         context.textAlign = 'left';
         context.lineWidth = 10;
         var maxWidth = 200;
-        var x = canvas.width-10-maxWidth;
-        var y = canvas.height-150;
+        var x = image_canvas.width-10-maxWidth;
+        var y = image_canvas.height-150;
 
         context.font = '20px serif';
 
@@ -112,6 +156,18 @@ function loadJS(url, data, onDone, onError) {
 
             // update score
             blur_score = json_data['blur_score'].toFixed(2);
+
+            // javascript is stupid
+            focus_data.reverse()
+            focus_data.unshift({
+                'x': focus_data.length.toString(),
+                'y': json_data['blur_score']
+            });
+            focus_data.reverse()
+
+            focus_chart.data.datasets[0].data = focus_data;
+            focus_chart.update();
+
         },
         error: function(data){
             onError(data.status);
@@ -175,7 +231,7 @@ function closeFullscreen() {
 
 
 $( document ).ready(function() {
-    $('#canvas').on("click", function() {
+    $('#image-canvas').on("click", function() {
         goFullscreen(this);
     });
 
@@ -200,14 +256,17 @@ $( document ).ready(function() {
         <div class="col-sm-2">
             {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
         </div>
+        <div class="col-sm-2 offset-2 bg-dark">
+            <canvas id="focus-chart"></canvas>
+        </div>
     </div>
 </form>
 
 <hr />
 
 <div class="row">
-    <div class="col-sm-12">
-        <canvas id="canvas"/>
+    <div class="col-10 offset-1">
+        <canvas id="image-canvas"/></canvas>
     </div>
 </div>
 
@@ -218,6 +277,7 @@ $( document ).ready(function() {
     <div>
 </div>
 
+
 <script>
 $("#REFRESH_SELECT").on("change", function() {
     refreshInterval = $('#REFRESH_SELECT').val() * 1000;
@@ -227,6 +287,8 @@ $("#REFRESH_SELECT").on("change", function() {
 $("#ZOOM_SELECT").on("change", function() {
     zoom = $('#ZOOM_SELECT').val();
     console.log('Changing zoom: ' + zoom);
+
+    focus_data = [];  // remove existing focus score on zoom change
 });
 </script>
 
