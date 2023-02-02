@@ -209,9 +209,24 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
 
 
-    def newBLOB(self, bp):
-        logger.info("new BLOB %s", bp.name)
+    def updateProperty(self, prop):
+        # INDI 2.x.x code path
+        #logger.info("Update property: %s", prop.getName())
 
+        if prop.isNameMatch("CCD1"):
+            blob = PyIndi.PropertyBlob(prop)  # cast generic type to blob type
+
+            # usually, the first item is the expected photo
+            self.processBlob(blob[0])
+
+
+    def newBLOB(self, bp):
+        # legacy INDI 1.x.x code path
+        logger.info("new BLOB %s", bp.name)
+        self.processBlob(bp)
+
+
+    def processBlob(self, bp):
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
         #start = time.time()
