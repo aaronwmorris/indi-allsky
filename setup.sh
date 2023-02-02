@@ -1268,6 +1268,10 @@ SUPPORTED_INDI_VERSIONS=(
     "skip"
 )
 
+# not working yet
+#    "2.0.0"
+
+
 # try to detect installed indiversion
 #DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
 DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
@@ -1300,7 +1304,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "1.9.9" ]; then
+if [ "$INDI_VERSION" == "2.0.0" ]; then
+    pip3 install "$PYINDI_1_9_9"
+elif [ "$INDI_VERSION" == "1.9.9" ]; then
     pip3 install "$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
     pip3 install "$PYINDI_1_9_8"

@@ -7,6 +7,17 @@ set -o errexit
 PATH=/bin:/usr/bin
 export PATH
 
+
+### Non-interactive options example ###
+#export INDIALLSKY_INDI_VERSION=1.9.9
+###
+
+
+#### config ####
+INDI_VERSION="${INDIALLSKY_INDI_VERSION:-}"
+#### end config ####
+
+
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 
@@ -77,6 +88,10 @@ SUPPORTED_INDI_VERSIONS=(
     "skip"
 )
 
+# not working yet
+#    "2.0.0"
+
+
 # try to detect installed indiversion
 #DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
 DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
@@ -115,7 +130,10 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "1.9.9" ]; then
+if [ "$INDI_VERSION" == "2.0.0" ]; then
+    pip3 uninstall -y pyindi-client
+    pip3 install --no-binary :all: --upgrade "$PYINDI_1_9_9"
+elif [ "$INDI_VERSION" == "1.9.9" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-binary :all: --upgrade "$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
