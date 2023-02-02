@@ -1,4 +1,4 @@
-#FROM debian:bullseye-slim
+FROM debian:bullseye-slim
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -25,7 +25,15 @@ USER allsky
 WORKDIR /home/allsky
 RUN git clone https://github.com/aaronwmorris/indi-allsky.git
 
+
 WORKDIR /home/allsky/indi-allsky
 RUN ./misc/build_indi_noansible.sh
+
+
+
+# simulate shell variables
+ENV USER=allsky
+ENV PGRP=allsky
+
 RUN ./setup.sh
 
