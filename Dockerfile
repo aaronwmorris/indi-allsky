@@ -1,3 +1,5 @@
+### INCOMPLETE ###
+
 FROM debian:bullseye-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -34,6 +36,7 @@ RUN ./misc/build_indi_noansible.sh
 # simulate shell variables
 ENV USER=allsky
 ENV PGRP=allsky
+ENV DBUS_SESSION_BUS_ADDRESS=foobar
 
 RUN ./setup.sh
 
