@@ -49,7 +49,12 @@ class UserManager(object):
             print('{0:d} - {1:s} ({2:s})'.format(user.id, user.username, user.name))
 
 
-    def adduser(self, username=None):
+    def adduser(self, **kwargs):
+        username = kwargs.get('username')
+        password = kwargs.get('password')
+        password2 = kwargs.get('password')
+        name = kwargs.get('name')
+        email = kwargs.get('email')
 
         while True:
             if not username:
@@ -69,19 +74,19 @@ class UserManager(object):
                 logger.warning('User already exists: %s', username)
                 continue
 
-
             break
 
 
         while True:
-            password1 = getpass.getpass('Password (not echoed):')
-            password2 = getpass.getpass('Password (again):')
+            if not password:
+                password = getpass.getpass('Password (not echoed):')
+                password2 = getpass.getpass('Password (again):')
 
-            if password1 != password2:
+            if password != password2:
                 logger.error('Password does not match')
                 continue
 
-            if len(password1) < 8:
+            if len(password) < 8:
                 logger.error('Password must be 8 characters or longer')
                 continue
 
@@ -89,7 +94,8 @@ class UserManager(object):
 
 
         while True:
-            name = input('Name: ')
+            if not name:
+                name = input('Name: ')
 
             if not re.search(self.name_regex, name):
                 logger.error('Name contains illegal characters')
@@ -99,7 +105,8 @@ class UserManager(object):
 
 
         while True:
-            email = input('Email: ')
+            if not email:
+                email = input('Email: ')
 
             if not re.search(self.username_regex, email):
                 logger.error('Email contains illegal characters')
@@ -108,7 +115,7 @@ class UserManager(object):
             break
 
 
-        hashed_password = argon2.hash(password1)
+        hashed_password = argon2.hash(password)
         #logger.info('Hash: %s', hashed_password)
 
         now = datetime.now()
@@ -129,7 +136,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def deleteuser(self, username=None):
+    def deleteuser(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')
@@ -147,7 +155,10 @@ class UserManager(object):
         db.session.commit()
 
 
-    def resetpass(self, username=None):
+    def resetpass(self, **kwargs):
+        username = kwargs.get('username')
+        password = kwargs.get('password')
+        password2 = kwargs.get('password')
 
         if not username:
             username = input('Username: ')
@@ -162,15 +173,17 @@ class UserManager(object):
             sys.exit(1)
 
 
-        password1 = getpass.getpass('Password (not echoed):')
-        password2 = getpass.getpass('Password (again):')
+        if not password:
+            password = getpass.getpass('Password (not echoed):')
+            password2 = getpass.getpass('Password (again):')
 
-        if password1 != password2:
+
+        if password != password2:
             logger.error('Password does not match')
             sys.exit(1)
 
 
-        hashed_password = argon2.hash(password1)
+        hashed_password = argon2.hash(password)
         #logger.info('Hash: %s', hashed_password)
 
 
@@ -181,7 +194,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def setadmin(self, username=None):
+    def setadmin(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')
@@ -199,7 +213,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def removeadmin(self, username=None):
+    def removeadmin(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')
@@ -217,7 +232,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def setactive(self, username=None):
+    def setactive(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')
@@ -235,7 +251,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def setinactive(self, username=None):
+    def setinactive(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')
@@ -276,6 +293,27 @@ if __name__ == "__main__":
         help='username',
         type=str,
     )
+    argparser.add_argument(
+        '--password',
+        '-p',
+        help='password',
+        type=str,
+        default='',
+    )
+    argparser.add_argument(
+        '--fullname',
+        '-f',
+        help='full name',
+        type=str,
+        default='',
+    )
+    argparser.add_argument(
+        '--email',
+        '-e',
+        help='email',
+        type=str,
+        default='',
+    )
 
 
     args = argparser.parse_args()
@@ -283,5 +321,10 @@ if __name__ == "__main__":
     um = UserManager()
 
     action_func = getattr(um, args.action)
-    action_func(username=args.username)
+    action_func(
+        username=args.username,
+        password=args.password,
+        name=args.fullname,
+        email=args.email,
+    )
 

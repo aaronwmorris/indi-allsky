@@ -21,6 +21,10 @@ export PATH
 #export INDIALLSKY_CCD_DRIVER=indi_simulator_ccd
 #export INDIALLSKY_GPS_DRIVER=None
 #export INDIALLSKY_FLASK_AUTH_ALL_VIEWS=true
+#export INDIALLSKY_WEB_USER=user@example.org
+#export INDIALLSKY_WEB_PASS=username
+#export INDIALLSKY_WEB_NAME="First Last"
+#export INDIALLSKY_WEB_EMAIL=user@example.org
 ###
 
 
@@ -32,8 +36,6 @@ INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
-
-FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-}"
 
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
@@ -57,6 +59,12 @@ GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
 
 HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
 HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
+
+FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-}"
+WEB_USER="${INDIALLSKY_WEB_USER:-}"
+WEB_PASS="${INDIALLSKY_WEB_PASS:-}"
+WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
+WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
@@ -1999,7 +2007,29 @@ if [ "$USER_COUNT" -eq 0 ]; then
         WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)
     done
 
-    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER"
+    while [ -z "${WEB_PASS:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_PASS=$(whiptail --title "Password" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+
+        if [ "${#WEB_PASS}" -lt 8 ]; then
+            WEB_PASS=""
+            echo
+            echo "Error: Password needs to be at least 8 characters"
+            sleep 3
+        fi
+    done
+
+    while [ -z "${WEB_NAME:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_NAME=$(whiptail --title "Full Name" --nocancel --inputbox "Please enter the users name" 0 0 3>&1 1>&2 2>&3)
+    done
+
+    while [ -z "${WEB_EMAIL:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_EMAIL=$(whiptail --title "Full Name" --nocancel --inputbox "Please enter the users email" 0 0 3>&1 1>&2 2>&3)
+    done
+
+    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_NAME" -e "$WEB_EMAIL"
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
 fi
 
