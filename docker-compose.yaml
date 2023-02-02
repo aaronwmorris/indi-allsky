@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  indi-allsky:
+    image: debian:bullseye-slim
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    env_file: env.local
+    ports:
+      - "8443:443"
+    volumes: 
+      - /etc/indi-allsky
+      - /var/lib/indi-allsky
+      - /var/www/html/allsky

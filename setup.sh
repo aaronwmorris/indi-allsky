@@ -22,7 +22,7 @@ export PATH
 #export INDIALLSKY_GPS_DRIVER=None
 #export INDIALLSKY_FLASK_AUTH_ALL_VIEWS=true
 #export INDIALLSKY_WEB_USER=user@example.org
-#export INDIALLSKY_WEB_PASS=username
+#export INDIALLSKY_WEB_PASS=password
 #export INDIALLSKY_WEB_NAME="First Last"
 #export INDIALLSKY_WEB_EMAIL=user@example.org
 ###
