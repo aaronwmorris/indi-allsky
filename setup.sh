@@ -9,25 +9,63 @@ PATH=/usr/bin:/bin
 export PATH
 
 
+### Non-interactive options example ###
+#export INDIALLSKY_CAMERA_INTERFACE=indi
+#export INDIALLSKY_INSTALL_INDI=true
+#export INDIALLSKY_INSTALL_LIBCAMERA=false
+#export INDIALLSKY_INSTALL_INDISERVER=true
+#export INDIALLSKY_HTTP_PORT=80
+#export INDIALLSKY_HTTPS_PORT=443
+#export INDIALLSKY_TIMEZONE="America/New_York"
+#export INDIALLSKY_INDI_VERSION=1.9.9
+#export INDIALLSKY_CCD_DRIVER=indi_simulator_ccd
+#export INDIALLSKY_GPS_DRIVER=None
+#export INDIALLSKY_FLASK_AUTH_ALL_VIEWS=true
+#export INDIALLSKY_WEB_USER=user@example.org
+#export INDIALLSKY_WEB_PASS=password
+#export INDIALLSKY_WEB_NAME="First Last"
+#export INDIALLSKY_WEB_EMAIL=user@example.org
+###
+
+
 #### config ####
 INDI_ALLSKY_VERSION="20230109.0"
+
 INDI_DRIVER_PATH="/usr/bin"
+
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
-FLASK_AUTH_ALL_VIEWS="true"
+
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
+
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 DB_URI_DEFAULT="sqlite:///${DB_FILE}"
-INSTALL_INDI="true"
-INSTALL_LIBCAMERA="false"
-INSTALL_INDISERVER="true"
-HTTP_PORT="80"
-HTTPS_PORT="443"
+
+CAMERA_INTERFACE="${INDIALLSKY_CAMERA_INTERFACE:-}"
 DPC_STRENGTH="0"
+
+INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
+INSTALL_LIBCAMERA="${INDIALLSKY_INSTALL_LIBCAMERA:-false}"
+
+INSTALL_INDISERVER="${INDIALLSKY_INSTALL_INDISERVER:-}"
+INDI_VERSION="${INDIALLSKY_INDI_VERSION:-}"
+
+CCD_DRIVER="${INDIALLSKY_CCD_DRIVER:-}"
+GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
+
+HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
+HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
+
+FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-}"
+WEB_USER="${INDIALLSKY_WEB_USER:-}"
+WEB_PASS="${INDIALLSKY_WEB_PASS:-}"
+WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
+WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
+
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 #### end config ####
@@ -202,27 +240,29 @@ echo "libcamera: supports cameras connected via CSI interface on Raspberry Pi So
 echo
 
 # whiptail might not be installed yet
-PS3="Select a camera interface: "
-select camera_interface in indi libcamera; do
-    if [ -n "$camera_interface" ]; then
-        CAMERA_INTERFACE=$camera_interface
-        break
-    fi
-done
-
-
-# more specific libcamera selection
-if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
-    echo
-    PS3="Select a libcamera interface: "
-    select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
-        if [ -n "$libcamera_interface" ]; then
-            # overwrite variable
-            CAMERA_INTERFACE=$libcamera_interface
+while [ -z "${CAMERA_INTERFACE:-}" ]; do
+    PS3="Select a camera interface: "
+    select camera_interface in indi libcamera; do
+        if [ -n "$camera_interface" ]; then
+            CAMERA_INTERFACE=$camera_interface
             break
         fi
     done
-fi
+
+
+    # more specific libcamera selection
+    if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+        echo
+        PS3="Select a libcamera interface: "
+        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
+            if [ -n "$libcamera_interface" ]; then
+                # overwrite variable
+                CAMERA_INTERFACE=$libcamera_interface
+                break
+            fi
+        done
+    fi
+done
 
 
 if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
@@ -258,7 +298,15 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
@@ -387,7 +435,15 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
@@ -499,7 +555,15 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     # Sometimes raspbian can be detected as debian
@@ -654,7 +718,15 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     sudo apt-get update
@@ -779,7 +851,15 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     sudo apt-get update
@@ -905,7 +985,15 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     sudo apt-get update
@@ -1012,7 +1100,15 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
 
     # reconfigure system timezone
-    sudo dpkg-reconfigure tzdata
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
 
 
     if [[ "$CPU_ARCH" == "x86_64" ]]; then
@@ -1124,12 +1220,14 @@ if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="no"
 elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
-    # user
-    if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 0 0 --defaultno; then
-        INSTALL_INDISERVER="true"
-    else
-        INSTALL_INDISERVER="false"
-    fi
+    while [ -z "${INSTALL_INDISERVER:-}" ]; do
+        # user
+        if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 0 0 --defaultno; then
+            INSTALL_INDISERVER="true"
+        else
+            INSTALL_INDISERVER="false"
+        fi
+    done
 fi
 
 
@@ -1178,6 +1276,10 @@ SUPPORTED_INDI_VERSIONS=(
     "skip"
 )
 
+# not working yet
+#    "2.0.0"
+
+
 # try to detect installed indiversion
 #DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
 DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
@@ -1210,7 +1312,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "1.9.9" ]; then
+if [ "$INDI_VERSION" == "2.0.0" ]; then
+    pip3 install "$PYINDI_1_9_9"
+elif [ "$INDI_VERSION" == "1.9.9" ]; then
     pip3 install "$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
     pip3 install "$PYINDI_1_9_8"
@@ -1234,9 +1338,8 @@ cd "$OLDPWD" || catch_error
 #echo ${INDI_CCD_DRIVERS[@]}
 
 
-CCD_DRIVER=""
 if [[ "$CAMERA_INTERFACE" == "indi" && "$INSTALL_INDISERVER" == "true" ]]; then
-    while [ -z "$CCD_DRIVER" ]; do
+    while [ -z "${CCD_DRIVER:-}" ]; do
         # shellcheck disable=SC2068
         CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_CCD_DRIVERS[@]} 3>&1 1>&2 2>&3)
     done
@@ -1260,9 +1363,8 @@ cd "$OLDPWD" || catch_error
 #echo ${INDI_GPS_DRIVERS[@]}
 
 
-GPS_DRIVER=""
 if [[ "$INSTALL_INDISERVER" == "true" ]]; then
-    while [ -z "$GPS_DRIVER" ]; do
+    while [ -z "${GPS_DRIVER:-}" ]; do
         # shellcheck disable=SC2068
         GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_GPS_DRIVERS[@]} 3>&1 1>&2 2>&3)
     done
@@ -1455,9 +1557,13 @@ echo "Detected image folder: $IMAGE_FOLDER"
 
 echo "**** Flask config ****"
 
-if ! whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
-    FLASK_AUTH_ALL_VIEWS="false"
-fi
+while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
+    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
+        FLASK_AUTH_ALL_VIEWS="true"
+    else
+        FLASK_AUTH_ALL_VIEWS="false"
+    fi
+done
 
 
 TMP_FLASK=$(mktemp)
@@ -1901,7 +2007,29 @@ if [ "$USER_COUNT" -eq 0 ]; then
         WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)
     done
 
-    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER"
+    while [ -z "${WEB_PASS:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_PASS=$(whiptail --title "Password" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+
+        if [ "${#WEB_PASS}" -lt 8 ]; then
+            WEB_PASS=""
+            echo
+            echo "Error: Password needs to be at least 8 characters"
+            sleep 3
+        fi
+    done
+
+    while [ -z "${WEB_NAME:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_NAME=$(whiptail --title "Full Name" --nocancel --inputbox "Please enter the users name" 0 0 3>&1 1>&2 2>&3)
+    done
+
+    while [ -z "${WEB_EMAIL:-}" ]; do
+        # shellcheck disable=SC2068
+        WEB_EMAIL=$(whiptail --title "Full Name" --nocancel --inputbox "Please enter the users email" 0 0 3>&1 1>&2 2>&3)
+    done
+
+    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_NAME" -e "$WEB_EMAIL"
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
 fi
 

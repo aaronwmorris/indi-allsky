@@ -348,6 +348,9 @@ class IndiClient(PyIndi.BaseClient):
         logger.info('Set BLOB mode')
         self.setBLOBMode(blobmode, self._ccd_device.getDeviceName(), prop)
 
+        # FastBlobs?
+        #self.enableDirectBlobAccess(self._ccd_device.getDeviceName(), prop)
+
 
     def disableDebug(self, ccd_device):
         debug_config = {
