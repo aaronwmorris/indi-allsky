@@ -486,6 +486,8 @@ fi
 ### INDI 3rdparty ###
 
 
+sudo ldconfig
+
 
 END_TIME=$(date +%s)
 
