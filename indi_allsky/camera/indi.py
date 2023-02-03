@@ -213,16 +213,22 @@ class IndiClient(PyIndi.BaseClient):
         # INDI 2.x.x code path
         #logger.info("Update property: %s", prop.getName())
 
-        if prop.isNameMatch("CCD1"):
-            blob = PyIndi.PropertyBlob(prop)  # cast generic type to blob type
-
-            # usually, the first item is the expected photo
-            self.processBlob(blob[0])
+        if prop.getType() == PyIndi.INDI_BLOB:
+            self.newBLOB(PyIndi.PropertyBlob(prop)[0])
+        elif prop.getType() == PyIndi.INDI_NUMBER:
+            self.newNumber(PyIndi.PropertyNumber(prop))
+        elif prop.getType() == PyIndi.INDI_SWITCH:
+            self.newSwitch(PyIndi.PropertySwitch(prop))
+        elif prop.getType() == PyIndi.INDI_TEXT:
+            self.newText(PyIndi.PropertyText(prop))
+        elif prop.getType() == PyIndi.INDI_LIGHT:
+            self.newLight(PyIndi.PropertyLight(prop))
+        else:
+            logger.warning('Property type not matched: %d', prop.getType())
 
 
     def newBLOB(self, bp):
         # legacy INDI 1.x.x code path
-        logger.info("new BLOB %s", bp.name)
         self.processBlob(bp)
 
 
@@ -282,16 +288,20 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newSwitch(self, svp):
+        # legacy INDI 1.x.x code path
         logger.info("new Switch %s for device %s", svp.name, svp.device)
 
     def newNumber(self, nvp):
+        # legacy INDI 1.x.x code path
         #logger.info("new Number %s for device %s", nvp.name, nvp.device)
         pass
 
     def newText(self, tvp):
+        # legacy INDI 1.x.x code path
         logger.info("new Text %s for device %s", tvp.name, tvp.device)
 
     def newLight(self, lvp):
+        # legacy INDI 1.x.x code path
         logger.info("new Light %s for device %s", lvp.name, lvp.device)
 
     def newMessage(self, d, m):
