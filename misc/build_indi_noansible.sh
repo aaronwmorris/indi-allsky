@@ -37,11 +37,22 @@ BUILD_INDI_CORE="true"
 BUILD_INDI_3RDPARTY="true"
 
 
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
+if [ "$MEM_TOTAL" -lt "1536000" ]; then
+    MAKE_CONCURRENT=1
+elif [ "$MEM_TOTAL" -lt "2560000" ]; then
+    MAKE_CONCURRENT=2
+else
+    MAKE_CONCURRENT=$(nproc)
+fi
+
+
 echo "######################################################"
 echo "### Welcome to the indi-allsky indi compile script ###"
 echo "######################################################"
 
 
+# sanity check
 if [[ "$(id -u)" == "0" ]]; then
     echo
     echo "Please do not run $(basename "$0") as root"
@@ -50,6 +61,16 @@ if [[ "$(id -u)" == "0" ]]; then
     echo
     exit 1
 fi
+
+
+if [ -f "/usr/bin/indiserver" ]; then
+    echo
+    echo
+    echo "Detected indiserver installed in /usr/bin... quitting"
+    echo
+    exit 1
+fi
+
 
 echo
 echo
@@ -60,20 +81,12 @@ echo
 echo "Indi core:     $INDI_CORE_TAG"
 echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
 echo
+echo "Running make with $MAKE_CONCURRENT processes"
+echo
 
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
-
-
-# sanity check
-if [ -f "/usr/bin/indiserver" ]; then
-    echo
-    echo
-    echo "Detected indiserver installed in /usr/bin... quitting"
-    echo
-    exit 1
-fi
 
 
 # Run sudo to ask for initial password
@@ -373,25 +386,6 @@ sudo ldconfig
 
 
 
-MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
-if [ "$MEM_TOTAL" -lt "1536000" ]; then
-    MAKE_CONCURRENT=1
-elif [ "$MEM_TOTAL" -lt "2560000" ]; then
-    MAKE_CONCURRENT=2
-else
-    MAKE_CONCURRENT=$(nproc)
-fi
-
-
-echo
-echo
-echo "Running make with $MAKE_CONCURRENT processes"
-echo
-sleep 5
-
-
-
-
 [[ ! -d "${PROJECTS_FOLDER}" ]] && mkdir "${PROJECTS_FOLDER}"
 [[ ! -d "${PROJECTS_FOLDER}/src" ]] && mkdir "${PROJECTS_FOLDER}/src"
 [[ ! -d "${PROJECTS_FOLDER}/build" ]] && mkdir "${PROJECTS_FOLDER}/build"
@@ -485,6 +479,8 @@ else
 fi
 ### INDI 3rdparty ###
 
+
+sudo ldconfig
 
 
 END_TIME=$(date +%s)
