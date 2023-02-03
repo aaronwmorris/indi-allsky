@@ -82,14 +82,12 @@ sleep 10
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.0.0"
     "1.9.9"
     "1.9.8"
     "1.9.7"
     "skip"
 )
-
-# not working yet
-#    "2.0.0"
 
 
 # try to detect installed indiversion

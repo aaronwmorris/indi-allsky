@@ -202,22 +202,73 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def newProperty(self, p):
-        #logger.info("new property %s for device %s", p.getName(), p.getDeviceName())
+        #logger.info("new property %s for %s", p.getName(), p.getDeviceName())
         pass
 
     def removeProperty(self, p):
-        logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
+        logger.info("remove property %s for %s", p.getName(), p.getDeviceName())
+
+
+    def updateProperty(self, p):
+        # INDI 2.x.x code path
+        #logger.info("Update property: %s", prop.getName())
+
+        if p.getType() == PyIndi.INDI_BLOB:
+            p_blob = PyIndi.PropertyBlob(p)
+            self.processBlob(p_blob[0])
+        elif p.getType() == PyIndi.INDI_NUMBER:
+            #p_number = PyIndi.PropertyNumber(p)
+            #logger.info("new Number %s for %s", p_number.getName(), p_number.getDeviceName())
+            pass
+        elif p.getType() == PyIndi.INDI_SWITCH:
+            #p_switch = PyIndi.PropertySwitch(p)
+            #logger.info("new Switch %s for %s", p_switch.getName(), p_switch.getDeviceName())
+            pass
+        elif p.getType() == PyIndi.INDI_TEXT:
+            #p_text = PyIndi.PropertyText(p)
+            #logger.info("new Text %s for %s", p_text.getName(), p_text.getDeviceName())
+            pass
+        elif p.getType() == PyIndi.INDI_LIGHT:
+            #p_light = PyIndi.PropertyLight(p)
+            #logger.info("new Light %s for %s", p_light.getName(), p_light.getDeviceName())
+            pass
+        else:
+            logger.warning('Property type not matched: %d', p.getType())
 
 
     def newBLOB(self, bp):
+        # legacy INDI 1.x.x code path
         logger.info("new BLOB %s", bp.name)
+        self.processBlob(bp)
 
+    def newSwitch(self, svp):
+        # legacy INDI 1.x.x code path
+        #logger.info("new Switch %s for %s", svp.name, svp.device)
+        pass
+
+    def newNumber(self, nvp):
+        # legacy INDI 1.x.x code path
+        #logger.info("new Number %s for %s", nvp.name, nvp.device)
+        pass
+
+    def newText(self, tvp):
+        # legacy INDI 1.x.x code path
+        #logger.info("new Text %s for %s", tvp.name, tvp.device)
+        pass
+
+    def newLight(self, lvp):
+        # legacy INDI 1.x.x code path
+        #logger.info("new Light %s for %s", lvp.name, lvp.device)
+        pass
+
+
+    def processBlob(self, blob):
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
         #start = time.time()
 
         ### get image data
-        imgdata = bp.getblobdata()
+        imgdata = blob.getblobdata()
         blobfile = io.BytesIO(imgdata)
         hdulist = fits.open(blobfile)
 
@@ -265,19 +316,6 @@ class IndiClient(PyIndi.BaseClient):
 
         self.image_q.put(jobdata)
 
-
-    def newSwitch(self, svp):
-        logger.info("new Switch %s for device %s", svp.name, svp.device)
-
-    def newNumber(self, nvp):
-        #logger.info("new Number %s for device %s", nvp.name, nvp.device)
-        pass
-
-    def newText(self, tvp):
-        logger.info("new Text %s for device %s", tvp.name, tvp.device)
-
-    def newLight(self, lvp):
-        logger.info("new Light %s for device %s", lvp.name, lvp.device)
 
     def newMessage(self, d, m):
         logger.info("new Message %s", d.messageQueue(m))
