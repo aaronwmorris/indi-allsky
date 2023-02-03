@@ -33,8 +33,11 @@ PROJECTS_FOLDER="$HOME/Projects"
 
 CMAKE_BIN=cmake
 INSTALL_PREFIX="/usr/local"
-BUILD_INDI_CORE="true"
-BUILD_INDI_3RDPARTY="true"
+
+
+# can be overridden by environment variables
+#BUILD_INDI_CORE="true"
+#BUILD_INDI_3RDPARTY="true"
 
 
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
@@ -44,6 +47,11 @@ elif [ "$MEM_TOTAL" -lt "2560000" ]; then
     MAKE_CONCURRENT=2
 else
     MAKE_CONCURRENT=$(nproc)
+fi
+
+
+if pkg-config --modversion libindi >/dev/null 2>&1; then
+    DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
 fi
 
 
@@ -80,6 +88,11 @@ echo "Arch: $CPU_ARCH"
 echo
 echo "Indi core:     $INDI_CORE_TAG"
 echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
+echo
+echo "Existing INDI: ${DETECTED_INDIVERSION:-none}"
+echo
+echo "BUILD_INDI_CORE: ${BUILD_INDI_CORE:-true}"
+echo "BUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-true}"
 echo
 echo "Running make with $MAKE_CONCURRENT processes"
 echo
@@ -140,6 +153,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -186,6 +200,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -232,6 +247,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -278,6 +294,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
@@ -323,6 +340,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
@@ -368,6 +386,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev 
 
 else
@@ -392,7 +411,7 @@ sudo ldconfig
 
 
 ### INDI Core ###
-if [ "$BUILD_INDI_CORE" == "true" ]; then
+if [ "${BUILD_INDI_CORE:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_core"
 
     if [ "$INDI_CORE_TAG" == "HEAD" ]; then
@@ -428,7 +447,7 @@ fi
 
 
 ### INDI 3rdparty ###
-if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
+if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
     if [ "$INDI_3RDPARTY_TAG" == "HEAD" ]; then
