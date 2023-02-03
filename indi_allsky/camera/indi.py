@@ -215,6 +215,7 @@ class IndiClient(PyIndi.BaseClient):
 
         if p.getType() == PyIndi.INDI_BLOB:
             p_blob = PyIndi.PropertyBlob(p)
+            #logger.info("new Blob %s for %s", p_blob.getName(), p_blob.getDeviceName())
             self.processBlob(p_blob[0])
         elif p.getType() == PyIndi.INDI_NUMBER:
             #p_number = PyIndi.PropertyNumber(p)
@@ -238,7 +239,7 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         # legacy INDI 1.x.x code path
-        logger.info("new BLOB %s", bp.name)
+        #logger.info("new BLOB %s", bp.name)
         self.processBlob(bp)
 
     def newSwitch(self, svp):

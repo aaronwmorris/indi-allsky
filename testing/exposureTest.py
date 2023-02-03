@@ -173,30 +173,64 @@ class IndiClient(PyIndi.BaseClient):
         logger.info("remove property %s for device %s", p.getName(), p.getDeviceName())
 
 
+    def updateProperty(self, p):
+        # INDI 2.x.x code path
+        #logger.info("Update property: %s", prop.getName())
+
+        if p.getType() == PyIndi.INDI_BLOB:
+            p_blob = PyIndi.PropertyBlob(p)
+            logger.info("new Blob %s for %s", p_blob.getName(), p_blob.getDeviceName())
+            self.processBlob(p_blob[0])
+        elif p.getType() == PyIndi.INDI_NUMBER:
+            #p_number = PyIndi.PropertyNumber(p)
+            #logger.info("new Number %s for %s", p_number.getName(), p_number.getDeviceName())
+            pass
+        elif p.getType() == PyIndi.INDI_SWITCH:
+            p_switch = PyIndi.PropertySwitch(p)
+            logger.info("new Switch %s for %s", p_switch.getName(), p_switch.getDeviceName())
+        elif p.getType() == PyIndi.INDI_TEXT:
+            p_text = PyIndi.PropertyText(p)
+            logger.info("new Text %s for %s", p_text.getName(), p_text.getDeviceName())
+        elif p.getType() == PyIndi.INDI_LIGHT:
+            p_light = PyIndi.PropertyLight(p)
+            logger.info("new Light %s for %s", p_light.getName(), p_light.getDeviceName())
+        else:
+            logger.warning('Property type not matched: %d', p.getType())
+
+
     def newBLOB(self, bp):
+        # legacy INDI 1.x.x code path
         logger.info("new BLOB %s", bp.name)
-
-        #start = time.time()
-
-        ### get image data
-        bp.getblobdata()
-
-        #elapsed_s = time.time() - start
-        #logger.info('Blob downloaded in %0.4f s', elapsed_s)
+        self.processBlob(bp)
 
 
     def newSwitch(self, svp):
+        # legacy INDI 1.x.x code path
         logger.info("new Switch %s for device %s", svp.name, svp.device)
 
     def newNumber(self, nvp):
+        # legacy INDI 1.x.x code path
         #logger.info("new Number %s for device %s", nvp.name, nvp.device)
         pass
 
     def newText(self, tvp):
+        # legacy INDI 1.x.x code path
         logger.info("new Text %s for device %s", tvp.name, tvp.device)
 
     def newLight(self, lvp):
+        # legacy INDI 1.x.x code path
         logger.info("new Light %s for device %s", lvp.name, lvp.device)
+
+
+    def processBlob(self, blob):
+        #start = time.time()
+
+        ### get image data
+        blob.getblobdata()
+
+        #elapsed_s = time.time() - start
+        #logger.info('Blob downloaded in %0.4f s', elapsed_s)
+
 
     def newMessage(self, d, m):
         logger.info("new Message %s", d.messageQueue(m))
