@@ -217,17 +217,21 @@ class IndiClient(PyIndi.BaseClient):
             p_blob = PyIndi.PropertyBlob(p)
             self.processBlob(p_blob[0])
         elif p.getType() == PyIndi.INDI_NUMBER:
-            p_number = PyIndi.PropertyNumber(p)
-            logger.info("new Number %s for %s", p_number.getName(), p_number.getDeviceName())
+            #p_number = PyIndi.PropertyNumber(p)
+            #logger.info("new Number %s for %s", p_number.getName(), p_number.getDeviceName())
+            pass
         elif p.getType() == PyIndi.INDI_SWITCH:
-            p_switch = PyIndi.PropertySwitch(p)
-            logger.info("new Switch %s for %s", p_switch.getName(), p_switch.getDeviceName())
+            #p_switch = PyIndi.PropertySwitch(p)
+            #logger.info("new Switch %s for %s", p_switch.getName(), p_switch.getDeviceName())
+            pass
         elif p.getType() == PyIndi.INDI_TEXT:
-            p_text = PyIndi.PropertyText(p)
-            logger.info("new Text %s for %s", p_text.getName(), p_text.getDeviceName())
+            #p_text = PyIndi.PropertyText(p)
+            #logger.info("new Text %s for %s", p_text.getName(), p_text.getDeviceName())
+            pass
         elif p.getType() == PyIndi.INDI_LIGHT:
-            p_light = PyIndi.PropertyLight(p)
-            logger.info("new Light %s for %s", p_light.getName(), p_light.getDeviceName())
+            #p_light = PyIndi.PropertyLight(p)
+            #logger.info("new Light %s for %s", p_light.getName(), p_light.getDeviceName())
+            pass
         else:
             logger.warning('Property type not matched: %d', p.getType())
 
@@ -239,7 +243,8 @@ class IndiClient(PyIndi.BaseClient):
 
     def newSwitch(self, svp):
         # legacy INDI 1.x.x code path
-        logger.info("new Switch %s for %s", svp.name, svp.device)
+        #logger.info("new Switch %s for %s", svp.name, svp.device)
+        pass
 
     def newNumber(self, nvp):
         # legacy INDI 1.x.x code path
@@ -248,11 +253,13 @@ class IndiClient(PyIndi.BaseClient):
 
     def newText(self, tvp):
         # legacy INDI 1.x.x code path
-        logger.info("new Text %s for %s", tvp.name, tvp.device)
+        #logger.info("new Text %s for %s", tvp.name, tvp.device)
+        pass
 
     def newLight(self, lvp):
         # legacy INDI 1.x.x code path
-        logger.info("new Light %s for %s", lvp.name, lvp.device)
+        #logger.info("new Light %s for %s", lvp.name, lvp.device)
+        pass
 
 
     def processBlob(self, blob):
