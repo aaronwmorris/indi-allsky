@@ -4,8 +4,8 @@ services:
   indi-allsky:
     image: debian:bullseye-slim
     build: 
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Dockerfile.indi
     env_file: env.local
     ports:
       - "8443:443"
