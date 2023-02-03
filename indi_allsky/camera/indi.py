@@ -132,6 +132,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self.exposureStartTime = None
 
+        self.indi_v2 = True  # remove this once 1.9.9 is no longer relevant
+
         logger.info('creating an instance of IndiClient')
 
         pyindi_version = '.'.join((
@@ -211,7 +213,10 @@ class IndiClient(PyIndi.BaseClient):
 
     def updateProperty(self, p):
         # INDI 2.x.x code path
-        #logger.info("Update property: %s", prop.getName())
+
+        # indi 1.9.9 has a bug that will run both the new an old code paths for properties
+        if not self.indi_v2:
+            return
 
         if p.getType() == PyIndi.INDI_BLOB:
             p_blob = PyIndi.PropertyBlob(p)
@@ -239,6 +244,9 @@ class IndiClient(PyIndi.BaseClient):
 
     def newBLOB(self, bp):
         # legacy INDI 1.x.x code path
+
+        self.indi_v2 = False
+
         #logger.info("new BLOB %s", bp.name)
         self.processBlob(bp)
 
