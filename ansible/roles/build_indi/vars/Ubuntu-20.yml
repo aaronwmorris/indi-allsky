@@ -47,6 +47,6 @@ indi_3rdparty_packages:
   - libftdi1-dev
   - libavcodec-dev
   - libavdevice-dev
-  - libnutclient-dev
+  #- libnutclient-dev
   - pkg-config
   - fxload
