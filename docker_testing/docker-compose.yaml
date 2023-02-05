@@ -16,10 +16,10 @@ services:
     #ports:
     #  - "17624:7624"
 
-  capture:
+  indi_allsky:
     build:
       context: .
-      dockerfile: Dockerfile.capture
+      dockerfile: Dockerfile.indi_allsky
     depends_on:
       - indiserver
     env_file: env.local
@@ -28,12 +28,12 @@ services:
       - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
 
-  #app:
+  #gunicorn_indi_allsky:
   #  build:
   #    context: .
   #    dockerfile: Dockerfile.gunicorn
   #  depends_on:
-  #    - capture
+  #    - indi_allsky
   #  env_file: env.local
   #  ports:
   #    - "8000:8000"
@@ -42,12 +42,12 @@ services:
   #    - database:/var/lib/indi-allsky
   #    - /var/www/html/allsky
 
-  #web:
+  #nginx_indi_allsky:
   #  build:
   #    context: .
   #    dockerfile: Dockerfile.nginx
   #  depends_on:
-  #    - capture
+  #    - indi_allsky
   #  env_file: env.local
   #  ports:
   #    - "8443:443"
