@@ -23,9 +23,9 @@ services:
       - indiserver
     env_file: env.local
     volumes:
-      - /etc/indi-allsky
-      - /var/lib/indi-allsky
-      - /var/www/html/allsky
+      - config:/etc/indi-allsky
+      - database:/var/lib/indi-allsky
+      - images:/var/www/html/allsky
 
   #gunicorn:
   #  build:
@@ -37,8 +37,8 @@ services:
   #  ports:
   #    - "8000:8000"
   #  volumes:
-  #    - /etc/indi-allsky
-  #    - /var/lib/indi-allsky
+  #    - config:/etc/indi-allsky
+  #    - database:/var/lib/indi-allsky
   #    - /var/www/html/allsky
 
   #apache:
@@ -51,6 +51,13 @@ services:
   #  ports:
   #    - "8443:443"
   #  volumes:
-  #    - /etc/indi-allsky
-  #    - /var/lib/indi-allsky
-  #    - /var/www/html/allsky
+  #    - config:/etc/indi-allsky
+  #    - database:/var/lib/indi-allsky
+  #    - images:/var/www/html/allsky
+
+
+volumes:
+  config:
+  database:
+  images:
+

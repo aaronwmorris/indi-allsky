@@ -6,7 +6,6 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHON_BIN=python3
 ENV PYINDI_VERSION=git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client
 
-#VOLUME ["/etc/indi-allsky", "/var/lib/indi-allsky", "/var/www/html/allsky"]
 
 RUN apt-get update && apt-get install -y \
     lsb-release \

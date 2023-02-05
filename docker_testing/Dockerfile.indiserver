@@ -10,4 +10,4 @@ USER allsky
 
 WORKDIR /home/allsky
 
-CMD ["indiserver", "-p 7624", "indi_simulator_telescope", "indi_simulator_ccd"]
+CMD ["indiserver", "-p 7624", "indi_simulator_telescope", $INDIALLSKY_CCD_DRIVER]
