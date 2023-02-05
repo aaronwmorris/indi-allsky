@@ -30,13 +30,9 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 USER allsky
 
 WORKDIR /home/allsky
-RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
 
+COPY misc/build_indi_noansible.sh /home/allsky
 
-WORKDIR /home/allsky/indi-allsky
-
-RUN ./misc/build_indi_noansible.sh
-
-RUN /home/allsky/indi-allsky/docker/docker_setup.sh
+RUN /home/allsky/build_indi_noansible.sh
 
 

@@ -3,26 +3,26 @@ version: "3"
 services:
   indi:
     build:
-      context: .
-      dockerfile: Dockerfile.indi
-    env_file: env.local
+      context: ..
+      dockerfile: docker/Dockerfile.indi
+    env_file: .env
 
   indiserver:
     build:
       context: ..
-      dockerfile: Dockerfile.indiserver
-    env_file: env.local
+      dockerfile: docker/Dockerfile.indiserver
+    env_file: .env
     privileged: true
     #ports:
     #  - "17624:7624"
 
   indi_allsky:
     build:
-      context: .
-      dockerfile: Dockerfile.indi_allsky
+      context: ..
+      dockerfile: docker/Dockerfile.indi_allsky
     depends_on:
       - indiserver
-    env_file: env.local
+    env_file: .env
     volumes:
       - config:/etc/indi-allsky
       - database:/var/lib/indi-allsky
@@ -30,11 +30,11 @@ services:
 
   #gunicorn_indi_allsky:
   #  build:
-  #    context: .
-  #    dockerfile: Dockerfile.gunicorn
+  #    context: ..
+  #    dockerfile: docker/Dockerfile.gunicorn
   #  depends_on:
   #    - indi_allsky
-  #  env_file: env.local
+  #  env_file: .env
   #  ports:
   #    - "8000:8000"
   #  volumes:
@@ -44,11 +44,11 @@ services:
 
   #nginx_indi_allsky:
   #  build:
-  #    context: .
-  #    dockerfile: Dockerfile.nginx
+  #    context: ..
+  #    dockerfile: docker/Dockerfile.nginx
   #  depends_on:
   #    - indi_allsky
-  #  env_file: env.local
+  #  env_file: .env
   #  ports:
   #    - "8443:443"
   #  volumes:
