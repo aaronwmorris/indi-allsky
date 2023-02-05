@@ -62,7 +62,8 @@ RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
 
 WORKDIR /home/allsky/indi-allsky
 
-
+ENV USER=allsky
+ENV PGRP=allsky
 RUN /home/allsky/indi-allsky/docker/docker_setup.sh
 
 
