@@ -1,6 +1,6 @@
 ### INCOMPLETE ###
 
-FROM indi_allsky
+FROM indi
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,6 +8,14 @@ ENV DEBIAN_FRONTEND noninteractive
 USER allsky
 
 WORKDIR /home/allsky/indi-allsky
+
+
+RUN mkdir virtualenv
+RUN virtualenv -p $PYTHON_BIN /home/allsky/indi-allsky/virtualenv/indi-allsky
+
+RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install --upgrade pip setuptools wheel
+RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install -r requirements_debian11.txt
+RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install $PYINDI_VERSION
 
 
 CMD ["/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/python3", "./allsky.py", "run"]
