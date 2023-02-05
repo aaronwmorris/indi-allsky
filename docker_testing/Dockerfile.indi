@@ -37,6 +37,6 @@ WORKDIR /home/allsky/indi-allsky
 
 RUN ./misc/build_indi_noansible.sh
 
-RUN /home/allsky/indi-allsky/docker_testing/docker_setup.sh
+RUN /home/allsky/indi-allsky/docker/docker_setup.sh
 
 
