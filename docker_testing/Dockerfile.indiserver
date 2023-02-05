@@ -1,0 +1,13 @@
+### INCOMPLETE ###
+
+FROM indi_allsky
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV PYTHON_BIN=python3
+
+
+USER allsky
+
+WORKDIR /home/allsky
+
+CMD ["indiserver", "-p 7624", "indi_simulator_telescope", "indi_simulator_ccd"]

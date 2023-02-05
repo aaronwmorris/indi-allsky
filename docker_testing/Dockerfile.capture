@@ -1,0 +1,13 @@
+### INCOMPLETE ###
+
+FROM indi_allsky
+
+ENV DEBIAN_FRONTEND noninteractive
+
+
+USER allsky
+
+WORKDIR /home/allsky/indi-allsky
+
+
+CMD ["/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/python3", "./allsky.py", "run"]
