@@ -1,0 +1,84 @@
+### INCOMPLETE ###
+
+FROM docker_indi
+
+ENV DEBIAN_FRONTEND noninteractive
+
+ENV PYTHON_BIN=python3
+ENV PYINDI_VERSION=git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client
+
+USER root
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    python3-dev \
+    python3-venv \
+    python3-pip \
+    virtualenv \
+    cmake \
+    gfortran \
+    whiptail \
+    git \
+    cpio \
+    tzdata \
+    ca-certificates \
+    libgnutls28-dev \
+    swig \
+    libatlas-base-dev \
+    libilmbase-dev \
+    libopenexr-dev \
+    libgtk-3-0 \
+    libssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libgnutls28-dev \
+    libcurl4-gnutls-dev \
+    libcfitsio-dev \
+    libnova-dev \
+    libdbus-1-dev \
+    libglib2.0-dev \
+    libffi-dev \
+    libopencv-dev \
+    libopenblas-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    ffmpeg \
+    gifsicle \
+    jq \
+    sqlite3
+
+    #rsyslog \
+    #cron \
+    #avahi-daemon \
+    #policykit-1 \
+    #dbus-user-session
+
+
+
+
+USER allsky
+
+
+WORKDIR /home/allsky
+
+RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
+
+WORKDIR /home/allsky/indi-allsky
+
+ENV USER=allsky
+ENV PGRP=allsky
+
+RUN ./docker/setup.sh
+
+
+RUN mkdir virtualenv
+RUN virtualenv -p $PYTHON_BIN /home/allsky/indi-allsky/virtualenv/indi-allsky
+
+RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install --upgrade pip setuptools wheel
+RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install -r requirements_debian11.txt
+RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install $PYINDI_VERSION
+
+
+CMD ["/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/python3", "./allsky.py", "run"]

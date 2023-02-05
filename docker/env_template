@@ -1,4 +1,4 @@
-### copy this file to env.local ###
+### copy this file to .env ###
 
 INDIALLSKY_CAMERA_INTERFACE=indi
 INDIALLSKY_INSTALL_INDI=true

@@ -1,0 +1,13 @@
+### INCOMPLETE ###
+
+FROM docker_indi_allsky
+
+ENV DEBIAN_FRONTEND noninteractive
+
+
+USER allsky
+
+WORKDIR /home/allsky/indi-allsky
+
+CMD ['/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/gunicorn', '--config', '/etc/indi-allsky/gunicorn.conf.py', 'indi_allsky.wsgi']
+

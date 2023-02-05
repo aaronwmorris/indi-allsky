@@ -1,0 +1,12 @@
+### INCOMPLETE ###
+
+FROM docker_indi
+
+ENV DEBIAN_FRONTEND noninteractive
+
+
+USER allsky
+
+WORKDIR /home/allsky
+
+CMD ["indiserver", "-p 7624", "indi_simulator_telescope", $INDIALLSKY_CCD_DRIVER]
