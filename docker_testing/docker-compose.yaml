@@ -12,6 +12,7 @@ services:
       context: ..
       dockerfile: Dockerfile.indiserver
     env_file: env.local
+    privileged: true
     #ports:
     #  - "17624:7624"
 
