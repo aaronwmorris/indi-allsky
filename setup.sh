@@ -1218,7 +1218,7 @@ fi
 
 if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
-    INSTALL_INDISERVER="no"
+    INSTALL_INDISERVER="false"
 elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
@@ -1228,6 +1228,8 @@ elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; th
             INSTALL_INDISERVER="false"
         fi
     done
+else
+    INSTALL_INDISERVER="true"
 fi
 
 
@@ -1445,10 +1447,13 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
-systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
 systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
+
+if [ "$INSTALL_INDISERVER" == "true" ]; then
+    systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
+fi
 
 
 echo "**** Setup policy kit permissions ****"
