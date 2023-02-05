@@ -1,9 +1,8 @@
 ### INCOMPLETE ###
 
-FROM indi
+FROM docker_indi
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV PYTHON_BIN=python3
 
 
 USER allsky

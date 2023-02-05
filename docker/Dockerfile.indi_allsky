@@ -1,9 +1,13 @@
 ### INCOMPLETE ###
 
-FROM indi
+FROM docker_indi
 
 ENV DEBIAN_FRONTEND noninteractive
 
+ENV PYTHON_BIN=python3
+ENV PYINDI_VERSION=git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client
+
+USER root
 
 RUN apt-get update && apt-get install -y \
     build-essential \

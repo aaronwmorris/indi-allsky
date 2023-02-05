@@ -7,6 +7,8 @@ PATH=/usr/bin:/bin
 export PATH
 
 
+PYTHON_BIN=python3
+
 ALLSKY_DIRECTORY=/home/allsky/indi-allsky
 
 INDISERVER_SERVICE_NAME="indiserver"
