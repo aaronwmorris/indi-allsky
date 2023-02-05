@@ -70,8 +70,7 @@ WORKDIR /home/allsky/indi-allsky
 ENV USER=allsky
 ENV PGRP=allsky
 
-RUN chmod 755 ./docker/docker_setup.sh
-RUN ./docker/docker_setup.sh
+RUN ./docker/setup.sh
 
 
 RUN mkdir virtualenv
