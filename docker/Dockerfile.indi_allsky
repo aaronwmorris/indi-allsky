@@ -68,6 +68,8 @@ WORKDIR /home/allsky/indi-allsky
 
 ENV USER=allsky
 ENV PGRP=allsky
+
+RUN chmod 755 /home/allsky/indi-allsky/docker/docker_setup.sh
 RUN /home/allsky/indi-allsky/docker/docker_setup.sh
 
 
