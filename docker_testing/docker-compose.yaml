@@ -1,10 +1,10 @@
 version: "3"
 
 services:
-  indi:
+  indi_allsky:
     build:
       context: ..
-      dockerfile: Dockerfile.indi
+      dockerfile: Dockerfile.indi_allsky
     env_file: env.local
 
   indiserver:
@@ -15,10 +15,10 @@ services:
     ports:
       - "17624:7624"
 
-  indi_allsky:
+  capture:
     build:
       context: ..
-      dockerfile: Dockerfile.indi-allsky
+      dockerfile: Dockerfile.capture
     depends_on:
       - indiserver
     env_file: env.local
