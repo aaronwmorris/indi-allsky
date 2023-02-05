@@ -20,14 +20,10 @@ RUN apt-get update && apt-get install -y \
     cmake \
     gfortran \
     whiptail \
-    rsyslog \
-    cron \
     git \
     cpio \
     tzdata \
     ca-certificates \
-    avahi-daemon \
-    apache2 \
     libgnutls28-dev \
     swig \
     libatlas-base-dev \
@@ -52,9 +48,13 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     gifsicle \
     jq \
-    sqlite3 \
-    policykit-1 \
-    dbus-user-session 
+    sqlite3
+
+    #rsyslog \
+    #cron \
+    #avahi-daemon \
+    #policykit-1 \
+    #dbus-user-session
 
 
 
