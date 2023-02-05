@@ -65,6 +65,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN groupadd --gid 10001 allsky
 RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
 
+RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
+RUN chmod 0440 /etc/sudoers.d/allsky
+
 
 USER allsky
 
@@ -75,6 +78,7 @@ RUN git clone https://github.com/aaronwmorris/indi-allsky.git
 WORKDIR /home/allsky/indi-allsky
 RUN ./misc/build_indi_noansible.sh
 
+RUN /home/allsky/indi-allsky/docker_testing/docker_setup.sh
 
 RUN mkdir virtualenv
 RUN virtualenv -p $PYTHON_BIN /home/allsky/indi-allsky/virtualenv/indi-allsky
@@ -82,5 +86,4 @@ RUN virtualenv -p $PYTHON_BIN /home/allsky/indi-allsky/virtualenv/indi-allsky
 RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install --upgrade pip setuptools wheel
 RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install -r requirements_debian11.txt
 RUN source /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install $PYINDI_VERSION
-
 
