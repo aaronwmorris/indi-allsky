@@ -5,6 +5,55 @@ FROM indi
 ENV DEBIAN_FRONTEND noninteractive
 
 
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    python3-dev \
+    python3-venv \
+    python3-pip \
+    virtualenv \
+    cmake \
+    gfortran \
+    whiptail \
+    git \
+    cpio \
+    tzdata \
+    ca-certificates \
+    libgnutls28-dev \
+    swig \
+    libatlas-base-dev \
+    libilmbase-dev \
+    libopenexr-dev \
+    libgtk-3-0 \
+    libssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libgnutls28-dev \
+    libcurl4-gnutls-dev \
+    libcfitsio-dev \
+    libnova-dev \
+    libdbus-1-dev \
+    libglib2.0-dev \
+    libffi-dev \
+    libopencv-dev \
+    libopenblas-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    ffmpeg \
+    gifsicle \
+    jq \
+    sqlite3
+
+    #rsyslog \
+    #cron \
+    #avahi-daemon \
+    #policykit-1 \
+    #dbus-user-session
+
+
+
+
 USER allsky
 
 WORKDIR /home/allsky/indi-allsky
