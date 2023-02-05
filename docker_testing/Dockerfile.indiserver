@@ -1,6 +1,6 @@
 ### INCOMPLETE ###
 
-FROM indi_allsky
+FROM indi
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHON_BIN=python3

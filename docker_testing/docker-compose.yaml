@@ -1,10 +1,10 @@
 version: "3"
 
 services:
-  indi_allsky:
+  indi:
     build:
       context: .
-      dockerfile: Dockerfile.indi_allsky
+      dockerfile: Dockerfile.indi
     env_file: env.local
 
   indiserver:
