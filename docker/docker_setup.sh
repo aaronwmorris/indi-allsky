@@ -20,6 +20,7 @@ DB_FOLDER="/var/lib/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 
+FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-false}"
 
 
 echo "**** Indi-allsky config ****"

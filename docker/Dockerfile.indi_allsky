@@ -62,6 +62,7 @@ USER allsky
 
 
 WORKDIR /home/allsky
+
 RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
 
 WORKDIR /home/allsky/indi-allsky
