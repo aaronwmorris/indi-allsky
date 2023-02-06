@@ -101,13 +101,12 @@ echo "**** Setup nginx ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
  -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
  -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
  -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+ -e "s|%UPSTREAM_SERVER%|gunicorn_indi_allsky:8000|g" \
  "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
 
 sudo cp -f "$TMP3" "$ALLSKY_ETC/nginx.conf"
