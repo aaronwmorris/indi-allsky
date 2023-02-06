@@ -32,6 +32,6 @@ WORKDIR /home/allsky
 
 COPY misc/build_indi_noansible.sh /home/allsky
 
-RUN /home/allsky/build_indi_noansible.sh
+RUN /home/allsky/build_indi_noansible.sh $INDIALLSKY_INDI_VERSION
 
 
