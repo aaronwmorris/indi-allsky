@@ -1,6 +1,6 @@
 ### INCOMPLETE ###
 
-FROM docker_indi
+FROM docker_indi_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
