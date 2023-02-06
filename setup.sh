@@ -1710,11 +1710,11 @@ else
                 -extensions san \
                 -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-                sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
-                sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+            sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+            sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
-                rm -f "$KEY_TMP"
-                rm -f "$CRT_TMP"
+            rm -f "$KEY_TMP"
+            rm -f "$CRT_TMP"
         fi
 
 

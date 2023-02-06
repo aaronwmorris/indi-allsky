@@ -25,6 +25,11 @@ HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
 HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
 
 
+# ensure correct permissions
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
+
+
 echo "**** Indi-allsky config ****"
 [[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
 sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
@@ -60,9 +65,6 @@ sed \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
-
-# syntax check
-json_pp < "$TMP_FLASK" >/dev/null
 
 
 if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
@@ -136,11 +138,13 @@ if [[ ! -f "$ALLSKY_ETC/self-signed.key" || ! -f "$ALLSKY_ETC/self-signed.pem" ]
         -extensions san \
         -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-        sudo cp -f "$KEY_TMP" "$ALLSKY_ETC/self-signed.key"
-        sudo cp -f "$CRT_TMP" "$ALLSKY_ETC/self-signed.pem"
+    sudo cp -f "$KEY_TMP" "$ALLSKY_ETC/self-signed.key"
+    sudo cp -f "$CRT_TMP" "$ALLSKY_ETC/self-signed.pem"
 
-        rm -f "$KEY_TMP"
-        rm -f "$CRT_TMP"
+
+
+    rm -f "$KEY_TMP"
+    rm -f "$CRT_TMP"
 fi
 
 
@@ -151,10 +155,14 @@ sudo chmod 644 "$ALLSKY_ETC/self-signed.pem"
 
 
 # system certificate store
-sudo cp -f "$ALLSKY_ETC/self-signed.pem" /usr/local/share/ca-certificates/indi-allsky.crt
-sudo chown root:root /usr/local/share/ca-certificates/indi-allsky.crt
+sudo cp -f "$ALLSKY_ETC/self-signed.pem" /usr/local/share/ca-certificates/self-signed.crt
+sudo chown root:root /usr/local/share/ca-certificates/self-signed.crt
 sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky.crt
 sudo update-ca-certificates
 
+
+# syntax check
+json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
+json_pp < "$ALLSKY_ETC/config.json" >/dev/null
 
 
