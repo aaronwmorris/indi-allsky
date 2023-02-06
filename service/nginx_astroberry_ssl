@@ -1,5 +1,5 @@
 upstream indi_allsky_server {
-    server unix:%DB_FOLDER%/%GUNICORN_SERVICE_NAME%.sock fail_timeout=0;
+    server %UPSTREAM_SERVER% fail_timeout=0;
 }
 
 server {
