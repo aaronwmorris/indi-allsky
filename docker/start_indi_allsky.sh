@@ -162,7 +162,10 @@ sudo update-ca-certificates
 
 
 # syntax check
-json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 json_pp < "$ALLSKY_ETC/config.json" >/dev/null
 
+
+# start the program
+cd "$ALLSKY_DIRECTORY"
+"$ALLSKY_DIRECTORY/virtualenv/indi-allsky/bin/python3" allsky.py run
 

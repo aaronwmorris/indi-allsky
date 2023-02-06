@@ -9,5 +9,5 @@ USER allsky
 
 WORKDIR /home/allsky/indi-allsky
 
-CMD ['/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/gunicorn', '--config', '/etc/indi-allsky/gunicorn.conf.py', '--bind', '0.0.0.0:8000', 'indi_allsky.wsgi']
+CMD ["su", "-", "allsky", "-c", "/home/allsky/indi-allsky/docker/start_gunicorn.sh"]
 

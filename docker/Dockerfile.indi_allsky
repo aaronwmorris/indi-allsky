@@ -67,11 +67,6 @@ RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
 
 WORKDIR /home/allsky/indi-allsky
 
-ENV USER=allsky
-ENV PGRP=allsky
-
-RUN ./docker/setup.sh
-
 
 RUN mkdir virtualenv
 RUN virtualenv -p $PYTHON_BIN /home/allsky/indi-allsky/virtualenv/indi-allsky
@@ -81,4 +76,5 @@ RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 insta
 RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install $PYINDI_VERSION
 
 
-CMD ["/home/allsky/indi-allsky/virtualenv/indi-allsky/bin/python3", "./allsky.py", "run"]
+CMD ["su", "-", "allsky", "-c", "/home/allsky/indi-allsky/docker/start_indi_allsky.sh"]
+
