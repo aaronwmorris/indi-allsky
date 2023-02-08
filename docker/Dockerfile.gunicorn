@@ -4,10 +4,14 @@ FROM docker_indi_allsky
 
 ENV DEBIAN_FRONTEND noninteractive
 
+USER root
 
-USER allsky
+RUN chmod u+s /bin/su
 
-WORKDIR /home/allsky/indi-allsky
 
-CMD ["su", "-", "allsky", "-c", "/home/allsky/indi-allsky/docker/start_gunicorn.sh"]
+#USER allsky
+#WORKDIR /home/allsky/indi-allsky
+
+
+CMD ["su", "-", "allsky", "-c /home/allsky/indi-allsky/docker/start_gunicorn.sh"]
 

@@ -56,11 +56,10 @@ RUN apt-get update && apt-get install -y \
     #dbus-user-session
 
 
+RUN chmod u+s /bin/su
 
 
 USER allsky
-
-
 WORKDIR /home/allsky
 
 RUN git clone --branch dev https://github.com/aaronwmorris/indi-allsky.git
@@ -76,5 +75,5 @@ RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 insta
 RUN . /home/allsky/indi-allsky/virtualenv/indi-allsky/bin/activate && pip3 install $PYINDI_VERSION
 
 
-CMD ["su", "-", "allsky", "-c", "/home/allsky/indi-allsky/docker/start_indi_allsky.sh"]
+CMD ["su", "-", "allsky", "-c /home/allsky/indi-allsky/docker/start_indi_allsky.sh"]
 

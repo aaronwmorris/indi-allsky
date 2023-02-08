@@ -13,5 +13,6 @@ RUN apt-get update && apt-get install -y \
 
 COPY docker/start_nginx.sh /usr/local/sbin
 
+
 CMD ["/usr/local/sbin/start_nginx.sh"]
 
