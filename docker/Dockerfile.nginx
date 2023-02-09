@@ -11,11 +11,8 @@ RUN apt-get update && apt-get install -y \
     nginx
 
 
-RUN cp -f /etc/indi-allsky/self-signed.key /etc/ssl/astroberry.key
-RUN cp -f /etc/indi-allsky/self-signed.pem /etc/ssl/astroberry.crt
-
-RUN cp -f /etc/indi-allsky/nginx.conf /etc/nginx/sites-available/default
+COPY docker/start_nginx.sh /usr/local/sbin
 
 
-CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
+CMD ["/usr/local/sbin/start_nginx.sh"]
 

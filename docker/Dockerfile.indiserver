@@ -1,12 +1,15 @@
 ### INCOMPLETE ###
 
-FROM docker_indi
+FROM docker_indi_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
+USER root
 
-USER allsky
+RUN chmod u+s /bin/su
 
-WORKDIR /home/allsky
+#USER allsky
+#WORKDIR /home/allsky
 
-CMD ["indiserver", "-p 7624", "indi_simulator_telescope", $INDIALLSKY_CCD_DRIVER]
+
+CMD ["/usr/local/bin/indiserver", "-p 7624", "indi_simulator_telescope", $INDIALLSKY_CCD_DRIVER]

@@ -25,6 +25,11 @@ HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
 HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
 
 
+# ensure correct permissions
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
+
+
 echo "**** Indi-allsky config ****"
 [[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
 sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
@@ -60,9 +65,6 @@ sed \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
-
-# syntax check
-json_pp < "$TMP_FLASK" >/dev/null
 
 
 if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
@@ -101,13 +103,12 @@ echo "**** Setup nginx ****"
 TMP3=$(mktemp)
 sed \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
  -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
  -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
  -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+ -e "s|%UPSTREAM_SERVER%|gunicorn_indi_allsky:8000|g" \
  "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
 
 sudo cp -f "$TMP3" "$ALLSKY_ETC/nginx.conf"
@@ -137,11 +138,13 @@ if [[ ! -f "$ALLSKY_ETC/self-signed.key" || ! -f "$ALLSKY_ETC/self-signed.pem" ]
         -extensions san \
         -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-        sudo cp -f "$KEY_TMP" "$ALLSKY_ETC/self-signed.key"
-        sudo cp -f "$CRT_TMP" "$ALLSKY_ETC/self-signed.pem"
+    sudo cp -f "$KEY_TMP" "$ALLSKY_ETC/self-signed.key"
+    sudo cp -f "$CRT_TMP" "$ALLSKY_ETC/self-signed.pem"
 
-        rm -f "$KEY_TMP"
-        rm -f "$CRT_TMP"
+
+
+    rm -f "$KEY_TMP"
+    rm -f "$CRT_TMP"
 fi
 
 
@@ -152,10 +155,17 @@ sudo chmod 644 "$ALLSKY_ETC/self-signed.pem"
 
 
 # system certificate store
-sudo cp -f "$ALLSKY_ETC/self-signed.pem" /usr/local/share/ca-certificates/indi-allsky.crt
-sudo chown root:root /usr/local/share/ca-certificates/indi-allsky.crt
+sudo cp -f "$ALLSKY_ETC/self-signed.pem" /usr/local/share/ca-certificates/self-signed.crt
+sudo chown root:root /usr/local/share/ca-certificates/self-signed.crt
 sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky.crt
 sudo update-ca-certificates
 
 
+# syntax check
+json_pp < "$ALLSKY_ETC/config.json" >/dev/null
+
+
+# start the program
+cd "$ALLSKY_DIRECTORY"
+"$ALLSKY_DIRECTORY/virtualenv/indi-allsky/bin/python3" allsky.py run
 

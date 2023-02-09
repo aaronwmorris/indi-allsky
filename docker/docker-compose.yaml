@@ -1,10 +1,10 @@
 version: "3"
 
 services:
-  indi:
+  indi_base:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi
+      dockerfile: docker/Dockerfile.indi_base
     env_file: .env
 
   indiserver:
