@@ -58,7 +58,7 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
 def CAMERA_INTERFACE_validator(form, field):
     if field.data not in (
         'indi',
-        'libcamera_imx477'
+        'libcamera_imx477',
         'libcamera_imx378',
         'libcamera_64mp_hawkeye',
         'libcamera_imx407',
