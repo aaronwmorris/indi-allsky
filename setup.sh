@@ -2014,10 +2014,19 @@ if [ "$USER_COUNT" -eq 0 ]; then
 
         if [ "${#WEB_PASS}" -lt 8 ]; then
             WEB_PASS=""
-            echo
-            echo "Error: Password needs to be at least 8 characters"
-            sleep 3
+            whiptail --msgbox "Error: Password needs to be at least 8 characters" 0 0
+            continue
         fi
+
+
+        WEB_PASS2=$(whiptail --title "Password (#2)" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+
+        if [ "$WEB_PASS" != "$WEB_PASS2" ]; then
+            WEB_PASS=""
+            whiptail --msgbox "Error: Passwords did not match" 0 0
+            continue
+        fi
+
     done
 
     while [ -z "${WEB_NAME:-}" ]; do
