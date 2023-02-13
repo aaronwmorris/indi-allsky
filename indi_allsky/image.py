@@ -2,6 +2,7 @@ import os
 import errno
 import io
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -472,6 +473,32 @@ class ImageWorker(Process):
                     else:
                         # slash is included with filesystem name
                         mqtt_data['disk{0:s}'.format(fs.mountpoint)] = round(disk_usage.percent, 1)
+
+
+                # publish temperature info
+                temp_info = psutil.sensors_temperatures()
+
+                for t_key in temp_info.keys():
+                    for i, t in enumerate(temp_info[t_key]):
+                        if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
+                            current_temp = ((t.current * 9.0 ) / 5.0) + 32
+                        elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
+                            current_temp = t.current + 273.15
+                        else:
+                            current_temp = float(t.current)
+
+                        if not t.label:
+                            # use index for label name
+                            label = str(i)
+                        else:
+                            label = t.label
+
+                        topic = 'temp/{0:s}/{1:s}'.format(t_key, label)
+
+                        # no spaces in topics
+                        topic_sub = re.sub(r'[#+\ ]', '_', topic)
+
+                        mqtt_data[topic_sub] = current_temp
 
 
                 self.mqtt_publish(latest_file, mqtt_data)

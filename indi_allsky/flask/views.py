@@ -9,6 +9,7 @@ import math
 import base64
 from pathlib import Path
 import socket
+import re
 import psutil
 import dbus
 import pycurl
@@ -1565,21 +1566,33 @@ class SystemInfoView(TemplateView):
 
         temp_list = list()
         for t_key in temp_info.keys():
-            for i in temp_info[t_key]:
+            for i, t in enumerate(temp_info[t_key]):
                 if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
-                    current_temp = ((i.current * 9.0 ) / 5.0) + 32
+                    current_temp = ((t.current * 9.0 ) / 5.0) + 32
                     temp_sys = 'F'
                 elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
-                    current_temp = i.current + 273.15
+                    current_temp = t.current + 273.15
                     temp_sys = 'K'
                 else:
-                    current_temp = float(i.current)
+                    current_temp = float(t.current)
                     temp_sys = 'C'
 
+                # these names will match the mqtt topics
+                if not t.label:
+                    # use index for label name
+                    label = str(i)
+                else:
+                    label = t.label
+
+                topic = '{0:s}/{1:s}'.format(t_key, label)
+
+                # no spaces in topics
+                topic_sub = re.sub(r'[#+\ ]', '_', topic)
+
                 temp_list.append({
-                    'name' : t_key,
-                    'temp' : current_temp,
-                    'sys'  : temp_sys,
+                    'name'   : topic_sub,
+                    'temp'   : current_temp,
+                    'sys'    : temp_sys,
                 })
 
         return temp_list
