@@ -480,9 +480,9 @@ class ImageWorker(Process):
 
                 for t_key in temp_info.keys():
                     for i, t in enumerate(temp_info[t_key]):
-                        if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
+                        if self.config.get('TEMP_DISPLAY') == 'f':
                             current_temp = ((t.current * 9.0 ) / 5.0) + 32
-                        elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
+                        elif self.config.get('TEMP_DISPLAY') == 'k':
                             current_temp = t.current + 273.15
                         else:
                             current_temp = float(t.current)
