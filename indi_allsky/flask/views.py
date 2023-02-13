@@ -1586,8 +1586,8 @@ class SystemInfoView(TemplateView):
 
                 topic = '{0:s}/{1:s}'.format(t_key, label)
 
-                # no spaces in topics
-                topic_sub = re.sub(r'[#+\ ]', '_', topic)
+                # no spaces, etc in topics
+                topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
 
                 temp_list.append({
                     'name'   : topic_sub,

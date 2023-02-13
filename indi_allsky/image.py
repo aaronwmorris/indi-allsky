@@ -495,8 +495,8 @@ class ImageWorker(Process):
 
                         topic = 'temp/{0:s}/{1:s}'.format(t_key, label)
 
-                        # no spaces in topics
-                        topic_sub = re.sub(r'[#+\ ]', '_', topic)
+                        # no spaces, etc in topics
+                        topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
 
                         mqtt_data[topic_sub] = current_temp
 
