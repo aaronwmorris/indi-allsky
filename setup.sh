@@ -1571,7 +1571,7 @@ echo "Detected image folder: $IMAGE_FOLDER"
 echo "**** Flask config ****"
 
 while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
-    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
+    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0 --defaultno; then
         FLASK_AUTH_ALL_VIEWS="true"
     else
         FLASK_AUTH_ALL_VIEWS="false"
