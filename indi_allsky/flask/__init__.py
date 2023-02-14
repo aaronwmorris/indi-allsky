@@ -111,7 +111,7 @@ def create_app():
 
         from . import views  # noqa: F401
 
-        db.create_all()  # Create sql tables for our data models
+        #db.create_all()  # Create sql tables for our data models
 
         return app
 
