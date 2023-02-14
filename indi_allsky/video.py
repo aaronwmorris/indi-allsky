@@ -846,15 +846,11 @@ class VideoWorker(Process):
         for file_entry in old_images:
             #logger.info('Removing old image: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_images.delete()  # mass delete
@@ -866,15 +862,11 @@ class VideoWorker(Process):
         for file_entry in old_fits_images:
             #logger.info('Removing old image: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_fits_images.delete()  # mass delete
@@ -886,15 +878,11 @@ class VideoWorker(Process):
         for file_entry in old_raw_images:
             #logger.info('Removing old image: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_raw_images.delete()  # mass delete
@@ -906,15 +894,11 @@ class VideoWorker(Process):
         for file_entry in old_videos:
             #logger.info('Removing old video: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_videos.delete()  # mass delete
@@ -926,15 +910,11 @@ class VideoWorker(Process):
         for file_entry in old_keograms:
             #logger.info('Removing old keogram: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_keograms.delete()  # mass delete
@@ -946,15 +926,11 @@ class VideoWorker(Process):
         for file_entry in old_startrails:
             #logger.info('Removing old star trails: %s', file_entry.filename)
 
-            file_p = Path(file_entry.getFilesystemPath())
-
             try:
-                file_p.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
                 continue
-            except FileNotFoundError as e:
-                logger.warning('File already removed: %s', str(e))
 
 
         old_startrails.delete()  # mass delete

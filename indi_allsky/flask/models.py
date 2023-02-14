@@ -88,6 +88,19 @@ class IndiAllSkyDbFileBase(db.Model):
         return full_filename_p
 
 
+    def deleteFile(self):
+        filename_p = self.getFilesystemPath()
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+        # do not catch OSError here
+
+
+    def deleteAsset(self):
+        # use this path to delete all parts of entry
+        self.deleteFile()
 
 
 class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):

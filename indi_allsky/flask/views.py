@@ -1876,12 +1876,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += image_query.count()
 
         for i in image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
+            i.deleteAsset()
 
         image_query.delete()
         db.session.commit()
@@ -1893,13 +1888,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += fits_image_query.count()
 
         for i in fits_image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
-
+            i.deleteAsset()
 
         fits_image_query.delete()
         db.session.commit()
@@ -1911,13 +1900,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += raw_image_query.count()
 
         for i in raw_image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
-
+            i.deleteAsset()
 
         raw_image_query.delete()
         db.session.commit()
@@ -1942,12 +1925,7 @@ class AjaxSystemInfoView(BaseView):
 
         # videos
         for v in video_query:
-            video_filename = v.getFilesystemPath()
-            video_filename_p = Path(video_filename)
-
-            if video_filename_p.exists():
-                app.logger.info('Deleting %s', video_filename_p)
-                video_filename_p.unlink()
+            v.deleteAsset()
 
         video_query.delete()
         db.session.commit()
@@ -1955,12 +1933,7 @@ class AjaxSystemInfoView(BaseView):
 
         # keograms
         for k in keogram_query:
-            keogram_filename = k.getFilesystemPath()
-            keogram_filename_p = Path(keogram_filename)
-
-            if keogram_filename_p.exists():
-                app.logger.info('Deleting %s', keogram_filename_p)
-                keogram_filename_p.unlink()
+            k.deleteAsset()
 
         keogram_query.delete()
         db.session.commit()
@@ -1968,12 +1941,7 @@ class AjaxSystemInfoView(BaseView):
 
         # startrails
         for s in startrail_query:
-            startrail_filename = s.getFilesystemPath()
-            startrail_filename_p = Path(startrail_filename)
-
-            if startrail_filename_p.exists():
-                app.logger.info('Deleting %s', startrail_filename_p)
-                startrail_filename_p.unlink()
+            s.deleteAsset()
 
         startrail_query.delete()
         db.session.commit()
@@ -1981,12 +1949,7 @@ class AjaxSystemInfoView(BaseView):
 
         # startrail videos
         for s in startrail_video_query:
-            startrail_video_filename = s.getFilesystemPath()
-            startrail_video_filename_p = Path(startrail_video_filename)
-
-            if startrail_video_filename_p.exists():
-                app.logger.info('Deleting %s', startrail_video_filename_p)
-                startrail_video_filename_p.unlink()
+            s.deleteAsset()
 
         startrail_video_query.delete()
         db.session.commit()
@@ -2340,43 +2303,19 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             if video_entry:
-                video_filename = video_entry.getFilesystemPath()
-                video_filename_p = Path(video_filename)
-
-                if video_filename_p.exists():
-                    app.logger.info('Deleting %s', video_filename_p)
-                    video_filename_p.unlink()
-
+                video_entry.deleteAsset()
                 db.session.delete(video_entry)
 
             if keogram_entry:
-                keogram_filename = keogram_entry.getFilesystemPath()
-                keogram_filename_p = Path(keogram_filename)
-
-                if keogram_filename_p.exists():
-                    app.logger.info('Deleting %s', keogram_filename_p)
-                    keogram_filename_p.unlink()
-
+                keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
 
             if startrail_entry:
-                startrail_filename = startrail_entry.getFilesystemPath()
-                startrail_filename_p = Path(startrail_filename)
-
-                if startrail_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_filename_p)
-                    startrail_filename_p.unlink()
-
+                startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
 
             if startrail_video_entry:
-                startrail_video_filename = startrail_video_entry.getFilesystemPath()
-                startrail_video_filename_p = Path(startrail_video_filename)
-
-                if startrail_video_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_video_filename_p)
-                    startrail_video_filename_p.unlink()
-
+                startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
 
 
@@ -2397,13 +2336,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 .first()
 
             if video_entry:
-                video_filename = video_entry.getFilesystemPath()
-                video_filename_p = Path(video_filename)
-
-                if video_filename_p.exists():
-                    app.logger.info('Deleting %s', video_filename_p)
-                    video_filename_p.unlink()
-
+                video_entry.deleteAsset()
                 db.session.delete(video_entry)
 
 
@@ -2435,33 +2368,15 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             if keogram_entry:
-                keogram_filename = keogram_entry.getFilesystemPath()
-                keogram_filename_p = Path(keogram_filename)
-
-                if keogram_filename_p.exists():
-                    app.logger.info('Deleting %s', keogram_filename_p)
-                    keogram_filename_p.unlink()
-
+                keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
 
             if startrail_entry:
-                startrail_filename = startrail_entry.getFilesystemPath()
-                startrail_filename_p = Path(startrail_filename)
-
-                if startrail_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_filename_p)
-                    startrail_filename_p.unlink()
-
+                startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
 
             if startrail_video_entry:
-                startrail_video_filename = startrail_video_entry.getFilesystemPath()
-                startrail_video_filename_p = Path(startrail_video_filename)
-
-                if startrail_video_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_video_filename_p)
-                    startrail_video_filename_p.unlink()
-
+                startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
 
 
