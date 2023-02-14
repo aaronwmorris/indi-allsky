@@ -45,6 +45,9 @@ DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 DB_URI_DEFAULT="sqlite:///${DB_FILE}"
 
+# mysql support is not ready
+USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
+
 CAMERA_INTERFACE="${INDIALLSKY_CAMERA_INTERFACE:-}"
 DPC_STRENGTH="0"
 
@@ -1630,6 +1633,69 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 
+### Mysql
+if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+    MYSQL_ETC="/etc/mysql"
+
+    sudo cp -f "${ALLSKY_DIRECTORY}/service/mysql_indi-allsky.conf" "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+    sudo chown root:root "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+    sudo chmod 644 "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+
+    if [[ ! -d "$MYSQL_ETC/ssl" ]]; then
+        sudo mkdir "$MYSQL_ETC/ssl"
+    fi
+
+    sudo chown root:root "MYSQL_ETC/ssl"
+    sudo chmod 755 "$MYSQL_ETC/ssl"
+
+
+    if [[ ! -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key" || ! -f "$MYSQL_ETC/ssl/indi-allsky_mysq.pem" ]]; then
+        sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+        sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+        SHORT_HOSTNAME=$(hostname -s)
+        MYSQL_KEY_TMP=$(mktemp)
+        MYSQL_CRT_TMP=$(mktemp)
+
+        # sudo has problems with process substitution <()
+        openssl req \
+            -new \
+            -newkey rsa:4096 \
+            -sha512 \
+            -days 3650 \
+            -nodes \
+            -x509 \
+            -subj "/CN=${SHORT_HOSTNAME}.local" \
+            -keyout "$MYSQL_KEY_TMP" \
+            -out "$MYSQL_CRT_TMP" \
+            -extensions san \
+            -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+        sudo cp -f "$MYSQL_KEY_TMP" "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+        sudo cp -f "$MYSQL_CRT_TMP" "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+        rm -f "$MYSQL_KEY_TMP"
+        rm -f "$MYSQL_CRT_TMP"
+    fi
+
+
+    sudo chown root:root "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+    sudo chmod 600 "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+    sudo chown root:root "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+    sudo chmod 644 "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+    # system certificate store
+    sudo cp -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem" /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo update-ca-certificates
+
+
+    sudo systemctl enable mariadb
+    sudo systemctl restart mariadb
+fi
+
+
 if [[ "$ASTROBERRY" == "true" ]]; then
     echo "**** Disabling apache web server (Astroberry) ****"
     sudo systemctl stop apache2 || true
@@ -1700,8 +1766,8 @@ else
             sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
             SHORT_HOSTNAME=$(hostname -s)
-            KEY_TMP=$(mktemp)
-            CRT_TMP=$(mktemp)
+            APACHE_KEY_TMP=$(mktemp)
+            APACHE_CRT_TMP=$(mktemp)
 
             # sudo has problems with process substitution <()
             openssl req \
@@ -1712,16 +1778,16 @@ else
                 -nodes \
                 -x509 \
                 -subj "/CN=${SHORT_HOSTNAME}.local" \
-                -keyout "$KEY_TMP" \
-                -out "$CRT_TMP" \
+                -keyout "$APACHE_KEY_TMP" \
+                -out "$APACHE_CRT_TMP" \
                 -extensions san \
                 -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-            sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
-            sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+            sudo cp -f "$APACHE_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+            sudo cp -f "$APACHE_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
-            rm -f "$KEY_TMP"
-            rm -f "$CRT_TMP"
+            rm -f "$APACHE_KEY_TMP"
+            rm -f "$APACHE_CRT_TMP"
         fi
 
 
