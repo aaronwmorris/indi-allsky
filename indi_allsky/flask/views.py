@@ -1972,10 +1972,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d images...', image_entries_count)
         image_notfound_list = list()
         for i in image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
 
@@ -1991,10 +1988,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d fits images...', fits_image_entries_count)
         fits_image_notfound_list = list()
         for i in fits_image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 fits_image_notfound_list.append(i)
 
@@ -2010,10 +2004,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d raw images...', raw_image_entries_count)
         raw_image_notfound_list = list()
         for i in raw_image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 raw_image_notfound_list.append(i)
 
@@ -2029,10 +2020,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries_count)
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
-            try:
-                self._validate_entry(b)
-                continue
-            except FileNotFoundError:
+            if not b.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
                 badpixelmap_notfound_list.append(b)
 
@@ -2047,10 +2035,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d dark frames...', darkframe_entries_count)
         darkframe_notfound_list = list()
         for d in darkframe_entries:
-            try:
-                self._validate_entry(d)
-                continue
-            except FileNotFoundError:
+            if not d.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
                 darkframe_notfound_list.append(d)
 
@@ -2066,10 +2051,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d videos...', video_entries_count)
         video_notfound_list = list()
         for v in video_entries:
-            try:
-                self._validate_entry(v)
-                continue
-            except FileNotFoundError:
+            if not v.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
                 video_notfound_list.append(v)
 
@@ -2084,10 +2066,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d keograms...', keogram_entries_count)
         keogram_notfound_list = list()
         for k in keogram_entries:
-            try:
-                self._validate_entry(k)
-                continue
-            except FileNotFoundError:
+            if not k.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
                 keogram_notfound_list.append(k)
 
@@ -2103,10 +2082,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d star trails...', startrail_entries_count)
         startrail_notfound_list = list()
         for s in startrail_entries:
-            try:
-                self._validate_entry(s)
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_notfound_list.append(s)
 
@@ -2122,10 +2098,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d star trail timelapses...', startrail_video_entries_count)
         startrail_video_notfound_list = list()
         for s in startrail_video_entries:
-            try:
-                self._validate_entry(s)
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_video_notfound_list.append(s)
 
@@ -2183,14 +2156,6 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
         return message_list
-
-
-    def _validate_entry(self, entry):
-        file_p = Path(entry.filename)
-
-        if not file_p.exists():
-            raise FileNotFoundError('File not found')
-
 
 
 class TimelapseGeneratorView(TemplateView):

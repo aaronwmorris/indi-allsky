@@ -88,6 +88,15 @@ class IndiAllSkyDbFileBase(db.Model):
         return full_filename_p
 
 
+    def validateFile(self):
+        filename_p = self.getFilesystemPath()
+
+        if filename_p.exists():
+            return True
+
+        return False
+
+
     def deleteFile(self):
         filename_p = self.getFilesystemPath()
 
