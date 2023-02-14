@@ -29,7 +29,7 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20230109.0"
+INDI_ALLSKY_VERSION="20230214.0"
 
 INDI_DRIVER_PATH="/usr/bin"
 
