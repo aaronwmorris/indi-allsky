@@ -1,3 +1,6 @@
+from .flask.models import IndiAllSkyDbConfigTable
+from .flask import db
+
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -181,17 +184,25 @@ class IndiAllSkyConfig(object):
 
 
     def __init__(self, config):
-        self.config = self.template_config  # populate initial values
-        self.config = config
+        self._config_id = None
+        self._config = self._template_config.copy()  # populate initial values
+
+        # fetch latest config
+        config_entry = self._getConfig()
+
+        # apply config on top of template
+        self._config_id = config_entry.id
+        self._config.update(config_entry.data)
 
 
-    @property
-    def template_config(self):
-        return self._template_config
 
-    @template_config.setter
-    def template_config(self, new_template_config):
-        pass  # read only
+    #@property
+    #def template_config(self):
+    #    return self._template_config
+
+    #@template_config.setter
+    #def template_config(self, new_template_config):
+    #    pass  # read only
 
 
     @property
@@ -200,6 +211,46 @@ class IndiAllSkyConfig(object):
 
     @config.setter
     def config(self, new_config):
-        for k, v in new_config.items():
-            setattr(self, k, v)
+        pass  # read only
+
+
+    @property
+    def config_id(self):
+        return self._config_id
+
+    @config_id.setter
+    def config_id(self, new_config_id):
+        pass  # read only
+
+
+
+    def _getConfig(self):
+        ### return the last saved config entry
+
+        # not catching NoResultFound
+        config_entry = IndiAllSkyDbConfigTable.query\
+            .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
+            .one()
+
+        return config_entry
+
+
+    def _setConfig(self, note):
+        config_entry = IndiAllSkyDbConfigTable(
+            data=self._config,
+            note=str(note),
+        )
+
+        db.session.add(config_entry)
+        db.session.commit()
+
+        return config_entry
+
+
+    def save(self, note):
+        config_entry = self._setConfig(note)
+
+        self._config_id = config_entry.id
+
+        return config_entry
 
