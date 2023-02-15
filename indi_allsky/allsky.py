@@ -7,13 +7,11 @@ import json
 import re
 import psutil
 import tempfile
-import shutil
 import subprocess
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from collections import OrderedDict
 #from pprint import pformat
 import math
 import dbus
@@ -74,12 +72,12 @@ class IndiAllSky(object):
 
     def __init__(self):
         try:
-            c = IndiAllSkyConfig()
+            self._config_obj = IndiAllSkyConfig()
         except NoResultFound:
             logger.error('No config file found, please import a config')
             sys.exit(1)
 
-        self.config = c.config
+        self.config = self._config_obj.config
 
         self._miscDb = miscDb(self.config)
 
@@ -1096,44 +1094,6 @@ class IndiAllSky(object):
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
-    def save_indi_allsky_config(self, config):
-        logger.warning('Saving new config file')
-
-        config_file_p = Path(self.config_file)
-        config_file_old_p = Path('{0:s}_old'.format(str(self.config_file)))
-        config_dir_p = config_file_p.parent
-
-
-        # write to temp file to ensure there is space available
-        try:
-            config_temp_f = tempfile.NamedTemporaryFile(dir=config_dir_p, mode='w', delete=False, suffix='.json')
-            config_temp_f.write(json.dumps(config, indent=4))
-            config_temp_f.close()
-
-            config_temp_p = Path(config_temp_f.name)
-        except PermissionError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-
-
-        try:
-            # make a backup
-            shutil.copy2(str(config_file_p), str(config_file_old_p))
-            config_file_old_p.chmod(0o640)
-
-            shutil.move(str(config_temp_p), str(config_file_p))
-            config_file_p.chmod(0o640)
-        except PermissionError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-
-
     def getSensorTemperature(self):
         temp_val = self.indiclient.getCcdTemperature()
 
@@ -1301,21 +1261,14 @@ class IndiAllSky(object):
     def updateConfigLocation(self, gps_lat, gps_long):
         logger.warning('Updating indi-allsky config with new geographic location')
 
-        with io.open(self.config_file, 'r') as f_config_file:
-            try:
-                c = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
-            except json.JSONDecodeError as e:
-                logger.error('Error decoding json: %s', str(e))
-                return
-
-        c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
-        c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
+        self.config['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
+        self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
 
 
         # save new config
         try:
-            self.save_indi_allsky_config(c)
-            logger.info('Wrote new config.json')
+            self._config_obj.save('*Auto* Location updated')
+            logger.info('Wrote new config')
         except ConfigSaveException:
             return
 

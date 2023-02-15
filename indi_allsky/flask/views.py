@@ -1122,8 +1122,8 @@ class AjaxConfigView(BaseView):
 
         # save new config
         try:
-            self.save_indi_allsky_config(self.indi_allsky_config)
-            app.logger.info('Wrote new config.json')
+            self._indi_allsky_config_obj.save('Web config form save')
+            app.logger.info('Wrote new config')
         except ConfigSaveException as e:
             error_data = {
                 'form_global' : [str(e)],

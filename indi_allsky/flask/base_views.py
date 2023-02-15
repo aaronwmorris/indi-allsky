@@ -4,13 +4,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-import json
 import psutil
-import tempfile
-import shutil
-import hashlib
 import ephem
-from collections import OrderedDict
 
 from flask import render_template
 from flask import jsonify
@@ -24,13 +19,15 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .misc import login_optional
 
+from ..config import IndiAllSkyConfig
+
 from .models import NotificationCategory
 
 from .models import IndiAllSkyDbCameraTable
 
 from .miscDb import miscDb
 
-from ..exceptions import ConfigSaveException
+#from ..exceptions import ConfigSaveException
 
 
 class BaseView(View):
@@ -39,62 +36,12 @@ class BaseView(View):
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
 
-        self.indi_allsky_config, self.indi_allsky_config_md5 = self.get_indi_allsky_config()
+        # not catching exception
+        self._indi_allsky_config_obj = IndiAllSkyConfig()
+
+        self.indi_allsky_config = self._indi_allsky_config_obj.config
 
         self._miscDb = miscDb(self.indi_allsky_config)
-
-
-    def get_indi_allsky_config(self):
-        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-            config = f_config_file.read()
-
-            try:
-                indi_allsky_config = json.loads(config, object_pairs_hook=OrderedDict)
-            except json.JSONDecodeError as e:
-                app.logger.error('Error decoding json: %s', str(e))
-                return dict()
-
-            config_md5 = hashlib.md5(config.encode())
-
-        return indi_allsky_config, config_md5
-
-
-    def save_indi_allsky_config(self, config):
-        app.logger.warning('Saving new config file')
-
-        config_file_p = Path(app.config['INDI_ALLSKY_CONFIG'])
-        config_file_old_p = Path('{0:s}_old'.format(str(app.config['INDI_ALLSKY_CONFIG'])))
-        config_dir_p = config_file_p.parent
-
-
-        # write to temp file to ensure there is space available
-        try:
-            config_temp_f = tempfile.NamedTemporaryFile(dir=config_dir_p, mode='w', delete=False, suffix='.json')
-            config_temp_f.write(json.dumps(config, indent=4))
-            config_temp_f.close()
-
-            config_temp_p = Path(config_temp_f.name)
-        except PermissionError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-
-
-        try:
-            # make a backup
-            shutil.copy2(str(config_file_p), str(config_file_old_p))
-            config_file_old_p.chmod(0o640)
-
-            shutil.move(str(config_temp_p), str(config_file_p))
-            config_file_p.chmod(0o640)
-        except PermissionError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
 
 
     def get_indiallsky_pid(self):

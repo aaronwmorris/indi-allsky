@@ -53,12 +53,12 @@ class IndiAllSkyDarks(object):
 
     def __init__(self):
         try:
-            c = IndiAllSkyConfig()
+            self._config_obj = IndiAllSkyConfig()
         except NoResultFound:
             logger.error('No config file found, please import a config')
             sys.exit(1)
 
-        self.config = c.config
+        self.config = self._config_obj.config
 
         self._daytime = True  # build daytime dark library
 
