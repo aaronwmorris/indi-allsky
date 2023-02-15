@@ -159,7 +159,7 @@ class IndiAllskyStacker(object):
 
 
                 # add new rotation value
-                rotation = self.transform.rotation - last_rotation
+                rotation = transform.rotation - last_rotation
                 #logger.info('Last rotation: %0.8f', rotation)
 
 
@@ -183,7 +183,7 @@ class IndiAllskyStacker(object):
 
 
                 self.hist_rotation.append(rotation)  # only add known good rotation values
-                last_rotation = self.transform.rotation
+                last_rotation = transform.rotation
 
 
 
