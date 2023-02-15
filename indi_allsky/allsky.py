@@ -9,7 +9,6 @@ import psutil
 import tempfile
 import shutil
 import subprocess
-import hashlib
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -29,6 +28,8 @@ from multiprocessing import Value
 
 from .version import __version__
 from .version import __config_version__
+
+from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
@@ -71,11 +72,14 @@ class IndiAllSky(object):
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
 
-    def __init__(self, f_config_file):
-        self.config, config_md5 = self._parseConfig(f_config_file.read())
-        f_config_file.close()
+    def __init__(self):
+        try:
+            c = IndiAllSkyConfig()
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
 
-        self.config_file = f_config_file.name
+        self.config = c.config
 
         self._miscDb = miscDb(self.config)
 
@@ -94,7 +98,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+        #self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())  # fixme
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
@@ -344,60 +348,6 @@ class IndiAllSky(object):
 
         self._miscDb.setState('PID', pid)
         self._miscDb.setState('PID_FILE', self.pid_file)
-
-
-    def _parseConfig(self, json_config):
-        # WARNING:  database configuration may not be ready
-        c = json.loads(json_config, object_pairs_hook=OrderedDict)
-
-
-        # set this after parsing json
-        c_md5 = hashlib.md5(json_config.encode())
-
-
-        # set any new config defaults which might not be in the config
-
-        # indi server
-        if not c.get('INDI_SERVER'):
-            c['INDI_SERVER'] = 'localhost'
-
-        if not c.get('INDI_PORT'):
-            c['INDI_PORT'] = 7624
-
-
-        # translate old config option
-        if c.get('IMAGE_SCALE_PERCENT') and not c.get('IMAGE_SCALE'):
-            c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
-
-
-        # Ensure exposure period is set
-        if not c.get('EXPOSURE_PERIOD'):
-            logger.warning('Night Exposure period not set, using Max Exposure value')
-            c['EXPOSURE_PERIOD'] = float(c['CCD_EXPOSURE_MAX'])
-
-        if not c.get('EXPOSURE_PERIOD_DAY'):
-            logger.warning('Day Exposure period not set, using Max Exposure value')
-            c['EXPOSURE_PERIOD_DAY'] = float(c['CCD_EXPOSURE_MAX'])
-
-
-        # set keogram scale factor
-        if not c.get('KEOGRAM_V_SCALE'):
-            c['KEOGRAM_V_SCALE'] = 33
-
-        if not c.get('KEOGRAM_H_SCALE'):
-            c['KEOGRAM_H_SCALE'] = 100
-
-
-        # set default date format for image label
-        if not c['TEXT_PROPERTIES'].get('DATE_FORMAT'):
-            c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'
-
-
-        if not c.get('FFMPEG_CODEC'):
-            c['FFMPEG_CODEC'] = 'libx264'
-
-
-        return c, c_md5
 
 
     def _initialize(self, connectOnly=False):

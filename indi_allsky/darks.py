@@ -24,6 +24,8 @@ from .exceptions import TimeOutException
 from .exceptions import TemperatureException
 from .exceptions import CameraException
 
+from .config import IndiAllSkyConfig
+
 from . import camera as camera_module
 
 from .flask import db
@@ -35,7 +37,7 @@ from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 #from .flask.models import IndiAllSkyDbTaskQueueTable
 
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 
 try:
@@ -49,9 +51,14 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyDarks(object):
 
-    def __init__(self, f_config):
-        self.config = json.loads(f_config.read())
-        f_config.close()
+    def __init__(self):
+        try:
+            c = IndiAllSkyConfig()
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
+
+        self.config = c.config
 
         self._daytime = True  # build daytime dark library
 

@@ -6,9 +6,9 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSkyConfig(object):
+class IndiAllSkyConfigBase(object):
 
-    _template_config = {
+    _base_config = {
         "CAMERA_INTERFACE" : "indi",
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
@@ -183,9 +183,21 @@ class IndiAllSkyConfig(object):
     }
 
 
-    def __init__(self, config):
+    @property
+    def base_config(self):
+        return self._base_config
+
+    @base_config.setter
+    def base_config(self, new_base_config):
+        pass  # read only
+
+
+
+class IndiAllSkyConfig(IndiAllSkyConfigBase):
+
+    def __init__(self):
         self._config_id = None
-        self._config = self._template_config.copy()  # populate initial values
+        self._config = self.base_config.copy()  # populate initial values
 
         # fetch latest config
         config_entry = self._getConfig()
@@ -194,15 +206,6 @@ class IndiAllSkyConfig(object):
         self._config_id = config_entry.id
         self._config.update(config_entry.data)
 
-
-
-    #@property
-    #def template_config(self):
-    #    return self._template_config
-
-    #@template_config.setter
-    #def template_config(self, new_template_config):
-    #    pass  # read only
 
 
     @property
