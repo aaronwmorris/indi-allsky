@@ -21,7 +21,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyConfigBase(object):
 
-    _base_config = {
+    _base_config = OrderedDict({
         "CAMERA_INTERFACE" : "indi",
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
@@ -193,7 +193,7 @@ class IndiAllSkyConfigBase(object):
             "IMAGE_FILE_TYPE"        : "dng",
             "EXTRA_OPTIONS"          : ""
         }
-    }
+    })
 
 
     @property
