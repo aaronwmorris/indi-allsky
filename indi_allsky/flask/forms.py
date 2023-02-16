@@ -1383,7 +1383,6 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
-    SQLALCHEMY_DATABASE_URI          = StringField('Database URI', render_kw={'readonly' : True}, validators=[DataRequired(), SQLALCHEMY_DATABASE_URI_validator])
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
@@ -1544,6 +1543,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
+    CONFIG_NOTE                      = StringField('Config Note')
 
 
     #def __init__(self, *args, **kwargs):

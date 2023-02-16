@@ -563,7 +563,6 @@ class ConfigView(FormView):
         context = super(ConfigView, self).get_context()
 
         form_data = {
-            'SQLALCHEMY_DATABASE_URI'        : self.indi_allsky_config.get('SQLALCHEMY_DATABASE_URI', 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'),
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
@@ -696,6 +695,7 @@ class ConfigView(FormView):
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
+            'CONFIG_NOTE'                    : '',
         }
 
 
@@ -912,7 +912,6 @@ class AjaxConfigView(BaseView):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
 
         # update data
-        self.indi_allsky_config['SQLALCHEMY_DATABASE_URI']              = str(request.json['SQLALCHEMY_DATABASE_URI'])
         self.indi_allsky_config['CAMERA_INTERFACE']                     = str(request.json['CAMERA_INTERFACE'])
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
@@ -1062,6 +1061,7 @@ class AjaxConfigView(BaseView):
 
         # Not a config option
         reload_on_save                                                  = bool(request.json['RELOAD_ON_SAVE'])
+        config_note                                                     = str(request.json['CONFIG_NOTE'])
 
 
         # ADU_ROI
@@ -1122,7 +1122,7 @@ class AjaxConfigView(BaseView):
 
         # save new config
         try:
-            self._indi_allsky_config_obj.save('Web config form save')
+            self._indi_allsky_config_obj.save(config_note)
             app.logger.info('Saved new config')
         except ConfigSaveException as e:
             error_data = {
