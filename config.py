@@ -35,6 +35,7 @@ if __name__ == "__main__":
             'load',
             'update_level',
             'edit',
+            'revert',
         ),
     )
     argparser.add_argument(
@@ -43,11 +44,18 @@ if __name__ == "__main__":
         help='config file',
         type=argparse.FileType('r'),
     )
+    argparser.add_argument(
+        '--revert_id',
+        '-r',
+        help='revert config id',
+        type=int,
+    )
+
 
     args = argparser.parse_args()
 
 
     iacu = IndiAllSkyConfigUtil()
     action_func = getattr(iacu, args.action)
-    action_func(config=args.config)
+    action_func(config=args.config, revert_id=args.revert_id)
 

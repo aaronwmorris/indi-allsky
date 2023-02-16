@@ -249,14 +249,20 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         pass  # read only
 
 
-    def _getConfig(self):
+    def _getConfig(self, config_id=None):
         ### return the last saved config entry
 
-        # not catching NoResultFound
-        config_entry = IndiAllSkyDbConfigTable.query\
-            .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
-            .limit(1)\
-            .one()
+        if config_id:
+            # not catching NoResultFound
+            config_entry = IndiAllSkyDbConfigTable.query\
+                .filter(IndiAllSkyDbConfigTable.id == int(config_id))\
+                .one()
+        else:
+            # not catching NoResultFound
+            config_entry = IndiAllSkyDbConfigTable.query\
+                .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
+                .limit(1)\
+                .one()
 
         return config_entry
 
@@ -341,11 +347,12 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         # fetch latest config
         try:
             config_entry = self._getConfig()
-            self._config.update(config_entry.data)
         except NoResultFound:
             logger.error('Configuration not loaded')
             sys.exit(1)
 
+
+        self._config.update(config_entry.data)
 
         logger.info('Updating config level')
         self.save('system', 'Update config level: {0:s}'.format(__config_level__))
@@ -354,11 +361,12 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
     def edit(self, **kwargs):
         try:
             config_entry = self._getConfig()
-            self._config.update(config_entry.data)
         except NoResultFound:
             logger.error('Configuration not loaded')
             sys.exit(1)
 
+
+        self._config.update(config_entry.data)
 
         config_temp_f = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
         config_temp_f.write(json.dumps(self.config, indent=4))
@@ -386,6 +394,23 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self.save('system', 'CLI config edit')
 
         config_temp_p.unlink()  # cleanup
+
+
+    def revert(self, **kwargs):
+        revert_id = kwargs['revert_id']
+
+        # fetch latest config
+        try:
+            revert_entry = self._getConfig(config_id=revert_id)
+        except NoResultFound:
+            logger.error('Configuration ID %d not found', int(revert_id))
+            sys.exit(1)
+
+
+        self._config.update(revert_entry.data)
+
+        logger.info('Reverting configuration')
+        self.save('system', 'Revert to config: {0:d}'.format(revert_entry.id))
 
 
     def _createSystemAccount(self):
