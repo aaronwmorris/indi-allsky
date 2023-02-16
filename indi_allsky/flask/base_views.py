@@ -19,8 +19,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .misc import login_optional
 
-from ..config import IndiAllSkyConfig
-
 from .models import NotificationCategory
 
 from .models import IndiAllSkyDbCameraTable
@@ -35,6 +33,7 @@ class BaseView(View):
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
+        from ..config import IndiAllSkyConfig  # prevent circular import
 
         # not catching exception
         self._indi_allsky_config_obj = IndiAllSkyConfig()
@@ -82,7 +81,7 @@ class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
 
-        self.check_config(self.indi_allsky_config_md5)
+        #self.check_config(self.indi_allsky_config_md5)  # fixme
 
         self.template_name = template_name
 

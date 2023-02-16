@@ -1,7 +1,13 @@
+import sys
+import json
+from collections import OrderedDict
+import logging
+
 from .flask.models import IndiAllSkyDbConfigTable
 from .flask import db
 
-import logging
+from sqlalchemy.orm.exc import NoResultFound
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -192,7 +198,6 @@ class IndiAllSkyConfigBase(object):
         pass  # read only
 
 
-
 class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
     def __init__(self):
@@ -256,4 +261,43 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._config_id = config_entry.id
 
         return config_entry
+
+
+class IndiAllSkyConfigUtil(IndiAllSkyConfig):
+
+    def __init__(self):
+        self._config_id = None
+        self._config = self.base_config.copy()  # populate initial values
+
+        # fetch latest config
+        try:
+            config_entry = self._getConfig()
+            self._config_id = config_entry.id
+            self._config.update(config_entry.data)
+        except NoResultFound:
+            pass
+
+
+
+    def load(self, **kwargs):
+        f_config = kwargs['config']
+
+
+        try:
+            self._getConfig()
+
+            logger.error('Configuration already defined, not loading config')
+            f_config.close()
+
+            sys.exit(1)
+        except NoResultFound:
+            pass
+
+
+        c = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
+        f_config.close()
+
+        self.config.update(c)
+
+        self.save('Load config: {0:s}'.format(f_config.name))
 
