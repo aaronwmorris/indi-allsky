@@ -29,8 +29,6 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20230214.0"
-
 INDI_DRIVER_PATH="/usr/bin"
 
 INDISERVER_SERVICE_NAME="indiserver"
@@ -2055,13 +2053,6 @@ TMP_CAMERA_INT=$(mktemp)
 jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > "$TMP_CAMERA_INT"
 cp -f "$TMP_CAMERA_INT" "${ALLSKY_ETC}/config.json"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
-
-
-echo "**** Update config version ****"
-TMP_CONFIG2=$(mktemp)
-jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > "$TMP_CONFIG2"
-cp -f "$TMP_CONFIG2" "${ALLSKY_ETC}/config.json"
-[[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
 
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"

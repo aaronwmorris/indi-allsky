@@ -8,6 +8,8 @@ from .flask import db
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .version import __config_level__
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -201,7 +203,6 @@ class IndiAllSkyConfigBase(object):
 class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
     def __init__(self):
-        self._config_id = None
         self._config = self.base_config.copy()  # populate initial values
 
         # fetch latest config
@@ -209,6 +210,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
         # apply config on top of template
         self._config_id = config_entry.id
+        self._config_level = config_entry.level
         self._config.update(config_entry.data)
 
 
@@ -231,6 +233,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         pass  # read only
 
 
+    @property
+    def config_level(self):
+        return self._config_level
+
+    @config_level.setter
+    def config_level(self, new_config_level):
+        pass  # read only
+
 
     def _getConfig(self):
         ### return the last saved config entry
@@ -238,6 +248,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         # not catching NoResultFound
         config_entry = IndiAllSkyDbConfigTable.query\
             .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
+            .limit(1)\
             .one()
 
         return config_entry
@@ -246,6 +257,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     def _setConfig(self, note):
         config_entry = IndiAllSkyDbConfigTable(
             data=self._config,
+            level=str(__config_level__),
             note=str(note),
         )
 
@@ -266,16 +278,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def __init__(self):
-        self._config_id = None
         self._config = self.base_config.copy()  # populate initial values
-
-        # fetch latest config
-        try:
-            config_entry = self._getConfig()
-            self._config_id = config_entry.id
-            self._config.update(config_entry.data)
-        except NoResultFound:
-            pass
 
 
 
@@ -287,7 +290,6 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             self._getConfig()
 
             logger.error('Configuration already defined, not loading config')
-            f_config.close()
 
             sys.exit(1)
         except NoResultFound:
@@ -300,4 +302,18 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self.config.update(c)
 
         self.save('Load config: {0:s}'.format(f_config.name))
+
+
+    def update_level(self, **kwargs):
+        # fetch latest config
+        try:
+            config_entry = self._getConfig()
+            self._config.update(config_entry.data)
+        except NoResultFound:
+            logger.error('Configuration not loaded')
+            sys.exit(1)
+
+
+        self.save('Update config level: {0:s}'.format(__config_level__))
+
 

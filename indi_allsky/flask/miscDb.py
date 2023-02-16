@@ -543,25 +543,3 @@ class miscDb(object):
         return state.value
 
 
-    def getConfig(self):
-        ### return the last saved config entry
-
-        # not catching NoResultFound
-        config_entry = IndiAllSkyDbConfigTable.query\
-            .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
-            .one()
-
-        return config_entry
-
-
-    def setConfig(self, config, note):
-        config_entry = IndiAllSkyDbConfigTable(
-            data=config,
-            note=str(note),
-        )
-
-        db.session.add(config_entry)
-        db.session.commit()
-
-        return config_entry
-

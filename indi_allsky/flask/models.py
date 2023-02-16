@@ -401,6 +401,7 @@ class IndiAllSkyDbConfigTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     data = db.Column(db.JSON)
+    level = db.Column(db.String(length=12), nullable=False)
     note = db.Column(db.String(length=255), nullable=False)
 
 

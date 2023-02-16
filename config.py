@@ -32,6 +32,7 @@ if __name__ == "__main__":
         help='dark frame algorithm, sigmaclip is recommended',
         choices=(
             'load',
+            'update_level',
         ),
     )
     argparser.add_argument(

@@ -25,7 +25,7 @@ from multiprocessing import Queue
 from multiprocessing import Value
 
 from .version import __version__
-from .version import __config_version__
+from .version import __config_level__
 
 from .config import IndiAllSkyConfig
 
@@ -73,6 +73,7 @@ class IndiAllSky(object):
     def __init__(self):
         try:
             self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
         except NoResultFound:
             logger.error('No config file found, please import a config')
             sys.exit(1)
@@ -82,8 +83,7 @@ class IndiAllSky(object):
         self._miscDb = miscDb(self.config)
 
 
-        config_version = float(self.config.get('VERSION', 0.0))
-        if __config_version__ != config_version:
+        if __config_level__ != self._config_obj.config_level:
             logger.error('indi-allsky version does not match config, please rerun setup.sh')
 
             self._miscDb.addNotification(
@@ -181,8 +181,7 @@ class IndiAllSky(object):
                 return
 
 
-        config_version = float(c.get('VERSION', 0.0))
-        if __config_version__ != config_version:
+        if __config_level__ != self._config_obj.config_level:
             logger.error('indi-allsky version does not match config, please rerun setup.sh')
 
             self._miscDb.addNotification(
@@ -350,7 +349,7 @@ class IndiAllSky(object):
 
     def _initialize(self, connectOnly=False):
         logger.info('indi-allsky release: %s', str(__version__))
-        logger.info('indi-allsky config version: %s', str(__config_version__))
+        logger.info('indi-allsky config level: %s', str(__config_level__))
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
