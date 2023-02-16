@@ -29,7 +29,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
-        help='dark frame algorithm, sigmaclip is recommended',
+        help='configuration management actions',
         choices=(
             'bootstrap',
             'load',
