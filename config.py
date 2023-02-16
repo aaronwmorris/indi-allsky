@@ -31,6 +31,7 @@ if __name__ == "__main__":
         'action',
         help='dark frame algorithm, sigmaclip is recommended',
         choices=(
+            'init',
             'load',
             'update_level',
         ),

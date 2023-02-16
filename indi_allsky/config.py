@@ -281,6 +281,19 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self._config = self.base_config.copy()  # populate initial values
 
 
+    def init(self, **kwargs):
+        try:
+            self._getConfig()
+
+            logger.error('Configuration already initialized')
+
+            sys.exit(1)
+        except NoResultFound:
+            pass
+
+        logger.info('Creating initial configuration')
+        self.save('Initial config')
+
 
     def load(self, **kwargs):
         f_config = kwargs['config']
@@ -301,6 +314,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         self.config.update(c)
 
+        logger.info('Loading configuration from file')
         self.save('Load config: {0:s}'.format(f_config.name))
 
 
@@ -314,6 +328,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             sys.exit(1)
 
 
+        logger.info('Updating config level')
         self.save('Update config level: {0:s}'.format(__config_level__))
 
 

@@ -1123,7 +1123,7 @@ class AjaxConfigView(BaseView):
         # save new config
         try:
             self._indi_allsky_config_obj.save('Web config form save')
-            app.logger.info('Wrote new config')
+            app.logger.info('Saved new config')
         except ConfigSaveException as e:
             error_data = {
                 'form_global' : [str(e)],
@@ -1135,11 +1135,11 @@ class AjaxConfigView(BaseView):
             self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
 
             message = {
-                'success-message' : 'Wrote new config,  Reloading indi-allsky service.',
+                'success-message' : 'Saved new config,  Reloading indi-allsky service.',
             }
         else:
             message = {
-                'success-message' : 'Wrote new config',
+                'success-message' : 'Saved new config',
             }
 
 
