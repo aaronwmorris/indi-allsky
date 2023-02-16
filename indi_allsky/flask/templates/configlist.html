@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Configs{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="row">
+    <div class="col-sm-1 fw-bold">ID</div>
+    <div class="col-sm-2 fw-bold">Create</div>
+    <div class="col-sm-2 fw-bold">Level</div>
+    <div class="col-sm-6 fw-bold">Note</div>
+</div>
+{% for config in config_list %}
+<div class="row">
+    <div class="col-sm-1">{{ config.id}}</div>
+    <div class="col-sm-2">{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="col-sm-2">{{ config.level }}</div>
+    <div class="col-sm-6">{{ config.note }}</div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

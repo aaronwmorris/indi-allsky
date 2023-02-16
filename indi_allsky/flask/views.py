@@ -54,6 +54,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
+from .models import IndiAllSkyDbConfigTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -1122,7 +1123,7 @@ class AjaxConfigView(BaseView):
 
         # save new config
         try:
-            self._indi_allsky_config_obj.save(config_note)
+            self._indi_allsky_config_obj.save(current_user.username, config_note)
             app.logger.info('Saved new config')
         except ConfigSaveException as e:
             error_data = {
@@ -2739,6 +2740,22 @@ class UsersView(TemplateView):
         return context
 
 
+class ConfigListView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ConfigListView, self).get_context()
+
+        config_list = IndiAllSkyDbConfigTable.query\
+            .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
+            .limit(25)
+
+        context['config_list'] = config_list
+
+        return context
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2781,4 +2798,5 @@ bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', 
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
+bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
 

@@ -9,6 +9,8 @@ from collections import OrderedDict
 import logging
 
 from .flask.models import IndiAllSkyDbConfigTable
+from .flask.models import IndiAllSkyDbUserTable
+
 from .flask import db
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -259,10 +261,11 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
-    def _setConfig(self, note):
+    def _setConfig(self, user_entry, note):
         config_entry = IndiAllSkyDbConfigTable(
             data=self._config,
             level=str(__config_level__),
+            user_id=user_entry.id,
             note=str(note),
         )
 
@@ -272,8 +275,12 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
-    def save(self, note):
-        config_entry = self._setConfig(note)
+    def save(self, username, note):
+        user_entry = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == str(username))\
+            .one()
+
+        config_entry = self._setConfig(user_entry, note)
 
         self._config_id = config_entry.id
 
@@ -286,7 +293,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self._config = self.base_config.copy()  # populate initial values
 
 
-    def init(self, **kwargs):
+    def bootstrap(self, **kwargs):
         try:
             self._getConfig()
 
@@ -296,8 +303,12 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         except NoResultFound:
             pass
 
+
+        self._createSystemAccount()
+
+
         logger.info('Creating initial configuration')
-        self.save('Initial config')
+        self.save('system', 'Initial config')
 
 
     def load(self, **kwargs):
@@ -314,13 +325,16 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             pass
 
 
+        self._createSystemAccount()
+
+
         c = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
         f_config.close()
 
         self.config.update(c)
 
         logger.info('Loading configuration from file')
-        self.save('Load config: {0:s}'.format(f_config.name))
+        self.save('system', 'Load config: {0:s}'.format(f_config.name))
 
 
     def update_level(self, **kwargs):
@@ -334,7 +348,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
         logger.info('Updating config level')
-        self.save('Update config level: {0:s}'.format(__config_level__))
+        self.save('system', 'Update config level: {0:s}'.format(__config_level__))
 
 
     def edit(self, **kwargs):
@@ -369,7 +383,33 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         self.config.update(c)
 
-        self.save('CLI config edit')
+        self.save('system', 'CLI config edit')
 
         config_temp_p.unlink()  # cleanup
+
+
+    def _createSystemAccount(self):
+        try:
+            system_user = IndiAllSkyDbUserTable.query\
+                .filter(IndiAllSkyDbUserTable.username == 'system')\
+                .one()
+
+            return system_user
+        except NoResultFound:
+            pass
+
+
+        system_user = IndiAllSkyDbUserTable(
+            username='system',
+            password='disabled',
+            name='Internal System Account',
+            email='system@indi-allsky',
+            active=False,
+            admin=True,
+        )
+
+        db.session.add(system_user)
+        db.session.commit()
+
+        return system_user
 

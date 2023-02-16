@@ -1260,7 +1260,7 @@ class IndiAllSky(object):
 
         # save new config
         try:
-            self._config_obj.save('*Auto* Location updated')
+            self._config_obj.save('system', '*Auto* Location updated')
             logger.info('Wrote new config')
         except ConfigSaveException:
             return

@@ -400,9 +400,11 @@ class IndiAllSkyDbConfigTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    data = db.Column(db.JSON)
     level = db.Column(db.String(length=12), nullable=False)
     note = db.Column(db.String(length=255), nullable=False)
+    data = db.Column(db.JSON)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('IndiAllSkyDbUserTable', back_populates='configs')
 
 
 class IndiAllSkyDbStateTable(db.Model):
@@ -431,6 +433,7 @@ class IndiAllSkyDbUserTable(db.Model):
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    configs = db.relationship('IndiAllSkyDbConfigTable', back_populates='user')
 
 
     @property
