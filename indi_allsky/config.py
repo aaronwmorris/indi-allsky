@@ -374,6 +374,8 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         config_temp_p = Path(config_temp_f.name)
 
+        initial_mtime = config_temp_p.stat().st_mtime
+
 
         while True:
             # execute until JSON is correctly formatted
@@ -381,7 +383,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
             try:
                 with io.open(str(config_temp_p), 'r') as f_config:
-                    c = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
+                    new_config = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
 
                 break
             except json.JSONDecodeError:
@@ -389,8 +391,15 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
                 time.sleep(3.0)
 
 
-        self.config.update(c)
+        if config_temp_p.stat().st_mtime == initial_mtime:
+            logger.info('Config not updated')
+            config_temp_p.unlink()  # cleanup
+            return
 
+
+        self.config.update(new_config)
+
+        logger.info('Saving new config')
         self.save('system', 'CLI config edit')
 
         config_temp_p.unlink()  # cleanup
