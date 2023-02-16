@@ -433,6 +433,25 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         print(json.dumps(dump_entry.data, indent=4))
 
 
+    def flush(self, **kwargs):
+        confirm1 = input('\nConfirm flushing all configs? [y/n]')
+        if confirm1.lower() != 'y':
+            logger.warning('Cancel flush')
+            sys.exit(1)
+
+        confirm2 = input('\nAre you lying? [y/n]')
+        if confirm2.lower() != 'n':
+            logger.warning('Cancel flush')
+            sys.exit(1)
+
+
+        configs_all = IndiAllSkyDbConfigTable.query
+        configs_all.delete()
+        db.session.commit()
+
+        logger.info('All configurations have been deleted')
+
+
     def _createSystemAccount(self):
         try:
             system_user = IndiAllSkyDbUserTable.query\

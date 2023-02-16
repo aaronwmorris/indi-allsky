@@ -1570,6 +1570,25 @@ sudo chmod 664 "${DB_FILE}"
 sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
 
+if [ -f "${ALLSKY_ETC}/config.json" ]; then
+    echo
+    echo
+    echo "Configurations are now being stored in the database"
+    echo "This script will move your existing configuration into"
+    echo "the database."
+    echo
+    sleep 5
+
+    "${ALLSKY_DIRECTORY}/config.py" load -c "${ALLSKY_ETC}/config.json"
+
+    mv -f "${ALLSKY_ETC}/config.json" "${ALLSKY_ETC}/legacy_config.json"
+fi
+
+
+# bootstrap initial config
+"${ALLSKY_DIRECTORY}/config.py" bootstrap || true
+
+
 ### Mysql
 if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
     MYSQL_ETC="/etc/mysql"

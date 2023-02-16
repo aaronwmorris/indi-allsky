@@ -33,10 +33,11 @@ if __name__ == "__main__":
         choices=(
             'bootstrap',
             'load',
+            'dump',
             'update_level',
             'edit',
             'revert',
-            'dump',
+            'flush',
         ),
     )
     argparser.add_argument(
