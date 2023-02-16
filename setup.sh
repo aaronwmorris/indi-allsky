@@ -38,7 +38,6 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
-IMAGE_FOLDER="/var/www/html/allsky/images"
 
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
@@ -1652,8 +1651,13 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
 fi
 
 
-# Detect IMAGE_FOLDER  fixme
-#IMAGE_FOLDER=
+
+# Detect IMAGE_FOLDER
+TMP_IMAGE_FOLDER_DUMP=$(mktemp)
+"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_IMAGE_FOLDER_DUMP"
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_IMAGE_FOLDER_DUMP")
+[[ -f "$TMP_IMAGE_FOLDER_DUMP" ]] && rm -f "$TMP_IMAGE_FOLDER_DUMP"
+
 
 
 echo "**** Flask config ****"
@@ -1986,18 +1990,30 @@ fi
 # Disable raw frames with libcamera when running less than 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
-    TMP_LIBCAM_TYPE=$(mktemp)
-    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_TYPE"
-    cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
+    TMP_LIBCAM_TYPE_DUMP=$(mktemp --suffix=.json)
+    "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_LIBCAM_TYPE_DUMP"
+
+    TMP_LIBCAM_TYPE=$(mktemp --suffix=.json)
+    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_LIBCAM_TYPE_DUMP" > "$TMP_LIBCAM_TYPE"
+
+    "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_DUMP"
+
+    [[ -f "$TMP_LIBCAM_TYPE_DUMP" ]] && rm -f "$TMP_LIBCAM_TYPE_DUMP"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
 
 # 25% ffmpeg scaling with libcamera when running 1GB of memory
 if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
-        TMP_LIBCAM_FFMPEG=$(mktemp)
-        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_FFMPEG"
-        cp -f "$TMP_LIBCAM_FFMPEG" "${ALLSKY_ETC}/config.json"
+        TMP_LIBCAM_FFMPEG_DUMP=$(mktemp --suffix=.json)
+        "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_LIBCAM_FFMPEG_DUMP"
+
+        TMP_LIBCAM_FFMPEG=$(mktemp --suffix=.json)
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_LIBCAM_FFMPEG_DUMP" > "$TMP_LIBCAM_FFMPEG"
+
+        "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_FFMPEG"
+
+        [[ -f "$TMP_LIBCAM_FFMPEG_DUMP" ]] && rm -f "$TMP_LIBCAM_FFMPEG_DUMP"
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
     fi
 fi
@@ -2020,9 +2036,15 @@ systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Update config camera interface ****"
-TMP_CAMERA_INT=$(mktemp)
-jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > "$TMP_CAMERA_INT"
-cp -f "$TMP_CAMERA_INT" "${ALLSKY_ETC}/config.json"
+TMP_CAMERA_INT_DUMP=$(mktemp --suffix=.json)
+"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CAMERA_INT_DUMP"
+
+TMP_CAMERA_INT=$(mktemp --suffix=.json)
+jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "$TMP_CAMERA_INT_DUMP" > "$TMP_CAMERA_INT"
+
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CAMERA_INT"
+
+[[ -f "$TMP_CAMERA_INT_DUMP" ]] && rm -f "$TMP_CAMERA_INT_DUMP"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
 
 
@@ -2076,7 +2098,7 @@ echo
 echo
 echo
 echo
-echo "*** Configurations are now stored in the database and not /etc/indi-allsky/config.json ***"
+echo "*** Configurations are now stored in the database and *NOT* /etc/indi-allsky/config.json ***"
 echo
 echo "Services can be started at the command line or can be started from the web interface"
 echo
