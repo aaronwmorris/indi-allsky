@@ -36,6 +36,7 @@ if __name__ == "__main__":
             'update_level',
             'edit',
             'revert',
+            'dump',
         ),
     )
     argparser.add_argument(
@@ -45,9 +46,9 @@ if __name__ == "__main__":
         type=argparse.FileType('r'),
     )
     argparser.add_argument(
-        '--revert_id',
-        '-r',
-        help='revert config id',
+        '--id',
+        '-i',
+        help='config id (revert/dump)',
         type=int,
     )
 
@@ -57,5 +58,5 @@ if __name__ == "__main__":
 
     iacu = IndiAllSkyConfigUtil()
     action_func = getattr(iacu, args.action)
-    action_func(config=args.config, revert_id=args.revert_id)
+    action_func(config=args.config, config_id=args.id)
 

@@ -406,9 +406,8 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def revert(self, **kwargs):
-        revert_id = kwargs['revert_id']
+        revert_id = kwargs['config_id']
 
-        # fetch latest config
         try:
             revert_entry = self._getConfig(config_id=revert_id)
         except NoResultFound:
@@ -420,6 +419,18 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         logger.info('Reverting configuration')
         self.save('system', 'Revert to config: {0:d}'.format(revert_entry.id))
+
+
+    def dump(self, **kwargs):
+        dump_id = kwargs['config_id']
+
+        try:
+            dump_entry = self._getConfig(config_id=dump_id)
+        except NoResultFound:
+            logger.error('Configuration ID %d not found', int(dump_id))
+            sys.exit(1)
+
+        print(json.dumps(dump_entry.data, indent=4))
 
 
     def _createSystemAccount(self):
