@@ -34,6 +34,9 @@ class UserManager(object):
     username_regex = r'^[a-zA-Z0-9\@\.\-]+$'
     name_regex = r'^[a-zA-Z0-9_\ \@\.\-]+$'
 
+    protected_users = [
+        'system',
+    ]
 
     def __init__(self):
         pass
@@ -141,6 +144,12 @@ class UserManager(object):
 
         if not username:
             username = input('Username: ')
+
+
+        if username in self.protected_users:
+            logger.error('%s is protected, unable to delete', username)
+            sys.exit(1)
+
 
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
