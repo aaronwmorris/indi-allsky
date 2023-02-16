@@ -96,7 +96,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        #self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())  # fixme
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
@@ -172,13 +172,10 @@ class IndiAllSky(object):
     def sighup_handler_main(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
+        self._config_obj = IndiAllSkyConfig()
 
-        with io.open(self.config_file, 'r') as f_config_file:
-            try:
-                c, config_md5 = self._parseConfig(f_config_file.read())
-            except json.JSONDecodeError as e:
-                logger.error('Error decoding json: %s', str(e))
-                return
+        # overwrite config
+        self.config = self._config_obj.config
 
 
         if __config_level__ != self._config_obj.config_level:
@@ -194,10 +191,7 @@ class IndiAllSky(object):
             return
 
 
-        # overwrite config
-        self.config = c
-
-        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 
         # Update shared values

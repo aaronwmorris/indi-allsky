@@ -81,7 +81,7 @@ class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
 
-        #self.check_config(self.indi_allsky_config_md5)  # fixme
+        self.check_config(self._indi_allsky_config_obj.config_id)
 
         self.template_name = template_name
 
@@ -105,19 +105,19 @@ class TemplateView(BaseView):
         return context
 
 
-    def check_config(self, web_md5):
+    def check_config(self, config_id):
         try:
-            db_md5 = self._miscDb.getState('CONFIG_MD5')
+            db_config_id = self._miscDb.getState('CONFIG_ID')
         except NoResultFound:
-            app.logger.error('Unable to get CONFIG_MD5')
+            app.logger.error('Unable to get CONFIG_ID')
             return
 
-        if db_md5 == web_md5.hexdigest():
+        if db_config_id == config_id:
             return
 
         self._miscDb.addNotification(
             NotificationCategory.STATE,
-            'config_md5',
+            'config_id',
             'Config updated: indi-allsky needs to be reloaded',
             expire=timedelta(minutes=30),
         )
