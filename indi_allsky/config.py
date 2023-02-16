@@ -1,5 +1,10 @@
 import sys
+import os
+import time
+import io
 import json
+import tempfile
+from pathlib import Path
 from collections import OrderedDict
 import logging
 
@@ -331,4 +336,40 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         logger.info('Updating config level')
         self.save('Update config level: {0:s}'.format(__config_level__))
 
+
+    def edit(self, **kwargs):
+        try:
+            config_entry = self._getConfig()
+            self._config.update(config_entry.data)
+        except NoResultFound:
+            logger.error('Configuration not loaded')
+            sys.exit(1)
+
+
+        config_temp_f = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+        config_temp_f.write(json.dumps(self.config, indent=4))
+        config_temp_f.close()
+
+        config_temp_p = Path(config_temp_f.name)
+
+
+        while True:
+            # execute until JSON is correctly formatted
+            os.system('editor {0:s}'.format(str(config_temp_p)))
+
+            try:
+                with io.open(str(config_temp_p), 'r') as f_config:
+                    c = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
+
+                break
+            except json.JSONDecodeError:
+                logger.error('JSON formatting error')
+                time.sleep(3.0)
+
+
+        self.config.update(c)
+
+        self.save('CLI config edit')
+
+        config_temp_p.unlink()  # cleanup
 

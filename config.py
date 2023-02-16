@@ -34,6 +34,7 @@ if __name__ == "__main__":
             'init',
             'load',
             'update_level',
+            'edit',
         ),
     )
     argparser.add_argument(
