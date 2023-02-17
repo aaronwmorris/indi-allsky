@@ -109,7 +109,7 @@ def create_app():
         from sqlalchemy import event
         event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
 
-        from . import views  # noqa: F401
+        #from . import views  # noqa: F401
 
         #db.create_all()  # Create sql tables for our data models
 
