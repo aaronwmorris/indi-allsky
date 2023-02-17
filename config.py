@@ -52,12 +52,22 @@ if __name__ == "__main__":
         help='config id (revert/dump)',
         type=int,
     )
-
+    argparser.add_argument(
+        '--force',
+        help='force changes',
+        dest='force',
+        action='store_true',
+    )
+    argparser.set_defaults(force=False)
 
     args = argparser.parse_args()
 
 
     iacu = IndiAllSkyConfigUtil()
     action_func = getattr(iacu, args.action)
-    action_func(config=args.config, config_id=args.id)
+    action_func(
+        config=args.config,
+        config_id=args.id,
+        force=args.force,
+    )
 

@@ -1996,7 +1996,7 @@ if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp --suffix=.json)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_LIBCAM_TYPE_DUMP" > "$TMP_LIBCAM_TYPE"
 
-    "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_DUMP"
+    "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_DUMP" --force
 
     [[ -f "$TMP_LIBCAM_TYPE_DUMP" ]] && rm -f "$TMP_LIBCAM_TYPE_DUMP"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
@@ -2011,7 +2011,7 @@ if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libca
         TMP_LIBCAM_FFMPEG=$(mktemp --suffix=.json)
         jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_LIBCAM_FFMPEG_DUMP" > "$TMP_LIBCAM_FFMPEG"
 
-        "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_FFMPEG"
+        "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_FFMPEG" --force
 
         [[ -f "$TMP_LIBCAM_FFMPEG_DUMP" ]] && rm -f "$TMP_LIBCAM_FFMPEG_DUMP"
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
@@ -2042,7 +2042,7 @@ TMP_CAMERA_INT_DUMP=$(mktemp --suffix=.json)
 TMP_CAMERA_INT=$(mktemp --suffix=.json)
 jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "$TMP_CAMERA_INT_DUMP" > "$TMP_CAMERA_INT"
 
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CAMERA_INT"
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CAMERA_INT" --force
 
 [[ -f "$TMP_CAMERA_INT_DUMP" ]] && rm -f "$TMP_CAMERA_INT_DUMP"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"

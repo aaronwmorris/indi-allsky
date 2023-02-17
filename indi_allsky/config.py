@@ -319,16 +319,17 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def load(self, **kwargs):
         f_config = kwargs['config']
+        force = kwargs['force']
 
+        if not force:
+            try:
+                self._getConfig()
 
-        try:
-            self._getConfig()
+                logger.error('Configuration already defined, not loading config')
 
-            logger.error('Configuration already defined, not loading config')
-
-            sys.exit(1)
-        except NoResultFound:
-            pass
+                sys.exit(1)
+            except NoResultFound:
+                pass
 
 
         self._createSystemAccount()
