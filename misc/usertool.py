@@ -9,6 +9,7 @@ from passlib.hash import argon2
 #import time
 from datetime import datetime
 #from datetime import timedelta
+from prettytable import PrettyTable
 import logging
 
 from sqlalchemy.exc import IntegrityError
@@ -45,13 +46,18 @@ class UserManager(object):
 
 
     def list(self, **kwargs):
+        table = PrettyTable()
+        table.field_names = ['ID', 'Username', 'Full Name', 'Email']
+
 
         user_list = IndiAllSkyDbUserTable.query\
             .order_by(IndiAllSkyDbUserTable.createDate.desc())
 
 
         for user in user_list:
-            print('{0:d} - {1:s} ({2:s})'.format(user.id, user.username, user.name))
+            table.add_row([user.id, user.username, user.name, user.email])
+
+        print(table)
 
 
     def adduser(self, **kwargs):
