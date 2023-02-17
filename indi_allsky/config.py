@@ -6,6 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 from collections import OrderedDict
+from prettytable import PrettyTable
 import logging
 
 from .flask.models import IndiAllSkyDbConfigTable
@@ -315,6 +316,19 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         logger.info('Creating initial configuration')
         self.save('system', 'Initial config')
+
+
+    def list(self, **kwargs):
+        table = PrettyTable()
+        table.field_names = ['ID', 'Create Date', 'User ID', 'Level', 'Note']
+
+        config_list = IndiAllSkyDbConfigTable.query\
+            .order_by(IndiAllSkyDbConfigTable.createDate.desc())
+
+        for config in config_list:
+            table.add_row([config.id, config.createDate, config.user_id, config.level, config.note])
+
+        print(table)
 
 
     def load(self, **kwargs):

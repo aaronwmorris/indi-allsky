@@ -32,6 +32,7 @@ if __name__ == "__main__":
         help='configuration management actions',
         choices=(
             'bootstrap',
+            'list',
             'load',
             'dump',
             'update_level',
