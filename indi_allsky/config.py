@@ -6,6 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 from collections import OrderedDict
+from prettytable import PrettyTable
 import logging
 
 from .flask.models import IndiAllSkyDbConfigTable
@@ -318,7 +319,6 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def list(self, **kwargs):
-        from prettytable import PrettyTable  # module might not be installed
         table = PrettyTable()
         table.field_names = ['ID', 'Create Date', 'User ID', 'Level', 'Note']
 
