@@ -2758,6 +2758,14 @@ class ConfigListView(TemplateView):
         context = super(ConfigListView, self).get_context()
 
         config_list = IndiAllSkyDbConfigTable.query\
+            .add_columns(
+                IndiAllSkyDbConfigTable.id,
+                IndiAllSkyDbConfigTable.createDate,
+                IndiAllSkyDbConfigTable.level,
+                IndiAllSkyDbConfigTable.note,
+                IndiAllSkyDbUserTable.username,
+            )\
+            .join(IndiAllSkyDbUserTable)\
             .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
             .limit(25)
 

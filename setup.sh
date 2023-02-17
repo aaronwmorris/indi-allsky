@@ -2043,7 +2043,8 @@ json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
-if [ "$USER_COUNT" -eq 0 ]; then
+# there is a system user
+if [ "$USER_COUNT" -le 1 ]; then
     while [ -z "${WEB_USER:-}" ]; do
         # shellcheck disable=SC2068
         WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)

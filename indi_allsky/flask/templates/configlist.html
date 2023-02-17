@@ -20,10 +20,12 @@
 <div class="row">
     <div class="col-sm-1">{{ config.id}}</div>
     <div class="col-sm-2">{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-sm-2">{{ config.user.username }}</div>
+    <div class="col-sm-2">{{ config.username }}</div>
     <div class="col-sm-2">{{ config.level }}</div>
     <div class="col-sm-5">{{ config.note }}</div>
 </div>
 {% endfor %}
 </div>
+<div style="height:20px;"></div>
+<div>Note: Configs from deleted users will not be displayed, but they are still in the database</div>
 {% endblock %}
