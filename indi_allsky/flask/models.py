@@ -72,7 +72,7 @@ class IndiAllSkyDbFileBase(db.Model):
         return rel_filename_p
 
 
-    def getUri(self):
+    def getUrl(self):
         rel_filename_p = self.getRelativePath()
         return Path('images').joinpath(rel_filename_p)
 

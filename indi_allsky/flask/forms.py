@@ -1687,7 +1687,7 @@ class IndiAllskyImageViewer(FlaskForm):
         raw_choices = list()
         for i, img in enumerate(images_query):
             try:
-                uri = img.getUri()
+                url = img.getUrl()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1697,7 +1697,7 @@ class IndiAllskyImageViewer(FlaskForm):
             else:
                 entry_str = img.createDate.strftime('%H:%M:%S')
 
-            images_choices.append((str(uri), entry_str))
+            images_choices.append((str(url), entry_str))
 
 
             # look for fits
@@ -1706,7 +1706,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
-                fits_select = (str(fits_image.getUri()), i)
+                fits_select = (str(fits_image.getUrl()), i)
             except NoResultFound:
                 fits_select = ('None', str(i))
 
@@ -1719,7 +1719,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                raw_select = (str(fits_image.getUri()), i)
+                raw_select = (str(fits_image.getUrl()), i)
             except NoResultFound:
                 raw_select = ('None', i)
 
@@ -1858,13 +1858,13 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             try:
-                uri = v.getUri()
+                url = v.getUrl()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
             entry = {
-                'url'        : str(uri),
+                'url'        : str(url),
                 'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
                 'night'      : v.night,
             }
@@ -1887,7 +1887,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if keogram_entry:
                 try:
-                    keogram_url = keogram_entry.getUri()
+                    keogram_url = keogram_entry.getUrl()
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -1905,7 +1905,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_entry:
                 try:
-                    startrail_url = startrail_entry.getUri()
+                    startrail_url = startrail_entry.getUrl()
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -1923,7 +1923,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_video_entry:
                 try:
-                    startrail_video_url = startrail_video_entry.getUri()
+                    startrail_video_url = startrail_video_entry.getUrl()
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None

@@ -294,13 +294,13 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             try:
-                uri = i.getUri()
+                url = i.getUrl()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
             data = {
-                'file'       : str(uri),
+                'url'        : str(url),
                 'sqm'        : i.sqm,
                 'stars'      : i.stars,
                 'detections' : i.detections,
