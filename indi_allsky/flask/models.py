@@ -403,7 +403,7 @@ class IndiAllSkyDbConfigTable(db.Model):
     level = db.Column(db.String(length=12), nullable=False)
     note = db.Column(db.String(length=255), nullable=False)
     data = db.Column(db.JSON)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # users can be deleted
     user = db.relationship('IndiAllSkyDbUserTable', back_populates='configs')
 
 

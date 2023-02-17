@@ -11,6 +11,8 @@ from datetime import datetime
 #from datetime import timedelta
 import logging
 
+from sqlalchemy.exc import IntegrityError
+
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 import indi_allsky
@@ -161,7 +163,12 @@ class UserManager(object):
 
 
         db.session.delete(existing_user)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            logger.error('Integrity error: %s', str(e))
+            sys.exit(1)
 
 
     def resetpass(self, **kwargs):
