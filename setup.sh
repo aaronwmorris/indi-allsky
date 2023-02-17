@@ -1584,10 +1584,6 @@ if [ -f "${ALLSKY_ETC}/config.json" ]; then
 fi
 
 
-# bootstrap initial config
-"${ALLSKY_DIRECTORY}/config.py" bootstrap || true
-
-
 ### Mysql
 if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
     MYSQL_ETC="/etc/mysql"
@@ -1651,12 +1647,18 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
 fi
 
 
+# bootstrap initial config
+"${ALLSKY_DIRECTORY}/config.py" bootstrap || true
+
+
+# dump config for processing
+TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
+"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
+
+
 
 # Detect IMAGE_FOLDER
-TMP_IMAGE_FOLDER_DUMP=$(mktemp)
-"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_IMAGE_FOLDER_DUMP"
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_IMAGE_FOLDER_DUMP")
-[[ -f "$TMP_IMAGE_FOLDER_DUMP" ]] && rm -f "$TMP_IMAGE_FOLDER_DUMP"
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
 
 
 
@@ -1990,30 +1992,22 @@ fi
 # Disable raw frames with libcamera when running less than 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
-    TMP_LIBCAM_TYPE_DUMP=$(mktemp --suffix=.json)
-    "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_LIBCAM_TYPE_DUMP"
-
     TMP_LIBCAM_TYPE=$(mktemp --suffix=.json)
-    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_LIBCAM_TYPE_DUMP" > "$TMP_LIBCAM_TYPE"
+    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_TYPE"
 
-    "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_DUMP" --force
+    cat "$TMP_LIBCAM_TYPE" > "$TMP_CONFIG_DUMP"
 
-    [[ -f "$TMP_LIBCAM_TYPE_DUMP" ]] && rm -f "$TMP_LIBCAM_TYPE_DUMP"
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
 
 # 25% ffmpeg scaling with libcamera when running 1GB of memory
 if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
-        TMP_LIBCAM_FFMPEG_DUMP=$(mktemp --suffix=.json)
-        "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_LIBCAM_FFMPEG_DUMP"
-
         TMP_LIBCAM_FFMPEG=$(mktemp --suffix=.json)
-        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_LIBCAM_FFMPEG_DUMP" > "$TMP_LIBCAM_FFMPEG"
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_FFMPEG"
 
-        "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_LIBCAM_FFMPEG" --force
+        cat "$TMP_LIBCAM_FFMPEG" > "$TMP_CONFIG_DUMP"
 
-        [[ -f "$TMP_LIBCAM_FFMPEG_DUMP" ]] && rm -f "$TMP_LIBCAM_FFMPEG_DUMP"
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
     fi
 fi
@@ -2036,15 +2030,11 @@ systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Update config camera interface ****"
-TMP_CAMERA_INT_DUMP=$(mktemp --suffix=.json)
-"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CAMERA_INT_DUMP"
-
 TMP_CAMERA_INT=$(mktemp --suffix=.json)
-jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "$TMP_CAMERA_INT_DUMP" > "$TMP_CAMERA_INT"
+jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "$TMP_CONFIG_DUMP" > "$TMP_CAMERA_INT"
 
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CAMERA_INT" --force
+cat "$TMP_CAMERA_INT" > "$TMP_CONFIG_DUMP"
 
-[[ -f "$TMP_CAMERA_INT_DUMP" ]] && rm -f "$TMP_CAMERA_INT_DUMP"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
 
 
@@ -2093,6 +2083,12 @@ if [ "$USER_COUNT" -eq 0 ]; then
     "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_NAME" -e "$WEB_EMAIL"
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
 fi
+
+
+# load all changes
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CONFIG_DUMP" --force
+[[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+
 
 echo
 echo

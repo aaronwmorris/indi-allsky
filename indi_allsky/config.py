@@ -431,6 +431,8 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             logger.error('Configuration ID %d not found', int(dump_id))
             sys.exit(1)
 
+        logger.info('Dumping config')
+
         print(json.dumps(dump_entry.data, indent=4))
 
 
