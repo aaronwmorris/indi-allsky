@@ -860,10 +860,12 @@ class AjaxConfigView(BaseView):
     def dispatch_request(self):
         form_config = IndiAllskyConfigForm(data=request.json)
 
-        if not current_user.is_admin:
-            form_errors = form_config.errors  # this must be a property
-            form_errors['form_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_config.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_config.validate():
@@ -1122,8 +1124,14 @@ class AjaxConfigView(BaseView):
 
 
         # save new config
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+
         try:
-            self._indi_allsky_config_obj.save(current_user.username, config_note)
+            self._indi_allsky_config_obj.save(username, config_note)
             app.logger.info('Saved new config')
         except ConfigSaveException as e:
             error_data = {
@@ -1163,10 +1171,12 @@ class AjaxSetTimeView(BaseView):
     def dispatch_request(self):
         form_settime = IndiAllskySetDateTimeForm(data=request.json)
 
-        if not current_user.is_admin:
-            form_errors = form_settime.errors  # this must be a property
-            form_errors['form_settime_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_settime.errors  # this must be a property
+                form_errors['form_settime_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_settime.validate():
@@ -1716,10 +1726,11 @@ class AjaxSystemInfoView(BaseView):
         form_system = IndiAllskySystemInfoForm(data=request.json)
 
 
-        if not current_user.is_admin:
-            form_errors = form_system.errors  # this must be a property
-            form_errors['form_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_system.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_system.validate():

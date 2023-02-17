@@ -1,5 +1,4 @@
 {
-    "comment_SQLALCHEMY_DATABASE_URI" : "This config is pulled from indi-allsky config.json",
     "SQLALCHEMY_DATABASE_URI" : "%SQLALCHEMY_DATABASE_URI%",
 
     "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
@@ -7,7 +6,7 @@
         "echo" : false
     },
 
-    "comment_SESSION_COOKIE_SECURE" : "True will prevent using http-only mode",
+    "SESSION_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,
     "SESSION_COOKIE_HTTPONLY" : true,
     "SESSION_COOKIE_SAMESITE" : "Lax",
@@ -15,7 +14,7 @@
     "SECRET_KEY" : "%SECRET_KEY%",
 
     "REMEMBER_COOKIE_DURATION" : 604800,
-    "comment_REMEMBER_COOKIE_SECURE" : "True will prevent using http-only mode",
+    "REMEMBER_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
     "REMEMBER_COOKIE_SECURE" : true,
     "REMEMBER_COOKIE_HTTPONLY" : true,
     "REMEMBER_COOKIE_SAMESITE" : "Lax",
@@ -27,7 +26,7 @@
     "INDI_ALLSKY_STATUS" : "%DB_FOLDER%/indi_allsky_status.json",
     "INDI_ALLSKY_PID" : "%DB_FOLDER%/indi-allsky.pid",
     "INDI_ALLSKY_AUTH_ALL_VIEWS" : %FLASK_AUTH_ALL_VIEWS%,
-    "comment_LOGIN_DISABLED" : "set true to disable all authentication",
+    "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
 
     "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
