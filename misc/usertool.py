@@ -9,7 +9,10 @@ from passlib.hash import argon2
 #import time
 from datetime import datetime
 #from datetime import timedelta
+from prettytable import PrettyTable
 import logging
+
+from sqlalchemy.exc import IntegrityError
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
@@ -34,19 +37,27 @@ class UserManager(object):
     username_regex = r'^[a-zA-Z0-9\@\.\-]+$'
     name_regex = r'^[a-zA-Z0-9_\ \@\.\-]+$'
 
+    protected_users = [
+        'system',
+    ]
 
     def __init__(self):
         pass
 
 
     def list(self, **kwargs):
+        table = PrettyTable()
+        table.field_names = ['ID', 'Username', 'Full Name', 'Email']
+
 
         user_list = IndiAllSkyDbUserTable.query\
             .order_by(IndiAllSkyDbUserTable.createDate.desc())
 
 
         for user in user_list:
-            print('{0:d} - {1:s} ({2:s})'.format(user.id, user.username, user.name))
+            table.add_row([user.id, user.username, user.name, user.email])
+
+        print(table)
 
 
     def adduser(self, **kwargs):
@@ -142,6 +153,12 @@ class UserManager(object):
         if not username:
             username = input('Username: ')
 
+
+        if username in self.protected_users:
+            logger.error('%s is protected, unable to delete', username)
+            sys.exit(1)
+
+
         existing_user = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == username)\
             .first()
@@ -152,7 +169,12 @@ class UserManager(object):
 
 
         db.session.delete(existing_user)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            logger.error('Integrity error: %s', str(e))
+            sys.exit(1)
 
 
     def resetpass(self, **kwargs):

@@ -39,13 +39,6 @@ if __name__ == "__main__":
         ),
     )
     argparser.add_argument(
-        '--config',
-        '-c',
-        help='config file',
-        type=argparse.FileType('r'),
-        default='/etc/indi-allsky/config.json',
-    )
-    argparser.add_argument(
         '--count',
         '-C',
         help='image count',
@@ -94,7 +87,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    iad = IndiAllSkyDarks(args.config)
+    iad = IndiAllSkyDarks()
     iad.count = args.count
     iad.temp_delta = args.temp_delta
     iad.time_delta = args.Time_delta

@@ -54,6 +54,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
+from .models import IndiAllSkyDbConfigTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -293,13 +294,13 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             try:
-                uri = i.getUri()
+                url = i.getUrl()
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
             data = {
-                'file'       : str(uri),
+                'url'        : str(url),
                 'sqm'        : i.sqm,
                 'stars'      : i.stars,
                 'detections' : i.detections,
@@ -563,7 +564,6 @@ class ConfigView(FormView):
         context = super(ConfigView, self).get_context()
 
         form_data = {
-            'SQLALCHEMY_DATABASE_URI'        : self.indi_allsky_config.get('SQLALCHEMY_DATABASE_URI', 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'),
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
@@ -696,6 +696,7 @@ class ConfigView(FormView):
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
+            'CONFIG_NOTE'                    : '',
         }
 
 
@@ -859,10 +860,12 @@ class AjaxConfigView(BaseView):
     def dispatch_request(self):
         form_config = IndiAllskyConfigForm(data=request.json)
 
-        if not current_user.is_admin:
-            form_errors = form_config.errors  # this must be a property
-            form_errors['form_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_config.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_config.validate():
@@ -912,7 +915,6 @@ class AjaxConfigView(BaseView):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
 
         # update data
-        self.indi_allsky_config['SQLALCHEMY_DATABASE_URI']              = str(request.json['SQLALCHEMY_DATABASE_URI'])
         self.indi_allsky_config['CAMERA_INTERFACE']                     = str(request.json['CAMERA_INTERFACE'])
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
@@ -1062,6 +1064,7 @@ class AjaxConfigView(BaseView):
 
         # Not a config option
         reload_on_save                                                  = bool(request.json['RELOAD_ON_SAVE'])
+        config_note                                                     = str(request.json['CONFIG_NOTE'])
 
 
         # ADU_ROI
@@ -1121,9 +1124,15 @@ class AjaxConfigView(BaseView):
 
 
         # save new config
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+
         try:
-            self.save_indi_allsky_config(self.indi_allsky_config)
-            app.logger.info('Wrote new config.json')
+            self._indi_allsky_config_obj.save(username, config_note)
+            app.logger.info('Saved new config')
         except ConfigSaveException as e:
             error_data = {
                 'form_global' : [str(e)],
@@ -1135,11 +1144,11 @@ class AjaxConfigView(BaseView):
             self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
 
             message = {
-                'success-message' : 'Wrote new config,  Reloading indi-allsky service.',
+                'success-message' : 'Saved new config,  Reloading indi-allsky service.',
             }
         else:
             message = {
-                'success-message' : 'Wrote new config',
+                'success-message' : 'Saved new config',
             }
 
 
@@ -1162,10 +1171,12 @@ class AjaxSetTimeView(BaseView):
     def dispatch_request(self):
         form_settime = IndiAllskySetDateTimeForm(data=request.json)
 
-        if not current_user.is_admin:
-            form_errors = form_settime.errors  # this must be a property
-            form_errors['form_settime_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_settime.errors  # this must be a property
+                form_errors['form_settime_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_settime.validate():
@@ -1715,10 +1726,11 @@ class AjaxSystemInfoView(BaseView):
         form_system = IndiAllskySystemInfoForm(data=request.json)
 
 
-        if not current_user.is_admin:
-            form_errors = form_system.errors  # this must be a property
-            form_errors['form_global'] = ['You do not have permission to make configuration changes']
-            return jsonify(form_errors), 400
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_system.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
 
 
         if not form_system.validate():
@@ -1876,12 +1888,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += image_query.count()
 
         for i in image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
+            i.deleteAsset()
 
         image_query.delete()
         db.session.commit()
@@ -1893,13 +1900,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += fits_image_query.count()
 
         for i in fits_image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
-
+            i.deleteAsset()
 
         fits_image_query.delete()
         db.session.commit()
@@ -1911,13 +1912,7 @@ class AjaxSystemInfoView(BaseView):
         file_count += raw_image_query.count()
 
         for i in raw_image_query:
-            image_filename = i.getFilesystemPath()
-            image_filename_p = Path(image_filename)
-
-            if image_filename_p.exists():
-                app.logger.info('Deleting %s', image_filename_p)
-                image_filename_p.unlink()
-
+            i.deleteAsset()
 
         raw_image_query.delete()
         db.session.commit()
@@ -1942,12 +1937,7 @@ class AjaxSystemInfoView(BaseView):
 
         # videos
         for v in video_query:
-            video_filename = v.getFilesystemPath()
-            video_filename_p = Path(video_filename)
-
-            if video_filename_p.exists():
-                app.logger.info('Deleting %s', video_filename_p)
-                video_filename_p.unlink()
+            v.deleteAsset()
 
         video_query.delete()
         db.session.commit()
@@ -1955,12 +1945,7 @@ class AjaxSystemInfoView(BaseView):
 
         # keograms
         for k in keogram_query:
-            keogram_filename = k.getFilesystemPath()
-            keogram_filename_p = Path(keogram_filename)
-
-            if keogram_filename_p.exists():
-                app.logger.info('Deleting %s', keogram_filename_p)
-                keogram_filename_p.unlink()
+            k.deleteAsset()
 
         keogram_query.delete()
         db.session.commit()
@@ -1968,12 +1953,7 @@ class AjaxSystemInfoView(BaseView):
 
         # startrails
         for s in startrail_query:
-            startrail_filename = s.getFilesystemPath()
-            startrail_filename_p = Path(startrail_filename)
-
-            if startrail_filename_p.exists():
-                app.logger.info('Deleting %s', startrail_filename_p)
-                startrail_filename_p.unlink()
+            s.deleteAsset()
 
         startrail_query.delete()
         db.session.commit()
@@ -1981,12 +1961,7 @@ class AjaxSystemInfoView(BaseView):
 
         # startrail videos
         for s in startrail_video_query:
-            startrail_video_filename = s.getFilesystemPath()
-            startrail_video_filename_p = Path(startrail_video_filename)
-
-            if startrail_video_filename_p.exists():
-                app.logger.info('Deleting %s', startrail_video_filename_p)
-                startrail_video_filename_p.unlink()
+            s.deleteAsset()
 
         startrail_video_query.delete()
         db.session.commit()
@@ -2009,10 +1984,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d images...', image_entries_count)
         image_notfound_list = list()
         for i in image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
 
@@ -2028,10 +2000,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d fits images...', fits_image_entries_count)
         fits_image_notfound_list = list()
         for i in fits_image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 fits_image_notfound_list.append(i)
 
@@ -2047,10 +2016,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d raw images...', raw_image_entries_count)
         raw_image_notfound_list = list()
         for i in raw_image_entries:
-            try:
-                self._validate_entry(i)
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 raw_image_notfound_list.append(i)
 
@@ -2066,10 +2032,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d bad pixel maps...', badpixelmap_entries_count)
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
-            try:
-                self._validate_entry(b)
-                continue
-            except FileNotFoundError:
+            if not b.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
                 badpixelmap_notfound_list.append(b)
 
@@ -2084,10 +2047,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d dark frames...', darkframe_entries_count)
         darkframe_notfound_list = list()
         for d in darkframe_entries:
-            try:
-                self._validate_entry(d)
-                continue
-            except FileNotFoundError:
+            if not d.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
                 darkframe_notfound_list.append(d)
 
@@ -2103,10 +2063,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d videos...', video_entries_count)
         video_notfound_list = list()
         for v in video_entries:
-            try:
-                self._validate_entry(v)
-                continue
-            except FileNotFoundError:
+            if not v.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
                 video_notfound_list.append(v)
 
@@ -2121,10 +2078,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d keograms...', keogram_entries_count)
         keogram_notfound_list = list()
         for k in keogram_entries:
-            try:
-                self._validate_entry(k)
-                continue
-            except FileNotFoundError:
+            if not k.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
                 keogram_notfound_list.append(k)
 
@@ -2140,10 +2094,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d star trails...', startrail_entries_count)
         startrail_notfound_list = list()
         for s in startrail_entries:
-            try:
-                self._validate_entry(s)
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_notfound_list.append(s)
 
@@ -2159,10 +2110,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.info('Searching %d star trail timelapses...', startrail_video_entries_count)
         startrail_video_notfound_list = list()
         for s in startrail_video_entries:
-            try:
-                self._validate_entry(s)
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_video_notfound_list.append(s)
 
@@ -2220,14 +2168,6 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
         return message_list
-
-
-    def _validate_entry(self, entry):
-        file_p = Path(entry.filename)
-
-        if not file_p.exists():
-            raise FileNotFoundError('File not found')
-
 
 
 class TimelapseGeneratorView(TemplateView):
@@ -2340,43 +2280,19 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             if video_entry:
-                video_filename = video_entry.getFilesystemPath()
-                video_filename_p = Path(video_filename)
-
-                if video_filename_p.exists():
-                    app.logger.info('Deleting %s', video_filename_p)
-                    video_filename_p.unlink()
-
+                video_entry.deleteAsset()
                 db.session.delete(video_entry)
 
             if keogram_entry:
-                keogram_filename = keogram_entry.getFilesystemPath()
-                keogram_filename_p = Path(keogram_filename)
-
-                if keogram_filename_p.exists():
-                    app.logger.info('Deleting %s', keogram_filename_p)
-                    keogram_filename_p.unlink()
-
+                keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
 
             if startrail_entry:
-                startrail_filename = startrail_entry.getFilesystemPath()
-                startrail_filename_p = Path(startrail_filename)
-
-                if startrail_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_filename_p)
-                    startrail_filename_p.unlink()
-
+                startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
 
             if startrail_video_entry:
-                startrail_video_filename = startrail_video_entry.getFilesystemPath()
-                startrail_video_filename_p = Path(startrail_video_filename)
-
-                if startrail_video_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_video_filename_p)
-                    startrail_video_filename_p.unlink()
-
+                startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
 
 
@@ -2397,13 +2313,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 .first()
 
             if video_entry:
-                video_filename = video_entry.getFilesystemPath()
-                video_filename_p = Path(video_filename)
-
-                if video_filename_p.exists():
-                    app.logger.info('Deleting %s', video_filename_p)
-                    video_filename_p.unlink()
-
+                video_entry.deleteAsset()
                 db.session.delete(video_entry)
 
 
@@ -2435,33 +2345,15 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             if keogram_entry:
-                keogram_filename = keogram_entry.getFilesystemPath()
-                keogram_filename_p = Path(keogram_filename)
-
-                if keogram_filename_p.exists():
-                    app.logger.info('Deleting %s', keogram_filename_p)
-                    keogram_filename_p.unlink()
-
+                keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
 
             if startrail_entry:
-                startrail_filename = startrail_entry.getFilesystemPath()
-                startrail_filename_p = Path(startrail_filename)
-
-                if startrail_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_filename_p)
-                    startrail_filename_p.unlink()
-
+                startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
 
             if startrail_video_entry:
-                startrail_video_filename = startrail_video_entry.getFilesystemPath()
-                startrail_video_filename_p = Path(startrail_video_filename)
-
-                if startrail_video_filename_p.exists():
-                    app.logger.info('Deleting %s', startrail_video_filename_p)
-                    startrail_video_filename_p.unlink()
-
+                startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
 
 
@@ -2859,6 +2751,30 @@ class UsersView(TemplateView):
         return context
 
 
+class ConfigListView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ConfigListView, self).get_context()
+
+        config_list = IndiAllSkyDbConfigTable.query\
+            .add_columns(
+                IndiAllSkyDbConfigTable.id,
+                IndiAllSkyDbConfigTable.createDate,
+                IndiAllSkyDbConfigTable.level,
+                IndiAllSkyDbConfigTable.note,
+                IndiAllSkyDbUserTable.username,
+            )\
+            .join(IndiAllSkyDbUserTable)\
+            .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
+            .limit(25)
+
+        context['config_list'] = config_list
+
+        return context
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -2901,4 +2817,5 @@ bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', 
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
+bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
 

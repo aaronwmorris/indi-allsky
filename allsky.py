@@ -63,13 +63,6 @@ if __name__ == "__main__":
         ),
     )
     argparser.add_argument(
-        '--config',
-        '-c',
-        help='config file',
-        type=argparse.FileType('r'),
-        default='/etc/indi-allsky/config.json',
-    )
-    argparser.add_argument(
         '--timespec',
         '-t',
         help='time spec',
@@ -121,7 +114,7 @@ if __name__ == "__main__":
         kwargs_dict['camera_id'] = args.cameraId
 
 
-    ia = indi_allsky.IndiAllSky(args.config)
+    ia = indi_allsky.IndiAllSky()
     ia.pidfile = args.pid
 
     action_func = getattr(ia, args.action)

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import argparse
 #import time
 from datetime import datetime
 from pathlib import Path
-from collections import OrderedDict
-import json
 import logging
 
 from astropy.io import fits
@@ -18,6 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 import indi_allsky
+from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask.miscDb import miscDb
 
 # setup flask context for db access
@@ -44,9 +42,16 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 class ImportDarkFrames(object):
 
-    def __init__(self, f_config_file):
-        self.config = self._parseConfig(f_config_file.read())
-        f_config_file.close()
+    def __init__(self):
+        try:
+            self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
+
+        self.config = self._config_obj.config
+
 
         self._miscDb = miscDb(self.config)
 
@@ -54,11 +59,6 @@ class ImportDarkFrames(object):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
-
-
-    def _parseConfig(self, json_config):
-        c = json.loads(json_config, object_pairs_hook=OrderedDict)
-        return c
 
 
     def main(self):
@@ -345,16 +345,5 @@ class ImportDarkFrames(object):
 
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument(
-        '--config',
-        '-c',
-        help='config file',
-        type=argparse.FileType('r'),
-        default='/etc/indi-allsky/config.json',
-    )
-
-    args = argparser.parse_args()
-
-    idf = ImportDarkFrames(args.config)
+    idf = ImportDarkFrames()
     idf.main()

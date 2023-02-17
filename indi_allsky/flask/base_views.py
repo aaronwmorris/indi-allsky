@@ -4,13 +4,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-import json
 import psutil
-import tempfile
-import shutil
-import hashlib
 import ephem
-from collections import OrderedDict
 
 from flask import render_template
 from flask import jsonify
@@ -30,7 +25,7 @@ from .models import IndiAllSkyDbCameraTable
 
 from .miscDb import miscDb
 
-from ..exceptions import ConfigSaveException
+#from ..exceptions import ConfigSaveException
 
 
 class BaseView(View):
@@ -38,63 +33,17 @@ class BaseView(View):
 
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
+        from ..config import IndiAllSkyConfig  # prevent circular import
 
-        self.indi_allsky_config, self.indi_allsky_config_md5 = self.get_indi_allsky_config()
+        # not catching exception
+        self._indi_allsky_config_obj = IndiAllSkyConfig()
+
+        self.indi_allsky_config = self._indi_allsky_config_obj.config
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
-
-    def get_indi_allsky_config(self):
-        with io.open(app.config['INDI_ALLSKY_CONFIG'], 'r') as f_config_file:
-            config = f_config_file.read()
-
-            try:
-                indi_allsky_config = json.loads(config, object_pairs_hook=OrderedDict)
-            except json.JSONDecodeError as e:
-                app.logger.error('Error decoding json: %s', str(e))
-                return dict()
-
-            config_md5 = hashlib.md5(config.encode())
-
-        return indi_allsky_config, config_md5
-
-
-    def save_indi_allsky_config(self, config):
-        app.logger.warning('Saving new config file')
-
-        config_file_p = Path(app.config['INDI_ALLSKY_CONFIG'])
-        config_file_old_p = Path('{0:s}_old'.format(str(app.config['INDI_ALLSKY_CONFIG'])))
-        config_dir_p = config_file_p.parent
-
-
-        # write to temp file to ensure there is space available
-        try:
-            config_temp_f = tempfile.NamedTemporaryFile(dir=config_dir_p, mode='w', delete=False, suffix='.json')
-            config_temp_f.write(json.dumps(config, indent=4))
-            config_temp_f.close()
-
-            config_temp_p = Path(config_temp_f.name)
-        except PermissionError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-
-
-        try:
-            # make a backup
-            shutil.copy2(str(config_file_p), str(config_file_old_p))
-            config_file_old_p.chmod(0o640)
-
-            shutil.move(str(config_temp_p), str(config_file_p))
-            config_file_p.chmod(0o640)
-        except PermissionError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            app.logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
+        # assume indi-allsky is running with application server
+        self.local_indi_allsky = True
 
 
     def get_indiallsky_pid(self):
@@ -106,21 +55,17 @@ class BaseView(View):
                 pid = pid_f.readline()
                 pid = pid.rstrip()
         except FileNotFoundError:
-            return False, None
+            return False
         except PermissionError:
-            return None, None
-
-
-        pid_mtime = indi_allsky_pid_p.stat().st_mtime
+            return None
 
 
         try:
             pid_int = int(pid)
         except ValueError:
-            return None, pid_mtime
+            return None
 
-
-        return pid_int, pid_mtime
+        return pid_int
 
 
     def getLatestCamera(self):
@@ -135,7 +80,7 @@ class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
 
-        self.check_config(self.indi_allsky_config_md5)
+        self.check_config(self._indi_allsky_config_obj.config_id)
 
         self.template_name = template_name
 
@@ -159,34 +104,36 @@ class TemplateView(BaseView):
         return context
 
 
-    def check_config(self, web_md5):
+    def check_config(self, config_id):
         try:
-            db_md5 = self._miscDb.getState('CONFIG_MD5')
+            db_config_id = self._miscDb.getState('CONFIG_ID')
         except NoResultFound:
-            app.logger.error('Unable to get CONFIG_MD5')
+            app.logger.error('Unable to get CONFIG_ID')
             return
 
-        if db_md5 == web_md5.hexdigest():
+        if db_config_id == config_id:
             return
 
         self._miscDb.addNotification(
             NotificationCategory.STATE,
-            'config_md5',
+            'config_id',
             'Config updated: indi-allsky needs to be reloaded',
             expire=timedelta(minutes=30),
         )
 
 
     def get_indi_allsky_status(self):
-        pid, pid_mtime = self.get_indiallsky_pid()
-
-        if isinstance(pid, type(None)):
+        try:
+            watchdog_time = int(self._miscDb.getState('WATCHDOG'))
+        except NoResultFound:
+            return '<span class="text-warning">UNKNOWN</span>'
+        except ValueError:
             return '<span class="text-warning">UNKNOWN</span>'
 
-        if not pid:
-            return '<span class="text-danger">DOWN</span>'
 
-        if not psutil.pid_exists(pid):
+        now = time.time()
+
+        if now > (watchdog_time + 180):
             return '<span class="text-danger">DOWN</span>'
 
 
@@ -214,15 +161,28 @@ class TemplateView(BaseView):
             return '<span class="text-warning">FOCUS MODE</span>'
 
 
-        if time.time() > (pid_mtime + 300):
-            # this notification is only supposed to fire if the program is
-            # running normally and the watchdog timestamp is older than 5 minutes
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'watchdog',
-                'Watchdog expired.  indi-allsky may be in a failed state.',
-                expire=timedelta(minutes=60),
-            )
+        indi_allsky_pid = self.get_indiallsky_pid()
+
+        if isinstance(indi_allsky_pid, bool):
+            # False is not local
+            self.local_indi_allsky = False
+        #else:
+        #    # None or int is local
+        #    local_indi_allsky = True
+
+
+        if self.local_indi_allsky and psutil.pid_exists(indi_allsky_pid):
+            # this check is only valid if the indi-allsky is running on the same server as the web application
+
+            if now > (watchdog_time + 300):
+                # this notification is only supposed to fire if the program is
+                # running normally and the watchdog timestamp is older than 5 minutes
+                self._miscDb.addNotification(
+                    NotificationCategory.GENERAL,
+                    'watchdog',
+                    'Watchdog expired.  indi-allsky may be in a failed state.',
+                    expire=timedelta(minutes=60),
+                )
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):

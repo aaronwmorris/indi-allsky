@@ -1,25 +1,54 @@
 #!/usr/bin/env python3
 
-import argparse
+import sys
 import logging
-import json
 import time
 import paho.mqtt.publish as publish
 import ssl
+from pathlib import Path
 #from pprint import pformat
 
+from sqlalchemy.orm.exc import NoResultFound
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
+sys.path.append(str(Path(__file__).parent.absolute().parent))
+
+
+import indi_allsky
+from indi_allsky.config import IndiAllSkyConfig
+
+# setup flask context for db access
+app = indi_allsky.flask.create_app()
+app.app_context().push()
+
+
+logger = logging.getLogger('indi_allsky')
+
+LOG_FORMATTER_STREAM = logging.Formatter('[%(levelname)s]: %(message)s')
+
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+
+logger.handlers.clear()  # remove syslog
+logger.addHandler(LOG_HANDLER_STREAM)
+
 
 
 
 class MqttTest(object):
-    def __init__(self, f_config):
-        self.config = json.loads(f_config.read())
+    def __init__(self):
+        try:
+            self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
+
+        self.config = self._config_obj.config
+
 
         self.tls = None
         self.mq_auth = None
+
 
     def main(self):
         if self.config['MQTTPUBLISH']['TLS']:
@@ -69,18 +98,6 @@ class MqttTest(object):
 
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument(
-        '--config',
-        '-c',
-        help='config file',
-        type=argparse.FileType('r'),
-        default='/etc/indi-allsky/config.json',
-    )
-
-
-    args = argparser.parse_args()
-
-    mt = MqttTest(args.config)
+    mt = MqttTest()
     mt.main()
 

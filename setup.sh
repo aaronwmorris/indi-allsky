@@ -29,8 +29,6 @@ export PATH
 
 
 #### config ####
-INDI_ALLSKY_VERSION="20230109.0"
-
 INDI_DRIVER_PATH="/usr/bin"
 
 INDISERVER_SERVICE_NAME="indiserver"
@@ -43,7 +41,10 @@ HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
-DB_URI_DEFAULT="sqlite:///${DB_FILE}"
+SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
+
+# mysql support is not ready
+USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
 
 CAMERA_INTERFACE="${INDIALLSKY_CAMERA_INTERFACE:-}"
 DPC_STRENGTH="0"
@@ -368,6 +369,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -492,6 +494,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -626,6 +629,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -765,6 +769,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -899,6 +904,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -1033,6 +1039,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -1156,6 +1163,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        default-libmysqlclient-dev \
         pkg-config \
         rustc \
         cargo \
@@ -1503,65 +1511,161 @@ echo "**** Indi-allsky config ****"
 sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 775 "${ALLSKY_ETC}"
 
-if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
-    if [[ -f "config.json" ]]; then
-        # copy current config to etc
-        cp config.json "${ALLSKY_ETC}/config.json"
-        sudo rm -f "${ALLSKY_DIRECTORY}/config.json"
-        ln -s "${ALLSKY_ETC}/config.json" "${ALLSKY_DIRECTORY}/config.json"
-    else
-        # syntax check
-        json_pp < "${ALLSKY_DIRECTORY}/config.json_template" > /dev/null
 
-        # create new config
-        cp "${ALLSKY_DIRECTORY}/config.json_template" "${ALLSKY_ETC}/config.json"
+
+echo "**** Setup DB ****"
+[[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
+sudo chmod 775 "$DB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
+[[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
+sudo chmod 775 "$DB_FOLDER/backup"
+sudo chown "$USER":"$PGRP" "${DB_FOLDER}/backup"
+if [[ -f "${DB_FILE}" ]]; then
+    sudo chmod 664 "${DB_FILE}"
+    sudo chown "$USER":"$PGRP" "${DB_FILE}"
+
+    echo "**** Backup DB prior to migration ****"
+    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
+    sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
+fi
+
+
+# Check for old alembic folder
+if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
+    echo
+    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
+    echo "for database migrations"
+    echo
+    echo "This script will attempt to properly migrate the config"
+    echo
+    sleep 5
+
+    sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
+
+    rm -fR "${ALLSKY_DIRECTORY}/alembic"
+fi
+
+
+# Setup migration folder
+if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
+    # Folder defined in flask config
+    flask db init
+
+    # Move migrations out of git checkout
+    cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
+    find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
+    cd "$OLDPWD" || catch_error
+
+    # Cleanup old files
+    find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
+fi
+
+
+flask db revision --autogenerate
+flask db upgrade head
+
+
+sudo chmod 664 "${DB_FILE}"
+sudo chown "$USER":"$PGRP" "${DB_FILE}"
+
+
+if [ -f "${ALLSKY_ETC}/config.json" ]; then
+    echo
+    echo
+    echo "Configurations are now being stored in the database"
+    echo "This script will move your existing configuration into"
+    echo "the database."
+    echo
+    sleep 5
+
+    "${ALLSKY_DIRECTORY}/config.py" load -c "${ALLSKY_ETC}/config.json"
+
+    mv -f "${ALLSKY_ETC}/config.json" "${ALLSKY_ETC}/legacy_config.json"
+fi
+
+
+### Mysql
+if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+    MYSQL_ETC="/etc/mysql"
+
+    sudo cp -f "${ALLSKY_DIRECTORY}/service/mysql_indi-allsky.conf" "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+    sudo chown root:root "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+    sudo chmod 644 "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
+
+    if [[ ! -d "$MYSQL_ETC/ssl" ]]; then
+        sudo mkdir "$MYSQL_ETC/ssl"
     fi
+
+    sudo chown root:root "MYSQL_ETC/ssl"
+    sudo chmod 755 "$MYSQL_ETC/ssl"
+
+
+    if [[ ! -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key" || ! -f "$MYSQL_ETC/ssl/indi-allsky_mysq.pem" ]]; then
+        sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+        sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+        SHORT_HOSTNAME=$(hostname -s)
+        MYSQL_KEY_TMP=$(mktemp)
+        MYSQL_CRT_TMP=$(mktemp)
+
+        # sudo has problems with process substitution <()
+        openssl req \
+            -new \
+            -newkey rsa:4096 \
+            -sha512 \
+            -days 3650 \
+            -nodes \
+            -x509 \
+            -subj "/CN=${SHORT_HOSTNAME}.local" \
+            -keyout "$MYSQL_KEY_TMP" \
+            -out "$MYSQL_CRT_TMP" \
+            -extensions san \
+            -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+        sudo cp -f "$MYSQL_KEY_TMP" "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+        sudo cp -f "$MYSQL_CRT_TMP" "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+        rm -f "$MYSQL_KEY_TMP"
+        rm -f "$MYSQL_CRT_TMP"
+    fi
+
+
+    sudo chown root:root "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+    sudo chmod 600 "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
+    sudo chown root:root "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+    sudo chmod 644 "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
+
+    # system certificate store
+    sudo cp -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem" /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mysql.crt
+    sudo update-ca-certificates
+
+
+    sudo systemctl enable mariadb
+    sudo systemctl restart mariadb
 fi
 
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
-sudo chmod 660 "${ALLSKY_ETC}/config.json"
 
-# Setup Database URI in config
-SQLALCHEMY_DATABASE_URI=$(jq -r '.SQLALCHEMY_DATABASE_URI' "${ALLSKY_ETC}/config.json")
-if [[ "$SQLALCHEMY_DATABASE_URI" == "null" ]]; then
-    TMP_CONFIG1=$(mktemp)
-    jq --argjson db_uri "\"$DB_URI_DEFAULT\"" '.SQLALCHEMY_DATABASE_URI = $db_uri' "${ALLSKY_ETC}/config.json" > "$TMP_CONFIG1"
-    cp -f "$TMP_CONFIG1" "${ALLSKY_ETC}/config.json"
-    sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
-    sudo chmod 660 "${ALLSKY_ETC}/config.json"
-    [[ -f "$TMP_CONFIG1" ]] && rm -f "$TMP_CONFIG1"
+# bootstrap initial config
+"${ALLSKY_DIRECTORY}/config.py" bootstrap || true
 
-    # use default
-    SQLALCHEMY_DATABASE_URI="$DB_URI_DEFAULT"
-fi
+
+# dump config for processing
+TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
+"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
+
 
 
 # Detect IMAGE_FOLDER
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
-if [[ "$IMAGE_FOLDER" == "null" || -z "$IMAGE_FOLDER" ]]; then
-    echo
-    echo
-    echo "Image folder config is empty, attempting to correct"
-    echo
-    sleep 3
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
 
-    # old installs of indi-allsky stored the images in the git checkout folder
-    IMAGE_FOLDER="${ALLSKY_DIRECTORY}/html/images"
-
-    TMP_IMAGE_FOLDER=$(mktemp)
-    jq --arg image_folder "$IMAGE_FOLDER" '.IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/config.json" > "$TMP_IMAGE_FOLDER"
-    cp -f "$TMP_IMAGE_FOLDER" "${ALLSKY_ETC}/config.json"
-    chmod 660 "${ALLSKY_ETC}/config.json"
-    [[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
-fi
-
-echo "Detected image folder: $IMAGE_FOLDER"
 
 
 echo "**** Flask config ****"
 
 while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
-    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0; then
+    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0 --defaultno; then
         FLASK_AUTH_ALL_VIEWS="true"
     else
         FLASK_AUTH_ALL_VIEWS="false"
@@ -1693,8 +1797,8 @@ else
             sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
             SHORT_HOSTNAME=$(hostname -s)
-            KEY_TMP=$(mktemp)
-            CRT_TMP=$(mktemp)
+            APACHE_KEY_TMP=$(mktemp)
+            APACHE_CRT_TMP=$(mktemp)
 
             # sudo has problems with process substitution <()
             openssl req \
@@ -1705,16 +1809,16 @@ else
                 -nodes \
                 -x509 \
                 -subj "/CN=${SHORT_HOSTNAME}.local" \
-                -keyout "$KEY_TMP" \
-                -out "$CRT_TMP" \
+                -keyout "$APACHE_KEY_TMP" \
+                -out "$APACHE_CRT_TMP" \
                 -extensions san \
                 -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-            sudo cp -f "$KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
-            sudo cp -f "$CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+            sudo cp -f "$APACHE_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+            sudo cp -f "$APACHE_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
-            rm -f "$KEY_TMP"
-            rm -f "$CRT_TMP"
+            rm -f "$APACHE_KEY_TMP"
+            rm -f "$APACHE_CRT_TMP"
         fi
 
 
@@ -1807,62 +1911,6 @@ if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
 fi
 
 
-echo "**** Setup DB ****"
-[[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
-sudo chmod 775 "$DB_FOLDER"
-sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
-[[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
-sudo chmod 775 "$DB_FOLDER/backup"
-sudo chown "$USER":"$PGRP" "${DB_FOLDER}/backup"
-if [[ -f "${DB_FILE}" ]]; then
-    sudo chmod 664 "${DB_FILE}"
-    sudo chown "$USER":"$PGRP" "${DB_FILE}"
-
-    echo "**** Backup DB prior to migration ****"
-    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
-    sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
-fi
-
-
-# Check for old alembic folder
-if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
-    echo
-    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
-    echo "for database migrations"
-    echo
-    echo "This script will attempt to properly migrate the config"
-    echo
-    sleep 5
-
-    sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
-
-    rm -fR "${ALLSKY_DIRECTORY}/alembic"
-fi
-
-
-# Setup migration folder
-if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
-    # Folder defined in flask config
-    flask db init
-
-    # Move migrations out of git checkout
-    cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
-    find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
-    cd "$OLDPWD" || catch_error
-
-    # Cleanup old files
-    find "${ALLSKY_DIRECTORY}/migrations/versions" -type f -name "*.py" -exec rm -f {} \;
-fi
-
-
-flask db revision --autogenerate
-flask db upgrade head
-
-
-sudo chmod 664 "${DB_FILE}"
-sudo chown "$USER":"$PGRP" "${DB_FILE}"
-
-
 if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
     echo "**** Enable Raspberry Pi camera interface ****"
     sudo raspi-config nonint do_camera 0
@@ -1944,18 +1992,22 @@ fi
 # Disable raw frames with libcamera when running less than 1GB of memory
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
-    TMP_LIBCAM_TYPE=$(mktemp)
-    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_TYPE"
-    cp -f "$TMP_LIBCAM_TYPE" "${ALLSKY_ETC}/config.json"
+    TMP_LIBCAM_TYPE=$(mktemp --suffix=.json)
+    jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_TYPE"
+
+    cat "$TMP_LIBCAM_TYPE" > "$TMP_CONFIG_DUMP"
+
     [[ -f "$TMP_LIBCAM_TYPE" ]] && rm -f "$TMP_LIBCAM_TYPE"
 fi
 
 # 25% ffmpeg scaling with libcamera when running 1GB of memory
 if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
-        TMP_LIBCAM_FFMPEG=$(mktemp)
-        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "${ALLSKY_ETC}/config.json" > "$TMP_LIBCAM_FFMPEG"
-        cp -f "$TMP_LIBCAM_FFMPEG" "${ALLSKY_ETC}/config.json"
+        TMP_LIBCAM_FFMPEG=$(mktemp --suffix=.json)
+        jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_FFMPEG"
+
+        cat "$TMP_LIBCAM_FFMPEG" > "$TMP_CONFIG_DUMP"
+
         [[ -f "$TMP_LIBCAM_FFMPEG" ]] && rm -f "$TMP_LIBCAM_FFMPEG"
     fi
 fi
@@ -1978,31 +2030,21 @@ systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
 
 
 echo "**** Update config camera interface ****"
-TMP_CAMERA_INT=$(mktemp)
-jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "${ALLSKY_ETC}/config.json" > "$TMP_CAMERA_INT"
-cp -f "$TMP_CAMERA_INT" "${ALLSKY_ETC}/config.json"
+TMP_CAMERA_INT=$(mktemp --suffix=.json)
+jq --arg camera_interface "$CAMERA_INTERFACE" '.CAMERA_INTERFACE = $camera_interface' "$TMP_CONFIG_DUMP" > "$TMP_CAMERA_INT"
+
+cat "$TMP_CAMERA_INT" > "$TMP_CONFIG_DUMP"
+
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
 
 
-echo "**** Update config version ****"
-TMP_CONFIG2=$(mktemp)
-jq --argjson version "$INDI_ALLSKY_VERSION" '.VERSION = $version' "${ALLSKY_ETC}/config.json" > "$TMP_CONFIG2"
-cp -f "$TMP_CONFIG2" "${ALLSKY_ETC}/config.json"
-[[ -f "$TMP_CONFIG2" ]] && rm -f "$TMP_CONFIG2"
-
-
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
-sudo chmod 660 "${ALLSKY_ETC}/config.json"
-
-
-
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/config.json" > /dev/null
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
-if [ "$USER_COUNT" -eq 0 ]; then
+# there is a system user
+if [ "$USER_COUNT" -le 1 ]; then
     while [ -z "${WEB_USER:-}" ]; do
         # shellcheck disable=SC2068
         WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)
@@ -2043,11 +2085,17 @@ if [ "$USER_COUNT" -eq 0 ]; then
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
 fi
 
+
+# load all changes
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CONFIG_DUMP" --force
+[[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+
+
 echo
 echo
 echo
 echo
-echo "A configuration file has automatically been provisioned at /etc/indi-allsky/config.json"
+echo "*** Configurations are now stored in the database and *NOT* /etc/indi-allsky/config.json ***"
 echo
 echo "Services can be started at the command line or can be started from the web interface"
 echo
