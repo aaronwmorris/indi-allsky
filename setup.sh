@@ -1527,6 +1527,8 @@ if [[ -f "${DB_FILE}" ]]; then
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
     sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
+
+    chmod 640 "$DB_BACKUP"
 fi
 
 
