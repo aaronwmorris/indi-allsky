@@ -47,7 +47,11 @@ class BaseView(View):
 
 
     def get_indiallsky_pid(self):
-        indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
+        try:
+            indi_allsky_pid_p = Path(self._miscDb.getState('PID_FILE'))
+        except NoResultFound:
+            app.logger.error('PID_FILE state not set')
+            return False
 
 
         try:
