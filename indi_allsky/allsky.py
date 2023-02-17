@@ -925,8 +925,8 @@ class IndiAllSky(object):
             self._queueManualTasks()
 
 
-            # Use pid file timestamp as watchdog
-            self.pid_file.touch(mode=0o644, exist_ok=True)
+            # Update watchdog
+            self._miscDb.setState('WATCHDOG', int(loop_start_time))
 
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:

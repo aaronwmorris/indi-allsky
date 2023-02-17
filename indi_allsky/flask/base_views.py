@@ -52,21 +52,17 @@ class BaseView(View):
                 pid = pid_f.readline()
                 pid = pid.rstrip()
         except FileNotFoundError:
-            return False, None
+            return False
         except PermissionError:
-            return None, None
-
-
-        pid_mtime = indi_allsky_pid_p.stat().st_mtime
+            return None
 
 
         try:
             pid_int = int(pid)
         except ValueError:
-            return None, pid_mtime
+            return None
 
-
-        return pid_int, pid_mtime
+        return pid_int
 
 
     def getLatestCamera(self):
@@ -124,15 +120,17 @@ class TemplateView(BaseView):
 
 
     def get_indi_allsky_status(self):
-        pid, pid_mtime = self.get_indiallsky_pid()
-
-        if isinstance(pid, type(None)):
+        try:
+            watchdog_time = int(self._miscDb.getState('WATCHDOG'))
+        except NoResultFound:
+            return '<span class="text-warning">UNKNOWN</span>'
+        except ValueError:
             return '<span class="text-warning">UNKNOWN</span>'
 
-        if not pid:
-            return '<span class="text-danger">DOWN</span>'
 
-        if not psutil.pid_exists(pid):
+        now = time.time()
+
+        if now > (watchdog_time + 180):
             return '<span class="text-danger">DOWN</span>'
 
 
@@ -160,15 +158,28 @@ class TemplateView(BaseView):
             return '<span class="text-warning">FOCUS MODE</span>'
 
 
-        if time.time() > (pid_mtime + 300):
-            # this notification is only supposed to fire if the program is
-            # running normally and the watchdog timestamp is older than 5 minutes
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'watchdog',
-                'Watchdog expired.  indi-allsky may be in a failed state.',
-                expire=timedelta(minutes=60),
-            )
+        indi_allsky_pid = self.get_indiallsky_pid()
+
+        if isinstance(indi_allsky_pid, bool):
+            # False is not local
+            local_indi_allsky = False
+        else:
+            # None or int is local
+            local_indi_allsky = True
+
+
+        if local_indi_allsky and psutil.pid_exists(indi_allsky_pid):
+            # this check is only valid if the indi-allsky is running on the same server as the web application
+
+            if now > (watchdog_time + 300):
+                # this notification is only supposed to fire if the program is
+                # running normally and the watchdog timestamp is older than 5 minutes
+                self._miscDb.addNotification(
+                    NotificationCategory.GENERAL,
+                    'watchdog',
+                    'Watchdog expired.  indi-allsky may be in a failed state.',
+                    expire=timedelta(minutes=60),
+                )
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
