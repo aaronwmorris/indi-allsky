@@ -19,6 +19,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
+from .models import IndiAllSkyDbConfigTable
 
 #from .models import NotificationCategory
 

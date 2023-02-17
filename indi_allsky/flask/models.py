@@ -32,6 +32,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(length=36), unique=True, index=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False)
+    driver = db.Column(db.String(length=100), nullable=True)
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
     connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
@@ -54,15 +55,79 @@ class IndiAllSkyDbCameraTable(db.Model):
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
 
 
-class IndiAllSkyDbImageTable(db.Model):
+class IndiAllSkyDbFileBase(db.Model):
+    __abstract__ = True
+
+
+    def getRelativePath(self):
+        filename_p = Path(self.filename)
+
+        if not self.filename.startswith('/'):
+            # filename is already relative
+            return filename_p
+
+        # this can raise ValueError
+        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
+
+        return rel_filename_p
+
+
+    def getUrl(self):
+        if self.remote_url:
+            # if files are stored in S3, etc
+            return self.remote_url
+
+        rel_filename_p = self.getRelativePath()
+        return Path('images').joinpath(rel_filename_p)
+
+
+    def getFilesystemPath(self):
+        filename_p = Path(self.filename)
+
+        if self.filename.startswith('/'):
+            # filename is already fully qualified
+            return filename_p
+
+        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
+
+        return full_filename_p
+
+
+    def validateFile(self):
+        filename_p = self.getFilesystemPath()
+
+        if filename_p.exists():
+            return True
+
+        return False
+
+
+    def deleteFile(self):
+        filename_p = self.getFilesystemPath()
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+        # do not catch OSError here
+
+
+    def deleteAsset(self):
+        # use this path to delete all parts of entry
+        self.deleteFile()
+
+
+class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'image'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     exp_elapsed = db.Column(db.Float, nullable=True)
+    process_elapsed = db.Column(db.Float, nullable=True)
     gain = db.Column(db.Integer, nullable=False)
     binmode = db.Column(db.Integer, server_default='1', nullable=False)
     temp = db.Column(db.Float, nullable=True)
@@ -94,37 +159,7 @@ class IndiAllSkyDbImageTable(db.Model):
         return '<Image {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbDarkFrameTable(db.Model):
+class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     __tablename__ = 'darkframe'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -142,7 +177,7 @@ class IndiAllSkyDbDarkFrameTable(db.Model):
         return '<DarkFrame {0:s}>'.format(self.filename)
 
 
-class IndiAllSkyDbBadPixelMapTable(db.Model):
+class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     __tablename__ = 'badpixelmap'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -160,11 +195,12 @@ class IndiAllSkyDbBadPixelMapTable(db.Model):
         return '<BadPixelMap {0:s}>'.format(self.filename)
 
 
-class IndiAllSkyDbVideoTable(db.Model):
+class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     __tablename__ = 'video'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -185,41 +221,12 @@ class IndiAllSkyDbVideoTable(db.Model):
         return '<Video {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbKeogramTable(db.Model):
+class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     __tablename__ = 'keogram'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -232,41 +239,12 @@ class IndiAllSkyDbKeogramTable(db.Model):
         return '<Keogram {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbStarTrailsTable(db.Model):
+class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     __tablename__ = 'startrail'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -279,41 +257,12 @@ class IndiAllSkyDbStarTrailsTable(db.Model):
         return '<StarTrails {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbStarTrailsVideoTable(db.Model):
+class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     __tablename__ = 'startrailvideo'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -326,41 +275,12 @@ class IndiAllSkyDbStarTrailsVideoTable(db.Model):
         return '<StarTrailVideo {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbFitsImageTable(db.Model):
+class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'fitsimage'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
@@ -375,41 +295,12 @@ class IndiAllSkyDbFitsImageTable(db.Model):
         return '<FitsImage {0:s}>'.format(self.filename)
 
 
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
-
-class IndiAllSkyDbRawImageTable(db.Model):
+class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'rawimage'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
@@ -422,37 +313,6 @@ class IndiAllSkyDbRawImageTable(db.Model):
 
     def __repr__(self):
         return '<RawImage {0:s}>'.format(self.filename)
-
-
-    def getRelativePath(self):
-        filename_p = Path(self.filename)
-
-        if not self.filename.startswith('/'):
-            # filename is already relative
-            return filename_p
-
-        # this can raise ValueError
-        rel_filename_p = filename_p.relative_to(app.config['INDI_ALLSKY_IMAGE_FOLDER'])
-
-        return rel_filename_p
-
-
-    def getUri(self):
-        rel_filename_p = self.getRelativePath()
-        return Path('images').joinpath(rel_filename_p)
-
-
-    def getFilesystemPath(self):
-        filename_p = Path(self.filename)
-
-        if self.filename.startswith('/'):
-            # filename is already fully qualified
-            return filename_p
-
-        full_filename_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath(filename_p)
-
-        return full_filename_p
-
 
 
 
@@ -539,6 +399,18 @@ class IndiAllSkyDbNotificationTable(db.Model):
         db.session.commit()
 
 
+class IndiAllSkyDbConfigTable(db.Model):
+    __tablename__ = 'config'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    level = db.Column(db.String(length=12), nullable=False)
+    note = db.Column(db.String(length=255), nullable=False)
+    data = db.Column(db.JSON)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # users can be deleted
+    user = db.relationship('IndiAllSkyDbUserTable', back_populates='configs')
+
+
 class IndiAllSkyDbStateTable(db.Model):
     __tablename__ = 'state'
 
@@ -564,6 +436,7 @@ class IndiAllSkyDbUserTable(db.Model):
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    configs = db.relationship('IndiAllSkyDbConfigTable', back_populates='user')
 
 
     @property

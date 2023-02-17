@@ -41,13 +41,13 @@ async function loop() {
 
 
 function showImage(entry) {
-    console.log('Showing image ' + entry["file"]);
+    console.log('Showing image ' + entry["url"]);
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
     var img = new Image();
-    img.src = entry["file"];
+    img.src = entry["url"];
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);

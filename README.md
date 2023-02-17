@@ -265,7 +265,8 @@ indi-allsky utilizes python's multiprocessing library to enable parallelizing ta
 
 ## Configuration
 
-All configuration is read from /etc/indi-allsky/config.json .  You can find configuration examples in the examples/ folder.
+All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
+You may use the config.py utility to manipulate the configuration from the command line.
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |

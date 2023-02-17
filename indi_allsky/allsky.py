@@ -7,14 +7,11 @@ import json
 import re
 import psutil
 import tempfile
-import shutil
 import subprocess
-import hashlib
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from collections import OrderedDict
 #from pprint import pformat
 import math
 import dbus
@@ -28,7 +25,9 @@ from multiprocessing import Queue
 from multiprocessing import Value
 
 from .version import __version__
-from .version import __config_version__
+from .version import __config_level__
+
+from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
@@ -71,17 +70,20 @@ class IndiAllSky(object):
     periodic_reconfigure_offset = 300.0  # 5 minutes
 
 
-    def __init__(self, f_config_file):
-        self.config, config_md5 = self._parseConfig(f_config_file.read())
-        f_config_file.close()
+    def __init__(self):
+        try:
+            self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
 
-        self.config_file = f_config_file.name
+        self.config = self._config_obj.config
 
         self._miscDb = miscDb(self.config)
 
 
-        config_version = float(self.config.get('VERSION', 0.0))
-        if __config_version__ != config_version:
+        if __config_level__ != self._config_obj.config_level:
             logger.error('indi-allsky version does not match config, please rerun setup.sh')
 
             self._miscDb.addNotification(
@@ -94,7 +96,7 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
@@ -170,17 +172,13 @@ class IndiAllSky(object):
     def sighup_handler_main(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
+        self._config_obj = IndiAllSkyConfig()
 
-        with io.open(self.config_file, 'r') as f_config_file:
-            try:
-                c, config_md5 = self._parseConfig(f_config_file.read())
-            except json.JSONDecodeError as e:
-                logger.error('Error decoding json: %s', str(e))
-                return
+        # overwrite config
+        self.config = self._config_obj.config
 
 
-        config_version = float(c.get('VERSION', 0.0))
-        if __config_version__ != config_version:
+        if __config_level__ != self._config_obj.config_level:
             logger.error('indi-allsky version does not match config, please rerun setup.sh')
 
             self._miscDb.addNotification(
@@ -193,10 +191,7 @@ class IndiAllSky(object):
             return
 
 
-        # overwrite config
-        self.config = c
-
-        self._miscDb.setState('CONFIG_MD5', config_md5.hexdigest())
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 
         # Update shared values
@@ -346,63 +341,9 @@ class IndiAllSky(object):
         self._miscDb.setState('PID_FILE', self.pid_file)
 
 
-    def _parseConfig(self, json_config):
-        # WARNING:  database configuration may not be ready
-        c = json.loads(json_config, object_pairs_hook=OrderedDict)
-
-
-        # set this after parsing json
-        c_md5 = hashlib.md5(json_config.encode())
-
-
-        # set any new config defaults which might not be in the config
-
-        # indi server
-        if not c.get('INDI_SERVER'):
-            c['INDI_SERVER'] = 'localhost'
-
-        if not c.get('INDI_PORT'):
-            c['INDI_PORT'] = 7624
-
-
-        # translate old config option
-        if c.get('IMAGE_SCALE_PERCENT') and not c.get('IMAGE_SCALE'):
-            c['IMAGE_SCALE'] = c['IMAGE_SCALE_PERCENT']
-
-
-        # Ensure exposure period is set
-        if not c.get('EXPOSURE_PERIOD'):
-            logger.warning('Night Exposure period not set, using Max Exposure value')
-            c['EXPOSURE_PERIOD'] = float(c['CCD_EXPOSURE_MAX'])
-
-        if not c.get('EXPOSURE_PERIOD_DAY'):
-            logger.warning('Day Exposure period not set, using Max Exposure value')
-            c['EXPOSURE_PERIOD_DAY'] = float(c['CCD_EXPOSURE_MAX'])
-
-
-        # set keogram scale factor
-        if not c.get('KEOGRAM_V_SCALE'):
-            c['KEOGRAM_V_SCALE'] = 33
-
-        if not c.get('KEOGRAM_H_SCALE'):
-            c['KEOGRAM_H_SCALE'] = 100
-
-
-        # set default date format for image label
-        if not c['TEXT_PROPERTIES'].get('DATE_FORMAT'):
-            c['TEXT_PROPERTIES']['DATE_FORMAT'] = '%Y%m%d %H:%M:%S'
-
-
-        if not c.get('FFMPEG_CODEC'):
-            c['FFMPEG_CODEC'] = 'libx264'
-
-
-        return c, c_md5
-
-
     def _initialize(self, connectOnly=False):
         logger.info('indi-allsky release: %s', str(__version__))
-        logger.info('indi-allsky config version: %s', str(__config_version__))
+        logger.info('indi-allsky config level: %s', str(__config_level__))
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
@@ -984,8 +925,8 @@ class IndiAllSky(object):
             self._queueManualTasks()
 
 
-            # Use pid file timestamp as watchdog
-            self.pid_file.touch(mode=0o644, exist_ok=True)
+            # Update watchdog
+            self._miscDb.setState('WATCHDOG', int(loop_start_time))
 
 
             if not self.night and not self.config['DAYTIME_CAPTURE']:
@@ -1144,44 +1085,6 @@ class IndiAllSky(object):
 
             loop_elapsed = now - loop_start_time
             logger.debug('Loop completed in %0.4f s', loop_elapsed)
-
-
-    def save_indi_allsky_config(self, config):
-        logger.warning('Saving new config file')
-
-        config_file_p = Path(self.config_file)
-        config_file_old_p = Path('{0:s}_old'.format(str(self.config_file)))
-        config_dir_p = config_file_p.parent
-
-
-        # write to temp file to ensure there is space available
-        try:
-            config_temp_f = tempfile.NamedTemporaryFile(dir=config_dir_p, mode='w', delete=False, suffix='.json')
-            config_temp_f.write(json.dumps(config, indent=4))
-            config_temp_f.close()
-
-            config_temp_p = Path(config_temp_f.name)
-        except PermissionError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-
-
-        try:
-            # make a backup
-            shutil.copy2(str(config_file_p), str(config_file_old_p))
-            config_file_old_p.chmod(0o640)
-
-            shutil.move(str(config_temp_p), str(config_file_p))
-            config_file_p.chmod(0o640)
-        except PermissionError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
-        except OSError as e:
-            logger.error('Unable to save config file: %s', str(e))
-            raise ConfigSaveException(str(e))
 
 
     def getSensorTemperature(self):
@@ -1351,21 +1254,14 @@ class IndiAllSky(object):
     def updateConfigLocation(self, gps_lat, gps_long):
         logger.warning('Updating indi-allsky config with new geographic location')
 
-        with io.open(self.config_file, 'r') as f_config_file:
-            try:
-                c = json.loads(f_config_file.read(), object_pairs_hook=OrderedDict)
-            except json.JSONDecodeError as e:
-                logger.error('Error decoding json: %s', str(e))
-                return
-
-        c['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
-        c['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
+        self.config['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
+        self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
 
 
         # save new config
         try:
-            self.save_indi_allsky_config(c)
-            logger.info('Wrote new config.json')
+            self._config_obj.save('system', '*Auto* Location updated')
+            logger.info('Wrote new config')
         except ConfigSaveException:
             return
 
