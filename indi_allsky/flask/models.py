@@ -73,6 +73,10 @@ class IndiAllSkyDbFileBase(db.Model):
 
 
     def getUrl(self):
+        if self.remote_url:
+            # if files are stored in S3, etc
+            return self.remote_url
+
         rel_filename_p = self.getRelativePath()
         return Path('images').joinpath(rel_filename_p)
 
