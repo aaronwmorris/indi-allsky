@@ -42,6 +42,9 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
+        # assume indi-allsky is running with application server
+        self.local_indi_allsky = True
+
 
     def get_indiallsky_pid(self):
         indi_allsky_pid_p = Path(app.config['INDI_ALLSKY_PID'])
@@ -162,13 +165,13 @@ class TemplateView(BaseView):
 
         if isinstance(indi_allsky_pid, bool):
             # False is not local
-            local_indi_allsky = False
-        else:
-            # None or int is local
-            local_indi_allsky = True
+            self.local_indi_allsky = False
+        #else:
+        #    # None or int is local
+        #    local_indi_allsky = True
 
 
-        if local_indi_allsky and psutil.pid_exists(indi_allsky_pid):
+        if self.local_indi_allsky and psutil.pid_exists(indi_allsky_pid):
             # this check is only valid if the indi-allsky is running on the same server as the web application
 
             if now > (watchdog_time + 300):
