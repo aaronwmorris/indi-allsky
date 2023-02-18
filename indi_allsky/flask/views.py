@@ -683,6 +683,15 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
+            'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
+            'S3UPLOAD__ACCESS_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACCESS_KEY', ''),
+            'S3UPLOAD__SECRET_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('SECRET_KEY', ''),
+            'S3UPLOAD__BUCKET'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('BUCKET', 'change-me'),
+            'S3UPLOAD__REGION'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('REGION', 'us-east-1'),
+            'S3UPLOAD__HOST'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('HOST', 'amazonaws.com'),
+            'S3UPLOAD__URL_TEMPLATE'         : self.indi_allsky_config.get('S3UPLOAD', {}).get('URL_TEMPLATE', 'https://{bucket}.s3.{region}.{host}'),
+            'S3UPLOAD__EXPIRE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('EXPIRE', True),
+            'S3UPLOAD__CERT_BYPASS'          : self.indi_allsky_config.get('S3UPLOAD', {}).get('CERT_BYPASS', False),
             'MQTTPUBLISH__ENABLE'            : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('ENABLE', False),
             'MQTTPUBLISH__TRANSPORT'         : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('TRANSPORT', 'tcp'),
             'MQTTPUBLISH__HOST'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('HOST', 'localhost'),
@@ -905,6 +914,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('FILETRANSFER'):
             self.indi_allsky_config['FILETRANSFER'] = {}
 
+        if not self.indi_allsky_config.get('S3UPLOAD'):
+            self.indi_allsky_config['S3UPLOAD'] = {}
+
         if not self.indi_allsky_config.get('MQTTPUBLISH'):
             self.indi_allsky_config['MQTTPUBLISH'] = {}
 
@@ -1036,6 +1048,15 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
+        self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
+        self.indi_allsky_config['S3UPLOAD']['ACCESS_KEY']               = str(request.json['S3UPLOAD__ACCESS_KEY'])
+        self.indi_allsky_config['S3UPLOAD']['SECRET_KEY']               = str(request.json['S3UPLOAD__SECRET_KEY'])
+        self.indi_allsky_config['S3UPLOAD']['BUCKET']                   = str(request.json['S3UPLOAD__BUCKET'])
+        self.indi_allsky_config['S3UPLOAD']['REGION']                   = str(request.json['S3UPLOAD__REGION'])
+        self.indi_allsky_config['S3UPLOAD']['HOST']                     = str(request.json['S3UPLOAD__HOST'])
+        self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE']             = str(request.json['S3UPLOAD__URL_TEMPLATE'])
+        self.indi_allsky_config['S3UPLOAD']['EXPIRE']                   = bool(request.json['S3UPLOAD__EXPIRE'])
+        self.indi_allsky_config['S3UPLOAD']['CERT_BYPASS']              = bool(request.json['S3UPLOAD__CERT_BYPASS'])
         self.indi_allsky_config['MQTTPUBLISH']['ENABLE']                = bool(request.json['MQTTPUBLISH__ENABLE'])
         self.indi_allsky_config['MQTTPUBLISH']['TRANSPORT']             = str(request.json['MQTTPUBLISH__TRANSPORT'])
         self.indi_allsky_config['MQTTPUBLISH']['HOST']                  = str(request.json['MQTTPUBLISH__HOST'])

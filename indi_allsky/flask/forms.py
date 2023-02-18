@@ -1158,6 +1158,74 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
             raise ValidationError('TypeError: {0:s} -  {1:s}'.format(k, str(e)))
 
 
+def S3UPLOAD__ACCESS_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    s3accesskey_regex = r'^[a-zA-Z0-9]+$'
+
+    if not re.search(s3accesskey_regex, field.data):
+        raise ValidationError('Invalid access key')
+
+
+def S3UPLOAD__SECRET_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    s3secretkey_regex = r'^[a-zA-Z0-9\/\+]+$'
+
+    if not re.search(s3secretkey_regex, field.data):
+        raise ValidationError('Invalid secret key')
+
+
+def S3UPLOAD__HOST_validator(form, field):
+    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid host name')
+
+
+def S3UPLOAD__REGION_validator(form, field):
+    region_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(region_regex, field.data):
+        raise ValidationError('Invalid region name')
+
+
+def S3UPLOAD__BUCKET_validator(form, field):
+    bucket_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(bucket_regex, field.data):
+        raise ValidationError('Invalid bucket name')
+
+
+def S3UPLOAD__URL_TEMPLATE_validator(form, field):
+    urlt_regex = r'^[a-zA-Z0-9\.\-\:\/\{\}]+$'
+
+    if not re.search(urlt_regex, field.data):
+        raise ValidationError('Invalid URL template')
+
+
+    slash_regex = r'\/$'
+
+    if re.search(slash_regex, field.data):
+        raise ValidationError('URL Template cannot end with a slash')
+
+
+    test_data = {
+        'host'   : 'foobar',
+        'bucket' : 'foobar',
+        'region' : 'foobar',
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
     topic_regex = r'^[a-zA-Z0-9_\-\/]+$'
 
@@ -1519,6 +1587,15 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
+    S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
+    S3UPLOAD__ACCESS_KEY             = PasswordField('Access Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__ACCESS_KEY_validator])
+    S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
+    S3UPLOAD__BUCKET                 = StringField('S3 Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
+    S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
+    S3UPLOAD__HOST                   = StringField('S3 Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
+    S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
+    S3UPLOAD__EXPIRE                 = BooleanField('Add Content Expiration')
+    S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
