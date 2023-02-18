@@ -501,14 +501,21 @@ class ImageWorker(Process):
                         mqtt_data[topic_sub] = current_temp
 
 
-                self.mqtt_publish(latest_file, mqtt_data)
+
+                if new_filename:
+                    upload_filename = new_filename
+                else:
+                    upload_filename = latest_file
 
 
-                self.upload_image(i_ref, latest_file, image_entry=image_entry)
+                self.mqtt_publish(upload_filename, mqtt_data)
+
+
+                self.upload_image(i_ref, upload_filename, image_entry=image_entry)
                 self.upload_metadata(i_ref, adu, adu_average)
 
 
-    def upload_image(self, i_ref, latest_file, image_entry=None):
+    def upload_image(self, i_ref, upload_filename, image_entry=None):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
@@ -543,7 +550,7 @@ class ImageWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(latest_file),
+            'local_file'  : str(upload_filename),
             'remote_file' : str(remote_file_p),
         }
 
@@ -642,7 +649,7 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def mqtt_publish(self, latest_file, mq_data):
+    def mqtt_publish(self, upload_filename, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')
             return
@@ -652,7 +659,7 @@ class ImageWorker(Process):
         # publish data to mq broker
         jobdata = {
             'action'      : 'mqttpub',
-            'local_file'  : str(latest_file),
+            'local_file'  : str(upload_filename),
             'mq_data'     : mq_data,
         }
 
