@@ -39,3 +39,4 @@ flask-login
 is-safe-url
 #mysql-connector-python
 prettytable
+boto3
