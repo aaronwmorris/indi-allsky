@@ -510,15 +510,21 @@ class ImageWorker(Process):
 
                 self.mqtt_publish(upload_filename, mqtt_data)
                 self.upload_s3(upload_filename)
-                self.upload_image(i_ref, upload_filename, image_entry=image_entry)
+                self.upload_image(i_ref, image_entry)
                 self.upload_metadata(i_ref, adu, adu_average)
 
 
-    def upload_image(self, i_ref, upload_filename, image_entry=None):
+    def upload_image(self, i_ref, image_entry):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
             return
+
+
+        if not image_entry:
+            # image was not saved
+            return
+
 
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
             next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
@@ -549,7 +555,8 @@ class ImageWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(upload_filename),
+            'model'       : image_entry.__class__.__name__,
+            'id'          : image_entry.id,
             'remote_file' : str(remote_file_p),
         }
 
@@ -563,10 +570,6 @@ class ImageWorker(Process):
 
         self.upload_q.put({'task_id' : upload_task.id})
 
-        if image_entry:
-            # image was not saved
-            self._miscDb.addUploadedFlag(image_entry)
-
 
     def upload_metadata(self, i_ref, adu, adu_average):
         ### upload images
@@ -577,6 +580,7 @@ class ImageWorker(Process):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             logger.warning('Metadata uploading disabled when image upload is disabled')
             return
+
 
         ### Only uploading metadata if image uploading is enabled
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:

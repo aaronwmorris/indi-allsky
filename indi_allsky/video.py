@@ -298,12 +298,6 @@ class VideoWorker(Process):
         try:
             tg = TimelapseGenerator(self.config)
             tg.generate(video_file, timelapse_files)
-            task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
-
-            ### Upload ###
-            self._uploadVideo(video_file)
-
-            self._miscDb.addUploadedFlag(video_entry)
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
@@ -316,9 +310,16 @@ class VideoWorker(Process):
             )
 
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
+            return
 
 
-    def _uploadVideo(self, video_file):
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
+        ### Upload ###
+        self._uploadVideo(video_entry, video_file)
+
+
+    def _uploadVideo(self, video_entry, video_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -343,7 +344,8 @@ class VideoWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(video_file),
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
             'remote_file' : str(remote_file_p),
         }
 
@@ -559,8 +561,7 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._uploadKeogram(keogram_file)
-                self._miscDb.addUploadedFlag(keogram_entry)
+                self._uploadKeogram(keogram_entry, keogram_file)
             else:
                 keogram_entry.success = False
                 db.session.commit()
@@ -568,8 +569,7 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._uploadStarTrail(startrail_file)
-                self._miscDb.addUploadedFlag(startrail_entry)
+                self._uploadStarTrail(startrail_entry, startrail_file)
             else:
                 startrail_entry.success = False
                 db.session.commit()
@@ -578,7 +578,6 @@ class VideoWorker(Process):
         if startrail_video_entry and night:
             if startrail_video_file.exists():
                 self._uploadStarTrailVideo(startrail_video_file)
-                self._miscDb.addUploadedFlag(startrail_video_entry)
             else:
                 # success flag set above
                 pass
@@ -587,7 +586,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def _uploadKeogram(self, keogram_file):
+    def _uploadKeogram(self, keogram_entry, keogram_file):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -613,7 +612,8 @@ class VideoWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(keogram_file),
+            'model'       : keogram_entry.__class__.__name__,
+            'id'          : keogram_entry.id,
             'remote_file' : str(remote_file_p),
         }
 
@@ -628,7 +628,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrail(self, startrail_file):
+    def _uploadStarTrail(self, startrail_entry, startrail_file):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -653,7 +653,8 @@ class VideoWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(startrail_file),
+            'model'       : startrail_entry.__class__.__name__,
+            'id'          : startrail_entry.id,
             'remote_file' : str(remote_file_p),
         }
 
@@ -668,8 +669,8 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrailVideo(self, startrail_video_file):
-        self._uploadVideo(startrail_video_file)
+    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file):
+        self._uploadVideo(startrail_video_entry, startrail_video_file)
 
 
     def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id):
