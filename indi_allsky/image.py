@@ -509,8 +509,7 @@ class ImageWorker(Process):
 
 
                 self.mqtt_publish(upload_filename, mqtt_data)
-
-
+                self.upload_s3(upload_filename)
                 self.upload_image(i_ref, upload_filename, image_entry=image_entry)
                 self.upload_metadata(i_ref, adu, adu_average)
 
@@ -672,6 +671,30 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : mqtt_task.id})
+
+
+    def upload_s3(self, upload_filename):
+        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
+            #logger.warning('S3 uploading disabled')
+            return
+
+        logger.info('Uploading to S3 bucket')
+
+        # publish data to s3 bucket
+        jobdata = {
+            'action'      : 's3',
+            'local_file'  : str(upload_filename),
+        }
+
+        s3_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(s3_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : s3_task.id})
 
 
     def getSqmData(self, camera_id):
