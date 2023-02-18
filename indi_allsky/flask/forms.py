@@ -1158,6 +1158,15 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
             raise ValidationError('TypeError: {0:s} -  {1:s}'.format(k, str(e)))
 
 
+def S3UPLOAD__CLASSNAME_validator(form, field):
+    class_names = (
+        'boto3_s3',
+    )
+
+    if field.data not in class_names:
+        raise ValidationError('Invalid selection')
+
+
 def S3UPLOAD__ACCESS_KEY_validator(form, field):
     if not field.data:
         return
@@ -1224,6 +1233,13 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
         raise ValidationError('KeyError: {0:s}'.format(str(e)))
     except ValueError as e:
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+def S3UPLOAD__STORAGE_CLASS_validator(form, field):
+    class_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if re.search(class_regex, field.data):
+        raise ValidationError('URL Template cannot end with a slash')
 
 
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
@@ -1439,6 +1455,10 @@ class IndiAllskyConfigForm(FlaskForm):
         ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
     )
 
+    S3UPLOAD__CLASSNAME_choices = (
+        ('boto3_s3', 'Boto3'),
+    )
+
     MQTTPUBLISH__TRANSPORT_choices = (
         ('tcp', 'tcp'),
         ('websockets', 'websockets'),
@@ -1587,6 +1607,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
+    S3UPLOAD__CLASSNAME              = SelectField('S3 Utility', choices=S3UPLOAD__CLASSNAME_choices, validators=[DataRequired(), S3UPLOAD__CLASSNAME_validator])
     S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
     S3UPLOAD__ACCESS_KEY             = PasswordField('Access Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__ACCESS_KEY_validator])
     S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
@@ -1595,6 +1616,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
     S3UPLOAD__EXPIRE                 = BooleanField('Add Content Expiration')
+    S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[DataRequired(), S3UPLOAD__STORAGE_CLASS_validator])
     S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
