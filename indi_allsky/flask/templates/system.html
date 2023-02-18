@@ -338,7 +338,16 @@
 <hr />
 
 <div class="row">
-    <div class="col-sm-12 text-warning"><span class="badge rounded-pill bg-warning text-dark">Warning</span> Manually setting time will disable NTP time sync (permanently)</div>
+    <div>
+        <span class="badge rounded-pill bg-danger">Danger</span>
+        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommend restarting both indiserver and indi-allsky.</span>
+    </div>
+</div>
+<div class="row">
+    <div>
+    <span class="badge rounded-pill bg-warning text-dark">Warning</span>
+    <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync (permanently)</span>
+    </div>
 </div>
 
 <div class="row">
