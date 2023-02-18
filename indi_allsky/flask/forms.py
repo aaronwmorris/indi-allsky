@@ -1238,8 +1238,8 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 def S3UPLOAD__STORAGE_CLASS_validator(form, field):
     class_regex = r'^[a-zA-Z0-9\-]+$'
 
-    if re.search(class_regex, field.data):
-        raise ValidationError('URL Template cannot end with a slash')
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid storage class syntax')
 
 
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
