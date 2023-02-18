@@ -1760,7 +1760,9 @@
             {{ form_config.S3UPLOAD__BUCKET(class='form-control bg-secondary') }}
             <div id="S3UPLOAD__BUCKET-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html">AWS S3 Bucket Access</a></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1771,7 +1773,9 @@
             {{ form_config.S3UPLOAD__REGION(class='form-control bg-secondary') }}
             <div id="S3UPLOAD__REGION-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html">AWS S3 Regions</a> (scroll on table)</div>
+        </div>
     </div>
 
     <div class="form-group row">
