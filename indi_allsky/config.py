@@ -32,21 +32,21 @@ class IndiAllSkyConfigBase(object):
         "CCD_CONFIG" : {
             "NIGHT" : {
                 "GAIN"    : 100,
-                "BINNING" : 1
+                "BINNING" : 1,
             },
             "MOONMODE" : {
                 "GAIN"    : 75,
-                "BINNING" : 1
+                "BINNING" : 1,
             },
             "DAY" : {
                 "GAIN"    : 0,
-                "BINNING" : 1
+                "BINNING" : 1,
             }
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},
             "PROPERTIES" : {},
-            "TEXT" : {}
+            "TEXT" : {},
         },
         "CCD_EXPOSURE_MAX"     : 15.00000,
         "CCD_EXPOSURE_DEF"     : 0.0,
@@ -100,7 +100,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
             "png"   : 5,
-            "tif"   : 5  # 5 = LZW
+            "tif"   : 5,  # 5 = LZW
         },
         "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
         "IMAGE_LABEL"      : True,
@@ -134,7 +134,7 @@ class IndiAllSkyConfigBase(object):
             [ "OBSERVER", "" ],
             [ "SITE", "" ],
             [ "OBJECT", "" ],
-            [ "NOTES", "" ]
+            [ "NOTES", "" ],
         ],
         "TEXT_PROPERTIES" : {
             "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
@@ -146,13 +146,13 @@ class IndiAllSkyConfigBase(object):
             "FONT_AA"        : "LINE_AA",
             "FONT_SCALE"     : 0.80,
             "FONT_THICKNESS" : 1,
-            "FONT_OUTLINE"   : True
+            "FONT_OUTLINE"   : True,
         },
         "ORB_PROPERTIES" : {
             "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
             "RADIUS"      : 9,
             "SUN_COLOR"   : [255, 255, 255],
-            "MOON_COLOR"  : [128, 128, 128]
+            "MOON_COLOR"  : [128, 128, 128],
         },
         "FILETRANSFER" : {
             "CLASSNAME"              : "pycurl_sftp",  # pycurl_sftp, pycurl_ftps, pycurl_ftpes, paramiko_sftp, python_ftp, python_ftpes
@@ -178,7 +178,20 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_KEOGRAM"         : False,
             "UPLOAD_STARTRAIL"       : False,
             "UPLOAD_ENDOFNIGHT"      : False,
-            "LIBCURL_OPTIONS"        : {}
+            "LIBCURL_OPTIONS"        : {},
+        },
+        "S3UPLOAD" : {
+            "ENABLE"                 : False,
+            "CLASSNAME"              : "boto3_s3",
+            "ACCESS_KEY"             : "",
+            "SECRET_KEY"             : "",
+            "BUCKET"                 : "change-me",
+            "REGION"                 : "us-east-1",
+            "HOST"                   : "amazonaws.com",
+            "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
+            "STORAGE_CLASS"          : "STANDARD",
+            "EXPIRE"                 : True,
+            "CERT_BYPASS"            : False,
         },
         "MQTTPUBLISH" : {
             "ENABLE"                 : False,
@@ -190,11 +203,11 @@ class IndiAllSkyConfigBase(object):
             "BASE_TOPIC"             : "indi-allsky",
             "QOS"                    : 0,  # 0, 1, or 2
             "TLS"                    : True,
-            "CERT_BYPASS"            : True
+            "CERT_BYPASS"            : True,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
-            "EXTRA_OPTIONS"          : ""
+            "EXTRA_OPTIONS"          : "",
         }
     })
 
