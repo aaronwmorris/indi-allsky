@@ -1734,11 +1734,11 @@
         <div class="col-sm-2">
             {{ form_config.S3UPLOAD__CLASSNAME.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.S3UPLOAD__CLASSNAME(class='form-control bg-secondary') }}
             <div id="S3UPLOAD__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
         </div>
     </div>
 
@@ -1773,7 +1773,7 @@
             <div id="S3UPLOAD__BUCKET-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html">AWS S3 Bucket Access</a></div>
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html" target="_blank">AWS S3 Bucket Access</a></div>
         </div>
     </div>
 
@@ -1786,7 +1786,8 @@
             <div id="S3UPLOAD__REGION-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html">AWS S3 Regions</a> (scroll on table)</div>
+            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html target="_blank"">AWS S3 Regions</a> (scroll on table)</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
 
@@ -1824,6 +1825,8 @@
             <div id="S3UPLOAD__STORAGE_CLASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
+            <div><a href="https://aws.amazon.com/s3/storage-classes/" target="_blank">AWS Storage Classes</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
 
