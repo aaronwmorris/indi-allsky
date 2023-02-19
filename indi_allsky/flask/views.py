@@ -116,7 +116,7 @@ class JsonLatestImageView(JsonView):
         super(JsonLatestImageView, self).__init__(**kwargs)
 
         self.camera_id = self.getLatestCamera()
-        self.history_seconds = 900
+        self.history_seconds = 300
 
 
     def get_objects(self):
