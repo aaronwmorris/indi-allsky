@@ -242,6 +242,7 @@ class FileUploader(Process):
                     'key'           : str(s3_key),
                     'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                     'expire_days'   : expire_days,
+                    'acl'           : self.config['S3UPLOAD']['ACL'],
                 }
 
                 try:

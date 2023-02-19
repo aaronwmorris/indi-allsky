@@ -61,12 +61,15 @@ class boto3_s3(GenericFileTransfer):
         key = kwargs['key']
         storage_class = kwargs['storage_class']
         expire_days = kwargs['expire_days']
+        acl = kwargs['acl']
 
         local_file_p = Path(local_file)
 
 
         extra_args = dict()
-        extra_args['ACL'] = 'public-read'  # all assets need to be publicly readable
+
+        if acl:
+            extra_args['ACL'] = acl  # all assets are normally publicly readable
 
 
         if storage_class:
