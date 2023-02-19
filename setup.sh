@@ -1545,6 +1545,10 @@ json_pp < "$TMP_FLASK" >/dev/null
 
 
 if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
+    # make a backup
+    cp -f "${ALLSKY_ETC}/flask.json" "${ALLSKY_ETC}/flask.json_old"
+    chmod 640 "${ALLSKY_ETC}/flask.json_old"
+
     # attempt to merge configs giving preference to the original config (listed 2nd)
     jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
     cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
