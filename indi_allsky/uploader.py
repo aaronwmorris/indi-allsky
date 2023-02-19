@@ -233,7 +233,8 @@ class FileUploader(Process):
                     'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
                     'region'       : self.config['S3UPLOAD']['REGION'],
                     'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
-                    'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],  # endpoint_url
+                    'tls'          : self.config['S3UPLOAD']['TLS'],
+                    'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],
                 }
 
                 put_kwargs = {
@@ -252,7 +253,13 @@ class FileUploader(Process):
                     task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['S3UPLOAD']['CLASSNAME']))
                     return
 
+
                 client = client_class(self.config)
+                client.timeout = self.config['FILETRANSFER']['TIMEOUT']  # reusing file transfer timeout
+
+
+                if self.config['S3UPLOAD']['PORT']:
+                    client.port = self.config['S3UPLOAD']['PORT']
 
 
             elif action == 'mqttpub':

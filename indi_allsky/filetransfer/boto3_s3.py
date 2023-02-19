@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 import socket
 import time
+from botocore.client import Config
 import boto3
 import boto3.exceptions
 import logging
@@ -29,6 +30,7 @@ class boto3_s3(GenericFileTransfer):
         secret_key = kwargs['secret_key']
         region = kwargs['region']
         #host = kwargs['hostname']  # endpoint_url
+        tls = kwargs['tls']
         cert_bypass = kwargs['cert_bypass']
 
 
@@ -38,14 +40,20 @@ class boto3_s3(GenericFileTransfer):
             verify = True
 
 
+        boto_config = Config(
+            connect_timeout=self._timeout,
+            retries={'max_attempts': 0},
+        )
+
         self.client = boto3.client(
             's3',
             region,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
             #endpoint_url='http://foobar',
-            use_ssl=True,
+            use_ssl=tls,
             verify=verify,
+            config=boto_config,
         )
 
 
