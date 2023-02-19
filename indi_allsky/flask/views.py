@@ -128,6 +128,13 @@ class JsonLatestImageView(JsonView):
             history_seconds = 86400
 
 
+        data = {
+            'latest_image' : {
+                'url' : None,
+            },
+        }
+
+
         if not night:
             if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
                 # images are not stored in the DB in this condition
@@ -138,24 +145,19 @@ class JsonLatestImageView(JsonView):
 
                 if latest_image_p.exists():
                     # use latest image if it exists
-                    #max_age = datetime.now() - timedelta(minutes=5)
-                    #if latest_image_p.stat().st_mtime > max_age.timestamp():
+                    max_age = datetime.now() - timedelta(seconds=history_seconds)
+                    if latest_image_p.stat().st_mtime > max_age.timestamp():
 
-                    data = {
-                        'latest_image' : {
-                            'url' : '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time())),
-                        },
-                    }
-
+                        data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                        return data
+                    else:
+                        return data
+                else:
                     return data
 
 
         # use database
-        data = {
-            'latest_image' : {
-                'url' : self.getLatestImage(self.camera_id, history_seconds),
-            },
-        }
+        data['latest_image']['url'] = self.getLatestImage(self.camera_id, history_seconds)
 
         return data
 
