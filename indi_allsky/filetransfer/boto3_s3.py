@@ -25,8 +25,8 @@ class boto3_s3(GenericFileTransfer):
     def connect(self, *args, **kwargs):
         super(boto3_s3, self).connect(*args, **kwargs)
 
-        access_key = kwargs['username']
-        secret_key = kwargs['password']
+        access_key = kwargs['access_key']
+        secret_key = kwargs['secret_key']
         region = kwargs['region']
         #host = kwargs['hostname']  # endpoint_url
         cert_bypass = kwargs['cert_bypass']

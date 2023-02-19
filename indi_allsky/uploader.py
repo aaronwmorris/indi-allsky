@@ -228,8 +228,9 @@ class FileUploader(Process):
 
 
                 connect_kwargs = {
-                    'username'     : self.config['S3UPLOAD']['ACCESS_KEY'],
-                    'password'     : self.config['S3UPLOAD']['SECRET_KEY'],
+                    'username'     : '*',  # not logging access key
+                    'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
+                    'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
                     'region'       : self.config['S3UPLOAD']['REGION'],
                     'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
                     'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],  # endpoint_url
