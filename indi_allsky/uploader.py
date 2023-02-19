@@ -204,6 +204,20 @@ class FileUploader(Process):
                 if self.config['FILETRANSFER']['PORT']:
                     client.port = self.config['FILETRANSFER']['PORT']
 
+            elif action == 's3':
+                connect_kwargs = {
+                    'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
+                    'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
+                    'region'       : self.config['S3UPLOAD']['REGION'],
+                    'host'         : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                }
+
+                put_kwargs = {
+                    'local_file'    : local_file_p,
+                    'bucket'        : self.config['S3UPLOAD']['BUCKET'],
+                    'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
+                    'expire'        : 30,
+                }
             elif action == 'mqttpub':
                 connect_kwargs = {
                     'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
