@@ -1161,6 +1161,7 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
 def S3UPLOAD__CLASSNAME_validator(form, field):
     class_names = (
         'boto3_s3',
+        'libcloud_s3',
     )
 
     if field.data not in class_names:
@@ -1478,6 +1479,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     S3UPLOAD__CLASSNAME_choices = (
         ('boto3_s3', 'Boto3'),
+        ('libcloud_s3', 'Apache Libcloud'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (
