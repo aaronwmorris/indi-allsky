@@ -1265,7 +1265,7 @@ class ImageViewerView(FormView):
             'FILTER_DETECTIONS' : None,
         }
 
-        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
+        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
 
         return context
 

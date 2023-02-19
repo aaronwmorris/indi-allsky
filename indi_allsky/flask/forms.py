@@ -1792,6 +1792,7 @@ class IndiAllskyImageViewer(FlaskForm):
         for i, img in enumerate(images_query):
             try:
                 url = img.getUrl(s3_prefix=self.s3_prefix)
+                #app.logger.info('Image URL: %s', url)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
