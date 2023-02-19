@@ -1612,7 +1612,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
     S3UPLOAD__CLASSNAME              = SelectField('S3 Utility', choices=S3UPLOAD__CLASSNAME_choices, validators=[DataRequired(), S3UPLOAD__CLASSNAME_validator])
     S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
-    S3UPLOAD__ACCESS_KEY             = PasswordField('Access Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__ACCESS_KEY_validator])
+    S3UPLOAD__ACCESS_KEY             = StringField('Access Key', validators=[S3UPLOAD__ACCESS_KEY_validator])
     S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
