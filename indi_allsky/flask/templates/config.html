@@ -1832,16 +1832,30 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.S3UPLOAD__EXPIRE.label }}
+            {{ form_config.S3UPLOAD__EXPIRE_IMAGES.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.S3UPLOAD__EXPIRE(class='form-check-input') }}
-                <div id="S3UPLOAD__EXPIRE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.S3UPLOAD__EXPIRE_IMAGES(class='form-check-input') }}
+                <div id="S3UPLOAD__EXPIRE_IMAGES-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Expire S3 content according to IMAGE_EXPIRE_DAYS and TIMELAPSE_EXPIRE_DAYS</div>
+        <div class="col-sm-8">Expire S3 images according to IMAGE_EXPIRE_DAYS</div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__EXPIRE_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__EXPIRE_TIMELAPSE(class='form-check-input') }}
+                <div id="S3UPLOAD__EXPIRE_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Expire S3 videos according to TIMELAPSE_EXPIRE_DAYS</div>
+    </div>
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -2230,7 +2244,8 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_STARTRAIL',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
     'S3UPLOAD__ENABLE',
-    'S3UPLOAD__EXPIRE',
+    'S3UPLOAD__EXPIRE_IMAGES',
+    'S3UPLOAD__EXPIRE_TIMELAPSE',
     'S3UPLOAD__CERT_BYPASS',
     'MQTTPUBLISH__ENABLE',
     'MQTTPUBLISH__TLS',

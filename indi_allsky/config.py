@@ -190,7 +190,8 @@ class IndiAllSkyConfigBase(object):
             "HOST"                   : "amazonaws.com",
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
             "STORAGE_CLASS"          : "STANDARD",
-            "EXPIRE"                 : True,
+            "EXPIRE_IMAGES"          : True,
+            "EXPIRE_TIMELAPSE"       : True,
             "CERT_BYPASS"            : False,
         },
         "MQTTPUBLISH" : {
