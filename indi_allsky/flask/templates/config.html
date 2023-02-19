@@ -1804,6 +1804,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__PORT(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">S3 transfer port (0 for default)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__URL_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -1870,6 +1881,18 @@
         <div class="col-sm-8">Expire S3 videos according to TIMELAPSE_EXPIRE_DAYS</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__TLS(class='form-check-input') }}
+                <div id="S3UPLOAD__TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Secure transfers</div>
+    </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -2202,6 +2225,7 @@ const field_names = [
     'S3UPLOAD__BUCKET',
     'S3UPLOAD__REGION',
     'S3UPLOAD__HOST',
+    'S3UPLOAD__PORT',
     'S3UPLOAD__URL_TEMPLATE',
     'S3UPLOAD__ACL',
     'S3UPLOAD__STORAGE_CLASS',
@@ -2261,6 +2285,7 @@ const checkbox_field_names = [
     'S3UPLOAD__ENABLE',
     'S3UPLOAD__EXPIRE_IMAGES',
     'S3UPLOAD__EXPIRE_TIMELAPSE',
+    'S3UPLOAD__TLS',
     'S3UPLOAD__CERT_BYPASS',
     'MQTTPUBLISH__ENABLE',
     'MQTTPUBLISH__TLS',

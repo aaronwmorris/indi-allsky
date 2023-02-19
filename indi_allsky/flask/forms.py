@@ -1194,6 +1194,17 @@ def S3UPLOAD__HOST_validator(form, field):
         raise ValidationError('Invalid host name')
 
 
+def S3UPLOAD__PORT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Port must be 0 or greater')
+
+    if field.data > 65535:
+        raise ValidationError('Port must be less than 65535')
+
+
 def S3UPLOAD__REGION_validator(form, field):
     region_regex = r'^[a-zA-Z0-9\-]+$'
 
@@ -1624,11 +1635,13 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
+    S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
     S3UPLOAD__EXPIRE_IMAGES          = BooleanField('Add Image Expiration')
     S3UPLOAD__EXPIRE_TIMELAPSE       = BooleanField('Add Timelapse Expiration')
     S3UPLOAD__ACL                    = StringField('S3 ACL', validators=[S3UPLOAD__ACL_validator])
     S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
+    S3UPLOAD__TLS                    = BooleanField('Use TLS')
     S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])

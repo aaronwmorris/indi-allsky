@@ -188,11 +188,13 @@ class IndiAllSkyConfigBase(object):
             "BUCKET"                 : "change-me",
             "REGION"                 : "us-east-2",
             "HOST"                   : "amazonaws.com",
+            "PORT"                   : 0,
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
             "ACL"                    : "public-read",
             "STORAGE_CLASS"          : "STANDARD",
             "EXPIRE_IMAGES"          : True,
             "EXPIRE_TIMELAPSE"       : True,
+            "TLS"                    : True,
             "CERT_BYPASS"            : False,
         },
         "MQTTPUBLISH" : {
