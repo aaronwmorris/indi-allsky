@@ -19,7 +19,7 @@ class boto3_s3(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(boto3_s3, self).__init__(*args, **kwargs)
 
-        self._port = 0
+        self._port = 443
 
 
     def connect(self, *args, **kwargs):
