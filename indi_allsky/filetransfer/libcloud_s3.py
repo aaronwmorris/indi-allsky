@@ -1,5 +1,5 @@
 from .generic import GenericFileTransfer
-#from .exceptions import AuthenticationFailure
+from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
@@ -10,6 +10,7 @@ import socket
 import time
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
+from libcloud.common.types import InvalidCredsError
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -90,6 +91,8 @@ class libcloud_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except InvalidCredsError as e:
+            raise AuthenticationFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
