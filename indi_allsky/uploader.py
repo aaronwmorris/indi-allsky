@@ -228,10 +228,10 @@ class FileUploader(Process):
 
 
                 connect_kwargs = {
-                    'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
-                    'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
+                    'username'     : self.config['S3UPLOAD']['ACCESS_KEY'],
+                    'password'     : self.config['S3UPLOAD']['SECRET_KEY'],
                     'region'       : self.config['S3UPLOAD']['REGION'],
-                    'host'         : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                    'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
                     'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],  # endpoint_url
                 }
 
@@ -242,6 +242,17 @@ class FileUploader(Process):
                     'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                     'expire_days'   : expire_days,
                 }
+
+                try:
+                    client_class = getattr(filetransfer, self.config['S3UPLOAD']['CLASSNAME'])
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', self.config['S3UPLOAD']['CLASSNAME'])
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['S3UPLOAD']['CLASSNAME']))
+                    return
+
+                client = client_class(self.config)
+
+
             elif action == 'mqttpub':
                 connect_kwargs = {
                     'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
