@@ -1428,7 +1428,7 @@ chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.service"
 [[ -f "$TMP2" ]] && rm -f "$TMP2"
 
 
-echo "**** Setting up gunicorn ****"
+echo "**** Setting up gunicorn service ****"
 TMP5=$(mktemp)
 sed \
  -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
@@ -1512,6 +1512,80 @@ sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 775 "${ALLSKY_ETC}"
 
 
+echo "**** Flask config ****"
+
+while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
+    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0 --defaultno; then
+        FLASK_AUTH_ALL_VIEWS="true"
+    else
+        FLASK_AUTH_ALL_VIEWS="false"
+    fi
+done
+
+
+TMP_FLASK=$(mktemp --suffix=.json)
+TMP_FLASK_MERGE=$(mktemp --suffix=.json)
+
+SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
+sed \
+ -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
+ -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
+ -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+ -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
+ -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
+ -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
+ -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
+
+# syntax check
+json_pp < "$TMP_FLASK" >/dev/null
+
+
+if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
+    # attempt to merge configs giving preference to the original config (listed 2nd)
+    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
+    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
+else
+    # new config
+    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
+fi
+
+
+# always replace the DB URI
+TMP_FLASK_2=$(mktemp --suffix=.json)
+jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
+cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
+
+# always replace the IMAGE_FOLDER
+TMP_FLASK_3=$(mktemp --suffix=.json)
+jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
+
+
+EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$EXISTING_PASSWORD_KEY" ]; then
+    # generate password key for encryption
+    PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+
+    TMP_FLASK_4=$(mktemp --suffix=.json)
+    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_4"
+    cp -f "$TMP_FLASK_4" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_4" ]] && rm -f "$TMP_FLASK_4"
+fi
+
+
+sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
+sudo chmod 660 "${ALLSKY_ETC}/flask.json"
+
+[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+
+
 
 echo "**** Setup DB ****"
 [[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
@@ -1583,6 +1657,11 @@ if [ -f "${ALLSKY_ETC}/config.json" ]; then
     "${ALLSKY_DIRECTORY}/config.py" load -c "${ALLSKY_ETC}/config.json"
 
     mv -f "${ALLSKY_ETC}/config.json" "${ALLSKY_ETC}/legacy_config.json"
+
+    # Move old backup config
+    if [ -f "${ALLSKY_ETC}/config.json_old" ]; then
+        mv -f "${ALLSKY_ETC}/config.json_old" "${ALLSKY_ETC}/legacy_config.json_old"
+    fi
 fi
 
 
@@ -1668,86 +1747,12 @@ echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
 sleep 3
 
 
-echo "**** Flask config ****"
+TMP_GUNICORN=$(mktemp)
+cat "${ALLSKY_DIRECTORY}/service/gunicorn.conf.py" > "$TMP_GUNICORN"
 
-while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
-    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0 --defaultno; then
-        FLASK_AUTH_ALL_VIEWS="true"
-    else
-        FLASK_AUTH_ALL_VIEWS="false"
-    fi
-done
-
-
-TMP_FLASK=$(mktemp --suffix=.json)
-TMP_FLASK_MERGE=$(mktemp --suffix=.json)
-
-SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
-sed \
- -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
- -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
- -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
- -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
- -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
- -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
- "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
-
-# syntax check
-json_pp < "$TMP_FLASK" >/dev/null
-
-
-if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
-    # attempt to merge configs giving preference to the original config (listed 2nd)
-    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
-    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
-else
-    # new config
-    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
-fi
-
-
-# always replace the DB URI
-TMP_FLASK_2=$(mktemp --suffix=.json)
-jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
-cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
-[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-
-# always replace the IMAGE_FOLDER
-TMP_FLASK_3=$(mktemp --suffix=.json)
-jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
-cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
-[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
-
-
-EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$EXISTING_PASSWORD_KEY" ]; then
-    # generate password key for encryption
-    PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
-
-    TMP_FLASK_4=$(mktemp --suffix=.json)
-    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_4"
-    cp -f "$TMP_FLASK_4" "${ALLSKY_ETC}/flask.json"
-    [[ -f "$TMP_FLASK_4" ]] && rm -f "$TMP_FLASK_4"
-fi
-
-
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
-sudo chmod 660 "${ALLSKY_ETC}/flask.json"
-
-[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
-[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
-
-
-TMP7=$(mktemp)
-cat "${ALLSKY_DIRECTORY}/service/gunicorn.conf.py" > "$TMP7"
-
-cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
+cp -f "$TMP_GUNICORN" "${ALLSKY_ETC}/gunicorn.conf.py"
 chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
-[[ -f "$TMP7" ]] && rm -f "$TMP7"
+[[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
 
