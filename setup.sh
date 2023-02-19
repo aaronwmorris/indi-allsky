@@ -1533,7 +1533,6 @@ sed \
  -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
- -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
  -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
  -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
@@ -1563,12 +1562,6 @@ TMP_FLASK_2=$(mktemp --suffix=.json)
 jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
 cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-
-# always replace the IMAGE_FOLDER
-TMP_FLASK_3=$(mktemp --suffix=.json)
-jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
-cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
-[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
 
 EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
@@ -1749,6 +1742,13 @@ echo
 echo
 echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
 sleep 3
+
+
+# replace the flask IMAGE_FOLDER
+TMP_FLASK_3=$(mktemp --suffix=.json)
+jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
 
 TMP_GUNICORN=$(mktemp)
