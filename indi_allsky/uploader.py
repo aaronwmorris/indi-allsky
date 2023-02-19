@@ -210,6 +210,7 @@ class FileUploader(Process):
                     'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
                     'region'       : self.config['S3UPLOAD']['REGION'],
                     'host'         : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                    'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],  # endpoint_url
                 }
 
                 put_kwargs = {
