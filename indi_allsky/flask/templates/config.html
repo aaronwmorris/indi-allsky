@@ -16,6 +16,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.ENCRYPT_PASSWORDS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
+                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Encrypt passwords in the database</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CAMERA_INTERFACE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -1719,6 +1734,198 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__ENABLE(class='form-check-input') }}
+                <div id="S3UPLOAD__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__CLASSNAME(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ACCESS_KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__ACCESS_KEY(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__ACCESS_KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__SECRET_KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__SECRET_KEY(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__SECRET_KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__BUCKET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__BUCKET(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__BUCKET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html" target="_blank">AWS S3 Bucket Access</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__REGION.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__REGION(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__REGION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html target="_blank"">AWS S3 Regions</a> (scroll on table)</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__HOST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__HOST(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__PORT(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">S3 transfer port (0 for default)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__URL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__URL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__URL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
+            <div>Available variables: <pre>bucket, region, host</pre></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ACL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__ACL(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__ACL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" target="_blank">AWS S3 ACLs</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__STORAGE_CLASS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__STORAGE_CLASS(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__STORAGE_CLASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://aws.amazon.com/s3/storage-classes/" target="_blank">AWS Storage Classes</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__EXPIRE_IMAGES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__EXPIRE_IMAGES(class='form-check-input') }}
+                <div id="S3UPLOAD__EXPIRE_IMAGES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Expire S3 images according to IMAGE_EXPIRE_DAYS</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__EXPIRE_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__EXPIRE_TIMELAPSE(class='form-check-input') }}
+                <div id="S3UPLOAD__EXPIRE_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Expire S3 videos according to TIMELAPSE_EXPIRE_DAYS</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__TLS(class='form-check-input') }}
+                <div id="S3UPLOAD__TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Secure transfers</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__CERT_BYPASS(class='form-check-input') }}
+                <div id="S3UPLOAD__CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.MQTTPUBLISH__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -2027,6 +2234,16 @@ const field_names = [
     'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER',
     'FILETRANSFER__UPLOAD_IMAGE',
     'FILETRANSFER__LIBCURL_OPTIONS',
+    'S3UPLOAD__CLASSNAME',
+    'S3UPLOAD__ACCESS_KEY',
+    'S3UPLOAD__SECRET_KEY',
+    'S3UPLOAD__BUCKET',
+    'S3UPLOAD__REGION',
+    'S3UPLOAD__HOST',
+    'S3UPLOAD__PORT',
+    'S3UPLOAD__URL_TEMPLATE',
+    'S3UPLOAD__ACL',
+    'S3UPLOAD__STORAGE_CLASS',
     'MQTTPUBLISH__TRANSPORT',
     'MQTTPUBLISH__HOST',
     'MQTTPUBLISH__PORT',
@@ -2051,6 +2268,7 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'ENCRYPT_PASSWORDS',
     'FOCUS_MODE',
     'AUTO_WB',
     'CCD_COOLING',
@@ -2080,6 +2298,11 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_KEOGRAM',
     'FILETRANSFER__UPLOAD_STARTRAIL',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
+    'S3UPLOAD__ENABLE',
+    'S3UPLOAD__EXPIRE_IMAGES',
+    'S3UPLOAD__EXPIRE_TIMELAPSE',
+    'S3UPLOAD__TLS',
+    'S3UPLOAD__CERT_BYPASS',
     'MQTTPUBLISH__ENABLE',
     'MQTTPUBLISH__TLS',
     'MQTTPUBLISH__CERT_BYPASS',

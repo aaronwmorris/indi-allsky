@@ -9,10 +9,14 @@ from collections import OrderedDict
 from prettytable import PrettyTable
 import logging
 
+from cryptography.fernet import Fernet
+#from cryptography.fernet import InvalidToken
+
 from .flask.models import IndiAllSkyDbConfigTable
 from .flask.models import IndiAllSkyDbUserTable
 
 from .flask import db
+from flask import current_app as app
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -25,6 +29,8 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyConfigBase(object):
 
     _base_config = OrderedDict({
+        "ENCRYPT_PASSWORDS_comment" : "Do not manually adjust",
+        "ENCRYPT_PASSWORDS" : False,
         "CAMERA_INTERFACE" : "indi",
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
@@ -32,21 +38,21 @@ class IndiAllSkyConfigBase(object):
         "CCD_CONFIG" : {
             "NIGHT" : {
                 "GAIN"    : 100,
-                "BINNING" : 1
+                "BINNING" : 1,
             },
             "MOONMODE" : {
                 "GAIN"    : 75,
-                "BINNING" : 1
+                "BINNING" : 1,
             },
             "DAY" : {
                 "GAIN"    : 0,
-                "BINNING" : 1
+                "BINNING" : 1,
             }
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},
             "PROPERTIES" : {},
-            "TEXT" : {}
+            "TEXT" : {},
         },
         "CCD_EXPOSURE_MAX"     : 15.00000,
         "CCD_EXPOSURE_DEF"     : 0.0,
@@ -100,7 +106,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
             "png"   : 5,
-            "tif"   : 5  # 5 = LZW
+            "tif"   : 5,  # 5 = LZW
         },
         "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
         "IMAGE_LABEL"      : True,
@@ -134,7 +140,7 @@ class IndiAllSkyConfigBase(object):
             [ "OBSERVER", "" ],
             [ "SITE", "" ],
             [ "OBJECT", "" ],
-            [ "NOTES", "" ]
+            [ "NOTES", "" ],
         ],
         "TEXT_PROPERTIES" : {
             "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
@@ -146,13 +152,13 @@ class IndiAllSkyConfigBase(object):
             "FONT_AA"        : "LINE_AA",
             "FONT_SCALE"     : 0.80,
             "FONT_THICKNESS" : 1,
-            "FONT_OUTLINE"   : True
+            "FONT_OUTLINE"   : True,
         },
         "ORB_PROPERTIES" : {
             "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
             "RADIUS"      : 9,
             "SUN_COLOR"   : [255, 255, 255],
-            "MOON_COLOR"  : [128, 128, 128]
+            "MOON_COLOR"  : [128, 128, 128],
         },
         "FILETRANSFER" : {
             "CLASSNAME"              : "pycurl_sftp",  # pycurl_sftp, pycurl_ftps, pycurl_ftpes, paramiko_sftp, python_ftp, python_ftpes
@@ -160,6 +166,7 @@ class IndiAllSkyConfigBase(object):
             "PORT"                   : 0,
             "USERNAME"               : "",
             "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
             "PRIVATE_KEY"            : "",
             "PUBLIC_KEY"             : "",
             "TIMEOUT"                : 5.0,
@@ -178,7 +185,25 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_KEOGRAM"         : False,
             "UPLOAD_STARTRAIL"       : False,
             "UPLOAD_ENDOFNIGHT"      : False,
-            "LIBCURL_OPTIONS"        : {}
+            "LIBCURL_OPTIONS"        : {},
+        },
+        "S3UPLOAD" : {
+            "ENABLE"                 : False,
+            "CLASSNAME"              : "boto3_s3",
+            "ACCESS_KEY"             : "",
+            "SECRET_KEY"             : "",
+            "SECRET_KEY_E"           : "",
+            "BUCKET"                 : "change-me",
+            "REGION"                 : "us-east-2",
+            "HOST"                   : "amazonaws.com",
+            "PORT"                   : 0,
+            "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
+            "ACL"                    : "public-read",
+            "STORAGE_CLASS"          : "STANDARD",
+            "EXPIRE_IMAGES"          : True,
+            "EXPIRE_TIMELAPSE"       : True,
+            "TLS"                    : True,
+            "CERT_BYPASS"            : False,
         },
         "MQTTPUBLISH" : {
             "ENABLE"                 : False,
@@ -187,14 +212,15 @@ class IndiAllSkyConfigBase(object):
             "PORT"                   : 8883,  # 1883 = mqtt, 8883 = TLS
             "USERNAME"               : "indi-allsky",
             "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
             "BASE_TOPIC"             : "indi-allsky",
             "QOS"                    : 0,  # 0, 1, or 2
             "TLS"                    : True,
-            "CERT_BYPASS"            : True
+            "CERT_BYPASS"            : True,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
-            "EXTRA_OPTIONS"          : ""
+            "EXTRA_OPTIONS"          : "",
         }
     })
 
@@ -221,6 +247,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._config_level = config_entry.level
         self._config.update(config_entry.data)
 
+        self._decrypt_passwords()
 
 
     @property
@@ -268,9 +295,9 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
-    def _setConfig(self, user_entry, note):
+    def _setConfig(self, config, user_entry, note):
         config_entry = IndiAllSkyDbConfigTable(
-            data=self._config,
+            data=config,
             level=str(__config_level__),
             user_id=user_entry.id,
             note=str(note),
@@ -282,21 +309,121 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
+    def _decrypt_passwords(self):
+        if self.config['ENCRYPT_PASSWORDS']:
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+
+            filetransfer__password_e = self.config.get('FILETRANSFER', {}).get('PASSWORD_E', '')
+            if filetransfer__password_e:
+                # not catching InvalidToken
+                filetransfer__password = f_key.decrypt(filetransfer__password_e.encode()).decode()
+            else:
+                filetransfer__password = self.config.get('FILETRANSFER', {}).get('PASSWORD', '')
+
+
+            s3upload__secret_key_e = self.config.get('S3UPLOAD', {}).get('SECRET_KEY_E', '')
+            if s3upload__secret_key_e:
+                # not catching InvalidToken
+                s3upload__secret_key = f_key.decrypt(s3upload__secret_key_e.encode()).decode()
+            else:
+                s3upload__secret_key = self.config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
+
+
+            mqttpublish__password_e = self.config.get('MQTTPUBLISH', {}).get('PASSWORD_E', '')
+            if mqttpublish__password_e:
+                # not catching InvalidToken
+                mqttpublish__password = f_key.decrypt(mqttpublish__password_e.encode()).decode()
+            else:
+                mqttpublish__password = self.config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+
+        else:
+            # passwords should not be encrypted
+            filetransfer__password = self.config.get('FILETRANSFER', {}).get('PASSWORD', '')
+            s3upload__secret_key = self.config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
+            mqttpublish__password = self.config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+
+
+        self.config['FILETRANSFER']['PASSWORD'] = filetransfer__password
+        self.config['FILETRANSFER']['PASSWORD_E'] = ''
+        self.config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
+        self.config['S3UPLOAD']['SECRET_KEY_E'] = ''
+        self.config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
+        self.config['MQTTPUBLISH']['PASSWORD_E'] = ''
+
+
+
     def save(self, username, note):
         user_entry = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == str(username))\
             .one()
 
-        config_entry = self._setConfig(user_entry, note)
+
+        config = self._encryptPasswords()
+
+        config_entry = self._setConfig(config, user_entry, note)
 
         self._config_id = config_entry.id
 
         return config_entry
 
 
+    def _encryptPasswords(self):
+        config = self._config.copy()
+
+        if config['ENCRYPT_PASSWORDS']:
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+
+            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            if filetransfer__password:
+                filetransfer__password_e = f_key.encrypt(filetransfer__password.encode()).decode()
+                filetransfer__password = ''
+            else:
+                filetransfer__password_e = ''
+                filetransfer__password = ''
+
+
+            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            if s3upload__secret_key:
+                s3upload__secret_key_e = f_key.encrypt(s3upload__secret_key.encode()).decode()
+                s3upload__secret_key = ''
+            else:
+                s3upload__secret_key_e = ''
+                s3upload__secret_key = ''
+
+
+            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            if mqttpublish__password:
+                mqttpublish__password_e = f_key.encrypt(mqttpublish__password.encode()).decode()
+                mqttpublish__password = ''
+            else:
+                mqttpublish__password_e = ''
+                mqttpublish__password = ''
+
+        else:
+            # passwords should not be encrypted
+            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            filetransfer__password_e = ''
+            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            s3upload__secret_key_e = ''
+            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            mqttpublish__password_e = ''
+
+
+        config['FILETRANSFER']['PASSWORD'] = filetransfer__password
+        config['FILETRANSFER']['PASSWORD_E'] = filetransfer__password_e
+        config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
+        config['S3UPLOAD']['SECRET_KEY_E'] = s3upload__secret_key_e
+        config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
+        config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
+
+
+        return config
+
+
 class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def __init__(self):
+        # not calling parent constructor
         self._config = self.base_config.copy()  # populate initial values
 
 

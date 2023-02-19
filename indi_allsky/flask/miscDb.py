@@ -451,11 +451,6 @@ class miscDb(object):
         return fits_image
 
 
-    def addUploadedFlag(self, entry):
-        entry.uploaded = True
-        db.session.commit()
-
-
     def getCurrentCameraId(self):
         if self.config.get('DB_CAMERA_ID'):
             return self.config['DB_CAMERA_ID']

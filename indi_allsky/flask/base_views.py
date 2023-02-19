@@ -42,6 +42,8 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
+        self.s3_prefix = self.getS3Prefix()
+
         # assume indi-allsky is running with application server
         self.local_indi_allsky = True
 
@@ -80,6 +82,28 @@ class BaseView(View):
         return latest_camera.id
 
 
+    def getS3Prefix(self):
+        s3_data = {
+            'host'   : self.indi_allsky_config['S3UPLOAD']['HOST'],
+            'bucket' : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
+            'region' : self.indi_allsky_config['S3UPLOAD']['REGION'],
+        }
+
+        try:
+            prefix = self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
+        except KeyError:
+            app.logger.error('Failure to generate S3 prefix')
+            return ''
+        except ValueError:
+            app.logger.error('Failure to generate S3 prefix')
+            return ''
+
+
+        #app.logger.info('S3 Prefix: %s', prefix)
+
+        return prefix
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
@@ -87,6 +111,8 @@ class TemplateView(BaseView):
         self.check_config(self._indi_allsky_config_obj.config_id)
 
         self.template_name = template_name
+
+        self.night = True
 
 
     def render_template(self, context):
@@ -105,6 +131,10 @@ class TemplateView(BaseView):
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
         }
+
+        # night set in get_astrometric_info()
+        context['night'] = int(self.night)  # javascript does not play well with bools
+
         return context
 
 
@@ -258,6 +288,7 @@ class TemplateView(BaseView):
         # day/night
         if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
+            self.night = False
         else:
             data['mode'] = 'Night'
 

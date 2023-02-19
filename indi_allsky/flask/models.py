@@ -72,12 +72,17 @@ class IndiAllSkyDbFileBase(db.Model):
         return rel_filename_p
 
 
-    def getUrl(self):
-        if self.remote_url:
-            # if files are stored in S3, etc
-            return self.remote_url
+    def getUrl(self, s3_prefix=''):
+        # Not using this for now
+        #if self.remote_url:
+        #    return self.remote_url
+
+        if self.s3_key:
+            return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
+
 
         rel_filename_p = self.getRelativePath()
+
         return Path('images').joinpath(rel_filename_p)
 
 
@@ -123,6 +128,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
@@ -201,6 +207,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -227,6 +234,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -245,6 +253,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -263,6 +272,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
@@ -281,6 +291,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
@@ -301,6 +312,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
+    s3_key = db.Column(db.String(length=255), nullable=True)
     createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)

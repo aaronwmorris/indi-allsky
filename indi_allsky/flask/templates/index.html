@@ -12,53 +12,90 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
-var img;
+var json_data = {
+    'latest_image' : {
+        'url' : null
+    }
+};
+var max_age = 300;
 var refreshInterval = {{ refreshInterval | int }};
-var url = '{{ latest_image_uri }}';
+var night = {{ night }};
 var fullscreen = false;  //initial state
 
 function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['latest_image']['url'] == null) {
+        await sleep(100);
+    }
+
+    $('#nodata').css({'display' : 'none'});
+
+    showImage(json_data['latest_image']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    img = new Image();
+    var img = new Image();
+    img.src = entry["url"];
     img.onload = function() {
-        $('#nodata').css({'display' : 'none'});
-
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
 
         var hRatio = canvas.width  / this.width;
-        var vRatio =  canvas.height / this.height;
+        var vRatio = canvas.height / this.height;
         var ratio  = Math.min ( hRatio, vRatio );
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 
         context.drawImage(this, 0, 0, this.width, this.height,
-                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
-        if(drawDate) {
-            var now = new Date();
-            var text = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-            var maxWidth = 100;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(text, x, y, maxWidth);
-            context.fillStyle = 'white';
-            context.fillText(text, x, y, maxWidth);
-        }
     };
-
-    refresh();
 }
 
-function refresh() {
-    img.src = url + "?t=" + new Date().getTime();
-    setTimeout(refresh, refreshInterval);
+
+function loadNextImage() {
+    console.log('Loading next image');
+    loadJS("{{ url_for('indi_allsky.js_latest_image_view') }}", {'limit_s' : max_age, 'night' : night}, function() {});
+    setTimeout(loadNextImage, refreshInterval);
 }
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            json_data = data
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+
+}
+
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
@@ -75,7 +112,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    refresh();
+    showImage(json_data['latest_image']);
 }
 setResizeHandler(resize_callback, 500);
 
@@ -113,6 +150,7 @@ function closeFullscreen() {
 }
 
 
+
 $( document ).ready(function() {
     $('#canvas').on("click", function() {
         goFullscreen(this);
@@ -120,26 +158,20 @@ $( document ).ready(function() {
 
     init();
 });
-</script>
 
+</script>
 {% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-sm-5"></div>
     <div class="col-sm-7">
-        <div class="text-muted" id="nodata">No Image</div>
+        <div class="text-muted" id="nodata">No Image for 5 minutes</div>
     </div>
 </div>
 <div class="row">
     <div class="col-sm-12">
         <canvas id="canvas"/>
-    </div>
-</div>
-<div class="row">
-    <div class="col-sm-5"></div>
-    <div class="col-sm-7">
-        <div class="text-muted">{{ user_message }}</div>
     </div>
 </div>
 {% endblock %}

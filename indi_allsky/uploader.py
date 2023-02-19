@@ -9,14 +9,10 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
-#from .flask import db
+from .flask import db
 from .flask.miscDb import miscDb
 
-from .flask.models import TaskQueueState
-from .flask.models import TaskQueueQueue
-from .flask.models import NotificationCategory
-
-from .flask.models import IndiAllSkyDbTaskQueueTable
+from .flask import models
 
 from . import filetransfer
 
@@ -51,6 +47,12 @@ class FileUploader(Process):
 
 
         self._shutdown = False
+
+
+        if self.config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
 
@@ -120,10 +122,10 @@ class FileUploader(Process):
 
 
             try:
-                task = IndiAllSkyDbTaskQueueTable.query\
-                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD)\
+                task = models.IndiAllSkyDbTaskQueueTable.query\
+                    .filter(models.IndiAllSkyDbTaskQueueTable.id == task_id)\
+                    .filter(models.IndiAllSkyDbTaskQueueTable.state == models.TaskQueueState.QUEUED)\
+                    .filter(models.IndiAllSkyDbTaskQueueTable.queue == models.TaskQueueQueue.UPLOAD)\
                     .one()
 
             except NoResultFound:
@@ -135,11 +137,50 @@ class FileUploader(Process):
 
 
             action = task.data['action']
+
             local_file = task.data.get('local_file')
+
+            entry_model = task.data.get('model')
+            entry_id = task.data.get('id')
+
             remote_file = task.data.get('remote_file')
             remove_local = task.data.get('remove_local')
 
+            asset_type = task.data.get('asset_type', 'image')
+
             mq_data = task.data.get('mq_data')
+
+
+            if entry_model and entry_id:
+                # lookup filename in model
+
+                try:
+                    _model = getattr(models, entry_model)
+                except AttributeError:
+                    logger.error('Model not found: %s', entry_model)
+                    task.setFailed('Model not found: {0:s}'.format(entry_model))
+                    continue
+
+                try:
+                    entry = _model.query\
+                        .filter(_model.id == entry_id)\
+                        .one()
+                except NoResultFound:
+                    logger.error('ID %d not found in %s', entry_id, entry_model)
+                    task.setFailed('ID {0:d} not found in {1:s}'.format(entry_id, entry_model))
+                    continue
+
+                local_file_p = Path(entry.filename)
+
+
+            elif local_file:
+                # use given file name
+                local_file_p = Path(local_file)
+                entry = None
+            else:
+                logger.error('Entry model or filename not defined')
+                task.setFailed('Entry model or filename not defined')
+                continue
 
 
             # Build parameters
@@ -154,7 +195,7 @@ class FileUploader(Process):
                 }
 
                 put_kwargs = {
-                    'local_file'  : Path(local_file),
+                    'local_file'  : local_file_p,
                     'remote_file' : Path(remote_file),
                 }
 
@@ -171,6 +212,56 @@ class FileUploader(Process):
                 if self.config['FILETRANSFER']['PORT']:
                     client.port = self.config['FILETRANSFER']['PORT']
 
+            elif action == 's3':
+                s3_key = local_file_p.relative_to(self.image_dir)
+
+                if asset_type == 'image':
+                    if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
+                        expire_days = self.config['IMAGE_EXPIRE_DAYS']
+                    else:
+                        expire_days = None
+                else:
+                    if self.config['S3UPLOAD']['EXPIRE_TIMELAPSE']:
+                        expire_days = self.config['TIMELAPSE_EXPIRE_DAYS']
+                    else:
+                        expire_days = None
+
+
+                connect_kwargs = {
+                    'username'     : '*',  # not logging access key
+                    'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
+                    'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
+                    'region'       : self.config['S3UPLOAD']['REGION'],
+                    'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                    'tls'          : self.config['S3UPLOAD']['TLS'],
+                    'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],
+                }
+
+                put_kwargs = {
+                    'local_file'    : local_file_p,
+                    'bucket'        : self.config['S3UPLOAD']['BUCKET'],
+                    'key'           : str(s3_key),
+                    'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
+                    'expire_days'   : expire_days,
+                    'acl'           : self.config['S3UPLOAD']['ACL'],
+                }
+
+                try:
+                    client_class = getattr(filetransfer, self.config['S3UPLOAD']['CLASSNAME'])
+                except AttributeError:
+                    logger.error('Unknown filetransfer class: %s', self.config['S3UPLOAD']['CLASSNAME'])
+                    task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['S3UPLOAD']['CLASSNAME']))
+                    return
+
+
+                client = client_class(self.config)
+                client.timeout = self.config['FILETRANSFER']['TIMEOUT']  # reusing file transfer timeout
+
+
+                if self.config['S3UPLOAD']['PORT']:
+                    client.port = self.config['S3UPLOAD']['PORT']
+
+
             elif action == 'mqttpub':
                 connect_kwargs = {
                     'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
@@ -182,7 +273,7 @@ class FileUploader(Process):
                 }
 
                 put_kwargs = {
-                    'local_file'  : Path(local_file),
+                    'local_file'  : local_file_p,
                     'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                     'qos'         : self.config['MQTTPUBLISH']['QOS'],
                     'mq_data'     : mq_data,
@@ -215,7 +306,7 @@ class FileUploader(Process):
                 task.setFailed('Connection failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'connection',
                     '{0:s} file transfer connection failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -228,7 +319,7 @@ class FileUploader(Process):
                 task.setFailed('Authentication failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'authentication',
                     '{0:s} file transfer authentication failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -241,7 +332,7 @@ class FileUploader(Process):
                 task.setFailed('Certificate validation failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'certificate',
                     '{0:s} file transfer certificate validation failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -258,7 +349,7 @@ class FileUploader(Process):
                 task.setFailed('Connection failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'connection',
                     '{0:s} file transfer connection failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -271,7 +362,7 @@ class FileUploader(Process):
                 task.setFailed('Authentication failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'authentication',
                     '{0:s} file transfer authentication failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -284,7 +375,7 @@ class FileUploader(Process):
                 task.setFailed('Certificate validation failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'certificate',
                     '{0:s} file transfer certificate validation failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -297,7 +388,7 @@ class FileUploader(Process):
                 task.setFailed('Tranfer failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'filetransfer',
                     '{0:s} file transfer failed: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -310,7 +401,7 @@ class FileUploader(Process):
                 task.setFailed('Permission failure')
 
                 self._miscDb.addNotification(
-                    NotificationCategory.UPLOAD,
+                    models.NotificationCategory.UPLOAD,
                     'permission',
                     '{0:s} file transfer permission failure: {1:s}'.format(client_class.__name__, str(e)),
                     expire=timedelta(hours=1),
@@ -329,9 +420,17 @@ class FileUploader(Process):
             task.setSuccess('File uploaded')
 
 
-            if remove_local:
-                local_file_p = Path(local_file)
+            if entry and action == 'upload':
+                entry.uploaded = True
+                db.session.commit()
 
+
+            if entry and action == 's3':
+                entry.s3_key = str(s3_key)
+                db.session.commit()
+
+
+            if remove_local:
                 try:
                     local_file_p.unlink()
                 except PermissionError as e:
