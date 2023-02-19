@@ -22,8 +22,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Camera temperature control (for cameras with active cooling)
 * Multi-image stacking
 * Timelapse video generation
-* Network file transfers - Upload images and videos to remote site
 * GPS support
+* Network file transfers - Upload images and videos to remote site
+    * S3 Object Storage support
 * Publish data to an MQTT service for monitoring
 * Keograms
 * Star Trails
@@ -337,6 +338,12 @@ https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
 | ftps           | 990  |
 | sftp           | 22   |
 | webdav (https) | 443  |
+
+## S3 Object Storage
+
+You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
+
+Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
 
 ## MQTT Publishing
 
