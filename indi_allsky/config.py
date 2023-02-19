@@ -25,6 +25,8 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyConfigBase(object):
 
     _base_config = OrderedDict({
+        "ENCRYPT_PASSWORDS_comment" : "Do not manually adjust this parameter",
+        "ENCRYPT_PASSWORDS" : False,
         "CAMERA_INTERFACE" : "indi",
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
@@ -160,6 +162,7 @@ class IndiAllSkyConfigBase(object):
             "PORT"                   : 0,
             "USERNAME"               : "",
             "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
             "PRIVATE_KEY"            : "",
             "PUBLIC_KEY"             : "",
             "TIMEOUT"                : 5.0,
@@ -185,6 +188,7 @@ class IndiAllSkyConfigBase(object):
             "CLASSNAME"              : "boto3_s3",
             "ACCESS_KEY"             : "",
             "SECRET_KEY"             : "",
+            "SECRET_KEY_E"           : "",
             "BUCKET"                 : "change-me",
             "REGION"                 : "us-east-2",
             "HOST"                   : "amazonaws.com",
@@ -204,6 +208,7 @@ class IndiAllSkyConfigBase(object):
             "PORT"                   : 8883,  # 1883 = mqtt, 8883 = TLS
             "USERNAME"               : "indi-allsky",
             "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
             "BASE_TOPIC"             : "indi-allsky",
             "QOS"                    : 0,  # 0, 1, or 2
             "TLS"                    : True,

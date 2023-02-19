@@ -1679,8 +1679,8 @@ while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
 done
 
 
-TMP_FLASK=$(mktemp)
-TMP_FLASK_MERGE=$(mktemp)
+TMP_FLASK=$(mktemp --suffix=.json)
+TMP_FLASK_MERGE=$(mktemp --suffix=.json)
 
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
@@ -1711,21 +1711,34 @@ fi
 
 
 # always replace the DB URI
-TMP_FLASK_2=$(mktemp)
+TMP_FLASK_2=$(mktemp --suffix=.json)
 jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
 cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
 
 # always replace the IMAGE_FOLDER
-TMP_FLASK_3=$(mktemp)
+TMP_FLASK_3=$(mktemp --suffix=.json)
 jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
 cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
+
+
+EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$EXISTING_PASSWORD_KEY" ]; then
+    # generate password key for encryption
+    PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+
+    TMP_FLASK_4=$(mktemp --suffix=.json)
+    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_4"
+    cp -f "$TMP_FLASK_4" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_4" ]] && rm -f "$TMP_FLASK_4"
+fi
+
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
-[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
 
 
