@@ -42,3 +42,4 @@ is-safe-url
 #mysql-connector-python
 prettytable
 boto3
+apache-libcloud
