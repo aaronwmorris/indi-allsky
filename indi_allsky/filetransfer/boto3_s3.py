@@ -83,7 +83,7 @@ class boto3_s3(GenericFileTransfer):
             self.client.upload_file(
                 str(local_file_p),
                 bucket,
-                key,
+                str(key),
                 ExtraArgs=extra_args,
             )
         except socket.gaierror as e:

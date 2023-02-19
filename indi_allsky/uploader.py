@@ -9,7 +9,7 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
-#from .flask import db
+from .flask import db
 from .flask.miscDb import miscDb
 
 from .flask import models
@@ -47,6 +47,12 @@ class FileUploader(Process):
 
 
         self._shutdown = False
+
+
+        if self.config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
 
@@ -207,6 +213,8 @@ class FileUploader(Process):
                     client.port = self.config['FILETRANSFER']['PORT']
 
             elif action == 's3':
+                s3_key = local_file_p.relative_to(self.image_dir)
+
                 if asset_type == 'image':
                     if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
                         expire_days = self.config['IMAGE_EXPIRE_DAYS']
@@ -230,6 +238,7 @@ class FileUploader(Process):
                 put_kwargs = {
                     'local_file'    : local_file_p,
                     'bucket'        : self.config['S3UPLOAD']['BUCKET'],
+                    'key'           : str(s3_key),
                     'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                     'expire_days'   : expire_days,
                 }
@@ -392,7 +401,13 @@ class FileUploader(Process):
 
 
             if entry and action == 'upload':
-                self._miscDb.addUploadedFlag(entry)
+                entry.uploaded = True
+                db.session.commit()
+
+
+            if entry and action == 's3':
+                entry.s3_key = str(s3_key)
+                db.session.commit()
 
 
             if remove_local:
