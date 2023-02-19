@@ -1274,7 +1274,9 @@ class ImageViewerView(FormView):
 class AjaxImageViewerView(BaseView):
     methods = ['POST']
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(AjaxImageViewerView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
 
 
@@ -1414,7 +1416,9 @@ class VideoViewerView(FormView):
 class AjaxVideoViewerView(BaseView):
     methods = ['POST']
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(AjaxVideoViewerView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
 
 
