@@ -42,6 +42,8 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
+        self.s3_prefix = self.getS3Prefix()
+
         # assume indi-allsky is running with application server
         self.local_indi_allsky = True
 
@@ -78,6 +80,28 @@ class BaseView(View):
             .first()
 
         return latest_camera.id
+
+
+    def getS3Prefix(self):
+        s3_data = {
+            'host'   : self.indi_allsky_config['S3UPLOAD']['HOST'],
+            'bucket' : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
+            'region' : self.indi_allsky_config['S3UPLOAD']['REGION'],
+        }
+
+        try:
+            prefix = self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
+        except KeyError:
+            app.logger.error('Failure to generate S3 prefix')
+            return ''
+        except ValueError:
+            app.logger.error('Failure to generate S3 prefix')
+            return ''
+
+
+        #app.logger.info('S3 Prefix: %s', prefix)
+
+        return prefix
 
 
 class TemplateView(BaseView):

@@ -1668,6 +1668,7 @@ class IndiAllskyImageViewer(FlaskForm):
         super(IndiAllskyImageViewer, self).__init__(*args, **kwargs)
 
         self.detections_count = kwargs.get('detections_count', 0)
+        self.s3_prefix = kwargs.get('s3_prefix', '')
 
 
     def getYears(self):
@@ -1790,7 +1791,7 @@ class IndiAllskyImageViewer(FlaskForm):
         raw_choices = list()
         for i, img in enumerate(images_query):
             try:
-                url = img.getUrl()
+                url = img.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1809,7 +1810,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
-                fits_select = (str(fits_image.getUrl()), i)
+                fits_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
             except NoResultFound:
                 fits_select = ('None', str(i))
 
@@ -1822,7 +1823,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                raw_select = (str(fits_image.getUrl()), i)
+                raw_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
             except NoResultFound:
                 raw_select = ('None', i)
 

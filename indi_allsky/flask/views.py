@@ -1287,9 +1287,9 @@ class AjaxImageViewerView(BaseView):
 
         if form_filter_detections:
             # filter images that have a detection
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1)
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1, s3_prefix=self.s3_prefix)
         else:
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0)
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0, s3_prefix=self.s3_prefix)
 
 
         json_data = {}
