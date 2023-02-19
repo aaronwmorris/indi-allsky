@@ -712,7 +712,6 @@ class ImageWorker(Process):
     def getSqmData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -737,7 +736,6 @@ class ImageWorker(Process):
     def getStarsData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),

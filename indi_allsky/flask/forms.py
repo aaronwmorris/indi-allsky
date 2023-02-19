@@ -1693,7 +1693,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getYears(self):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
 
         years_query = db.session.query(
@@ -1713,7 +1712,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
 
@@ -1738,7 +1736,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getDays(self, year, month):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
@@ -1764,7 +1761,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getHours(self, year, month, day):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
@@ -1793,7 +1789,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getImages(self, year, month, day, hour):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
