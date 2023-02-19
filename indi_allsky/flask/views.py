@@ -17,6 +17,9 @@ import paramiko
 import paho.mqtt
 import ccdproc
 
+from cryptography.fernet import Fernet
+#from cryptography.fernet import InvalidToken
+
 import ephem
 
 # for version reporting
@@ -706,6 +709,7 @@ class ConfigView(FormView):
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
+            'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
         }
 
 
@@ -1088,6 +1092,7 @@ class AjaxConfigView(BaseView):
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
+        self.indi_allsky_config['ENCRYPT_PASSWORDS']                    = bool(request.json['ENCRYPT_PASSWORDS'])
 
         # Not a config option
         reload_on_save                                                  = bool(request.json['RELOAD_ON_SAVE'])

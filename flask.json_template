@@ -28,6 +28,7 @@
 
     "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
 
+    "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
     "PASSWORD_KEY" : "",
 
     "INDISERVER_SERVICE_NAME" : "%INDISERVER_SERVICE_NAME%.service",

@@ -1492,6 +1492,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
