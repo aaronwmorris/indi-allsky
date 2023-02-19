@@ -695,6 +695,7 @@ class ImageWorker(Process):
             'action'      : 's3',
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
+            'asset_type'  : 'image',
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(

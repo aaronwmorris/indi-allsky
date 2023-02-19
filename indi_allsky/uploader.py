@@ -140,6 +140,8 @@ class FileUploader(Process):
             remote_file = task.data.get('remote_file')
             remove_local = task.data.get('remove_local')
 
+            asset_type = task.data.get('asset_type', 'image')
+
             mq_data = task.data.get('mq_data')
 
 
@@ -205,6 +207,18 @@ class FileUploader(Process):
                     client.port = self.config['FILETRANSFER']['PORT']
 
             elif action == 's3':
+                if asset_type == 'image':
+                    if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
+                        expire_days = self.config['IMAGE_EXPIRE_DAYS']
+                    else:
+                        expire_days = None
+                else:
+                    if self.config['S3UPLOAD']['EXPIRE_TIMELAPSE']:
+                        expire_days = self.config['TIMELAPSE_EXPIRE_DAYS']
+                    else:
+                        expire_days = None
+
+
                 connect_kwargs = {
                     'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
                     'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
@@ -217,7 +231,7 @@ class FileUploader(Process):
                     'local_file'    : local_file_p,
                     'bucket'        : self.config['S3UPLOAD']['BUCKET'],
                     'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
-                    'expire'        : 30,
+                    'expire_days'   : expire_days,
                 }
             elif action == 'mqttpub':
                 connect_kwargs = {

@@ -4,6 +4,8 @@ from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
 from pathlib import Path
+from datetime import datetime
+from datetime import timedelta
 import socket
 import time
 import boto3
@@ -57,6 +59,7 @@ class boto3_s3(GenericFileTransfer):
         bucket = kwargs['bucket']
         key = kwargs['key']
         storage_class = kwargs['storage_class']
+        expire_days = kwargs['expire_days']
 
         local_file_p = Path(local_file)
 
@@ -64,8 +67,15 @@ class boto3_s3(GenericFileTransfer):
         extra_args = dict()
         extra_args['ACL'] = 'public-read'  # all assets need to be publicly readable
 
+
         if storage_class:
             extra_args['StorageClass'] = storage_class
+
+
+        if expire_days:
+            now = datetime.now()
+            extra_args['Expires'] = now + timedelta(days=expire_days)
+
 
         start = time.time()
 
