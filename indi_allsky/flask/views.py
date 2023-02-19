@@ -294,7 +294,7 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             try:
-                url = i.getUrl()
+                url = i.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1406,7 +1406,7 @@ class VideoViewerView(FormView):
             'MONTH_SELECT' : None,
         }
 
-        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data)
+        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
 
         return context
 
@@ -1419,7 +1419,7 @@ class AjaxVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
-        form_video_viewer = IndiAllskyVideoViewer(data=request.json)
+        form_video_viewer = IndiAllskyVideoViewer(data=request.json, s3_prefix=self.s3_prefix)
 
 
         form_year      = request.json.get('YEAR_SELECT')

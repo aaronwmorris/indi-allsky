@@ -1792,7 +1792,6 @@ class IndiAllskyImageViewer(FlaskForm):
         for i, img in enumerate(images_query):
             try:
                 url = img.getUrl(s3_prefix=self.s3_prefix)
-                #app.logger.info('Image URL: %s', url)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1893,6 +1892,12 @@ class IndiAllskyVideoViewer(FlaskForm):
     TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
 
 
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyVideoViewer, self).__init__(*args, **kwargs)
+
+        self.s3_prefix = kwargs.get('s3_prefix', '')
+
+
     def getYears(self):
         dayDate_year = extract('year', IndiAllSkyDbVideoTable.dayDate).label('dayDate_year')
 
@@ -1963,7 +1968,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             try:
-                url = v.getUrl()
+                url = v.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1992,7 +1997,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if keogram_entry:
                 try:
-                    keogram_url = keogram_entry.getUrl()
+                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -2010,7 +2015,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_entry:
                 try:
-                    startrail_url = startrail_entry.getUrl()
+                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -2028,7 +2033,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_video_entry:
                 try:
-                    startrail_video_url = startrail_video_entry.getUrl()
+                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
