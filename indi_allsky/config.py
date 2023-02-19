@@ -29,7 +29,8 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyConfigBase(object):
 
     _base_config = OrderedDict({
-        "ENCRYPT_PASSWORDS" : False,  # Do not manually adjust this parameter
+        "ENCRYPT_PASSWORDS_comment" : "Do not manually adjust",
+        "ENCRYPT_PASSWORDS" : False,
         "CAMERA_INTERFACE" : "indi",
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
