@@ -1662,6 +1662,10 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 # Detect IMAGE_FOLDER
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
 
+echo
+echo
+echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
+sleep 3
 
 
 echo "**** Flask config ****"
@@ -1676,7 +1680,6 @@ done
 
 
 TMP_FLASK=$(mktemp)
-TMP_FLASK_2=$(mktemp)
 TMP_FLASK_MERGE=$(mktemp)
 
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
@@ -1708,15 +1711,21 @@ fi
 
 
 # always replace the DB URI
+TMP_FLASK_2=$(mktemp)
 jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
 cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
 
+# always replace the IMAGE_FOLDER
+TMP_FLASK_3=$(mktemp)
+jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
 [[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
+[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
 
 
