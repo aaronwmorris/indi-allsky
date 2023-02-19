@@ -112,6 +112,8 @@ class TemplateView(BaseView):
 
         self.template_name = template_name
 
+        self.night = True
+
 
     def render_template(self, context):
         return render_template(self.template_name, **context)
@@ -129,6 +131,10 @@ class TemplateView(BaseView):
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
         }
+
+        # night set in get_astrometric_info()
+        context['night'] = int(self.night)  # javascript does not play well with bools
+
         return context
 
 
@@ -282,6 +288,7 @@ class TemplateView(BaseView):
         # day/night
         if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
             data['mode'] = 'Day'
+            self.night = False
         else:
             data['mode'] = 'Night'
 

@@ -16,6 +16,7 @@ var json_data = {
     'latest_image' : null,
 };
 var refreshInterval = {{ refreshInterval | int }};
+var night = {{ night }};
 var fullscreen = false;  //initial state
 
 function init() {
@@ -65,7 +66,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_latest_image_view') }}", {'limit_s' : 86400}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_latest_image_view') }}", {'limit_s' : 86400, 'night' : night}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
