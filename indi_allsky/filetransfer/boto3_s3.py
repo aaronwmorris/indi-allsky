@@ -66,7 +66,7 @@ class boto3_s3(GenericFileTransfer):
 
 
         extra_args = dict()
-        extra_args['ACL'] = 'public-read'  # all assets need to be publicly readable
+        #extra_args['ACL'] = 'public-read'  # all assets need to be publicly readable
 
 
         if storage_class:
