@@ -1,7 +1,7 @@
 from .generic import GenericFileTransfer
 #from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
-#from .exceptions import TransferFailure
+from .exceptions import TransferFailure
 
 from pathlib import Path
 from datetime import datetime
@@ -9,6 +9,7 @@ from datetime import timedelta
 import socket
 import time
 import boto3
+import boto3.exceptions
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -92,6 +93,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except boto3.exceptions.S3UploadFailedError as e:
+            raise TransferFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
