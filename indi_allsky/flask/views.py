@@ -17,9 +17,6 @@ import paramiko
 import paho.mqtt
 import ccdproc
 
-from cryptography.fernet import Fernet
-#from cryptography.fernet import InvalidToken
-
 import ephem
 
 # for version reporting
@@ -111,20 +108,77 @@ class IndexView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
-        latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
-        context['latest_image_uri'] = str(latest_image_uri)
-
-        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        latest_image_p = image_dir.joinpath(latest_image_uri.name)
-
-
-        context['user_message'] = ''  # default message
-        if latest_image_p.exists():
-            max_age = datetime.now() - timedelta(minutes=5)
-            if latest_image_p.stat().st_mtime < max_age.timestamp():
-                context['user_message'] = 'Image is out of date'
-
         return context
+
+
+class JsonLatestImageView(JsonView):
+    def __init__(self, **kwargs):
+        super(JsonLatestImageView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+        self.history_seconds = 900
+
+
+    def get_objects(self):
+        history_seconds = int(request.args.get('limit_s', self.history_seconds))
+
+        # sanity check
+        if history_seconds > 86400:
+            history_seconds = 86400
+
+
+        #latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+
+        #image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        #latest_image_p = image_dir.joinpath(latest_image_uri.name)
+
+        #if latest_image_p.exists():
+        #    # use latest image if it exists
+        #    max_age = datetime.now() - timedelta(minutes=5)
+        #    if latest_image_p.stat().st_mtime > max_age.timestamp():
+
+        #        data = {
+        #            'latest_image' :  {
+        #                'url' : '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time())),
+        #            },
+        #        }
+
+        #        return data
+
+
+        # use database
+        data = {
+            'latest_image' : {
+                'url' : self.getLatestImage(self.camera_id, history_seconds),
+            },
+        }
+
+        return data
+
+
+    def getLatestImage(self, camera_id, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+
+        latest_image = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        if not latest_image:
+            return None
+
+
+        try:
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix)
+        except ValueError as e:
+            app.logger.error('Error determining relative file name: %s', str(e))
+            return None
+
+
+        return url
 
 
 class PublicIndexView(BaseView):
@@ -2820,6 +2874,7 @@ def images_folder(path):
 
 
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
 bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
