@@ -186,7 +186,7 @@ class IndiAllSkyConfigBase(object):
             "ACCESS_KEY"             : "",
             "SECRET_KEY"             : "",
             "BUCKET"                 : "change-me",
-            "REGION"                 : "us-east-1",
+            "REGION"                 : "us-east-2",
             "HOST"                   : "amazonaws.com",
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
             "STORAGE_CLASS"          : "STANDARD",
