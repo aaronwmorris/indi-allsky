@@ -127,23 +127,25 @@ class JsonLatestImageView(JsonView):
             history_seconds = 86400
 
 
-        #latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+        if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+            # images are not stored in the DB in this condition
+            latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
 
-        #image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        #latest_image_p = image_dir.joinpath(latest_image_uri.name)
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            latest_image_p = image_dir.joinpath(latest_image_uri.name)
 
-        #if latest_image_p.exists():
-        #    # use latest image if it exists
-        #    max_age = datetime.now() - timedelta(minutes=5)
-        #    if latest_image_p.stat().st_mtime > max_age.timestamp():
+            if latest_image_p.exists():
+                # use latest image if it exists
+                #max_age = datetime.now() - timedelta(minutes=5)
+                #if latest_image_p.stat().st_mtime > max_age.timestamp():
 
-        #        data = {
-        #            'latest_image' :  {
-        #                'url' : '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time())),
-        #            },
-        #        }
+                data = {
+                    'latest_image' : {
+                        'url' : '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time())),
+                    },
+                }
 
-        #        return data
+                return data
 
 
         # use database
