@@ -1236,6 +1236,9 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 
 
 def S3UPLOAD__STORAGE_CLASS_validator(form, field):
+    if not field.data:
+        return
+
     class_regex = r'^[a-zA-Z0-9\-]+$'
 
     if not re.search(class_regex, field.data):
@@ -1617,7 +1620,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
     S3UPLOAD__EXPIRE_IMAGES          = BooleanField('Add Image Expiration')
     S3UPLOAD__EXPIRE_TIMELAPSE       = BooleanField('Add Timelapse Expiration')
-    S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[DataRequired(), S3UPLOAD__STORAGE_CLASS_validator])
+    S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
     S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
