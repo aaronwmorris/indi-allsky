@@ -1818,6 +1818,20 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ACL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__ACL(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__ACL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" target="_blank">AWS S3 ACLs</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__STORAGE_CLASS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -2189,6 +2203,7 @@ const field_names = [
     'S3UPLOAD__REGION',
     'S3UPLOAD__HOST',
     'S3UPLOAD__URL_TEMPLATE',
+    'S3UPLOAD__ACL',
     'S3UPLOAD__STORAGE_CLASS',
     'MQTTPUBLISH__TRANSPORT',
     'MQTTPUBLISH__HOST',

@@ -1235,6 +1235,13 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
+def S3UPLOAD__ACL_validator(form, field):
+    acl_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(acl_regex, field.data):
+        raise ValidationError('Invalid ACL name')
+
+
 def S3UPLOAD__STORAGE_CLASS_validator(form, field):
     if not field.data:
         return
@@ -1620,6 +1627,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
     S3UPLOAD__EXPIRE_IMAGES          = BooleanField('Add Image Expiration')
     S3UPLOAD__EXPIRE_TIMELAPSE       = BooleanField('Add Timelapse Expiration')
+    S3UPLOAD__ACL                    = StringField('S3 ACL', validators=[S3UPLOAD__ACL_validator])
     S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
     S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
