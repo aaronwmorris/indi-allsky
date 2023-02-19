@@ -412,8 +412,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['FILETRANSFER']['PASSWORD_E'] = filetransfer__password_e
         config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
         config['S3UPLOAD']['SECRET_KEY_E'] = s3upload__secret_key_e
-        config['MQTTPUBLISH__PASSWORD'] = mqttpublish__password
-        config['MQTTPUBLISH__PASSWORD_E'] = mqttpublish__password_e
+        config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
+        config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
 
 
         return config
