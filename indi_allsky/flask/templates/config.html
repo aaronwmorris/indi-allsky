@@ -2367,6 +2367,8 @@ $('#form_config').on('submit', function() {
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
+
+            $('#CONFIG_NOTE').val('');
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
