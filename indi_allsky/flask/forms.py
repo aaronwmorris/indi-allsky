@@ -1158,6 +1158,112 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
             raise ValidationError('TypeError: {0:s} -  {1:s}'.format(k, str(e)))
 
 
+def S3UPLOAD__CLASSNAME_validator(form, field):
+    class_names = (
+        'boto3_s3',
+        'libcloud_s3',
+    )
+
+    if field.data not in class_names:
+        raise ValidationError('Invalid selection')
+
+
+def S3UPLOAD__ACCESS_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    s3accesskey_regex = r'^[a-zA-Z0-9]+$'
+
+    if not re.search(s3accesskey_regex, field.data):
+        raise ValidationError('Invalid access key')
+
+
+def S3UPLOAD__SECRET_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    s3secretkey_regex = r'^[a-zA-Z0-9\/\+]+$'
+
+    if not re.search(s3secretkey_regex, field.data):
+        raise ValidationError('Invalid secret key')
+
+
+def S3UPLOAD__HOST_validator(form, field):
+    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(host_regex, field.data):
+        raise ValidationError('Invalid host name')
+
+
+def S3UPLOAD__PORT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Port must be 0 or greater')
+
+    if field.data > 65535:
+        raise ValidationError('Port must be less than 65535')
+
+
+def S3UPLOAD__REGION_validator(form, field):
+    region_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(region_regex, field.data):
+        raise ValidationError('Invalid region name')
+
+
+def S3UPLOAD__BUCKET_validator(form, field):
+    bucket_regex = r'^[a-zA-Z0-9\.\-]+$'
+
+    if not re.search(bucket_regex, field.data):
+        raise ValidationError('Invalid bucket name')
+
+
+def S3UPLOAD__URL_TEMPLATE_validator(form, field):
+    urlt_regex = r'^[a-zA-Z0-9\.\-\:\/\{\}]+$'
+
+    if not re.search(urlt_regex, field.data):
+        raise ValidationError('Invalid URL template')
+
+
+    slash_regex = r'\/$'
+
+    if re.search(slash_regex, field.data):
+        raise ValidationError('URL Template cannot end with a slash')
+
+
+    test_data = {
+        'host'   : 'foobar',
+        'bucket' : 'foobar',
+        'region' : 'foobar',
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+def S3UPLOAD__ACL_validator(form, field):
+    acl_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(acl_regex, field.data):
+        raise ValidationError('Invalid ACL name')
+
+
+def S3UPLOAD__STORAGE_CLASS_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid storage class syntax')
+
+
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
     topic_regex = r'^[a-zA-Z0-9_\-\/]+$'
 
@@ -1371,6 +1477,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
     )
 
+    S3UPLOAD__CLASSNAME_choices = (
+        ('boto3_s3', 'Boto3'),
+        ('libcloud_s3', 'Apache Libcloud'),
+    )
+
     MQTTPUBLISH__TRANSPORT_choices = (
         ('tcp', 'tcp'),
         ('websockets', 'websockets'),
@@ -1383,6 +1494,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
@@ -1519,6 +1631,21 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_ENDOFNIGHT  = BooleanField('Transfer AllSky EndOfNight data')
+    S3UPLOAD__CLASSNAME              = SelectField('S3 Utility', choices=S3UPLOAD__CLASSNAME_choices, validators=[DataRequired(), S3UPLOAD__CLASSNAME_validator])
+    S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
+    S3UPLOAD__ACCESS_KEY             = StringField('Access Key', validators=[S3UPLOAD__ACCESS_KEY_validator])
+    S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
+    S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
+    S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
+    S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
+    S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
+    S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
+    S3UPLOAD__EXPIRE_IMAGES          = BooleanField('Add Image Expiration')
+    S3UPLOAD__EXPIRE_TIMELAPSE       = BooleanField('Add Timelapse Expiration')
+    S3UPLOAD__ACL                    = StringField('S3 ACL', validators=[S3UPLOAD__ACL_validator])
+    S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
+    S3UPLOAD__TLS                    = BooleanField('Use TLS')
+    S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
@@ -1565,10 +1692,10 @@ class IndiAllskyImageViewer(FlaskForm):
         super(IndiAllskyImageViewer, self).__init__(*args, **kwargs)
 
         self.detections_count = kwargs.get('detections_count', 0)
+        self.s3_prefix = kwargs.get('s3_prefix', '')
 
 
     def getYears(self):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
 
         years_query = db.session.query(
@@ -1588,7 +1715,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
 
@@ -1613,7 +1739,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getDays(self, year, month):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
@@ -1639,7 +1764,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getHours(self, year, month, day):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
@@ -1668,7 +1792,6 @@ class IndiAllskyImageViewer(FlaskForm):
 
 
     def getImages(self, year, month, day, hour):
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
         createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
@@ -1687,7 +1810,7 @@ class IndiAllskyImageViewer(FlaskForm):
         raw_choices = list()
         for i, img in enumerate(images_query):
             try:
-                url = img.getUrl()
+                url = img.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1706,7 +1829,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
-                fits_select = (str(fits_image.getUrl()), i)
+                fits_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
             except NoResultFound:
                 fits_select = ('None', str(i))
 
@@ -1719,7 +1842,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                raw_select = (str(fits_image.getUrl()), i)
+                raw_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
             except NoResultFound:
                 raw_select = ('None', i)
 
@@ -1786,6 +1909,12 @@ class IndiAllskyVideoViewer(FlaskForm):
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyVideoViewer, self).__init__(*args, **kwargs)
+
+        self.s3_prefix = kwargs.get('s3_prefix', '')
 
 
     def getYears(self):
@@ -1858,7 +1987,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             try:
-                url = v.getUrl()
+                url = v.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -1887,7 +2016,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if keogram_entry:
                 try:
-                    keogram_url = keogram_entry.getUrl()
+                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -1905,7 +2034,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_entry:
                 try:
-                    startrail_url = startrail_entry.getUrl()
+                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -1923,7 +2052,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_video_entry:
                 try:
-                    startrail_video_url = startrail_video_entry.getUrl()
+                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None

@@ -108,20 +108,83 @@ class IndexView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
-        latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
-        context['latest_image_uri'] = str(latest_image_uri)
-
-        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        latest_image_p = image_dir.joinpath(latest_image_uri.name)
-
-
-        context['user_message'] = ''  # default message
-        if latest_image_p.exists():
-            max_age = datetime.now() - timedelta(minutes=5)
-            if latest_image_p.stat().st_mtime < max_age.timestamp():
-                context['user_message'] = 'Image is out of date'
-
         return context
+
+
+class JsonLatestImageView(JsonView):
+    def __init__(self, **kwargs):
+        super(JsonLatestImageView, self).__init__(**kwargs)
+
+        self.camera_id = self.getLatestCamera()
+        self.history_seconds = 300
+
+
+    def get_objects(self):
+        history_seconds = int(request.args.get('limit_s', self.history_seconds))
+        night = bool(int(request.args.get('night', 1)))
+
+        # sanity check
+        if history_seconds > 86400:
+            history_seconds = 86400
+
+
+        data = {
+            'latest_image' : {
+                'url' : None,
+            },
+        }
+
+
+        if not night:
+            if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+                # images are not stored in the DB in this condition
+                latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+
+                image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+                latest_image_p = image_dir.joinpath(latest_image_uri.name)
+
+                if latest_image_p.exists():
+                    # use latest image if it exists
+                    max_age = datetime.now() - timedelta(seconds=history_seconds)
+                    if latest_image_p.stat().st_mtime > max_age.timestamp():
+
+                        data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                        return data
+                    else:
+                        return data
+                else:
+                    return data
+
+
+        # use database
+        data['latest_image']['url'] = self.getLatestImage(self.camera_id, history_seconds)
+
+        return data
+
+
+    def getLatestImage(self, camera_id, history_seconds):
+        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+
+        latest_image = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        if not latest_image:
+            return None
+
+
+        try:
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix)
+        except ValueError as e:
+            app.logger.error('Error determining relative file name: %s', str(e))
+            return None
+
+
+        return str(url)
 
 
 class PublicIndexView(BaseView):
@@ -134,7 +197,6 @@ class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
 
-        #connectDate_local = func.datetime(IndiAllSkyDbCameraTable.connectDate, 'localtime', type_=DateTime).label('connectDate_local')
         context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
 
@@ -145,7 +207,6 @@ class DarkFramesView(TemplateView):
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
 
-        #createDate_local = func.datetime(IndiAllSkyDbDarkFrameTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
             .order_by(
@@ -183,6 +244,7 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.createDate,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.exp_elapsed,
+                IndiAllSkyDbImageTable.process_elapsed,
                 (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
@@ -283,7 +345,6 @@ class JsonImageLoopView(JsonView):
     def getLatestImages(self, camera_id, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         latest_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -294,7 +355,7 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             try:
-                url = i.getUrl()
+                url = i.getUrl(s3_prefix=self.s3_prefix)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -314,7 +375,6 @@ class JsonImageLoopView(JsonView):
     def getSqmData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -339,7 +399,6 @@ class JsonImageLoopView(JsonView):
     def getStarsData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
@@ -399,7 +458,6 @@ class JsonChartView(JsonView):
     def getChartData(self, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         chart_query = IndiAllSkyDbImageTable.query\
             .add_columns(
                 IndiAllSkyDbImageTable.createDate,
@@ -683,6 +741,21 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
+            'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
+            'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
+            'S3UPLOAD__ACCESS_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACCESS_KEY', ''),
+            'S3UPLOAD__SECRET_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('SECRET_KEY', ''),
+            'S3UPLOAD__BUCKET'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('BUCKET', 'change-me'),
+            'S3UPLOAD__REGION'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('REGION', 'us-east-2'),
+            'S3UPLOAD__HOST'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('HOST', 'amazonaws.com'),
+            'S3UPLOAD__PORT'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('PORT', 0),
+            'S3UPLOAD__URL_TEMPLATE'         : self.indi_allsky_config.get('S3UPLOAD', {}).get('URL_TEMPLATE', 'https://{bucket}.s3.{region}.{host}'),
+            'S3UPLOAD__STORAGE_CLASS'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('STORAGE_CLASS', 'STANDARD'),
+            'S3UPLOAD__ACL'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACL', 'public-read'),
+            'S3UPLOAD__EXPIRE_IMAGES'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('EXPIRE_IMAGES', True),
+            'S3UPLOAD__EXPIRE_TIMELAPSE'     : self.indi_allsky_config.get('S3UPLOAD', {}).get('EXPIRE_TIMELAPSE', True),
+            'S3UPLOAD__TLS'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('TLS', True),
+            'S3UPLOAD__CERT_BYPASS'          : self.indi_allsky_config.get('S3UPLOAD', {}).get('CERT_BYPASS', False),
             'MQTTPUBLISH__ENABLE'            : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('ENABLE', False),
             'MQTTPUBLISH__TRANSPORT'         : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('TRANSPORT', 'tcp'),
             'MQTTPUBLISH__HOST'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('HOST', 'localhost'),
@@ -697,6 +770,7 @@ class ConfigView(FormView):
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
+            'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
         }
 
 
@@ -905,6 +979,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('FILETRANSFER'):
             self.indi_allsky_config['FILETRANSFER'] = {}
 
+        if not self.indi_allsky_config.get('S3UPLOAD'):
+            self.indi_allsky_config['S3UPLOAD'] = {}
+
         if not self.indi_allsky_config.get('MQTTPUBLISH'):
             self.indi_allsky_config['MQTTPUBLISH'] = {}
 
@@ -1036,6 +1113,21 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
+        self.indi_allsky_config['S3UPLOAD']['CLASSNAME']                = str(request.json['S3UPLOAD__CLASSNAME'])
+        self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
+        self.indi_allsky_config['S3UPLOAD']['ACCESS_KEY']               = str(request.json['S3UPLOAD__ACCESS_KEY'])
+        self.indi_allsky_config['S3UPLOAD']['SECRET_KEY']               = str(request.json['S3UPLOAD__SECRET_KEY'])
+        self.indi_allsky_config['S3UPLOAD']['BUCKET']                   = str(request.json['S3UPLOAD__BUCKET'])
+        self.indi_allsky_config['S3UPLOAD']['REGION']                   = str(request.json['S3UPLOAD__REGION'])
+        self.indi_allsky_config['S3UPLOAD']['HOST']                     = str(request.json['S3UPLOAD__HOST'])
+        self.indi_allsky_config['S3UPLOAD']['PORT']                     = int(request.json['S3UPLOAD__PORT'])
+        self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE']             = str(request.json['S3UPLOAD__URL_TEMPLATE'])
+        self.indi_allsky_config['S3UPLOAD']['STORAGE_CLASS']            = str(request.json['S3UPLOAD__STORAGE_CLASS'])
+        self.indi_allsky_config['S3UPLOAD']['ACL']                      = str(request.json['S3UPLOAD__ACL'])
+        self.indi_allsky_config['S3UPLOAD']['EXPIRE_IMAGES']            = bool(request.json['S3UPLOAD__EXPIRE_IMAGES'])
+        self.indi_allsky_config['S3UPLOAD']['EXPIRE_TIMELAPSE']         = bool(request.json['S3UPLOAD__EXPIRE_TIMELAPSE'])
+        self.indi_allsky_config['S3UPLOAD']['TLS']                      = bool(request.json['S3UPLOAD__TLS'])
+        self.indi_allsky_config['S3UPLOAD']['CERT_BYPASS']              = bool(request.json['S3UPLOAD__CERT_BYPASS'])
         self.indi_allsky_config['MQTTPUBLISH']['ENABLE']                = bool(request.json['MQTTPUBLISH__ENABLE'])
         self.indi_allsky_config['MQTTPUBLISH']['TRANSPORT']             = str(request.json['MQTTPUBLISH__TRANSPORT'])
         self.indi_allsky_config['MQTTPUBLISH']['HOST']                  = str(request.json['MQTTPUBLISH__HOST'])
@@ -1061,6 +1153,7 @@ class AjaxConfigView(BaseView):
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
+        self.indi_allsky_config['ENCRYPT_PASSWORDS']                    = bool(request.json['ENCRYPT_PASSWORDS'])
 
         # Not a config option
         reload_on_save                                                  = bool(request.json['RELOAD_ON_SAVE'])
@@ -1238,7 +1331,7 @@ class ImageViewerView(FormView):
             'FILTER_DETECTIONS' : None,
         }
 
-        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data)
+        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
 
         return context
 
@@ -1247,7 +1340,9 @@ class ImageViewerView(FormView):
 class AjaxImageViewerView(BaseView):
     methods = ['POST']
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(AjaxImageViewerView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
 
 
@@ -1260,9 +1355,9 @@ class AjaxImageViewerView(BaseView):
 
         if form_filter_detections:
             # filter images that have a detection
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1)
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1, s3_prefix=self.s3_prefix)
         else:
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0)
+            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0, s3_prefix=self.s3_prefix)
 
 
         json_data = {}
@@ -1379,7 +1474,7 @@ class VideoViewerView(FormView):
             'MONTH_SELECT' : None,
         }
 
-        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data)
+        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
 
         return context
 
@@ -1387,12 +1482,14 @@ class VideoViewerView(FormView):
 class AjaxVideoViewerView(BaseView):
     methods = ['POST']
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(AjaxVideoViewerView, self).__init__(**kwargs)
+
         self.camera_id = self.getLatestCamera()
 
 
     def dispatch_request(self):
-        form_video_viewer = IndiAllskyVideoViewer(data=request.json)
+        form_video_viewer = IndiAllskyVideoViewer(data=request.json, s3_prefix=self.s3_prefix)
 
 
         form_year      = request.json.get('YEAR_SELECT')
@@ -2763,6 +2860,7 @@ class ConfigListView(TemplateView):
                 IndiAllSkyDbConfigTable.createDate,
                 IndiAllSkyDbConfigTable.level,
                 IndiAllSkyDbConfigTable.note,
+                IndiAllSkyDbConfigTable.encrypted,
                 IndiAllSkyDbUserTable.username,
             )\
             .join(IndiAllSkyDbUserTable)\
@@ -2784,6 +2882,7 @@ def images_folder(path):
 
 
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
 bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))

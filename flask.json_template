@@ -21,12 +21,15 @@
     "SESSION_PROTECTION" : "strong",
 
     "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
-    "INDI_ALLSKY_IMAGE_FOLDER" : "%IMAGE_FOLDER%",
+    "INDI_ALLSKY_IMAGE_FOLDER" : "",
     "INDI_ALLSKY_AUTH_ALL_VIEWS" : %FLASK_AUTH_ALL_VIEWS%,
     "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
 
     "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
+
+    "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
+    "PASSWORD_KEY" : "",
 
     "INDISERVER_SERVICE_NAME" : "%INDISERVER_SERVICE_NAME%.service",
     "ALLSKY_SERVICE_NAME" : "%ALLSKY_SERVICE_NAME%.service",

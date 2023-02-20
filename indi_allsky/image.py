@@ -412,6 +412,7 @@ class ImageWorker(Process):
                     sqm=i_ref['sqm_value'],
                     stars=len(i_ref['stars']),
                     detections=len(i_ref['lines']),
+                    process_elapsed=processing_elapsed_s,
                 )
             else:
                 # images not being saved
@@ -501,18 +502,30 @@ class ImageWorker(Process):
                         mqtt_data[topic_sub] = current_temp
 
 
-                self.mqtt_publish(latest_file, mqtt_data)
+
+                if new_filename:
+                    upload_filename = new_filename
+                else:
+                    upload_filename = latest_file
 
 
-                self.upload_image(i_ref, latest_file, image_entry=image_entry)
+                self.mqtt_publish(upload_filename, mqtt_data)
+                self.upload_s3(image_entry)
+                self.upload_image(i_ref, image_entry)
                 self.upload_metadata(i_ref, adu, adu_average)
 
 
-    def upload_image(self, i_ref, latest_file, image_entry=None):
+    def upload_image(self, i_ref, image_entry):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
             return
+
+
+        if not image_entry:
+            # image was not saved
+            return
+
 
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
             next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
@@ -543,7 +556,8 @@ class ImageWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : 'upload',
-            'local_file'  : str(latest_file),
+            'model'       : image_entry.__class__.__name__,
+            'id'          : image_entry.id,
             'remote_file' : str(remote_file_p),
         }
 
@@ -557,10 +571,6 @@ class ImageWorker(Process):
 
         self.upload_q.put({'task_id' : upload_task.id})
 
-        if image_entry:
-            # image was not saved
-            self._miscDb.addUploadedFlag(image_entry)
-
 
     def upload_metadata(self, i_ref, adu, adu_average):
         ### upload images
@@ -571,6 +581,7 @@ class ImageWorker(Process):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             logger.warning('Metadata uploading disabled when image upload is disabled')
             return
+
 
         ### Only uploading metadata if image uploading is enabled
         if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
@@ -642,7 +653,7 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def mqtt_publish(self, latest_file, mq_data):
+    def mqtt_publish(self, upload_filename, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')
             return
@@ -652,7 +663,7 @@ class ImageWorker(Process):
         # publish data to mq broker
         jobdata = {
             'action'      : 'mqttpub',
-            'local_file'  : str(latest_file),
+            'local_file'  : str(upload_filename),
             'mq_data'     : mq_data,
         }
 
@@ -667,10 +678,41 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : mqtt_task.id})
 
 
+    def upload_s3(self, image_entry):
+        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
+            #logger.warning('S3 uploading disabled')
+            return
+
+
+        if not image_entry:
+            #logger.warning('S3 uploading disabled')
+            return
+
+
+        logger.info('Uploading to S3 bucket')
+
+        # publish data to s3 bucket
+        jobdata = {
+            'action'      : 's3',
+            'model'       : image_entry.__class__.__name__,
+            'id'          : image_entry.id,
+            'asset_type'  : 'image',
+        }
+
+        s3_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(s3_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : s3_task.id})
+
+
     def getSqmData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         sqm_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
@@ -695,7 +737,6 @@ class ImageWorker(Process):
     def getStarsData(self, camera_id):
         now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
 
-        #createDate_local = func.datetime(IndiAllSkyDbImageTable.createDate, 'localtime', type_=DateTime).label('createDate_local')
         stars_images = IndiAllSkyDbImageTable.query\
             .add_columns(
                 func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),

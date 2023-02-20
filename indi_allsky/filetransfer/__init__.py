@@ -11,6 +11,8 @@ from .pycurl_ftpes import pycurl_ftpes
 from .pycurl_ftpes import ftpes
 from .pycurl_webdav_https import pycurl_webdav_https
 from .paho_mqtt import paho_mqtt
+from .boto3_s3 import boto3_s3
+from .libcloud_s3 import libcloud_s3
 
 __all__ = (
     'paramiko_sftp',
@@ -26,4 +28,6 @@ __all__ = (
     'ftpes',
     'pycurl_webdav_https',
     'paho_mqtt',
+    'boto3_s3',
+    'libcloud_s3',
 )

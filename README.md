@@ -22,8 +22,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Camera temperature control (for cameras with active cooling)
 * Multi-image stacking
 * Timelapse video generation
-* Network file transfers - Upload images and videos to remote site
 * GPS support
+* Network file transfers - Upload images and videos to remote site
+    * S3 Object Storage support
 * Publish data to an MQTT service for monitoring
 * Keograms
 * Star Trails
@@ -338,11 +339,29 @@ https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
 | sftp           | 22   |
 | webdav (https) | 443  |
 
+## S3 Object Storage
+
+You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
+
+Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
+
 ## MQTT Publishing
 
 indi-allsky supports publishing all sky data to an MQTT service for monitoring.
 
 For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing
+
+## Blogs, Articles, and Links
+
+Please let me know if you want to make an addition or correction.
+
+* [indilib.org](https://www.indilib.org/research/projects/197-indi-allsky-record-the-sky.html)
+* [indilib.org forum thread](https://indilib.org/forum/general/10619-new-all-sky-camera-management-software-indi-allsky.html)
+* [CloudyNights.com forum thread](https://www.cloudynights.com/topic/785514-new-all-sky-camera-management-software-indi-allsky/)
+* [Gord Tulloch](https://www.openastronomy.ca/2023/01/06/indi-allsky-software-review/)
+* [Giles Coochey](https://coochey.net/?cat=29)
+* [PampaSkies](http://www.pampaskies.com/gallery3/Equipment/All-Sky-Camera-with-Sky-Condition-Detection)
+* [The Suffolk Sky](http://www.suffolksky.com/all-sky-camera/)
 
 ## Alternatives
 
