@@ -14,7 +14,8 @@
     <div class="col-sm-2 fw-bold">Create</div>
     <div class="col-sm-2 fw-bold">User</div>
     <div class="col-sm-2 fw-bold">Level</div>
-    <div class="col-sm-5 fw-bold">Note</div>
+    <div class="col-sm-1 fw-bold">Encrypted</div>
+    <div class="col-sm-4 fw-bold">Note</div>
 </div>
 {% for config in config_list %}
 <div class="row">
@@ -22,7 +23,8 @@
     <div class="col-sm-2">{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
     <div class="col-sm-2">{{ config.username }}</div>
     <div class="col-sm-2">{{ config.level }}</div>
-    <div class="col-sm-5">{{ config.note }}</div>
+    <div class="col-sm-1">{{ config.encrypted }}</div>
+    <div class="col-sm-4">{{ config.note }}</div>
 </div>
 {% endfor %}
 </div>

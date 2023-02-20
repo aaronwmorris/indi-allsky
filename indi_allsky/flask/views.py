@@ -2859,6 +2859,7 @@ class ConfigListView(TemplateView):
                 IndiAllSkyDbConfigTable.createDate,
                 IndiAllSkyDbConfigTable.level,
                 IndiAllSkyDbConfigTable.note,
+                IndiAllSkyDbConfigTable.encrypted,
                 IndiAllSkyDbUserTable.username,
             )\
             .join(IndiAllSkyDbUserTable)\
