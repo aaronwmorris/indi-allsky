@@ -184,7 +184,7 @@ class JsonLatestImageView(JsonView):
             return None
 
 
-        return url
+        return str(url)
 
 
 class PublicIndexView(BaseView):
