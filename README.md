@@ -351,6 +351,18 @@ indi-allsky supports publishing all sky data to an MQTT service for monitoring.
 
 For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing
 
+## Blogs, Articles, and Links
+
+Please let me know if you want to make an addition or correction.
+
+* [indilib.org](https://www.indilib.org/research/projects/197-indi-allsky-record-the-sky.html)
+* [indilib.org forum thread](https://indilib.org/forum/general/10619-new-all-sky-camera-management-software-indi-allsky.html)
+* [CloudyNights.com forum thread](https://www.cloudynights.com/topic/785514-new-all-sky-camera-management-software-indi-allsky/)
+* [Gord Tulloch](https://www.openastronomy.ca/2023/01/06/indi-allsky-software-review/)
+* [Giles Coochey](https://coochey.net/?cat=29)
+* [PampaSkies](http://www.pampaskies.com/gallery3/Equipment/All-Sky-Camera-with-Sky-Condition-Detection)
+* [The Suffolk Sky](http://www.suffolksky.com/all-sky-camera/)
+
 ## Alternatives
 
 * Thomas Jacquin's Allsky
