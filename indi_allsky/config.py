@@ -295,12 +295,13 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
-    def _setConfig(self, config, user_entry, note):
+    def _setConfig(self, config, user_entry, note, encrypted):
         config_entry = IndiAllSkyDbConfigTable(
             data=config,
             level=str(__config_level__),
             user_id=user_entry.id,
             note=str(note),
+            encrypted=encrypted,
         )
 
         db.session.add(config_entry)
@@ -358,9 +359,9 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             .one()
 
 
-        config = self._encryptPasswords()
+        config, encrypted = self._encryptPasswords()
 
-        config_entry = self._setConfig(config, user_entry, note)
+        config_entry = self._setConfig(config, user_entry, note, encrypted)
 
         self._config_id = config_entry.id
 
@@ -371,6 +372,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config = self._config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
+            encrypted = True
+
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
             filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
@@ -401,6 +404,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
         else:
             # passwords should not be encrypted
+            encrypted = False
+
             filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
             filetransfer__password_e = ''
             s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
@@ -417,7 +422,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
 
 
-        return config
+        return config, encrypted
 
 
 class IndiAllSkyConfigUtil(IndiAllSkyConfig):
