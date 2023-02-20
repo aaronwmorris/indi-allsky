@@ -244,6 +244,7 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.createDate,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.exp_elapsed,
+                IndiAllSkyDbImageTable.process_elapsed,
                 (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\

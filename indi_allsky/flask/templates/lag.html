@@ -14,7 +14,8 @@
     <div class="col-2 fw-bold">Date</div>
     <div class="col-2 fw-bold">Exposure</div>
     <div class="col-1 fw-bold">Diff</div>
-    <div class="col-1 fw-bold">Elapsed</>
+    <div class="col-1 fw-bold">Elapsed</div>
+    <div class="col-1 fw-bold">Processing</div>
 </div>
 {% for image in image_lag_list %}
 <div class="row">
@@ -23,6 +24,7 @@
     <div class="col-2">{{ "%0.7f"|format(image.exposure) }}</div>
     <div class="col-1">{{ image.lag_diff }}</div>
     <div class="col-1">{{ "%0.2f"|format(image.exp_elapsed | float) }}</div>
+    <div class="col-1">{{ "%0.2f"|format(image.process_elapsed | float) }}</div>
 </div>
 {% endfor %}
 </div>
