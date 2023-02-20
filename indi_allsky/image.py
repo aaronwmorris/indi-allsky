@@ -412,6 +412,7 @@ class ImageWorker(Process):
                     sqm=i_ref['sqm_value'],
                     stars=len(i_ref['stars']),
                     detections=len(i_ref['lines']),
+                    process_elapsed=processing_elapsed_s,
                 )
             else:
                 # images not being saved

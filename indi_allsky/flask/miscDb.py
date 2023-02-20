@@ -19,7 +19,6 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
-from .models import IndiAllSkyDbConfigTable
 
 #from .models import NotificationCategory
 
@@ -94,6 +93,7 @@ class miscDb(object):
         calibrated=False,
         stars=None,
         detections=0,
+        process_elapsed=None,
     ):
         if not filename:
             return
@@ -153,6 +153,7 @@ class miscDb(object):
             sqm=sqm,
             stars=stars,
             detections=detections,
+            process_elapsed=process_elapsed,
         )
 
         db.session.add(image)
