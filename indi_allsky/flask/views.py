@@ -67,8 +67,9 @@ from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.expression import true
-from sqlalchemy.sql.expression import false
+from sqlalchemy.sql.expression import true as sa_true
+from sqlalchemy.sql.expression import false as sa_false
+from sqlalchemy.sql.expression import null as sa_null
 
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
@@ -2072,6 +2073,7 @@ class AjaxSystemInfoView(BaseView):
 
         ### Images
         image_entries = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -2088,6 +2090,7 @@ class AjaxSystemInfoView(BaseView):
 
         ### FITS Images
         fits_image_entries = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
 
 
@@ -2104,6 +2107,7 @@ class AjaxSystemInfoView(BaseView):
 
         ### Raw Images
         raw_image_entries = IndiAllSkyDbRawImageTable.query\
+            .filter(IndiAllSkyDbRawImageTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
 
 
@@ -2121,6 +2125,7 @@ class AjaxSystemInfoView(BaseView):
         ### Bad Pixel Maps
         badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
             .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
+        # fixme - need deal with non-local installs
 
 
         badpixelmap_entries_count = badpixelmap_entries.count()
@@ -2137,6 +2142,8 @@ class AjaxSystemInfoView(BaseView):
         ### Dark frames
         darkframe_entries = IndiAllSkyDbDarkFrameTable.query\
             .order_by(IndiAllSkyDbDarkFrameTable.createDate.asc())
+        # fixme - need deal with non-local installs
+
 
         darkframe_entries_count = darkframe_entries.count()
         message_list.append('<p>Dark Frames: {0:d}</p>'.format(darkframe_entries_count))
@@ -2151,7 +2158,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
-            .filter(IndiAllSkyDbVideoTable.success == true())\
+            .filter(IndiAllSkyDbVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbVideoTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
         video_entries_count = video_entries.count()
@@ -2167,6 +2175,7 @@ class AjaxSystemInfoView(BaseView):
 
         ### Keograms
         keogram_entries = IndiAllSkyDbKeogramTable.query\
+            .filter(IndiAllSkyDbKeogramTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
 
         keogram_entries_count = keogram_entries.count()
@@ -2182,7 +2191,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
-            .filter(IndiAllSkyDbStarTrailsTable.success == true())\
+            .filter(IndiAllSkyDbStarTrailsTable.success == sa_true())\
+            .filter(IndiAllSkyDbStarTrailsTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
         startrail_entries_count = startrail_entries.count()
@@ -2198,7 +2208,8 @@ class AjaxSystemInfoView(BaseView):
 
         ### Startrail videos
         startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.success == true())\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
 
         startrail_video_entries_count = startrail_video_entries.count()
@@ -2793,7 +2804,7 @@ class AjaxNotificationView(BaseView):
 
         # this MUST ALWAYS return the newest result
         notice = IndiAllSkyDbNotificationTable.query\
-            .filter(IndiAllSkyDbNotificationTable.ack == false())\
+            .filter(IndiAllSkyDbNotificationTable.ack == sa_false())\
             .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
             .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
             .first()
