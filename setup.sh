@@ -2076,7 +2076,7 @@ cat "$TMP_CAMERA_INT" > "$TMP_CONFIG_DUMP"
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
-USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
+USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
 # there is a system user
 if [ "$USER_COUNT" -le 1 ]; then
     while [ -z "${WEB_USER:-}" ]; do

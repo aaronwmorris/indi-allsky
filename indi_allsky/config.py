@@ -582,6 +582,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         print(json.dumps(dump_entry.data, indent=4))
 
 
+    def user_count(self, **kwargs):
+        user_count = IndiAllSkyDbUserTable.query.count()
+        print('{0:d}'.format(user_count))
+
+
     def flush(self, **kwargs):
         confirm1 = input('\nConfirm flushing all configs? [y/n]')
         if confirm1.lower() != 'y':
@@ -599,6 +604,10 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         db.session.commit()
 
         logger.info('All configurations have been deleted')
+
+
+    def flush_alembic(self, **kwargs):
+        pass
 
 
     def _createSystemAccount(self):

@@ -31,14 +31,16 @@ if __name__ == "__main__":
         'action',
         help='configuration management actions',
         choices=(
-            'bootstrap',
-            'list',
-            'load',
-            'dump',
-            'update_level',
-            'edit',
-            'revert',
-            'flush',
+            'bootstrap',        # load initial config
+            'list',             # list configs
+            'load',             # load exported config
+            'dump',             # export config to STDOUT
+            'update_level',     # update config functional level
+            'edit',             # edit config in cli
+            'revert',           # revert to an older config --id
+            'user_count',       # return count of active users to STDOUT
+            'flush',            # deletes all configs
+            'flush_alembic',    # delete alembic migration info
         ),
     )
     argparser.add_argument(
