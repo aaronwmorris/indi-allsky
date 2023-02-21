@@ -606,10 +606,6 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         logger.info('All configurations have been deleted')
 
 
-    def flush_alembic(self, **kwargs):
-        pass
-
-
     def _createSystemAccount(self):
         try:
             system_user = IndiAllSkyDbUserTable.query\

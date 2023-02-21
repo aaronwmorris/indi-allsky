@@ -1604,22 +1604,6 @@ if [[ -f "${DB_FILE}" ]]; then
 fi
 
 
-# Check for old alembic folder
-if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
-    echo
-    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
-    echo "for database migrations"
-    echo
-    echo "This script will attempt to properly migrate the config"
-    echo
-    sleep 5
-
-    sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
-
-    rm -fR "${ALLSKY_DIRECTORY}/alembic"
-fi
-
-
 # Setup migration folder
 if [[ ! -d "$MIGRATION_FOLDER" ]]; then
     # Folder defined in flask config

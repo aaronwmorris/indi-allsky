@@ -40,7 +40,6 @@ if __name__ == "__main__":
             'revert',           # revert to an older config --id
             'user_count',       # return count of active users to STDOUT
             'flush',            # deletes all configs
-            'flush_alembic',    # delete alembic migration info
         ),
     )
     argparser.add_argument(
