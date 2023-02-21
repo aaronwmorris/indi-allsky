@@ -1428,7 +1428,7 @@ class ImageProcessor(object):
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
-            data = hdulist[0].data
+            #data = hdulist[0].data
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             indi_rgb = False
 
@@ -1436,6 +1436,10 @@ class ImageProcessor(object):
 
             image_bitpix = 8
             image_bayerpat = None
+
+            # create a new fits container
+            hdu = fits.PrimaryHDU(data)
+            hdulist = fits.HDUList([hdu])
         elif filename_p.suffix in ['.png']:
             indi_rgb = False
 
@@ -1443,6 +1447,10 @@ class ImageProcessor(object):
 
             image_bitpix = 8
             image_bayerpat = None
+
+            # create a new fits container
+            hdu = fits.PrimaryHDU(data)
+            hdulist = fits.HDUList([hdu])
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
@@ -1452,7 +1460,7 @@ class ImageProcessor(object):
             raw = rawpy.imread(str(filename_p))
             data = raw.raw_image
 
-            # create a new fits container for DNG data
+            # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 

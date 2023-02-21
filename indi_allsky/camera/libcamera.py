@@ -157,8 +157,8 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '100',
-                '--denoise', 'off',
-                '--awbgains', '1,1',  # disable awb
+                #'--denoise', 'off',
+                #'--awbgains', '1,1',  # enable awb in jpg mode
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
