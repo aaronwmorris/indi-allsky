@@ -238,7 +238,9 @@ class ImageLagView(TemplateView):
 
         now_minus_3h = datetime.now() - timedelta(hours=3)
 
-        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
+        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
+        #createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+
         image_lag_list = IndiAllSkyDbImageTable.query\
             .add_columns(
                 IndiAllSkyDbImageTable.id,
@@ -246,7 +248,7 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.exp_elapsed,
                 IndiAllSkyDbImageTable.process_elapsed,
-                (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+                (cast(createDate_s, Integer) - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
@@ -265,6 +267,9 @@ class RollingAduView(TemplateView):
 
         now_minus_3d = datetime.now() - timedelta(days=3)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
+        #createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
 
         # this should give us average exposure, adu in 15 minute sets, during the night
         rolling_adu_list = IndiAllSkyDbImageTable.query\
@@ -285,8 +290,9 @@ class RollingAduView(TemplateView):
                     )
                 )
             )\
-            .group_by(cast(func.strftime('%s', IndiAllSkyDbImageTable.createDate), Integer) / 900)\
+            .group_by(cast(createDate_s, Integer) / 900)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
 
         context['rolling_adu_list'] = rolling_adu_list
 
