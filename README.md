@@ -341,9 +341,11 @@ https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
 
 ## S3 Object Storage
 
-You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
+You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the local indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
 
 Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
+
+Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.
 
 ## MQTT Publishing
 
