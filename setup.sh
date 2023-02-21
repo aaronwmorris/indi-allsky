@@ -42,6 +42,7 @@ HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
+MIGRATION_FOLDER="$DB_FOLDER/migrations"
 
 # mysql support is not ready
 USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
@@ -1529,7 +1530,7 @@ TMP_FLASK_MERGE=$(mktemp --suffix=.json)
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%MIGRATION_FOLDER%|$MIGRATION_FOLDER|g" \
  -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
@@ -1603,30 +1604,14 @@ if [[ -f "${DB_FILE}" ]]; then
 fi
 
 
-# Check for old alembic folder
-if [[ -d "${ALLSKY_DIRECTORY}/alembic" ]]; then
-    echo
-    echo "You appear to have upgraded from a previous version of indi-allsky that used alembic"
-    echo "for database migrations"
-    echo
-    echo "This script will attempt to properly migrate the config"
-    echo
-    sleep 5
-
-    sqlite3 "${DB_FILE}" "DELETE FROM alembic_version;"
-
-    rm -fR "${ALLSKY_DIRECTORY}/alembic"
-fi
-
-
 # Setup migration folder
-if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
+if [[ ! -d "$MIGRATION_FOLDER" ]]; then
     # Folder defined in flask config
     flask db init
 
     # Move migrations out of git checkout
     cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
-    find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
+    find . -type f -name "*.py" | cpio -pdmu "${MIGRATION_FOLDER}/versions"
     cd "$OLDPWD" || catch_error
 
     # Cleanup old files
@@ -2075,7 +2060,7 @@ cat "$TMP_CAMERA_INT" > "$TMP_CONFIG_DUMP"
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
-USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT COUNT(id) FROM user;")
+USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
 # there is a system user
 if [ "$USER_COUNT" -le 1 ]; then
     while [ -z "${WEB_USER:-}" ]; do
