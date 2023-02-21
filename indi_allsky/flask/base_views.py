@@ -44,9 +44,6 @@ class BaseView(View):
 
         self.s3_prefix = self.getS3Prefix()
 
-        # assume indi-allsky is running with application server
-        self.local_indi_allsky = True
-
 
     def get_indiallsky_pid(self):
         try:
@@ -113,6 +110,9 @@ class TemplateView(BaseView):
         self.template_name = template_name
 
         self.night = True
+
+        # assume indi-allsky is running with application server
+        self.local_indi_allsky = True
 
 
     def render_template(self, context):
@@ -203,6 +203,7 @@ class TemplateView(BaseView):
         if isinstance(indi_allsky_pid, bool):
             # False is not local
             self.local_indi_allsky = False
+            return '<span class="text-muted">REMOTE</span>'
         #else:
         #    # None or int is local
         #    local_indi_allsky = True
