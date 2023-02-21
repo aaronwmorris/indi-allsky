@@ -26,7 +26,7 @@
     "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
 
-    "MIGRATION_FOLDER" : "%DB_FOLDER%/migrations",
+    "MIGRATION_FOLDER" : "%MIGRATION_FOLDER%",
 
     "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
     "PASSWORD_KEY" : "",

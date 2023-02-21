@@ -42,6 +42,7 @@ HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
+MIGRATION_FOLDER="$DB_FOLDER/migrations"
 
 # mysql support is not ready
 USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
@@ -1529,7 +1530,7 @@ TMP_FLASK_MERGE=$(mktemp --suffix=.json)
 SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%MIGRATION_FOLDER%|$MIGRATION_FOLDER|g" \
  -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
@@ -1620,13 +1621,13 @@ fi
 
 
 # Setup migration folder
-if [[ ! -d "${DB_FOLDER}/migrations" ]]; then
+if [[ ! -d "$MIGRATION_FOLDER" ]]; then
     # Folder defined in flask config
     flask db init
 
     # Move migrations out of git checkout
     cd "${ALLSKY_DIRECTORY}/migrations/versions" || catch_error
-    find . -type f -name "*.py" | cpio -pdmu "${DB_FOLDER}/migrations/versions"
+    find . -type f -name "*.py" | cpio -pdmu "${MIGRATION_FOLDER}/versions"
     cd "$OLDPWD" || catch_error
 
     # Cleanup old files
