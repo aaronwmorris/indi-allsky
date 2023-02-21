@@ -34,8 +34,8 @@ class IndiAllSkyDbCameraTable(db.Model):
     name = db.Column(db.String(length=100), unique=True, nullable=False)
     driver = db.Column(db.String(length=100), nullable=True)
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
-    connectDate = db.Column(db.DateTime(timezone=False), nullable=True)
+    createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
+    connectDate = db.Column(db.DateTime(), nullable=True)
     minGain = db.Column(db.Integer, nullable=True)
     maxGain = db.Column(db.Integer, nullable=True)
     minExposure = db.Column(db.Float, nullable=True)
@@ -129,7 +129,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     exp_elapsed = db.Column(db.Float, nullable=True)
@@ -170,7 +170,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
     gain = db.Column(db.Integer, nullable=False, index=True)
@@ -188,7 +188,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
     gain = db.Column(db.Integer, nullable=False, index=True)
@@ -208,7 +208,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -235,7 +235,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -254,7 +254,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -273,7 +273,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -292,7 +292,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -313,7 +313,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
     remote_url = db.Column(db.String(length=255), nullable=True)
     s3_key = db.Column(db.String(length=255), nullable=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -347,7 +347,7 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     __tablename__ = 'taskqueue'
 
     id = db.Column(db.Integer, primary_key=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True)
     queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
     data = db.Column(db.JSON)
@@ -393,8 +393,8 @@ class IndiAllSkyDbNotificationTable(db.Model):
     __tablename__ = 'notification'
 
     id = db.Column(db.Integer, primary_key=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
-    expireDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime', '+12 hours'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    expireDate = db.Column(db.DateTime(), nullable=False, index=True)
     ack = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     category = db.Column(db.Enum(NotificationCategory, length=20, native_enum=False), nullable=False, index=True)
     item = db.Column(db.String(length=32), nullable=False, index=True)
@@ -415,7 +415,7 @@ class IndiAllSkyDbConfigTable(db.Model):
     __tablename__ = 'config'
 
     id = db.Column(db.Integer, primary_key=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     level = db.Column(db.String(length=12), nullable=False)
     encrypted = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     note = db.Column(db.String(length=255), nullable=False)
@@ -428,7 +428,7 @@ class IndiAllSkyDbStateTable(db.Model):
     __tablename__ = 'state'
 
     key = db.Column(db.String(length=32), primary_key=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, index=True, server_default=db.text("(datetime('now', 'localtime'))"))
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     value = db.Column(db.String(length=255), nullable=False)
 
 
@@ -436,10 +436,10 @@ class IndiAllSkyDbUserTable(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    createDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
-    passwordDate = db.Column(db.DateTime(timezone=False), nullable=False, server_default=db.text("(datetime('now', 'localtime'))"))
-    apikeyDate = db.Column(db.DateTime(timezone=False), nullable=True)
-    loginDate = db.Column(db.DateTime(timezone=False), nullable=True)
+    createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
+    passwordDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
+    apikeyDate = db.Column(db.DateTime(), nullable=True)
+    loginDate = db.Column(db.DateTime(), nullable=True)
     loginIp = db.Column(db.String(255), nullable=True)  # X-Forwarded-For may contain multiple IPs
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
