@@ -241,6 +241,8 @@ class ImageLagView(TemplateView):
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
             createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+        elif app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql'):
+            createDate_s = func.to_char(IndiAllSkyDbImageTable.createDate, '%s')  # postgres
         else:
             # assume sqlite
             createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
@@ -276,6 +278,8 @@ class RollingAduView(TemplateView):
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
             createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+        elif app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql'):
+            createDate_s = func.to_char(IndiAllSkyDbImageTable.createDate, '%s')  # postgres
         else:
             # assume sqlite
             createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
