@@ -238,8 +238,13 @@ class ImageLagView(TemplateView):
 
         now_minus_3h = datetime.now() - timedelta(hours=3)
 
-        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
-        #createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+        else:
+            # assume sqlite
+            createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
+
 
         image_lag_list = IndiAllSkyDbImageTable.query\
             .add_columns(
@@ -268,8 +273,13 @@ class RollingAduView(TemplateView):
         now_minus_3d = datetime.now() - timedelta(days=3)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
-        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
-        #createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+        else:
+            # assume sqlite
+            createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
+
 
         # this should give us average exposure, adu in 15 minute sets, during the night
         rolling_adu_list = IndiAllSkyDbImageTable.query\
