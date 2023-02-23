@@ -240,14 +240,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._config = self.base_config.copy()  # populate initial values
 
         # fetch latest config
-        config_entry = self._getConfig()
+        config_entry = self._getConfigEntry()
 
         # apply config on top of template
         self._config_id = config_entry.id
         self._config_level = config_entry.level
         self._config.update(config_entry.data)
 
-        self._decrypt_passwords()
+        self._config = self._decrypt_passwords()
 
 
     @property
@@ -277,7 +277,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         pass  # read only
 
 
-    def _getConfig(self, config_id=None):
+    def _getConfigEntry(self, config_id=None):
         ### return the last saved config entry
 
         if config_id:
@@ -295,7 +295,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
-    def _setConfig(self, config, user_entry, note, encrypted):
+    def _setConfigEntry(self, config, user_entry, note, encrypted):
         config_entry = IndiAllSkyDbConfigTable(
             data=config,
             level=str(__config_level__),
@@ -311,46 +311,49 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _decrypt_passwords(self):
-        if self.config['ENCRYPT_PASSWORDS']:
+        config = self._config.copy()
+
+        if config['ENCRYPT_PASSWORDS']:
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
-            filetransfer__password_e = self.config.get('FILETRANSFER', {}).get('PASSWORD_E', '')
+            filetransfer__password_e = config.get('FILETRANSFER', {}).get('PASSWORD_E', '')
             if filetransfer__password_e:
                 # not catching InvalidToken
                 filetransfer__password = f_key.decrypt(filetransfer__password_e.encode()).decode()
             else:
-                filetransfer__password = self.config.get('FILETRANSFER', {}).get('PASSWORD', '')
+                filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
 
 
-            s3upload__secret_key_e = self.config.get('S3UPLOAD', {}).get('SECRET_KEY_E', '')
+            s3upload__secret_key_e = config.get('S3UPLOAD', {}).get('SECRET_KEY_E', '')
             if s3upload__secret_key_e:
                 # not catching InvalidToken
                 s3upload__secret_key = f_key.decrypt(s3upload__secret_key_e.encode()).decode()
             else:
-                s3upload__secret_key = self.config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
+                s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
 
 
-            mqttpublish__password_e = self.config.get('MQTTPUBLISH', {}).get('PASSWORD_E', '')
+            mqttpublish__password_e = config.get('MQTTPUBLISH', {}).get('PASSWORD_E', '')
             if mqttpublish__password_e:
                 # not catching InvalidToken
                 mqttpublish__password = f_key.decrypt(mqttpublish__password_e.encode()).decode()
             else:
-                mqttpublish__password = self.config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+                mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
 
         else:
             # passwords should not be encrypted
-            filetransfer__password = self.config.get('FILETRANSFER', {}).get('PASSWORD', '')
-            s3upload__secret_key = self.config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
-            mqttpublish__password = self.config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+            filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
+            s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
+            mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
 
 
-        self.config['FILETRANSFER']['PASSWORD'] = filetransfer__password
-        self.config['FILETRANSFER']['PASSWORD_E'] = ''
-        self.config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
-        self.config['S3UPLOAD']['SECRET_KEY_E'] = ''
-        self.config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
-        self.config['MQTTPUBLISH']['PASSWORD_E'] = ''
+        config['FILETRANSFER']['PASSWORD'] = filetransfer__password
+        config['FILETRANSFER']['PASSWORD_E'] = ''
+        config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
+        config['S3UPLOAD']['SECRET_KEY_E'] = ''
+        config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
+        config['MQTTPUBLISH']['PASSWORD_E'] = ''
 
+        return config
 
 
     def save(self, username, note):
@@ -361,7 +364,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
         config, encrypted = self._encryptPasswords()
 
-        config_entry = self._setConfig(config, user_entry, note, encrypted)
+        config_entry = self._setConfigEntry(config, user_entry, note, encrypted)
 
         self._config_id = config_entry.id
 
@@ -434,7 +437,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def bootstrap(self, **kwargs):
         try:
-            self._getConfig()
+            self._getConfigEntry()
 
             logger.error('Configuration already initialized')
 
@@ -469,7 +472,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         if not force:
             try:
-                self._getConfig()
+                self._getConfigEntry()
 
                 logger.error('Configuration already defined, not loading config')
 
@@ -493,7 +496,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
     def update_level(self, **kwargs):
         # fetch latest config
         try:
-            config_entry = self._getConfig()
+            config_entry = self._getConfigEntry()
         except NoResultFound:
             logger.error('Configuration not loaded')
             sys.exit(1)
@@ -507,13 +510,15 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def edit(self, **kwargs):
         try:
-            config_entry = self._getConfig()
+            config_entry = self._getConfigEntry()
         except NoResultFound:
             logger.error('Configuration not loaded')
             sys.exit(1)
 
 
         self._config.update(config_entry.data)
+
+        self._config = self._decrypt_passwords()
 
         config_temp_f = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
         config_temp_f.write(json.dumps(self.config, indent=4))
@@ -556,7 +561,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         revert_id = kwargs['config_id']
 
         try:
-            revert_entry = self._getConfig(config_id=revert_id)
+            revert_entry = self._getConfigEntry(config_id=revert_id)
         except NoResultFound:
             logger.error('Configuration ID %d not found', int(revert_id))
             sys.exit(1)
@@ -572,14 +577,18 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         dump_id = kwargs['config_id']
 
         try:
-            dump_entry = self._getConfig(config_id=dump_id)
+            dump_entry = self._getConfigEntry(config_id=dump_id)
         except NoResultFound:
             logger.error('Configuration ID %d not found', int(dump_id))
             sys.exit(1)
 
+        self._config.update(dump_entry.data)
+
+        self._config = self._decrypt_passwords()
+
         logger.info('Dumping config')
 
-        print(json.dumps(dump_entry.data, indent=4))
+        print(json.dumps(self._config, indent=4))
 
 
     def user_count(self, **kwargs):
