@@ -17,10 +17,14 @@ logger = logging.getLogger('indi_allsky')
 
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
-
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
+LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
+LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
+LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
+
+logger.setLevel(logging.INFO)
 
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -93,10 +97,8 @@ if __name__ == "__main__":
 
     # log setup
     if args.log == 'syslog':
-        # default goes to syslog
-        pass
+        logger.addHandler(LOG_HANDLER_SYSLOG)
     elif args.log == 'stderr':
-        logger.handlers.clear()  # remove syslog
         logger.addHandler(LOG_HANDLER_STREAM)
     else:
         raise Exception('Invalid log output')
