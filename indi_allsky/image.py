@@ -38,6 +38,7 @@ from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
 
+from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -61,6 +62,8 @@ try:
 except ImportError:
     rawpy = None
 
+
+app = create_app()
 
 logger = logging.getLogger('indi_allsky')
 
@@ -184,13 +187,14 @@ class ImageWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        ### use this as a method to log uncaught exceptions
-        try:
-            self.saferun()
-        except Exception as e:
-            tb = traceback.format_exc()
-            self.error_q.put((str(e), tb))
-            raise e
+        with app.app_context():
+            ### use this as a method to log uncaught exceptions
+            try:
+                self.saferun()
+            except Exception as e:
+                tb = traceback.format_exc()
+                self.error_q.put((str(e), tb))
+                raise e
 
 
 

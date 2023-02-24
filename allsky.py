@@ -8,9 +8,8 @@ import traceback
 import argparse
 
 
-# setup flask context for db access
-app = indi_allsky.flask.create_app()
-app.app_context().push()
+# the flask context cannot created globally
+# it will cause problems with DB connections using TLS/SSL
 
 
 logger = logging.getLogger('indi_allsky')
@@ -52,7 +51,6 @@ if __name__ == "__main__":
         choices=(
             'run',
             'connectOnly',
-            'darks',
             'cameraReport',
             'generateNightTimelapse',
             'generateDayTimelapse',

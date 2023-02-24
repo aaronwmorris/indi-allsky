@@ -40,7 +40,7 @@ from .exceptions import TemperatureException
 from .exceptions import CameraException
 from .exceptions import ConfigSaveException
 
-#from flask import current_app as app
+from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -62,6 +62,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 
+app = create_app()
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -71,14 +73,16 @@ class IndiAllSky(object):
 
 
     def __init__(self):
-        try:
-            self._config_obj = IndiAllSkyConfig()
-            #logger.info('Loaded config id: %d', self._config_obj.config_id)
-        except NoResultFound:
-            logger.error('No config file found, please import a config')
-            sys.exit(1)
+        with app.app_context():
+            try:
+                self._config_obj = IndiAllSkyConfig()
+                #logger.info('Loaded config id: %d', self._config_obj.config_id)
+            except NoResultFound:
+                logger.error('No config file found, please import a config')
+                sys.exit(1)
 
-        self.config = self._config_obj.config
+            self.config = self._config_obj.config
+
 
         self._miscDb = miscDb(self.config)
 
@@ -96,7 +100,8 @@ class IndiAllSky(object):
             sys.exit(1)
 
 
-        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
+        with app.app_context():
+            self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
@@ -844,15 +849,16 @@ class IndiAllSky(object):
         sys.exit()
 
 
-
     def run(self):
-        self.write_pid()
+        with app.app_context():
+            self.write_pid()
 
-        self._expireOrphanedTasks()
+            self._expireOrphanedTasks()
 
-        self._initialize()
+            self._initialize()
 
-        self._pre_run_tasks()
+            self._pre_run_tasks()
+
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -883,208 +889,210 @@ class IndiAllSky(object):
             self.detectNight()
             self.detectMoonMode()
 
-            ### Change between day and night
-            if self.night_v.value != int(self.night):
-                if self.generate_timelapse_flag:
-                    self._flushOldTasks()  # cleanup old tasks in DB
-                    self._expireData()  # cleanup old images and folders
 
-                if not self.night and self.generate_timelapse_flag:
-                    ### Generate timelapse at end of night
-                    yesterday_ref = datetime.now() - timedelta(days=1)
-                    timespec = yesterday_ref.strftime('%Y%m%d')
-                    self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                    self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
-                    self._uploadAllskyEndOfNight()
-                    self._systemHealthCheck()
+            with app.app_context():
+                ### Change between day and night
+                if self.night_v.value != int(self.night):
+                    if self.generate_timelapse_flag:
+                        self._flushOldTasks()  # cleanup old tasks in DB
+                        self._expireData()  # cleanup old images and folders
 
-                elif self.night and self.generate_timelapse_flag:
-                    ### Generate timelapse at end of day
-                    today_ref = datetime.now()
-                    timespec = today_ref.strftime('%Y%m%d')
-                    self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                    self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
-                    self._systemHealthCheck()
+                    if not self.night and self.generate_timelapse_flag:
+                        ### Generate timelapse at end of night
+                        yesterday_ref = datetime.now() - timedelta(days=1)
+                        timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._uploadAllskyEndOfNight()
+                        self._systemHealthCheck()
 
-
-            # this is to prevent expiring images at startup
-            if self.night:
-                # always indicate timelapse generation at night
-                self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-            elif self.config['DAYTIME_CAPTURE'] and self.config['DAYTIME_TIMELAPSE']:
-                # must be day time
-                self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+                    elif self.night and self.generate_timelapse_flag:
+                        ### Generate timelapse at end of day
+                        today_ref = datetime.now()
+                        timespec = today_ref.strftime('%Y%m%d')
+                        self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._systemHealthCheck()
 
 
-            self.getSensorTemperature()
-            self.getTelescopeRaDec()
-            self.getGpsPosition()
+                # this is to prevent expiring images at startup
+                if self.night:
+                    # always indicate timelapse generation at night
+                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+                elif self.config['DAYTIME_CAPTURE'] and self.config['DAYTIME_TIMELAPSE']:
+                    # must be day time
+                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
 
-            # Queue externally defined tasks
-            self._queueManualTasks()
+                self.getSensorTemperature()
+                self.getTelescopeRaDec()
+                self.getGpsPosition()
 
 
-            # Update watchdog
-            self._miscDb.setState('WATCHDOG', int(loop_start_time))
+                # Queue externally defined tasks
+                self._queueManualTasks()
 
 
-            if not self.night and not self.config['DAYTIME_CAPTURE']:
-                logger.info('Daytime capture is disabled')
-                self.generate_timelapse_flag = False
-
-                if self._shutdown:
-                    logger.warning('Shutting down')
-                    self._stopImageWorker(terminate=self._terminate)
-                    self._stopVideoWorker(terminate=self._terminate)
-                    self._stopFileUploadWorker(terminate=self._terminate)
-
-                    self.indiclient.disableCcdCooler()  # safety
-
-                    self.indiclient.disconnectServer()
+                # Update watchdog
+                self._miscDb.setState('WATCHDOG', int(loop_start_time))
 
 
-                    now = datetime.now()
-                    self._miscDb.addNotification(
-                        NotificationCategory.STATE,
-                        'indi-allsky',
-                        'indi-allsky was shutdown',
-                        expire=timedelta(hours=1),
-                    )
+                if not self.night and not self.config['DAYTIME_CAPTURE']:
+                    logger.info('Daytime capture is disabled')
+                    self.generate_timelapse_flag = False
+
+                    if self._shutdown:
+                        logger.warning('Shutting down')
+                        self._stopImageWorker(terminate=self._terminate)
+                        self._stopVideoWorker(terminate=self._terminate)
+                        self._stopFileUploadWorker(terminate=self._terminate)
+
+                        self.indiclient.disableCcdCooler()  # safety
+
+                        self.indiclient.disconnectServer()
 
 
-                    sys.exit()
+                        now = datetime.now()
+                        self._miscDb.addNotification(
+                            NotificationCategory.STATE,
+                            'indi-allsky',
+                            'indi-allsky was shutdown',
+                            expire=timedelta(hours=1),
+                        )
 
 
-                if self._reload:
-                    logger.warning('Restarting processes')
-                    self._reload = False
-                    self._stopImageWorker()
-                    self._stopVideoWorker()
-                    self._stopFileUploadWorker()
-                    # processes will start at the next loop
+                        sys.exit()
 
 
-                time.sleep(59)  # prime number
-                continue
+                    if self._reload:
+                        logger.warning('Restarting processes')
+                        self._reload = False
+                        self._stopImageWorker()
+                        self._stopVideoWorker()
+                        self._stopFileUploadWorker()
+                        # processes will start at the next loop
 
 
-            # check exposure state every 5 minutes
-            if check_exposure_state < loop_start_time:
-                check_exposure_state = time.time() + 300  # next check in 5 minutes
-
-                camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                if camera_last_ready_s > 300:
-                    self._miscDb.addNotification(
-                        NotificationCategory.CAMERA,
-                        'last_ready',
-                        'Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
-                        expire=timedelta(minutes=60),
-                    )
-
-
-            # Loop to run for 11 seconds (prime number)
-            loop_end = time.time() + 11
-
-            while True:
-                time.sleep(0.05)
-
-                now = time.time()
-                if now >= loop_end:
-                    break
-
-                last_camera_ready = camera_ready
-                camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
-
-                if not camera_ready:
+                    time.sleep(59)  # prime number
                     continue
 
-                ###########################################
-                # Camera is ready, not taking an exposure #
-                ###########################################
-                if not last_camera_ready:
-                    camera_ready_time = now
+
+                # check exposure state every 5 minutes
+                if check_exposure_state < loop_start_time:
+                    check_exposure_state = time.time() + 300  # next check in 5 minutes
+
+                    camera_last_ready_s = int(loop_start_time - camera_ready_time)
+                    if camera_last_ready_s > 300:
+                        self._miscDb.addNotification(
+                            NotificationCategory.CAMERA,
+                            'last_ready',
+                            'Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
+                            expire=timedelta(minutes=60),
+                        )
 
 
-                if waiting_for_frame:
-                    frame_elapsed = now - frame_start_time
+                # Loop to run for 11 seconds (prime number)
+                loop_end = time.time() + 11
 
-                    waiting_for_frame = False
+                while True:
+                    time.sleep(0.05)
 
-                    logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
+                    now = time.time()
+                    if now >= loop_end:
+                        break
 
+                    last_camera_ready = camera_ready
+                    camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
 
-                ##########################################################################
-                # Here we know the camera is not busy and we are not waiting for a frame #
-                ##########################################################################
+                    if not camera_ready:
+                        continue
 
-                # shutdown here to ensure camera is not taking images
-                if self._shutdown:
-                    logger.warning('Shutting down')
-                    self._stopImageWorker(terminate=self._terminate)
-                    self._stopVideoWorker(terminate=self._terminate)
-                    self._stopFileUploadWorker(terminate=self._terminate)
-
-                    self.indiclient.disableCcdCooler()  # safety
-
-                    self.indiclient.disconnectServer()
-
-
-                    now = datetime.now()
-                    self._miscDb.addNotification(
-                        NotificationCategory.STATE,
-                        'indi-allsky',
-                        'indi-allsky was shutdown',
-                        expire=timedelta(hours=1),
-                    )
-
-                    sys.exit()
+                    ###########################################
+                    # Camera is ready, not taking an exposure #
+                    ###########################################
+                    if not last_camera_ready:
+                        camera_ready_time = now
 
 
-                # restart here to ensure camera is not taking images
-                if self._reload:
-                    logger.warning('Restarting processes')
-                    self._reload = False
-                    self._stopImageWorker()
-                    self._stopVideoWorker()
-                    self._stopFileUploadWorker()
-                    # processes will start at the next loop
+                    if waiting_for_frame:
+                        frame_elapsed = now - frame_start_time
+
+                        waiting_for_frame = False
+
+                        logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
 
 
-                # reconfigure if needed
-                self.reconfigureCcd()
+                    ##########################################################################
+                    # Here we know the camera is not busy and we are not waiting for a frame #
+                    ##########################################################################
 
-                # these tasks run every ~5 minutes
-                self.periodic_reconfigure()
+                    # shutdown here to ensure camera is not taking images
+                    if self._shutdown:
+                        logger.warning('Shutting down')
+                        self._stopImageWorker(terminate=self._terminate)
+                        self._stopVideoWorker(terminate=self._terminate)
+                        self._stopFileUploadWorker(terminate=self._terminate)
 
+                        self.indiclient.disableCcdCooler()  # safety
 
-                if now >= next_frame_time:
-                    #######################
-                    # Start next exposure #
-                    #######################
-
-                    total_elapsed = now - frame_start_time
-
-                    frame_start_time = now
-
-                    self.shoot(self.exposure_v.value, sync=False)
-                    camera_ready = False
-                    waiting_for_frame = True
-
-                    if self.focus_mode:
-                        # Start frame immediately in focus mode
-                        logger.warning('*** FOCUS MODE ENABLED ***')
-                        next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
-                    elif self.night:
-                        next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
-                    else:
-                        next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY']
-
-                    logger.info('Total time since last exposure %0.4f s', total_elapsed)
+                        self.indiclient.disconnectServer()
 
 
-            loop_elapsed = now - loop_start_time
-            logger.debug('Loop completed in %0.4f s', loop_elapsed)
+                        now = datetime.now()
+                        self._miscDb.addNotification(
+                            NotificationCategory.STATE,
+                            'indi-allsky',
+                            'indi-allsky was shutdown',
+                            expire=timedelta(hours=1),
+                        )
+
+                        sys.exit()
+
+
+                    # restart here to ensure camera is not taking images
+                    if self._reload:
+                        logger.warning('Restarting processes')
+                        self._reload = False
+                        self._stopImageWorker()
+                        self._stopVideoWorker()
+                        self._stopFileUploadWorker()
+                        # processes will start at the next loop
+
+
+                    # reconfigure if needed
+                    self.reconfigureCcd()
+
+                    # these tasks run every ~5 minutes
+                    self.periodic_reconfigure()
+
+
+                    if now >= next_frame_time:
+                        #######################
+                        # Start next exposure #
+                        #######################
+
+                        total_elapsed = now - frame_start_time
+
+                        frame_start_time = now
+
+                        self.shoot(self.exposure_v.value, sync=False)
+                        camera_ready = False
+                        waiting_for_frame = True
+
+                        if self.focus_mode:
+                            # Start frame immediately in focus mode
+                            logger.warning('*** FOCUS MODE ENABLED ***')
+                            next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
+                        elif self.night:
+                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
+                        else:
+                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY']
+
+                        logger.info('Total time since last exposure %0.4f s', total_elapsed)
+
+
+                loop_elapsed = now - loop_start_time
+                logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
     def getSensorTemperature(self):
@@ -1421,11 +1429,6 @@ class IndiAllSky(object):
                     return
 
         self.moonmode = False
-
-
-    def darks(self):
-        logger.error('This functionality has been moved to the darks.py script')
-        sys.exit()
 
 
     def generateDayTimelapse(self, timespec='', camera_id=0):

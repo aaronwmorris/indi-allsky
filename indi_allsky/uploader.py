@@ -9,6 +9,7 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -20,6 +21,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import TimeOutException
 
+
+app = create_app()
 
 logger = logging.getLogger('indi_allsky')
 
@@ -90,13 +93,14 @@ class FileUploader(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        ### use this as a method to log uncaught exceptions
-        try:
-            self.saferun()
-        except Exception as e:
-            tb = traceback.format_exc()
-            self.error_q.put((str(e), tb))
-            raise e
+        with app.app_context():
+            ### use this as a method to log uncaught exceptions
+            try:
+                self.saferun()
+            except Exception as e:
+                tb = traceback.format_exc()
+                self.error_q.put((str(e), tb))
+                raise e
 
 
     def saferun(self):
