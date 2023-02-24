@@ -880,6 +880,9 @@ class IndiAllSky(object):
             logger.info('Exposure state: %s', exposure_state)
 
 
+            # do *NOT* start workers inside of a flask context
+            # doing so will cause TLS/SSL problems connecting to databases
+
             # restart worker if it has failed
             self._startImageWorker()
             self._startVideoWorker()
