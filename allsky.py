@@ -13,7 +13,7 @@ import argparse
 
 
 logger = logging.getLogger('indi_allsky')
-# logger config in indi_allsky/flask/__init__.py
+logger.setLevel(logging.INFO)
 
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
@@ -23,8 +23,6 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
-
-logger.setLevel(logging.INFO)
 
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):

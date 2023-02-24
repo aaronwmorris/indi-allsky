@@ -28,6 +28,7 @@ from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
+from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -46,19 +47,22 @@ except ImportError:
     rawpy = None
 
 
+app = create_app()
+
 logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyDarks(object):
 
     def __init__(self):
-        try:
-            self._config_obj = IndiAllSkyConfig()
-        except NoResultFound:
-            logger.error('No config file found, please import a config')
-            sys.exit(1)
+        with app.app_context():
+            try:
+                self._config_obj = IndiAllSkyConfig()
+            except NoResultFound:
+                logger.error('No config file found, please import a config')
+                sys.exit(1)
 
-        self.config = self._config_obj.config
+            self.config = self._config_obj.config
 
         self._daytime = True  # build daytime dark library
 
@@ -362,6 +366,11 @@ class IndiAllSkyDarks(object):
 
 
     def average(self):
+        with app.app_context():
+            self._average()
+
+
+    def _average(self):
         self._initialize()
         self._pre_run_tasks()
 
@@ -369,10 +378,16 @@ class IndiAllSkyDarks(object):
 
 
     def tempaverage(self):
+        with app.app_context():
+            self._tempaverage()
+
+
+    def _tempaverage(self):
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
 
         self._initialize()
+
         self._pre_run_tasks()
 
         current_temp = self.getSensorTemperature()
@@ -399,6 +414,11 @@ class IndiAllSkyDarks(object):
 
 
     def sigmaclip(self):
+        with app.app_context():
+            self._sigmaclip()
+
+
+    def _sigmaclip(self):
         self._initialize()
         self._pre_run_tasks()
 
@@ -406,10 +426,16 @@ class IndiAllSkyDarks(object):
 
 
     def tempsigmaclip(self):
+        with app.app_context():
+            self._tempsigmaclip()
+
+
+    def _tempsigmaclip(self):
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
 
         self._initialize()
+
         self._pre_run_tasks()
 
         current_temp = self.getSensorTemperature()
