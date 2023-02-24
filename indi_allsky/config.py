@@ -15,13 +15,16 @@ from cryptography.fernet import Fernet
 from .flask.models import IndiAllSkyDbConfigTable
 from .flask.models import IndiAllSkyDbUserTable
 
+from .flask import create_app
 from .flask import db
-from flask import current_app as app
+from flask import current_app
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from .version import __config_level__
 
+
+app = create_app()
 
 logger = logging.getLogger('indi_allsky')
 
@@ -314,7 +317,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config = self._config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
-            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+            f_key = Fernet(current_app.config['PASSWORD_KEY'].encode())
 
             filetransfer__password_e = config.get('FILETRANSFER', {}).get('PASSWORD_E', '')
             if filetransfer__password_e:
@@ -377,7 +380,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         if config['ENCRYPT_PASSWORDS']:
             encrypted = True
 
-            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+            f_key = Fernet(current_app.config['PASSWORD_KEY'].encode())
 
             filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
             if filetransfer__password:
@@ -436,6 +439,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def bootstrap(self, **kwargs):
+        with app.app_context():
+            self._bootstrap(**kwargs)
+
+
+    def _bootstrap(self, **kwargs):
         try:
             self._getConfigEntry()
 
@@ -467,6 +475,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def load(self, **kwargs):
+        with app.app_context():
+            self._load(**kwargs)
+
+
+    def _load(self, **kwargs):
         f_config = kwargs['config']
         force = kwargs['force']
 
@@ -494,6 +507,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def update_level(self, **kwargs):
+        with app.app_context():
+            self._update_level(**kwargs)
+
+
+    def _update_level(self, **kwargs):
         # fetch latest config
         try:
             config_entry = self._getConfigEntry()
@@ -509,6 +527,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def edit(self, **kwargs):
+        with app.app_context():
+            self._edit(**kwargs)
+
+
+    def _edit(self, **kwargs):
         try:
             config_entry = self._getConfigEntry()
         except NoResultFound:
@@ -558,6 +581,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def revert(self, **kwargs):
+        with app.app_context():
+            self._revert(**kwargs)
+
+
+    def _revert(self, **kwargs):
         revert_id = kwargs['config_id']
 
         try:
@@ -574,6 +602,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def dump(self, **kwargs):
+        with app.app_context():
+            self._dump(**kwargs)
+
+
+    def _dump(self, **kwargs):
         dump_id = kwargs['config_id']
 
         try:
@@ -592,11 +625,21 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def user_count(self, **kwargs):
+        with app.app_context():
+            self._user_count(**kwargs)
+
+
+    def _user_count(self, **kwargs):
         user_count = IndiAllSkyDbUserTable.query.count()
         print('{0:d}'.format(user_count))
 
 
     def flush(self, **kwargs):
+        with app.app_context():
+            self._flush(**kwargs)
+
+
+    def _flush(self, **kwargs):
         confirm1 = input('\nConfirm flushing all configs? [y/n]')
         if confirm1.lower() != 'y':
             logger.warning('Cancel flush')
