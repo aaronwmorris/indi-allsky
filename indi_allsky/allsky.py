@@ -1435,17 +1435,18 @@ class IndiAllSky(object):
         # run from command line
         self.config['TIMELAPSE_ENABLE'] = True
 
-        if camera_id == 0:
-            try:
-                camera_id = self._miscDb.getCurrentCameraId()
-            except NoResultFound:
-                logger.error('No camera found')
-                sys.exit(1)
-        else:
-            camera_id = int(camera_id)
+        with app.app_context():
+            if camera_id == 0:
+                try:
+                    camera_id = self._miscDb.getCurrentCameraId()
+                except NoResultFound:
+                    logger.error('No camera found')
+                    sys.exit(1)
+            else:
+                camera_id = int(camera_id)
 
 
-        self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1481,17 +1482,18 @@ class IndiAllSky(object):
         # run from command line
         self.config['TIMELAPSE_ENABLE'] = True
 
-        if camera_id == 0:
-            try:
-                camera_id = self._miscDb.getCurrentCameraId()
-            except NoResultFound:
-                logger.error('No camera found')
-                sys.exit(1)
-        else:
-            camera_id = int(camera_id)
+        with app.app_context():
+            if camera_id == 0:
+                try:
+                    camera_id = self._miscDb.getCurrentCameraId()
+                except NoResultFound:
+                    logger.error('No camera found')
+                    sys.exit(1)
+            else:
+                camera_id = int(camera_id)
 
 
-        self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1527,17 +1529,18 @@ class IndiAllSky(object):
         # run from command line
         self.config['TIMELAPSE_ENABLE'] = True
 
-        if camera_id == 0:
-            try:
-                camera_id = self._miscDb.getCurrentCameraId()
-            except NoResultFound:
-                logger.error('No camera found')
-                sys.exit(1)
-        else:
-            camera_id = int(camera_id)
+        with app.app_context():
+            if camera_id == 0:
+                try:
+                    camera_id = self._miscDb.getCurrentCameraId()
+                except NoResultFound:
+                    logger.error('No camera found')
+                    sys.exit(1)
+            else:
+                camera_id = int(camera_id)
 
 
-        self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1573,17 +1576,18 @@ class IndiAllSky(object):
         # run from command line
         self.config['TIMELAPSE_ENABLE'] = True
 
-        if camera_id == 0:
-            try:
-                camera_id = self._miscDb.getCurrentCameraId()
-            except NoResultFound:
-                logger.error('No camera found')
-                sys.exit(1)
-        else:
-            camera_id = int(camera_id)
+        with app.app_context():
+            if camera_id == 0:
+                try:
+                    camera_id = self._miscDb.getCurrentCameraId()
+                except NoResultFound:
+                    logger.error('No camera found')
+                    sys.exit(1)
+            else:
+                camera_id = int(camera_id)
 
 
-        self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1673,7 +1677,8 @@ class IndiAllSky(object):
 
 
     def expireData(self):
-        self._expireData(TaskQueueState.MANUAL)
+        with app.app_context():
+            self._expireData(TaskQueueState.MANUAL)
 
 
     def _expireData(self, task_state=TaskQueueState.QUEUED):
@@ -1740,6 +1745,11 @@ class IndiAllSky(object):
 
 
     def dbImportImages(self):
+        with app.app_context():
+            self._dbImportImages()
+
+
+    def _dbImportImages(self):
         try:
             IndiAllSkyDbCameraTable.query\
                 .limit(1)\
