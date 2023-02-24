@@ -1106,19 +1106,10 @@ class ImageWorker(Process):
 
         if len(data.shape) == 2:
             # mono
-            m_avg = cv2.mean(src=data, mask=self._adu_mask)[0]
-
-            logger.info('Greyscale mean: %0.2f', m_avg)
-
-            adu = m_avg
+            adu = cv2.mean(src=data, mask=self._adu_mask)[0]
         else:
             data_mono = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
-
-            m_avg = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
-
-            logger.info('Greyscale mean: %0.2f', m_avg)
-
-            adu = m_avg
+            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
 
 
         if adu <= 0.0:
