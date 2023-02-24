@@ -712,6 +712,11 @@ class IndiAllSkyDarks(object):
 
 
     def flush(self):
+        with app.app_context():
+            self._flush()
+
+
+    def _flush(self):
         badpixelmaps_all = IndiAllSkyDbBadPixelMapTable.query
         dark_frames_all = IndiAllSkyDbDarkFrameTable.query
 
