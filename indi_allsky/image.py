@@ -38,6 +38,7 @@ from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
 
+from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
@@ -61,6 +62,8 @@ try:
 except ImportError:
     rawpy = None
 
+
+app = create_app()
 
 logger = logging.getLogger('indi_allsky')
 
@@ -184,13 +187,14 @@ class ImageWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        ### use this as a method to log uncaught exceptions
-        try:
-            self.saferun()
-        except Exception as e:
-            tb = traceback.format_exc()
-            self.error_q.put((str(e), tb))
-            raise e
+        with app.app_context():
+            ### use this as a method to log uncaught exceptions
+            try:
+                self.saferun()
+            except Exception as e:
+                tb = traceback.format_exc()
+                self.error_q.put((str(e), tb))
+                raise e
 
 
 
@@ -1102,19 +1106,10 @@ class ImageWorker(Process):
 
         if len(data.shape) == 2:
             # mono
-            m_avg = cv2.mean(src=data, mask=self._adu_mask)[0]
-
-            logger.info('Greyscale mean: %0.2f', m_avg)
-
-            adu = m_avg
+            adu = cv2.mean(src=data, mask=self._adu_mask)[0]
         else:
             data_mono = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
-
-            m_avg = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
-
-            logger.info('Greyscale mean: %0.2f', m_avg)
-
-            adu = m_avg
+            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
 
 
         if adu <= 0.0:

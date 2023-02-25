@@ -34,12 +34,12 @@ dictConfig({
             'stream'    : 'ext://flask.logging.wsgi_errors_stream',
             'formatter' : 'default',
         },
-        'syslog_local6' : {
-            'class'     : 'logging.handlers.SysLogHandler',
-            'formatter' : 'syslog',
-            'address'   : '/dev/log',
-            'facility'  : 'local6',
-        },
+        #'syslog_local6' : {
+        #    'class'     : 'logging.handlers.SysLogHandler',
+        #    'formatter' : 'syslog',
+        #    'address'   : '/dev/log',
+        #    'facility'  : 'local6',
+        #},
         'syslog_local7' : {
             'class'     : 'logging.handlers.SysLogHandler',
             'formatter' : 'syslog',
@@ -60,7 +60,7 @@ dictConfig({
         },
         'indi_allsky' : {
             'level'      : 'INFO',
-            'handlers'   : ['syslog_local6'],
+            'handlers'   : [],  # indi_allsky handles it own logging
             'propagate'  : False,
         },
     }

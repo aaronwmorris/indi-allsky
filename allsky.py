@@ -8,20 +8,21 @@ import traceback
 import argparse
 
 
-# setup flask context for db access
-app = indi_allsky.flask.create_app()
-app.app_context().push()
+# the flask context cannot created globally
+# it will cause problems with DB connections using TLS/SSL
 
 
 logger = logging.getLogger('indi_allsky')
-# logger config in indi_allsky/flask/__init__.py
+logger.setLevel(logging.INFO)
 
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
-
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
+LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
+LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
+LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -52,7 +53,6 @@ if __name__ == "__main__":
         choices=(
             'run',
             'connectOnly',
-            'darks',
             'cameraReport',
             'generateNightTimelapse',
             'generateDayTimelapse',
@@ -95,10 +95,8 @@ if __name__ == "__main__":
 
     # log setup
     if args.log == 'syslog':
-        # default goes to syslog
-        pass
+        logger.addHandler(LOG_HANDLER_SYSLOG)
     elif args.log == 'stderr':
-        logger.handlers.clear()  # remove syslog
         logger.addHandler(LOG_HANDLER_STREAM)
     else:
         raise Exception('Invalid log output')
