@@ -662,8 +662,6 @@ class ImageWorker(Process):
             #logger.warning('MQ publishing disabled')
             return
 
-        logger.info('Publishing data to MQ broker')
-
         # publish data to mq broker
         jobdata = {
             'action'      : 'mqttpub',
