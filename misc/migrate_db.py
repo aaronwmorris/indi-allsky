@@ -21,8 +21,9 @@ logger.setLevel(logging.INFO)
 #logging.getLogger('sqlalchemy').setLevel(logging.INFO)
 
 
-SRC_URL = 'sqlite:////tmp/indi-allsky.sqlite'
-DST_URL = 'mysql+mysqlconnector://indi_allsky_own:password123@localhost:3306/indi_allsky?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity'
+SRC_URL = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
+
+DST_URL = 'mysql+mysqlconnector://indi_allsky_own:password123@localhost:3306/indi_allsky'
 
 
 
@@ -39,7 +40,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     dbapi_connection.execute('PRAGMA journal_mode=WAL')
 
 
-class MigrateDb(object):
+class ConvertDb(object):
 
     def __init__(self):
         self.src_session = self._dbConnect(SRC_ENGINE)
@@ -235,5 +236,5 @@ class dst_IndiAllSkyDbUserTable(dst_Base):
 
 
 if __name__ == '__main__':
-    mdb = MigrateDb().main()
+    cdb = ConvertDb().main()
 
