@@ -292,7 +292,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on arm 32bit
+        # rawpy not available on 32bit
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
@@ -551,7 +553,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on arm 32bit
+        # rawpy not available on 32bit
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
@@ -822,7 +826,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on arm 32bit
+        # rawpy not available on 32bit
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
@@ -957,7 +963,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     PYTHON_BIN=python3.9
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on arm 32bit
+        # rawpy not available on 32bit
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
@@ -1091,7 +1099,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     PYTHON_BIN=python3.8
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on arm 32bit
+        # rawpy not available on 32bit
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
