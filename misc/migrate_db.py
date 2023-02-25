@@ -4,6 +4,7 @@
 import sys
 #import argparse
 import time
+import json
 import logging
 #import ssl
 from sqlalchemy import create_engine
@@ -53,7 +54,7 @@ class MigrateDb(object):
     def main(self):
         self.migrate_table(src_IndiAllSkyDbCameraTable, dst_IndiAllSkyDbCameraTable)
         self.migrate_table(src_IndiAllSkyDbUserTable, dst_IndiAllSkyDbUserTable)
-        #self.migrate_table(src_IndiAllSkyDbConfigTable, dst_IndiAllSkyDbConfigTable)  # user foreign keys
+        self.migrate_table(src_IndiAllSkyDbConfigTable, dst_IndiAllSkyDbConfigTable)  # user foreign keys
 
         # all tables below have camera foreign keys
         self.migrate_table(src_IndiAllSkyDbImageTable, dst_IndiAllSkyDbImageTable)
@@ -83,9 +84,13 @@ class MigrateDb(object):
             dst_entry = dict()
 
             for col_name in column_list:
-                col = getattr(row, col_name)
-
-                dst_entry[col_name] = col
+                if col_name == 'data':
+                    # columns named data are all json mapped
+                    json_data = json.dumps(getattr(row, col_name))
+                    dst_entry[col_name] = json_data
+                else:
+                    col = getattr(row, col_name)
+                    dst_entry[col_name] = col
 
             dst_entries.append(dst_entry)
 
