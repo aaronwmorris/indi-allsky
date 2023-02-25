@@ -1423,7 +1423,7 @@ class IndiAllSky(object):
 
         moon_phase = moon.moon_phase * 100.0
 
-        logger.info('Moon altitide: %s, phase %0.1f%%', moon.alt, moon_phase)
+        logger.info('Moon altitude: %s, phase %0.1f%%', moon.alt, moon_phase)
         if self.night:
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
