@@ -2177,12 +2177,15 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         day_list = list()
         for entry in days_query:
             # cannot query from inside a query
-            day_list.append(entry.day)
+            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+                day_list.append(entry.day)
+            else:
+                # assume sqlite
+                day_list.append(datetime.strptime(entry.day, '%Y-%m-%d').date())
 
 
         day_choices = list()
-        for d in day_list:
-            day_date = datetime.strptime(d, '%Y-%m-%d').date()
+        for day_date in day_list:
             day_str = day_date.strftime('%Y-%m-%d')
 
             # syntastic does not like booleans in queries directly
