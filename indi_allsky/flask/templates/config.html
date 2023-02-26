@@ -1438,6 +1438,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.UPLOAD_WORKERS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.UPLOAD_WORKERS(class='form-control bg-secondary') }}
+            <div id="UPLOAD_WORKERS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Number of upload workers to operate</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -2219,6 +2234,7 @@ const field_names = [
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',
     'ORB_PROPERTIES__MOON_COLOR',
+    'UPLOAD_WORKERS',
     'FILETRANSFER__CLASSNAME',
     'FILETRANSFER__HOST',
     'FILETRANSFER__PORT',

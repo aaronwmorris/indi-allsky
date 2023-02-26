@@ -141,7 +141,7 @@ class IndiAllSky(object):
         self.upload_worker_list = []
         self.upload_worker_idx = 0
 
-        for x in range(1):
+        for x in range(self.config.get('UPLOAD_WORKERS', 1)):
             self.upload_worker_list.append({
                 'worker'  : None,
                 'error_q' : Queue(),

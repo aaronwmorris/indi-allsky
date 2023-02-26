@@ -889,6 +889,17 @@ def ORB_PROPERTIES__RADIUS_validator(form, field):
         raise ValidationError('Orb radius must be 1 or more')
 
 
+def UPLOAD_WORKERS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Worker count must be 1 or greater')
+
+    if field.data > 4:
+        raise ValidationError('Worker count must be less than 5')
+
+
 def FILETRANSFER__CLASSNAME_validator(form, field):
     class_names = (
         'pycurl_sftp',
@@ -1607,6 +1618,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    UPLOAD_WORKERS                   = IntegerField('Upload Workers', validators=[DataRequired(), UPLOAD_WORKERS_validator])
     FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
     FILETRANSFER__HOST               = StringField('Host', validators=[FILETRANSFER__HOST_validator])
     FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
