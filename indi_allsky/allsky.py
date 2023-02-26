@@ -664,12 +664,13 @@ class IndiAllSky(object):
 
         if self.image_worker_idx % 10 == 0:
             # notify if worker is restarted more than 10 times
-            self._miscDb.addNotification(
-                NotificationCategory.WORKER,
-                'ImageWorker',
-                'WARNING: ImageWorker was restarted more than 10 times',
-                expire=timedelta(hours=2),
-            )
+            with app.app_context():
+                self._miscDb.addNotification(
+                    NotificationCategory.WORKER,
+                    'ImageWorker',
+                    'WARNING: ImageWorker was restarted more than 10 times',
+                    expire=timedelta(hours=2),
+                )
 
 
     def _stopImageWorker(self, terminate=False):
@@ -721,12 +722,13 @@ class IndiAllSky(object):
 
         if self.video_worker_idx % 10 == 0:
             # notify if worker is restarted more than 10 times
-            self._miscDb.addNotification(
-                NotificationCategory.WORKER,
-                'VideoWorker',
-                'WARNING: VideoWorker was restarted more than 10 times',
-                expire=timedelta(hours=2),
-            )
+            with app.app_context():
+                self._miscDb.addNotification(
+                    NotificationCategory.WORKER,
+                    'VideoWorker',
+                    'WARNING: VideoWorker was restarted more than 10 times',
+                    expire=timedelta(hours=2),
+                )
 
 
     def _stopVideoWorker(self, terminate=False):
@@ -775,12 +777,13 @@ class IndiAllSky(object):
 
         if self.upload_worker_idx % 10 == 0:
             # notify if worker is restarted more than 10 times
-            self._miscDb.addNotification(
-                NotificationCategory.WORKER,
-                'FileUploader',
-                'WARNING: FileUploader was restarted more than 10 times',
-                expire=timedelta(hours=2),
-            )
+            with app.app_context():
+                self._miscDb.addNotification(
+                    NotificationCategory.WORKER,
+                    'FileUploader',
+                    'WARNING: FileUploader was restarted more than 10 times',
+                    expire=timedelta(hours=2),
+                )
 
 
     def _stopFileUploadWorker(self, terminate=False):
