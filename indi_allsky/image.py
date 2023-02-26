@@ -187,14 +187,13 @@ class ImageWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        with app.app_context():
-            ### use this as a method to log uncaught exceptions
-            try:
-                self.saferun()
-            except Exception as e:
-                tb = traceback.format_exc()
-                self.error_q.put((str(e), tb))
-                raise e
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
 
 
 
@@ -217,306 +216,312 @@ class ImageWorker(Process):
                 return
 
 
-            ### Not using DB task queue for image processing to reduce database I/O
-            #task_id = i_dict['task_id']
-
-            #try:
-            #    task = IndiAllSkyDbTaskQueueTable.query\
-            #        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-            #        .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-            #        .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
-            #        .one()
-
-            #except NoResultFound:
-            #    logger.error('Task ID %d not found', task_id)
-            #    continue
+            # new context for every task, reduces the effects of caching
+            with app.app_context():
+                self.processImage(i_dict)
 
 
-            #task.setRunning()
+    def processImage(self, i_dict):
+        ### Not using DB task queue for image processing to reduce database I/O
+        #task_id = i_dict['task_id']
+
+        #try:
+        #    task = IndiAllSkyDbTaskQueueTable.query\
+        #        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+        #        .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+        #        .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.IMAGE)\
+        #        .one()
+
+        #except NoResultFound:
+        #    logger.error('Task ID %d not found', task_id)
+        #    continue
 
 
-            #filename = Path(task.data['filename'])
-            #exposure = task.data['exposure']
-            #exp_date = datetime.fromtimestamp(task.data['exp_time'])
-            #exp_elapsed = task.data['exp_elapsed']
-            #camera_id = task.data['camera_id']
-            #filename_t = task.data.get('filename_t')
-            ###
-
-            filename_p = Path(i_dict['filename'])
-            exposure = i_dict['exposure']
-            exp_date = datetime.fromtimestamp(i_dict['exp_time'])
-            exp_elapsed = i_dict['exp_elapsed']
-            camera_id = i_dict['camera_id']
-            filename_t = i_dict.get('filename_t')
+        #task.setRunning()
 
 
-            if filename_t:
-                self.filename_t = filename_t
+        #filename = Path(task.data['filename'])
+        #exposure = task.data['exposure']
+        #exp_date = datetime.fromtimestamp(task.data['exp_time'])
+        #exp_elapsed = task.data['exp_elapsed']
+        #camera_id = task.data['camera_id']
+        #filename_t = task.data.get('filename_t')
+        ###
 
-            self.image_count += 1
-
-
-            if not filename_p.exists():
-                logger.error('Frame not found: %s', filename_p)
-                #task.setFailed('Frame not found: {0:s}'.format(str(filename_p)))
-                continue
-
-
-            if filename_p.stat().st_size == 0:
-                logger.error('Frame is empty: %s', filename_p)
-                filename_p.unlink()
-                continue
+        filename_p = Path(i_dict['filename'])
+        exposure = i_dict['exposure']
+        exp_date = datetime.fromtimestamp(i_dict['exp_time'])
+        exp_elapsed = i_dict['exp_elapsed']
+        camera_id = i_dict['camera_id']
+        filename_t = i_dict.get('filename_t')
 
 
-            processing_start = time.time()
+        if filename_t:
+            self.filename_t = filename_t
+
+        self.image_count += 1
 
 
-            self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera_id)
-            self.image_processor.calibrate()
+        if not filename_p.exists():
+            logger.error('Frame not found: %s', filename_p)
+            #task.setFailed('Frame not found: {0:s}'.format(str(filename_p)))
+            return
 
 
-            if self.config.get('IMAGE_SAVE_FITS'):
-                i_ref = self.image_processor.getLatestImage()
-                self.write_fit(i_ref)
+        if filename_p.stat().st_size == 0:
+            logger.error('Frame is empty: %s', filename_p)
+            filename_p.unlink()
+            return
 
 
-            self.image_processor.calculateSqm()
-
-            self.image_processor.stack()
-
-            self.image_processor.debayer()
+        processing_start = time.time()
 
 
+        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera_id)
+        self.image_processor.calibrate()
 
-            image_height, image_width = self.image_processor.image.shape[:2]
-            logger.info('Image: %d x %d', image_width, image_height)
 
-
+        if self.config.get('IMAGE_SAVE_FITS'):
             i_ref = self.image_processor.getLatestImage()
-
-            ### IMAGE IS CALIBRATED ###
-
-
-            if self.config.get('IMAGE_EXPORT_RAW'):
-                self.export_raw_image(i_ref)
+            self.write_fit(i_ref)
 
 
-            self.image_processor.convert_16bit_to_8bit()
+        self.image_processor.calculateSqm()
+
+        self.image_processor.stack()
+
+        self.image_processor.debayer()
 
 
-            #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
-            #    numpy.save(f_numpy, self.image_processor.image)
-            #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
+
+        image_height, image_width = self.image_processor.image.shape[:2]
+        logger.info('Image: %d x %d', image_width, image_height)
 
 
-            # rotation
-            if self.config.get('IMAGE_ROTATE'):
-                try:
-                    rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
-                    self.image_processor.rotate(rotate_enum)
-                except AttributeError:
-                    logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+        i_ref = self.image_processor.getLatestImage()
+
+        ### IMAGE IS CALIBRATED ###
 
 
-            # verticle flip
-            if self.config.get('IMAGE_FLIP_V'):
-                self.image_processor.flip(0)
-
-            # horizontal flip
-            if self.config.get('IMAGE_FLIP_H'):
-                self.image_processor.flip(1)
+        if self.config.get('IMAGE_EXPORT_RAW'):
+            self.export_raw_image(i_ref)
 
 
-            # adu calculate (before processing)
-            adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
+        self.image_processor.convert_16bit_to_8bit()
 
 
-            # line detection
-            if self.night_v.value and self.config.get('DETECT_METEORS'):
-                self.image_processor.detectLines()
+        #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
+        #    numpy.save(f_numpy, self.image_processor.image)
+        #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
-            # star detection
-            if self.night_v.value and self.config.get('DETECT_STARS', True):
-                self.image_processor.detectStars()
+        # rotation
+        if self.config.get('IMAGE_ROTATE'):
+            try:
+                rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
+                self.image_processor.rotate(rotate_enum)
+            except AttributeError:
+                logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
 
 
-            # additional draw code
-            if self.config.get('DETECT_DRAW'):
-                self.image_processor.drawDetections()
+        # verticle flip
+        if self.config.get('IMAGE_FLIP_V'):
+            self.image_processor.flip(0)
+
+        # horizontal flip
+        if self.config.get('IMAGE_FLIP_H'):
+            self.image_processor.flip(1)
 
 
-            # crop
-            if self.config.get('IMAGE_CROP_ROI'):
-                self.image_processor.crop_image()
+        # adu calculate (before processing)
+        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
 
 
-            # green removal
-            scnr_algo = self.config.get('SCNR_ALGORITHM')
-            if scnr_algo:
-                self.image_processor.scnr(scnr_algo)
+        # line detection
+        if self.night_v.value and self.config.get('DETECT_METEORS'):
+            self.image_processor.detectLines()
 
 
-            # white balance
-            self.image_processor.white_balance_manual_bgr()
-
-            if self.config.get('AUTO_WB'):
-                self.image_processor.white_balance_auto_bgr()
+        # star detection
+        if self.night_v.value and self.config.get('DETECT_STARS', True):
+            self.image_processor.detectStars()
 
 
-            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
-                # Contrast enhancement during the day
-                self.image_processor.contrast_clahe()
-            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
-                # Contrast enhancement during night
-                self.image_processor.contrast_clahe()
+        # additional draw code
+        if self.config.get('DETECT_DRAW'):
+            self.image_processor.drawDetections()
 
 
-            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                self.image_processor.scale_image()
+        # crop
+        if self.config.get('IMAGE_CROP_ROI'):
+            self.image_processor.crop_image()
 
 
-            # blur
-            #self.image_processor.median_blur()
-
-            # denoise
-            #self.image_processor.fastDenoise()
-
-            self.image_processor.image_text()
+        # green removal
+        scnr_algo = self.config.get('SCNR_ALGORITHM')
+        if scnr_algo:
+            self.image_processor.scnr(scnr_algo)
 
 
-            processing_elapsed_s = time.time() - processing_start
-            logger.info('Image processed in %0.4f s', processing_elapsed_s)
+        # white balance
+        self.image_processor.white_balance_manual_bgr()
+
+        if self.config.get('AUTO_WB'):
+            self.image_processor.white_balance_auto_bgr()
 
 
-            #task.setSuccess('Image processed')
+        if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+            # Contrast enhancement during the day
+            self.image_processor.contrast_clahe()
+        elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+            # Contrast enhancement during night
+            self.image_processor.contrast_clahe()
 
-            self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-            latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
+        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
+            self.image_processor.scale_image()
+
+
+        # blur
+        #self.image_processor.median_blur()
+
+        # denoise
+        #self.image_processor.fastDenoise()
+
+        self.image_processor.image_text()
+
+
+        processing_elapsed_s = time.time() - processing_start
+        logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
+
+        #task.setSuccess('Image processed')
+
+        self.write_status_json(i_ref, adu, adu_average)  # write json status file
+
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
+
+        if new_filename:
+            image_entry = self._miscDb.addImage(
+                new_filename,
+                camera_id,
+                exp_date,
+                exposure,
+                exp_elapsed,
+                self.gain_v.value,
+                self.bin_v.value,
+                self.sensortemp_v.value,
+                adu,
+                self.target_adu_found,  # stable
+                bool(self.moonmode_v.value),
+                self.astrometric_data['moon_phase'],
+                night=bool(self.night_v.value),
+                adu_roi=self.config['ADU_ROI'],
+                calibrated=i_ref['calibrated'],
+                sqm=i_ref['sqm_value'],
+                stars=len(i_ref['stars']),
+                detections=len(i_ref['lines']),
+                process_elapsed=processing_elapsed_s,
+            )
+        else:
+            # images not being saved
+            image_entry = None
+
+
+        if latest_file:
+            # build mqtt data
+            mqtt_data = {
+                'exposure' : round(exposure, 6),
+                'gain'     : self.gain_v.value,
+                'bin'      : self.bin_v.value,
+                'temp'     : round(self.sensortemp_v.value, 1),
+                'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
+                'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
+                'moonphase': round(self.astrometric_data['moon_phase'], 1),
+                'moonmode' : bool(self.moonmode_v.value),
+                'night'    : bool(self.night_v.value),
+                'sqm'      : round(i_ref['sqm_value'], 1),
+                'stars'    : len(i_ref['stars']),
+                'latitude' : round(self.latitude_v.value, 3),
+                'longitude': round(self.longitude_v.value, 3),
+                'sidereal_time': self.astrometric_data['sidereal_time'],
+            }
+
+
+            # publish cpu info
+            cpu_info = psutil.cpu_times_percent()
+            mqtt_data['cpu/user'] = round(cpu_info.user, 1)
+            mqtt_data['cpu/system'] = round(cpu_info.system, 1)
+            mqtt_data['cpu/nice'] = round(cpu_info.nice, 1)
+            mqtt_data['cpu/iowait'] = round(cpu_info.iowait, 1)  # io wait is not true cpu usage, not including in total
+            mqtt_data['cpu/total'] = round(cpu_info.user + cpu_info.system + cpu_info.nice, 1)
+
+
+            # publish memory info
+            memory_info = psutil.virtual_memory()
+            memory_total = memory_info.total
+            memory_free = memory_info.free
+
+            mqtt_data['memory/user'] = round((memory_info.used / memory_total) * 100.0, 1)
+            mqtt_data['memory/cached'] = round((memory_info.cached / memory_total) * 100.0, 1)
+            mqtt_data['memory/total'] = round(100 - ((memory_free * 100) / memory_total), 1)
+
+
+            # publish disk info
+            fs_list = psutil.disk_partitions()
+
+            for fs in fs_list:
+                if fs.mountpoint.startswith('/snap/'):
+                    # skip snap filesystems
+                    continue
+
+                disk_usage = psutil.disk_usage(fs.mountpoint)
+
+                if fs.mountpoint == '/':
+                    mqtt_data['disk/root'] = round(disk_usage.percent, 1)  # hopefully there is not a /root filesystem
+                    continue
+                else:
+                    # slash is included with filesystem name
+                    mqtt_data['disk{0:s}'.format(fs.mountpoint)] = round(disk_usage.percent, 1)
+
+
+            # publish temperature info
+            temp_info = psutil.sensors_temperatures()
+
+            for t_key in temp_info.keys():
+                for i, t in enumerate(temp_info[t_key]):
+                    if self.config.get('TEMP_DISPLAY') == 'f':
+                        current_temp = ((t.current * 9.0 ) / 5.0) + 32
+                    elif self.config.get('TEMP_DISPLAY') == 'k':
+                        current_temp = t.current + 273.15
+                    else:
+                        current_temp = float(t.current)
+
+                    if not t.label:
+                        # use index for label name
+                        label = str(i)
+                    else:
+                        label = t.label
+
+                    topic = 'temp/{0:s}/{1:s}'.format(t_key, label)
+
+                    # no spaces, etc in topics
+                    topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
+
+                    mqtt_data[topic_sub] = current_temp
+
+
 
             if new_filename:
-                image_entry = self._miscDb.addImage(
-                    new_filename,
-                    camera_id,
-                    exp_date,
-                    exposure,
-                    exp_elapsed,
-                    self.gain_v.value,
-                    self.bin_v.value,
-                    self.sensortemp_v.value,
-                    adu,
-                    self.target_adu_found,  # stable
-                    bool(self.moonmode_v.value),
-                    self.astrometric_data['moon_phase'],
-                    night=bool(self.night_v.value),
-                    adu_roi=self.config['ADU_ROI'],
-                    calibrated=i_ref['calibrated'],
-                    sqm=i_ref['sqm_value'],
-                    stars=len(i_ref['stars']),
-                    detections=len(i_ref['lines']),
-                    process_elapsed=processing_elapsed_s,
-                )
+                upload_filename = new_filename
             else:
-                # images not being saved
-                image_entry = None
+                upload_filename = latest_file
 
 
-            if latest_file:
-                # build mqtt data
-                mqtt_data = {
-                    'exposure' : round(exposure, 6),
-                    'gain'     : self.gain_v.value,
-                    'bin'      : self.bin_v.value,
-                    'temp'     : round(self.sensortemp_v.value, 1),
-                    'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
-                    'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
-                    'moonphase': round(self.astrometric_data['moon_phase'], 1),
-                    'moonmode' : bool(self.moonmode_v.value),
-                    'night'    : bool(self.night_v.value),
-                    'sqm'      : round(i_ref['sqm_value'], 1),
-                    'stars'    : len(i_ref['stars']),
-                    'latitude' : round(self.latitude_v.value, 3),
-                    'longitude': round(self.longitude_v.value, 3),
-                    'sidereal_time': self.astrometric_data['sidereal_time'],
-                }
-
-
-                # publish cpu info
-                cpu_info = psutil.cpu_times_percent()
-                mqtt_data['cpu/user'] = round(cpu_info.user, 1)
-                mqtt_data['cpu/system'] = round(cpu_info.system, 1)
-                mqtt_data['cpu/nice'] = round(cpu_info.nice, 1)
-                mqtt_data['cpu/iowait'] = round(cpu_info.iowait, 1)  # io wait is not true cpu usage, not including in total
-                mqtt_data['cpu/total'] = round(cpu_info.user + cpu_info.system + cpu_info.nice, 1)
-
-
-                # publish memory info
-                memory_info = psutil.virtual_memory()
-                memory_total = memory_info.total
-                memory_free = memory_info.free
-
-                mqtt_data['memory/user'] = round((memory_info.used / memory_total) * 100.0, 1)
-                mqtt_data['memory/cached'] = round((memory_info.cached / memory_total) * 100.0, 1)
-                mqtt_data['memory/total'] = round(100 - ((memory_free * 100) / memory_total), 1)
-
-
-                # publish disk info
-                fs_list = psutil.disk_partitions()
-
-                for fs in fs_list:
-                    if fs.mountpoint.startswith('/snap/'):
-                        # skip snap filesystems
-                        continue
-
-                    disk_usage = psutil.disk_usage(fs.mountpoint)
-
-                    if fs.mountpoint == '/':
-                        mqtt_data['disk/root'] = round(disk_usage.percent, 1)  # hopefully there is not a /root filesystem
-                        continue
-                    else:
-                        # slash is included with filesystem name
-                        mqtt_data['disk{0:s}'.format(fs.mountpoint)] = round(disk_usage.percent, 1)
-
-
-                # publish temperature info
-                temp_info = psutil.sensors_temperatures()
-
-                for t_key in temp_info.keys():
-                    for i, t in enumerate(temp_info[t_key]):
-                        if self.config.get('TEMP_DISPLAY') == 'f':
-                            current_temp = ((t.current * 9.0 ) / 5.0) + 32
-                        elif self.config.get('TEMP_DISPLAY') == 'k':
-                            current_temp = t.current + 273.15
-                        else:
-                            current_temp = float(t.current)
-
-                        if not t.label:
-                            # use index for label name
-                            label = str(i)
-                        else:
-                            label = t.label
-
-                        topic = 'temp/{0:s}/{1:s}'.format(t_key, label)
-
-                        # no spaces, etc in topics
-                        topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
-
-                        mqtt_data[topic_sub] = current_temp
-
-
-
-                if new_filename:
-                    upload_filename = new_filename
-                else:
-                    upload_filename = latest_file
-
-
-                self.mqtt_publish(upload_filename, mqtt_data)
-                self.upload_s3(image_entry)
-                self.upload_image(i_ref, image_entry)
-                self.upload_metadata(i_ref, adu, adu_average)
+            self.mqtt_publish(upload_filename, mqtt_data)
+            self.upload_s3(image_entry)
+            self.upload_image(i_ref, image_entry)
+            self.upload_metadata(i_ref, adu, adu_average)
 
 
     def upload_image(self, i_ref, image_entry):

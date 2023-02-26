@@ -131,14 +131,13 @@ class VideoWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        with app.app_context():
-            ### use this as a method to log uncaught exceptions
-            try:
-                self.saferun()
-            except Exception as e:
-                tb = traceback.format_exc()
-                self.error_q.put((str(e), tb))
-                raise e
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
 
 
     def saferun(self):
@@ -160,46 +159,51 @@ class VideoWorker(Process):
                 return
 
 
-            task_id = v_dict['task_id']
+            # new context for every task, reduces the effects of caching
+            with app.app_context():
+                self.processTask(v_dict)
 
 
-            try:
-                task = IndiAllSkyDbTaskQueueTable.query\
-                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
-                    .one()
+    def processTask(self, v_dict):
+        task_id = v_dict['task_id']
 
-            except NoResultFound:
-                logger.error('Task ID %d not found', task_id)
-                continue
+        try:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                .one()
 
-
-            task.setRunning()
-
-
-            action = task.data['action']
-            timespec = task.data['timespec']
-            img_folder = Path(task.data['img_folder'])
-            timeofday = task.data['timeofday']
-            camera_id = task.data['camera_id']
+        except NoResultFound:
+            logger.error('Task ID %d not found', task_id)
+            return
 
 
-            try:
-                action_method = getattr(self, action)
-            except AttributeError:
-                logger.error('Unknown action: %s', action)
-                continue
+        task.setRunning()
 
 
-            if not img_folder.exists():
-                logger.error('Image folder does not exist: %s', img_folder)
-                task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
-                continue
+        action = task.data['action']
+        timespec = task.data['timespec']
+        img_folder = Path(task.data['img_folder'])
+        timeofday = task.data['timeofday']
+        camera_id = task.data['camera_id']
 
 
-            # perform the action
-            action_method(task, timespec, img_folder, timeofday, camera_id)
+        try:
+            action_method = getattr(self, action)
+        except AttributeError:
+            logger.error('Unknown action: %s', action)
+            return
+
+
+        if not img_folder.exists():
+            logger.error('Image folder does not exist: %s', img_folder)
+            task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
+            return
+
+
+        # perform the action
+        action_method(task, timespec, img_folder, timeofday, camera_id)
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
