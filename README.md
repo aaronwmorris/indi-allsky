@@ -345,6 +345,8 @@ You may choose to upload images and timelapse files to an S3 bucket.  Once the i
 
 Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
 
+Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
+
 Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.
 
 ## MQTT Publishing
