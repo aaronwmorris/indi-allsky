@@ -58,6 +58,7 @@ from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
@@ -2230,14 +2231,36 @@ class IndiAllSky(object):
 
     def _queueManualTasks(self):
         logger.info('Checking for manually submitted tasks')
-        manual_video_tasks = IndiAllSkyDbTaskQueueTable.query\
-            .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+        manual_tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.MANUAL)\
+            .filter(
+                or_(
+                    IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.MAIN,
+                    IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO,
+                )
+            )\
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
 
 
-        for video_task in manual_video_tasks:
-            logger.info('Queuing manual task %d', video_task.id)
-            video_task.setQueued()
-            self.video_q.put({'task_id' : video_task.id})
+        for task in manual_tasks:
+            if task.queue == TaskQueueQueue.VIDEO:
+                logger.info('Queuing manual task %d', task.id)
+                task.setQueued()
+                self.video_q.put({'task_id' : task.id})
+
+            elif task.queue == TaskQueueQueue.MAIN:
+                logger.info('Picked up MAIN task')
+
+                action = task.data['action']
+
+                if action == 'reload':
+                    task.setSuccess()
+                    os.kill(os.getpid(), signal.SIGHUP)
+                else:
+                    logger.error('Unknown action: %s', action)
+                    task.setFailed()
+
+            else:
+                logger.error('Unmanaged queue %s', task.queue.name)
+                task.setFailed()
 
