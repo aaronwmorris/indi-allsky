@@ -739,6 +739,7 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__DATE_FORMAT'   : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('DATE_FORMAT', '%Y%m%d %H:%M:%S'),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
+            'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 1),
             'FILETRANSFER__CLASSNAME'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
             'FILETRANSFER__HOST'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
             'FILETRANSFER__PORT'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
@@ -1111,6 +1112,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEXT_PROPERTIES']['DATE_FORMAT']       = str(request.json['TEXT_PROPERTIES__DATE_FORMAT'])
         self.indi_allsky_config['ORB_PROPERTIES']['MODE']               = str(request.json['ORB_PROPERTIES__MODE'])
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
+        self.indi_allsky_config['UPLOAD_WORKERS']                       = int(request.json['UPLOAD_WORKERS'])
         self.indi_allsky_config['FILETRANSFER']['CLASSNAME']            = str(request.json['FILETRANSFER__CLASSNAME'])
         self.indi_allsky_config['FILETRANSFER']['HOST']                 = str(request.json['FILETRANSFER__HOST'])
         self.indi_allsky_config['FILETRANSFER']['PORT']                 = int(request.json['FILETRANSFER__PORT'])

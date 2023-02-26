@@ -138,9 +138,14 @@ class IndiAllSky(object):
         self.video_worker_idx = 0
 
         self.upload_q = Queue()
-        self.upload_error_q = Queue()
-        self.upload_worker = None
+        self.upload_worker_list = []
         self.upload_worker_idx = 0
+
+        for x in range(self.config.get('UPLOAD_WORKERS', 1)):
+            self.upload_worker_list.append({
+                'worker'  : None,
+                'error_q' : Queue(),
+            })
 
         self.periodic_reconfigure_time = time.time() + self.periodic_reconfigure_offset
 
@@ -748,14 +753,19 @@ class IndiAllSky(object):
         self.video_worker.join()
 
 
-    def _startFileUploadWorker(self):
-        if self.upload_worker:
-            if self.upload_worker.is_alive():
+    def _startFileUploadWorkers(self):
+        for upload_worker_dict in self.upload_worker_list:
+            self._fileUploadWorkerStart(upload_worker_dict)
+
+
+    def _fileUploadWorkerStart(self, uw_dict):
+        if uw_dict['worker']:
+            if uw_dict['worker'].is_alive():
                 return
 
 
             try:
-                upload_error, upload_traceback = self.upload_error_q.get_nowait()
+                upload_error, upload_traceback = uw_dict['error_q'].get_nowait()
                 for line in upload_traceback.split('\n'):
                     logger.error('Upload worker exception: %s', line)
             except queue.Empty:
@@ -765,14 +775,14 @@ class IndiAllSky(object):
         self.upload_worker_idx += 1
 
         logger.info('Starting FileUploader process %d', self.upload_worker_idx)
-        self.upload_worker = FileUploader(
+        uw_dict['worker'] = FileUploader(
             self.upload_worker_idx,
             self.config,
-            self.upload_error_q,
+            uw_dict['error_q'],
             self.upload_q,
         )
 
-        self.upload_worker.start()
+        uw_dict['worker'].start()
 
 
         if self.upload_worker_idx % 10 == 0:
@@ -786,21 +796,33 @@ class IndiAllSky(object):
                 )
 
 
-    def _stopFileUploadWorker(self, terminate=False):
-        if not self.upload_worker:
-            return
+    def _stopFileUploadWorkers(self, terminate=False):
+        active_worker_list = list()
+        for upload_worker_dict in self.upload_worker_list:
+            if not upload_worker_dict['worker']:
+                continue
 
-        if not self.upload_worker.is_alive():
-            return
+            if not upload_worker_dict['worker'].is_alive():
+                continue
 
+            active_worker_list.append(upload_worker_dict)
+
+            # need to put the stops in the queue before waiting on workers to join
+            self.upload_q.put({'stop' : True})
+
+
+        for upload_worker_dict in active_worker_list:
+            self._fileUploadWorkerStop(upload_worker_dict, terminate=terminate)
+
+
+    def _fileUploadWorkerStop(self, uw_dict, terminate=False):
         if terminate:
             logger.info('Terminating FileUploadWorker process')
-            self.upload_worker.terminate()
+            uw_dict['worker'].terminate()
 
         logger.info('Stopping FileUploadWorker process')
 
-        self.upload_q.put({'stop' : True})
-        self.upload_worker.join()
+        uw_dict['worker'].join()
 
 
     def _pre_run_tasks(self):
@@ -889,7 +911,7 @@ class IndiAllSky(object):
             # restart worker if it has failed
             self._startImageWorker()
             self._startVideoWorker()
-            self._startFileUploadWorker()
+            self._startFileUploadWorkers()
 
 
             self.detectNight()
@@ -951,7 +973,7 @@ class IndiAllSky(object):
                         logger.warning('Shutting down')
                         self._stopImageWorker(terminate=self._terminate)
                         self._stopVideoWorker(terminate=self._terminate)
-                        self._stopFileUploadWorker(terminate=self._terminate)
+                        self._stopFileUploadWorkers(terminate=self._terminate)
 
                         self.indiclient.disableCcdCooler()  # safety
 
@@ -975,7 +997,7 @@ class IndiAllSky(object):
                         self._reload = False
                         self._stopImageWorker()
                         self._stopVideoWorker()
-                        self._stopFileUploadWorker()
+                        self._stopFileUploadWorkers()
                         # processes will start at the next loop
 
 
@@ -1037,7 +1059,7 @@ class IndiAllSky(object):
                         logger.warning('Shutting down')
                         self._stopImageWorker(terminate=self._terminate)
                         self._stopVideoWorker(terminate=self._terminate)
-                        self._stopFileUploadWorker(terminate=self._terminate)
+                        self._stopFileUploadWorkers(terminate=self._terminate)
 
                         self.indiclient.disableCcdCooler()  # safety
 
@@ -1061,7 +1083,7 @@ class IndiAllSky(object):
                         self._reload = False
                         self._stopImageWorker()
                         self._stopVideoWorker()
-                        self._stopFileUploadWorker()
+                        self._stopFileUploadWorkers()
                         # processes will start at the next loop
 
 
