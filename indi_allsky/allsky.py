@@ -2254,8 +2254,8 @@ class IndiAllSky(object):
                 action = task.data['action']
 
                 if action == 'reload':
-                    task.setSuccess()
                     os.kill(os.getpid(), signal.SIGHUP)
+                    task.setSuccess('Reloaded indi-allsky process')
                 else:
                     logger.error('Unknown action: %s', action)
                     task.setFailed()
