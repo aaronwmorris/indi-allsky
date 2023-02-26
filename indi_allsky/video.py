@@ -1,5 +1,4 @@
 import os
-import io
 import time
 import math
 import json
@@ -10,9 +9,7 @@ from datetime import timezone
 from pathlib import Path
 import psutil
 import tempfile
-import fcntl
 import signal
-import errno
 import traceback
 import logging
 
@@ -134,14 +131,13 @@ class VideoWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
-        with app.app_context():
-            ### use this as a method to log uncaught exceptions
-            try:
-                self.saferun()
-            except Exception as e:
-                tb = traceback.format_exc()
-                self.error_q.put((str(e), tb))
-                raise e
+        ### use this as a method to log uncaught exceptions
+        try:
+            self.saferun()
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.error_q.put((str(e), tb))
+            raise e
 
 
     def saferun(self):
@@ -163,59 +159,51 @@ class VideoWorker(Process):
                 return
 
 
-            task_id = v_dict['task_id']
+            # new context for every task, reduces the effects of caching
+            with app.app_context():
+                self.processTask(v_dict)
 
 
-            try:
-                task = IndiAllSkyDbTaskQueueTable.query\
-                    .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
-                    .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
-                    .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
-                    .one()
+    def processTask(self, v_dict):
+        task_id = v_dict['task_id']
 
-            except NoResultFound:
-                logger.error('Task ID %d not found', task_id)
-                continue
+        try:
+            task = IndiAllSkyDbTaskQueueTable.query\
+                .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.QUEUED)\
+                .filter(IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)\
+                .one()
 
-
-            task.setRunning()
-
-
-            try:
-                self._getLock()  # get lock to prevent multiple videos from being concurrently generated
-            except BlockingIOError as e:
-                if e.errno == errno.EAGAIN:
-                    logger.error('Failed to get exclusive lock: %s', str(e))
-                    task.setFailed('Failed to get exclusive lock')
-                    return
+        except NoResultFound:
+            logger.error('Task ID %d not found', task_id)
+            return
 
 
-            action = task.data['action']
-            timespec = task.data['timespec']
-            img_folder = Path(task.data['img_folder'])
-            timeofday = task.data['timeofday']
-            camera_id = task.data['camera_id']
+        task.setRunning()
 
 
-            try:
-                action_method = getattr(self, action)
-            except AttributeError:
-                logger.error('Unknown action: %s', action)
-                continue
+        action = task.data['action']
+        timespec = task.data['timespec']
+        img_folder = Path(task.data['img_folder'])
+        timeofday = task.data['timeofday']
+        camera_id = task.data['camera_id']
 
 
-            if not img_folder.exists():
-                logger.error('Image folder does not exist: %s', img_folder)
-                task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
-                continue
+        try:
+            action_method = getattr(self, action)
+        except AttributeError:
+            logger.error('Unknown action: %s', action)
+            return
 
 
-            # perform the action
-            action_method(task, timespec, img_folder, timeofday, camera_id)
+        if not img_folder.exists():
+            logger.error('Image folder does not exist: %s', img_folder)
+            task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
+            return
 
 
-            self._releaseLock()
-
+        # perform the action
+        action_method(task, timespec, img_folder, timeofday, camera_id)
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
@@ -1098,22 +1086,4 @@ class VideoWorker(Process):
 
         return mask_data
 
-
-    def _getLock(self):
-        logger.info('Get exclusive lock to generate video')
-        lock_p = Path(self.video_lockfile)
-
-        if not lock_p.is_file():
-            f_lock = io.open(str(lock_p), 'w+')
-            f_lock.close()
-            lock_p.chmod(0o644)
-
-        self.f_lock = io.open(str(lock_p), 'w+')
-        fcntl.flock(self.f_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)  # Exclusive, non-blocking lock
-
-
-    def _releaseLock(self):
-        logger.info('Release exclusive lock')
-        fcntl.flock(self.f_lock, fcntl.LOCK_UN)
-        self.f_lock.close()
 

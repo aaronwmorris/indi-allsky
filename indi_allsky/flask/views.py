@@ -1257,7 +1257,14 @@ class AjaxConfigView(BaseView):
 
 
         if reload_on_save:
-            self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                data={'action' : 'reload'},
+            )
+
+            db.session.add(task_reload)
+            db.session.commit()
 
             message = {
                 'success-message' : 'Saved new config,  Reloading indi-allsky service.',
@@ -1269,15 +1276,6 @@ class AjaxConfigView(BaseView):
 
 
         return jsonify(message)
-
-
-    def hupSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.ReloadUnit(unit, 'fail')
-
-        return r
 
 
 class AjaxSetTimeView(BaseView):
@@ -1875,7 +1873,18 @@ class AjaxSystemInfoView(BaseView):
 
         elif service == app.config['ALLSKY_SERVICE_NAME']:
             if command == 'hup':
-                r = self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+                task_reload = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.MAIN,
+                    state=TaskQueueState.MANUAL,
+                    data={'action' : 'reload'},
+                )
+
+                db.session.add(task_reload)
+                db.session.commit()
+
+                r = 'Submitted reload task'
+
+                #r = self.hupSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'stop':
                 r = self.stopSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'start':

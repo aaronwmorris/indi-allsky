@@ -341,6 +341,7 @@ class TaskQueueQueue(enum.Enum):
     IMAGE   = 'image_q'
     VIDEO   = 'video_q'
     UPLOAD  = 'upload_q'
+    MAIN    = 'main_q'
 
 
 class IndiAllSkyDbTaskQueueTable(db.Model):
