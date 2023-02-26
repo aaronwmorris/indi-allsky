@@ -1,5 +1,4 @@
 import os
-import io
 import time
 import math
 import json
@@ -10,9 +9,7 @@ from datetime import timezone
 from pathlib import Path
 import psutil
 import tempfile
-import fcntl
 import signal
-import errno
 import traceback
 import logging
 
@@ -181,15 +178,6 @@ class VideoWorker(Process):
             task.setRunning()
 
 
-            try:
-                self._getLock()  # get lock to prevent multiple videos from being concurrently generated
-            except BlockingIOError as e:
-                if e.errno == errno.EAGAIN:
-                    logger.error('Failed to get exclusive lock: %s', str(e))
-                    task.setFailed('Failed to get exclusive lock')
-                    return
-
-
             action = task.data['action']
             timespec = task.data['timespec']
             img_folder = Path(task.data['img_folder'])
@@ -212,10 +200,6 @@ class VideoWorker(Process):
 
             # perform the action
             action_method(task, timespec, img_folder, timeofday, camera_id)
-
-
-            self._releaseLock()
-
 
 
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
@@ -1098,22 +1082,4 @@ class VideoWorker(Process):
 
         return mask_data
 
-
-    def _getLock(self):
-        logger.info('Get exclusive lock to generate video')
-        lock_p = Path(self.video_lockfile)
-
-        if not lock_p.is_file():
-            f_lock = io.open(str(lock_p), 'w+')
-            f_lock.close()
-            lock_p.chmod(0o644)
-
-        self.f_lock = io.open(str(lock_p), 'w+')
-        fcntl.flock(self.f_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)  # Exclusive, non-blocking lock
-
-
-    def _releaseLock(self):
-        logger.info('Release exclusive lock')
-        fcntl.flock(self.f_lock, fcntl.LOCK_UN)
-        self.f_lock.close()
 
