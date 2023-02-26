@@ -2242,6 +2242,7 @@ class IndiAllSky(object):
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
 
 
+        reload_received = False
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
                 logger.info('Queuing manual task %d', task.id)
@@ -2254,6 +2255,12 @@ class IndiAllSky(object):
                 action = task.data['action']
 
                 if action == 'reload':
+                    if reload_received:
+                        logger.warning('Skipping duplicate reload signal')
+                        task.setExpired()
+                        continue
+
+                    reload_received = True
                     os.kill(os.getpid(), signal.SIGHUP)
                     task.setSuccess('Reloaded indi-allsky process')
                 else:
