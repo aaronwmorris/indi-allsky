@@ -797,24 +797,31 @@ class IndiAllSky(object):
 
 
     def _stopFileUploadWorkers(self, terminate=False):
+        active_worker_list = list()
         for upload_worker_dict in self.upload_worker_list:
+            if not upload_worker_dict['worker']:
+                continue
+
+            if not upload_worker_dict['worker'].is_alive():
+                continue
+
+            active_worker_list.append(upload_worker_dict)
+
+            # need to put the stops in the queue before waiting on workers to join
+            self.upload_q.put({'stop' : True})
+
+
+        for upload_worker_dict in active_worker_list:
             self._fileUploadWorkerStop(upload_worker_dict, terminate=terminate)
 
 
     def _fileUploadWorkerStop(self, uw_dict, terminate=False):
-        if not uw_dict['worker']:
-            return
-
-        if not uw_dict['worker'].is_alive():
-            return
-
         if terminate:
             logger.info('Terminating FileUploadWorker process')
             uw_dict['worker'].terminate()
 
         logger.info('Stopping FileUploadWorker process')
 
-        self.upload_q.put({'stop' : True})
         uw_dict['worker'].join()
 
 
