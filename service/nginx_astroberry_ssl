@@ -60,9 +60,6 @@ server {
 
     rewrite ^/$ /indi-allsky;
 
-    auth_basic "Allsky";
-    auth_basic_user_file %ALLSKY_ETC%/nginx.passwd;
-
 
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
