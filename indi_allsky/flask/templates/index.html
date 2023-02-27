@@ -17,7 +17,7 @@ var json_data = {
         'url' : null
     }
 };
-var max_age = 300;
+var max_age = 900;
 var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
@@ -166,7 +166,7 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-5"></div>
     <div class="col-sm-7">
-        <div class="text-muted" id="nodata">No Image for 5 minutes</div>
+        <div class="text-muted" id="nodata">No Image for 15 minutes</div>
     </div>
 </div>
 <div class="row">

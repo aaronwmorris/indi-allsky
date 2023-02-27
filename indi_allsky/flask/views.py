@@ -117,7 +117,7 @@ class JsonLatestImageView(JsonView):
         super(JsonLatestImageView, self).__init__(**kwargs)
 
         self.camera_id = self.getLatestCamera()
-        self.history_seconds = 300
+        self.history_seconds = 900
 
 
     def get_objects(self):
@@ -134,6 +134,25 @@ class JsonLatestImageView(JsonView):
                 'url' : None,
             },
         }
+
+
+        if self.indi_allsky_config.get('FOCUS_MODE', False):
+            latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            latest_image_p = image_dir.joinpath(latest_image_uri.name)
+
+            if latest_image_p.exists():
+                # use latest image if it exists
+                max_age = datetime.now() - timedelta(seconds=history_seconds)
+                if latest_image_p.stat().st_mtime > max_age.timestamp():
+
+                    data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                    return data
+                else:
+                    return data
+            else:
+                return data
 
 
         if not night:
