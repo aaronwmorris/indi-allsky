@@ -834,37 +834,37 @@ class ImageWorker(Process):
 
 
         data = self.image_processor.non_stacked_image
-
+        max_bit_depth = self.image_processor.max_bit_depth
 
         if i_ref['image_bitpix'] == 8:
             # nothing to scale
             scaled_data = data
         elif i_ref['image_bitpix'] == 16:
-            if i_ref['image_bit_depth'] == 8:
+            if max_bit_depth == 8:
                 logger.info('Upscaling data from 8 to 16 bit')
                 scaled_data = numpy.left_shift(data, 8)
-            elif i_ref['image_bit_depth'] == 9:
+            elif max_bit_depth == 9:
                 logger.info('Upscaling data from 9 to 16 bit')
                 scaled_data = numpy.left_shift(data, 7)
-            elif i_ref['image_bit_depth'] == 10:
+            elif max_bit_depth == 10:
                 logger.info('Upscaling data from 10 to 16 bit')
                 scaled_data = numpy.left_shift(data, 6)
-            elif i_ref['image_bit_depth'] == 11:
+            elif max_bit_depth == 11:
                 logger.info('Upscaling data from 11 to 16 bit')
                 scaled_data = numpy.left_shift(data, 5)
-            elif i_ref['image_bit_depth'] == 12:
+            elif max_bit_depth == 12:
                 logger.info('Upscaling data from 12 to 16 bit')
                 scaled_data = numpy.left_shift(data, 4)
-            elif i_ref['image_bit_depth'] == 13:
+            elif max_bit_depth == 13:
                 logger.info('Upscaling data from 13 to 16 bit')
                 scaled_data = numpy.left_shift(data, 3)
-            elif i_ref['image_bit_depth'] == 14:
+            elif max_bit_depth == 14:
                 logger.info('Upscaling data from 14 to 16 bit')
                 scaled_data = numpy.left_shift(data, 2)
-            elif i_ref['image_bit_depth'] == 15:
+            elif max_bit_depth == 15:
                 logger.info('Upscaling data from 15 to 16 bit')
                 scaled_data = numpy.left_shift(data, 1)
-            elif i_ref['image_bit_depth'] == 16:
+            elif max_bit_depth == 16:
                 # nothing to scale
                 scaled_data = data
             else:
@@ -884,7 +884,7 @@ class ImageWorker(Process):
                 # jpeg has to be 8 bits
                 logger.info('Resampling image from %d to 8 bits', i_ref['image_bitpix'])
 
-                div_factor = int((2 ** i_ref['image_bit_depth']) / 255)
+                div_factor = int((2 ** max_bit_depth) / 255)
                 scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
 
             cv2.imwrite(str(tmpfile_name), scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
@@ -1342,6 +1342,8 @@ class ImageProcessor(object):
 
         self.astrometric_data = astrometric_data
 
+        self._max_bit_depth = 8  # this will be scaled up (never down) as detected
+
         self._detection_mask = mask
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
@@ -1394,6 +1396,15 @@ class ImageProcessor(object):
 
     @shape.setter
     def shape(self, *args):
+        pass  # read only
+
+
+    @property
+    def max_bit_depth(self):
+        return self._max_bit_depth
+
+    @max_bit_depth.setter
+    def max_bit_depth(self, *args):
         pass  # read only
 
 
@@ -1544,7 +1555,7 @@ class ImageProcessor(object):
                 pass
 
 
-        image_bit_depth = self._detectBitDepth(hdulist)
+        detected_bit_depth = self._detectBitDepth(hdulist)
 
 
         image_data = {
@@ -1556,7 +1567,7 @@ class ImageProcessor(object):
             'camera_id'        : camera_id,
             'image_bitpix'     : image_bitpix,
             'image_bayerpat'   : image_bayerpat,
-            'image_bit_depth'  : image_bit_depth,
+            'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
             'indi_rgb'         : indi_rgb,
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
@@ -1577,27 +1588,31 @@ class ImageProcessor(object):
         # during the day when there are no hot pixels.  This can result in a
         # trippy effect
         if max_val > 32768:
-            image_bit_depth = 16
+            detected_bit_depth = 16
         elif max_val > 16384:
-            image_bit_depth = 15
+            detected_bit_depth = 15
         elif max_val > 8192:
-            image_bit_depth = 14
+            detected_bit_depth = 14
         elif max_val > 4096:
-            image_bit_depth = 13
+            detected_bit_depth = 13
         elif max_val > 2096:
-            image_bit_depth = 12
+            detected_bit_depth = 12
         elif max_val > 1024:
-            image_bit_depth = 11
+            detected_bit_depth = 11
         elif max_val > 512:
-            image_bit_depth = 10
+            detected_bit_depth = 10
         elif max_val > 256:
-            image_bit_depth = 9
+            detected_bit_depth = 9
         else:
-            image_bit_depth = 8
+            detected_bit_depth = 8
 
-        logger.info('Detected bit depth: %d', image_bit_depth)
+        #logger.info('Detected bit depth: %d', detected_bit_depth)
 
-        return image_bit_depth
+        if detected_bit_depth > self._max_bit_depth:
+            logger.warning('Updated default bit depth: %d', detected_bit_depth)
+            self._max_bit_depth = detected_bit_depth
+
+        return detected_bit_depth
 
 
     def getLatestImage(self):
@@ -1896,16 +1911,16 @@ class ImageProcessor(object):
     def convert_16bit_to_8bit(self):
         i_ref = self.getLatestImage()
 
-        self._convert_16bit_to_8bit(i_ref['image_bitpix'], i_ref['image_bit_depth'])
+        self._convert_16bit_to_8bit(i_ref['image_bitpix'])
 
 
-    def _convert_16bit_to_8bit(self, image_bitpix, image_bit_depth):
+    def _convert_16bit_to_8bit(self, image_bitpix):
         if image_bitpix == 8:
             return
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
-        div_factor = int((2 ** image_bit_depth) / 255)
+        div_factor = int((2 ** self._max_bit_depth) / 255)
 
         self.image = (self.image / div_factor).astype(numpy.uint8)
 
