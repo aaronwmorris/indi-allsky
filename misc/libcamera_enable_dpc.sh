@@ -68,7 +68,7 @@ for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
     JSON_FILE="/usr/share/libcamera/ipa/raspberrypi/${LIBCAMERA_JSON}.json"
 
     if [ -f "$JSON_FILE" ]; then
-        echo "Disabling dpc in $JSON_FILE"
+        echo "Enabling dpc in $JSON_FILE"
 
         TMP_JSON=$(mktemp)
         jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > "$TMP_JSON"
