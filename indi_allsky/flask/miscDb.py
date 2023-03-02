@@ -73,64 +73,67 @@ class miscDb(object):
         return camera
 
 
-    def addImage(
-        self,
-        filename,
-        camera_id,
-        createDate,
-        exposure,
-        exp_elapsed,
-        gain,
-        binmode,
-        temp,
-        adu,
-        stable,
-        moonmode,
-        moonphase,
-        night=True,
-        sqm=None,
-        adu_roi=False,
-        calibrated=False,
-        stars=None,
-        detections=0,
-        process_elapsed=None,
-    ):
+    def addImage(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'exposure'
+        #    'exp_elapsed'
+        #    'gain'
+        #    'binmode'
+        #    'temp'
+        #    'adu'
+        #    'stable'
+        #    'moonmode'
+        #    'moonphase'
+        #    'night'
+        #    'sqm'
+        #    'adu_roi'
+        #    'calibrated'
+        #    'stars'
+        #    'detections'
+        #    'process_elapsed'
+        #}
+
         if not filename:
             return
 
-        filename_p = Path(filename)
-
-        #if not filename_p.exists():
-        #    logger.warning('File not found: %s', filename_p)
+        filename_p = Path(filename)  # file might not exist when entry created
 
 
         logger.info('Adding image %s to DB', filename_p)
 
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
 
         # If temp is 0, write null
-        if temp:
-            temp_val = float(temp)
+        if metadata['temp']:
+            temp_val = float(metadata['temp'])
         else:
             temp_val = None
 
 
         # if moonmode is 0, moonphase is Null
-        if moonmode:
-            moonphase_val = float(moonphase)
+        if metadata['moonmode']:
+            moonphase_val = float(metadata['moonmode'])
         else:
             moonphase_val = None
 
-        moonmode_val = bool(moonmode)
+        moonmode_val = bool(metadata['moonmode'])
 
-        night_val = bool(night)  # integer to boolean
-        adu_roi_val = bool(adu_roi)
-
-
-        if night:
-            # day date for night is offset by 12 hours
-            dayDate = (datetime.now() - timedelta(hours=12)).date()
-        else:
-            dayDate = datetime.now().date()
+        night_val = bool(metadata['night'])  # integer to boolean
+        adu_roi_val = bool(metadata['adu_roi'])
 
 
         image = IndiAllSkyDbImageTable(
@@ -138,22 +141,22 @@ class miscDb(object):
             filename=str(filename_p),
             createDate=createDate,
             dayDate=dayDate,
-            exposure=exposure,
-            exp_elapsed=exp_elapsed,
-            gain=gain,
-            binmode=binmode,
+            exposure=metadata['exposure'],
+            exp_elapsed=metadata['exp_elapsed'],
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
             temp=temp_val,
-            calibrated=calibrated,
+            calibrated=metadata['calibrated'],
             night=night_val,
-            adu=adu,
+            adu=metadata['adu'],
             adu_roi=adu_roi_val,
-            stable=stable,
+            stable=metadata['stable'],
             moonmode=moonmode_val,
             moonphase=moonphase_val,
-            sqm=sqm,
-            stars=stars,
-            detections=detections,
-            process_elapsed=process_elapsed,
+            sqm=metadata['sqm'],
+            stars=metadata['stars'],
+            detections=metadata['detections'],
+            process_elapsed=metadata['process_elapsed'],
         )
 
         db.session.add(image)

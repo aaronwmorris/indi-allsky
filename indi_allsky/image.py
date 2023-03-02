@@ -402,26 +402,31 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
 
         if new_filename:
+            image_metadata = {
+                'createDate'      : exp_date.timestamp(),
+                'exposure'        : exposure,
+                'exp_elapsed'     : exp_elapsed,
+                'gain'            : self.gain_v.value,
+                'binmode'         : self.bin_v.value,
+                'temp'            : self.sensortemp_v.value,
+                'adu'             : adu,
+                'stable'          : self.target_adu_found,
+                'moonmode'        : bool(self.moonmode_v.value),
+                'moonphase'       : self.astrometric_data['moon_phase'],
+                'night'           : bool(self.night_v.value),
+                'adu_roi'         : self.config['ADU_ROI'],
+                'calibrated'      : i_ref['calibrated'],
+                'sqm'             : i_ref['sqm_value'],
+                'stars'           : len(i_ref['stars']),
+                'detections'      : len(i_ref['lines']),
+                'process_elapsed' : processing_elapsed_s,
+
+            }
+
             image_entry = self._miscDb.addImage(
                 new_filename,
                 camera_id,
-                exp_date,
-                exposure,
-                exp_elapsed,
-                self.gain_v.value,
-                self.bin_v.value,
-                self.sensortemp_v.value,
-                adu,
-                self.target_adu_found,  # stable
-                bool(self.moonmode_v.value),
-                self.astrometric_data['moon_phase'],
-                night=bool(self.night_v.value),
-                adu_roi=self.config['ADU_ROI'],
-                calibrated=i_ref['calibrated'],
-                sqm=i_ref['sqm_value'],
-                stars=len(i_ref['stars']),
-                detections=len(i_ref['lines']),
-                process_elapsed=processing_elapsed_s,
+                image_metadata,
             )
         else:
             # images not being saved

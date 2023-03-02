@@ -39,8 +39,8 @@ class UploadApiView(BaseView):
 
         if request.method == 'POST':
             return self.post()
-        elif request.method == 'PUT':
-            return self.put(entry_id)
+        #elif request.method == 'PUT':
+        #    return self.put(entry_id)
         else:
             return jsonify({}), 400
 
@@ -50,9 +50,9 @@ class UploadApiView(BaseView):
         pass
 
 
-    def put(self):
-        #media_file = request.files.get('media')
-        pass
+    #def put(self):
+    #    #media_file = request.files.get('media')
+    #    pass
 
 
     def authorize(self):
