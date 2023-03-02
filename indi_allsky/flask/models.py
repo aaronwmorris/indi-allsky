@@ -36,6 +36,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
     connectDate = db.Column(db.DateTime(), nullable=True)
+
     minGain = db.Column(db.Integer, nullable=True)
     maxGain = db.Column(db.Integer, nullable=True)
     minExposure = db.Column(db.Float, nullable=True)
@@ -44,10 +45,19 @@ class IndiAllSkyDbCameraTable(db.Model):
     height = db.Column(db.Integer, nullable=True)
     bits = db.Column(db.Integer, nullable=True)
     pixelSize = db.Column(db.Float, nullable=True)
+
+    location = db.Column(db.String(length=100), nullable=True)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
-    location = db.Column(db.String(length=100), nullable=True)
+    alt = db.Column(db.Float, nullable=True)
+    az = db.Column(db.Float, nullable=True)
+
+    lensName = db.Column(db.String(length=100), nullable=True)
+    lensFocalLength = db.Column(db.Float, nullable=True)
+    lensFocalRatio = db.Column(db.Float, nullable=True)
+
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
