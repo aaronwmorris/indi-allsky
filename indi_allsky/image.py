@@ -789,14 +789,18 @@ class ImageWorker(Process):
         ))
 
 
+        fits_metadata = {
+            'createDate' : i_ref['exp_date'].timestamp(),
+            'exposure'   : i_ref['exposure'],
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'night'      : bool(self.night_v.value),
+        }
+
         self._miscDb.addFitsImage(
             filename,
             i_ref['camera_id'],
-            i_ref['exp_date'],
-            i_ref['exposure'],
-            self.gain_v.value,
-            self.bin_v.value,
-            night=bool(self.night_v.value),
+            fits_metadata,
         )
 
 
@@ -938,14 +942,18 @@ class ImageWorker(Process):
         ))
 
 
+        raw_metadata = {
+            'createDate' : i_ref['exp_date'].timestamp(),
+            'exposure'   : i_ref['exposure'],
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'night'      : bool(self.night_v.value),
+        }
+
         self._miscDb.addRawImage(
             filename,
             i_ref['camera_id'],
-            i_ref['exp_date'],
-            i_ref['exposure'],
-            self.gain_v.value,
-            self.bin_v.value,
-            night=bool(self.night_v.value),
+            raw_metadata,
         )
 
 

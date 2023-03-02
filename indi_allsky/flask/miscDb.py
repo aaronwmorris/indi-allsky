@@ -170,8 +170,8 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
-        #    'bitdepth
-        #    'exposure
+        #    'bitdepth'
+        #    'exposure'
         #    'gain'
         #    'binmode'
         #    'temp'
@@ -226,8 +226,8 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
-        #    'bitdepth
-        #    'exposure
+        #    'bitdepth'
+        #    'exposure'
         #    'gain'
         #    'binmode'
         #    'temp'
@@ -480,17 +480,30 @@ class miscDb(object):
         return startrail_video
 
 
-    def addFitsImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
+    def addFitsImage(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'exposure'
+        #    'gain'
+        #    'binmode'
+        #    'night'
+        #}
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    logger.warning('File not found: %s', filename_p)
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
 
 
-        if night:
+        if metadata['night']:
             # day date for night is offset by 12 hours
             dayDate = (createDate - timedelta(hours=12)).date()
         else:
@@ -504,11 +517,11 @@ class miscDb(object):
             camera_id=camera_id,
             filename=str(filename_p),
             createDate=createDate,
-            exposure=exposure,
-            gain=gain,
-            binmode=binmode,
+            exposure=metadata['exposure'],
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(fits_image)
@@ -517,17 +530,30 @@ class miscDb(object):
         return fits_image
 
 
-    def addRawImage(self, filename, camera_id, createDate, exposure, gain, binmode, night=True):
+    def addRawImage(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'exposure'
+        #    'gain'
+        #    'binmode'
+        #    'night'
+        #}
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    logger.warning('File not found: %s', filename_p)
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
 
 
-        if night:
+        if metadata['night']:
             # day date for night is offset by 12 hours
             dayDate = (createDate - timedelta(hours=12)).date()
         else:
@@ -541,11 +567,11 @@ class miscDb(object):
             camera_id=camera_id,
             filename=str(filename_p),
             createDate=createDate,
-            exposure=exposure,
-            gain=gain,
-            binmode=binmode,
+            exposure=metadata['exposure'],
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(fits_image)
