@@ -687,24 +687,25 @@ class IndiAllSkyDarks(object):
         s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
         s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
 
+        dark_metadata = {
+            'createDate' : exp_date.timestamp(),
+            'bitdepth'   : image_bitpix,
+            'exposure'   : exposure_f,
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'temp'       : self.sensortemp_v.value,
+        }
+
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
             self.camera_id,
-            image_bitpix,
-            exposure_f,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
+            dark_metadata,
         )
 
         self._miscDb.addDarkFrame(
             full_dark_filename_p,
             self.camera_id,
-            image_bitpix,
-            exposure_f,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
+            dark_metadata,
         )
 
         tmp_fit_dir.cleanup()

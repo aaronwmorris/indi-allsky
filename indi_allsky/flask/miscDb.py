@@ -165,39 +165,53 @@ class miscDb(object):
         return image
 
 
-    def addDarkFrame(self, filename, camera_id, bitdepth, exposure, gain, binmode, temp):
+    def addDarkFrame(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'
+        #    'bitdepth
+        #    'exposure
+        #    'gain'
+        #    'binmode'
+        #    'temp'
+        #}
+
+
         if not filename:
             return
 
-        #logger.info('####### Exposure: %s', pformat(exposure))
-
         filename_p = Path(filename)
-
-        #if not filename_p.exists():
-        #    logger.warning('File not found: %s', filename_p)
 
 
         logger.info('Adding dark frame %s to DB', filename_p)
 
 
-        exposure_int = int(exposure)
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        exposure_int = int(metadata['exposure'])
 
 
         # If temp is 0, write null
-        if temp:
-            temp_val = float(temp)
+        if metadata['temp']:
+            temp_val = float(metadata['temp'])
         else:
             logger.warning('Temperature is not defined')
             temp_val = None
 
 
         dark = IndiAllSkyDbDarkFrameTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
-            bitdepth=bitdepth,
+            bitdepth=metadata['bitdepth'],
             exposure=exposure_int,
-            gain=gain,
-            binmode=binmode,
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
             temp=temp_val,
         )
 
@@ -207,39 +221,52 @@ class miscDb(object):
         return dark
 
 
-    def addBadPixelMap(self, filename, camera_id, bitdepth, exposure, gain, binmode, temp):
+    def addBadPixelMap(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'
+        #    'bitdepth
+        #    'exposure
+        #    'gain'
+        #    'binmode'
+        #    'temp'
+        #}
+
+
         if not filename:
             return
 
-        #logger.info('####### Exposure: %s', pformat(exposure))
-
         filename_p = Path(filename)
-
-        #if not filename_p.exists():
-        #    logger.warning('File not found: %s', filename_p)
 
 
         logger.info('Adding bad pixel map %s to DB', filename_p)
 
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
 
-        exposure_int = int(exposure)
+
+        exposure_int = int(metadata['exposure'])
 
 
         # If temp is 0, write null
-        if temp:
-            temp_val = float(temp)
+        if metadata['temp']:
+            temp_val = float(metadata['temp'])
         else:
             logger.warning('Temperature is not defined')
             temp_val = None
 
 
         bpm = IndiAllSkyDbBadPixelMapTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
-            bitdepth=bitdepth,
+            bitdepth=metadata['bitdepth'],
             exposure=exposure_int,
-            gain=gain,
-            binmode=binmode,
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
             temp=temp_val,
         )
 
