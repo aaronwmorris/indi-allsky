@@ -85,12 +85,12 @@ class UploadApiView(BaseView):
             return abort(400)
 
 
-        time_floor = int(time.time() / 900) * 900
+        time_floor = int(time.time() / 300) * 300
 
-        hash1 = hashlib.sha256(str(time_floor) + str(user.apikey))
+        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, str(user.apikey).encode())).hexdigest()
         if apikey != hash1:
             # we do not need to calculate the 2nd hash if the first one works
-            hash2 = hashlib.sha256(str(time_floor + 1) + str(user.apikey))
+            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, str(user.apikey).encode())).hexdigest()
             if apikey != hash2:
                 return abort(400)
 
