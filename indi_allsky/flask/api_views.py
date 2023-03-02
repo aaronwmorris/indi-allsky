@@ -99,5 +99,5 @@ class ImageUploadApiView(UploadApiView):
     pass
 
 
-bp_api_allsky.add_url_rule('/upload/image', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['POST'], defaults={'id': None})
-bp_api_allsky.add_url_rule('/upload/image/<int:id>', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['PUT'])
+bp_api_allsky.add_url_rule('/upload/image', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['POST'])
+
