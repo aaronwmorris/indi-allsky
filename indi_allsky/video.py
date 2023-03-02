@@ -209,6 +209,8 @@ class VideoWorker(Process):
     def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
         task.setRunning()
 
+        now = datetime.now()
+
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         except ValueError:
@@ -278,12 +280,17 @@ class VideoWorker(Process):
             timelapse_files.append(p_entry)
 
 
+        video_metadata = {
+            'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'timeofday'  : timeofday,
+        }
+
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
             video_file,
             camera_id,
-            d_dayDate,
-            timeofday,
+            video_metadata,
         )
 
 
@@ -387,6 +394,8 @@ class VideoWorker(Process):
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
         task.setRunning()
+
+        now = datetime.now()
 
         try:
             d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
@@ -492,21 +501,24 @@ class VideoWorker(Process):
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
 
 
+        k_st_metadata = {
+            'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'timeofday'  : timeofday,
+        }
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
             keogram_file,
             camera_id,
-            d_dayDate,
-            timeofday,
+            k_st_metadata,
         )
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera_id,
-                d_dayDate,
-                timeofday=timeofday,
+                k_st_metadata,
             )
         else:
             startrail_entry = None
@@ -556,8 +568,7 @@ class VideoWorker(Process):
                 startrail_video_entry = self._miscDb.addStarTrailVideo(
                     startrail_video_file,
                     camera_id,
-                    d_dayDate,
-                    timeofday=timeofday,
+                    k_st_metadata,
                 )
 
                 try:

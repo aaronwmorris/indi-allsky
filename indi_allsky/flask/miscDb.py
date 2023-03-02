@@ -169,7 +169,7 @@ class miscDb(object):
 
         ### expected metadata
         #{
-        #    'createDate'
+        #    'createDate'  # datetime or timestamp
         #    'bitdepth
         #    'exposure
         #    'gain'
@@ -225,7 +225,7 @@ class miscDb(object):
 
         ### expected metadata
         #{
-        #    'createDate'
+        #    'createDate'  # datetime or timestamp
         #    'bitdepth
         #    'exposure
         #    'gain'
@@ -276,27 +276,45 @@ class miscDb(object):
         return bpm
 
 
-    def addVideo(self, filename, camera_id, dayDate, timeofday):
+    def addVideo(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'timeofday'
+        #}
+
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    # this is a normal condition, DB entry is created before file exists
-        #    logger.warning('File not found: %s', filename_p)
-
 
         logger.info('Adding video %s to DB', filename_p)
 
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
 
-        if timeofday == 'night':
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+
+        if metadata['timeofday'] == 'night':
             night = True
         else:
             night = False
 
 
         video = IndiAllSkyDbVideoTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
@@ -309,27 +327,45 @@ class miscDb(object):
         return video
 
 
-    def addKeogram(self, filename, camera_id, dayDate, timeofday):
+    def addKeogram(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'timeofday'
+        #}
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    # this is a normal condition, DB entry is created before file exists
-        #    logger.warning('File not found: %s', filename_p)
-
 
         logger.info('Adding keogram %s to DB', filename_p)
 
 
-        if timeofday == 'night':
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+
+        if metadata['timeofday'] == 'night':
             night = True
         else:
             night = False
 
 
         keogram = IndiAllSkyDbKeogramTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
@@ -342,27 +378,45 @@ class miscDb(object):
         return keogram
 
 
-    def addStarTrail(self, filename, camera_id, dayDate, timeofday='night'):
+    def addStarTrail(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'timeofday'
+        #}
+
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    # this is a normal condition, DB entry is created before file exists
-        #    logger.warning('File not found: %s', filename_p)
-
 
         logger.info('Adding star trail %s to DB', filename_p)
 
 
-        if timeofday == 'night':
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+        if metadata['timeofday'] == 'night':
             night = True
         else:
             night = False
 
 
         startrail = IndiAllSkyDbStarTrailsTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
@@ -375,27 +429,45 @@ class miscDb(object):
         return startrail
 
 
-    def addStarTrailVideo(self, filename, camera_id, dayDate, timeofday='night'):
+    def addStarTrailVideo(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'timeofday'
+        #}
+
+
         if not filename:
             return
 
         filename_p = Path(filename)
 
-        #if not filename_p.exists():
-        #    # this is a normal condition, DB entry is created before file exists
-        #    logger.warning('File not found: %s', filename_p)
-
 
         logger.info('Adding star trail video %s to DB', filename_p)
 
 
-        if timeofday == 'night':
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+        if metadata['timeofday'] == 'night':
             night = True
         else:
             night = False
 
 
         startrail_video = IndiAllSkyDbStarTrailsVideoTable(
+            createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
