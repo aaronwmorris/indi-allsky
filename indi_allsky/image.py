@@ -1024,15 +1024,16 @@ class ImageWorker(Process):
         try:
             # Use a hardlink, there is a good chance these are on the same filesystem
             os.link(str(latest_file), str(filename))
+        except PermissionError:
+            # possibly a FAT filesystem, copy instead
+            shutil.copy2(str(latest_file), str(filename))
         except OSError as e:
+            # careful, some exceptions inhert from OSError like PermissionError
             if e.errno == errno.EXDEV:
                 # different filesystems, copy file instead
                 shutil.copy2(str(latest_file), str(filename))
             else:
                 raise
-        except PermissionError:
-            # possibly a FAT filesystem, copy instead
-            shutil.copy2(str(latest_file), str(filename))
 
         filename.chmod(0o644)
 
