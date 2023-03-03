@@ -1,10 +1,13 @@
+#import os
 #import io
 import time
-#from datetime import datetime
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 import hashlib
 import json
 import tempfile
+import shutil
 
 
 from flask import request
@@ -35,6 +38,15 @@ class UploadApiView(BaseView):
     decorators = []
 
 
+    def __init__(self, **kwargs):
+        super(UploadApiView, self).__init__(**kwargs)
+
+        if self.indi_allsky_config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.parent.joinpath('html', 'images').absolute()
+
+
     def dispatch_request(self):
         self.authorize()
 
@@ -58,7 +70,10 @@ class UploadApiView(BaseView):
         metadata_json = json.load(metadata_file)
 
         media_file = request.files['media']
-        f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.bin')
+
+        media_file_p = Path(media_file.filename)  # need this for the extension
+
+        f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix=media_file_p.suffix)
         while True:
             data = media_file.read(32768)
             if data:
@@ -117,14 +132,60 @@ class UploadApiView(BaseView):
                 return abort(400)
 
 
+    def getImageFolder(self, exp_date, night):
+        if night:
+            # images should be written to previous day's folder until noon
+            day_ref = exp_date - timedelta(hours=12)
+            timeofday_str = 'night'
+        else:
+            # daytime
+            # images should be written to current day's folder
+            day_ref = exp_date
+            timeofday_str = 'day'
+
+        hour_str = exp_date.strftime('%d_%H')
+
+        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        if not day_folder.exists():
+            day_folder.mkdir(mode=0o755, parents=True)
+
+        hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
+        if not hour_folder.exists():
+            hour_folder.mkdir(mode=0o755)
+
+        return hour_folder
+
+
+
+
 class ImageUploadApiView(UploadApiView):
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
+
     def post(self):
-        metadata_json, media_file = self.saveFile()
+        image_metadata, image_file = self.saveFile()
 
-        app.logger.info('Json: %s', metadata_json)
-        app.logger.info('File: %s', media_file)
+        app.logger.info('Json: %s', image_metadata)
+        app.logger.info('File: %s', image_file)
 
-        media_file.unlink()
+
+        createDate = datetime.fromtimestamp(image_metadata['createDate'])
+        folder = self.getImageFolder(createDate, image_metadata['night'])
+
+        date_str = createDate.strftime('%Y%m%d_%H%M%S')
+        filename = folder.joinpath(self.filename_t.format(camera_id, date_str, image_file.suffix))  # suffix includes dot
+
+
+        shutil.move(str(image_file), str(filename))
+
+
+        filename.chmod(0o644)
+
+
+        self._miscDb.addImage(
+            filename,
+            camera_id,
+            image_metadata,
+        )
 
         return jsonify({})
 
