@@ -6,6 +6,7 @@ import hashlib
 import requests
 import json
 from pathlib import Path
+import http.client as http_client
 import logging
 
 
@@ -14,6 +15,11 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
+
+http_client.HTTPConnection.debuglevel = 0
+requests_log = logging.getLogger('requests.packages.urllib3')
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
 
 
 class FormUploader(object):

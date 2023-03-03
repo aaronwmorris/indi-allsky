@@ -32,7 +32,7 @@ class UploadApiView(BaseView):
     decorators = []
 
 
-    def dispatch_request(self, entry_id):
+    def dispatch_request(self):
         self.authorize()
 
         # we are now authenticated
@@ -87,10 +87,10 @@ class UploadApiView(BaseView):
 
         time_floor = int(time.time() / 300) * 300
 
-        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, str(user.apikey).encode())).hexdigest()
+        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, str(user.apikey)).encode()).hexdigest()
         if apikey != hash1:
             # we do not need to calculate the 2nd hash if the first one works
-            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, str(user.apikey).encode())).hexdigest()
+            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, str(user.apikey)).encode()).hexdigest()
             if apikey != hash2:
                 return abort(400)
 
