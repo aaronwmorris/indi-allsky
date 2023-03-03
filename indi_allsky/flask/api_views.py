@@ -1,7 +1,10 @@
+#import io
 import time
 #from datetime import datetime
-#import math
+from pathlib import Path
 import hashlib
+import json
+import tempfile
 
 
 from flask import request
@@ -46,8 +49,27 @@ class UploadApiView(BaseView):
 
 
     def post(self):
-        #datetime = str(request.json['NEW_DATETIME'])
+        # override in child class
         pass
+
+
+    def saveFile(self):
+        metadata_file = request.files['metadata']
+        metadata_json = json.load(metadata_file)
+
+        media_file = request.files['media']
+        f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.bin')
+        while True:
+            data = media_file.read(32768)
+            if data:
+                f_tmp_media.write(data)
+            else:
+                break
+
+        f_tmp_media.close()
+
+        return metadata_json, Path(f_tmp_media.name)
+
 
 
     #def put(self):
@@ -96,7 +118,16 @@ class UploadApiView(BaseView):
 
 
 class ImageUploadApiView(UploadApiView):
-    pass
+    def post(self):
+        metadata_json, media_file = self.saveFile()
+
+        app.logger.info('Json: %s', metadata_json)
+        app.logger.info('File: %s', media_file)
+
+        media_file.unlink()
+
+        return jsonify({})
+
 
 
 bp_api_allsky.add_url_rule('/upload/image', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['POST'])

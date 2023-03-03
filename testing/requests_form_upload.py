@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import io
+from datetime import datetime
 import time
 import hashlib
 import requests
@@ -50,9 +51,30 @@ class FormUploader(object):
         }
 
 
-        metadata = {'foo' : 'bar'}
+        metadata = {
+            'createDate'   : datetime.now().timestamp(),
+            'exposure'     : 5.6,
+            'exp_elapsed'  : 1.1,
+            'gain'         : 100,
+            'binmode'      : 1,
+            'temp'         : -6.7,
+            'adu'          : 5006.2,
+            'stable'       : True,
+            'moonmode'     : False,
+            'moonphase'    : 16.1,
+            'night'        : True,
+            'sqm'          : 5007.8,
+            'adu_roi'      : False,
+            'calibrated'   : True,
+            'stars'        : 0,
+            'detections'   : 0,
+            'process_elapsed' : 1.2,
+        }
+
+
 
         local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
+
 
         files = [
             ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
