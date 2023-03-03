@@ -293,7 +293,8 @@ class UserManager(object):
         db.session.commit()
 
 
-    def genapikey(self, username=None):
+    def genapikey(self, **kwargs):
+        username = kwargs.get('username')
 
         if not username:
             username = input('Username: ')

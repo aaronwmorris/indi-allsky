@@ -16,6 +16,8 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
+### UNTESTED
+
 class pycurl_wsapi_sync(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(pycurl_wsapi_sync, self).__init__(*args, **kwargs)
