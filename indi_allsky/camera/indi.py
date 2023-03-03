@@ -120,6 +120,7 @@ class IndiClient(PyIndi.BaseClient):
         self.bin_v = bin_v
 
         self._camera_id = None
+        self._camera_uuid = None
 
         self._ccd_device = None
         self._ctl_ccd_exposure = None
@@ -151,6 +152,14 @@ class IndiClient(PyIndi.BaseClient):
     @camera_id.setter
     def camera_id(self, new_camera_id):
         self._camera_id = int(new_camera_id)
+
+    @property
+    def camera_uuid(self):
+        return self._camera_uuid
+
+    @camera_uuid.setter
+    def camera_uuid(self, new_camera_uuid):
+        self._camera_uuid = str(new_camera_uuid)
 
 
     @property

@@ -261,9 +261,10 @@ class IndiAllSky(object):
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
         self.camera_id = db_camera.id
 
-        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
+        self.indiclient.camera_id = db_camera.id
+        self.indiclient.camera_uuid = db_camera.uuid
 
-        self.indiclient.camera_id = self.camera_id
+        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
 
 
         # Update focus mode
@@ -543,9 +544,10 @@ class IndiAllSky(object):
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
         self.camera_id = db_camera.id
 
-        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
+        self.indiclient.camera_id = db_camera.id
+        self.indiclient.camera_uuid = db_camera.uuid
 
-        self.indiclient.camera_id = self.camera_id
+        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
 
 
         # Disable debugging
