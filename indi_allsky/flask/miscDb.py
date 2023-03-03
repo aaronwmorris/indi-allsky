@@ -581,19 +581,21 @@ class miscDb(object):
 
 
     def getCurrentCameraId(self):
-        if self.config.get('DB_CAMERA_ID'):
-            return self.config['DB_CAMERA_ID']
-        else:
-            try:
-                camera = IndiAllSkyDbCameraTable.query\
-                    .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-                    .limit(1)\
-                    .one()
-            except NoResultFound:
-                logger.error('No cameras found')
-                raise
+        try:
+            camera_id = int(self.getState('DB_CAMERA_ID'))
+            return camera_id
+        except NoResultFound:
+            pass
 
-        return camera.id
+        try:
+            camera = IndiAllSkyDbCameraTable.query\
+                .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+                .limit(1)\
+                .one()
+            return camera.id
+        except NoResultFound:
+            logger.error('No cameras found')
+            raise
 
 
     def addNotification(self, category, item, notification, expire=timedelta(hours=12)):

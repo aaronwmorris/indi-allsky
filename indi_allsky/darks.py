@@ -80,6 +80,7 @@ class IndiAllSkyDarks(object):
         self.indiclient = None
 
         self.camera_id = None
+        self.ccd_info = None
 
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
@@ -216,13 +217,11 @@ class IndiAllSkyDarks(object):
 
 
         # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
+        self.ccd_info = self.indiclient.getCcdInfo()
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
+        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], self.ccd_info)
         self.camera_id = db_camera.id
 
         # Disable debugging
@@ -243,8 +242,8 @@ class IndiAllSkyDarks(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = self.ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = self.ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -347,8 +346,8 @@ class IndiAllSkyDarks(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
-                hdulist[0].header['BAYERPAT'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']
+            elif self.ccd_info['CCD_CFA']['CFA_TYPE'].get('text'):
+                hdulist[0].header['BAYERPAT'] = self.ccd_info['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
 
@@ -517,7 +516,7 @@ class IndiAllSkyDarks(object):
 
     def _run(self, stacking_class):
 
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+        ccd_bits = int(self.ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
 
         # exposures start with 1 and then every 5s until the max exposure

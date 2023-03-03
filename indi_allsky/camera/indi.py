@@ -119,6 +119,8 @@ class IndiClient(PyIndi.BaseClient):
         self.gain_v = gain_v
         self.bin_v = bin_v
 
+        self._camera_id = None
+
         self._ccd_device = None
         self._ctl_ccd_exposure = None
 
@@ -140,6 +142,15 @@ class IndiClient(PyIndi.BaseClient):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
         logger.info('PyIndi version: %s', pyindi_version)
+
+
+    @property
+    def camera_id(self):
+        return self._camera_id
+
+    @camera_id.setter
+    def camera_id(self, new_camera_id):
+        self._camera_id = int(new_camera_id)
 
 
     @property
@@ -300,7 +311,7 @@ class IndiClient(PyIndi.BaseClient):
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
-            'camera_id'   : self.config['DB_CAMERA_ID'],
+            'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
         }
 

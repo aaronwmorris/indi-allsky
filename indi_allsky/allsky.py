@@ -124,6 +124,8 @@ class IndiAllSky(object):
         self.moonmode_v = Value('i', -1)  # bogus initial value
         self.moonmode = None
 
+        self.camera_id = None
+
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
 
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -248,26 +250,27 @@ class IndiAllSky(object):
 
 
         # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
+        #ccd_properties = self.indiclient.getCcdDeviceProperties()
 
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # need to get camera info before adding to DB
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
-        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+        self.camera_id = db_camera.id
+
+        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
+
+        self.indiclient.camera_id = self.camera_id
 
 
         # Update focus mode
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
         # set minimum exposure
-        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
@@ -288,8 +291,8 @@ class IndiAllSky(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -529,19 +532,20 @@ class IndiAllSky(object):
 
 
         # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
+        #ccd_properties = self.indiclient.getCcdDeviceProperties()
 
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # need to get camera info before adding to DB
         db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
-        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+        self.camera_id = db_camera.id
+
+        self._miscDb.setState('DB_CAMERA_ID', db_camera.id)
+
+        self.indiclient.camera_id = self.camera_id
 
 
         # Disable debugging
@@ -567,7 +571,7 @@ class IndiAllSky(object):
 
 
         # set minimum exposure
-        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
@@ -602,8 +606,8 @@ class IndiAllSky(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -931,8 +935,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of night
                         yesterday_ref = datetime.now() - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                        self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateNightTimelapse(timespec, self.camera_id)
+                        self._generateNightKeogram(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight()
                         self._systemHealthCheck()
 
@@ -940,8 +944,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of day
                         today_ref = datetime.now()
                         timespec = today_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                        self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateDayTimelapse(timespec, self.camera_id)
+                        self._generateDayKeogram(timespec, self.camera_id)
                         self._systemHealthCheck()
 
 
