@@ -67,10 +67,16 @@ class UploadApiView(BaseView):
         pass
 
 
-    def saveFile(self):
+    def saveMetadata(self):
         metadata_file = request.files['metadata']
         metadata_json = json.load(metadata_file)
 
+        #app.logger.info('Json: %s', metadata_json)
+
+        return metadata_json
+
+
+    def saveFile(self):
         media_file = request.files['media']
 
         media_file_p = Path(media_file.filename)  # need this for the extension
@@ -85,10 +91,9 @@ class UploadApiView(BaseView):
 
         f_tmp_media.close()
 
-        #app.logger.info('Json: %s', metadata_json)
         #app.logger.info('File: %s', media_file_p)
 
-        return metadata_json, Path(f_tmp_media.name)
+        return Path(f_tmp_media.name)
 
 
 
@@ -141,6 +146,15 @@ class UploadApiView(BaseView):
                 return abort(400)
 
 
+    def getCamera(self, camera_uuid):
+        # not catching NoResultFound
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.uuid == camera_uuid)\
+            .one()
+
+        return camera
+
+
     def getImageFolder(self, exp_date, night):
         if night:
             # images should be written to previous day's folder until noon
@@ -166,17 +180,14 @@ class UploadApiView(BaseView):
 
 
 
-
 class ImageUploadApiView(UploadApiView):
     filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
     def post(self):
-        image_metadata, image_file = self.saveFile()
+        image_metadata = self.saveMetadata()
+        image_file = self.saveFile()
 
-        # not catching NoResultFound
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.uuid == image_metadata['camera_uuid'])\
-            .one()
+        camera = self.getCamera(image_metadata['camera_uuid'])
 
 
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
