@@ -351,11 +351,19 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
 
+            syncapi__apikey_e = config.get('SYNCAPI', {}).get('APIKEY_E', '')
+            if syncapi__apikey_e:
+                # not catching InvalidToken
+                syncapi__apikey = f_key.decrypt(syncapi__apikey_e.encode()).decode()
+            else:
+                syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
+
         else:
             # passwords should not be encrypted
             filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
             s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
             mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+            syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -364,6 +372,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['S3UPLOAD']['SECRET_KEY_E'] = ''
         config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
         config['MQTTPUBLISH']['PASSWORD_E'] = ''
+        config['SYNCAPI']['APIKEY'] = syncapi__apikey
+        config['SYNCAPI']['APIKEY_E'] = ''
 
         return config
 
@@ -417,6 +427,16 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 mqttpublish__password_e = ''
                 mqttpublish__password = ''
 
+
+            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            if syncapi__apikey:
+                syncapi__apikey_e = f_key.encrypt(syncapi__apikey.encode()).decode()
+                syncapi__apikey = ''
+            else:
+                syncapi__apikey_e = ''
+                syncapi__apikey = ''
+
+
         else:
             # passwords should not be encrypted
             encrypted = False
@@ -427,6 +447,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             s3upload__secret_key_e = ''
             mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
             mqttpublish__password_e = ''
+            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey_e = ''
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -435,6 +457,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['S3UPLOAD']['SECRET_KEY_E'] = s3upload__secret_key_e
         config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
         config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
+        config['SYNCAPI']['APIKEY'] = syncapi__apikey
+        config['SYNCAPI']['APIKEY_E'] = syncapi__apikey_e
 
 
         return config, encrypted
