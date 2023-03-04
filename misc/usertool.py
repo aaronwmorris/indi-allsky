@@ -310,8 +310,8 @@ class UserManager(object):
 
         apikey = secrets.token_hex(32)
 
-        existing_user.apikey = apikey
-        db.session.commit()
+        # apikeys are encrypted
+        existing_user.setApiKey(apikey, app.config['PASSWORD_KEY'])
 
 
         print()

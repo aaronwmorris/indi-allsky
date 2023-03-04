@@ -101,14 +101,14 @@ class UploadApiView(BaseView):
             return abort(400)
 
         try:
-            bearer, user_apikey = auth_header.split(' ')
+            bearer, user_apikey_hash = auth_header.split(' ')
         except ValueError:
             app.logger.error('Malformed API key')
             return abort(400)
 
 
         try:
-            username, apikey = user_apikey.split(':')
+            username, apikey_hash = user_apikey_hash.split(':')
         except ValueError:
             app.logger.error('Malformed API key')
             return abort(400)
@@ -126,11 +126,14 @@ class UploadApiView(BaseView):
 
         time_floor = int(time.time() / 300) * 300
 
-        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, str(user.apikey)).encode()).hexdigest()
-        if apikey != hash1:
+
+        apikey = user.getApiKey(app.config['PASSWORD_KEY'])
+
+        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
+        if apikey_hash != hash1:
             # we do not need to calculate the 2nd hash if the first one works
-            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, str(user.apikey)).encode()).hexdigest()
-            if apikey != hash2:
+            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, apikey).encode()).hexdigest()
+            if apikey_hash != hash2:
                 return abort(400)
 
 

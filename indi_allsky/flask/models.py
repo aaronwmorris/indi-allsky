@@ -1,6 +1,9 @@
 import enum
 from pathlib import Path
 
+from cryptography.fernet import Fernet
+#from cryptography.fernet import InvalidToken
+
 from sqlalchemy.sql import expression
 
 from flask import current_app as app
@@ -467,7 +470,7 @@ class IndiAllSkyDbUserTable(db.Model):
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, index=True)
     name = db.Column(db.String(255))
-    apikey = db.Column(db.String(255))
+    apikey = db.Column(db.String(255))  # apikeys are encrypted
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
@@ -501,4 +504,15 @@ class IndiAllSkyDbUserTable(db.Model):
 
     def get_id(self):
         return self.id
+
+
+    def getApiKey(self, password_key):
+        f_key = Fernet(password_key.encode())
+        return f_key.decrypt(self.apikey.encode()).decode()
+
+
+    def setApiKey(self, apikey, password_key):
+        f_key = Fernet(password_key.encode())
+        self.apikey = f_key.encrypt(apikey.encode()).decode()
+        db.session.commit()
 

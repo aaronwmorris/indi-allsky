@@ -32,7 +32,7 @@ class FormUploader(object):
     def main(self):
         endpoint_url = 'https://localhost/indi-allsky/upload/image'
         username = 'foobar'
-        apikey = '3842b28bcdd1cb91fd4a996b963deffc3b4cb9ab95aa27e0d9301b4f91401f86'
+        apikey = '6472e501744c00dae3acd4406d662d844fe5ff0710e7aa0ac3ab28c8f5ee3f83'
         cert_bypass = True
 
         if cert_bypass:
@@ -43,7 +43,7 @@ class FormUploader(object):
         time_floor = int(time.time() / 300) * 300
 
         apikey_hash = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
-        logger.info('Hash: %s', apikey_hash)
+        #logger.info('Hash: %s', apikey_hash)
 
 
         self.headers = {
