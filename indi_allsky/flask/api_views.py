@@ -85,6 +85,9 @@ class UploadApiView(BaseView):
 
         f_tmp_media.close()
 
+        #app.logger.info('Json: %s', metadata_json)
+        #app.logger.info('File: %s', media_file_p)
+
         return metadata_json, Path(f_tmp_media.name)
 
 
@@ -134,6 +137,7 @@ class UploadApiView(BaseView):
             # we do not need to calculate the 2nd hash if the first one works
             hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, apikey).encode()).hexdigest()
             if apikey_hash != hash2:
+                app.logger.error('Unable to authenticate API key')
                 return abort(400)
 
 
@@ -168,10 +172,6 @@ class ImageUploadApiView(UploadApiView):
 
     def post(self):
         image_metadata, image_file = self.saveFile()
-
-        app.logger.info('Json: %s', image_metadata)
-        app.logger.info('File: %s', image_file)
-
 
         # not catching NoResultFound
         camera = IndiAllSkyDbCameraTable.query\
