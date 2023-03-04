@@ -69,6 +69,7 @@ class FormUploader(object):
             'stars'        : 0,
             'detections'   : 0,
             'process_elapsed' : 1.2,
+            'camera_uuid'  : '2b291720-3142-4745-a526-7f3d7376563f',
         }
 
 

@@ -23,7 +23,9 @@ from .base_views import BaseView
 #from . import db
 
 from .models import IndiAllSkyDbUserTable
+from .models import IndiAllSkyDbCameraTable
 
+#from sqlalchemy.orm.exc import NoResultFound
 
 
 bp_api_allsky = Blueprint(
@@ -168,11 +170,17 @@ class ImageUploadApiView(UploadApiView):
         app.logger.info('File: %s', image_file)
 
 
+        # not catching NoResultFound
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.uuid == image_metadata['camera_uuid'])\
+            .one()
+
+
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'])
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(self.filename_t.format(camera_id, date_str, image_file.suffix))  # suffix includes dot
+        filename = folder.joinpath(self.filename_t.format(camera.id, date_str, image_file.suffix))  # suffix includes dot
 
 
         shutil.move(str(image_file), str(filename))
@@ -183,7 +191,7 @@ class ImageUploadApiView(UploadApiView):
 
         self._miscDb.addImage(
             filename,
-            camera_id,
+            camera.id,
             image_metadata,
         )
 

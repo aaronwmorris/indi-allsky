@@ -321,6 +321,7 @@ class IndiClient(PyIndi.BaseClient):
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
+            'camera_uuid' : self.camera_uuid,
             'filename_t'  : self._filename_t,
         }
 

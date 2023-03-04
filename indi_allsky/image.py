@@ -253,6 +253,7 @@ class ImageWorker(Process):
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
+        camera_uuid = i_dict['camera_uuid']
         filename_t = i_dict.get('filename_t')
 
 
@@ -420,7 +421,7 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
-                'camera_uuid'     : self.camera_uuid,
+                'camera_uuid'     : camera_uuid,
             }
 
             image_entry = self._miscDb.addImage(
