@@ -222,6 +222,14 @@ class IndiAllSkyConfigBase(object):
             "TLS"                    : True,
             "CERT_BYPASS"            : True,
         },
+        "SYNCAPI" : {
+            "ENABLE"                 : False,
+            "BASEURL"                : "https://example.com/indi-allsky",
+            "USERNAME"               : "",
+            "APIKEY"                 : "",
+            "APIKEY_E"               : "",
+            "CERT_BYPASS"            : False,
+        },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
             "EXTRA_OPTIONS"          : "",

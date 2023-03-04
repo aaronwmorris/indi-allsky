@@ -982,7 +982,17 @@ def MQTTPUBLISH__USERNAME_validator(form, field):
     if not field.data:
         return
 
-    username_regex = r'^[a-zA-Z0-9_\@\.\-\\]+$'
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
+def SYNCAPI__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
 
     if not re.search(username_regex, field.data):
         raise ValidationError('Invalid username')
@@ -993,6 +1003,10 @@ def FILETRANSFER__PASSWORD_validator(form, field):
 
 
 def MQTTPUBLISH__PASSWORD_validator(form, field):
+    pass
+
+
+def SYNCAPI__PASSWORD_validator(form, field):
     pass
 
 
@@ -1294,6 +1308,19 @@ def MQTTPUBLISH__QOS_validator(form, field):
 
     if field.data not in (0, 1, 2):
         raise ValidationError('Invalid QoS')
+
+
+def SYNCAPI__BASEURL_validator(form, field):
+    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\]+$'
+
+    if not re.search(url_regex, field.data):
+        raise ValidationError('Invalid characters in URL')
+
+    if not re.search(r'^https?\:\/\/', field.data):
+        raise ValidationError('URL should begin with https://')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('URL cannot end with slash')
 
 
 def FITSHEADER_KEY_validator(form, field):
@@ -1668,6 +1695,11 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
+    SYNCAPI__ENABLE                  = BooleanField('Enable Sync API')
+    SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator])
+    SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator])
+    SYNCAPI__APIKEY                  = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__PASSWORD_validator])
+    SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
