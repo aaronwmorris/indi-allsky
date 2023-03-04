@@ -420,7 +420,7 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
-
+                'camera_uuid'     : self.camera_uuid,
             }
 
             image_entry = self._miscDb.addImage(
@@ -795,6 +795,7 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'camera_uuid': self.camera_uuid,
         }
 
         self._miscDb.addFitsImage(
@@ -948,6 +949,7 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'camera_uuid': self.camera_uuid,
         }
 
         self._miscDb.addRawImage(

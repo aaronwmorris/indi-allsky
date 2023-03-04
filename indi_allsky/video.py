@@ -187,6 +187,7 @@ class VideoWorker(Process):
         img_folder = Path(task.data['img_folder'])
         timeofday = task.data['timeofday']
         camera_id = task.data['camera_id']
+        camera_uuid = task.data['camera_uuid']
 
 
         try:
@@ -203,10 +204,10 @@ class VideoWorker(Process):
 
 
         # perform the action
-        action_method(task, timespec, img_folder, timeofday, camera_id)
+        action_method(task, timespec, img_folder, timeofday, camera_id, camera_uuid)
 
 
-    def generateVideo(self, task, timespec, img_folder, timeofday, camera_id):
+    def generateVideo(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
         task.setRunning()
 
         now = datetime.now()
@@ -284,6 +285,7 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'timeofday'  : timeofday,
+            'camera_uuid': camera_uuid,
         }
 
         # Create DB entry before creating file
@@ -392,7 +394,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id):
+    def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
         task.setRunning()
 
         now = datetime.now()
@@ -505,6 +507,7 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'timeofday'  : timeofday,
+            'camera_uuid': camera_uuid,
         }
 
         # Add DB entries before creating files
@@ -712,7 +715,7 @@ class VideoWorker(Process):
         self._uploadVideo(startrail_video_entry, startrail_video_file)
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id):
+    def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
         task.setRunning()
 
         if timeofday != 'night':
@@ -819,7 +822,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, img_folder, timeofday, camera_id):
+    def systemHealthCheck(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
         # check filesystems
         logger.info('Performing system health check')
 
@@ -856,7 +859,7 @@ class VideoWorker(Process):
             )
 
 
-    def expireData(self, task, timespec, img_folder, timeofday, camera_id):
+    def expireData(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
         task.setRunning()
 
         # Old image files need to be pruned
