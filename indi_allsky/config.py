@@ -38,6 +38,9 @@ class IndiAllSkyConfigBase(object):
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
         "INDI_CAMERA_NAME" : "",
+        "LENS_NAME" : "AllSky Lens",
+        "LENS_FOCAL_LENGTH" : 2.5,
+        "LENS_FOCAL_RATIO"  : 2.0,
         "CCD_CONFIG" : {
             "NIGHT" : {
                 "GAIN"    : 100,

@@ -99,6 +99,32 @@ def INDI_CAMERA_NAME_validator(form, field):
         raise ValidationError('Invalid camera name')
 
 
+def LENS_NAME_validator(form, field):
+    if not field.data:
+        return
+
+    lens_regex = r'^[a-zA-Z0-9\.\ \-\/]+$'
+
+    if not re.search(lens_regex, field.data):
+        raise ValidationError('Invalid lens name')
+
+
+def LENS_FOCAL_LENGTH_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0.0:
+        raise ValidationError('Focal length must be greater than 0')
+
+
+def LENS_FOCAL_RATIO_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0.0:
+        raise ValidationError('Focal ratio must be greater than 0')
+
+
 def ccd_GAIN_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -1537,6 +1563,9 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
+    LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
+    LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
+    LENS_FOCAL_RATIO                 = FloatField('Focal Ratio', validators=[LENS_FOCAL_RATIO_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])

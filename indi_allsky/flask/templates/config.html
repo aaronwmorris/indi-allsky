@@ -77,6 +77,41 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LENS_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
+            <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_LENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2211,6 +2246,9 @@ const field_names = [
     'INDI_SERVER',
     'INDI_PORT',
     'INDI_CAMERA_NAME',
+    'LENS_NAME',
+    'LENS_FOCAL_LENGTH',
+    'LENS_FOCAL_RATIO',
     'CCD_CONFIG__NIGHT__GAIN',
     'CCD_CONFIG__NIGHT__BINNING',
     'CCD_CONFIG__MOONMODE__GAIN',
