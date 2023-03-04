@@ -79,7 +79,7 @@ class FormUploader(object):
 
         files = [
             ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
-            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),
+            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
 

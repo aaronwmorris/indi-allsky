@@ -2,7 +2,7 @@ from .generic import GenericFileTransfer
 #from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 #from .exceptions import CertificateValidationFailure
-#from .exceptions import TransferFailure
+from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
@@ -13,6 +13,9 @@ import socket
 import json
 import hashlib
 import logging
+
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -74,24 +77,23 @@ class requests_wsapi_sync(GenericFileTransfer):
         super(requests_wsapi_sync, self).put(*args, **kwargs)
 
         local_file = kwargs['local_file']
-        remote_file = kwargs['remote_file']
+        remote_uri = kwargs['remote_uri']
         metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
-        remote_file_p = Path(remote_file)
 
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
-        logger.info('requests URL: %s', url)
+        url = '{0:s}/{1:s}'.format(self.url, remote_uri)
+        #logger.info('requests URL: %s', url)
 
-
-        start = time.time()
 
         files = [
             ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
-            ('media', ('media.bin', io.open(str(local_file_p), 'rb'), 'application/octet-stream')),
+            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
+
+        start = time.time()
 
         try:
             r = self.client.post(url, files=files, headers=self.headers, verify=self.verify)
@@ -100,6 +102,9 @@ class requests_wsapi_sync(GenericFileTransfer):
         except socket.timeout as e:
             raise ConnectionFailure(str(e)) from e
 
+
+        if r.status_code >= 400:
+            raise TransferFailure('Sync error: {0:d}'.format(r.status_code))
 
 
         upload_elapsed_s = time.time() - start
