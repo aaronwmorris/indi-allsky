@@ -65,6 +65,8 @@ class SyncApiBaseView(BaseView):
             return self.post()
         elif request.method == 'PUT':
             return self.put()
+        elif request.method == 'DELETE':
+            return self.delete()
         else:
             return jsonify({}), 400
 
@@ -98,8 +100,25 @@ class SyncApiBaseView(BaseView):
         return jsonify({'id' : file_entry.id})
 
 
+    def delete(self):
+        metadata = self.saveMetadata()
+        # no file for delete
+        # no camera for delete
 
-    def processFile(self, **kwargs):
+        try:
+            self.deleteFile(metadata)
+        except FileMissing:
+            return jsonify({'error' : 'file_missing'}), 400
+
+        return jsonify({})
+
+
+    def processFile(self, *args, **kwargs):
+        # override in class
+        pass
+
+
+    def deleteFile(self, *args, **kwargs):
         # override in class
         pass
 
@@ -292,6 +311,28 @@ class SyncApiImageView(SyncApiBaseView):
         return image_entry
 
 
+    def deleteFile(self, image_metadata):
+        try:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .filter(IndiAllSkyDbImageTable.id == image_metadata['id'])\
+                .one()
+
+
+            filename_p = Path(image_entry.filename)
+
+            app.logger.warning('Deleting image entry %d', image_entry.id)
+            db.session.delete(image_entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
@@ -349,6 +390,28 @@ class SyncApiVideoView(SyncApiBaseView):
         app.logger.info('Uploaded video: %s', video_file)
 
         return video_entry
+
+
+    def deleteFile(self, video_metadata):
+        try:
+            video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(IndiAllSkyDbVideoTable.id == video_metadata['id'])\
+                .one()
+
+
+            filename_p = Path(video_entry.filename)
+
+            app.logger.warning('Deleting video entry %d', video_entry.id)
+            db.session.delete(video_entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
 
 
 class SyncApiKeogramView(SyncApiBaseView):
@@ -414,6 +477,28 @@ class SyncApiKeogramView(SyncApiBaseView):
         return keogram_entry
 
 
+    def deleteFile(self, keogram_metadata):
+        try:
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(IndiAllSkyDbKeogramTable.id == keogram_metadata['id'])\
+                .one()
+
+
+            filename_p = Path(keogram_entry.filename)
+
+            app.logger.warning('Deleting keogram entry %d', keogram_entry.id)
+            db.session.delete(keogram_entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
 class SyncApiStartrailView(SyncApiBaseView):
     decorators = []
 
@@ -475,6 +560,29 @@ class SyncApiStartrailView(SyncApiBaseView):
         app.logger.info('Uploaded startrail: %s', startrail_file)
 
         return startrail_entry
+
+
+    def deleteFile(self, startrail_metadata):
+        try:
+            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .filter(IndiAllSkyDbStarTrailsTable.id == startrail_metadata['id'])\
+                .one()
+
+
+            filename_p = Path(startrail_entry.filename)
+
+            app.logger.warning('Deleting star trail entry %d', startrail_entry.id)
+            db.session.delete(startrail_entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+
 
 
 class SyncApiStartrailVideoView(SyncApiBaseView):
@@ -541,13 +649,40 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
         return startrail_video_entry
 
 
+    def deleteFile(self, startrail_video_metadata):
+        try:
+            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.id == startrail_video_metadata['id'])\
+                .one()
+
+
+            filename_p = Path(startrail_video_entry.filename)
+
+            app.logger.warning('Deleting star trail video entry %d', startrail_video_entry.id)
+            db.session.delete(startrail_video_entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+
 class FileExists(Exception):
     pass
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST', 'PUT'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST', 'PUT'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST', 'PUT'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST', 'PUT'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST', 'PUT'])
+class FileMissing(Exception):
+    pass
+
+
+bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST', 'PUT', 'DELETE'])
 

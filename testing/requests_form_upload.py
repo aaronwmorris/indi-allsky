@@ -90,6 +90,10 @@ class FormUploader(object):
             'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
         }
 
+        delete_metadata = {
+            'id' : 1,
+        }
+
 
         #local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
         local_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
@@ -100,11 +104,15 @@ class FormUploader(object):
             ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
+        delete_files = [
+            ('metadata', ('metadata.json', io.StringIO(json.dumps(delete_metadata)), 'application/json')),
+        ]
 
         start = time.time()
 
-        r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
+        #r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
+        r = requests.delete(endpoint_url, files=delete_files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
