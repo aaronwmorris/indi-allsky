@@ -24,8 +24,13 @@ from .base_views import BaseView
 
 #from . import db
 
-from .models import IndiAllSkyDbUserTable
 from .models import IndiAllSkyDbCameraTable
+from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbKeogramTable
+from .models import IndiAllSkyDbStarTrailsTable
+from .models import IndiAllSkyDbStarTrailsVideoTable
+from .models import IndiAllSkyDbUserTable
 
 #from sqlalchemy.orm.exc import NoResultFound
 
@@ -71,10 +76,13 @@ class SyncApiBaseView(BaseView):
         camera = self.getCamera(metadata['camera_uuid'])
 
 
-        self.processFile(camera, metadata, media_file)
+        try:
+            file_entry = self.processFile(camera, metadata, media_file)
+        except FileExists:
+            return jsonify({'error' : 'file_exists'}), 400
 
 
-        return jsonify({})
+        return jsonify({'id' : file_entry.id})
 
 
     def processFile(self, **kwargs):
@@ -214,7 +222,7 @@ class SyncApiImageView(SyncApiBaseView):
     image_filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
 
-    def processFile(self, camera, image_metadata, tmp_file):
+    def processFile(self, camera, image_metadata, tmp_file, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'])
 
@@ -222,31 +230,39 @@ class SyncApiImageView(SyncApiBaseView):
         image_file = folder.joinpath(self.image_filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
 
 
-        if image_file.exists():
-            tmp_file.unlink()
-            return abort(400)
+        if not image_file.exists():
+            image_entry = self._miscDb.addImage(
+                image_file,
+                camera.id,
+                image_metadata,
+            )
+
+        else:
+            if overwrite:
+                image_entry = IndiAllSkyDbImageTable.query\
+                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                    .one()
+
+                app.logger.warning('Replacing image')
+                image_file.unlink()
+            else:
+                raise FileExists()
 
 
         shutil.move(str(tmp_file), str(image_file))
-
-
         image_file.chmod(0o644)
 
 
-        self._miscDb.addImage(
-            image_file,
-            camera.id,
-            image_metadata,
-        )
-
         app.logger.info('Uploaded image: %s', image_file)
+
+        return image_entry
 
 
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
 
-    def processFile(self, camera, video_metadata, tmp_file):
+    def processFile(self, camera, video_metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(video_metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
@@ -255,30 +271,37 @@ class SyncApiVideoView(SyncApiBaseView):
 
         video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
 
-        if video_file.exists():
-            app.logger.warning('Replacing video')
-            video_file.unlink()
-
-            shutil.move(str(tmp_file), str(video_file))
-        else:
-            shutil.move(str(tmp_file), str(video_file))
-
-            # Create DB entry before creating file
-            self._miscDb.addVideo(
+        if not video_file.exists():
+            video_entry = self._miscDb.addVideo(
                 video_file,
                 camera.id,
                 video_metadata,
             )
+        else:
+            if overwrite:
+                video_entry = IndiAllSkyDbVideoTable.query\
+                    .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                    .one()
+
+                app.logger.warning('Replacing video')
+                video_file.unlink()
+            else:
+                raise FileExists()
+
+
+        shutil.move(str(tmp_file), str(video_file))
+        video_file.chmod(0o644)
 
         app.logger.info('Uploaded video: %s', video_file)
 
+        return video_entry
 
 
 class SyncApiKeogramView(SyncApiBaseView):
     decorators = []
 
 
-    def processFile(self, camera, keogram_metadata, tmp_file):
+    def processFile(self, camera, keogram_metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(keogram_metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
@@ -289,30 +312,38 @@ class SyncApiKeogramView(SyncApiBaseView):
         keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), keogram_metadata['timeofday'], tmp_file.suffix))
 
 
-        if keogram_file.exists():
-            app.logger.warning('Replacing keogram')
-            keogram_file.unlink()
-
-            shutil.move(str(tmp_file), str(keogram_file))
-        else:
-            shutil.move(str(tmp_file), str(keogram_file))
-
-            self._miscDb.addKeogram(
+        if not keogram_file.exists():
+            keogram_entry = self._miscDb.addKeogram(
                 keogram_file,
                 camera.id,
                 keogram_metadata,
             )
+        else:
+            if overwrite:
+                keogram_entry = IndiAllSkyDbKeogramTable.query\
+                    .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                    .one()
+
+                app.logger.warning('Replacing keogram')
+                keogram_file.unlink()
+            else:
+                raise FileExists()
+
+
+        shutil.move(str(tmp_file), str(keogram_file))
+        keogram_file.chmod(0o644)
+
 
         app.logger.info('Uploaded keogram: %s', keogram_file)
 
-
+        return keogram_entry
 
 
 class SyncApiStartrailView(SyncApiBaseView):
     decorators = []
 
 
-    def processFile(self, camera, startrail_metadata, tmp_file):
+    def processFile(self, camera, startrail_metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(startrail_metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
@@ -323,29 +354,38 @@ class SyncApiStartrailView(SyncApiBaseView):
         startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_metadata['timeofday'], tmp_file.suffix))
 
 
-        if startrail_file.exists():
-            app.logger.warning('Replacing star trail')
-            startrail_file.unlink()
-
-            shutil.move(str(tmp_file), str(startrail_file))
-        else:
-
-            shutil.move(str(tmp_file), str(startrail_file))
-
-            self._miscDb.addStarTrail(
+        if not startrail_file.exists():
+            startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera.id,
                 startrail_metadata,
             )
+        else:
+            if overwrite:
+                startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                    .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                    .one()
+
+                app.logger.warning('Replacing star trail')
+                startrail_file.unlink()
+            else:
+                raise FileExists()
+
+
+        shutil.move(str(tmp_file), str(startrail_file))
+        startrail_file.chmod(0o644)
+
 
         app.logger.info('Uploaded startrail: %s', startrail_file)
+
+        return startrail_entry
 
 
 class SyncApiStartrailVideoView(SyncApiBaseView):
     decorators = []
 
 
-    def processFile(self, camera, startrail_video_metadata, tmp_file):
+    def processFile(self, camera, startrail_video_metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(startrail_video_metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
@@ -356,22 +396,35 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
         startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_video_metadata['timeofday'], tmp_file.suffix))
 
 
-        if startrail_video_file.exists():
-            app.logger.warning('Replacing Star trail video')
-            startrail_video_file.unlink()
-
-            shutil.move(str(tmp_file), str(startrail_video_file))
-        else:
-            shutil.move(str(tmp_file), str(startrail_video_file))
-
-            self._miscDb.addStarTrailVideo(
+        if not startrail_video_file.exists():
+            startrail_video_entry = self._miscDb.addStarTrailVideo(
                 startrail_video_file,
                 camera.id,
                 startrail_video_metadata,
             )
+        else:
+            if overwrite:
+                startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                    .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                    .one()
+
+                app.logger.warning('Replacing Star trail video')
+                startrail_video_file.unlink()
+            else:
+                raise FileExists()
+
+
+        shutil.move(str(tmp_file), str(startrail_video_file))
+        startrail_video_file.chmod(0o644)
+
 
         app.logger.info('Uploaded startrail: %s', startrail_video_file)
 
+        return startrail_video_entry
+
+
+class FileExists(Exception):
+    pass
 
 
 bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST'])
