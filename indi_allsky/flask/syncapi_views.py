@@ -18,6 +18,8 @@ from flask import current_app as app
 
 #from flask_login import login_required
 
+from .. import constants
+
 from .base_views import BaseView
 
 #from . import db
@@ -38,6 +40,8 @@ bp_syncapi_allsky = Blueprint(
 
 class SyncApiView(BaseView):
     decorators = []
+
+    image_filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
 
     def __init__(self, **kwargs):
@@ -63,8 +67,38 @@ class SyncApiView(BaseView):
 
 
     def post(self):
-        # override in child class
-        pass
+        metadata = self.saveMetadata()
+        media_file = self.saveFile()
+
+        camera = self.getCamera(metadata['camera_uuid'])
+
+
+        if metadata['type'] == constants.IMAGE:
+            self.processImage(camera, metadata, media_file)
+
+        return jsonify({})
+
+
+
+    def processImage(self, camera, image_metadata, image_file):
+        createDate = datetime.fromtimestamp(image_metadata['createDate'])
+        folder = self.getImageFolder(createDate, image_metadata['night'])
+
+        date_str = createDate.strftime('%Y%m%d_%H%M%S')
+        filename = folder.joinpath(self.image_filename_t.format(camera.id, date_str, image_file.suffix))  # suffix includes dot
+
+
+        shutil.move(str(image_file), str(filename))
+
+
+        filename.chmod(0o644)
+
+
+        self._miscDb.addImage(
+            filename,
+            camera.id,
+            image_metadata,
+        )
 
 
     def saveMetadata(self):
@@ -179,39 +213,5 @@ class SyncApiView(BaseView):
         return hour_folder
 
 
-
-class ImageSyncApiView(SyncApiView):
-    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
-
-    def post(self):
-        image_metadata = self.saveMetadata()
-        image_file = self.saveFile()
-
-        camera = self.getCamera(image_metadata['camera_uuid'])
-
-
-        createDate = datetime.fromtimestamp(image_metadata['createDate'])
-        folder = self.getImageFolder(createDate, image_metadata['night'])
-
-        date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(self.filename_t.format(camera.id, date_str, image_file.suffix))  # suffix includes dot
-
-
-        shutil.move(str(image_file), str(filename))
-
-
-        filename.chmod(0o644)
-
-
-        self._miscDb.addImage(
-            filename,
-            camera.id,
-            image_metadata,
-        )
-
-        return jsonify({})
-
-
-
-bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=ImageSyncApiView.as_view('image_upload_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1', view_func=SyncApiView.as_view('syncapi_v1_view'), methods=['POST'])
 

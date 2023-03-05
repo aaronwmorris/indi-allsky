@@ -30,7 +30,7 @@ class FormUploader(object):
 
 
     def main(self):
-        endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
+        endpoint_url = 'https://localhost/indi-allsky/sync/v1'
         username = 'foobar'
         apikey = '6472e501744c00dae3acd4406d662d844fe5ff0710e7aa0ac3ab28c8f5ee3f83'
         cert_bypass = True
@@ -52,6 +52,7 @@ class FormUploader(object):
 
 
         metadata = {
+            'type'         : 1,  # IMAGE
             'createDate'   : datetime.now().timestamp(),
             'exposure'     : 5.6,
             'exp_elapsed'  : 1.1,
