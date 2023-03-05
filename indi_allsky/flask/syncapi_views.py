@@ -18,7 +18,7 @@ from flask import current_app as app
 
 #from flask_login import login_required
 
-from .. import constants
+#from .. import constants
 
 from .base_views import BaseView
 
@@ -38,14 +38,12 @@ bp_syncapi_allsky = Blueprint(
 )
 
 
-class SyncApiView(BaseView):
+class SyncApiBaseView(BaseView):
     decorators = []
-
-    image_filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
 
     def __init__(self, **kwargs):
-        super(SyncApiView, self).__init__(**kwargs)
+        super(SyncApiBaseView, self).__init__(**kwargs)
 
         if self.indi_allsky_config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
@@ -73,166 +71,15 @@ class SyncApiView(BaseView):
         camera = self.getCamera(metadata['camera_uuid'])
 
 
-        if metadata['type'] == constants.IMAGE:
-            self.processImage(camera, metadata, media_file)
-        elif metadata['type'] == constants.VIDEO:
-            self.processVideo(camera, metadata, media_file)
-        elif metadata['type'] == constants.KEOGRAM:
-            self.processKeogram(camera, metadata, media_file)
-        elif metadata['type'] == constants.STARTRAIL:
-            self.processStartrail(camera, metadata, media_file)
-        elif metadata['type'] == constants.STARTRAIL_VIDEO:
-            self.processStartrailVideo(camera, metadata, media_file)
-        #elif metadata['type'] == constants.RAW_IMAGE:
-        #    self.processRawImage(camera, metadata, media_file)
-        #elif metadata['type'] == constants.FITS_IMAGE:
-        #    self.processFitsImage(camera, metadata, media_file)
-        else:
-            app.logger.error('Unknown upload type')
-            media_file.unlink()
-            return jsonify({}), 400
+        self.processFile(camera, metadata, media_file)
+
 
         return jsonify({})
 
 
-
-    def processImage(self, camera, image_metadata, tmp_file):
-        createDate = datetime.fromtimestamp(image_metadata['createDate'])
-        folder = self.getImageFolder(createDate, image_metadata['night'])
-
-        date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        image_file = folder.joinpath(self.image_filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
-
-
-        if image_file.exists():
-            tmp_file.unlink()
-            return abort(400)
-
-
-        shutil.move(str(tmp_file), str(image_file))
-
-
-        image_file.chmod(0o644)
-
-
-        self._miscDb.addImage(
-            image_file,
-            camera.id,
-            image_metadata,
-        )
-
-        app.logger.info('Uploaded image: %s', image_file)
-
-
-    def processVideo(self, camera, video_metadata, tmp_file):
-        d_dayDate = datetime.strptime(video_metadata['dayDate'], '%Y%m%d').date()
-
-        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
-        if not date_folder.exists():
-            date_folder.mkdir(mode=0o755)
-
-        video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
-
-        if video_file.exists():
-            tmp_file.unlink()
-            return abort(400)
-
-
-        shutil.move(str(tmp_file), str(video_file))
-
-
-        # Create DB entry before creating file
-        self._miscDb.addVideo(
-            video_file,
-            camera.id,
-            video_metadata,
-        )
-
-        app.logger.info('Uploaded video: %s', video_file)
-
-
-    def processKeogram(self, camera, keogram_metadata, tmp_file):
-        d_dayDate = datetime.strptime(keogram_metadata['dayDate'], '%Y%m%d').date()
-
-        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
-        if not date_folder.exists():
-            date_folder.mkdir(mode=0o755)
-
-
-        keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), keogram_metadata['timeofday'], tmp_file.suffix))
-
-
-        if keogram_file.exists():
-            tmp_file.unlink()
-            return abort(400)
-
-
-        shutil.move(str(tmp_file), str(keogram_file))
-
-
-        self._miscDb.addKeogram(
-            keogram_file,
-            camera.id,
-            keogram_metadata,
-        )
-
-        app.logger.info('Uploaded keogram: %s', keogram_file)
-
-
-    def processStartrail(self, camera, startrail_metadata, tmp_file):
-        d_dayDate = datetime.strptime(startrail_metadata['dayDate'], '%Y%m%d').date()
-
-        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
-        if not date_folder.exists():
-            date_folder.mkdir(mode=0o755)
-
-
-        startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_metadata['timeofday'], tmp_file.suffix))
-
-
-        if startrail_file.exists():
-            tmp_file.unlink()
-            return abort(400)
-
-
-        shutil.move(str(tmp_file), str(startrail_file))
-
-
-        self._miscDb.addStarTrail(
-            startrail_file,
-            camera.id,
-            startrail_metadata,
-        )
-
-        app.logger.info('Uploaded startrail: %s', startrail_file)
-
-
-    def processStartrailVideo(self, camera, startrail_video_metadata, tmp_file):
-        d_dayDate = datetime.strptime(startrail_video_metadata['dayDate'], '%Y%m%d').date()
-
-        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
-        if not date_folder.exists():
-            date_folder.mkdir(mode=0o755)
-
-
-        startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_video_metadata['timeofday'], tmp_file.suffix))
-
-
-        if startrail_video_file.exists():
-            tmp_file.unlink()
-            return abort(400)
-
-
-        shutil.move(str(tmp_file), str(startrail_video_file))
-
-
-        self._miscDb.addStarTrailVideo(
-            startrail_video_file,
-            camera.id,
-            startrail_video_metadata,
-        )
-
-        app.logger.info('Uploaded startrail: %s', startrail_video_file)
+    def processFile(self, **kwargs):
+        # override in class
+        pass
 
 
     def saveMetadata(self):
@@ -361,5 +208,175 @@ class SyncApiView(BaseView):
         return hour_folder
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/media', view_func=SyncApiView.as_view('syncapi_v1_media_view'), methods=['POST'])
+class SyncApiImageView(SyncApiBaseView):
+    decorators = []
+
+    image_filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
+
+
+    def processFile(self, camera, image_metadata, tmp_file):
+        createDate = datetime.fromtimestamp(image_metadata['createDate'])
+        folder = self.getImageFolder(createDate, image_metadata['night'])
+
+        date_str = createDate.strftime('%Y%m%d_%H%M%S')
+        image_file = folder.joinpath(self.image_filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
+
+
+        if image_file.exists():
+            tmp_file.unlink()
+            return abort(400)
+
+
+        shutil.move(str(tmp_file), str(image_file))
+
+
+        image_file.chmod(0o644)
+
+
+        self._miscDb.addImage(
+            image_file,
+            camera.id,
+            image_metadata,
+        )
+
+        app.logger.info('Uploaded image: %s', image_file)
+
+
+class SyncApiVideoView(SyncApiBaseView):
+    decorators = []
+
+
+    def processFile(self, camera, video_metadata, tmp_file):
+        d_dayDate = datetime.strptime(video_metadata['dayDate'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+        if not date_folder.exists():
+            date_folder.mkdir(mode=0o755)
+
+        video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
+
+        if video_file.exists():
+            app.logger.warning('Replacing video')
+            video_file.unlink()
+
+            shutil.move(str(tmp_file), str(video_file))
+        else:
+            shutil.move(str(tmp_file), str(video_file))
+
+            # Create DB entry before creating file
+            self._miscDb.addVideo(
+                video_file,
+                camera.id,
+                video_metadata,
+            )
+
+        app.logger.info('Uploaded video: %s', video_file)
+
+
+
+class SyncApiKeogramView(SyncApiBaseView):
+    decorators = []
+
+
+    def processFile(self, camera, keogram_metadata, tmp_file):
+        d_dayDate = datetime.strptime(keogram_metadata['dayDate'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+        if not date_folder.exists():
+            date_folder.mkdir(mode=0o755)
+
+
+        keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), keogram_metadata['timeofday'], tmp_file.suffix))
+
+
+        if keogram_file.exists():
+            app.logger.warning('Replacing keogram')
+            keogram_file.unlink()
+
+            shutil.move(str(tmp_file), str(keogram_file))
+        else:
+            shutil.move(str(tmp_file), str(keogram_file))
+
+            self._miscDb.addKeogram(
+                keogram_file,
+                camera.id,
+                keogram_metadata,
+            )
+
+        app.logger.info('Uploaded keogram: %s', keogram_file)
+
+
+
+
+class SyncApiStartrailView(SyncApiBaseView):
+    decorators = []
+
+
+    def processFile(self, camera, startrail_metadata, tmp_file):
+        d_dayDate = datetime.strptime(startrail_metadata['dayDate'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+        if not date_folder.exists():
+            date_folder.mkdir(mode=0o755)
+
+
+        startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_metadata['timeofday'], tmp_file.suffix))
+
+
+        if startrail_file.exists():
+            app.logger.warning('Replacing star trail')
+            startrail_file.unlink()
+
+            shutil.move(str(tmp_file), str(startrail_file))
+        else:
+
+            shutil.move(str(tmp_file), str(startrail_file))
+
+            self._miscDb.addStarTrail(
+                startrail_file,
+                camera.id,
+                startrail_metadata,
+            )
+
+        app.logger.info('Uploaded startrail: %s', startrail_file)
+
+
+class SyncApiStartrailVideoView(SyncApiBaseView):
+    decorators = []
+
+
+    def processFile(self, camera, startrail_video_metadata, tmp_file):
+        d_dayDate = datetime.strptime(startrail_video_metadata['dayDate'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+        if not date_folder.exists():
+            date_folder.mkdir(mode=0o755)
+
+
+        startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_video_metadata['timeofday'], tmp_file.suffix))
+
+
+        if startrail_video_file.exists():
+            app.logger.warning('Replacing Star trail video')
+            startrail_video_file.unlink()
+
+            shutil.move(str(tmp_file), str(startrail_video_file))
+        else:
+            shutil.move(str(tmp_file), str(startrail_video_file))
+
+            self._miscDb.addStarTrailVideo(
+                startrail_video_file,
+                camera.id,
+                startrail_video_metadata,
+            )
+
+        app.logger.info('Uploaded startrail: %s', startrail_video_file)
+
+
+
+bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST'])
 
