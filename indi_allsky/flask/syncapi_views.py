@@ -237,8 +237,6 @@ class SyncApiBaseView(BaseView):
         if night:
             timeofday_str = 'night'
         else:
-            # daytime
-            # images should be written to current day's folder
             timeofday_str = 'day'
 
         hour_str = exp_date.strftime('%d_%H')
@@ -350,7 +348,13 @@ class SyncApiVideoView(SyncApiBaseView):
         if not date_folder.exists():
             date_folder.mkdir(mode=0o755)
 
-        video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
+
+        if video_metadata['night']:
+            timeofday_str = 'night'
+        else:
+            timeofday_str = 'day'
+
+        video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
 
         if not video_file.exists():
             try:
@@ -432,7 +436,12 @@ class SyncApiKeogramView(SyncApiBaseView):
             date_folder.mkdir(mode=0o755)
 
 
-        keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), keogram_metadata['timeofday'], tmp_file.suffix))
+        if keogram_metadata['night']:
+            timeofday_str = 'night'
+        else:
+            timeofday_str = 'day'
+
+        keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
 
 
         if not keogram_file.exists():
@@ -517,7 +526,12 @@ class SyncApiStartrailView(SyncApiBaseView):
             date_folder.mkdir(mode=0o755)
 
 
-        startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_metadata['timeofday'], tmp_file.suffix))
+        if startrail_metadata['night']:
+            timeofday_str = 'night'
+        else:
+            timeofday_str = 'day'
+
+        startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
 
 
         if not startrail_file.exists():
@@ -603,7 +617,12 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
             date_folder.mkdir(mode=0o755)
 
 
-        startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_video_metadata['timeofday'], tmp_file.suffix))
+        if startrail_video_metadata['night']:
+            timeofday_str = 'night'
+        else:
+            timeofday_str = 'day'
+
+        startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
 
 
         if not startrail_video_file.exists():

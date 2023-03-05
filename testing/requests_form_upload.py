@@ -86,7 +86,7 @@ class FormUploader(object):
             'type'       : constants.VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : now.strftime('%Y%m%d'),
-            'timeofday'  : 'night',
+            'night'      : True,
             'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
         }
 
