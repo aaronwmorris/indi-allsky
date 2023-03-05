@@ -30,6 +30,8 @@ from astropy.io import fits
 import cv2
 import numpy
 
+from . import constants
+
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -709,7 +711,7 @@ class ImageWorker(Process):
             'action'      : 's3',
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
-            'asset_type'  : 'image',
+            'asset_type'  : constants.ASSET_IMAGE,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(

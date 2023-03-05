@@ -30,7 +30,7 @@ class FormUploader(object):
 
 
     def main(self):
-        endpoint_url = 'https://localhost/indi-allsky/upload/image'
+        endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
         username = 'foobar'
         apikey = '6472e501744c00dae3acd4406d662d844fe5ff0710e7aa0ac3ab28c8f5ee3f83'
         cert_bypass = True

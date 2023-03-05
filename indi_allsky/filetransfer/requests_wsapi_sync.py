@@ -23,6 +23,7 @@ logger = logging.getLogger('indi_allsky')
 ### UNTESTED
 
 class requests_wsapi_sync(GenericFileTransfer):
+
     def __init__(self, *args, **kwargs):
         super(requests_wsapi_sync, self).__init__(*args, **kwargs)
 

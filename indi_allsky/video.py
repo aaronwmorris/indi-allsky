@@ -15,6 +15,8 @@ import logging
 
 import ephem
 
+from . import constants
+
 from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
@@ -380,7 +382,7 @@ class VideoWorker(Process):
             'action'      : 's3',
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : 'timelapse',
+            'asset_type'  : constants.ASSET_TIMELAPSE,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(

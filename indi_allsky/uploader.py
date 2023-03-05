@@ -9,6 +9,8 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from . import constants
+
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -155,7 +157,7 @@ class FileUploader(Process):
         remote_file = task.data.get('remote_file')
         remove_local = task.data.get('remove_local')
 
-        asset_type = task.data.get('asset_type', 'image')
+        asset_type = task.data.get('asset_type', constants.ASSET_IMAGE)
 
         mq_data = task.data.get('mq_data')
 
@@ -224,12 +226,13 @@ class FileUploader(Process):
         elif action == 's3':
             s3_key = local_file_p.relative_to(self.image_dir)
 
-            if asset_type == 'image':
+            if asset_type == constants.ASSET_IMAGE:
                 if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
                     expire_days = self.config['IMAGE_EXPIRE_DAYS']
                 else:
                     expire_days = None
             else:
+                # assume timelapse asset (video, keogram, startrail, etc)
                 if self.config['S3UPLOAD']['EXPIRE_TIMELAPSE']:
                     expire_days = self.config['TIMELAPSE_EXPIRE_DAYS']
                 else:

@@ -28,20 +28,20 @@ from .models import IndiAllSkyDbCameraTable
 #from sqlalchemy.orm.exc import NoResultFound
 
 
-bp_api_allsky = Blueprint(
-    'wsapi_indi_allsky',
+bp_syncapi_allsky = Blueprint(
+    'syncapi_indi_allsky',
     __name__,
     #url_prefix='/',  # wsgi
     url_prefix='/indi-allsky',  # gunicorn
 )
 
 
-class UploadApiView(BaseView):
+class SyncApiView(BaseView):
     decorators = []
 
 
     def __init__(self, **kwargs):
-        super(UploadApiView, self).__init__(**kwargs)
+        super(SyncApiView, self).__init__(**kwargs)
 
         if self.indi_allsky_config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
@@ -180,7 +180,7 @@ class UploadApiView(BaseView):
 
 
 
-class ImageUploadApiView(UploadApiView):
+class ImageSyncApiView(SyncApiView):
     filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
     def post(self):
@@ -213,5 +213,5 @@ class ImageUploadApiView(UploadApiView):
 
 
 
-bp_api_allsky.add_url_rule('/upload/image', view_func=ImageUploadApiView.as_view('image_upload_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=ImageSyncApiView.as_view('image_upload_view'), methods=['POST'])
 
