@@ -89,13 +89,14 @@ class IndiAllSkyDbFileBase(db.Model):
         return rel_filename_p
 
 
-    def getUrl(self, s3_prefix=''):
-        # Not using this for now
-        #if self.remote_url:
-        #    return self.remote_url
+    def getUrl(self, s3_prefix='', local=False):
+        if not local:
+            # Not using this for now
+            #if self.remote_url:
+            #    return self.remote_url
 
-        if self.s3_key:
-            return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
+            if self.s3_key:
+                return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
 
 
         rel_filename_p = self.getRelativePath()

@@ -84,7 +84,10 @@ class SyncApiBaseView(BaseView):
             return jsonify({'error' : 'file_exists'}), 400
 
 
-        return jsonify({'id' : file_entry.id})
+        return jsonify({
+            'id'   : file_entry.id,
+            'url'  : str(file_entry.getUrl(local=True)),
+        })
 
 
     def put(self):
@@ -97,7 +100,10 @@ class SyncApiBaseView(BaseView):
         file_entry = self.processFile(camera, metadata, media_file, overwrite=True)
 
 
-        return jsonify({'id' : file_entry.id})
+        return jsonify({
+            'id'   : file_entry.id,
+            'url'  : str(file_entry.getUrl(local=True)),
+        })
 
 
     def delete(self):

@@ -59,7 +59,7 @@ class FormUploader(object):
 
         now = datetime.now()
 
-        image_metadata = {
+        image_metadata = {  # noqa: F841
             'type'         : constants.IMAGE,
             'createDate'   : now.timestamp(),
             'exposure'     : 5.6,
@@ -82,7 +82,7 @@ class FormUploader(object):
         }
 
 
-        video_metadata = {
+        video_metadata = {  # noqa: F841
             'type'       : constants.VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : now.strftime('%Y%m%d'),
@@ -104,15 +104,15 @@ class FormUploader(object):
             ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
-        delete_files = [
+        delete_files = [  # noqa: F841
             ('metadata', ('metadata.json', io.StringIO(json.dumps(delete_metadata)), 'application/json')),
         ]
 
         start = time.time()
 
         #r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
-        #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
-        r = requests.delete(endpoint_url, files=delete_files, headers=self.headers, verify=verify)
+        r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
+        #r = requests.delete(endpoint_url, files=delete_files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
