@@ -257,7 +257,10 @@ class IndiClientLibCameraGeneric(IndiClient):
                     metadata_dict = dict()
 
 
-            self.current_metadata_file_p.unlink(missing_ok=True)
+            try:
+                self.current_metadata_file_p.unlink()
+            except FileNotFoundError:
+                pass
 
 
             try:
