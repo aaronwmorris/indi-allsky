@@ -107,12 +107,10 @@ class SyncApiBaseView(BaseView):
 
 
     def delete(self):
-        metadata = self.saveMetadata()
-        # no file for delete
-        # no camera for delete
+        delete_id = request.json['id']
 
         try:
-            self.deleteFile(metadata)
+            self.deleteFile(delete_id)
         except FileMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -315,10 +313,10 @@ class SyncApiImageView(SyncApiBaseView):
         return image_entry
 
 
-    def deleteFile(self, image_metadata):
+    def deleteFile(self, image_id):
         try:
             image_entry = IndiAllSkyDbImageTable.query\
-                .filter(IndiAllSkyDbImageTable.id == image_metadata['id'])\
+                .filter(IndiAllSkyDbImageTable.id == image_id)\
                 .one()
 
 
@@ -402,10 +400,10 @@ class SyncApiVideoView(SyncApiBaseView):
         return video_entry
 
 
-    def deleteFile(self, video_metadata):
+    def deleteFile(self, video_id):
         try:
             video_entry = IndiAllSkyDbVideoTable.query\
-                .filter(IndiAllSkyDbVideoTable.id == video_metadata['id'])\
+                .filter(IndiAllSkyDbVideoTable.id == video_id)\
                 .one()
 
 
@@ -492,10 +490,10 @@ class SyncApiKeogramView(SyncApiBaseView):
         return keogram_entry
 
 
-    def deleteFile(self, keogram_metadata):
+    def deleteFile(self, keogram_id):
         try:
             keogram_entry = IndiAllSkyDbKeogramTable.query\
-                .filter(IndiAllSkyDbKeogramTable.id == keogram_metadata['id'])\
+                .filter(IndiAllSkyDbKeogramTable.id == keogram_id)\
                 .one()
 
 
@@ -582,10 +580,10 @@ class SyncApiStartrailView(SyncApiBaseView):
         return startrail_entry
 
 
-    def deleteFile(self, startrail_metadata):
+    def deleteFile(self, startrail_id):
         try:
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                .filter(IndiAllSkyDbStarTrailsTable.id == startrail_metadata['id'])\
+                .filter(IndiAllSkyDbStarTrailsTable.id == startrail_id)\
                 .one()
 
 
@@ -674,10 +672,10 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
         return startrail_video_entry
 
 
-    def deleteFile(self, startrail_video_metadata):
+    def deleteFile(self, startrail_video_id):
         try:
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.id == startrail_video_metadata['id'])\
+                .filter(IndiAllSkyDbStarTrailsVideoTable.id == startrail_video_id)\
                 .one()
 
 
