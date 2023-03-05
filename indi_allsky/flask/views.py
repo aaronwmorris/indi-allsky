@@ -2563,7 +2563,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
+                'night'       : night,
                 'camera_id'   : self.camera_id,
             }
 
@@ -2571,7 +2571,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
+                'night'       : night,
                 'camera_id'   : self.camera_id,
             }
 
@@ -2618,7 +2618,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
+                'night'       : night,
                 'camera_id'   : self.camera_id,
             }
 
@@ -2656,7 +2656,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
+                'night'       : night,
                 'camera_id'   : self.camera_id,
             }
 

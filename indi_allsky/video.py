@@ -187,7 +187,7 @@ class VideoWorker(Process):
         action = task.data['action']
         timespec = task.data['timespec']
         img_folder = Path(task.data['img_folder'])
-        timeofday = task.data['timeofday']
+        night = task.data['night']
         camera_id = task.data['camera_id']
         camera_uuid = task.data['camera_uuid']
 
@@ -206,10 +206,10 @@ class VideoWorker(Process):
 
 
         # perform the action
-        action_method(task, timespec, img_folder, timeofday, camera_id, camera_uuid)
+        action_method(task, timespec, img_folder, night, camera_id, camera_uuid)
 
 
-    def generateVideo(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
+    def generateVideo(self, task, timespec, img_folder, night, camera_id, camera_uuid):
         task.setRunning()
 
         now = datetime.now()
@@ -222,10 +222,10 @@ class VideoWorker(Process):
             return
 
 
-        if timeofday == 'night':
-            night = True
+        if night:
+            timeofday = 'night'
         else:
-            night = False
+            timeofday = 'day'
 
 
         if self.config['FFMPEG_CODEC'] in ['libx264']:
@@ -287,7 +287,7 @@ class VideoWorker(Process):
             'type'       : constants.VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'timeofday'  : timeofday,
+            'night'      : night,
             'camera_uuid': camera_uuid,
         }
 
@@ -397,7 +397,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def generateKeogramStarTrails(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
+    def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera_id, camera_uuid):
         task.setRunning()
 
         now = datetime.now()
@@ -410,10 +410,11 @@ class VideoWorker(Process):
             return
 
 
-        if timeofday == 'night':
-            night = True
+        if night:
+            timeofday = 'night'
         else:
-            night = False
+            timeofday = 'day'
+
 
         if self.config['FFMPEG_CODEC'] in ['libx264']:
             video_format = 'mp4'
@@ -510,7 +511,7 @@ class VideoWorker(Process):
             'type'       : constants.KEOGRAM,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'timeofday'  : timeofday,
+            'night'      : night,
             'camera_uuid': camera_uuid,
         }
 
@@ -518,7 +519,7 @@ class VideoWorker(Process):
             'type'       : constants.STARTRAIL,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'timeofday'  : timeofday,
+            'night'      : night,
             'camera_uuid': camera_uuid,
         }
 
@@ -526,7 +527,7 @@ class VideoWorker(Process):
             'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'timeofday'  : timeofday,
+            'night'      : night,
             'camera_uuid': camera_uuid,
         }
 
@@ -735,10 +736,10 @@ class VideoWorker(Process):
         self._uploadVideo(startrail_video_entry, startrail_video_file)
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
+    def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera_id, camera_uuid):
         task.setRunning()
 
-        if timeofday != 'night':
+        if not night:
             # Only upload at end of night
             return
 
@@ -842,7 +843,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
+    def systemHealthCheck(self, task, timespec, img_folder, night, camera_id, camera_uuid):
         # check filesystems
         logger.info('Performing system health check')
 
@@ -879,7 +880,7 @@ class VideoWorker(Process):
             )
 
 
-    def expireData(self, task, timespec, img_folder, timeofday, camera_id, camera_uuid):
+    def expireData(self, task, timespec, img_folder, night, camera_id, camera_uuid):
         task.setRunning()
 
         # Old image files need to be pruned

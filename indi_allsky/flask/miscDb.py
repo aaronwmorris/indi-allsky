@@ -282,7 +282,7 @@ class miscDb(object):
         #{
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
-        #    'timeofday'
+        #    'night'
         #}
 
 
@@ -307,18 +307,12 @@ class miscDb(object):
 
 
 
-        if metadata['timeofday'] == 'night':
-            night = True
-        else:
-            night = False
-
-
         video = IndiAllSkyDbVideoTable(
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(video)
@@ -333,7 +327,7 @@ class miscDb(object):
         #{
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
-        #    'timeofday'
+        #    'night'
         #}
 
         if not filename:
@@ -358,18 +352,12 @@ class miscDb(object):
 
 
 
-        if metadata['timeofday'] == 'night':
-            night = True
-        else:
-            night = False
-
-
         keogram = IndiAllSkyDbKeogramTable(
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(keogram)
@@ -384,7 +372,7 @@ class miscDb(object):
         #{
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
-        #    'timeofday'
+        #    'night'
         #}
 
 
@@ -409,18 +397,13 @@ class miscDb(object):
             dayDate = metadata['dayDate']
 
 
-        if metadata['timeofday'] == 'night':
-            night = True
-        else:
-            night = False
-
 
         startrail = IndiAllSkyDbStarTrailsTable(
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(startrail)
@@ -435,7 +418,7 @@ class miscDb(object):
         #{
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
-        #    'timeofday'
+        #    'night'
         #}
 
 
@@ -460,18 +443,13 @@ class miscDb(object):
             dayDate = metadata['dayDate']
 
 
-        if metadata['timeofday'] == 'night':
-            night = True
-        else:
-            night = False
-
 
         startrail_video = IndiAllSkyDbStarTrailsVideoTable(
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
             dayDate=dayDate,
-            night=night,
+            night=metadata['night'],
         )
 
         db.session.add(startrail_video)

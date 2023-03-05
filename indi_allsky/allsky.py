@@ -1509,7 +1509,7 @@ class IndiAllSky(object):
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'day',
+            'night'       : False,
             'camera_id'   : camera_id,
             'camera_uuid' : camera_uuid,
         }
@@ -1562,7 +1562,7 @@ class IndiAllSky(object):
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'night',
+            'night'       : True,
             'camera_id'   : camera_id,
             'camera_uuid' : camera_uuid,
         }
@@ -1615,7 +1615,7 @@ class IndiAllSky(object):
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'night',
+            'night'       : True,
             'camera_id'   : camera_id,
             'camera_uuid' : camera_uuid,
         }
@@ -1668,7 +1668,7 @@ class IndiAllSky(object):
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'day',
+            'night'       : False,
             'camera_id'   : camera_id,
             'camera_uuid' : camera_uuid,
         }
@@ -1752,7 +1752,7 @@ class IndiAllSky(object):
             'action'       : 'expireData',
             'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
-            'timeofday'    : None,  # Not needed
+            'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
             'camera_uuid'  : None,  # Not needed
         }
@@ -1774,7 +1774,7 @@ class IndiAllSky(object):
             'action'       : 'uploadAllskyEndOfNight',
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
-            'timeofday'    : 'night',
+            'night'        : True,
             'camera_id'    : None,  # Not needed
             'camera_uuid'  : None,  # Not needed
         }
@@ -1796,7 +1796,7 @@ class IndiAllSky(object):
             'action'       : 'systemHealthCheck',
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
-            'timeofday'    : None,  # Not needed
+            'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
             'camera_uuid'  : None,  # Not needed
         }
