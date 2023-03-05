@@ -35,7 +35,7 @@ class FormUploader(object):
 
 
     def main(self):
-        endpoint_url = 'https://localhost/indi-allsky/sync/v1'
+        endpoint_url = 'https://localhost/indi-allsky/sync/v1/media'
         username = 'foobar'
         apikey = '6472e501744c00dae3acd4406d662d844fe5ff0710e7aa0ac3ab28c8f5ee3f83'
         cert_bypass = True
@@ -56,9 +56,11 @@ class FormUploader(object):
         }
 
 
-        metadata = {
+        now = datetime.now()
+
+        image_metadata = {
             'type'         : constants.IMAGE,
-            'createDate'   : datetime.now().timestamp(),
+            'createDate'   : now.timestamp(),
             'exposure'     : 5.6,
             'exp_elapsed'  : 1.1,
             'gain'         : 100,
@@ -79,12 +81,21 @@ class FormUploader(object):
         }
 
 
+        video_metadata = {
+            'type'       : constants.VIDEO,
+            'createDate' : now.timestamp(),
+            'dayDate'    : now.strftime('%Y%m%d'),
+            'timeofday'  : 'night',
+            'camera_uuid': '2b291720-3142-4745-a526-7f3d7376563f',
+        }
 
-        local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
+
+        #local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
+        local_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
         files = [
-            ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
+            ('metadata', ('metadata.json', io.StringIO(json.dumps(video_metadata)), 'application/json')),
             ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
