@@ -22,7 +22,7 @@ from flask import current_app as app
 
 from .base_views import BaseView
 
-#from . import db
+from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -32,7 +32,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbUserTable
 
-#from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 
 bp_syncapi_allsky = Blueprint(
@@ -63,8 +63,8 @@ class SyncApiBaseView(BaseView):
 
         if request.method == 'POST':
             return self.post()
-        #elif request.method == 'PUT':
-        #    return self.put(entry_id)
+        elif request.method == 'PUT':
+            return self.put()
         else:
             return jsonify({}), 400
 
@@ -83,6 +83,20 @@ class SyncApiBaseView(BaseView):
 
 
         return jsonify({'id' : file_entry.id})
+
+
+    def put(self):
+        metadata = self.saveMetadata()
+        media_file = self.saveFile()
+
+        camera = self.getCamera(metadata['camera_uuid'])
+
+
+        file_entry = self.processFile(camera, metadata, media_file, overwrite=True)
+
+
+        return jsonify({'id' : file_entry.id})
+
 
 
     def processFile(self, **kwargs):
@@ -231,20 +245,35 @@ class SyncApiImageView(SyncApiBaseView):
 
 
         if not image_file.exists():
+            try:
+                # delete old entry if it exists
+                old_image_entry = IndiAllSkyDbImageTable.query\
+                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                    .one()
+
+                app.logger.warning('Removing orphaned image entry')
+                db.session.delete(old_image_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
             image_entry = self._miscDb.addImage(
                 image_file,
                 camera.id,
                 image_metadata,
             )
-
         else:
             if overwrite:
-                image_entry = IndiAllSkyDbImageTable.query\
-                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
-                    .one()
+                try:
+                    image_entry = IndiAllSkyDbImageTable.query\
+                        .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                        .one()
 
-                app.logger.warning('Replacing image')
-                image_file.unlink()
+                    app.logger.warning('Replacing image')
+                    image_file.unlink()
+                except NoResultFound:
+                    pass
             else:
                 raise FileExists()
 
@@ -272,6 +301,18 @@ class SyncApiVideoView(SyncApiBaseView):
         video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
 
         if not video_file.exists():
+            try:
+                # delete old entry if it exists
+                old_video_entry = IndiAllSkyDbVideoTable.query\
+                    .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                    .one()
+
+                app.logger.warning('Removing orphaned video entry')
+                db.session.delete(old_video_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
             video_entry = self._miscDb.addVideo(
                 video_file,
                 camera.id,
@@ -279,12 +320,15 @@ class SyncApiVideoView(SyncApiBaseView):
             )
         else:
             if overwrite:
-                video_entry = IndiAllSkyDbVideoTable.query\
-                    .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
-                    .one()
+                try:
+                    video_entry = IndiAllSkyDbVideoTable.query\
+                        .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                        .one()
 
-                app.logger.warning('Replacing video')
-                video_file.unlink()
+                    app.logger.warning('Replacing video')
+                    video_file.unlink()
+                except NoResultFound:
+                    pass
             else:
                 raise FileExists()
 
@@ -313,6 +357,19 @@ class SyncApiKeogramView(SyncApiBaseView):
 
 
         if not keogram_file.exists():
+            try:
+                # delete old entry if it exists
+                old_keogram_entry = IndiAllSkyDbKeogramTable.query\
+                    .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                    .one()
+
+                app.logger.warning('Removing orphaned keogram entry')
+                db.session.delete(old_keogram_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
             keogram_entry = self._miscDb.addKeogram(
                 keogram_file,
                 camera.id,
@@ -320,12 +377,15 @@ class SyncApiKeogramView(SyncApiBaseView):
             )
         else:
             if overwrite:
-                keogram_entry = IndiAllSkyDbKeogramTable.query\
-                    .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
-                    .one()
+                try:
+                    keogram_entry = IndiAllSkyDbKeogramTable.query\
+                        .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                        .one()
 
-                app.logger.warning('Replacing keogram')
-                keogram_file.unlink()
+                    app.logger.warning('Replacing keogram')
+                    keogram_file.unlink()
+                except NoResultFound:
+                    pass
             else:
                 raise FileExists()
 
@@ -355,6 +415,19 @@ class SyncApiStartrailView(SyncApiBaseView):
 
 
         if not startrail_file.exists():
+            try:
+                # delete old entry if it exists
+                old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                    .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                    .one()
+
+                app.logger.warning('Removing orphaned startrail entry')
+                db.session.delete(old_startrail_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera.id,
@@ -362,12 +435,15 @@ class SyncApiStartrailView(SyncApiBaseView):
             )
         else:
             if overwrite:
-                startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                    .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
-                    .one()
+                try:
+                    startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                        .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                        .one()
 
-                app.logger.warning('Replacing star trail')
-                startrail_file.unlink()
+                    app.logger.warning('Replacing star trail')
+                    startrail_file.unlink()
+                except NoResultFound:
+                    pass
             else:
                 raise FileExists()
 
@@ -397,6 +473,19 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
 
 
         if not startrail_video_file.exists():
+            try:
+                # delete old entry if it exists
+                old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                    .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                    .one()
+
+                app.logger.warning('Removing orphaned startrail video entry')
+                db.session.delete(old_startrail_video_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
             startrail_video_entry = self._miscDb.addStarTrailVideo(
                 startrail_video_file,
                 camera.id,
@@ -404,12 +493,15 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
             )
         else:
             if overwrite:
-                startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                    .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
-                    .one()
+                try:
+                    startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                        .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                        .one()
 
-                app.logger.warning('Replacing Star trail video')
-                startrail_video_file.unlink()
+                    app.logger.warning('Replacing Star trail video')
+                    startrail_video_file.unlink()
+                except NoResultFound:
+                    pass
             else:
                 raise FileExists()
 
@@ -427,9 +519,9 @@ class FileExists(Exception):
     pass
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST', 'PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST', 'PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST', 'PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST', 'PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST', 'PUT'])
 
