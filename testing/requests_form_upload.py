@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import io
 from datetime import datetime
 import time
@@ -9,6 +10,10 @@ import json
 from pathlib import Path
 import http.client as http_client
 import logging
+
+sys.path.append(str(Path(__file__).parent.absolute().parent))
+
+from indi_allsky import constants
 
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -52,7 +57,7 @@ class FormUploader(object):
 
 
         metadata = {
-            'type'         : 1,  # IMAGE
+            'type'         : constants.IMAGE,
             'createDate'   : datetime.now().timestamp(),
             'exposure'     : 5.6,
             'exp_elapsed'  : 1.1,
