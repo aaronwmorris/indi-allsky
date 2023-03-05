@@ -284,6 +284,7 @@ class VideoWorker(Process):
 
 
         video_metadata = {
+            'type'       : constants.VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'timeofday'  : timeofday,
@@ -505,7 +506,24 @@ class VideoWorker(Process):
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
 
 
-        k_st_metadata = {
+        keogram_metadata = {
+            'type'       : constants.KEOGRAM,
+            'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'timeofday'  : timeofday,
+            'camera_uuid': camera_uuid,
+        }
+
+        startrail_metadata = {
+            'type'       : constants.STARTRAIL,
+            'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'timeofday'  : timeofday,
+            'camera_uuid': camera_uuid,
+        }
+
+        startrail_video_metadata = {
+            'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'timeofday'  : timeofday,
@@ -516,14 +534,14 @@ class VideoWorker(Process):
         keogram_entry = self._miscDb.addKeogram(
             keogram_file,
             camera_id,
-            k_st_metadata,
+            keogram_metadata,
         )
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
                 camera_id,
-                k_st_metadata,
+                startrail_metadata,
             )
         else:
             startrail_entry = None
@@ -573,7 +591,7 @@ class VideoWorker(Process):
                 startrail_video_entry = self._miscDb.addStarTrailVideo(
                     startrail_video_file,
                     camera_id,
-                    k_st_metadata,
+                    startrail_video_metadata,
                 )
 
                 try:

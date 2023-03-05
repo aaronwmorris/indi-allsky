@@ -406,6 +406,7 @@ class ImageWorker(Process):
 
         if new_filename:
             image_metadata = {
+                'type'            : constants.IMAGE,
                 'createDate'      : exp_date.timestamp(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
@@ -793,6 +794,7 @@ class ImageWorker(Process):
 
 
         fits_metadata = {
+            'type'       : constants.FITS_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -947,6 +949,7 @@ class ImageWorker(Process):
 
 
         raw_metadata = {
+            'type'       : constants.RAW_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
