@@ -80,24 +80,125 @@ class SyncApiView(BaseView):
 
 
 
-    def processImage(self, camera, image_metadata, image_file):
+    def processImage(self, camera, image_metadata, tmp_file):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'])
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        filename = folder.joinpath(self.image_filename_t.format(camera.id, date_str, image_file.suffix))  # suffix includes dot
+        image_file = folder.joinpath(self.image_filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
 
 
-        shutil.move(str(image_file), str(filename))
+        if image_file.exists():
+            tmp_file.unlink()
+            return abort(400)
 
 
-        filename.chmod(0o644)
+        shutil.move(str(tmp_file), str(image_file))
+
+
+        image_file.chmod(0o644)
 
 
         self._miscDb.addImage(
-            filename,
+            image_file,
             camera.id,
             image_metadata,
+        )
+
+
+    def processVideo(self, camera, video_metadata, tmp_file):
+        d_dayDate = datetime.strptime(video_metadata['timespec'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+
+
+        video_file = date_folder.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), video_metadata['timeofday'], tmp_file.suffix))
+
+        if video_file.exists():
+            tmp_file.unlink()
+            return abort(400)
+
+
+        shutil.move(str(tmp_file), str(video_file))
+
+
+        # Create DB entry before creating file
+        self._miscDb.addVideo(
+            video_file,
+            camera.id,
+            video_metadata,
+        )
+
+
+    def processKeogram(self, camera, keogram_metadata, tmp_file):
+        d_dayDate = datetime.strptime(keogram_metadata['timespec'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+
+
+        keogram_file = date_folder.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), keogram_metadata['timeofday'], tmp_file.suffix))
+
+
+        if keogram_file.exists():
+            tmp_file.unlink()
+            return abort(400)
+
+
+        shutil.move(str(tmp_file), str(keogram_file))
+
+
+        self._miscDb.addKeogram(
+            keogram_file,
+            camera.id,
+            keogram_metadata,
+        )
+
+
+    def processStartrail(self, camera, startrail_metadata, tmp_file):
+        d_dayDate = datetime.strptime(startrail_metadata['timespec'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+
+
+        startrail_file = date_folder.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_metadata['timeofday'], self.config['IMAGE_FILE_TYPE']))
+
+
+        if startrail_file.exists():
+            tmp_file.unlink()
+            return abort(400)
+
+
+        shutil.move(str(tmp_file), str(startrail_file))
+
+
+        self._miscDb.addStarTrail(
+            startrail_file,
+            camera.id,
+            startrail_metadata,
+        )
+
+
+    def processStartrailVideo(self, camera, startrail_video_metadata, tmp_file):
+        d_dayDate = datetime.strptime(startrail_video_metadata['timespec'], '%Y%m%d').date()
+
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
+
+
+        startrail_video_file = date_folder.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, d_dayDate.strftime('%Y%m%d'), startrail_video_metadata['timeofday'], tmp_file.suffix))
+
+
+        if startrail_video_file.exists():
+            tmp_file.unlink()
+            return abort(400)
+
+
+        shutil.move(str(tmp_file), str(startrail_video_file))
+
+
+        self._miscDb.addStarTrailVideo(
+            startrail_video_file,
+            camera.id,
+            startrail_video_metadata,
         )
 
 
@@ -189,20 +290,34 @@ class SyncApiView(BaseView):
         return camera
 
 
-    def getImageFolder(self, exp_date, night):
+    def getDateFolder(self, exp_date, night):
         if night:
             # images should be written to previous day's folder until noon
             day_ref = exp_date - timedelta(hours=12)
-            timeofday_str = 'night'
         else:
             # daytime
             # images should be written to current day's folder
             day_ref = exp_date
+
+        date_folder = self.image_dir.joinpath(day_ref.strftime('%Y%m%d'))
+
+        return date_folder
+
+
+    def getImageFolder(self, exp_date, night):
+        date_folder = self.getDateFolder(exp_date, night)
+
+        if night:
+            timeofday_str = 'night'
+        else:
+            # daytime
+            # images should be written to current day's folder
             timeofday_str = 'day'
 
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = date_folder.joinpath(timeofday_str)
+
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
 
