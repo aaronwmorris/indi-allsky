@@ -38,7 +38,7 @@ class FormUploader(object):
         #endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
         endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
         username = 'foobar'
-        apikey = '6472e501744c00dae3acd4406d662d844fe5ff0710e7aa0ac3ab28c8f5ee3f83'
+        apikey = 'd8389bda9ac722e4619ca6d1dbe41cc8422d8fc26a111784b00617a87fe7889c'
         cert_bypass = True
 
         if cert_bypass:
@@ -78,7 +78,7 @@ class FormUploader(object):
             'stars'        : 0,
             'detections'   : 0,
             'process_elapsed' : 1.2,
-            'camera_uuid'  : '2b291720-3142-4745-a526-7f3d7376563f',
+            'camera_uuid'  : '05415368-2ff1-4098-a1a6-5ff75e2b1330',
         }
 
 
@@ -87,7 +87,7 @@ class FormUploader(object):
             'createDate' : now.timestamp(),
             'dayDate'    : now.strftime('%Y%m%d'),
             'timeofday'  : 'night',
-            'camera_uuid': '2b291720-3142-4745-a526-7f3d7376563f',
+            'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
         }
 
 
@@ -103,8 +103,8 @@ class FormUploader(object):
 
         start = time.time()
 
-        #r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
-        r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
+        r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
+        #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

@@ -258,25 +258,30 @@ class SyncApiImageView(SyncApiBaseView):
                 pass
 
 
-            image_entry = self._miscDb.addImage(
-                image_file,
-                camera.id,
-                image_metadata,
-            )
         else:
-            if overwrite:
-                try:
-                    image_entry = IndiAllSkyDbImageTable.query\
-                        .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
-                        .one()
-
-                    app.logger.warning('Replacing image')
-                    image_file.unlink()
-                except NoResultFound:
-                    pass
-            else:
+            if not overwrite:
                 raise FileExists()
 
+            app.logger.warning('Replacing image')
+            image_file.unlink()
+
+            try:
+                old_image_entry = IndiAllSkyDbImageTable.query\
+                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                    .one()
+
+                app.logger.warning('Removing old image entry')
+                db.session.delete(old_image_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        image_entry = self._miscDb.addImage(
+            image_file,
+            camera.id,
+            image_metadata,
+        )
 
         shutil.move(str(tmp_file), str(image_file))
         image_file.chmod(0o644)
@@ -313,25 +318,30 @@ class SyncApiVideoView(SyncApiBaseView):
             except NoResultFound:
                 pass
 
-            video_entry = self._miscDb.addVideo(
-                video_file,
-                camera.id,
-                video_metadata,
-            )
         else:
-            if overwrite:
-                try:
-                    video_entry = IndiAllSkyDbVideoTable.query\
-                        .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
-                        .one()
-
-                    app.logger.warning('Replacing video')
-                    video_file.unlink()
-                except NoResultFound:
-                    pass
-            else:
+            if not overwrite:
                 raise FileExists()
 
+            app.logger.warning('Replacing video')
+            video_file.unlink()
+
+            try:
+                old_video_entry = IndiAllSkyDbVideoTable.query\
+                    .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                    .one()
+
+                app.logger.warning('Removing old video entry')
+                db.session.delete(old_video_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        video_entry = self._miscDb.addVideo(
+            video_file,
+            camera.id,
+            video_metadata,
+        )
 
         shutil.move(str(tmp_file), str(video_file))
         video_file.chmod(0o644)
@@ -370,25 +380,30 @@ class SyncApiKeogramView(SyncApiBaseView):
                 pass
 
 
-            keogram_entry = self._miscDb.addKeogram(
-                keogram_file,
-                camera.id,
-                keogram_metadata,
-            )
         else:
-            if overwrite:
-                try:
-                    keogram_entry = IndiAllSkyDbKeogramTable.query\
-                        .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
-                        .one()
-
-                    app.logger.warning('Replacing keogram')
-                    keogram_file.unlink()
-                except NoResultFound:
-                    pass
-            else:
+            if not overwrite:
                 raise FileExists()
 
+            app.logger.warning('Replacing keogram')
+            keogram_file.unlink()
+
+            try:
+                old_keogram_entry = IndiAllSkyDbKeogramTable.query\
+                    .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                    .one()
+
+                app.logger.warning('Removing old keogram entry')
+                db.session.delete(old_keogram_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        keogram_entry = self._miscDb.addKeogram(
+            keogram_file,
+            camera.id,
+            keogram_metadata,
+        )
 
         shutil.move(str(tmp_file), str(keogram_file))
         keogram_file.chmod(0o644)
@@ -427,25 +442,30 @@ class SyncApiStartrailView(SyncApiBaseView):
             except NoResultFound:
                 pass
 
-
-            startrail_entry = self._miscDb.addStarTrail(
-                startrail_file,
-                camera.id,
-                startrail_metadata,
-            )
         else:
-            if overwrite:
-                try:
-                    startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                        .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
-                        .one()
-
-                    app.logger.warning('Replacing star trail')
-                    startrail_file.unlink()
-                except NoResultFound:
-                    pass
-            else:
+            if not overwrite:
                 raise FileExists()
+
+            app.logger.warning('Replacing star trail')
+            startrail_file.unlink()
+
+            try:
+                old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                    .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                    .one()
+
+                app.logger.warning('Removing old startrail entry')
+                db.session.delete(old_startrail_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        startrail_entry = self._miscDb.addStarTrail(
+            startrail_file,
+            camera.id,
+            startrail_metadata,
+        )
 
 
         shutil.move(str(tmp_file), str(startrail_file))
@@ -486,24 +506,30 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
                 pass
 
 
-            startrail_video_entry = self._miscDb.addStarTrailVideo(
-                startrail_video_file,
-                camera.id,
-                startrail_video_metadata,
-            )
         else:
-            if overwrite:
-                try:
-                    startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                        .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
-                        .one()
-
-                    app.logger.warning('Replacing Star trail video')
-                    startrail_video_file.unlink()
-                except NoResultFound:
-                    pass
-            else:
+            if not overwrite:
                 raise FileExists()
+
+            app.logger.warning('Replacing Star trail video')
+            startrail_video_file.unlink()
+
+            try:
+                old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                    .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                    .one()
+
+                app.logger.warning('Removing old startrail video entry')
+                db.session.delete(old_startrail_video_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        startrail_video_entry = self._miscDb.addStarTrailVideo(
+            startrail_video_file,
+            camera.id,
+            startrail_video_metadata,
+        )
 
 
         shutil.move(str(tmp_file), str(startrail_video_file))
