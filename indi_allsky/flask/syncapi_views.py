@@ -140,9 +140,26 @@ class SyncApiBaseView(BaseView):
         pass
 
 
-    def deleteFile(self, *args, **kwargs):
-        # override in class
-        pass
+    def deleteFile(self, entry_id):
+        try:
+            entry = self.model.query\
+                .filter(self.model.id == entry_id)\
+                .one()
+
+
+            filename_p = Path(entry.filename)
+
+            app.logger.warning('Deleting entry %d', entry.id)
+            db.session.delete(entry)
+            db.session.commit()
+        except NoResultFound:
+            raise FileMissing()
+
+
+        try:
+            filename_p.unlink()
+        except FileNotFoundError:
+            pass
 
 
     def getFile(self, entry_id):
@@ -346,28 +363,6 @@ class SyncApiImageView(SyncApiBaseView):
         return image_entry
 
 
-    def deleteFile(self, image_id):
-        try:
-            image_entry = IndiAllSkyDbImageTable.query\
-                .filter(IndiAllSkyDbImageTable.id == image_id)\
-                .one()
-
-
-            filename_p = Path(image_entry.filename)
-
-            app.logger.warning('Deleting image entry %d', image_entry.id)
-            db.session.delete(image_entry)
-            db.session.commit()
-        except NoResultFound:
-            raise FileMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
-
-
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
@@ -433,28 +428,6 @@ class SyncApiVideoView(SyncApiBaseView):
         app.logger.info('Uploaded video: %s', video_file)
 
         return video_entry
-
-
-    def deleteFile(self, video_id):
-        try:
-            video_entry = IndiAllSkyDbVideoTable.query\
-                .filter(IndiAllSkyDbVideoTable.id == video_id)\
-                .one()
-
-
-            filename_p = Path(video_entry.filename)
-
-            app.logger.warning('Deleting video entry %d', video_entry.id)
-            db.session.delete(video_entry)
-            db.session.commit()
-        except NoResultFound:
-            raise FileMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
 
 
 class SyncApiKeogramView(SyncApiBaseView):
@@ -527,28 +500,6 @@ class SyncApiKeogramView(SyncApiBaseView):
         return keogram_entry
 
 
-    def deleteFile(self, keogram_id):
-        try:
-            keogram_entry = IndiAllSkyDbKeogramTable.query\
-                .filter(IndiAllSkyDbKeogramTable.id == keogram_id)\
-                .one()
-
-
-            filename_p = Path(keogram_entry.filename)
-
-            app.logger.warning('Deleting keogram entry %d', keogram_entry.id)
-            db.session.delete(keogram_entry)
-            db.session.commit()
-        except NoResultFound:
-            raise FileMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
-
-
 class SyncApiStartrailView(SyncApiBaseView):
     decorators = []
 
@@ -617,29 +568,6 @@ class SyncApiStartrailView(SyncApiBaseView):
         app.logger.info('Uploaded startrail: %s', startrail_file)
 
         return startrail_entry
-
-
-    def deleteFile(self, startrail_id):
-        try:
-            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                .filter(IndiAllSkyDbStarTrailsTable.id == startrail_id)\
-                .one()
-
-
-            filename_p = Path(startrail_entry.filename)
-
-            app.logger.warning('Deleting star trail entry %d', startrail_entry.id)
-            db.session.delete(startrail_entry)
-            db.session.commit()
-        except NoResultFound:
-            raise FileMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
-
 
 
 class SyncApiStartrailVideoView(SyncApiBaseView):
@@ -711,29 +639,6 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
         app.logger.info('Uploaded startrail: %s', startrail_video_file)
 
         return startrail_video_entry
-
-
-    def deleteFile(self, startrail_video_id):
-        try:
-            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.id == startrail_video_id)\
-                .one()
-
-
-            filename_p = Path(startrail_video_entry.filename)
-
-            app.logger.warning('Deleting star trail video entry %d', startrail_video_entry.id)
-            db.session.delete(startrail_video_entry)
-            db.session.commit()
-        except NoResultFound:
-            raise FileMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
-
 
 
 class FileExists(Exception):
