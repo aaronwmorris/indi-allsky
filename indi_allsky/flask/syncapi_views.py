@@ -30,6 +30,8 @@ from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
+from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbUserTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -47,6 +49,8 @@ class SyncApiBaseView(BaseView):
     decorators = []
 
     model = None
+    filename_t = None
+    add_function = None
 
 
     def __init__(self, **kwargs):
@@ -182,7 +186,8 @@ class SyncApiBaseView(BaseView):
                 pass
 
 
-        new_entry = self._miscDb.addVideo(
+        addFunction_method = getattr(self._miscDb, self.add_function)
+        new_entry = addFunction_method(
             filename,
             camera.id,
             metadata,
@@ -360,6 +365,7 @@ class SyncApiImageView(SyncApiBaseView):
 
     model = IndiAllSkyDbImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
+    add_function = 'addImage'
 
 
     def processFile(self, camera, image_metadata, tmp_file, overwrite=False):
@@ -373,8 +379,8 @@ class SyncApiImageView(SyncApiBaseView):
         if not image_file.exists():
             try:
                 # delete old entry if it exists
-                old_image_entry = IndiAllSkyDbImageTable.query\
-                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                old_image_entry = self.model.query\
+                    .filter(self.model.filename == str(image_file))\
                     .one()
 
                 app.logger.warning('Removing orphaned image entry')
@@ -392,8 +398,8 @@ class SyncApiImageView(SyncApiBaseView):
             image_file.unlink()
 
             try:
-                old_image_entry = IndiAllSkyDbImageTable.query\
-                    .filter(IndiAllSkyDbImageTable.filename == str(image_file))\
+                old_image_entry = self.model.query\
+                    .filter(self.model.filename == str(image_file))\
                     .one()
 
                 app.logger.warning('Removing old image entry')
@@ -403,7 +409,8 @@ class SyncApiImageView(SyncApiBaseView):
                 pass
 
 
-        image_entry = self._miscDb.addImage(
+        addFunction_method = getattr(self._miscDb, self.add_function)
+        new_entry = addFunction_method(
             image_file,
             camera.id,
             image_metadata,
@@ -415,7 +422,7 @@ class SyncApiImageView(SyncApiBaseView):
 
         app.logger.info('Uploaded image: %s', image_file)
 
-        return image_entry
+        return new_entry
 
 
 class SyncApiVideoView(SyncApiBaseView):
@@ -423,7 +430,7 @@ class SyncApiVideoView(SyncApiBaseView):
 
     model = IndiAllSkyDbVideoTable
     filename_t = 'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
-
+    add_function = 'addVideo'
 
 
 class SyncApiKeogramView(SyncApiBaseView):
@@ -431,6 +438,7 @@ class SyncApiKeogramView(SyncApiBaseView):
 
     model = IndiAllSkyDbKeogramTable
     filename_t = 'allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    add_function = 'addKeogram'
 
 
 class SyncApiStartrailView(SyncApiBaseView):
@@ -438,6 +446,7 @@ class SyncApiStartrailView(SyncApiBaseView):
 
     model = IndiAllSkyDbStarTrailsTable
     filename_t = 'allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    add_function = 'addStarTrail'
 
 
 class SyncApiStartrailVideoView(SyncApiBaseView):
@@ -445,7 +454,23 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
 
     model = IndiAllSkyDbStarTrailsVideoTable
     filename_t = 'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    add_function = 'addStarTrailVideo'
 
+
+class SyncApiRawImageView(SyncApiBaseView):
+    decorators = []
+
+    model = IndiAllSkyDbRawImageTable
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'
+    add_function = 'addRawImage'
+
+
+class SyncApiFitsImageView(SyncApiImageView):  # image parent
+    decorators = []
+
+    model = IndiAllSkyDbFitsImageTable
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'
+    add_function = 'addFitsImage'
 
 
 class FileExists(Exception):
@@ -461,4 +486,6 @@ bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_v
 bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/rawimage', view_func=SyncApiRawImageView.as_view('syncapi_v1_rawimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/fitsimage', view_func=SyncApiFitsImageView.as_view('syncapi_v1_fitsimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 
