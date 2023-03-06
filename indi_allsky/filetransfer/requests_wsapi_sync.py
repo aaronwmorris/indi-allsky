@@ -81,8 +81,6 @@ class requests_wsapi_sync(GenericFileTransfer):
         remote_uri = kwargs['remote_uri']
         metadata = kwargs['metadata']
 
-        local_file_p = Path(local_file)
-
 
         url = '{0:s}/{1:s}'.format(self.url, remote_uri)
         #logger.info('requests URL: %s', url)
@@ -90,8 +88,12 @@ class requests_wsapi_sync(GenericFileTransfer):
 
         files = [
             ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
-            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
+
+
+        if local_file:
+            local_file_p = Path(local_file)
+            files.append(('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')))  # need file extension from original file
 
 
         start = time.time()

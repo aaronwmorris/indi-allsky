@@ -79,7 +79,7 @@ class SyncApiBaseView(BaseView):
             return jsonify({}), 400
 
 
-    def post(self):
+    def post(self, overwrite=False):
         metadata = self.saveMetadata()
         media_file = self.saveFile()
 
@@ -87,7 +87,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file)
+            file_entry = self.processPost(camera, metadata, media_file, overwrite=overwrite)
         except FileExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -98,20 +98,8 @@ class SyncApiBaseView(BaseView):
         })
 
 
-    def put(self):
-        metadata = self.saveMetadata()
-        media_file = self.saveFile()
-
-        camera = self.getCamera(metadata)
-
-
-        file_entry = self.processPost(camera, metadata, media_file, overwrite=True)
-
-
-        return jsonify({
-            'id'   : file_entry.id,
-            'url'  : str(file_entry.getUrl(local=True)),
-        })
+    def put(self, overwrite=True):
+        self.post(overwrite=overwrite)
 
 
     def delete(self):
@@ -336,16 +324,20 @@ class SyncApiCameraView(BaseView):
     add_function = 'addCamera_uuid'
 
 
-    def put(self):
+    def post(self, overwrite=True):
         metadata = self.saveMetadata()
 
 
-        camera_entry = self.processPost(None, metadata, None, overwrite=True)
+        camera_entry = self.processPost(None, metadata, None, overwrite=overwrite)
 
 
         return jsonify({
             'id'   : camera_entry.id,
         })
+
+
+    def put(self, overwrite=True):
+        self.post(overwrite=overwrite)
 
 
     def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
@@ -504,7 +496,7 @@ class FileMissing(Exception):
     pass
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['POST', 'PUT'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
