@@ -73,6 +73,12 @@ class IndiAllSkyDbCameraTable(db.Model):
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
 
 
+    @property
+    def filename(self):
+        ### virtual property used for the sync api
+        return 'camera'
+
+
 class IndiAllSkyDbFileBase(db.Model):
     __abstract__ = True
 

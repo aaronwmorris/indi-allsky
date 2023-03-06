@@ -13,7 +13,8 @@ from .pycurl_webdav_https import pycurl_webdav_https
 from .paho_mqtt import paho_mqtt
 from .boto3_s3 import boto3_s3
 from .libcloud_s3 import libcloud_s3
-from .pycurl_wsapi_sync import pycurl_wsapi_sync
+#from .pycurl_wsapi_sync import pycurl_wsapi_sync
+from .requests_wsapi_sync import requests_wsapi_sync
 
 __all__ = (
     'paramiko_sftp',
@@ -34,5 +35,6 @@ __all__ = (
     'boto3_s3',
     'libcloud_s3',
 
-    'pycurl_wsapi_sync',
+    #'pycurl_wsapi_sync',
+    'requests_wsapi_sync',
 )

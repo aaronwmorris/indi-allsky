@@ -31,6 +31,8 @@ from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
+from . import constants
+
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
@@ -683,6 +685,38 @@ class IndiAllSky(object):
             logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
             time.sleep(3)
+
+
+        self._sync_camera(db_camera, camera_metadata)
+
+
+    def _sync_camera(self, camera, camera_metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        camera_metadata['uuid'] = camera.uuid
+        camera_metadata['type'] = constants.CAMERA
+
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : camera.__class__.__name__,
+            'id'          : camera.id,
+            'metadata'    : camera_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def _startImageWorker(self):

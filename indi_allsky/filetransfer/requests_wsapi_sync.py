@@ -1,7 +1,7 @@
 from .generic import GenericFileTransfer
 #from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
-#from .exceptions import CertificateValidationFailure
+from .exceptions import CertificateValidationFailure
 from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
@@ -10,6 +10,7 @@ import requests
 import io
 import time
 import socket
+import ssl
 import json
 import hashlib
 import logging
@@ -19,8 +20,6 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 logger = logging.getLogger('indi_allsky')
 
-
-### UNTESTED
 
 class requests_wsapi_sync(GenericFileTransfer):
 
@@ -59,6 +58,7 @@ class requests_wsapi_sync(GenericFileTransfer):
 
         self.headers = {
             'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, apikey_hash),
+            'Connection'    : 'close',  # no need for keep alives
         }
 
 
@@ -70,19 +70,14 @@ class requests_wsapi_sync(GenericFileTransfer):
     def close(self):
         super(requests_wsapi_sync, self).close()
 
-        if self.client:
-            self.client.close()
-
 
     def put(self, *args, **kwargs):
         super(requests_wsapi_sync, self).put(*args, **kwargs)
 
-        local_file = kwargs['local_file']
-        remote_uri = kwargs['remote_uri']
         metadata = kwargs['metadata']
+        local_file = kwargs['local_file']
 
 
-        url = '{0:s}/{1:s}'.format(self.url, remote_uri)
         #logger.info('requests URL: %s', url)
 
 
@@ -91,7 +86,8 @@ class requests_wsapi_sync(GenericFileTransfer):
         ]
 
 
-        if local_file:
+        # cameras do not have files
+        if str(local_file) != 'camera':
             local_file_p = Path(local_file)
             files.append(('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')))  # need file extension from original file
 
@@ -99,11 +95,15 @@ class requests_wsapi_sync(GenericFileTransfer):
         start = time.time()
 
         try:
-            r = self.client.post(url, files=files, headers=self.headers, verify=self.verify)
+            r = self.client.post(self.url, files=files, headers=self.headers, verify=self.verify)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:
             raise ConnectionFailure(str(e)) from e
+        except ssl.SSLCertVerificationError as e:
+            raise CertificateValidationFailure(str(e)) from e
+        except requests.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
 
 
         if r.status_code >= 400:

@@ -157,9 +157,9 @@ class FileUploader(Process):
         remote_file = task.data.get('remote_file')
         remove_local = task.data.get('remove_local')
 
-        asset_type = task.data.get('asset_type', constants.ASSET_IMAGE)
+        asset_type = task.data.get('asset_type')
 
-        mq_data = task.data.get('mq_data')
+        metadata = task.data.get('metadata')
 
 
         if entry_model and entry_id:
@@ -195,7 +195,7 @@ class FileUploader(Process):
 
 
         # Build parameters
-        if action == 'upload':
+        if action == constants.TRANSFER_UPLOAD:
             connect_kwargs = {
                 'hostname'    : self.config['FILETRANSFER']['HOST'],
                 'username'    : self.config['FILETRANSFER']['USERNAME'],
@@ -223,7 +223,7 @@ class FileUploader(Process):
             if self.config['FILETRANSFER']['PORT']:
                 client.port = self.config['FILETRANSFER']['PORT']
 
-        elif action == 's3':
+        elif action == constants.TRANSFER_S3:
             s3_key = local_file_p.relative_to(self.image_dir)
 
             if asset_type == constants.ASSET_IMAGE:
@@ -274,7 +274,7 @@ class FileUploader(Process):
                 client.port = self.config['S3UPLOAD']['PORT']
 
 
-        elif action == 'mqttpub':
+        elif action == constants.TRANSFER_MQTT:
             connect_kwargs = {
                 'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
                 'hostname'    : self.config['MQTTPUBLISH']['HOST'],
@@ -288,7 +288,7 @@ class FileUploader(Process):
                 'local_file'  : local_file_p,
                 'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                 'qos'         : self.config['MQTTPUBLISH']['QOS'],
-                'mq_data'     : mq_data,
+                'mq_data'     : metadata,
             }
 
             try:
@@ -303,6 +303,29 @@ class FileUploader(Process):
             if self.config['MQTTPUBLISH']['PORT']:
                 client.port = self.config['MQTTPUBLISH']['PORT']
 
+        elif action == constants.TRANSFER_SYNC_V1:
+            ENDPOINT_URI = constants.ENDPOINT_V1[metadata['type']]
+
+            connect_kwargs = {
+                'hostname'     : '{0:s}/{1:s}'.format(self.config['SYNCAPI']['BASEURL'], ENDPOINT_URI),
+                'username'     : self.config['SYNCAPI']['USERNAME'],
+                'apikey'       : self.config['SYNCAPI']['APIKEY'],
+                'cert_bypass'  : self.config['SYNCAPI']['CERT_BYPASS'],
+            }
+
+            put_kwargs = {
+                'metadata'      : metadata,
+                'local_file'    : local_file_p,
+            }
+
+            try:
+                client_class = getattr(filetransfer, 'requests_wsapi_sync')
+            except AttributeError:
+                logger.error('Unknown filetransfer class: %s', 'requests_wsapi_sync')
+                task.setFailed('Unknown filetransfer class: {0:s}'.format('requests_wsapi_sync'))
+                return
+
+            client = client_class(self.config)
         else:
             task.setFailed('Invalid transfer action')
             raise Exception('Invalid transfer action')

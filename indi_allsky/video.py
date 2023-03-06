@@ -355,7 +355,7 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'      : 'upload',
+            'action'      : constants.TRANSFER_UPLOAD,
             'model'       : video_entry.__class__.__name__,
             'id'          : video_entry.id,
             'remote_file' : str(remote_file_p),
@@ -387,7 +387,7 @@ class VideoWorker(Process):
 
         # publish data to s3 bucket
         jobdata = {
-            'action'      : 's3',
+            'action'      : constants.TRANSFER_S3,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
             'asset_type'  : constants.ASSET_TIMELAPSE,
@@ -681,7 +681,7 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'      : 'upload',
+            'action'      : constants.TRANSFER_UPLOAD,
             'model'       : keogram_entry.__class__.__name__,
             'id'          : keogram_entry.id,
             'remote_file' : str(remote_file_p),
@@ -722,7 +722,7 @@ class VideoWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'      : 'upload',
+            'action'      : constants.TRANSFER_UPLOAD,
             'model'       : startrail_entry.__class__.__name__,
             'id'          : startrail_entry.id,
             'remote_file' : str(remote_file_p),
@@ -831,7 +831,7 @@ class VideoWorker(Process):
 
 
         jobdata = {
-            'action'         : 'upload',
+            'action'         : constants.TRANSFER_UPLOAD,
             'local_file'     : str(data_json_p),
             'remote_file'    : str(remote_file_p),
             'remove_local'   : True,

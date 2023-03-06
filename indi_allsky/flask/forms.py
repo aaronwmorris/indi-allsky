@@ -1064,7 +1064,7 @@ def MQTTPUBLISH__PASSWORD_validator(form, field):
     pass
 
 
-def SYNCAPI__PASSWORD_validator(form, field):
+def SYNCAPI__APIKEY_validator(form, field):
     pass
 
 
@@ -1762,7 +1762,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__ENABLE                  = BooleanField('Enable Sync API')
     SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator])
     SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator])
-    SYNCAPI__APIKEY                  = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__PASSWORD_validator])
+    SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])

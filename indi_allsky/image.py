@@ -577,7 +577,7 @@ class ImageWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'      : 'upload',
+            'action'      : constants.TRANSFER_UPLOAD,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
             'remote_file' : str(remote_file_p),
@@ -658,7 +658,7 @@ class ImageWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'       : 'upload',
+            'action'       : constants.TRANSFER_UPLOAD,
             'local_file'   : str(tmp_metadata_name_p),
             'remote_file'  : str(remote_file_p),
             'remove_local' : True,
@@ -682,9 +682,9 @@ class ImageWorker(Process):
 
         # publish data to mq broker
         jobdata = {
-            'action'      : 'mqttpub',
+            'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
-            'mq_data'     : mq_data,
+            'metadata'    : mq_data,
         }
 
         mqtt_task = IndiAllSkyDbTaskQueueTable(
@@ -713,7 +713,7 @@ class ImageWorker(Process):
 
         # publish data to s3 bucket
         jobdata = {
-            'action'      : 's3',
+            'action'      : constants.TRANSFER_S3,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
             'asset_type'  : constants.ASSET_IMAGE,

@@ -28,3 +28,10 @@ ENDPOINT_V1 = {
     #USER            : 'sync/v1/user',
 }
 
+
+# File transfers
+TRANSFER_UPLOAD  = 1
+TRANSFER_MQTT    = 2
+TRANSFER_S3      = 3
+TRANSFER_SYNC_V1 = 4
+
