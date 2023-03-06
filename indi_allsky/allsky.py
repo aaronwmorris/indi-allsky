@@ -262,6 +262,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
@@ -270,6 +271,13 @@ class IndiAllSky(object):
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
@@ -556,6 +564,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
@@ -564,6 +573,13 @@ class IndiAllSky(object):
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)

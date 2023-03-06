@@ -321,7 +321,7 @@ class SyncApiCameraView(BaseView):
 
     model = IndiAllSkyDbCameraTable
     filename_t = None
-    add_function = 'addCamera_uuid'
+    add_function = 'addCamera_remote'
 
 
     def post(self, overwrite=True):

@@ -60,6 +60,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     lensFocalRatio = db.Column(db.Float, nullable=True)
 
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
 
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')

@@ -47,6 +47,7 @@ class miscDb(object):
             camera = IndiAllSkyDbCameraTable(
                 name=metadata['name'],
                 connectDate=now,
+                remote=False,
                 uuid=str(uuid.uuid4()),
             )
 
@@ -54,11 +55,16 @@ class miscDb(object):
             db.session.commit()
 
 
+
+
         keys_exclude = [
             'id',
             'name',
             'uuid',
             'type',
+            'remote',
+            #'sync_id',
+            #'friendlyName',
         ]
 
         # populate camera info
@@ -76,8 +82,7 @@ class miscDb(object):
         return camera
 
 
-    def addCamera_uuid(self, metadata):
-        # cameras should be remote in this case
+    def addCamera_remote(self, metadata):
         now = datetime.now()
 
         try:
@@ -88,16 +93,21 @@ class miscDb(object):
             camera.connectDate = now
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
-                name=metadata['name'],
+                name=metadata['uuid'],  # use uuid initially for uniqueness
                 connectDate=now,
+                remote=True,
                 uuid=metadata['uuid']
             )
 
             db.session.add(camera)
             db.session.commit()
 
-            # The camera name must be unique
-            camera.name = '{0:s} {1:d}'.format(metadata['name'], camera.id)
+
+        # The camera name and friendlyName must be unique
+        camera.name = '{0:s} {1:d}'.format(metadata['name'], camera.id)
+
+        if metadata['friendlyName']:
+            camera.friendlyName = '{0:s} {1:d}'.format(metadata['friendlyName'], camera.id)
 
 
         keys_exclude = [
@@ -105,6 +115,9 @@ class miscDb(object):
             'name',
             'uuid',
             'type',
+            'remote',
+            'sync_id',
+            'friendlyName',
         ]
 
         # populate camera info
