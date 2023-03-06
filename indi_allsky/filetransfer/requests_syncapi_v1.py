@@ -89,7 +89,11 @@ class requests_syncapi_v1(GenericFileTransfer):
         # cameras do not have files
         if str(local_file) != 'camera':
             local_file_p = Path(local_file)
+            local_file_size = local_file_p.stat().st_size
+
             files.append(('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')))  # need file extension from original file
+        else:
+            local_file_size = 1024  # fake
 
 
         start = time.time()
@@ -111,7 +115,6 @@ class requests_syncapi_v1(GenericFileTransfer):
 
 
         upload_elapsed_s = time.time() - start
-        local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
 

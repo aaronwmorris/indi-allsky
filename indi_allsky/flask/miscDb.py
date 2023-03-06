@@ -106,7 +106,7 @@ class miscDb(object):
         # The camera name and friendlyName must be unique
         camera.name = '{0:s} {1:d}'.format(metadata['name'], camera.id)
 
-        if metadata['friendlyName']:
+        if metadata.get('friendlyName'):
             camera.friendlyName = '{0:s} {1:d}'.format(metadata['friendlyName'], camera.id)
 
 

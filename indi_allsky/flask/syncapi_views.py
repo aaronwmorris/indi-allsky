@@ -316,7 +316,7 @@ class SyncApiBaseView(BaseView):
         return camera
 
 
-class SyncApiCameraView(BaseView):
+class SyncApiCameraView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbCameraTable
