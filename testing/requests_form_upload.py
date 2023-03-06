@@ -116,7 +116,7 @@ class FormUploader(object):
         #r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
         r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
-        #r = requests.delete(endpoint_url, json=delete_metadata, headers=self.headers, verify=verify)
+        #r = requests.delete(endpoint_url, files=delete_metadata, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_image_file_p.stat().st_size

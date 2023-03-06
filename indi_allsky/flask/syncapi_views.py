@@ -83,11 +83,11 @@ class SyncApiBaseView(BaseView):
         metadata = self.saveMetadata()
         media_file = self.saveFile()
 
-        camera = self.getCamera(metadata['camera_uuid'])
+        camera = self.getCamera(metadata)
 
 
         try:
-            file_entry = self.processFile(camera, metadata, media_file)
+            file_entry = self.processPost(camera, metadata, media_file)
         except FileExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -102,10 +102,10 @@ class SyncApiBaseView(BaseView):
         metadata = self.saveMetadata()
         media_file = self.saveFile()
 
-        camera = self.getCamera(metadata['camera_uuid'])
+        camera = self.getCamera(metadata)
 
 
-        file_entry = self.processFile(camera, metadata, media_file, overwrite=True)
+        file_entry = self.processPost(camera, metadata, media_file, overwrite=True)
 
 
         return jsonify({
@@ -115,10 +115,12 @@ class SyncApiBaseView(BaseView):
 
 
     def delete(self):
-        delete_id = request.json['id']
+        metadata = self.saveMetadata()
+        # no media
+        # no camera
 
         try:
-            self.deleteFile(delete_id)
+            self.deleteFile(metadata['id'])
         except FileMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -139,7 +141,7 @@ class SyncApiBaseView(BaseView):
         })
 
 
-    def processFile(self, camera, metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'))
@@ -317,13 +319,42 @@ class SyncApiBaseView(BaseView):
             return abort(400)
 
 
-    def getCamera(self, camera_uuid):
+    def getCamera(self, metadata):
         # not catching NoResultFound
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.uuid == camera_uuid)\
+            .filter(IndiAllSkyDbCameraTable.uuid == metadata['camera_uuid'])\
             .one()
 
         return camera
+
+
+class SyncApiCameraView(BaseView):
+    decorators = []
+
+    model = IndiAllSkyDbCameraTable
+    filename_t = None
+    add_function = 'addCamera'
+
+
+    def put(self):
+        metadata = self.saveMetadata()
+
+        try:
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            camera = None
+
+
+        camera_entry = self.processPost(camera, metadata, None, overwrite=True)
+
+
+        return jsonify({
+            'id'   : camera_entry.id,
+        })
+
+
+    def processPost(self, camera, metadata, notused1, overwrite=True):
+        pass
 
 
 class SyncApiImageView(SyncApiBaseView):
@@ -334,7 +365,7 @@ class SyncApiImageView(SyncApiBaseView):
     add_function = 'addImage'
 
 
-    def processFile(self, camera, image_metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, image_metadata, tmp_file, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
@@ -473,6 +504,7 @@ class FileMissing(Exception):
     pass
 
 
+bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['PUT'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
