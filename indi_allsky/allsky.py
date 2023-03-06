@@ -699,7 +699,6 @@ class IndiAllSky(object):
         camera_metadata['uuid'] = camera.uuid
         camera_metadata['type'] = constants.CAMERA
 
-
         # tell worker to upload file
         jobdata = {
             'action'      : constants.TRANSFER_SYNC_V1,

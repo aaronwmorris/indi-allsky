@@ -47,7 +47,7 @@ class miscDb(object):
             camera = IndiAllSkyDbCameraTable(
                 name=metadata['name'],
                 connectDate=now,
-                remote=False,
+                local=True,
                 uuid=str(uuid.uuid4()),
             )
 
@@ -62,7 +62,7 @@ class miscDb(object):
             'name',
             'uuid',
             'type',
-            'remote',
+            'local',
             #'sync_id',
             #'friendlyName',
         ]
@@ -95,7 +95,7 @@ class miscDb(object):
             camera = IndiAllSkyDbCameraTable(
                 name=metadata['uuid'],  # use uuid initially for uniqueness
                 connectDate=now,
-                remote=True,
+                local=False,
                 uuid=metadata['uuid']
             )
 
@@ -115,7 +115,7 @@ class miscDb(object):
             'name',
             'uuid',
             'type',
-            'remote',
+            'local',
             'sync_id',
             'friendlyName',
         ]
