@@ -319,10 +319,10 @@ class FileUploader(Process):
             }
 
             try:
-                client_class = getattr(filetransfer, 'requests_wsapi_sync')
+                client_class = getattr(filetransfer, 'requests_syncapi_v1')
             except AttributeError:
-                logger.error('Unknown filetransfer class: %s', 'requests_wsapi_sync')
-                task.setFailed('Unknown filetransfer class: {0:s}'.format('requests_wsapi_sync'))
+                logger.error('Unknown filetransfer class: %s', 'requests_syncapi_v1')
+                task.setFailed('Unknown filetransfer class: {0:s}'.format('requests_syncapi_v1'))
                 return
 
             client = client_class(self.config)

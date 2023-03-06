@@ -18,9 +18,9 @@ logger = logging.getLogger('indi_allsky')
 
 ### UNTESTED
 
-class pycurl_wsapi_sync(GenericFileTransfer):
+class pycurl_syncapi_v1(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(pycurl_wsapi_sync, self).__init__(*args, **kwargs)
+        super(pycurl_syncapi_v1, self).__init__(*args, **kwargs)
 
         self.client = None
         self._port = 443
@@ -28,7 +28,7 @@ class pycurl_wsapi_sync(GenericFileTransfer):
 
 
     def connect(self, *args, **kwargs):
-        super(pycurl_wsapi_sync, self).connect(*args, **kwargs)
+        super(pycurl_syncapi_v1, self).connect(*args, **kwargs)
 
         ### The full connect and transfer happens under the put() function
         ### The curl instance is just setup here
@@ -83,14 +83,14 @@ class pycurl_wsapi_sync(GenericFileTransfer):
 
 
     def close(self):
-        super(pycurl_wsapi_sync, self).close()
+        super(pycurl_syncapi_v1, self).close()
 
         if self.client:
             self.client.close()
 
 
     def put(self, *args, **kwargs):
-        super(pycurl_wsapi_sync, self).put(*args, **kwargs)
+        super(pycurl_syncapi_v1, self).put(*args, **kwargs)
 
         local_file = kwargs['local_file']
         remote_file = kwargs['remote_file']

@@ -21,10 +21,10 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 logger = logging.getLogger('indi_allsky')
 
 
-class requests_wsapi_sync(GenericFileTransfer):
+class requests_syncapi_v1(GenericFileTransfer):
 
     def __init__(self, *args, **kwargs):
-        super(requests_wsapi_sync, self).__init__(*args, **kwargs)
+        super(requests_syncapi_v1, self).__init__(*args, **kwargs)
 
         self.client = None
         self._port = 443
@@ -32,7 +32,7 @@ class requests_wsapi_sync(GenericFileTransfer):
 
 
     def connect(self, *args, **kwargs):
-        super(requests_wsapi_sync, self).connect(*args, **kwargs)
+        super(requests_syncapi_v1, self).connect(*args, **kwargs)
 
         ### The full connect and transfer happens under the put() function
 
@@ -68,11 +68,11 @@ class requests_wsapi_sync(GenericFileTransfer):
 
 
     def close(self):
-        super(requests_wsapi_sync, self).close()
+        super(requests_syncapi_v1, self).close()
 
 
     def put(self, *args, **kwargs):
-        super(requests_wsapi_sync, self).put(*args, **kwargs)
+        super(requests_syncapi_v1, self).put(*args, **kwargs)
 
         metadata = kwargs['metadata']
         local_file = kwargs['local_file']
