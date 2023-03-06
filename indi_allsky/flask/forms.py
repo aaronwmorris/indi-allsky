@@ -125,6 +125,28 @@ def LENS_FOCAL_RATIO_validator(form, field):
         raise ValidationError('Focal ratio must be greater than 0')
 
 
+def LENS_ALTITUDE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Altitude must be 0 or greater')
+
+    if field.data > 90.0:
+        raise ValidationError('Altitude must be 90 or less')
+
+
+def LENS_AZIMUTH_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Azimuth must be 0 or greater')
+
+    if field.data > 360.0:
+        raise ValidationError('Azimuth must be 360 or less')
+
+
 def ccd_GAIN_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -1576,6 +1598,8 @@ class IndiAllskyConfigForm(FlaskForm):
     LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
     LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
     LENS_FOCAL_RATIO                 = FloatField('Focal Ratio', validators=[LENS_FOCAL_RATIO_validator])
+    LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
+    LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
