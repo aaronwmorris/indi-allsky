@@ -301,18 +301,20 @@ class SyncApiBaseView(BaseView):
             return abort(400)
 
 
-        time_floor = int(time.time() / 300) * 300
-
-
         apikey = user.getApiKey(app.config['PASSWORD_KEY'])
 
-        hash1 = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
-        if apikey_hash != hash1:
-            # we do not need to calculate the 2nd hash if the first one works
-            hash2 = hashlib.sha256('{0:d}{1:s}'.format(time_floor + 1, apikey).encode()).hexdigest()
-            if apikey_hash != hash2:
-                app.logger.error('Unable to authenticate API key')
-                return abort(400)
+
+        time_floor = int(time.time() / 300) * 300
+
+        # the time on the remote system needs to be plus/minus the time_floor period
+        time_floor_list = [time_floor, time_floor - 1, time_floor + 1]
+        for t in time_floor_list:
+            api_hash = hashlib.sha256('{0:d}{1:s}'.format(t, apikey).encode()).hexdigest()
+            if apikey_hash == api_hash:
+                break
+        else:
+            app.logger.error('Unable to authenticate API key')
+            return abort(400)
 
 
     def getCamera(self, camera_uuid):
