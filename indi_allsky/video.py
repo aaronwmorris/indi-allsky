@@ -189,7 +189,6 @@ class VideoWorker(Process):
         img_folder = Path(task.data['img_folder'])
         night = task.data['night']
         camera_id = task.data['camera_id']
-        logger.info('Data: %s', task.data)
 
 
         if camera_id:

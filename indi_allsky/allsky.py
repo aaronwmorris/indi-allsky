@@ -260,7 +260,19 @@ class IndiAllSky(object):
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.camera_name, ccd_info)
+        camera_metadata = {
+            'name'        : self.camera_name,
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+        }
+
+        db_camera = self._miscDb.addCamera(camera_metadata)
         self.camera_id = db_camera.id
 
         self.indiclient.camera_id = self.camera_id
@@ -554,7 +566,7 @@ class IndiAllSky(object):
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
         }
 
-        db_camera = self._miscDb.addCamera(self.camera_name, ccd_info)
+        db_camera = self._miscDb.addCamera(camera_metadata)
         self.camera_id = db_camera.id
 
         self.indiclient.camera_id = self.camera_id

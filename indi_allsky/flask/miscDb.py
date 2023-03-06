@@ -32,38 +32,87 @@ class miscDb(object):
         self.config = config
 
 
-    def addCamera(self, camera_name, ccd_info):
+    def addCamera(self, metadata):
         now = datetime.now()
 
         try:
             camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.name == camera_name)\
+                .filter(IndiAllSkyDbCameraTable.name == metadata['name'])\
                 .one()
             camera.connectDate = now
 
             if not camera.uuid:
                 camera.uuid = str(uuid.uuid4())
-
         except NoResultFound:
             camera = IndiAllSkyDbCameraTable(
-                name=camera_name,
+                name=metadata['name'],
                 connectDate=now,
                 uuid=str(uuid.uuid4()),
             )
 
             db.session.add(camera)
+            db.session.commit()
 
+
+        keys_exclude = [
+            'id',
+            'name',
+            'uuid',
+            'type',
+        ]
 
         # populate camera info
-        if ccd_info:
-            camera.minExposure = float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min'))
-            camera.maxExposure = float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max'))
-            camera.minGain = int(ccd_info.get('GAIN_INFO', {}).get('min'))
-            camera.maxGain = int(ccd_info.get('GAIN_INFO', {}).get('max'))
-            camera.width = int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max'))
-            camera.height = int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max'))
-            camera.bits = int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current'))
-            camera.pixelSize = float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current'))
+        for k, v in metadata.items():
+            if k in keys_exclude:
+                continue
+
+            setattr(camera, k, v)
+
+
+        db.session.commit()
+
+        logger.info('Camera DB ID: %d', camera.id)
+
+        return camera
+
+
+    def addCamera_uuid(self, metadata):
+        # cameras should be remote in this case
+        now = datetime.now()
+
+        try:
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.uuid == metadata['uuid'])\
+                .one()
+
+            camera.connectDate = now
+        except NoResultFound:
+            camera = IndiAllSkyDbCameraTable(
+                name=metadata['name'],
+                connectDate=now,
+                uuid=metadata['uuid']
+            )
+
+            db.session.add(camera)
+            db.session.commit()
+
+            # The camera name must be unique
+            camera.name = '{0:s} {1:d}'.format(metadata['name'], camera.id)
+
+
+        keys_exclude = [
+            'id',
+            'name',
+            'uuid',
+            'type',
+        ]
+
+        # populate camera info
+        for k, v in metadata.items():
+            if k in keys_exclude:
+                continue
+
+            setattr(camera, k, v)
 
 
         db.session.commit()

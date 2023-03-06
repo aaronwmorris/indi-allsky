@@ -333,19 +333,14 @@ class SyncApiCameraView(BaseView):
 
     model = IndiAllSkyDbCameraTable
     filename_t = None
-    add_function = 'addCamera'
+    add_function = 'addCamera_uuid'
 
 
     def put(self):
         metadata = self.saveMetadata()
 
-        try:
-            camera = self.getCamera(metadata)
-        except NoResultFound:
-            camera = None
 
-
-        camera_entry = self.processPost(camera, metadata, None, overwrite=True)
+        camera_entry = self.processPost(None, metadata, None, overwrite=True)
 
 
         return jsonify({
@@ -353,8 +348,13 @@ class SyncApiCameraView(BaseView):
         })
 
 
-    def processPost(self, camera, metadata, notused1, overwrite=True):
-        pass
+    def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
+        addFunction_method = getattr(self._miscDb, self.add_function)
+        entry = addFunction_method(
+            metadata,
+        )
+
+        return entry
 
 
 class SyncApiImageView(SyncApiBaseView):
