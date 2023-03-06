@@ -279,6 +279,8 @@ class IndiAllSky(object):
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
@@ -582,6 +584,8 @@ class IndiAllSky(object):
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
