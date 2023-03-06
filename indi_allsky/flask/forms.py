@@ -373,6 +373,16 @@ def DETECT_STARS_THOLD_validator(form, field):
         raise ValidationError('Threshold must be 1.0 or less')
 
 
+def LOCATION_NAME_validator(form, field):
+    if not field.data:
+        return
+
+    name_regex = r'^[a-zA-Z0-9_,\.\-\/\:\ ]+$'
+
+    if not re.search(name_regex, field.data):
+        raise ValidationError('Invalid name')
+
+
 def LOCATION_LATITUDE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1606,6 +1616,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
     SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
+    LOCATION_NAME                    = StringField('Location', validators=[LOCATION_NAME_validator])
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')

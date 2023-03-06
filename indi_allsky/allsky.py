@@ -272,6 +272,7 @@ class IndiAllSky(object):
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
 
+            'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
 
@@ -574,6 +575,7 @@ class IndiAllSky(object):
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
 
+            'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
 
