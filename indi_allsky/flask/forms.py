@@ -1380,6 +1380,15 @@ def SYNCAPI__BASEURL_validator(form, field):
     if re.search(r'\/$', field.data):
         raise ValidationError('URL cannot end with slash')
 
+    if not re.search(r'localhost', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
+    if not re.search(r'127\.0\.0\.1', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
+    if not re.search(r'\:\:1', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
 
 def FITSHEADER_KEY_validator(form, field):
     header_regex = r'^[a-zA-Z0-9\-]+$'
