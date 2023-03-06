@@ -324,42 +324,6 @@ class SyncApiBaseView(BaseView):
         return camera
 
 
-    def getDateFolder(self, exp_date, night):
-        if night:
-            # images should be written to previous day's folder until noon
-            day_ref = exp_date - timedelta(hours=12)
-        else:
-            # daytime
-            # images should be written to current day's folder
-            day_ref = exp_date
-
-        date_folder = self.image_dir.joinpath(day_ref.strftime('%Y%m%d'))
-
-        return date_folder
-
-
-    def getImageFolder(self, exp_date, night):
-        date_folder = self.getDateFolder(exp_date, night)
-
-        if night:
-            timeofday_str = 'night'
-        else:
-            timeofday_str = 'day'
-
-        hour_str = exp_date.strftime('%d_%H')
-
-        day_folder = date_folder.joinpath(timeofday_str)
-
-        if not day_folder.exists():
-            day_folder.mkdir(mode=0o755, parents=True)
-
-        hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
-        if not hour_folder.exists():
-            hour_folder.mkdir(mode=0o755)
-
-        return hour_folder
-
-
 class SyncApiImageView(SyncApiBaseView):
     decorators = []
 
@@ -370,7 +334,7 @@ class SyncApiImageView(SyncApiBaseView):
 
     def processFile(self, camera, image_metadata, tmp_file, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
-        folder = self.getImageFolder(createDate, image_metadata['night'])
+        folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
         image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
@@ -425,6 +389,30 @@ class SyncApiImageView(SyncApiBaseView):
         return new_entry
 
 
+    def getImageFolder(self, exp_date, night, camera):
+        if night:
+            # images should be written to previous day's folder until noon
+            day_ref = exp_date - timedelta(hours=12)
+            timeofday_str = 'night'
+        else:
+            # images should be written to current day's folder
+            day_ref = exp_date
+            timeofday_str = 'day'
+
+        hour_str = exp_date.strftime('%d_%H')
+
+        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+
+        if not day_folder.exists():
+            day_folder.mkdir(mode=0o755, parents=True)
+
+        hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
+        if not hour_folder.exists():
+            hour_folder.mkdir(mode=0o755)
+
+        return hour_folder
+
+
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
@@ -457,12 +445,14 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
     add_function = 'addStarTrailVideo'
 
 
-class SyncApiRawImageView(SyncApiBaseView):
+class SyncApiRawImageView(SyncApiImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbRawImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'
     add_function = 'addRawImage'
+
+    # fixme need processImage/getImageFolder function for export folder
 
 
 class SyncApiFitsImageView(SyncApiImageView):  # image parent

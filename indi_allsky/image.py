@@ -1105,7 +1105,6 @@ class ImageWorker(Process):
             day_ref = exp_date - timedelta(hours=12)
             timeofday_str = 'night'
         else:
-            # daytime
             # images should be written to current day's folder
             day_ref = exp_date
             timeofday_str = 'day'
