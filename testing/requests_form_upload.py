@@ -90,7 +90,12 @@ class FormUploader(object):
             'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
         }
 
-        delete_metadata = {
+
+        get_params = {  # noqa: F841
+            'id' : 2,
+        }
+
+        delete_metadata = {  # noqa: F841
             'id' : 1,
         }
 
@@ -106,9 +111,10 @@ class FormUploader(object):
 
         start = time.time()
 
+        r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
         #r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
-        r = requests.delete(endpoint_url, json=delete_metadata, headers=self.headers, verify=verify)
+        #r = requests.delete(endpoint_url, json=delete_metadata, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

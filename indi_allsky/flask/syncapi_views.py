@@ -46,6 +46,8 @@ bp_syncapi_allsky = Blueprint(
 class SyncApiBaseView(BaseView):
     decorators = []
 
+    model = None
+
 
     def __init__(self, **kwargs):
         super(SyncApiBaseView, self).__init__(**kwargs)
@@ -67,6 +69,8 @@ class SyncApiBaseView(BaseView):
             return self.put()
         elif request.method == 'DELETE':
             return self.delete()
+        elif request.method == 'GET':
+            return self.get()
         else:
             return jsonify({}), 400
 
@@ -117,6 +121,20 @@ class SyncApiBaseView(BaseView):
         return jsonify({})
 
 
+    def get(self):
+        get_id = request.args.get('id')
+
+        try:
+            file_entry = self.getFile(get_id)
+        except FileMissing:
+            return jsonify({'error' : 'file_missing'}), 400
+
+        return jsonify({
+            'id'   : file_entry.id,
+            'url'  : str(file_entry.getUrl(local=True)),
+        })
+
+
     def processFile(self, *args, **kwargs):
         # override in class
         pass
@@ -125,6 +143,19 @@ class SyncApiBaseView(BaseView):
     def deleteFile(self, *args, **kwargs):
         # override in class
         pass
+
+
+    def getFile(self, entry_id):
+        try:
+            entry = self.model.query\
+                .filter(self.model.id == entry_id)\
+                .one()
+
+        except NoResultFound:
+            raise FileMissing()
+
+
+        return entry
 
 
     def saveMetadata(self):
@@ -254,6 +285,8 @@ class SyncApiBaseView(BaseView):
 class SyncApiImageView(SyncApiBaseView):
     decorators = []
 
+    model = IndiAllSkyDbImageTable
+
     image_filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
 
 
@@ -337,6 +370,8 @@ class SyncApiImageView(SyncApiBaseView):
 
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
+
+    model = IndiAllSkyDbVideoTable
 
 
     def processFile(self, camera, video_metadata, tmp_file, overwrite=False):
@@ -424,6 +459,8 @@ class SyncApiVideoView(SyncApiBaseView):
 
 class SyncApiKeogramView(SyncApiBaseView):
     decorators = []
+
+    model = IndiAllSkyDbKeogramTable
 
 
     def processFile(self, camera, keogram_metadata, tmp_file, overwrite=False):
@@ -515,6 +552,8 @@ class SyncApiKeogramView(SyncApiBaseView):
 class SyncApiStartrailView(SyncApiBaseView):
     decorators = []
 
+    model = IndiAllSkyDbStarTrailsTable
+
 
     def processFile(self, camera, startrail_metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(startrail_metadata['dayDate'], '%Y%m%d').date()
@@ -605,6 +644,8 @@ class SyncApiStartrailView(SyncApiBaseView):
 
 class SyncApiStartrailVideoView(SyncApiBaseView):
     decorators = []
+
+    model = IndiAllSkyDbStarTrailsVideoTable
 
 
     def processFile(self, camera, startrail_video_metadata, tmp_file, overwrite=False):
@@ -703,9 +744,9 @@ class FileMissing(Exception):
     pass
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['POST', 'PUT', 'DELETE'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['POST', 'PUT', 'DELETE'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['POST', 'PUT', 'DELETE'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['POST', 'PUT', 'DELETE'])
-bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 
