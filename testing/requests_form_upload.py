@@ -35,8 +35,8 @@ class FormUploader(object):
 
 
     def main(self):
-        #endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
-        endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
+        endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
+        #endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
         username = 'foobar'
         apikey = 'd8389bda9ac722e4619ca6d1dbe41cc8422d8fc26a111784b00617a87fe7889c'
         cert_bypass = True
@@ -100,24 +100,27 @@ class FormUploader(object):
         }
 
 
-        #local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
-        local_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
+        local_image_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
+        #local_video_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
         files = [  # noqa: F841
-            ('metadata', ('metadata.json', io.StringIO(json.dumps(video_metadata)), 'application/json')),
-            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
+            ('metadata', ('metadata.json', io.StringIO(json.dumps(image_metadata)), 'application/json')),
+            ('media', (local_image_file_p.name, io.open(str(local_image_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
+            #('metadata', ('metadata.json', io.StringIO(json.dumps(video_metadata)), 'application/json')),
+            #('media', (local_video_file_p.name, io.open(str(local_video_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
         start = time.time()
 
-        r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
-        #r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
+        #r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
+        r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.delete(endpoint_url, json=delete_metadata, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
-        local_file_size = local_file_p.stat().st_size
+        local_file_size = local_image_file_p.stat().st_size
+        #local_file_size = local_video_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
         logger.warning('Error: %d', r.status_code)
