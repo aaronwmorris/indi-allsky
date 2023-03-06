@@ -80,6 +80,8 @@ class IndiAllSkyDarks(object):
         self.indiclient = None
 
         self.camera_id = None
+        self.camera_name = None
+        self.camera_server = None
         self.ccd_info = None
 
         self.exposure_v = Value('f', -1.0)
@@ -207,8 +209,8 @@ class IndiAllSkyDarks(object):
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
 
 
         # Get Properties
@@ -221,7 +223,7 @@ class IndiAllSkyDarks(object):
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], self.ccd_info)
+        db_camera = self._miscDb.addCamera(self.camera_name, self.ccd_info)
         self.camera_id = db_camera.id
 
         # Disable debugging
@@ -462,7 +464,7 @@ class IndiAllSkyDarks(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
-        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
+        if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -504,13 +506,13 @@ class IndiAllSkyDarks(object):
 
 
     def _pre_shoot_reconfigure(self):
-        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
+        if self.camera_server in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
+            if self.camera_name.startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
+        elif self.camera_server in ['indi_asi_single_ccd']:
+            if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 

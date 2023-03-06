@@ -125,7 +125,8 @@ class IndiAllSky(object):
         self.moonmode = None
 
         self.camera_id = None
-        self.camera_uuid = None
+        self.camera_name = None
+        self.camera_server = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
 
@@ -224,11 +225,11 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
 
 
         ### Telescope config
@@ -259,15 +260,12 @@ class IndiAllSky(object):
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
+        db_camera = self._miscDb.addCamera(self.camera_name, ccd_info)
         self.camera_id = db_camera.id
-        self.camera_uuid = db_camera.uuid
 
         self.indiclient.camera_id = self.camera_id
-        self.indiclient.camera_uuid = self.camera_uuid
 
         self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
-        #self._miscDb.setState('DB_CAMERA_UUID', self.camera_uuid)
 
 
         # Update focus mode
@@ -451,11 +449,11 @@ class IndiAllSky(object):
 
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
 
 
         ### GPS config
@@ -544,15 +542,24 @@ class IndiAllSky(object):
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
+        camera_metadata = {
+            'name'        : self.camera_name,
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+        }
+
+        db_camera = self._miscDb.addCamera(self.camera_name, ccd_info)
         self.camera_id = db_camera.id
-        self.camera_uuid = db_camera.uuid
 
         self.indiclient.camera_id = self.camera_id
-        self.indiclient.camera_uuid = self.camera_uuid
 
         self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
-        #self._miscDb.setState('DB_CAMERA_UUID', self.camera_uuid)
 
 
         # Disable debugging
@@ -847,7 +854,7 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
+        if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -869,13 +876,13 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
+        if self.camera_server in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
+            if self.camera_name.startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
+        elif self.camera_server in ['indi_asi_single_ccd']:
+            if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
@@ -942,8 +949,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of night
                         yesterday_ref = datetime.now() - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.camera_id, self.camera_uuid)
-                        self._generateNightKeogram(timespec, self.camera_id, self.camera_uuid)
+                        self._generateNightTimelapse(timespec, self.camera_id)
+                        self._generateNightKeogram(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight()
                         self._systemHealthCheck()
 
@@ -951,8 +958,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of day
                         today_ref = datetime.now()
                         timespec = today_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.camera_id, self.camera_uuid)
-                        self._generateDayKeogram(timespec, self.camera_id, self.camera_uuid)
+                        self._generateDayTimelapse(timespec, self.camera_id)
+                        self._generateDayKeogram(timespec, self.camera_id)
                         self._systemHealthCheck()
 
 
@@ -1495,7 +1502,7 @@ class IndiAllSky(object):
             self._generateDayTimelapse(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateDayTimelapse(self, timespec, camera_id, camera_uuid, task_state=TaskQueueState.QUEUED):
+    def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1511,7 +1518,6 @@ class IndiAllSky(object):
             'img_folder'  : str(img_day_folder),
             'night'       : False,
             'camera_id'   : camera_id,
-            'camera_uuid' : camera_uuid,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1548,7 +1554,7 @@ class IndiAllSky(object):
             self._generateNightTimelapse(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateNightTimelapse(self, timespec, camera_id, camera_uuid, task_state=TaskQueueState.QUEUED):
+    def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1564,7 +1570,6 @@ class IndiAllSky(object):
             'img_folder'  : str(img_day_folder),
             'night'       : True,
             'camera_id'   : camera_id,
-            'camera_uuid' : camera_uuid,
         }
 
         task = IndiAllSkyDbTaskQueueTable(

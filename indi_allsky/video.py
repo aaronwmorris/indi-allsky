@@ -189,7 +189,15 @@ class VideoWorker(Process):
         img_folder = Path(task.data['img_folder'])
         night = task.data['night']
         camera_id = task.data['camera_id']
-        camera_uuid = task.data['camera_uuid']
+        logger.info('Data: %s', task.data)
+
+
+        if camera_id:
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+        else:
+            camera = None
 
 
         try:
@@ -206,10 +214,10 @@ class VideoWorker(Process):
 
 
         # perform the action
-        action_method(task, timespec, img_folder, night, camera_id, camera_uuid)
+        action_method(task, timespec, img_folder, night, camera)
 
 
-    def generateVideo(self, task, timespec, img_folder, night, camera_id, camera_uuid):
+    def generateVideo(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -237,7 +245,7 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, video_format))
+        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -261,7 +269,7 @@ class VideoWorker(Process):
         # find all files
         timelapse_files_entries = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
@@ -288,13 +296,13 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
-            'camera_uuid': camera_uuid,
+            'camera_uuid': camera.uuid,
         }
 
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
             video_file,
-            camera_id,
+            camera.id,
             video_metadata,
         )
 
@@ -397,7 +405,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera_id, camera_uuid):
+    def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -426,9 +434,9 @@ class VideoWorker(Process):
             return
 
 
-        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera_id, timespec, timeofday, video_format))
+        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
+        startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
+        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
@@ -489,7 +497,7 @@ class VideoWorker(Process):
         # find all files
         files_entries = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
@@ -512,7 +520,7 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
-            'camera_uuid': camera_uuid,
+            'camera_uuid': camera.uuid,
         }
 
         startrail_metadata = {
@@ -520,7 +528,7 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
-            'camera_uuid': camera_uuid,
+            'camera_uuid': camera.uuid,
         }
 
         startrail_video_metadata = {
@@ -528,20 +536,20 @@ class VideoWorker(Process):
             'createDate' : now.timestamp(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
-            'camera_uuid': camera_uuid,
+            'camera_uuid': camera.uuid,
         }
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
             keogram_file,
-            camera_id,
+            camera.id,
             keogram_metadata,
         )
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file,
-                camera_id,
+                camera.id,
                 startrail_metadata,
             )
         else:
@@ -591,7 +599,7 @@ class VideoWorker(Process):
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
                 startrail_video_entry = self._miscDb.addStarTrailVideo(
                     startrail_video_file,
-                    camera_id,
+                    camera.id,
                     startrail_video_metadata,
                 )
 
@@ -736,7 +744,7 @@ class VideoWorker(Process):
         self._uploadVideo(startrail_video_entry, startrail_video_file)
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera_id, camera_uuid):
+    def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
         if not night:
@@ -843,7 +851,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, img_folder, night, camera_id, camera_uuid):
+    def systemHealthCheck(self, task, timespec, img_folder, night, camera):
         # check filesystems
         logger.info('Performing system health check')
 
@@ -880,7 +888,7 @@ class VideoWorker(Process):
             )
 
 
-    def expireData(self, task, timespec, img_folder, night, camera_id, camera_uuid):
+    def expireData(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
         # Old image files need to be pruned

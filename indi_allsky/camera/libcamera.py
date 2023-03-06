@@ -29,7 +29,6 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._exposure = None
 
         self._camera_id = None
-        self._camera_uuid = None
 
         self._ccd_gain = -1
         self._ccd_bin = 1
@@ -86,14 +85,6 @@ class IndiClientLibCameraGeneric(IndiClient):
     @camera_id.setter
     def camera_id(self, new_camera_id):
         self._camera_id = int(new_camera_id)
-
-    @property
-    def camera_uuid(self):
-        return self._camera_uuid
-
-    @camera_uuid.setter
-    def camera_uuid(self, new_camera_uuid):
-        self._camera_uuid = str(new_camera_uuid)
 
 
     def getCcdGain(self):

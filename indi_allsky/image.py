@@ -255,7 +255,6 @@ class ImageWorker(Process):
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
-        camera_uuid = i_dict['camera_uuid']
         filename_t = i_dict.get('filename_t')
 
 
@@ -277,10 +276,15 @@ class ImageWorker(Process):
             return
 
 
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         processing_start = time.time()
 
 
-        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera_id)
+        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         self.image_processor.calibrate()
 
 
@@ -424,7 +428,7 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
-                'camera_uuid'     : camera_uuid,
+                'camera_uuid'     : i_ref['camera_uuid'],
             }
 
             image_entry = self._miscDb.addImage(
@@ -609,7 +613,7 @@ class ImageWorker(Process):
 
 
         metadata = {
-            'device'              : self.config['CAMERA_NAME'],
+            'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
@@ -800,7 +804,7 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
-            'camera_uuid': self.camera_uuid,
+            'camera_uuid': i_ref['camera_uuid'],
         }
 
         self._miscDb.addFitsImage(
@@ -955,7 +959,7 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
-            'camera_uuid': self.camera_uuid,
+            'camera_uuid': i_ref['camera_uuid'],
         }
 
         self._miscDb.addRawImage(
@@ -1071,7 +1075,7 @@ class ImageWorker(Process):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
-            'device'              : self.config['CAMERA_NAME'],
+            'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
@@ -1430,7 +1434,7 @@ class ImageProcessor(object):
 
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera_id):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
         filename_p = Path(filename)
 
 
@@ -1585,7 +1589,9 @@ class ImageProcessor(object):
             'exposure'         : exposure,
             'exp_date'         : exp_date,
             'exp_elapsed'      : exp_elapsed,
-            'camera_id'        : camera_id,
+            'camera_id'        : camera.id,
+            'camera_name'      : camera.name,
+            'camera_uuid'      : camera.uuid,
             'image_bitpix'     : image_bitpix,
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
