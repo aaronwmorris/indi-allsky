@@ -1848,7 +1848,7 @@ class IndiAllskyImageViewer(FlaskForm):
             fits_choices.append(fits_select)
 
 
-            # look for raw
+            # look for raw exports
             try:
                 fits_image = IndiAllSkyDbRawImageTable.query\
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
@@ -1856,6 +1856,9 @@ class IndiAllskyImageViewer(FlaskForm):
 
                 raw_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
             except NoResultFound:
+                raw_select = ('None', i)
+            except ValueError:
+                # this can happen when RAW files are exported outside of the document root
                 raw_select = ('None', i)
 
             raw_choices.append(raw_select)
