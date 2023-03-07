@@ -377,7 +377,7 @@ class FileUploader(Process):
 
         # Upload file
         try:
-            client.put(**put_kwargs)
+            response = client.put(**put_kwargs)
         except filetransfer.exceptions.ConnectionFailure as e:
             logger.error('Connection failure: %s', e)
             client.close()
@@ -455,13 +455,18 @@ class FileUploader(Process):
         task.setSuccess('File uploaded')
 
 
-        if entry and action == 'upload':
+        if entry and action == constants.TRANSFER_UPLOAD:
             entry.uploaded = True
             db.session.commit()
 
 
-        if entry and action == 's3':
+        if entry and action == constants.TRANSFER_S3:
             entry.s3_key = str(s3_key)
+            db.session.commit()
+
+
+        if entry and action == constants.TRANSFER_SYNC_V1:
+            entry.sync_id = response['id']
             db.session.commit()
 
 

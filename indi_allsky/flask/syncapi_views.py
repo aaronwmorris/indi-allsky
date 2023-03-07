@@ -330,7 +330,6 @@ class SyncApiCameraView(SyncApiBaseView):
 
         camera_entry = self.processPost(None, metadata, None, overwrite=overwrite)
 
-
         return jsonify({
             'id'   : camera_entry.id,
         })
@@ -345,6 +344,8 @@ class SyncApiCameraView(SyncApiBaseView):
         entry = addFunction_method(
             metadata,
         )
+
+        app.logger.info('Updated camera: %s', entry.uuid)
 
         return entry
 
