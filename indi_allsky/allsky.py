@@ -1607,7 +1607,7 @@ class IndiAllSky(object):
         with app.app_context():
             if camera_id == 0:
                 try:
-                    camera_id, camera_uuid = self._miscDb.getCurrentCameraId()
+                    camera_id = self._miscDb.getCurrentCameraId()
                 except NoResultFound:
                     logger.error('No camera found')
                     sys.exit(1)
@@ -1615,12 +1615,7 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .one()
-
-
-            self._generateNightTimelapse(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
+            self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1659,7 +1654,7 @@ class IndiAllSky(object):
         with app.app_context():
             if camera_id == 0:
                 try:
-                    camera_id, camera_uuid = self._miscDb.getCurrentCameraId()
+                    camera_id = self._miscDb.getCurrentCameraId()
                 except NoResultFound:
                     logger.error('No camera found')
                     sys.exit(1)
@@ -1667,15 +1662,10 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .one()
+            self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-            self._generateNightKeogram(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateNightKeogram(self, timespec, camera_id, camera_uuid, task_state=TaskQueueState.QUEUED):
+    def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1691,7 +1681,6 @@ class IndiAllSky(object):
             'img_folder'  : str(img_day_folder),
             'night'       : True,
             'camera_id'   : camera_id,
-            'camera_uuid' : camera_uuid,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1712,7 +1701,7 @@ class IndiAllSky(object):
         with app.app_context():
             if camera_id == 0:
                 try:
-                    camera_id, camera_uuid = self._miscDb.getCurrentCameraId()
+                    camera_id = self._miscDb.getCurrentCameraId()
                 except NoResultFound:
                     logger.error('No camera found')
                     sys.exit(1)
@@ -1720,15 +1709,10 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .one()
+            self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
-            self._generateDayKeogram(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateDayKeogram(self, timespec, camera_id, camera_uuid, task_state=TaskQueueState.QUEUED):
+    def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
@@ -1744,7 +1728,6 @@ class IndiAllSky(object):
             'img_folder'  : str(img_day_folder),
             'night'       : False,
             'camera_id'   : camera_id,
-            'camera_uuid' : camera_uuid,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1828,7 +1811,6 @@ class IndiAllSky(object):
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
-            'camera_uuid'  : None,  # Not needed
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1850,7 +1832,6 @@ class IndiAllSky(object):
             'timespec'     : None,  # Not needed
             'night'        : True,
             'camera_id'    : None,  # Not needed
-            'camera_uuid'  : None,  # Not needed
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1872,7 +1853,6 @@ class IndiAllSky(object):
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
-            'camera_uuid'  : None,  # Not needed
         }
 
         task = IndiAllSkyDbTaskQueueTable(
