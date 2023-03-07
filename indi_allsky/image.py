@@ -19,6 +19,8 @@ import logging
 import traceback
 #from pprint import pformat
 
+#from tifffile import TiffWriter
+
 import ephem
 
 from multiprocessing import Process
@@ -942,6 +944,13 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+
+            #with TiffWriter(str(tmpfile_name), ) as tif:
+            #    tif.write(
+            #        scaled_data,
+            #        compression='lzw',  # requires imagecodecs
+            #        metadata={'foo': 'bar'},
+            #    )
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 

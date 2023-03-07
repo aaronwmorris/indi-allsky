@@ -18,6 +18,8 @@ paramiko
 pycurl
 imageio
 imageio-ffmpeg
+# https://www.wheelodex.org/projects/imagecodecs/
+#imagecodecs
 rawpy
 pygifsicle
 gunicorn[gthread]
