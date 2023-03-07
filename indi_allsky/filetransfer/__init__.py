@@ -17,7 +17,7 @@ from .paho_mqtt import paho_mqtt
 from .boto3_s3 import boto3_s3
 from .libcloud_s3 import libcloud_s3
 
-from .pycurl_syncapi_v1 import pycurl_syncapi_v1
+#from .pycurl_syncapi_v1 import pycurl_syncapi_v1
 from .requests_syncapi_v1 import requests_syncapi_v1
 
 
@@ -40,6 +40,6 @@ __all__ = (
     'boto3_s3',
     'libcloud_s3',
 
-    'pycurl_syncapi_v1',
+    #'pycurl_syncapi_v1',
     'requests_syncapi_v1',
 )

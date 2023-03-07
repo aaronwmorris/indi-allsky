@@ -7,7 +7,7 @@ from .exceptions import TransferFailure
 
 from pathlib import Path
 import pycurl
-#import io
+import io
 import time
 import json
 import hashlib
@@ -132,6 +132,10 @@ class pycurl_syncapi_v1(GenericFileTransfer):
         self.client.setopt(pycurl.UPLOAD, 1)  # PUT
 
 
+        response_buffer = io.BytesIO()
+        self.client.setopt(pycurl.WRITEFUNCTION, response_buffer.write)
+
+
         try:
             self.client.perform()
         except pycurl.error as e:
@@ -155,7 +159,17 @@ class pycurl_syncapi_v1(GenericFileTransfer):
 
 
         upload_elapsed_s = time.time() - start
-        local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
+
+        response_str = response_buffer.getvalue().decode()
+        logger.info('Response: %s', response_str)
+
+        try:
+            response = json.loads(response_str)
+        except json.JSONDecodeError as e:
+            raise TransferFailure(str(e)) from e
+
+
+        return response
 

@@ -320,7 +320,6 @@ class FileUploader(Process):
 
             try:
                 client_class = getattr(filetransfer, 'requests_syncapi_v1')
-                #client_class = getattr(filetransfer, 'pycurl_syncapi_v1')
             except AttributeError:
                 logger.error('Unknown filetransfer class: %s', 'requests_syncapi_v1')
                 task.setFailed('Unknown filetransfer class: {0:s}'.format('requests_syncapi_v1'))
