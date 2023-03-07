@@ -329,6 +329,7 @@ class VideoWorker(Process):
         ### Upload ###
         self._uploadVideo(video_entry, video_file)
         self._s3_upload(video_entry)
+        self._syncapi(video_entry, video_metadata)
 
 
     def _uploadVideo(self, video_entry, video_file):
@@ -402,6 +403,34 @@ class VideoWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : s3_task.id})
+
+
+    def _syncapi(self, asset_entry, metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+        if not asset_entry:
+            #logger.warning('S3 uploading disabled')
+            return
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
@@ -630,6 +659,7 @@ class VideoWorker(Process):
             if keogram_file.exists():
                 self._uploadKeogram(keogram_entry, keogram_file)
                 self._s3_upload(keogram_entry)
+                self._syncapi(keogram_entry, keogram_metadata)
             else:
                 keogram_entry.success = False
                 db.session.commit()
@@ -639,6 +669,7 @@ class VideoWorker(Process):
             if startrail_file.exists():
                 self._uploadStarTrail(startrail_entry, startrail_file)
                 self._s3_upload(startrail_entry)
+                self._syncapi(startrail_entry, startrail_metadata)
             else:
                 startrail_entry.success = False
                 db.session.commit()
@@ -648,6 +679,7 @@ class VideoWorker(Process):
             if startrail_video_file.exists():
                 self._uploadStarTrailVideo(startrail_video_file)
                 self._s3_upload(startrail_video_entry)
+                self._syncapi(startrail_video_entry, startrail_video_metadata)
             else:
                 # success flag set above
                 pass
