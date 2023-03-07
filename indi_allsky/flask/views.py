@@ -116,7 +116,6 @@ class JsonLatestImageView(JsonView):
     def __init__(self, **kwargs):
         super(JsonLatestImageView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.history_seconds = 900
 
 
@@ -177,7 +176,7 @@ class JsonLatestImageView(JsonView):
 
 
         # use database
-        data['latest_image']['url'] = self.getLatestImage(self.camera_id, history_seconds)
+        data['latest_image']['url'] = self.getLatestImage(self.camera.id, history_seconds)
 
         return data
 
@@ -358,7 +357,6 @@ class JsonImageLoopView(JsonView):
     def __init__(self, **kwargs):
         super(JsonImageLoopView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.history_seconds = 900
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
@@ -374,9 +372,9 @@ class JsonImageLoopView(JsonView):
             history_seconds = 86400
 
         data = {
-            'image_list' : self.getLatestImages(self.camera_id, history_seconds),
-            'sqm_data'   : self.getSqmData(self.camera_id),
-            'stars_data' : self.getStarsData(self.camera_id),
+            'image_list' : self.getLatestImages(self.camera.id, history_seconds),
+            'sqm_data'   : self.getSqmData(self.camera.id),
+            'stars_data' : self.getStarsData(self.camera.id),
         }
 
         return data
@@ -476,7 +474,6 @@ class JsonChartView(JsonView):
     def __init__(self, **kwargs):
         super(JsonChartView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.chart_history_seconds = 900
 
 
@@ -509,7 +506,7 @@ class JsonChartView(JsonView):
                 (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
             )\
             .join(IndiAllSkyDbCameraTable)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
@@ -588,7 +585,7 @@ class JsonChartView(JsonView):
 
         latest_image = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
@@ -1408,8 +1405,6 @@ class AjaxImageViewerView(BaseView):
     def __init__(self, **kwargs):
         super(AjaxImageViewerView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def dispatch_request(self):
         form_year  = request.json.get('YEAR_SELECT')
@@ -1549,8 +1544,6 @@ class AjaxVideoViewerView(BaseView):
 
     def __init__(self, **kwargs):
         super(AjaxVideoViewerView, self).__init__(**kwargs)
-
-        self.camera_id = self.getLatestCamera()
 
 
     def dispatch_request(self):
@@ -2359,13 +2352,11 @@ class TimelapseGeneratorView(TemplateView):
     def __init__(self, **kwargs):
         super(TimelapseGeneratorView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
 
-        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera_id)
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera.id)
 
         # Lookup tasks
         state_list = (
@@ -2416,11 +2407,9 @@ class AjaxTimelapseGeneratorView(BaseView):
     def __init__(self, **kwargs):
         super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def dispatch_request(self):
-        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera_id)
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera.id)
 
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
@@ -2562,7 +2551,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata_video = {
@@ -2570,7 +2559,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : self.camera_id,
+                'camera_id'   : self.camera.id,
             }
 
             jobdata_kst = {
@@ -2578,7 +2567,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : self.camera_id,
+                'camera_id'   : self.camera.id,
             }
 
 
@@ -2617,7 +2606,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
@@ -2625,7 +2614,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : self.camera_id,
+                'camera_id'   : self.camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2655,7 +2644,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
@@ -2663,7 +2652,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : self.camera_id,
+                'camera_id'   : self.camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2704,8 +2693,6 @@ class JsonFocusView(JsonView):
 
     def __init__(self, **kwargs):
         super(JsonFocusView, self).__init__(**kwargs)
-
-        #self.camera_id = self.getLatestCamera()
 
 
     def dispatch_request(self):

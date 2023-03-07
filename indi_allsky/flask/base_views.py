@@ -44,6 +44,8 @@ class BaseView(View):
 
         self.s3_prefix = self.getS3Prefix()
 
+        self.camera = self.getLatestCamera()
+
 
     def get_indiallsky_pid(self):
         try:
@@ -76,7 +78,7 @@ class BaseView(View):
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
             .first()
 
-        return latest_camera.id
+        return latest_camera
 
 
     def getS3Prefix(self):
@@ -179,8 +181,8 @@ class TemplateView(BaseView):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.indi_allsky_config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.indi_allsky_config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.camera.longitude)
+        obs.lat = math.radians(self.camera.latitude)
 
         sun = ephem.Sun()
 
@@ -235,15 +237,15 @@ class TemplateView(BaseView):
 
         data = dict()
 
-        data['latitude'] = float(self.indi_allsky_config['LOCATION_LATITUDE'])
-        data['longitude'] = float(self.indi_allsky_config['LOCATION_LONGITUDE'])
+        data['latitude'] = self.camera.latitude
+        data['longitude'] = self.camera.longitude
 
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.indi_allsky_config['LOCATION_LONGITUDE'])
-        obs.lat = math.radians(self.indi_allsky_config['LOCATION_LATITUDE'])
+        obs.lon = math.radians(self.camera.longitude)
+        obs.lat = math.radians(self.camera.latitude)
 
         sun = ephem.Sun()
         moon = ephem.Moon()
