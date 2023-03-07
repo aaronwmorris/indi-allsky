@@ -117,22 +117,22 @@ class TemplateView(BaseView):
             if self.local_indi_allsky:
                 # only do this on local devices
                 db_config_id = int(self._miscDb.getState('CONFIG_ID'))
+
+                if db_config_id == config_id:
+                    return
+
+                self._miscDb.addNotification(
+                    NotificationCategory.STATE,
+                    'config_id',
+                    'Config updated: indi-allsky needs to be reloaded',
+                    expire=timedelta(minutes=30),
+                )
         except NoResultFound:
             app.logger.error('Unable to get CONFIG_ID')
             return
         except ValueError:
             app.logger.error('Invalid CONFIG_ID')
             return
-
-        if db_config_id == config_id:
-            return
-
-        self._miscDb.addNotification(
-            NotificationCategory.STATE,
-            'config_id',
-            'Config updated: indi-allsky needs to be reloaded',
-            expire=timedelta(minutes=30),
-        )
 
 
     def get_indi_allsky_status(self):
