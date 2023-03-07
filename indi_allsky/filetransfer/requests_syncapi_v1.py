@@ -81,9 +81,13 @@ class requests_syncapi_v1(GenericFileTransfer):
         #logger.info('requests URL: %s', url)
 
 
-        files = [
-            ('metadata', ('metadata.json', io.StringIO(json.dumps(metadata)), 'application/json')),
-        ]
+        files = [(
+            'metadata', (
+                'metadata.json',
+                io.StringIO(json.dumps(metadata)),
+                'application/json',
+            )
+        )]
 
 
         # cameras do not have files
@@ -91,7 +95,13 @@ class requests_syncapi_v1(GenericFileTransfer):
             local_file_p = Path(local_file)
             local_file_size = local_file_p.stat().st_size
 
-            files.append(('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')))  # need file extension from original file
+            files.append((
+                'media', (
+                    local_file_p.name,  # need file extension from original file
+                    io.open(str(local_file_p), 'rb'),
+                    'application/octet-stream',
+                )
+            ))
         else:
             local_file_size = 1024  # fake
 
@@ -99,7 +109,8 @@ class requests_syncapi_v1(GenericFileTransfer):
         start = time.time()
 
         try:
-            r = self.client.post(self.url, files=files, headers=self.headers, verify=self.verify)
+            # put allows overwrites
+            r = self.client.put(self.url, files=files, headers=self.headers, verify=self.verify)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

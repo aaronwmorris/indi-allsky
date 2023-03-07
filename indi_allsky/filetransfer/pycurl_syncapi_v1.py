@@ -7,7 +7,7 @@ from .exceptions import TransferFailure
 
 from pathlib import Path
 import pycurl
-import io
+#import io
 import time
 import json
 import hashlib
@@ -93,26 +93,43 @@ class pycurl_syncapi_v1(GenericFileTransfer):
         super(pycurl_syncapi_v1, self).put(*args, **kwargs)
 
         local_file = kwargs['local_file']
-        remote_file = kwargs['remote_file']
         metadata = kwargs['metadata']
 
-        local_file_p = Path(local_file)
-        remote_file_p = Path(remote_file)
+
+        files = [(
+            'metadata', (
+                pycurl.FORM_BUFFER, 'metadata.json',
+                pycurl.FORM_BUFFERPTR, json.dumps(metadata),
+                pycurl.FORM_CONTENTTYPE, 'application/json',
+            )
+        )]
 
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
-        logger.info('pycurl URL: %s', url)
+        # cameras do not have files
+        if str(local_file) != 'camera':
+            local_file_p = Path(local_file)
+            local_file_size = local_file_p.stat().st_size
+
+            files.append((
+                'media', (
+                    pycurl.FORM_FILE, str(local_file_p),
+                    pycurl.FORM_FILENAME, local_file_p.name,  # need file extension from original file
+                    pycurl.FORM_CONTENTTYPE, 'application/octet-stream',
+                )
+            ))
+        else:
+            local_file_size = 1024  # fake
+
+
+        self.client.setopt(pycurl.HTTPPOST, files)
 
 
         start = time.time()
-        f_localfile = io.open(str(local_file_p), 'rb')
 
-        self.client.setopt(pycurl.URL, url)
-        self.client.setopt(pycurl.POST, 1)
+        self.client.setopt(pycurl.URL, self.url)
 
-
-        self.client.setopt(pycurl.HTTPPOST, [('metadata', (pycurl.FORM_BUFFER, 'metadata.json', pycurl.FORM_BUFFERPTR, json.dumps(metadata)))])
-        self.client.setopt(pycurl.HTTPPOST, [('media', (pycurl.FORM_FILE, str(local_file_p)))])
+        #self.client.setopt(pycurl.POST, 1)
+        self.client.setopt(pycurl.UPLOAD, 1)  # PUT
 
 
         try:
@@ -136,8 +153,6 @@ class pycurl_syncapi_v1(GenericFileTransfer):
             else:
                 raise e from e
 
-
-        f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
