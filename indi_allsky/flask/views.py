@@ -2797,8 +2797,14 @@ class JsonLogView(JsonView):
 
         log_file_f.close()
 
-        log_lines.pop(0)  # skip the first partial line
-        log_lines.reverse()  # newer lines first
+
+        try:
+            log_lines.pop(0)  # skip the first partial line
+            log_lines.reverse()  # newer lines first
+        except IndexError:
+            app.logger.warning('indi-allsky log empty')
+            log_lines = list()
+
 
         json_data['log'] = ''.join(log_lines)
 
