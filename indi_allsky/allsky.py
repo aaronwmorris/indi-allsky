@@ -294,6 +294,9 @@ class IndiAllSky(object):
         self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
 
 
+        self._sync_camera(db_camera, camera_metadata)
+
+
         # Update focus mode
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -600,6 +603,9 @@ class IndiAllSky(object):
         self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
 
 
+        self._sync_camera(db_camera, camera_metadata)
+
+
         # Disable debugging
         self.indiclient.disableDebugCcd()
 
@@ -687,9 +693,6 @@ class IndiAllSky(object):
             logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
             time.sleep(3)
-
-
-        self._sync_camera(db_camera, camera_metadata)
 
 
     def _sync_camera(self, camera, camera_metadata):
