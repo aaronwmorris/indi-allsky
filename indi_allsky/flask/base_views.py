@@ -190,7 +190,7 @@ class TemplateView(BaseView):
         sun.compute(obs)
         sun_alt = math.degrees(sun.alt)
 
-        if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
+        if sun_alt > self.camera.nightSunAlt:
             night = False
         else:
             night = True

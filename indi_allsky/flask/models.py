@@ -54,6 +54,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     alt = db.Column(db.Float, nullable=True)
     az = db.Column(db.Float, nullable=True)
+    nightSunAlt = db.Column(db.Float, nullable=True)
 
     lensName = db.Column(db.String(length=100), nullable=True)
     lensFocalLength = db.Column(db.Float, nullable=True)
