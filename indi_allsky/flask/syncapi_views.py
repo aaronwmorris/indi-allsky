@@ -99,7 +99,7 @@ class SyncApiBaseView(BaseView):
 
 
     def put(self, overwrite=True):
-        self.post(overwrite=overwrite)
+        return self.post(overwrite=overwrite)
 
 
     def delete(self):
@@ -336,7 +336,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def put(self, overwrite=True):
-        self.post(overwrite=overwrite)
+        return self.post(overwrite=overwrite)
 
 
     def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
