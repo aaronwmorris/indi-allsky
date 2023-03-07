@@ -113,8 +113,7 @@ class TemplateView(BaseView):
 
         self.night = True
 
-        # assume indi-allsky is running with application server
-        self.local_indi_allsky = True
+        self.local_indi_allsky = self.camera.local
 
 
     def render_template(self, context):
