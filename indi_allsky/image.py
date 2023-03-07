@@ -441,6 +441,7 @@ class ImageWorker(Process):
         else:
             # images not being saved
             image_entry = None
+            image_metadata = dict()
 
 
         if latest_file:
