@@ -4,7 +4,6 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-import psutil
 import ephem
 
 from flask import render_template
@@ -47,32 +46,6 @@ class BaseView(View):
         self.camera = self.getLatestCamera()
 
 
-    def get_indiallsky_pid(self):
-        try:
-            indi_allsky_pid_p = Path(self._miscDb.getState('PID_FILE'))
-        except NoResultFound:
-            app.logger.error('PID_FILE state not set')
-            return False
-
-
-        try:
-            with io.open(str(indi_allsky_pid_p), 'r') as pid_f:
-                pid = pid_f.readline()
-                pid = pid.rstrip()
-        except FileNotFoundError:
-            return False
-        except PermissionError:
-            return None
-
-
-        try:
-            pid_int = int(pid)
-        except ValueError:
-            return None
-
-        return pid_int
-
-
     def getLatestCamera(self):
         latest_camera = IndiAllSkyDbCameraTable.query\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
@@ -107,13 +80,13 @@ class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
 
+        self.local_indi_allsky = self.camera.local
+
         self.check_config(self._indi_allsky_config_obj.config_id)
 
         self.template_name = template_name
 
         self.night = True
-
-        self.local_indi_allsky = self.camera.local
 
 
     def render_template(self, context):
@@ -141,7 +114,9 @@ class TemplateView(BaseView):
 
     def check_config(self, config_id):
         try:
-            db_config_id = int(self._miscDb.getState('CONFIG_ID'))
+            if self.local_indi_allsky:
+                # only do this on local devices
+                db_config_id = int(self._miscDb.getState('CONFIG_ID'))
         except NoResultFound:
             app.logger.error('Unable to get CONFIG_ID')
             return
@@ -161,6 +136,10 @@ class TemplateView(BaseView):
 
 
     def get_indi_allsky_status(self):
+        if not self.local_indi_allsky:
+            return '<span class="text-muted">REMOTE</span>'
+
+
         try:
             watchdog_time = int(self._miscDb.getState('WATCHDOG'))
         except NoResultFound:
@@ -199,29 +178,15 @@ class TemplateView(BaseView):
             return '<span class="text-warning">FOCUS MODE</span>'
 
 
-        indi_allsky_pid = self.get_indiallsky_pid()
-
-        if isinstance(indi_allsky_pid, bool):
-            # False is not local
-            self.local_indi_allsky = False
-            return '<span class="text-muted">REMOTE</span>'
-        #else:
-        #    # None or int is local
-        #    local_indi_allsky = True
-
-
-        if self.local_indi_allsky and psutil.pid_exists(indi_allsky_pid):
-            # this check is only valid if the indi-allsky is running on the same server as the web application
-
-            if now > (watchdog_time + 300):
-                # this notification is only supposed to fire if the program is
-                # running normally and the watchdog timestamp is older than 5 minutes
-                self._miscDb.addNotification(
-                    NotificationCategory.GENERAL,
-                    'watchdog',
-                    'Watchdog expired.  indi-allsky may be in a failed state.',
-                    expire=timedelta(minutes=60),
-                )
+        if now > (watchdog_time + 300):
+            # this notification is only supposed to fire if the program is
+            # running normally and the watchdog timestamp is older than 5 minutes
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'watchdog',
+                'Watchdog expired.  indi-allsky may be in a failed state.',
+                expire=timedelta(minutes=60),
+            )
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
