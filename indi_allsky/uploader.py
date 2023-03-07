@@ -9,6 +9,8 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from . import constants
+
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -155,9 +157,9 @@ class FileUploader(Process):
         remote_file = task.data.get('remote_file')
         remove_local = task.data.get('remove_local')
 
-        asset_type = task.data.get('asset_type', 'image')
+        asset_type = task.data.get('asset_type')
 
-        mq_data = task.data.get('mq_data')
+        metadata = task.data.get('metadata')
 
 
         if entry_model and entry_id:
@@ -193,7 +195,7 @@ class FileUploader(Process):
 
 
         # Build parameters
-        if action == 'upload':
+        if action == constants.TRANSFER_UPLOAD:
             connect_kwargs = {
                 'hostname'    : self.config['FILETRANSFER']['HOST'],
                 'username'    : self.config['FILETRANSFER']['USERNAME'],
@@ -221,15 +223,16 @@ class FileUploader(Process):
             if self.config['FILETRANSFER']['PORT']:
                 client.port = self.config['FILETRANSFER']['PORT']
 
-        elif action == 's3':
+        elif action == constants.TRANSFER_S3:
             s3_key = local_file_p.relative_to(self.image_dir)
 
-            if asset_type == 'image':
+            if asset_type == constants.ASSET_IMAGE:
                 if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
                     expire_days = self.config['IMAGE_EXPIRE_DAYS']
                 else:
                     expire_days = None
             else:
+                # assume timelapse asset (video, keogram, startrail, etc)
                 if self.config['S3UPLOAD']['EXPIRE_TIMELAPSE']:
                     expire_days = self.config['TIMELAPSE_EXPIRE_DAYS']
                 else:
@@ -271,7 +274,7 @@ class FileUploader(Process):
                 client.port = self.config['S3UPLOAD']['PORT']
 
 
-        elif action == 'mqttpub':
+        elif action == constants.TRANSFER_MQTT:
             connect_kwargs = {
                 'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
                 'hostname'    : self.config['MQTTPUBLISH']['HOST'],
@@ -285,7 +288,7 @@ class FileUploader(Process):
                 'local_file'  : local_file_p,
                 'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                 'qos'         : self.config['MQTTPUBLISH']['QOS'],
-                'mq_data'     : mq_data,
+                'mq_data'     : metadata,
             }
 
             try:
@@ -300,6 +303,29 @@ class FileUploader(Process):
             if self.config['MQTTPUBLISH']['PORT']:
                 client.port = self.config['MQTTPUBLISH']['PORT']
 
+        elif action == constants.TRANSFER_SYNC_V1:
+            ENDPOINT_URI = constants.ENDPOINT_V1[metadata['type']]
+
+            connect_kwargs = {
+                'hostname'     : '{0:s}/{1:s}'.format(self.config['SYNCAPI']['BASEURL'], ENDPOINT_URI),
+                'username'     : self.config['SYNCAPI']['USERNAME'],
+                'apikey'       : self.config['SYNCAPI']['APIKEY'],
+                'cert_bypass'  : self.config['SYNCAPI']['CERT_BYPASS'],
+            }
+
+            put_kwargs = {
+                'metadata'      : metadata,
+                'local_file'    : local_file_p,
+            }
+
+            try:
+                client_class = getattr(filetransfer, 'requests_syncapi_v1')
+            except AttributeError:
+                logger.error('Unknown filetransfer class: %s', 'requests_syncapi_v1')
+                task.setFailed('Unknown filetransfer class: {0:s}'.format('requests_syncapi_v1'))
+                return
+
+            client = client_class(self.config)
         else:
             task.setFailed('Invalid transfer action')
             raise Exception('Invalid transfer action')
@@ -351,7 +377,7 @@ class FileUploader(Process):
 
         # Upload file
         try:
-            client.put(**put_kwargs)
+            response = client.put(**put_kwargs)
         except filetransfer.exceptions.ConnectionFailure as e:
             logger.error('Connection failure: %s', e)
             client.close()
@@ -429,13 +455,18 @@ class FileUploader(Process):
         task.setSuccess('File uploaded')
 
 
-        if entry and action == 'upload':
+        if entry and action == constants.TRANSFER_UPLOAD:
             entry.uploaded = True
             db.session.commit()
 
 
-        if entry and action == 's3':
+        if entry and action == constants.TRANSFER_S3:
             entry.s3_key = str(s3_key)
+            db.session.commit()
+
+
+        if entry and action == constants.TRANSFER_SYNC_V1:
+            entry.sync_id = response['id']
             db.session.commit()
 
 

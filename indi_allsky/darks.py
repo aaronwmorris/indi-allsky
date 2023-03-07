@@ -80,6 +80,9 @@ class IndiAllSkyDarks(object):
         self.indiclient = None
 
         self.camera_id = None
+        self.camera_name = None
+        self.camera_server = None
+        self.ccd_info = None
 
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
@@ -206,8 +209,8 @@ class IndiAllSkyDarks(object):
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
 
 
         # Get Properties
@@ -217,12 +220,23 @@ class IndiAllSkyDarks(object):
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
+        self.ccd_info = ccd_info
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
+        camera_metadata = {
+            'name'        : self.camera_name,
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+        }
+
+        db_camera = self._miscDb.addCamera(camera_metadata)
         self.camera_id = db_camera.id
 
         # Disable debugging
@@ -243,8 +257,8 @@ class IndiAllSkyDarks(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -347,8 +361,8 @@ class IndiAllSkyDarks(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
-                hdulist[0].header['BAYERPAT'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']
+            elif self.ccd_info['CCD_CFA']['CFA_TYPE'].get('text'):
+                hdulist[0].header['BAYERPAT'] = self.ccd_info['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
 
@@ -463,7 +477,7 @@ class IndiAllSkyDarks(object):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
-        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
+        if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -505,19 +519,19 @@ class IndiAllSkyDarks(object):
 
 
     def _pre_shoot_reconfigure(self):
-        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
+        if self.camera_server in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
+            if self.camera_name.startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
+        elif self.camera_server in ['indi_asi_single_ccd']:
+            if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
     def _run(self, stacking_class):
 
-        ccd_bits = int(self.config['CCD_INFO']['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
+        ccd_bits = int(self.ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
 
 
         # exposures start with 1 and then every 5s until the max exposure
@@ -687,24 +701,25 @@ class IndiAllSkyDarks(object):
         s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
         s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
 
+        dark_metadata = {
+            'createDate' : exp_date.timestamp(),
+            'bitdepth'   : image_bitpix,
+            'exposure'   : exposure_f,
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'temp'       : self.sensortemp_v.value,
+        }
+
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
             self.camera_id,
-            image_bitpix,
-            exposure_f,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
+            dark_metadata,
         )
 
         self._miscDb.addDarkFrame(
             full_dark_filename_p,
             self.camera_id,
-            image_bitpix,
-            exposure_f,
-            self.gain_v.value,
-            self.bin_v.value,
-            self.sensortemp_v.value,
+            dark_metadata,
         )
 
         tmp_fit_dir.cleanup()

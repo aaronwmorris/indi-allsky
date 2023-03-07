@@ -99,6 +99,54 @@ def INDI_CAMERA_NAME_validator(form, field):
         raise ValidationError('Invalid camera name')
 
 
+def LENS_NAME_validator(form, field):
+    if not field.data:
+        return
+
+    lens_regex = r'^[a-zA-Z0-9\.\ \-\/]+$'
+
+    if not re.search(lens_regex, field.data):
+        raise ValidationError('Invalid lens name')
+
+
+def LENS_FOCAL_LENGTH_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0.0:
+        raise ValidationError('Focal length must be greater than 0')
+
+
+def LENS_FOCAL_RATIO_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0.0:
+        raise ValidationError('Focal ratio must be greater than 0')
+
+
+def LENS_ALTITUDE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Altitude must be 0 or greater')
+
+    if field.data > 90.0:
+        raise ValidationError('Altitude must be 90 or less')
+
+
+def LENS_AZIMUTH_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Azimuth must be 0 or greater')
+
+    if field.data > 360.0:
+        raise ValidationError('Azimuth must be 360 or less')
+
+
 def ccd_GAIN_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -345,6 +393,16 @@ def DETECT_STARS_THOLD_validator(form, field):
 
     if field.data > 1.0:
         raise ValidationError('Threshold must be 1.0 or less')
+
+
+def LOCATION_NAME_validator(form, field):
+    if not field.data:
+        return
+
+    name_regex = r'^[a-zA-Z0-9_,\.\-\/\:\ ]+$'
+
+    if not re.search(name_regex, field.data):
+        raise ValidationError('Invalid name')
 
 
 def LOCATION_LATITUDE_validator(form, field):
@@ -982,7 +1040,17 @@ def MQTTPUBLISH__USERNAME_validator(form, field):
     if not field.data:
         return
 
-    username_regex = r'^[a-zA-Z0-9_\@\.\-\\]+$'
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
+def SYNCAPI__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
 
     if not re.search(username_regex, field.data):
         raise ValidationError('Invalid username')
@@ -993,6 +1061,10 @@ def FILETRANSFER__PASSWORD_validator(form, field):
 
 
 def MQTTPUBLISH__PASSWORD_validator(form, field):
+    pass
+
+
+def SYNCAPI__APIKEY_validator(form, field):
     pass
 
 
@@ -1296,6 +1368,28 @@ def MQTTPUBLISH__QOS_validator(form, field):
         raise ValidationError('Invalid QoS')
 
 
+def SYNCAPI__BASEURL_validator(form, field):
+    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\]+$'
+
+    if not re.search(url_regex, field.data):
+        raise ValidationError('Invalid characters in URL')
+
+    if not re.search(r'^https?\:\/\/', field.data):
+        raise ValidationError('URL should begin with https://')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('URL cannot end with slash')
+
+    if re.search(r'localhost', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
+    if re.search(r'127\.0\.0\.1', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
+    if re.search(r'\:\:1', field.data):
+        raise ValidationError('Do not sync to localhost, bad things happen')
+
+
 def FITSHEADER_KEY_validator(form, field):
     header_regex = r'^[a-zA-Z0-9\-]+$'
 
@@ -1510,6 +1604,11 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
+    LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
+    LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
+    LENS_FOCAL_RATIO                 = FloatField('Focal Ratio', validators=[LENS_FOCAL_RATIO_validator])
+    LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
+    LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
@@ -1550,6 +1649,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
     SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
+    LOCATION_NAME                    = StringField('Location', validators=[LOCATION_NAME_validator])
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
@@ -1668,6 +1768,11 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
+    SYNCAPI__ENABLE                  = BooleanField('Enable Sync API')
+    SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator])
+    SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator])
+    SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
+    SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])

@@ -116,7 +116,6 @@ class JsonLatestImageView(JsonView):
     def __init__(self, **kwargs):
         super(JsonLatestImageView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.history_seconds = 900
 
 
@@ -177,7 +176,7 @@ class JsonLatestImageView(JsonView):
 
 
         # use database
-        data['latest_image']['url'] = self.getLatestImage(self.camera_id, history_seconds)
+        data['latest_image']['url'] = self.getLatestImage(self.camera.id, history_seconds)
 
         return data
 
@@ -358,7 +357,6 @@ class JsonImageLoopView(JsonView):
     def __init__(self, **kwargs):
         super(JsonImageLoopView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.history_seconds = 900
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
@@ -374,9 +372,9 @@ class JsonImageLoopView(JsonView):
             history_seconds = 86400
 
         data = {
-            'image_list' : self.getLatestImages(self.camera_id, history_seconds),
-            'sqm_data'   : self.getSqmData(self.camera_id),
-            'stars_data' : self.getStarsData(self.camera_id),
+            'image_list' : self.getLatestImages(self.camera.id, history_seconds),
+            'sqm_data'   : self.getSqmData(self.camera.id),
+            'stars_data' : self.getStarsData(self.camera.id),
         }
 
         return data
@@ -476,7 +474,6 @@ class JsonChartView(JsonView):
     def __init__(self, **kwargs):
         super(JsonChartView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
         self.chart_history_seconds = 900
 
 
@@ -509,7 +506,7 @@ class JsonChartView(JsonView):
                 (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
             )\
             .join(IndiAllSkyDbCameraTable)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
@@ -588,7 +585,7 @@ class JsonChartView(JsonView):
 
         latest_image = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_seconds)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
@@ -666,6 +663,11 @@ class ConfigView(FormView):
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
             'INDI_CAMERA_NAME'               : self.indi_allsky_config.get('INDI_CAMERA_NAME', ''),
+            'LENS_NAME'                      : self.indi_allsky_config.get('LENS_NAME', 'AllSky Lens'),
+            'LENS_FOCAL_LENGTH'              : self.indi_allsky_config.get('LENS_FOCAL_LENGTH', 2.5),
+            'LENS_FOCAL_RATIO'               : self.indi_allsky_config.get('LENS_FOCAL_RATIO', 2.0),
+            'LENS_ALTITUDE'                  : self.indi_allsky_config.get('LENS_ALTITUDE', 90.0),
+            'LENS_AZIMUTH'                   : self.indi_allsky_config.get('LENS_AZIMUTH', 0.0),
             'CCD_CONFIG__NIGHT__GAIN'        : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100),
             'CCD_CONFIG__NIGHT__BINNING'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
             'CCD_CONFIG__MOONMODE__GAIN'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75),
@@ -698,6 +700,7 @@ class ConfigView(FormView):
             'DETECT_METEORS'                 : self.indi_allsky_config.get('DETECT_METEORS', False),
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'DETECT_DRAW'                    : self.indi_allsky_config.get('DETECT_DRAW', False),
+            'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
@@ -807,6 +810,11 @@ class ConfigView(FormView):
             'MQTTPUBLISH__QOS'               : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('QOS', 0),
             'MQTTPUBLISH__TLS'               : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('TLS', True),
             'MQTTPUBLISH__CERT_BYPASS'       : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('CERT_BYPASS', True),
+            'SYNCAPI__ENABLE'                : self.indi_allsky_config.get('SYNCAPI', {}).get('ENABLE', False),
+            'SYNCAPI__BASEURL'               : self.indi_allsky_config.get('SYNCAPI', {}).get('BASEURL', 'https://example.com/indi-allsky'),
+            'SYNCAPI__USERNAME'              : self.indi_allsky_config.get('SYNCAPI', {}).get('USERNAME', ''),
+            'SYNCAPI__APIKEY'                : self.indi_allsky_config.get('SYNCAPI', {}).get('APIKEY', ''),
+            'SYNCAPI__CERT_BYPASS'           : self.indi_allsky_config.get('SYNCAPI', {}).get('CERT_BYPASS', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
@@ -1026,6 +1034,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('MQTTPUBLISH'):
             self.indi_allsky_config['MQTTPUBLISH'] = {}
 
+        if not self.indi_allsky_config.get('SYNCAPI'):
+            self.indi_allsky_config['SYNCAPI'] = {}
+
         if not self.indi_allsky_config.get('LIBCAMERA'):
             self.indi_allsky_config['LIBCAMERA'] = {}
 
@@ -1037,6 +1048,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
         self.indi_allsky_config['INDI_CAMERA_NAME']                     = str(request.json['INDI_CAMERA_NAME'])
+        self.indi_allsky_config['LENS_NAME']                            = str(request.json['LENS_NAME'])
+        self.indi_allsky_config['LENS_FOCAL_LENGTH']                    = float(request.json['LENS_FOCAL_LENGTH'])
+        self.indi_allsky_config['LENS_FOCAL_RATIO']                     = float(request.json['LENS_FOCAL_RATIO'])
+        self.indi_allsky_config['LENS_ALTITUDE']                        = float(request.json['LENS_ALTITUDE'])
+        self.indi_allsky_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = int(request.json['CCD_CONFIG__NIGHT__GAIN'])
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
         self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = int(request.json['CCD_CONFIG__MOONMODE__GAIN'])
@@ -1069,6 +1085,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DETECT_METEORS']                       = bool(request.json['DETECT_METEORS'])
         self.indi_allsky_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
         self.indi_allsky_config['DETECT_DRAW']                          = bool(request.json['DETECT_DRAW'])
+        self.indi_allsky_config['LOCATION_NAME']                        = str(request.json['LOCATION_NAME'])
         self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
         self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
@@ -1180,6 +1197,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['MQTTPUBLISH']['QOS']                   = int(request.json['MQTTPUBLISH__QOS'])
         self.indi_allsky_config['MQTTPUBLISH']['TLS']                   = bool(request.json['MQTTPUBLISH__TLS'])
         self.indi_allsky_config['MQTTPUBLISH']['CERT_BYPASS']           = bool(request.json['MQTTPUBLISH__CERT_BYPASS'])
+        self.indi_allsky_config['SYNCAPI']['ENABLE']                    = bool(request.json['SYNCAPI__ENABLE'])
+        self.indi_allsky_config['SYNCAPI']['BASEURL']                   = str(request.json['SYNCAPI__BASEURL'])
+        self.indi_allsky_config['SYNCAPI']['USERNAME']                  = str(request.json['SYNCAPI__USERNAME'])
+        self.indi_allsky_config['SYNCAPI']['APIKEY']                    = str(request.json['SYNCAPI__APIKEY'])
+        self.indi_allsky_config['SYNCAPI']['CERT_BYPASS']               = bool(request.json['SYNCAPI__CERT_BYPASS'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
@@ -1383,8 +1405,6 @@ class AjaxImageViewerView(BaseView):
     def __init__(self, **kwargs):
         super(AjaxImageViewerView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def dispatch_request(self):
         form_year  = request.json.get('YEAR_SELECT')
@@ -1524,8 +1544,6 @@ class AjaxVideoViewerView(BaseView):
 
     def __init__(self, **kwargs):
         super(AjaxVideoViewerView, self).__init__(**kwargs)
-
-        self.camera_id = self.getLatestCamera()
 
 
     def dispatch_request(self):
@@ -2334,13 +2352,11 @@ class TimelapseGeneratorView(TemplateView):
     def __init__(self, **kwargs):
         super(TimelapseGeneratorView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
 
-        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera_id)
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=self.camera.id)
 
         # Lookup tasks
         state_list = (
@@ -2391,11 +2407,9 @@ class AjaxTimelapseGeneratorView(BaseView):
     def __init__(self, **kwargs):
         super(AjaxTimelapseGeneratorView, self).__init__(**kwargs)
 
-        self.camera_id = self.getLatestCamera()
-
 
     def dispatch_request(self):
-        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera_id)
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=self.camera.id)
 
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
@@ -2537,23 +2551,23 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata_video = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
-                'camera_id'   : self.camera_id,
+                'night'       : night,
+                'camera_id'   : self.camera.id,
             }
 
             jobdata_kst = {
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
-                'camera_id'   : self.camera_id,
+                'night'       : night,
+                'camera_id'   : self.camera.id,
             }
 
 
@@ -2592,15 +2606,15 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
-                'camera_id'   : self.camera_id,
+                'night'       : night,
+                'camera_id'   : self.camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2630,15 +2644,15 @@ class AjaxTimelapseGeneratorView(BaseView):
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
             img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera_id)
+            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, self.camera.id)
             img_day_folder = img_base_folder.joinpath(night_day_str)
 
             jobdata = {
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
-                'timeofday'   : night_day_str,
-                'camera_id'   : self.camera_id,
+                'night'       : night,
+                'camera_id'   : self.camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2679,8 +2693,6 @@ class JsonFocusView(JsonView):
 
     def __init__(self, **kwargs):
         super(JsonFocusView, self).__init__(**kwargs)
-
-        #self.camera_id = self.getLatestCamera()
 
 
     def dispatch_request(self):
@@ -2785,8 +2797,14 @@ class JsonLogView(JsonView):
 
         log_file_f.close()
 
-        log_lines.pop(0)  # skip the first partial line
-        log_lines.reverse()  # newer lines first
+
+        try:
+            log_lines.pop(0)  # skip the first partial line
+            log_lines.reverse()  # newer lines first
+        except IndexError:
+            app.logger.warning('indi-allsky log empty')
+            log_lines = list()
+
 
         json_data['log'] = ''.join(log_lines)
 

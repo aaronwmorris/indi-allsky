@@ -1,6 +1,9 @@
 import enum
 from pathlib import Path
 
+from cryptography.fernet import Fernet
+#from cryptography.fernet import InvalidToken
+
 from sqlalchemy.sql import expression
 
 from flask import current_app as app
@@ -36,6 +39,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
     connectDate = db.Column(db.DateTime(), nullable=True)
+
     minGain = db.Column(db.Integer, nullable=True)
     maxGain = db.Column(db.Integer, nullable=True)
     minExposure = db.Column(db.Float, nullable=True)
@@ -44,6 +48,21 @@ class IndiAllSkyDbCameraTable(db.Model):
     height = db.Column(db.Integer, nullable=True)
     bits = db.Column(db.Integer, nullable=True)
     pixelSize = db.Column(db.Float, nullable=True)
+
+    location = db.Column(db.String(length=100), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    alt = db.Column(db.Float, nullable=True)
+    az = db.Column(db.Float, nullable=True)
+    nightSunAlt = db.Column(db.Float, nullable=True)
+
+    lensName = db.Column(db.String(length=100), nullable=True)
+    lensFocalLength = db.Column(db.Float, nullable=True)
+    lensFocalRatio = db.Column(db.Float, nullable=True)
+
+    local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
+
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
@@ -53,6 +72,12 @@ class IndiAllSkyDbCameraTable(db.Model):
     badpixelmaps = db.relationship('IndiAllSkyDbBadPixelMapTable', back_populates='camera')
     fitsimages = db.relationship('IndiAllSkyDbFitsImageTable', back_populates='camera')
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
+
+
+    @property
+    def filename(self):
+        ### virtual property used for the sync api
+        return 'camera'
 
 
 class IndiAllSkyDbFileBase(db.Model):
@@ -72,13 +97,14 @@ class IndiAllSkyDbFileBase(db.Model):
         return rel_filename_p
 
 
-    def getUrl(self, s3_prefix=''):
-        # Not using this for now
-        #if self.remote_url:
-        #    return self.remote_url
+    def getUrl(self, s3_prefix='', local=False):
+        if not local:
+            # Not using this for now
+            #if self.remote_url:
+            #    return self.remote_url
 
-        if self.s3_key:
-            return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
+            if self.s3_key:
+                return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
 
 
         rel_filename_p = self.getRelativePath()
@@ -146,6 +172,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     sqm = db.Column(db.Float, nullable=True)
     stars = db.Column(db.Integer, nullable=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     calibrated = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     detections = db.Column(db.Integer, server_default='0', nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -212,6 +239,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='videos')
@@ -239,6 +267,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
@@ -258,6 +287,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
@@ -277,6 +307,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailvideos')
@@ -299,6 +330,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='fitsimages')
 
@@ -320,6 +352,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, unique=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='rawimages')
 
@@ -446,7 +479,7 @@ class IndiAllSkyDbUserTable(db.Model):
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, index=True)
     name = db.Column(db.String(255))
-    apikey = db.Column(db.String(255))
+    apikey = db.Column(db.String(255))  # apikeys are encrypted
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
@@ -480,4 +513,15 @@ class IndiAllSkyDbUserTable(db.Model):
 
     def get_id(self):
         return self.id
+
+
+    def getApiKey(self, password_key):
+        f_key = Fernet(password_key.encode())
+        return f_key.decrypt(self.apikey.encode()).decode()
+
+
+    def setApiKey(self, apikey, password_key):
+        f_key = Fernet(password_key.encode())
+        self.apikey = f_key.encrypt(apikey.encode()).decode()
+        db.session.commit()
 

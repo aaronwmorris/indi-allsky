@@ -38,6 +38,11 @@ class IndiAllSkyConfigBase(object):
         "INDI_SERVER" : "localhost",
         "INDI_PORT"   : 7624,
         "INDI_CAMERA_NAME" : "",
+        "LENS_NAME" : "AllSky Lens",
+        "LENS_FOCAL_LENGTH" : 2.5,
+        "LENS_FOCAL_RATIO"  : 2.0,
+        "LENS_ALTITUDE"     : 90.0,
+        "LENS_AZIMUTH"      : 0.0,
         "CCD_CONFIG" : {
             "NIGHT" : {
                 "GAIN"    : 100,
@@ -85,6 +90,7 @@ class IndiAllSkyConfigBase(object):
         "DETECT_MASK" : "",
         "DETECT_DRAW" : False,
         "SQM_ROI" : [],
+        "LOCATION_NAME"      : '',
         "LOCATION_LATITUDE"  : 33,
         "LOCATION_LONGITUDE" : -84,
         "TIMELAPSE_ENABLE"         : True,
@@ -222,6 +228,14 @@ class IndiAllSkyConfigBase(object):
             "TLS"                    : True,
             "CERT_BYPASS"            : True,
         },
+        "SYNCAPI" : {
+            "ENABLE"                 : False,
+            "BASEURL"                : "https://example.com/indi-allsky",
+            "USERNAME"               : "",
+            "APIKEY"                 : "",
+            "APIKEY_E"               : "",
+            "CERT_BYPASS"            : False,
+        },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
             "EXTRA_OPTIONS"          : "",
@@ -343,11 +357,19 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
 
+            syncapi__apikey_e = config.get('SYNCAPI', {}).get('APIKEY_E', '')
+            if syncapi__apikey_e:
+                # not catching InvalidToken
+                syncapi__apikey = f_key.decrypt(syncapi__apikey_e.encode()).decode()
+            else:
+                syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
+
         else:
             # passwords should not be encrypted
             filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
             s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
             mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+            syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -356,6 +378,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['S3UPLOAD']['SECRET_KEY_E'] = ''
         config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
         config['MQTTPUBLISH']['PASSWORD_E'] = ''
+        config['SYNCAPI']['APIKEY'] = syncapi__apikey
+        config['SYNCAPI']['APIKEY_E'] = ''
 
         return config
 
@@ -409,6 +433,16 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 mqttpublish__password_e = ''
                 mqttpublish__password = ''
 
+
+            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            if syncapi__apikey:
+                syncapi__apikey_e = f_key.encrypt(syncapi__apikey.encode()).decode()
+                syncapi__apikey = ''
+            else:
+                syncapi__apikey_e = ''
+                syncapi__apikey = ''
+
+
         else:
             # passwords should not be encrypted
             encrypted = False
@@ -419,6 +453,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             s3upload__secret_key_e = ''
             mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
             mqttpublish__password_e = ''
+            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey_e = ''
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -427,6 +463,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['S3UPLOAD']['SECRET_KEY_E'] = s3upload__secret_key_e
         config['MQTTPUBLISH']['PASSWORD'] = mqttpublish__password
         config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
+        config['SYNCAPI']['APIKEY'] = syncapi__apikey
+        config['SYNCAPI']['APIKEY_E'] = syncapi__apikey_e
 
 
         return config, encrypted

@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import getpass
 from passlib.hash import argon2
+import secrets
 #import time
 from datetime import datetime
 #from datetime import timedelta
@@ -292,6 +293,32 @@ class UserManager(object):
         db.session.commit()
 
 
+    def genapikey(self, **kwargs):
+        username = kwargs.get('username')
+
+        if not username:
+            username = input('Username: ')
+
+        existing_user = IndiAllSkyDbUserTable.query\
+            .filter(IndiAllSkyDbUserTable.username == username)\
+            .first()
+
+        if not existing_user:
+            logger.warning('User does not exist: %s', username)
+            sys.exit(1)
+
+
+        apikey = secrets.token_hex(32)
+
+        # apikeys are encrypted
+        existing_user.setApiKey(apikey, app.config['PASSWORD_KEY'])
+
+
+        print()
+        print('API key: {0:s}'.format(apikey))
+        print()
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
@@ -303,6 +330,7 @@ if __name__ == "__main__":
             'adduser',
             'deleteuser',
             'resetpass',
+            'genapikey',
             'setadmin',
             'removeadmin',
             'setactive',
