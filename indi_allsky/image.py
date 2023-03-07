@@ -533,6 +533,7 @@ class ImageWorker(Process):
 
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_s3(image_entry)
+            self.syncapi_image(image_entry, image_metadata)
             self.upload_image(i_ref, image_entry)
             self.upload_metadata(i_ref, adu, adu_average)
 
@@ -728,6 +729,36 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : s3_task.id})
+
+
+    def syncapi_image(self, image_entry, image_metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        if not image_entry:
+            # image was not saved
+            return
+
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : image_entry.__class__.__name__,
+            'id'          : image_entry.id,
+            'metadata'    : image_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def getSqmData(self, camera_id):
