@@ -1,0 +1,32 @@
+### Requirements for a web interface only interface
+# https://www.wheelodex.org/projects/numpy/
+numpy
+# https://www.wheelodex.org/projects/opencv-python-headless/
+opencv-python-headless
+# https://www.wheelodex.org/projects/ccdproc/
+ccdproc
+bottleneck
+ephem
+paramiko
+# https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
+pycurl
+gunicorn[gthread]
+inotify
+psutil
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-WTF
+# https://www.wheelodex.org/projects/cryptography/
+cryptography
+dbus-python
+paho-mqtt
+setuptools-rust
+# https://www.wheelodex.org/projects/bcrypt/
+bcrypt
+passlib[argon2]
+flask-login
+is-safe-url
+mysql-connector-python
+PyMySQL
+prettytable
