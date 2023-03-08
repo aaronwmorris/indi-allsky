@@ -18,6 +18,8 @@ paramiko
 pycurl
 imageio
 imageio-ffmpeg
+# https://www.piwheels.org/project/imagecodecs/
+#imagecodecs
 #rawpy  # not available on armv7l
 pygifsicle
 gunicorn[gthread]

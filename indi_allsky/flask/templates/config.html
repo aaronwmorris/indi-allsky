@@ -77,6 +77,98 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LOCATION_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.LOCATION_NAME(class='form-control bg-secondary') }}
+            <div id="LOCATION_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">Free form input</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -90, Max: 90</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -180, Max: 180</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
+            <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_LENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_ALTITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_ALTITUDE(class='form-control bg-secondary') }}
+            <div id="LENS_ALTITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_AZIMUTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_AZIMUTH(class='form-control bg-secondary') }}
+            <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -546,30 +638,6 @@
             <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x2, y2</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Min: -90, Max: 90</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LONGITUDE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Min: -180, Max: 180</div>
     </div>
 
     <hr />
@@ -2059,6 +2127,67 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.SYNCAPI__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SYNCAPI__ENABLE(class='form-check-input') }}
+                <div id="SYNCAPI__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SYNCAPI__BASEURL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.SYNCAPI__BASEURL(class='form-control bg-secondary') }}
+            <div id="SYNCAPI__BASEURL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">Base URL for remote indi-allsky instance</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SYNCAPI__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.SYNCAPI__USERNAME(class='form-control bg-secondary') }}
+            <div id="SYNCAPI__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SYNCAPI__APIKEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.SYNCAPI__APIKEY(class='form-control bg-secondary') }}
+            <div id="SYNCAPI__APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SYNCAPI__CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SYNCAPI__CERT_BYPASS(class='form-check-input') }}
+                <div id="SYNCAPI__CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Bypass certificate validation</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2150,6 +2279,11 @@ const field_names = [
     'INDI_SERVER',
     'INDI_PORT',
     'INDI_CAMERA_NAME',
+    'LENS_NAME',
+    'LENS_FOCAL_LENGTH',
+    'LENS_FOCAL_RATIO',
+    'LENS_ALTITUDE',
+    'LENS_AZIMUTH',
     'CCD_CONFIG__NIGHT__GAIN',
     'CCD_CONFIG__NIGHT__BINNING',
     'CCD_CONFIG__MOONMODE__GAIN',
@@ -2183,6 +2317,7 @@ const field_names = [
     'SQM_ROI_Y2',
     'DETECT_STARS_THOLD',
     'DETECT_MASK',
+    'LOCATION_NAME',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
     'NIGHT_SUN_ALT_DEG',
@@ -2270,6 +2405,9 @@ const field_names = [
     'MQTTPUBLISH__PASSWORD',
     'MQTTPUBLISH__BASE_TOPIC',
     'MQTTPUBLISH__QOS',
+    'SYNCAPI__BASEURL',
+    'SYNCAPI__USERNAME',
+    'SYNCAPI__APIKEY',
     'FITSHEADERS__0__KEY',
     'FITSHEADERS__0__VAL',
     'FITSHEADERS__1__KEY',
@@ -2325,6 +2463,8 @@ const checkbox_field_names = [
     'MQTTPUBLISH__ENABLE',
     'MQTTPUBLISH__TLS',
     'MQTTPUBLISH__CERT_BYPASS',
+    'SYNCAPI__ENABLE',
+    'SYNCAPI__CERT_BYPASS',
     'RELOAD_ON_SAVE',
 ];
 

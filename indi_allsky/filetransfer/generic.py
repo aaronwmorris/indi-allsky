@@ -37,7 +37,7 @@ class GenericFileTransfer(object):
         username = kwargs['username']
         #password = kwargs['password']
 
-        logger.info('Connecting to %s:%d as %s with %s', hostname, self._port, username, self.__class__.__name__)
+        logger.info('Connecting to %s (%d) as %s with %s', hostname, self._port, username, self.__class__.__name__)
 
 
     def close(self):

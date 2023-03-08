@@ -31,6 +31,8 @@ from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
+from . import constants
+
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
@@ -123,6 +125,10 @@ class IndiAllSky(object):
         self.night = None
         self.moonmode_v = Value('i', -1)  # bogus initial value
         self.moonmode = None
+
+        self.camera_id = None
+        self.camera_name = None
+        self.camera_server = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
 
@@ -221,11 +227,11 @@ class IndiAllSky(object):
         self.reconfigureCcd()
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
 
 
         ### Telescope config
@@ -248,26 +254,54 @@ class IndiAllSky(object):
 
 
         # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
+        #ccd_properties = self.indiclient.getCcdDeviceProperties()
 
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
-        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+        camera_metadata = {
+            'name'        : self.camera_name,
+
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+
+            'location'    : self.config['LOCATION_NAME'],
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
+            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
+        }
+
+        db_camera = self._miscDb.addCamera(camera_metadata)
+        self.camera_id = db_camera.id
+
+        self.indiclient.camera_id = self.camera_id
+
+        self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
+
+
+        self._sync_camera(db_camera, camera_metadata)
 
 
         # Update focus mode
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
         # set minimum exposure
-        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
@@ -288,8 +322,8 @@ class IndiAllSky(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -444,11 +478,11 @@ class IndiAllSky(object):
 
 
         # add driver name to config
-        self.config['CAMERA_NAME'] = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.config['CAMERA_NAME'])
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
-        self.config['CAMERA_SERVER'] = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.config['CAMERA_SERVER'])
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
 
 
         ### GPS config
@@ -529,19 +563,47 @@ class IndiAllSky(object):
 
 
         # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        self.config['CCD_PROPERTIES'] = ccd_properties
+        #ccd_properties = self.indiclient.getCcdDeviceProperties()
 
 
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
-        self.config['CCD_INFO'] = ccd_info
 
 
         # need to get camera info before adding to DB
-        db_camera = self._miscDb.addCamera(self.config['CAMERA_NAME'], ccd_info)
-        self.config['DB_CAMERA_ID'] = db_camera.id
-        self._miscDb.setState('DB_CAMERA_ID', self.config['DB_CAMERA_ID'])
+        camera_metadata = {
+            'name'        : self.camera_name,
+
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+
+            'location'    : self.config['LOCATION_NAME'],
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
+            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
+        }
+
+        db_camera = self._miscDb.addCamera(camera_metadata)
+        self.camera_id = db_camera.id
+
+        self.indiclient.camera_id = self.camera_id
+
+        self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
+
+
+        self._sync_camera(db_camera, camera_metadata)
 
 
         # Disable debugging
@@ -567,7 +629,7 @@ class IndiAllSky(object):
 
 
         # set minimum exposure
-        ccd_min_exp = self.config['CCD_INFO']['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
@@ -602,8 +664,8 @@ class IndiAllSky(object):
 
 
         # Validate gain settings
-        ccd_min_gain = self.config['CCD_INFO']['GAIN_INFO']['min']
-        ccd_max_gain = self.config['CCD_INFO']['GAIN_INFO']['max']
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
@@ -631,6 +693,34 @@ class IndiAllSky(object):
             logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
             time.sleep(3)
+
+
+    def _sync_camera(self, camera, camera_metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        camera_metadata['uuid'] = camera.uuid
+        camera_metadata['type'] = constants.CAMERA
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : camera.__class__.__name__,
+            'id'          : camera.id,
+            'metadata'    : camera_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def _startImageWorker(self):
@@ -836,7 +926,7 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CAMERA_SERVER'] in ['indi_rpicam']:
+        if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
@@ -858,13 +948,13 @@ class IndiAllSky(object):
             self.validateGpsTime()
 
 
-        if self.config['CAMERA_SERVER'] in ['indi_asi_ccd']:
+        if self.camera_server in ['indi_asi_ccd']:
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.config['CAMERA_NAME'].startswith('ZWO CCD ASI120'):
+            if self.camera_name.startswith('ZWO CCD ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.config['CAMERA_SERVER'] in ['indi_asi_single_ccd']:
-            if self.config['CAMERA_NAME'].startswith('ZWO ASI120'):
+        elif self.camera_server in ['indi_asi_single_ccd']:
+            if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
@@ -931,8 +1021,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of night
                         yesterday_ref = datetime.now() - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                        self._generateNightKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateNightTimelapse(timespec, self.camera_id)
+                        self._generateNightKeogram(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight()
                         self._systemHealthCheck()
 
@@ -940,8 +1030,8 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of day
                         today_ref = datetime.now()
                         timespec = today_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.config['DB_CAMERA_ID'])
-                        self._generateDayKeogram(timespec, self.config['DB_CAMERA_ID'])
+                        self._generateDayTimelapse(timespec, self.camera_id)
+                        self._generateDayKeogram(timespec, self.camera_id)
                         self._systemHealthCheck()
 
 
@@ -1476,7 +1566,12 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+
+
+            self._generateDayTimelapse(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
 
 
     def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1493,7 +1588,7 @@ class IndiAllSky(object):
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'day',
+            'night'       : False,
             'camera_id'   : camera_id,
         }
 
@@ -1540,7 +1635,7 @@ class IndiAllSky(object):
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'night',
+            'night'       : True,
             'camera_id'   : camera_id,
         }
 
@@ -1587,7 +1682,7 @@ class IndiAllSky(object):
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'night',
+            'night'       : True,
             'camera_id'   : camera_id,
         }
 
@@ -1634,7 +1729,7 @@ class IndiAllSky(object):
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
-            'timeofday'   : 'day',
+            'night'       : False,
             'camera_id'   : camera_id,
         }
 
@@ -1717,7 +1812,7 @@ class IndiAllSky(object):
             'action'       : 'expireData',
             'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
-            'timeofday'    : None,  # Not needed
+            'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
         }
 
@@ -1738,7 +1833,7 @@ class IndiAllSky(object):
             'action'       : 'uploadAllskyEndOfNight',
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
-            'timeofday'    : 'night',
+            'night'        : True,
             'camera_id'    : None,  # Not needed
         }
 
@@ -1759,7 +1854,7 @@ class IndiAllSky(object):
             'action'       : 'systemHealthCheck',
             'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
-            'timeofday'    : None,  # Not needed
+            'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
         }
 

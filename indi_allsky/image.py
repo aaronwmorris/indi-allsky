@@ -19,6 +19,8 @@ import logging
 import traceback
 #from pprint import pformat
 
+#from tifffile import TiffWriter
+
 import ephem
 
 from multiprocessing import Process
@@ -29,6 +31,8 @@ from astropy.io import fits
 
 import cv2
 import numpy
+
+from . import constants
 
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
@@ -274,10 +278,15 @@ class ImageWorker(Process):
             return
 
 
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         processing_start = time.time()
 
 
-        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera_id)
+        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         self.image_processor.calibrate()
 
 
@@ -402,30 +411,37 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
 
         if new_filename:
+            image_metadata = {
+                'type'            : constants.IMAGE,
+                'createDate'      : exp_date.timestamp(),
+                'exposure'        : exposure,
+                'exp_elapsed'     : exp_elapsed,
+                'gain'            : self.gain_v.value,
+                'binmode'         : self.bin_v.value,
+                'temp'            : self.sensortemp_v.value,
+                'adu'             : adu,
+                'stable'          : self.target_adu_found,
+                'moonmode'        : bool(self.moonmode_v.value),
+                'moonphase'       : self.astrometric_data['moon_phase'],
+                'night'           : bool(self.night_v.value),
+                'adu_roi'         : self.config['ADU_ROI'],
+                'calibrated'      : i_ref['calibrated'],
+                'sqm'             : i_ref['sqm_value'],
+                'stars'           : len(i_ref['stars']),
+                'detections'      : len(i_ref['lines']),
+                'process_elapsed' : processing_elapsed_s,
+                'camera_uuid'     : i_ref['camera_uuid'],
+            }
+
             image_entry = self._miscDb.addImage(
                 new_filename,
                 camera_id,
-                exp_date,
-                exposure,
-                exp_elapsed,
-                self.gain_v.value,
-                self.bin_v.value,
-                self.sensortemp_v.value,
-                adu,
-                self.target_adu_found,  # stable
-                bool(self.moonmode_v.value),
-                self.astrometric_data['moon_phase'],
-                night=bool(self.night_v.value),
-                adu_roi=self.config['ADU_ROI'],
-                calibrated=i_ref['calibrated'],
-                sqm=i_ref['sqm_value'],
-                stars=len(i_ref['stars']),
-                detections=len(i_ref['lines']),
-                process_elapsed=processing_elapsed_s,
+                image_metadata,
             )
         else:
             # images not being saved
             image_entry = None
+            image_metadata = dict()
 
 
         if latest_file:
@@ -520,6 +536,7 @@ class ImageWorker(Process):
 
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_s3(image_entry)
+            self.syncapi_image(image_entry, image_metadata)
             self.upload_image(i_ref, image_entry)
             self.upload_metadata(i_ref, adu, adu_average)
 
@@ -564,7 +581,7 @@ class ImageWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'      : 'upload',
+            'action'      : constants.TRANSFER_UPLOAD,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
             'remote_file' : str(remote_file_p),
@@ -600,7 +617,7 @@ class ImageWorker(Process):
 
 
         metadata = {
-            'device'              : self.config['CAMERA_NAME'],
+            'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
@@ -645,7 +662,7 @@ class ImageWorker(Process):
 
         # tell worker to upload file
         jobdata = {
-            'action'       : 'upload',
+            'action'       : constants.TRANSFER_UPLOAD,
             'local_file'   : str(tmp_metadata_name_p),
             'remote_file'  : str(remote_file_p),
             'remove_local' : True,
@@ -669,9 +686,9 @@ class ImageWorker(Process):
 
         # publish data to mq broker
         jobdata = {
-            'action'      : 'mqttpub',
+            'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
-            'mq_data'     : mq_data,
+            'metadata'    : mq_data,
         }
 
         mqtt_task = IndiAllSkyDbTaskQueueTable(
@@ -700,10 +717,10 @@ class ImageWorker(Process):
 
         # publish data to s3 bucket
         jobdata = {
-            'action'      : 's3',
+            'action'      : constants.TRANSFER_S3,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
-            'asset_type'  : 'image',
+            'asset_type'  : constants.ASSET_IMAGE,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(
@@ -715,6 +732,36 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : s3_task.id})
+
+
+    def syncapi_image(self, image_entry, image_metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        if not image_entry:
+            # image was not saved
+            return
+
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : image_entry.__class__.__name__,
+            'id'          : image_entry.id,
+            'metadata'    : image_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def getSqmData(self, camera_id):
@@ -784,14 +831,20 @@ class ImageWorker(Process):
         ))
 
 
+        fits_metadata = {
+            'type'       : constants.FITS_IMAGE,
+            'createDate' : i_ref['exp_date'].timestamp(),
+            'exposure'   : i_ref['exposure'],
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'night'      : bool(self.night_v.value),
+            'camera_uuid': i_ref['camera_uuid'],
+        }
+
         self._miscDb.addFitsImage(
             filename,
             i_ref['camera_id'],
-            i_ref['exp_date'],
-            i_ref['exposure'],
-            self.gain_v.value,
-            self.bin_v.value,
-            night=bool(self.night_v.value),
+            fits_metadata,
         )
 
 
@@ -892,6 +945,13 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+
+            #with TiffWriter(str(tmpfile_name), ) as tif:
+            #    tif.write(
+            #        scaled_data,
+            #        compression='lzw',  # requires imagecodecs
+            #        metadata={'foo': 'bar'},
+            #    )
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 
@@ -933,14 +993,20 @@ class ImageWorker(Process):
         ))
 
 
+        raw_metadata = {
+            'type'       : constants.RAW_IMAGE,
+            'createDate' : i_ref['exp_date'].timestamp(),
+            'exposure'   : i_ref['exposure'],
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'night'      : bool(self.night_v.value),
+            'camera_uuid': i_ref['camera_uuid'],
+        }
+
         self._miscDb.addRawImage(
             filename,
             i_ref['camera_id'],
-            i_ref['exp_date'],
-            i_ref['exposure'],
-            self.gain_v.value,
-            self.bin_v.value,
-            night=bool(self.night_v.value),
+            raw_metadata,
         )
 
 
@@ -1050,7 +1116,7 @@ class ImageWorker(Process):
         status = {
             'name'                : 'indi_json',
             'class'               : 'ccd',
-            'device'              : self.config['CAMERA_NAME'],
+            'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
             'gain'                : self.gain_v.value,
@@ -1084,7 +1150,6 @@ class ImageWorker(Process):
             day_ref = exp_date - timedelta(hours=12)
             timeofday_str = 'night'
         else:
-            # daytime
             # images should be written to current day's folder
             day_ref = exp_date
             timeofday_str = 'day'
@@ -1410,7 +1475,7 @@ class ImageProcessor(object):
 
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera_id):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
         filename_p = Path(filename)
 
 
@@ -1565,7 +1630,9 @@ class ImageProcessor(object):
             'exposure'         : exposure,
             'exp_date'         : exp_date,
             'exp_elapsed'      : exp_elapsed,
-            'camera_id'        : camera_id,
+            'camera_id'        : camera.id,
+            'camera_name'      : camera.name,
+            'camera_uuid'      : camera.uuid,
             'image_bitpix'     : image_bitpix,
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference

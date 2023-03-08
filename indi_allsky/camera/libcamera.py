@@ -28,6 +28,8 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self._exposure = None
 
+        self._camera_id = None
+
         self._ccd_gain = -1
         self._ccd_bin = 1
 
@@ -74,6 +76,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             'lat'           : self.latitude_v.value,
             'long'          : self.longitude_v.value,
         }
+
+
+    @property
+    def camera_id(self):
+        return self._camera_id
+
+    @camera_id.setter
+    def camera_id(self, new_camera_id):
+        self._camera_id = int(new_camera_id)
 
 
     def getCcdGain(self):
@@ -237,7 +248,10 @@ class IndiClientLibCameraGeneric(IndiClient):
                     metadata_dict = dict()
 
 
-            self.current_metadata_file_p.unlink(missing_ok=True)
+            try:
+                self.current_metadata_file_p.unlink()
+            except FileNotFoundError:
+                pass
 
 
             try:
@@ -265,7 +279,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exposure'    : self._exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
-            'camera_id'   : self.config['DB_CAMERA_ID'],
+            'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
         }
 

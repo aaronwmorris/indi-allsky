@@ -289,6 +289,8 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    MYSQL_ETC="/etc/mysql"
+
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
@@ -384,6 +386,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         dbus-user-session
 
 
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -425,6 +433,8 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3
 
@@ -509,6 +519,12 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         dbus-user-session
 
 
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -549,6 +565,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3
 
@@ -644,6 +662,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         sqlite3 \
         policykit-1 \
         dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
 
 
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
@@ -690,6 +714,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    MYSQL_ETC="/etc/mysql"
+
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements_debian10.txt
@@ -786,6 +812,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         dbus-user-session
 
 
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -822,6 +854,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3
 
@@ -923,6 +957,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         dbus-user-session
 
 
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -959,6 +999,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.9
 
@@ -1060,6 +1102,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         dbus-user-session
 
 
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -1095,6 +1143,8 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.8
 
@@ -1184,6 +1234,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         sqlite3 \
         policykit-1 \
         dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
 
 
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
@@ -1568,15 +1624,8 @@ else
 fi
 
 
-# always replace the DB URI
-TMP_FLASK_2=$(mktemp --suffix=.json)
-jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
-cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
-[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-
-
-EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$EXISTING_PASSWORD_KEY" ]; then
+PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$PASSWORD_KEY" ]; then
     # generate password key for encryption
     PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
@@ -1592,6 +1641,15 @@ sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
 [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+
+
+
+# create a backup of the key
+if [ ! -f "${ALLSKY_ETC}/password_key_backup.json" ]; then
+    jq -n --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
+fi
+
+chmod 400 "${ALLSKY_ETC}/password_key_backup.json"
 
 
 
@@ -1659,8 +1717,6 @@ fi
 
 ### Mysql
 if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-    MYSQL_ETC="/etc/mysql"
-
     sudo cp -f "${ALLSKY_DIRECTORY}/service/mysql_indi-allsky.conf" "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
     sudo chown root:root "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
     sudo chmod 644 "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"
@@ -1669,7 +1725,7 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo mkdir "$MYSQL_ETC/ssl"
     fi
 
-    sudo chown root:root "MYSQL_ETC/ssl"
+    sudo chown root:root "$MYSQL_ETC/ssl"
     sudo chmod 755 "$MYSQL_ETC/ssl"
 
 

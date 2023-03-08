@@ -1,27 +1,15 @@
-### This file is targeted to Raspbian/Debian 11 and Python 3.9
-# https://www.wheelodex.org/projects/astropy/
-astropy
+### Requirements for a web interface only interface
 # https://www.wheelodex.org/projects/numpy/
 numpy
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless
-# https://www.wheelodex.org/projects/scipy/
-scipy
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
-astroalign
 bottleneck
-python-dateutil
 ephem
 paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
-imageio
-imageio-ffmpeg
-# https://www.wheelodex.org/projects/imagecodecs/
-#imagecodecs
-rawpy
-pygifsicle
 gunicorn[gthread]
 inotify
 psutil
@@ -42,5 +30,3 @@ is-safe-url
 mysql-connector-python
 PyMySQL
 prettytable
-boto3
-apache-libcloud
