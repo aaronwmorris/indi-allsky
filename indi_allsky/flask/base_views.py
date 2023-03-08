@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 import ephem
 
+from flask import session
 from flask import render_template
 from flask import jsonify
 from flask.views import View
@@ -43,16 +44,6 @@ class BaseView(View):
 
         self.s3_prefix = self.getS3Prefix()
 
-        self.camera = self.getLatestCamera()
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera
-
 
     def getS3Prefix(self):
         s3_data = {
@@ -76,17 +67,45 @@ class BaseView(View):
         return prefix
 
 
+    def getCameraById(self, camera_id):
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+        return camera
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
+        self.template_name = template_name
+
+        self.camera = None  # set in setupSession()
+
+        self.setupSession()
 
         self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
-        self.template_name = template_name
+        self.night = True  # will be overridden later
 
-        self.night = True
+
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
+
+        self.camera = self.getLatestCamera()
+        session['camera_id'] = self.camera.id
+
+
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera
 
 
     def render_template(self, context):
