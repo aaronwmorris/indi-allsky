@@ -1593,11 +1593,9 @@ done
 TMP_FLASK=$(mktemp --suffix=.json)
 TMP_FLASK_MERGE=$(mktemp --suffix=.json)
 
-SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 sed \
  -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
  -e "s|%MIGRATION_FOLDER%|$MIGRATION_FOLDER|g" \
- -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
  -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
@@ -1624,15 +1622,27 @@ else
 fi
 
 
+SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$SECRET_KEY" ]; then
+    # generate flask secret key
+    SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
+
+    TMP_FLASK_SKEY=$(mktemp --suffix=.json)
+    jq --arg secret_key "$SECRET_KEY" '.SECRET_KEY = $secret_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_SKEY"
+    cp -f "$TMP_FLASK_SKEY" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_SKEY" ]] && rm -f "$TMP_FLASK_SKEY"
+fi
+
+
 PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
 if [ -z "$PASSWORD_KEY" ]; then
     # generate password key for encryption
     PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
-    TMP_FLASK_4=$(mktemp --suffix=.json)
-    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_4"
-    cp -f "$TMP_FLASK_4" "${ALLSKY_ETC}/flask.json"
-    [[ -f "$TMP_FLASK_4" ]] && rm -f "$TMP_FLASK_4"
+    TMP_FLASK_PKEY=$(mktemp --suffix=.json)
+    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_PKEY"
+    cp -f "$TMP_FLASK_PKEY" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_PKEY" ]] && rm -f "$TMP_FLASK_PKEY"
 fi
 
 
