@@ -1624,8 +1624,8 @@ else
 fi
 
 
-EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$EXISTING_PASSWORD_KEY" ]; then
+PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$PASSWORD_KEY" ]; then
     # generate password key for encryption
     PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
@@ -1641,6 +1641,15 @@ sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
 [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+
+
+
+# create a backup of the key
+if [ ! -f "${ALLSKY_ETC}/password_key_backup.json" ]; then
+    jq -n --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
+fi
+
+chmod 400 "${ALLSKY_ETC}/password_key_backup.json"
 
 
 
