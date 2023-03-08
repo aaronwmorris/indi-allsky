@@ -11,7 +11,7 @@
     "SESSION_COOKIE_HTTPONLY" : true,
     "SESSION_COOKIE_SAMESITE" : "Lax",
     "TEMPLATES_AUTO_RELOAD" : true,
-    "SECRET_KEY" : "%SECRET_KEY%",
+    "SECRET_KEY" : "",
 
     "REMEMBER_COOKIE_DURATION" : 604800,
     "REMEMBER_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
