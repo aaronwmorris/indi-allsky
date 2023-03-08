@@ -1568,13 +1568,6 @@ else
 fi
 
 
-# always replace the DB URI
-TMP_FLASK_2=$(mktemp --suffix=.json)
-jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
-cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
-[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-
-
 EXISTING_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
 if [ -z "$EXISTING_PASSWORD_KEY" ]; then
     # generate password key for encryption
