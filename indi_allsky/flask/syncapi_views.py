@@ -88,7 +88,7 @@ class SyncApiBaseView(BaseView):
 
         try:
             file_entry = self.processPost(camera, metadata, media_file, overwrite=overwrite)
-        except FileExists:
+        except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
 
@@ -109,7 +109,7 @@ class SyncApiBaseView(BaseView):
 
         try:
             self.deleteFile(metadata['id'])
-        except FileMissing:
+        except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
         return jsonify({})
@@ -119,8 +119,8 @@ class SyncApiBaseView(BaseView):
         get_id = request.args.get('id')
 
         try:
-            file_entry = self.getFile(get_id)
-        except FileMissing:
+            file_entry = self.getEntry(get_id)
+        except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
         return jsonify({
@@ -159,7 +159,7 @@ class SyncApiBaseView(BaseView):
 
         else:
             if not overwrite:
-                raise FileExists()
+                raise EntryExists()
 
             app.logger.warning('Replacing file')
             filename.unlink()
@@ -204,7 +204,7 @@ class SyncApiBaseView(BaseView):
             db.session.delete(entry)
             db.session.commit()
         except NoResultFound:
-            raise FileMissing()
+            raise EntryMissing()
 
 
         try:
@@ -213,14 +213,14 @@ class SyncApiBaseView(BaseView):
             pass
 
 
-    def getFile(self, entry_id):
+    def getEntry(self, entry_id):
         try:
             entry = self.model.query\
                 .filter(self.model.id == entry_id)\
                 .one()
 
         except NoResultFound:
-            raise FileMissing()
+            raise EntryMissing()
 
 
         return entry
@@ -324,6 +324,19 @@ class SyncApiCameraView(SyncApiBaseView):
     add_function = 'addCamera_remote'
 
 
+    def get(self):
+        get_id = request.args.get('id')
+
+        try:
+            file_entry = self.getEntry(get_id)
+        except EntryMissing:
+            return jsonify({'error' : 'camera_missing'}), 400
+
+        return jsonify({
+            'id'   : file_entry.id,
+        })
+
+
     def post(self, overwrite=True):
         metadata = self.saveMetadata()
 
@@ -348,6 +361,10 @@ class SyncApiCameraView(SyncApiBaseView):
         app.logger.info('Updated camera: %s', entry.uuid)
 
         return entry
+
+
+    def delete(self):
+        return jsonify({'error' : 'not_implemented'}), 400
 
 
 class SyncApiImageView(SyncApiBaseView):
@@ -382,7 +399,7 @@ class SyncApiImageView(SyncApiBaseView):
 
         else:
             if not overwrite:
-                raise FileExists()
+                raise EntryExists()
 
             app.logger.warning('Replacing image')
             image_file.unlink()
@@ -489,15 +506,15 @@ class SyncApiFitsImageView(SyncApiImageView):  # image parent
     add_function = 'addFitsImage'
 
 
-class FileExists(Exception):
+class EntryExists(Exception):
     pass
 
 
-class FileMissing(Exception):
+class EntryMissing(Exception):
     pass
 
 
-bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['POST', 'PUT'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
