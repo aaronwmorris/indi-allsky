@@ -275,6 +275,8 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.process_elapsed,
                 (cast(createDate_s, Integer) - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(50)
@@ -313,6 +315,8 @@ class RollingAduView(TemplateView):
                 func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
             )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .filter(
                 and_(
                     IndiAllSkyDbImageTable.createDate > now_minus_3d,
@@ -1393,7 +1397,7 @@ class ImageViewerView(FormView):
             'FILTER_DETECTIONS' : None,
         }
 
-        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
+        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data, camera_id=self.camera.id, s3_prefix=self.s3_prefix)
 
         return context
 
@@ -1415,9 +1419,9 @@ class AjaxImageViewerView(BaseView):
 
         if form_filter_detections:
             # filter images that have a detection
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=1, s3_prefix=self.s3_prefix)
+            form_viewer = IndiAllskyImageViewer(data=request.json, camera_id=self.camera.id, detections_count=1, s3_prefix=self.s3_prefix)
         else:
-            form_viewer = IndiAllskyImageViewer(data=request.json, detections_count=0, s3_prefix=self.s3_prefix)
+            form_viewer = IndiAllskyImageViewer(data=request.json, camera_id=self.camera.id, detections_count=0, s3_prefix=self.s3_prefix)
 
 
         json_data = {}
@@ -1534,7 +1538,7 @@ class VideoViewerView(FormView):
             'MONTH_SELECT' : None,
         }
 
-        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data, s3_prefix=self.s3_prefix)
+        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data, camera_id=self.camera.id, s3_prefix=self.s3_prefix)
 
         return context
 
@@ -1547,7 +1551,7 @@ class AjaxVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
-        form_video_viewer = IndiAllskyVideoViewer(data=request.json, s3_prefix=self.s3_prefix)
+        form_video_viewer = IndiAllskyVideoViewer(data=request.json, camera_id=self.camera.id, s3_prefix=self.s3_prefix)
 
 
         form_year      = request.json.get('YEAR_SELECT')
@@ -2431,21 +2435,29 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         if action == 'delete_all':
             video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
                 .first()
 
             keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbKeogramTable.night == night)\
                 .first()
 
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .join(IndiAllSkyDbStarTrailsTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
                 .first()
 
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
                 .first()
@@ -2480,6 +2492,8 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         elif action == 'delete_video':
             video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
                 .first()
@@ -2501,16 +2515,22 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         if action == 'delete_k_st':
             keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbKeogramTable.night == night)\
                 .first()
 
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .join(IndiAllSkyDbStarTrailsTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
                 .first()
 
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
                 .first()
