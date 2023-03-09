@@ -1015,7 +1015,7 @@ class IndiAllSky(object):
                 if self.night_v.value != int(self.night):
                     if self.generate_timelapse_flag:
                         self._flushOldTasks()  # cleanup old tasks in DB
-                        self._expireData()  # cleanup old images and folders
+                        self._expireData(self.camera_id)  # cleanup old images and folders
 
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of night
