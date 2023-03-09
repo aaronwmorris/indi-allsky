@@ -57,8 +57,6 @@ logger = logging.getLogger('indi_allsky')
 
 class VideoWorker(Process):
 
-    video_lockfile = '/tmp/timelapse_video.lock'
-
 
     def __init__(
         self,
@@ -327,12 +325,12 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
-        self._uploadVideo(video_entry, video_file)
-        self._s3_upload(video_entry)
         self._syncapi(video_entry, video_metadata)
+        self._uploadVideo(video_entry, video_file, camera)
+        self._s3_upload(video_entry)
 
 
-    def _uploadVideo(self, video_entry, video_file):
+    def _uploadVideo(self, video_entry, video_file, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -345,6 +343,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -657,9 +656,9 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._uploadKeogram(keogram_entry, keogram_file)
-                self._s3_upload(keogram_entry)
                 self._syncapi(keogram_entry, keogram_metadata)
+                self._uploadKeogram(keogram_entry, keogram_file, camera)
+                self._s3_upload(keogram_entry)
             else:
                 keogram_entry.success = False
                 db.session.commit()
@@ -667,9 +666,9 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._uploadStarTrail(startrail_entry, startrail_file)
-                self._s3_upload(startrail_entry)
                 self._syncapi(startrail_entry, startrail_metadata)
+                self._uploadStarTrail(startrail_entry, startrail_file, camera)
+                self._s3_upload(startrail_entry)
             else:
                 startrail_entry.success = False
                 db.session.commit()
@@ -677,9 +676,9 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._uploadStarTrailVideo(startrail_video_file)
-                self._s3_upload(startrail_video_entry)
                 self._syncapi(startrail_video_entry, startrail_video_metadata)
+                self._uploadStarTrailVideo(startrail_video_file, camera)
+                self._s3_upload(startrail_video_entry)
             else:
                 # success flag set above
                 pass
@@ -688,7 +687,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def _uploadKeogram(self, keogram_entry, keogram_file):
+    def _uploadKeogram(self, keogram_entry, keogram_file, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -701,6 +700,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -730,7 +730,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrail(self, startrail_entry, startrail_file):
+    def _uploadStarTrail(self, startrail_entry, startrail_file, camera):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -742,6 +742,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -771,8 +772,8 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file):
-        self._uploadVideo(startrail_video_entry, startrail_video_file)
+    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file, camera):
+        self._uploadVideo(startrail_video_entry, startrail_video_file, camera)
 
 
     def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
@@ -798,8 +799,8 @@ class VideoWorker(Process):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
+        obs.lon = math.radians(camera.longitude)
+        obs.lat = math.radians(camera.latitude)
 
         sun = ephem.Sun()
 
@@ -853,6 +854,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -927,21 +929,38 @@ class VideoWorker(Process):
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
         old_raw_images = IndiAllSkyDbRawImageTable.query\
+            .join(IndiAllSkyDbRawImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
+            .join(IndiAllSkyDbVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
         old_keograms = IndiAllSkyDbKeogramTable.query\
+            .join(IndiAllSkyDbKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
+            .join(IndiAllSkyDbStarTrailsTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+        old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
+            .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
 
 
         # images
@@ -1040,53 +1059,26 @@ class VideoWorker(Process):
         db.session.commit()
 
 
-        ### The following code will need to be pruned eventually since we are deleting based on DB entries
-        # Old fits image files need to be pruned
-
-
-        # ensure we do not delete images stored in DB
-        cutoff_age_images_minus_1day = cutoff_age_images - timedelta(days=1)
-
-
-        fits_file_list = list()
-        self._getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
-
-        old_fits_files_1 = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
-        old_fits_files_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
-        old_fits_files_no_d_bpm = filter(lambda p: 'bpm' not in p.name, old_fits_files_nodarks)  # exclude bpms
-        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files_no_d_bpm)))
-        for f in old_fits_files_no_d_bpm:
-            logger.info('Removing old fits image: %s', f)
+        # star trails video
+        logger.warning('Found %d expired star trail videos to delete', old_startrails_videos.count())
+        for file_entry in old_startrails_videos:
+            #logger.info('Removing old star trails video: %s', file_entry.filename)
 
             try:
-                f.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
+                continue
 
 
-
-        # Old export image files need to be pruned
-        export_folder_p = Path(self.config['IMAGE_EXPORT_FOLDER'])
-
-        export_file_list = list()
-        self._getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
-
-        old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), export_file_list)
-        logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
-        for f in old_export_files:
-            logger.info('Removing old export image: %s', f)
-
-            try:
-                f.unlink()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
+        old_startrails_videos.delete()  # mass delete
+        db.session.commit()
 
 
 
         # Remove empty folders
         dir_list = list()
         self._getFolderFolders(img_folder, dir_list)
-        self._getFolderFolders(export_folder_p, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
