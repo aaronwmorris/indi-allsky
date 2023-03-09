@@ -534,11 +534,11 @@ class ImageWorker(Process):
                 upload_filename = latest_file
 
 
-            self.mqtt_publish(upload_filename, mqtt_data)
-            self.upload_s3(image_entry)
             self.syncapi_image(image_entry, image_metadata)
+            self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
             self.upload_metadata(i_ref, adu, adu_average)
+            self.upload_s3(image_entry)
 
 
     def upload_image(self, i_ref, image_entry, camera):
