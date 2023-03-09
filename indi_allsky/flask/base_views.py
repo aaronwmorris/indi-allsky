@@ -71,8 +71,18 @@ class BaseView(View):
 
     def getCameraById(self, camera_id):
         if camera_id == -1:
+            # see if a camera has been defined since the last run
+            camera = IndiAllSkyDbCameraTable.query\
+                .order_by(IndiAllSkyDbCameraTable.createDate.desc())\
+                .first()
+
+            if camera:
+                session['camera_id'] = camera.id
+                return camera
+
             app.logger.warning('No cameras are defined')
             return FakeCamera()
+
 
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -425,4 +435,5 @@ class FakeCamera(object):
     local = True
     latitude = 0.0
     longitude = 0.0
+    nightSunAlt = 0.0
 
