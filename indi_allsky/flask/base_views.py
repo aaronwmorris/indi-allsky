@@ -126,6 +126,7 @@ class TemplateView(BaseView):
     def getLatestCamera(self):
         latest_camera = IndiAllSkyDbCameraTable.query\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .limit(1)\
             .one()
 
         return latest_camera
