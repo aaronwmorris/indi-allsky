@@ -131,7 +131,12 @@ class TemplateView(BaseView):
         # night set in get_astrometric_info()
         context['night'] = int(self.night)  # javascript does not play well with bools
 
-        context['form_camera_select'] = IndiAllskyCameraSelectForm(camera_id=session['camera_id'])
+
+        camera_default = {
+            'CAMERA_SELECT' : session['camera_id'],
+        }
+
+        context['form_camera_select'] = IndiAllskyCameraSelectForm(data=camera_default)
 
         return context
 

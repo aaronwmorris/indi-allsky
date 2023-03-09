@@ -2528,10 +2528,7 @@ class IndiAllskyCameraSelectForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyCameraSelectForm, self).__init__(*args, **kwargs)
 
-        self.camera_id = kwargs.get('camera_id')
-
         self.CAMERA_SELECT.choices = self.getCameras()
-        self.CAMERA_SELECT.default = self.camera_id
 
 
     def getCameras(self):
