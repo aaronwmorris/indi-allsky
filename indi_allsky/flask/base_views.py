@@ -70,6 +70,10 @@ class BaseView(View):
 
 
     def getCameraById(self, camera_id):
+        if camera_id == -1:
+            app.logger.warning('No cameras are defined')
+            return FakeCamera()
+
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
@@ -99,14 +103,20 @@ class TemplateView(BaseView):
             self.camera = self.getCameraById(session['camera_id'])
             return
 
-        self.camera = self.getLatestCamera()
+        try:
+            self.camera = self.getLatestCamera()
+        except NoResultFound:
+            # -1 to setup a fake camera object
+            session['camera_id'] = -1
+            return
+
         session['camera_id'] = self.camera.id
 
 
     def getLatestCamera(self):
         latest_camera = IndiAllSkyDbCameraTable.query\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
+            .one()
 
         return latest_camera
 
@@ -408,5 +418,11 @@ class JsonView(BaseView):
         raise NotImplementedError()
 
 
-
+# Prior to indi-allsky being started, no cameras are defined
+# This class provides the minimum viable product until a real camera is defined
+class FakeCamera(object):
+    id = -1
+    local = True
+    latitude = 0.0
+    longitude = 0.0
 
