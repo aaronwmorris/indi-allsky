@@ -306,16 +306,6 @@ class FileUploader(Process):
         elif action == constants.TRANSFER_SYNC_V1:
             ENDPOINT_URI = constants.ENDPOINT_V1[metadata['type']]
 
-
-            # do not sync these metadata keys for now
-            exclude_keys = ['s3_key']
-            for k in exclude_keys:
-                try:
-                    metadata.pop(k)
-                except KeyError:
-                    pass
-
-
             connect_kwargs = {
                 'hostname'     : '{0:s}/{1:s}'.format(self.config['SYNCAPI']['BASEURL'], ENDPOINT_URI),
                 'username'     : self.config['SYNCAPI']['USERNAME'],
