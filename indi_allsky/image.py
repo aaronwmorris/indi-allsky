@@ -1157,7 +1157,7 @@ class ImageWorker(Process):
 
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), camera.uuid, timeofday_str)
+        day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
 

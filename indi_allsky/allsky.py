@@ -1577,7 +1577,7 @@ class IndiAllSky(object):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'day')
+        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'day')
 
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
 
@@ -1628,7 +1628,7 @@ class IndiAllSky(object):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'night')
+        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'night')
 
         logger.warning('Generating night time timelapse for %s camera %d', timespec, camera.id)
 
@@ -1679,7 +1679,7 @@ class IndiAllSky(object):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'night')
+        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'night')
 
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
 
@@ -1730,7 +1730,7 @@ class IndiAllSky(object):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'day')
+        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'day')
 
         logger.warning('Generating day time keogram for %s camera %d', timespec, camera.id)
 
