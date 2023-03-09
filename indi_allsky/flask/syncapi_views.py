@@ -176,6 +176,15 @@ class SyncApiBaseView(BaseView):
                 pass
 
 
+        # do not sync these metadata keys for now
+        exclude_keys = ['s3_key']
+        for k in exclude_keys:
+            try:
+                metadata.pop(k)
+            except KeyError:
+                pass
+
+
         addFunction_method = getattr(self._miscDb, self.add_function)
         new_entry = addFunction_method(
             filename,
@@ -192,25 +201,20 @@ class SyncApiBaseView(BaseView):
 
 
     def deleteFile(self, entry_id):
+        # we do not want to call deleteAsset() here
         try:
             entry = self.model.query\
                 .filter(self.model.id == entry_id)\
                 .one()
 
 
-            filename_p = Path(entry.filename)
+            entry.deleteFile()
 
             app.logger.warning('Deleting entry %d', entry.id)
             db.session.delete(entry)
             db.session.commit()
         except NoResultFound:
             raise EntryMissing()
-
-
-        try:
-            filename_p.unlink()
-        except FileNotFoundError:
-            pass
 
 
     def getEntry(self, entry_id):

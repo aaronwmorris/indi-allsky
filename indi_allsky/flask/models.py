@@ -80,6 +80,14 @@ class IndiAllSkyDbCameraTable(db.Model):
         return 'camera'
 
 
+    def validateFile(self):
+        return True
+
+
+    def deleteFile(self):
+        pass
+
+
 class IndiAllSkyDbFileBase(db.Model):
     __abstract__ = True
 
