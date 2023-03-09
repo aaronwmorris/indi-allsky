@@ -292,7 +292,7 @@ class ImageWorker(Process):
 
         if self.config.get('IMAGE_SAVE_FITS'):
             i_ref = self.image_processor.getLatestImage()
-            self.write_fit(i_ref)
+            self.write_fit(i_ref, camera)
 
 
         self.image_processor.calculateSqm()
@@ -408,7 +408,7 @@ class ImageWorker(Process):
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref)
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera)
 
         if new_filename:
             image_metadata = {
@@ -813,7 +813,7 @@ class ImageWorker(Process):
         return stars_data
 
 
-    def write_fit(self, i_ref):
+    def write_fit(self, i_ref, camera):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
@@ -824,7 +824,7 @@ class ImageWorker(Process):
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         # raw light
-        folder = self.getImageFolder(i_ref['exp_date'])
+        folder = self.getImageFolder(i_ref['exp_date'], camera)
         filename = folder.joinpath(self.filename_t.format(
             i_ref['camera_id'],
             date_str,
@@ -1026,7 +1026,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
-    def write_img(self, data, i_ref):
+    def write_img(self, data, i_ref, camera):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1076,7 +1076,7 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self.getImageFolder(i_ref['exp_date'])
+        folder = self.getImageFolder(i_ref['exp_date'], camera)
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
@@ -1145,7 +1145,7 @@ class ImageWorker(Process):
         indi_allsky_status_p.chmod(0o644)
 
 
-    def getImageFolder(self, exp_date):
+    def getImageFolder(self, exp_date, camera):
         if self.night_v.value:
             # images should be written to previous day's folder until noon
             day_ref = exp_date - timedelta(hours=12)
@@ -1157,7 +1157,7 @@ class ImageWorker(Process):
 
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), camera.uuid, timeofday_str)
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
 

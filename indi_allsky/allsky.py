@@ -126,7 +126,7 @@ class IndiAllSky(object):
         self.moonmode_v = Value('i', -1)  # bogus initial value
         self.moonmode = None
 
-        self.camera_id = None
+        self.camera = None
         self.camera_name = None
         self.camera_server = None
 
@@ -286,15 +286,14 @@ class IndiAllSky(object):
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
         }
 
-        db_camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = db_camera.id
+        self.camera = self._miscDb.addCamera(camera_metadata)
 
-        self.indiclient.camera_id = self.camera_id
+        self.indiclient.camera_id = self.camera.id
 
-        self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
+        self._miscDb.setState('DB_CAMERA_ID', self.camera.id)
 
 
-        self._sync_camera(db_camera, camera_metadata)
+        self._sync_camera(self.camera, camera_metadata)
 
 
         # Update focus mode
@@ -595,15 +594,14 @@ class IndiAllSky(object):
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
         }
 
-        db_camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = db_camera.id
+        self.camera = self._miscDb.addCamera(camera_metadata)
 
-        self.indiclient.camera_id = self.camera_id
+        self.indiclient.camera_id = self.camera.id
 
-        self._miscDb.setState('DB_CAMERA_ID', self.camera_id)
+        self._miscDb.setState('DB_CAMERA_ID', self.camera.id)
 
 
-        self._sync_camera(db_camera, camera_metadata)
+        self._sync_camera(self.camera, camera_metadata)
 
 
         # Disable debugging
@@ -1021,17 +1019,17 @@ class IndiAllSky(object):
                         ### Generate timelapse at end of night
                         yesterday_ref = datetime.now() - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.camera_id)
-                        self._generateNightKeogram(timespec, self.camera_id)
-                        self._uploadAllskyEndOfNight()
+                        self._generateNightTimelapse(timespec, self.camera)
+                        self._generateNightKeogram(timespec, self.camera)
+                        self._uploadAllskyEndOfNight(self.camera)
                         self._systemHealthCheck()
 
                     elif self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of day
                         today_ref = datetime.now()
                         timespec = today_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.camera_id)
-                        self._generateDayKeogram(timespec, self.camera_id)
+                        self._generateDayTimelapse(timespec, self.camera)
+                        self._generateDayKeogram(timespec, self.camera)
                         self._systemHealthCheck()
 
 
@@ -1571,25 +1569,24 @@ class IndiAllSky(object):
                 .one()
 
 
-            self._generateDayTimelapse(timespec, camera_id, camera.uuid, task_state=TaskQueueState.MANUAL)
+            self._generateDayTimelapse(timespec, camera, task_state=TaskQueueState.MANUAL)
 
 
-    def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
+    def _generateDayTimelapse(self, timespec, camera, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'day')
 
-        logger.warning('Generating day time timelapse for %s camera %d', timespec, camera_id)
-        img_day_folder = img_base_folder.joinpath('day')
+        logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'night'       : False,
-            'camera_id'   : camera_id,
+            'camera_id'   : camera.id,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1618,25 +1615,29 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
 
 
-    def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
+            self._generateNightTimelapse(timespec, camera, task_state=TaskQueueState.MANUAL)
+
+
+    def _generateNightTimelapse(self, timespec, camera, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'night')
 
-        logger.warning('Generating night time timelapse for %s camera %d', timespec, camera_id)
-        img_day_folder = img_base_folder.joinpath('night')
+        logger.warning('Generating night time timelapse for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'night'       : True,
-            'camera_id'   : camera_id,
+            'camera_id'   : camera.id,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1665,25 +1666,29 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
 
 
-    def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
+            self._generateNightKeogram(timespec, camera, task_state=TaskQueueState.MANUAL)
+
+
+    def _generateNightKeogram(self, timespec, camera, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'night')
 
-        logger.warning('Generating night time keogram for %s camera %d', timespec, camera_id)
-        img_day_folder = img_base_folder.joinpath('night')
+        logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'night'       : True,
-            'camera_id'   : camera_id,
+            'camera_id'   : camera.id,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1712,25 +1717,29 @@ class IndiAllSky(object):
                 camera_id = int(camera_id)
 
 
-            self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
 
 
-    def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
+            self._generateDayKeogram(timespec, camera, task_state=TaskQueueState.MANUAL)
+
+
+    def _generateDayKeogram(self, timespec, camera, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
             return
 
-        img_base_folder = self.image_dir.joinpath('{0:s}'.format(timespec))
+        img_day_folder = self.image_dir.joinpath('{0:s}'.format(timespec), camera.uuid, 'day')
 
-        logger.warning('Generating day time keogram for %s camera %d', timespec, camera_id)
-        img_day_folder = img_base_folder.joinpath('day')
+        logger.warning('Generating day time keogram for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
             'night'       : False,
-            'camera_id'   : camera_id,
+            'camera_id'   : camera.id,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1801,19 +1810,34 @@ class IndiAllSky(object):
         return r2
 
 
-    def expireData(self):
+    def expireData(self, camera_id=0):
         with app.app_context():
-            self._expireData(TaskQueueState.MANUAL)
+            if camera_id == 0:
+                try:
+                    camera_id = self._miscDb.getCurrentCameraId()
+                except NoResultFound:
+                    logger.error('No camera found')
+                    sys.exit(1)
+            else:
+                camera_id = int(camera_id)
 
 
-    def _expireData(self, task_state=TaskQueueState.QUEUED):
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+
+
+            self._expireData(camera, TaskQueueState.MANUAL)
+
+
+    def _expireData(self, camera, task_state=TaskQueueState.QUEUED):
         # This will delete old images from the filesystem and DB
         jobdata = {
             'action'       : 'expireData',
             'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
-            'camera_id'    : None,  # Not needed
+            'camera_id'    : camera.id,
         }
 
         task = IndiAllSkyDbTaskQueueTable(
