@@ -325,12 +325,12 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
-        self._uploadVideo(video_entry, video_file)
+        self._uploadVideo(video_entry, video_file, camera)
         self._s3_upload(video_entry)
         self._syncapi(video_entry, video_metadata)
 
 
-    def _uploadVideo(self, video_entry, video_file):
+    def _uploadVideo(self, video_entry, video_file, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -343,6 +343,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -655,7 +656,7 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._uploadKeogram(keogram_entry, keogram_file)
+                self._uploadKeogram(keogram_entry, keogram_file, camera)
                 self._s3_upload(keogram_entry)
                 self._syncapi(keogram_entry, keogram_metadata)
             else:
@@ -665,7 +666,7 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._uploadStarTrail(startrail_entry, startrail_file)
+                self._uploadStarTrail(startrail_entry, startrail_file, camera)
                 self._s3_upload(startrail_entry)
                 self._syncapi(startrail_entry, startrail_metadata)
             else:
@@ -675,7 +676,7 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._uploadStarTrailVideo(startrail_video_file)
+                self._uploadStarTrailVideo(startrail_video_file, camera)
                 self._s3_upload(startrail_video_entry)
                 self._syncapi(startrail_video_entry, startrail_video_metadata)
             else:
@@ -686,7 +687,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def _uploadKeogram(self, keogram_entry, keogram_file):
+    def _uploadKeogram(self, keogram_entry, keogram_file, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -699,6 +700,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -728,7 +730,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrail(self, startrail_entry, startrail_file):
+    def _uploadStarTrail(self, startrail_entry, startrail_file, camera):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -740,6 +742,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
@@ -769,8 +772,8 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file):
-        self._uploadVideo(startrail_video_entry, startrail_video_file)
+    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file, camera):
+        self._uploadVideo(startrail_video_entry, startrail_video_file, camera)
 
 
     def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
@@ -796,8 +799,8 @@ class VideoWorker(Process):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
+        obs.lon = math.radians(camera.longitude)
+        obs.lat = math.radians(camera.latitude)
 
         sun = ephem.Sun()
 
@@ -851,6 +854,7 @@ class VideoWorker(Process):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
         }
 
 
