@@ -2520,3 +2520,23 @@ class IndiAllskyLoginForm(FlaskForm):
     PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[DataRequired(), FILETRANSFER__PASSWORD_validator])
     NEXT              = HiddenField('Next')
 
+
+class IndiAllskyCameraSelectForm(FlaskForm):
+    CAMERA_SELECT     = SelectField('CAMERA', validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyCameraSelectForm, self).__init__(*args, **kwargs)
+
+        self.CAMERA_SELECT.choices = self.getCameras()
+
+
+    def getCameras(self):
+        cameras = IndiAllSkyDbCameraTable.query
+
+        camera_list = list()
+        for camera in cameras:
+            camera_list.append((camera.id, camera.name))
+
+        return camera_list
+

@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 import ephem
 
+from flask import session
 from flask import render_template
 from flask import jsonify
 from flask.views import View
@@ -21,6 +22,8 @@ from .misc import login_optional
 from .models import NotificationCategory
 
 from .models import IndiAllSkyDbCameraTable
+
+from .forms import IndiAllskyCameraSelectForm
 
 from .miscDb import miscDb
 
@@ -42,16 +45,6 @@ class BaseView(View):
         self._miscDb = miscDb(self.indi_allsky_config)
 
         self.s3_prefix = self.getS3Prefix()
-
-        self.camera = self.getLatestCamera()
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .first()
-
-        return latest_camera
 
 
     def getS3Prefix(self):
@@ -76,17 +69,46 @@ class BaseView(View):
         return prefix
 
 
+    def getCameraById(self, camera_id):
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+        return camera
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
+        self.template_name = template_name
+
+        self.camera = None  # set in setupSession()
+
+        self.setupSession()
 
         self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
-        self.template_name = template_name
-
+        # night set in get_astrometric_info()
         self.night = True
+
+
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
+
+        self.camera = self.getLatestCamera()
+        session['camera_id'] = self.camera.id
+
+
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .first()
+
+        return latest_camera
 
 
     def render_template(self, context):
@@ -108,6 +130,13 @@ class TemplateView(BaseView):
 
         # night set in get_astrometric_info()
         context['night'] = int(self.night)  # javascript does not play well with bools
+
+
+        camera_default = {
+            'CAMERA_SELECT' : session['camera_id'],
+        }
+
+        context['form_camera_select'] = IndiAllskyCameraSelectForm(data=camera_default)
 
         return context
 
