@@ -23,6 +23,8 @@ from .models import NotificationCategory
 
 from .models import IndiAllSkyDbCameraTable
 
+from .forms import IndiAllskyCameraSelectForm
+
 from .miscDb import miscDb
 
 #from ..exceptions import ConfigSaveException
@@ -88,7 +90,8 @@ class TemplateView(BaseView):
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
-        self.night = True  # will be overridden later
+        # night set in get_astrometric_info()
+        self.night = True
 
 
     def setupSession(self):
@@ -127,6 +130,8 @@ class TemplateView(BaseView):
 
         # night set in get_astrometric_info()
         context['night'] = int(self.night)  # javascript does not play well with bools
+
+        context['form_camera_select'] = IndiAllskyCameraSelectForm(camera_id=session['camera_id'])
 
         return context
 

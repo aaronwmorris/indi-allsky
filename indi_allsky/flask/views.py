@@ -2973,6 +2973,41 @@ class ConfigListView(TemplateView):
 
 
 
+class AjaxSelectCameraView(BaseView):
+    methods = ['POST']
+    decorators = []  # manually handle if user is logged in
+
+
+    def __init__(self, **kwargs):
+        super(AjaxSelectCameraView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if request.method == 'POST':
+            return self.post()
+        else:
+            return jsonify({}), 400
+
+
+    def post(self):
+        camera_id = int(request.json['camera_id'])
+
+        try:
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+        except NoResultFound:
+            return jsonify({}), 400
+
+
+        session['camera_id'] = camera.id
+
+
+        # return next notification
+        return jsonify({})
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -3007,6 +3042,7 @@ bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('aja
 bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
+bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
