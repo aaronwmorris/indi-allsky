@@ -218,7 +218,9 @@ function changeCamera(onDone, onError) {
         'camera_id' : $("#CAMERA_SELECT").val()
     };
 
-    if(!onDone)onDone=function(){};
+    if(!onDone)onDone=function(){
+        location.reload();
+    };
     if(!onError)onError=function(){};
 
 
