@@ -133,7 +133,6 @@ class ImageWorker(Process):
         self.target_adu_found = False
         self.current_adu_target = 0
         self.hist_adu = []
-        self.target_adu = float(self.config['TARGET_ADU'])
 
         self.image_count = 0
 
@@ -624,7 +623,7 @@ class ImageWorker(Process):
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
-            'target_adu'          : self.target_adu,
+            'target_adu'          : i_ref['target_adu'],
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
@@ -1123,7 +1122,7 @@ class ImageWorker(Process):
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
-            'target_adu'          : self.target_adu,
+            'target_adu'          : i_ref['target_adu'],
             'current_adu_target'  : self.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
@@ -1191,14 +1190,20 @@ class ImageWorker(Process):
         logger.info('Brightness average: %0.2f', adu)
 
 
+        if self.night_v.value:
+            target_adu = self.config['TARGET_ADU']
+        else:
+            target_adu = self.config['TARGET_ADU_DAY']
+
+
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
         # Setting a deviation that is too short can cause exposure flapping
         if exposure < 0.001000:
             # DAY
             adu_dev = float(self.config.get('TARGET_ADU_DEV_DAY', 20))
 
-            target_adu_min = self.target_adu - adu_dev
-            target_adu_max = self.target_adu + adu_dev
+            target_adu_min = target_adu - adu_dev
+            target_adu_max = target_adu + adu_dev
             current_adu_target_min = self.current_adu_target - adu_dev
             current_adu_target_max = self.current_adu_target + adu_dev
 
@@ -1208,8 +1213,8 @@ class ImageWorker(Process):
             # NIGHT
             adu_dev = float(self.config.get('TARGET_ADU_DEV', 10))
 
-            target_adu_min = self.target_adu - adu_dev
-            target_adu_max = self.target_adu + adu_dev
+            target_adu_min = target_adu - adu_dev
+            target_adu_max = target_adu + adu_dev
             current_adu_target_min = self.current_adu_target - adu_dev
             current_adu_target_max = self.current_adu_target + adu_dev
 
@@ -1219,7 +1224,7 @@ class ImageWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, adu, target_adu_min, target_adu_max, exp_scale_factor)
+            self.recalculate_exposure(exposure, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -1250,7 +1255,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, adu, target_adu_min, target_adu_max, exp_scale_factor):
+    def recalculate_exposure(self, exposure, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
@@ -1263,9 +1268,9 @@ class ImageWorker(Process):
 
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = exposure - ((exposure - (exposure * (self.target_adu / adu))) * exp_scale_factor)
+            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            new_exposure = exposure - ((exposure - (exposure * (self.target_adu / adu))) * exp_scale_factor)
+            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         else:
             new_exposure = exposure
 
@@ -1625,6 +1630,12 @@ class ImageProcessor(object):
         detected_bit_depth = self._detectBitDepth(hdulist)
 
 
+        if self.night_v.value:
+            target_adu = self.config['TARGET_ADU']
+        else:
+            target_adu = self.config['TARGET_ADU_DAY']
+
+
         image_data = {
             'hdulist'          : hdulist,
             'calibrated'       : False,
@@ -1637,6 +1648,7 @@ class ImageProcessor(object):
             'image_bitpix'     : image_bitpix,
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
+            'target_adu'       : target_adu,
             'indi_rgb'         : indi_rgb,
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
