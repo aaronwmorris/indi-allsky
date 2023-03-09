@@ -57,8 +57,6 @@ logger = logging.getLogger('indi_allsky')
 
 class VideoWorker(Process):
 
-    video_lockfile = '/tmp/timelapse_video.lock'
-
 
     def __init__(
         self,
