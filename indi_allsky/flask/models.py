@@ -99,11 +99,9 @@ class IndiAllSkyDbFileBase(db.Model):
 
     def getUrl(self, s3_prefix='', local=False):
         if not local:
-            # Not using this for now
-            #if self.remote_url:
-            #    return self.remote_url
-
-            if self.s3_key:
+            if self.remote_url:
+                return self.remote_url
+            elif self.s3_key:
                 return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
 
 
