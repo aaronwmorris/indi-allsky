@@ -927,21 +927,38 @@ class VideoWorker(Process):
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
         old_raw_images = IndiAllSkyDbRawImageTable.query\
+            .join(IndiAllSkyDbRawImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
+            .join(IndiAllSkyDbVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
         old_keograms = IndiAllSkyDbKeogramTable.query\
+            .join(IndiAllSkyDbKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
+            .join(IndiAllSkyDbStarTrailsTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+        old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
+            .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
 
 
         # images
@@ -1040,53 +1057,26 @@ class VideoWorker(Process):
         db.session.commit()
 
 
-        ### The following code will need to be pruned eventually since we are deleting based on DB entries
-        # Old fits image files need to be pruned
-
-
-        # ensure we do not delete images stored in DB
-        cutoff_age_images_minus_1day = cutoff_age_images - timedelta(days=1)
-
-
-        fits_file_list = list()
-        self._getFolderFilesByExt(img_folder, fits_file_list, extension_list=['fit', 'fits'])
-
-        old_fits_files_1 = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), fits_file_list)
-        old_fits_files_nodarks = filter(lambda p: 'dark' not in p.name, old_fits_files_1)  # exclude darks
-        old_fits_files_no_d_bpm = filter(lambda p: 'bpm' not in p.name, old_fits_files_nodarks)  # exclude bpms
-        logger.warning('Found %d expired fits images to delete', len(list(old_fits_files_no_d_bpm)))
-        for f in old_fits_files_no_d_bpm:
-            logger.info('Removing old fits image: %s', f)
+        # star trails video
+        logger.warning('Found %d expired star trail videos to delete', old_startrails_videos.count())
+        for file_entry in old_startrails_videos:
+            #logger.info('Removing old star trails video: %s', file_entry.filename)
 
             try:
-                f.unlink()
+                file_entry.deleteAsset()
             except OSError as e:
                 logger.error('Cannot remove file: %s', str(e))
+                continue
 
 
-
-        # Old export image files need to be pruned
-        export_folder_p = Path(self.config['IMAGE_EXPORT_FOLDER'])
-
-        export_file_list = list()
-        self._getFolderFilesByExt(export_folder_p, export_file_list, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
-
-        old_export_files = filter(lambda p: p.stat().st_mtime < cutoff_age_images_minus_1day.timestamp(), export_file_list)
-        logger.warning('Found %d expired export images to delete', len(list(old_export_files)))
-        for f in old_export_files:
-            logger.info('Removing old export image: %s', f)
-
-            try:
-                f.unlink()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
+        old_startrails_videos.delete()  # mass delete
+        db.session.commit()
 
 
 
         # Remove empty folders
         dir_list = list()
         self._getFolderFolders(img_folder, dir_list)
-        self._getFolderFolders(export_folder_p, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
