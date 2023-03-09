@@ -2433,32 +2433,36 @@ class AjaxTimelapseGeneratorView(BaseView):
             night = False
 
 
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .one()
+
 
         if action == 'delete_all':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
                 .first()
 
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .join(IndiAllSkyDbKeogramTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbKeogramTable.night == night)\
                 .first()
 
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .join(IndiAllSkyDbStarTrailsTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
                 .first()
 
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
                 .first()
@@ -2494,7 +2498,7 @@ class AjaxTimelapseGeneratorView(BaseView):
         elif action == 'delete_video':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbVideoTable.night == night)\
                 .first()
@@ -2517,21 +2521,21 @@ class AjaxTimelapseGeneratorView(BaseView):
         if action == 'delete_k_st':
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .join(IndiAllSkyDbKeogramTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbKeogramTable.night == night)\
                 .first()
 
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .join(IndiAllSkyDbStarTrailsTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsTable.night == night)\
                 .first()
 
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
                 .filter(IndiAllSkyDbStarTrailsVideoTable.night == night)\
                 .first()
@@ -2564,23 +2568,27 @@ class AjaxTimelapseGeneratorView(BaseView):
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
-                night_day_str = 'night'
+                timeofday_str = 'night'
             else:
-                night_day_str = 'day'
+                timeofday_str = 'day'
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, session['camera_id'])
-            img_day_folder = img_base_folder.joinpath(night_day_str)
+            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata_video = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : session['camera_id'],
+                'camera_id'   : camera.id,
             }
 
             jobdata_kst = {
@@ -2588,7 +2596,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : session['camera_id'],
+                'camera_id'   : camera.id,
             }
 
 
@@ -2619,23 +2627,27 @@ class AjaxTimelapseGeneratorView(BaseView):
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
-                night_day_str = 'night'
+                timeofday_str = 'night'
             else:
-                night_day_str = 'day'
+                timeofday_str = 'day'
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, session['camera_id'])
-            img_day_folder = img_base_folder.joinpath(night_day_str)
+            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : session['camera_id'],
+                'camera_id'   : camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -2657,23 +2669,27 @@ class AjaxTimelapseGeneratorView(BaseView):
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
-                night_day_str = 'night'
+                timeofday_str = 'night'
             else:
-                night_day_str = 'day'
+                timeofday_str = 'day'
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-            img_base_folder = image_dir.joinpath('{0:s}'.format(timespec))
 
-            app.logger.warning('Generating %s time timelapse for %s camera %d', night_day_str, timespec, session['camera_id'])
-            img_day_folder = img_base_folder.joinpath(night_day_str)
+            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
+
+            app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
                 'img_folder'  : str(img_day_folder),
                 'night'       : night,
-                'camera_id'   : session['camera_id'],
+                'camera_id'   : camera.id,
             }
 
             task = IndiAllSkyDbTaskQueueTable(
