@@ -132,7 +132,7 @@ class SyncApiBaseView(BaseView):
     def processPost(self, camera, metadata, tmp_file, overwrite=False):
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
-        date_folder = self.image_dir.joinpath(camera.uuid, d_dayDate.strftime('%Y%m%d'))
+        date_folder = self.image_dir.joinpath(d_dayDate.strftime('%Y%m%d'), camera.uuid)
         if not date_folder.exists():
             date_folder.mkdir(mode=0o755)
 
@@ -444,7 +444,7 @@ class SyncApiImageView(SyncApiBaseView):
 
         hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath(camera.uuid, '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), camera.uuid, timeofday_str)
 
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
