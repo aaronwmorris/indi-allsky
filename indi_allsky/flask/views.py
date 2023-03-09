@@ -2574,7 +2574,12 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+
             img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
 
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
@@ -2628,7 +2633,12 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+
             img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
 
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
@@ -2665,7 +2675,12 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
             image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+
             img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
 
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
