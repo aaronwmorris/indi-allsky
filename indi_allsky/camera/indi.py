@@ -948,6 +948,26 @@ class IndiClient(PyIndi.BaseClient):
         return camera_ready, exposure_state
 
 
+    def abortCcdExposure(self):
+        logger.warning('Aborting exposure')
+
+        try:
+            ccd_abort = self.get_control(self._ccd_device, 'CCD_ABORT_EXPOSURE', 'switch', timeout=2.0)
+        except TimeOutException:
+            logger.warning("Abort not supported")
+            return
+
+
+        if ccd_abort.getPermission() == PyIndi.IP_RO:
+            logger.warning("Abort control is read only")
+            return
+
+
+        ccd_abort[0].setState(PyIndi.ISS_ON)   # ABORT
+
+        self.sendNewSwitch(ccd_abort)
+
+
     def getCcdGain(self):
         indi_exec = self._ccd_device.getDriverExec()
 
