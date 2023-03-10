@@ -48,6 +48,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     height = db.Column(db.Integer, nullable=True)
     bits = db.Column(db.Integer, nullable=True)
     pixelSize = db.Column(db.Float, nullable=True)
+    cfa = db.Column(db.Integer(), nullable=True)  # maps to constants
 
     location = db.Column(db.String(length=100), nullable=True)
     latitude = db.Column(db.Float, nullable=True)

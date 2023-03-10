@@ -261,6 +261,12 @@ class IndiAllSky(object):
         ccd_info = self.indiclient.getCcdInfo()
 
 
+        if self.config.get('CFA_PATTERN'):
+            cfa_pattern = self.config['CFA_PATTERN']
+        else:
+            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+
+
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
@@ -273,6 +279,7 @@ class IndiAllSky(object):
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
@@ -570,6 +577,12 @@ class IndiAllSky(object):
         ccd_info = self.indiclient.getCcdInfo()
 
 
+        if self.config.get('CFA_PATTERN'):
+            cfa_pattern = self.config['CFA_PATTERN']
+        else:
+            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+
+
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
@@ -582,6 +595,7 @@ class IndiAllSky(object):
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,

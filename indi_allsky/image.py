@@ -1367,15 +1367,15 @@ class ImageProcessor(object):
     registration_exposure_thresh = 5.0
 
     __cfa_bgr_map = {
-        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'RGGB' : cv2.COLOR_BAYER_BG2BGR,
+        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
         'BGGR' : cv2.COLOR_BAYER_RG2BGR,
         'GBRG' : cv2.COLOR_BAYER_GR2BGR,  # untested
     }
 
     __cfa_gray_map = {
-        'GRBG' : cv2.COLOR_BAYER_GB2GRAY,
         'RGGB' : cv2.COLOR_BAYER_BG2GRAY,
+        'GRBG' : cv2.COLOR_BAYER_GB2GRAY,
         'BGGR' : cv2.COLOR_BAYER_RG2GRAY,
         'GBRG' : cv2.COLOR_BAYER_GR2GRAY,
     }
@@ -1567,8 +1567,8 @@ class ImageProcessor(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE'].get('text'):
-                hdulist[0].header['BAYERPAT'] = self.config['CCD_INFO']['CCD_CFA']['CFA_TYPE']['text']
+            elif camera.cfa:
+                hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[camera.cfa]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
 
