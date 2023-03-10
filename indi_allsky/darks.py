@@ -629,33 +629,6 @@ class IndiAllSkyDarks(object):
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
         exposure_f = float(exposure)
 
-        self.getSensorTemperature()
-
-        exp_date = datetime.now()
-        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
-        dark_filename = dark_filename_t.format(
-            self.camera_id,
-            ccd_bits,
-            int(exposure),
-            self.gain_v.value,
-            self.bin_v.value,
-            int(self.sensortemp_v.value),
-            date_str,
-        )
-        bpm_filename = bpm_filename_t.format(
-            self.camera_id,
-            ccd_bits,
-            int(exposure),
-            self.gain_v.value,
-            self.bin_v.value,
-            int(self.sensortemp_v.value),
-            date_str,
-        )
-
-        full_dark_filename_p = self.darks_dir.joinpath(dark_filename)
-        full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
-
-
         tmp_fit_dir = tempfile.TemporaryDirectory()
         tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
@@ -692,6 +665,34 @@ class IndiAllSkyDarks(object):
 
             m_avg = numpy.mean(hdulist[0].data, axis=1)[0]
             logger.info('Image average adu: %0.2f', m_avg)
+
+
+        # libcamera does not know the temperature until the first exposure is taken
+        self.getSensorTemperature()
+
+        exp_date = datetime.now()
+        date_str = exp_date.strftime('%Y%m%d_%H%M%S')
+        dark_filename = dark_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
+        bpm_filename = bpm_filename_t.format(
+            self.camera_id,
+            ccd_bits,
+            int(exposure),
+            self.gain_v.value,
+            self.bin_v.value,
+            int(self.sensortemp_v.value),
+            date_str,
+        )
+
+        full_dark_filename_p = self.darks_dir.joinpath(dark_filename)
+        full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
 
 
         s = stacking_class(self.gain_v, self.bin_v)

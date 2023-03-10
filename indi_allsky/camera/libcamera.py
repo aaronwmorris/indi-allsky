@@ -211,6 +211,8 @@ class IndiClientLibCameraGeneric(IndiClient):
 
             self.active_exposure = False
 
+            self._processMetadata()
+
             self._queueImage()
 
 
@@ -232,40 +234,43 @@ class IndiClientLibCameraGeneric(IndiClient):
                     logger.error('libcamera-still error: %s', line)
 
 
-            # read metadata to get sensor temperature
-            if self.current_metadata_file_p:
-                try:
-                    with io.open(self.current_metadata_file_p, 'r') as f_metadata:
-                        metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
-                except FileNotFoundError as e:
-                    logger.error('Metadata file not found: %s', str(e))
-                    metadata_dict = dict()
-                except PermissionError as e:
-                    logger.error('Permission erro: %s', str(e))
-                    metadata_dict = dict()
-                except json.JSONDecodeError as e:
-                    logger.error('Error decoding json: %s', str(e))
-                    metadata_dict = dict()
-
-
-            try:
-                self.current_metadata_file_p.unlink()
-            except FileNotFoundError:
-                pass
-
-
-            try:
-                self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
-            except KeyError:
-                logger.error('libcamera sensor temperature key not found')
-            except ValueError:
-                logger.error('Unable to parse libcamera sensor temperature')
-
+            self._processMetadata()
 
             self._queueImage()
 
 
         return True, 'READY'
+
+
+    def _processMetadata(self):
+        # read metadata to get sensor temperature
+        if self.current_metadata_file_p:
+            try:
+                with io.open(self.current_metadata_file_p, 'r') as f_metadata:
+                    metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
+            except FileNotFoundError as e:
+                logger.error('Metadata file not found: %s', str(e))
+                metadata_dict = dict()
+            except PermissionError as e:
+                logger.error('Permission erro: %s', str(e))
+                metadata_dict = dict()
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                metadata_dict = dict()
+
+
+        try:
+            self.current_metadata_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        try:
+            self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
+        except KeyError:
+            logger.error('libcamera sensor temperature key not found')
+        except ValueError:
+            logger.error('Unable to parse libcamera sensor temperature')
 
 
     def abortCcdExposure(self):
