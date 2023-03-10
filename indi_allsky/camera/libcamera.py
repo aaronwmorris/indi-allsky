@@ -268,6 +268,34 @@ class IndiClientLibCameraGeneric(IndiClient):
         return True, 'READY'
 
 
+    def abortCcdExposure(self):
+        logger.warning('Aborting exposure')
+
+        self.active_exposure = False
+
+        for x in range(5):
+            if self._libCameraPidRunning():
+                self.libcamera_process.terminate()
+                time.sleep(0.25)
+            else:
+                break
+
+        else:
+            self.libcamera_process.kill()
+
+
+        try:
+            self.current_exposure_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        try:
+            self.current_metadata_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
     def _queueImage(self):
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
