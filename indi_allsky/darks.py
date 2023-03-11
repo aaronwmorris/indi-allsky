@@ -640,11 +640,7 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            # wait at least 10 seconds longer than the exposure (not sure if download times are included)
-            # sv305 has a bug which requires at least double the exposure time
-            timeout = (exposure_f * 2.0) + 10.0
-
-            self.shoot(exposure_f, sync=True, timeout=timeout)
+            self.shoot(exposure_f, sync=True, timeout=180.0)  # flat 3 minute timeout
 
             elapsed_s = time.time() - start
 
