@@ -252,6 +252,10 @@ class IndiAllSky(object):
             self.reparkTelescope()
 
 
+        # configuration needs to be performed before getting CCD_INFO
+        # which queries the exposure control
+        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+
 
         # Get Properties
         #ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -568,6 +572,10 @@ class IndiAllSky(object):
             self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
 
 
+        # configuration needs to be performed before getting CCD_INFO
+        # which queries the exposure control
+        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+
 
         # Get Properties
         #ccd_properties = self.indiclient.getCcdDeviceProperties()
@@ -626,8 +634,6 @@ class IndiAllSky(object):
 
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode()
-
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
         try:
