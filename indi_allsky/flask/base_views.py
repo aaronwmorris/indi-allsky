@@ -200,7 +200,7 @@ class TemplateView(BaseView):
 
         now = time.time()
 
-        if now > (watchdog_time + 180):
+        if now > (watchdog_time + 240):
             return '<span class="text-danger">DOWN</span>'
 
 
