@@ -209,6 +209,15 @@ class IndiClientLibCameraGeneric(IndiClient):
                 logger.error('Exposure timeout')
                 raise TimeOutException('Timeout waiting for exposure')
 
+
+            if self.libcamera_process.returncode != 0:
+                # log errors
+                stdout = self.libcamera_process.stdout
+                for line in stdout.readlines():
+                    logger.error('libcamera-still error: %s', line)
+
+                # not returning, just log the error
+
             self.active_exposure = False
 
             self._processMetadata()
@@ -232,6 +241,8 @@ class IndiClientLibCameraGeneric(IndiClient):
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
                     logger.error('libcamera-still error: %s', line)
+
+                # not returning, just log the error
 
 
             self._processMetadata()

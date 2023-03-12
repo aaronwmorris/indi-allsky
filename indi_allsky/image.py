@@ -1,5 +1,3 @@
-import os
-import errno
 import io
 import json
 import re
@@ -868,11 +866,13 @@ class ImageWorker(Process):
             return
 
 
-        shutil.move(str(tmpfile_p), str(filename))
+        shutil.copy2(str(tmpfile_p), str(filename))
         filename.chmod(0o644)
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
+
+        tmpfile_p.unlink()
 
 
         logger.info('Finished writing fit file')
@@ -1025,8 +1025,10 @@ class ImageWorker(Process):
             return
 
 
-        shutil.move(str(tmpfile_name), str(filename))
+        shutil.copy2(str(tmpfile_name), str(filename))
         filename.chmod(0o644)
+
+        tmpfile_name.unlink()
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
@@ -1065,7 +1067,7 @@ class ImageWorker(Process):
             pass
 
 
-        shutil.move(str(tmpfile_name), str(latest_file))
+        shutil.copy2(str(tmpfile_name), str(latest_file))
         latest_file.chmod(0o644)
 
 
@@ -1094,21 +1096,10 @@ class ImageWorker(Process):
             return latest_file, None
 
 
-        try:
-            # Use a hardlink, there is a good chance these are on the same filesystem
-            os.link(str(latest_file), str(filename))
-        except PermissionError:
-            # possibly a FAT filesystem, copy instead
-            shutil.copy2(str(latest_file), str(filename))
-        except OSError as e:
-            # careful, some exceptions inhert from OSError like PermissionError
-            if e.errno == errno.EXDEV:
-                # different filesystems, copy file instead
-                shutil.copy2(str(latest_file), str(filename))
-            else:
-                raise
-
+        shutil.copy2(str(tmpfile_name), str(filename))
         filename.chmod(0o644)
+
+        tmpfile_name.unlink()
 
 
         # set mtime to original exposure time
@@ -1754,7 +1745,7 @@ class ImageProcessor(object):
             .order_by(
                 IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                 IndiAllSkyDbBadPixelMapTable.temp.asc(),
-                IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                IndiAllSkyDbBadPixelMapTable.createDate.desc(),
             )\
             .first()
 
@@ -1771,7 +1762,7 @@ class ImageProcessor(object):
                 .order_by(
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                     IndiAllSkyDbBadPixelMapTable.temp.desc(),
-                    IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                    IndiAllSkyDbBadPixelMapTable.createDate.desc(),
                 )\
                 .first()
 
@@ -1801,7 +1792,7 @@ class ImageProcessor(object):
             .order_by(
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
-                IndiAllSkyDbDarkFrameTable.createDate.asc(),
+                IndiAllSkyDbDarkFrameTable.createDate.desc(),
             )\
             .first()
 
@@ -1818,7 +1809,7 @@ class ImageProcessor(object):
                 .order_by(
                     IndiAllSkyDbDarkFrameTable.exposure.asc(),
                     IndiAllSkyDbDarkFrameTable.temp.desc(),
-                    IndiAllSkyDbDarkFrameTable.createDate.asc(),
+                    IndiAllSkyDbDarkFrameTable.createDate.desc(),
                 )\
                 .first()
 
