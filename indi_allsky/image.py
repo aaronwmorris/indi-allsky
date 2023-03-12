@@ -1754,7 +1754,7 @@ class ImageProcessor(object):
             .order_by(
                 IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                 IndiAllSkyDbBadPixelMapTable.temp.asc(),
-                IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                IndiAllSkyDbBadPixelMapTable.createDate.desc(),
             )\
             .first()
 
@@ -1771,7 +1771,7 @@ class ImageProcessor(object):
                 .order_by(
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                     IndiAllSkyDbBadPixelMapTable.temp.desc(),
-                    IndiAllSkyDbBadPixelMapTable.createDate.asc(),
+                    IndiAllSkyDbBadPixelMapTable.createDate.desc(),
                 )\
                 .first()
 
@@ -1801,7 +1801,7 @@ class ImageProcessor(object):
             .order_by(
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
-                IndiAllSkyDbDarkFrameTable.createDate.asc(),
+                IndiAllSkyDbDarkFrameTable.createDate.desc(),
             )\
             .first()
 
@@ -1818,7 +1818,7 @@ class ImageProcessor(object):
                 .order_by(
                     IndiAllSkyDbDarkFrameTable.exposure.asc(),
                     IndiAllSkyDbDarkFrameTable.temp.desc(),
-                    IndiAllSkyDbDarkFrameTable.createDate.asc(),
+                    IndiAllSkyDbDarkFrameTable.createDate.desc(),
                 )\
                 .first()
 
