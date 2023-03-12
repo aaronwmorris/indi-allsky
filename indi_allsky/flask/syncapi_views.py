@@ -1,5 +1,3 @@
-#import os
-#import io
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -192,8 +190,10 @@ class SyncApiBaseView(BaseView):
             metadata,
         )
 
-        shutil.move(str(tmp_file), str(filename))
+        shutil.copy2(str(tmp_file), str(filename))
         filename.chmod(0o644)
+
+        tmp_file.unlink()
 
         app.logger.info('Uploaded file: %s', filename)
 
@@ -427,9 +427,10 @@ class SyncApiImageView(SyncApiBaseView):
             image_metadata,
         )
 
-        shutil.move(str(tmp_file), str(image_file))
+        shutil.copy2(str(tmp_file), str(image_file))
         image_file.chmod(0o644)
 
+        tmp_file.unlink()
 
         app.logger.info('Uploaded image: %s', image_file)
 
