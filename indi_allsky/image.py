@@ -59,6 +59,7 @@ from sqlalchemy import func
 
 from .exceptions import CalibrationNotFound
 from .exceptions import TimeOutException
+from .exceptions import BadImage
 
 
 try:
@@ -285,7 +286,13 @@ class ImageWorker(Process):
         processing_start = time.time()
 
 
-        self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
+        try:
+            self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
+        except BadImage as e:
+            logger.error('Bad Image: %s', str(e))
+            #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
+            return
+
         self.image_processor.calibrate()
 
 
@@ -1503,7 +1510,11 @@ class ImageProcessor(object):
 
         ### Open file
         if filename_p.suffix in ['.fit']:
-            hdulist = fits.open(filename_p)
+            try:
+                hdulist = fits.open(filename_p)
+            except OSError as e:
+                filename_p.unlink()
+                raise BadImage(str(e)) from e
 
             #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
             image_bitpix = hdulist[0].header['BITPIX']
@@ -1515,6 +1526,10 @@ class ImageProcessor(object):
 
             data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
+            if isinstance(data, type(None)):
+                filename_p.unlink()
+                raise BadImage('Bad jpeg image')
+
             image_bitpix = 8
             image_bayerpat = None
 
@@ -1525,6 +1540,10 @@ class ImageProcessor(object):
             indi_rgb = False
 
             data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(data, type(None)):
+                filename_p.unlink()
+                raise BadImage('Bad png image')
 
             image_bitpix = 8
             image_bayerpat = None
@@ -1538,7 +1557,12 @@ class ImageProcessor(object):
                 raise Exception('*** rawpy module not available ***')
 
             # DNG raw
-            raw = rawpy.imread(str(filename_p))
+            try:
+                raw = rawpy.imread(str(filename_p))
+            except rawpy._rawpy.LibRawIOError as e:
+                filename_p.unlink()
+                raise BadImage(str(e)) from e
+
             data = raw.raw_image
 
             # create a new fits container

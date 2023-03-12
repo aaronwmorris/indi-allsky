@@ -23,6 +23,7 @@ from multiprocessing import Value
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
 from .exceptions import CameraException
+from .exceptions import BadImage
 
 from .config import IndiAllSkyConfig
 
@@ -334,14 +335,23 @@ class IndiAllSkyDarks(object):
 
         ### Open file
         if filename_p.suffix in ['.fit']:
-            hdulist = fits.open(filename_p)
+            try:
+                hdulist = fits.open(filename_p)
+            except OSError as e:
+                filename_p.unlink()
+                raise BadImage(str(e)) from e
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
                 raise Exception('*** rawpy module not available ***')
 
             # DNG raw
-            raw = rawpy.imread(str(filename_p))
+            try:
+                raw = rawpy.imread(str(filename_p))
+            except rawpy._rawpy.LibRawIOError as e:
+                filename_p.unlink()
+                raise BadImage(str(e)) from e
+
             scidata_uncalibrated = raw.raw_image
 
             # create a new fits container for DNG data
@@ -635,7 +645,10 @@ class IndiAllSkyDarks(object):
         logger.info('Temp folder: %s', tmp_fit_dir_p)
 
         image_bitpix = None
-        for c in range(self._count):
+
+        i = 1
+        while i <= self._count:
+            # sometimes image data is bad, take images until we reach the desired number
             start = time.time()
 
             self._pre_shoot_reconfigure()
@@ -647,7 +660,13 @@ class IndiAllSkyDarks(object):
             logger.info('Exposure received in %0.4f s', elapsed_s)
 
 
-            hdulist = self._wait_for_image(exposure_f)
+            try:
+                hdulist = self._wait_for_image(exposure_f)
+            except BadImage as e:
+                logger.error('Bad Image: %s', str(e))
+                continue
+
+
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
             image_bitpix = hdulist[0].header['BITPIX']
@@ -661,6 +680,8 @@ class IndiAllSkyDarks(object):
 
             m_avg = numpy.mean(hdulist[0].data, axis=1)[0]
             logger.info('Image average adu: %0.2f', m_avg)
+
+            i += 1  # increment
 
 
         # libcamera does not know the temperature until the first exposure is taken
@@ -1019,5 +1040,4 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         combined_dark.meta['combined'] = True
 
         combined_dark.write(filename_p)
-
 

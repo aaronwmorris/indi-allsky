@@ -22,3 +22,7 @@ class TimelapseException(Exception):
 class ConfigSaveException(Exception):
     pass
 
+
+class BadImage(Exception):
+    pass
+
