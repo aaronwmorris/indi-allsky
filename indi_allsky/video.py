@@ -974,8 +974,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_images.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -990,8 +991,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_fits_images.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -1006,8 +1008,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_raw_images.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -1022,8 +1025,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_videos.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -1038,8 +1042,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_keograms.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -1054,8 +1059,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_startrails.delete()  # mass delete
+
         db.session.commit()
 
 
@@ -1070,8 +1076,9 @@ class VideoWorker(Process):
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            db.session.delete(file_entry)
 
-        old_startrails_videos.delete()  # mass delete
+
         db.session.commit()
 
 
