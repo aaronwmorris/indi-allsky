@@ -29,6 +29,8 @@ from .config import IndiAllSkyConfig
 
 from . import camera as camera_module
 
+from . import constants
+
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -224,9 +226,16 @@ class IndiAllSkyDarks(object):
         self.ccd_info = ccd_info
 
 
+        if self.config.get('CFA_PATTERN'):
+            cfa_pattern = self.config['CFA_PATTERN']
+        else:
+            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+
+
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
@@ -235,6 +244,18 @@ class IndiAllSkyDarks(object):
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
             'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
+
+            'location'    : self.config['LOCATION_NAME'],
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
+            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
