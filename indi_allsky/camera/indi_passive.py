@@ -388,7 +388,7 @@ class IndiClientPassive(IndiClient):
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
-            'indi_pylibcamera.py',
+            'indi_pylibcamera.py', './indi_pylibcamera.py', '././indi_pylibcamera.py',
         ]:
             gain_ctl = self.get_control(self._ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
