@@ -629,8 +629,11 @@ class IndiAllSky(object):
         self._sync_camera(camera, camera_metadata)
 
 
-        # Disable debugging
-        self.indiclient.disableDebugCcd()
+        try:
+            # Disable debugging
+            self.indiclient.disableDebugCcd()
+        except TimeOutException:
+            logger.warning('Camera does not support debug')
 
 
         # set BLOB mode to BLOB_ALSO
