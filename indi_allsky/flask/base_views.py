@@ -86,7 +86,12 @@ class BaseView(View):
 
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
+            .first()
+
+        if not camera:
+            # this can happen when cameras are deleted
+            session['camera_id'] = -1
+            return FakeCamera()
 
         return camera
 
