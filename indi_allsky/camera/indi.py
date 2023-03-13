@@ -998,6 +998,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
+            'indi_pylibcamera.py', './indi_pylibcamera.py', '././indi_pylibcamera.py',
         ]:
             gain_ctl = self.get_control(self._ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
@@ -1055,6 +1056,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
+            'indi_pylibcamera.py', './indi_pylibcamera.py', '././indi_pylibcamera.py',
         ]:
             gain_config = {
                 "PROPERTIES" : {
@@ -1127,6 +1129,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_playerone_ccd',
             'indi_sx_ccd',
+            'indi_pylibcamera.py', './indi_pylibcamera.py', '././indi_pylibcamera.py',
         ]:
             binning_config = {
                 "PROPERTIES" : {
