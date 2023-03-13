@@ -58,6 +58,7 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
 def CAMERA_INTERFACE_validator(form, field):
     if field.data not in (
         'indi',
+        'indi_passive',
         'libcamera_imx477',
         'libcamera_imx378',
         'libcamera_64mp_hawkeye',
@@ -1484,6 +1485,7 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = (
         ('indi', 'INDI'),
+        ('indi_passive', 'INDI (Passive)'),
         ('libcamera_imx477', 'libcamera IMX477'),
         ('libcamera_imx378', 'libcamera_IMX378'),
         ('libcamera_64mp_hawkeye', 'libcamera_64mp_Hawkeye'),
