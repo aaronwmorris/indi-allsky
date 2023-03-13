@@ -261,8 +261,11 @@ class IndiAllSkyDarks(object):
         db_camera = self._miscDb.addCamera(camera_metadata)
         self.camera_id = db_camera.id
 
-        # Disable debugging
-        self.indiclient.disableDebugCcd()
+        try:
+            # Disable debugging
+            self.indiclient.disableDebugCcd()
+        except TimeOutException:
+            logger.warning('Camera does not support debug')
 
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode()
