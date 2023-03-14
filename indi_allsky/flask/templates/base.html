@@ -61,7 +61,6 @@
                 </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
-                    <hr />
                     <div>
                         <form id="form_camera_select" onSubmit="return false;">
                             <div class="form-group row">
@@ -71,6 +70,7 @@
                             </div>
                         </form>
                     </div>
+                    <hr />
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
                     <div>Sidereal: {{astrometric_data.sidereal_time}}</div>
