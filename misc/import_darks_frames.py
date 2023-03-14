@@ -252,28 +252,28 @@ class ImportDarkFrames(object):
             if not do_import:
                 continue
 
+            dark_metadata = {
+                'createDate' : date_obs.timestamp(),
+                'bitdepth'   : bitpix,
+                'exposure'   : exptime,
+                'gain'       : gain,
+                'binmode'    : binning,
+                'temp'       : ccd_temp,
+            }
 
             # import
             if frame_type == 'bpm':
                 self._miscDb.addBadPixelMap(
                     frame,
                     camera_id,
-                    bitpix,
-                    exptime,
-                    gain,
-                    binning,
-                    ccd_temp,
+                    dark_metadata,
                 )
 
             elif frame_type == 'dark':
                 self._miscDb.addDarkFrame(
                     frame,
                     camera_id,
-                    bitpix,
-                    exptime,
-                    gain,
-                    binning,
-                    ccd_temp,
+                    dark_metadata,
                 )
 
             else:
