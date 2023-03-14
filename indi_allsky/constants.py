@@ -14,6 +14,8 @@ STARTRAIL_VIDEO = 6
 RAW_IMAGE       = 7
 FITS_IMAGE      = 8
 USER            = 9
+DARK_FRAME      = 10
+BPM_FRAME       = 11
 
 
 ENDPOINT_V1 = {
