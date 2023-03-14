@@ -1967,7 +1967,7 @@ class AjaxSystemInfoView(BaseView):
                 #time.sleep(5.0)
                 #return jsonify({'success-message' : 'Test'})
 
-                image_count = self.flushImages()
+                image_count = self.flushImages(session['camera_id'])
 
                 json_data = {
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
@@ -1978,7 +1978,7 @@ class AjaxSystemInfoView(BaseView):
                 #time.sleep(5.0)
                 #return jsonify({'success-message' : 'Test'})
 
-                file_count = self.flushTimelapses()
+                file_count = self.flushTimelapses(session['camera_id'])
 
                 json_data = {
                     'success-message' : '{0:d} Files Deleted'.format(file_count),
@@ -2052,53 +2052,70 @@ class AjaxSystemInfoView(BaseView):
         return r
 
 
-    def flushImages(self):
+    def flushImages(self, camera_id):
         file_count = 0
 
         ### Images
-        image_query = IndiAllSkyDbImageTable.query
+        image_query = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
         file_count += image_query.count()
 
         for i in image_query:
             i.deleteAsset()
+            db.session.delete(i)
 
-        image_query.delete()
         db.session.commit()
 
 
         ### FITS Images
-        fits_image_query = IndiAllSkyDbFitsImageTable.query
+        fits_image_query = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
         file_count += fits_image_query.count()
 
         for i in fits_image_query:
             i.deleteAsset()
+            db.session.delete(i)
 
-        fits_image_query.delete()
         db.session.commit()
 
 
         ### RAW Images
-        raw_image_query = IndiAllSkyDbRawImageTable.query
+        raw_image_query = IndiAllSkyDbRawImageTable.query\
+            .join(IndiAllSkyDbRawImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
         file_count += raw_image_query.count()
 
         for i in raw_image_query:
             i.deleteAsset()
+            db.session.delete(i)
 
-        raw_image_query.delete()
         db.session.commit()
 
 
         return file_count
 
 
-    def flushTimelapses(self):
-        video_query = IndiAllSkyDbVideoTable.query
-        keogram_query = IndiAllSkyDbKeogramTable.query
-        startrail_query = IndiAllSkyDbStarTrailsTable.query
-        startrail_video_query = IndiAllSkyDbStarTrailsVideoTable.query
+    def flushTimelapses(self, camera_id):
+        video_query = IndiAllSkyDbVideoTable.query\
+            .join(IndiAllSkyDbVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
+        keogram_query = IndiAllSkyDbKeogramTable.query\
+            .join(IndiAllSkyDbKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
+        startrail_query = IndiAllSkyDbStarTrailsTable.query\
+            .join(IndiAllSkyDbStarTrailsTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
+        startrail_video_query = IndiAllSkyDbStarTrailsVideoTable.query\
+            .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
         video_count = video_query.count()
         keogram_count = keogram_query.count()
@@ -2111,32 +2128,32 @@ class AjaxSystemInfoView(BaseView):
         # videos
         for v in video_query:
             v.deleteAsset()
+            db.session.delete(v)
 
-        video_query.delete()
         db.session.commit()
 
 
         # keograms
         for k in keogram_query:
             k.deleteAsset()
+            db.session.delete(k)
 
-        keogram_query.delete()
         db.session.commit()
 
 
         # startrails
         for s in startrail_query:
             s.deleteAsset()
+            db.session.delete(s)
 
-        startrail_query.delete()
         db.session.commit()
 
 
         # startrail videos
-        for s in startrail_video_query:
-            s.deleteAsset()
+        for sv in startrail_video_query:
+            sv.deleteAsset()
+            db.session.delete(sv)
 
-        startrail_video_query.delete()
         db.session.commit()
 
 
