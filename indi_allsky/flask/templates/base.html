@@ -61,6 +61,15 @@
                 </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
+                    <div>
+                        <form id="form_camera_select" onSubmit="return false;">
+                            <div class="form-group row">
+                                <div class="col-sm-12">
+                                    {{ form_camera_select.CAMERA_SELECT(class='form-control bg-secondary') }}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                     <hr />
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
@@ -104,30 +113,6 @@
       </div>
       <div class="modal-footer">
         <button id="ack_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Acknowledge</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<div class="modal fade" id="cameraSelectModal" tabindex="-1" aria-labelledby="cameraSelectLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="cameraSelecLabel">Select Camera</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="form_camera_select" onSubmit="return false;">
-            <div class="form-group row">
-                <div class="col-sm-8">
-                    {{ form_camera_select.CAMERA_SELECT(class='form-control bg-secondary') }}
-                </div>
-            </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button id="cam_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Select</button>
       </div>
     </div>
   </div>
@@ -242,13 +227,11 @@ function changeCamera(onDone, onError) {
 $( document ).ready(function() {
     // Load notifications when ready
     loadNotification({}, showNotification);
-    $("#indi_allsky_anchor").on("click", function() {
-        $("#cameraSelectModal").modal('show');
-    });
 
-    $("#cam_button").on("click", function() {
+    $("#CAMERA_SELECT").on("change", function() {
         changeCamera();
     });
+
 });
 
 </script>
