@@ -705,12 +705,13 @@ class IndiAllSkyDarks(object):
             m_avg = numpy.mean(hdulist[0].data, axis=1)[0]
             logger.info('Image average adu: %0.2f', m_avg)
 
+            self.getSensorTemperature()
+            logger.info('Sensor temperature: %0.2f', self.sensortemp_v.value)
+
             i += 1  # increment
 
 
         # libcamera does not know the temperature until the first exposure is taken
-        self.getSensorTemperature()
-
         exp_date = datetime.now()
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         dark_filename = dark_filename_t.format(
