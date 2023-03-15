@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<form id="form_config" onSubmit="return false;">
+<form id="form_config" onSubmit="return false;" autocomplete="off">
     {{ form_config.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
 
