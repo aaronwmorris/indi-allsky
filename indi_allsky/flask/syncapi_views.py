@@ -175,7 +175,7 @@ class SyncApiBaseView(BaseView):
 
 
         # do not sync these metadata keys for now
-        exclude_keys = ['s3_key']
+        exclude_keys = []
         for k in exclude_keys:
             try:
                 metadata.pop(k)
