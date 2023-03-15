@@ -538,11 +538,11 @@ class ImageWorker(Process):
                 upload_filename = latest_file
 
 
-            self.syncapi_image(image_entry, image_metadata)
+            self.upload_s3(image_entry)
+            self.syncapi(image_entry, image_metadata)
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
             self.upload_metadata(i_ref, adu, adu_average)
-            self.upload_s3(image_entry)
 
 
     def upload_image(self, i_ref, image_entry, camera):
@@ -739,13 +739,18 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def syncapi_image(self, image_entry, image_metadata):
+    def syncapi(self, asset_entry, asset_metadata):
         ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
 
-        if not image_entry:
+        if self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is uploaded after s3 upload
+            return
+
+
+        if not asset_entry:
             # image was not saved
             return
 
@@ -753,9 +758,9 @@ class ImageWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : constants.TRANSFER_SYNC_V1,
-            'model'       : image_entry.__class__.__name__,
-            'id'          : image_entry.id,
-            'metadata'    : image_metadata,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : asset_metadata,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(

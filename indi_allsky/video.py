@@ -325,9 +325,9 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
+        self._s3_upload(video_entry)
         self._syncapi(video_entry, video_metadata)
         self._uploadVideo(video_entry, video_file, camera)
-        self._s3_upload(video_entry)
 
 
     def _uploadVideo(self, video_entry, video_file, camera):
@@ -407,6 +407,10 @@ class VideoWorker(Process):
     def _syncapi(self, asset_entry, metadata):
         ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+        if self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is uploaded after s3 upload
             return
 
         if not asset_entry:
@@ -656,9 +660,9 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
+                self._s3_upload(keogram_entry)
                 self._syncapi(keogram_entry, keogram_metadata)
                 self._uploadKeogram(keogram_entry, keogram_file, camera)
-                self._s3_upload(keogram_entry)
             else:
                 keogram_entry.success = False
                 db.session.commit()
@@ -666,9 +670,9 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
+                self._s3_upload(startrail_entry)
                 self._syncapi(startrail_entry, startrail_metadata)
                 self._uploadStarTrail(startrail_entry, startrail_file, camera)
-                self._s3_upload(startrail_entry)
             else:
                 startrail_entry.success = False
                 db.session.commit()
@@ -676,9 +680,9 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
+                self._s3_upload(startrail_video_entry)
                 self._syncapi(startrail_video_entry, startrail_video_metadata)
                 self._uploadStarTrailVideo(startrail_video_file, camera)
-                self._s3_upload(startrail_video_entry)
             else:
                 # success flag set above
                 pass

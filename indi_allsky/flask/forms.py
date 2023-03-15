@@ -1784,6 +1784,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator])
     SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
+    SYNCAPI__POST_S3                 = BooleanField('Upload after S3 Upload')
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
