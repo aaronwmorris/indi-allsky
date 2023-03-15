@@ -325,7 +325,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
-        self._s3_upload(video_entry)
+        self._s3_upload(video_entry, video_metadata)
         self._syncapi(video_entry, video_metadata)
         self._uploadVideo(video_entry, video_file, camera)
 
@@ -372,7 +372,7 @@ class VideoWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _s3_upload(self, asset_entry):
+    def _s3_upload(self, asset_entry, asset_metadata):
         if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
             #logger.warning('S3 uploading disabled')
             return
@@ -391,6 +391,7 @@ class VideoWorker(Process):
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
             'asset_type'  : constants.ASSET_TIMELAPSE,
+            'metadata'    : asset_metadata,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(
@@ -660,7 +661,7 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._s3_upload(keogram_entry)
+                self._s3_upload(keogram_entry, keogram_metadata)
                 self._syncapi(keogram_entry, keogram_metadata)
                 self._uploadKeogram(keogram_entry, keogram_file, camera)
             else:
@@ -670,7 +671,7 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._s3_upload(startrail_entry)
+                self._s3_upload(startrail_entry, startrail_metadata)
                 self._syncapi(startrail_entry, startrail_metadata)
                 self._uploadStarTrail(startrail_entry, startrail_file, camera)
             else:
@@ -680,7 +681,7 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._s3_upload(startrail_video_entry)
+                self._s3_upload(startrail_video_entry, startrail_video_metadata)
                 self._syncapi(startrail_video_entry, startrail_video_metadata)
                 self._uploadStarTrailVideo(startrail_video_file, camera)
             else:

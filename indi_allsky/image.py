@@ -538,7 +538,7 @@ class ImageWorker(Process):
                 upload_filename = latest_file
 
 
-            self.upload_s3(image_entry)
+            self.s3_upload(image_entry, image_metadata)
             self.syncapi(image_entry, image_metadata)
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
@@ -707,13 +707,13 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : mqtt_task.id})
 
 
-    def upload_s3(self, image_entry):
+    def s3_upload(self, asset_entry, asset_metadata):
         if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
             #logger.warning('S3 uploading disabled')
             return
 
 
-        if not image_entry:
+        if not asset_entry:
             #logger.warning('S3 uploading disabled')
             return
 
@@ -723,9 +723,10 @@ class ImageWorker(Process):
         # publish data to s3 bucket
         jobdata = {
             'action'      : constants.TRANSFER_S3,
-            'model'       : image_entry.__class__.__name__,
-            'id'          : image_entry.id,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
             'asset_type'  : constants.ASSET_IMAGE,
+            'metadata'    : asset_metadata,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(
