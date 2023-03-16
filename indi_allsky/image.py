@@ -1867,6 +1867,11 @@ class ImageProcessor(object):
             master_dark = dark
 
 
+        if master_dark.shape != data.shape:
+            logger.error('Dark frame calibration dimensions mismatch')
+            raise CalibrationNotFound('Dark frame calibration dimension mismatch')
+
+
         data_calibrated = cv2.subtract(data, master_dark)
 
         return data_calibrated
