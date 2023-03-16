@@ -465,6 +465,7 @@ class FileUploader(Process):
             db.session.commit()
 
             # perform syncapi after s3 (if enabled)
+            metadata['s3_key'] = str(s3_key)
             self._syncapi(entry, metadata)
 
 
