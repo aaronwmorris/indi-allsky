@@ -5,6 +5,9 @@ import time
 from pathlib import Path
 import logging
 
+from sqlalchemy.sql.expression import true as sa_true
+from sqlalchemy.sql.expression import null as sa_null
+
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
@@ -16,11 +19,14 @@ app.app_context().push()
 
 from indi_allsky.flask import db
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
+from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
+from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
 from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
+from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 
 
 
@@ -43,6 +49,7 @@ class ValidateDatabaseEntries(object):
 
         ### Images
         image_entries = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -58,9 +65,40 @@ class ValidateDatabaseEntries(object):
                 image_notfound_list.append(i)
 
 
+        ### FITS Images
+        fits_image_entries = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
+
+
+        logger.info('Searching %d fits images...', fits_image_entries.count())
+
+        fits_image_notfound_list = list()
+        for i in fits_image_entries:
+            if not i.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                fits_image_notfound_list.append(i)
+
+
+        ### Raw Images
+        raw_image_entries = IndiAllSkyDbRawImageTable.query\
+            .filter(IndiAllSkyDbRawImageTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
+
+
+        logger.info('Searching %d raw images...', raw_image_entries.count())
+
+        raw_image_notfound_list = list()
+        for i in raw_image_entries:
+            if not i.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                raw_image_notfound_list.append(i)
+
+
         ### Bad Pixel Maps
         badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
             .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
+        # fixme - need deal with non-local installs
 
 
         logger.info('Searching %d bad pixel maps...', badpixelmap_entries.count())
@@ -78,6 +116,7 @@ class ValidateDatabaseEntries(object):
         ### Dark frames
         darkframe_entries = IndiAllSkyDbDarkFrameTable.query\
             .order_by(IndiAllSkyDbDarkFrameTable.createDate.asc())
+        # fixme - need deal with non-local installs
 
 
         logger.info('Searching %d dark frames...', darkframe_entries.count())
@@ -94,6 +133,8 @@ class ValidateDatabaseEntries(object):
 
         ### Videos
         video_entries = IndiAllSkyDbVideoTable.query\
+            .filter(IndiAllSkyDbVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbVideoTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
 
@@ -111,6 +152,7 @@ class ValidateDatabaseEntries(object):
 
         ### Keograms
         keogram_entries = IndiAllSkyDbKeogramTable.query\
+            .filter(IndiAllSkyDbKeogramTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
 
 
@@ -128,6 +170,8 @@ class ValidateDatabaseEntries(object):
 
         ### Startrails
         startrail_entries = IndiAllSkyDbStarTrailsTable.query\
+            .filter(IndiAllSkyDbStarTrailsTable.success == sa_true())\
+            .filter(IndiAllSkyDbStarTrailsTable.s3_key == sa_null())\
             .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
 
@@ -143,12 +187,34 @@ class ValidateDatabaseEntries(object):
                 keogram_notfound_list.append(s)
 
 
+
+        ### Startrail videos
+        startrail_video_entries = IndiAllSkyDbStarTrailsVideoTable.query\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbStarTrailsVideoTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
+
+
+        logger.info('Searching %d star trail timelapses...', startrail_video_entries.count())
+
+        startrail_video_notfound_list = list()
+        for s in startrail_video_entries:
+            if not s.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                startrail_video_notfound_list.append(s)
+
+
+
+
         logger.warning('Images not found: %d', len(image_notfound_list))
+        logger.warning('Raw Images not found: %d', len(raw_image_notfound_list))
+        logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
         logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         logger.warning('Videos not found: %d', len(video_notfound_list))
         logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         logger.warning('Star trails not found: %d', len(startrail_notfound_list))
+        logger.warning('Star trail videos not found: %d', len(startrail_video_notfound_list))
 
 
         print()
@@ -163,6 +229,16 @@ class ValidateDatabaseEntries(object):
         if len(image_notfound_list):
             logger.warning('Removing %d missing image entries', len(image_notfound_list))
             [db.session.delete(i) for i in image_notfound_list]
+
+
+        if len(raw_image_notfound_list):
+            logger.warning('Removing %d missing raw image entries', len(raw_image_notfound_list))
+            [db.session.delete(i) for i in raw_image_notfound_list]
+
+
+        if len(fits_image_notfound_list):
+            logger.warning('Removing %d missing fits image entries', len(fits_image_notfound_list))
+            [db.session.delete(i) for i in fits_image_notfound_list]
 
 
         if len(badpixelmap_notfound_list):
@@ -188,6 +264,11 @@ class ValidateDatabaseEntries(object):
         if len(startrail_notfound_list):
             logger.warning('Removing %d missing star trail entries', len(startrail_notfound_list))
             [db.session.delete(s) for s in startrail_notfound_list]
+
+
+        if len(startrail_video_notfound_list):
+            logger.warning('Removing %d missing star trail video entries', len(startrail_video_notfound_list))
+            [db.session.delete(s) for s in startrail_video_notfound_list]
 
 
         # finalize transaction
