@@ -464,6 +464,10 @@ class FileUploader(Process):
             entry.s3_key = str(s3_key)
             db.session.commit()
 
+            # perform syncapi after s3 (if enabled)
+            metadata['s3_key'] = str(s3_key)
+            self._syncapi(entry, metadata)
+
 
         if entry and action == constants.TRANSFER_SYNC_V1:
             entry.sync_id = response['id']
@@ -482,4 +486,36 @@ class FileUploader(Process):
 
 
         #raise Exception('Testing uncaught exception')
+
+
+    def _syncapi(self, asset_entry, metadata):
+        ### sync camera
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+        if not self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is *NOT* uploaded after s3 upload
+            return
+
+        if not asset_entry:
+            #logger.warning('S3 uploading disabled')
+            return
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : metadata,
+        }
+
+        upload_task = models.IndiAllSkyDbTaskQueueTable(
+            queue=models.TaskQueueQueue.UPLOAD,
+            state=models.TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 

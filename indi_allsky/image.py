@@ -538,11 +538,11 @@ class ImageWorker(Process):
                 upload_filename = latest_file
 
 
-            self.syncapi_image(image_entry, image_metadata)
+            self.s3_upload(image_entry, image_metadata)
+            self.syncapi(image_entry, image_metadata)
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
             self.upload_metadata(i_ref, adu, adu_average)
-            self.upload_s3(image_entry)
 
 
     def upload_image(self, i_ref, image_entry, camera):
@@ -707,13 +707,13 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : mqtt_task.id})
 
 
-    def upload_s3(self, image_entry):
+    def s3_upload(self, asset_entry, asset_metadata):
         if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
             #logger.warning('S3 uploading disabled')
             return
 
 
-        if not image_entry:
+        if not asset_entry:
             #logger.warning('S3 uploading disabled')
             return
 
@@ -723,9 +723,10 @@ class ImageWorker(Process):
         # publish data to s3 bucket
         jobdata = {
             'action'      : constants.TRANSFER_S3,
-            'model'       : image_entry.__class__.__name__,
-            'id'          : image_entry.id,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
             'asset_type'  : constants.ASSET_IMAGE,
+            'metadata'    : asset_metadata,
         }
 
         s3_task = IndiAllSkyDbTaskQueueTable(
@@ -739,13 +740,18 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def syncapi_image(self, image_entry, image_metadata):
+    def syncapi(self, asset_entry, asset_metadata):
         ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
 
-        if not image_entry:
+        if self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is uploaded after s3 upload
+            return
+
+
+        if not asset_entry:
             # image was not saved
             return
 
@@ -753,9 +759,9 @@ class ImageWorker(Process):
         # tell worker to upload file
         jobdata = {
             'action'      : constants.TRANSFER_SYNC_V1,
-            'model'       : image_entry.__class__.__name__,
-            'id'          : image_entry.id,
-            'metadata'    : image_metadata,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : asset_metadata,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(

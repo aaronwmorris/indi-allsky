@@ -55,14 +55,15 @@ class miscDb(object):
             db.session.commit()
 
 
-
-
         keys_exclude = [
             'id',
             'name',
             'uuid',
             'type',
             'local',
+            'filename',
+            's3_key',
+            'remote_url',
             #'sync_id',
             #'friendlyName',
         ]
@@ -118,6 +119,9 @@ class miscDb(object):
             'local',
             'sync_id',
             'friendlyName',
+            'filename',
+            's3_key',
+            'remote_url',
         ]
 
         # populate camera info
@@ -219,6 +223,8 @@ class miscDb(object):
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(image)
@@ -375,6 +381,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(video)
@@ -420,6 +428,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(keogram)
@@ -466,6 +476,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(startrail)
@@ -512,6 +524,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(startrail_video)
@@ -562,6 +576,8 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
         db.session.add(fits_image)
@@ -603,7 +619,7 @@ class miscDb(object):
         logger.info('Adding raw image %s to DB', filename_p)
 
 
-        fits_image = IndiAllSkyDbRawImageTable(
+        raw_image = IndiAllSkyDbRawImageTable(
             camera_id=camera_id,
             filename=str(filename_p),
             createDate=createDate,
@@ -612,12 +628,14 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
         )
 
-        db.session.add(fits_image)
+        db.session.add(raw_image)
         db.session.commit()
 
-        return fits_image
+        return raw_image
 
 
     def getCurrentCameraId(self):
