@@ -55,14 +55,15 @@ class miscDb(object):
             db.session.commit()
 
 
-
-
         keys_exclude = [
             'id',
             'name',
             'uuid',
             'type',
             'local',
+            'filename',
+            's3_key',
+            'remote_url',
             #'sync_id',
             #'friendlyName',
         ]
@@ -118,6 +119,9 @@ class miscDb(object):
             'local',
             'sync_id',
             'friendlyName',
+            'filename',
+            's3_key',
+            'remote_url',
         ]
 
         # populate camera info
