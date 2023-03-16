@@ -707,7 +707,7 @@ class ConfigView(FormView):
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'DETECT_DRAW'                    : self.indi_allsky_config.get('DETECT_DRAW', False),
             'PRIVACY_MASK'                   : self.indi_allsky_config.get('PRIVACY_MASK', ''),
-            'PRIVACY_MASK_BLUR'              : self.indi_allsky_config.get('PRIVACY_MASK_BLUR', 75),
+            'PRIVACY_MASK_BLUR'              : self.indi_allsky_config.get('PRIVACY_MASK_BLUR', 45),
             'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
