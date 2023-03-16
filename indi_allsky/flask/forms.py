@@ -753,6 +753,18 @@ def DETECT_MASK_validator(form, field):
         raise ValidationError('Mask image is all black')
 
 
+def PRIVACY_MASK_validator(form, field):
+    DETECT_MASK_validator(form, field)
+
+
+def PRIVACY_MASK_BLUR_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Mask blur must be 0 or greater')
+
+
 def IMAGE_SCALE_validator(form, field):
     if field.data < 1:
         raise ValidationError('Image Scaling must be 1 or greater')
@@ -1656,6 +1668,8 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_METEORS                   = BooleanField('Meteor Detection')
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
+    PRIVACY_MASK                     = StringField('Privacy Mask', validators=[PRIVACY_MASK_validator])
+    PRIVACY_MASK_BLUR                = IntegerField('Blur Factor', validators=[PRIVACY_MASK_BLUR_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
