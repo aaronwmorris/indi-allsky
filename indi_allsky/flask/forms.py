@@ -1593,8 +1593,8 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     S3UPLOAD__CLASSNAME_choices = (
-        ('boto3_s3', 'Boto3'),
-        ('libcloud_s3', 'Apache Libcloud'),
+        ('boto3_s3', 'Boto3 (AWS)'),
+        ('libcloud_s3', 'Apache Libcloud (AWS)'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (
