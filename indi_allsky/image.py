@@ -406,7 +406,7 @@ class ImageWorker(Process):
         self.image_processor.colorize()
 
 
-        self.image_processor.apply_logo_mask()
+        self.image_processor.apply_logo_overlay()
 
 
         if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
@@ -2268,14 +2268,14 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
-    def apply_logo_mask(self):
-        logo_mask = self.config.get('LOGO_MASK', '')
-        if not logo_mask:
+    def apply_logo_overlay(self):
+        logo_overlay = self.config.get('LOGO_OVERLAY', '')
+        if not logo_overlay:
             return
 
 
         if isinstance(self._overlay, type(None)):
-            self._overlay, self._alpha_mask = self._load_logo_mask(self.image)
+            self._overlay, self._alpha_mask = self._load_logo_overlay(self.image)
 
             if isinstance(self._overlay, type(None)):
                 return
@@ -2649,33 +2649,33 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def _load_logo_mask(self, image):
-        logo_mask = self.config.get('LOGO_MASK', '')
+    def _load_logo_overlay(self, image):
+        logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
-        if not logo_mask:
-            logger.warning('No logo mask defined')
+        if not logo_overlay:
+            logger.warning('No logo overlay defined')
             return
 
 
-        logo_mask_p = Path(logo_mask)
+        logo_overlay_p = Path(logo_overlay)
 
         try:
-            if not logo_mask_p.exists():
-                logger.error('%s does not exist', logo_mask_p)
+            if not logo_overlay_p.exists():
+                logger.error('%s does not exist', logo_overlay_p)
                 return
 
 
-            if not logo_mask_p.is_file():
-                logger.error('%s is not a file', logo_mask_p)
+            if not logo_overlay_p.is_file():
+                logger.error('%s is not a file', logo_overlay_p)
                 return
 
         except PermissionError as e:
             logger.error(str(e))
             return
 
-        overlay_img = cv2.imread(str(logo_mask_p), cv2.IMREAD_UNCHANGED)
+        overlay_img = cv2.imread(str(logo_overlay_p), cv2.IMREAD_UNCHANGED)
         if isinstance(overlay_img, type(None)):
-            logger.error('%s is not a valid image', logo_mask_p)
+            logger.error('%s is not a valid image', logo_overlay_p)
             return
 
 

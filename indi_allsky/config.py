@@ -90,7 +90,7 @@ class IndiAllSkyConfigBase(object):
         "DETECT_METEORS" : False,
         "DETECT_MASK" : "",
         "DETECT_DRAW" : False,
-        "LOGO_MASK"   : "",
+        "LOGO_OVERLAY" : "",
         "SQM_ROI" : [],
         "LOCATION_NAME"      : '',
         "LOCATION_LATITUDE"  : 33,

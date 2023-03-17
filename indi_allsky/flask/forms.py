@@ -753,7 +753,7 @@ def DETECT_MASK_validator(form, field):
         raise ValidationError('Mask image is all black')
 
 
-def LOGO_MASK_validator(form, field):
+def LOGO_OVERLAY_validator(form, field):
     if not field.data:
         return
 
@@ -1694,7 +1694,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_METEORS                   = BooleanField('Meteor Detection')
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
-    LOGO_MASK                        = StringField('Logo Mask', validators=[LOGO_MASK_validator])
+    LOGO_OVERLAY                     = StringField('Logo Overlay', validators=[LOGO_OVERLAY_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
