@@ -2670,7 +2670,7 @@ class ImageProcessor(object):
 
 
         overlay_rgb = overlay_img[:, :, :3]
-        overlay_alpha = (overlay_img[:, :, 3] / 255).astype(numpy.float16)
+        overlay_alpha = (overlay_img[:, :, 3] / 255).astype(numpy.float32)
 
 
         alpha_mask = numpy.dstack((overlay_alpha, overlay_alpha, overlay_alpha))
