@@ -91,7 +91,7 @@ class IndiAllSkyConfigBase(object):
         "DETECT_MASK" : "",
         "DETECT_DRAW" : False,
         "PRIVACY_MASK" : "",
-        "PRIVACY_MASK_BLUR" : 45,
+        "PRIVACY_MASK_BLUR" : 30,
         "SQM_ROI" : [],
         "LOCATION_NAME"      : '',
         "LOCATION_LATITUDE"  : 33,

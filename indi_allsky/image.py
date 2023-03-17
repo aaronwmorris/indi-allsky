@@ -2636,7 +2636,7 @@ class ImageProcessor(object):
 
     def _load_privacy_mask(self, image):
         privacy_mask = self.config.get('PRIVACY_MASK', '')
-        privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 0)
+        privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
 
         if not privacy_mask:
             logger.warning('No privacy mask defined')
