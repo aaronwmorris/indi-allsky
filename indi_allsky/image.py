@@ -2680,7 +2680,7 @@ class ImageProcessor(object):
             blur_mask = mask
 
 
-        gradient_mask = blur_mask / 255
+        gradient_mask = (blur_mask / 255).astype(numpy.float16)
 
         return gradient_mask
 
