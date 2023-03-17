@@ -403,6 +403,9 @@ class ImageWorker(Process):
             self.image_processor.contrast_clahe()
 
 
+        self.image_processor.colorize()
+
+
         self.image_processor.apply_logo_mask()
 
 
@@ -2255,6 +2258,14 @@ class ImageProcessor(object):
         new_lab = cv2.merge((cl, a, b))
 
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    def colorize(self):
+        if len(self.image.shape) == 3:
+            # already color
+            return
+
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
     def apply_logo_mask(self):
