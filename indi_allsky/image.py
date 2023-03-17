@@ -1437,7 +1437,7 @@ class ImageProcessor(object):
 
         self._detection_mask = mask
         self._overlay = None
-        self._overlay_inv = None
+        self._alpha_mask = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -2264,14 +2264,17 @@ class ImageProcessor(object):
 
 
         if isinstance(self._overlay, type(None)):
-            self._overlay, self._overlay_inv = self._load_privacy_mask(self.image)
+            self._overlay, self._alpha_mask = self._load_privacy_mask(self.image)
 
             if isinstance(self._overlay, type(None)):
                 return
 
+        alpha_start = time.time()
 
-        image_bg = cv2.bitwise_and(self.image, self.image, mask=self._overlay_inv)
-        self.image = cv2.add(image_bg, self._overlay)
+        self.image = self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask
+
+        alpha_elapsed_s = time.time() - alpha_start
+        logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
 
 
     #def equalizeHistogram(self, data):
@@ -2660,20 +2663,18 @@ class ImageProcessor(object):
             logger.error(str(e))
             return
 
-        overlay_img = cv2.imread(str(privacy_mask_p), cv2.IMREAD_COLOR)
+        overlay_img = cv2.imread(str(privacy_mask_p), cv2.IMREAD_UNCHANGED)
         if isinstance(overlay_img, type(None)):
             logger.error('%s is not a valid image', privacy_mask_p)
             return
 
 
-        mask_gray = cv2.cvtColor(overlay_img, cv2.COLOR_BGR2GRAY)
-        #ret, mask = cv2.threshold(mask_gray, 250, 255, cv2.THRESH_BINARY_INV)
-        ret, mask = cv2.threshold(mask_gray, 30, 255, cv2.THRESH_BINARY)
-        overlay_inv = cv2.bitwise_not(mask)
+        overlay_rgb = overlay_img[:, :, :3]
+        overlay_alpha = (overlay_img[:, :, 3] / 255).astype(numpy.float16)
 
 
-        overlay = cv2.bitwise_and(overlay_img, overlay_img, mask=mask)
+        alpha_mask = numpy.dstack((overlay_alpha, overlay_alpha, overlay_alpha))
 
 
-        return overlay, overlay_inv
+        return overlay_rgb, alpha_mask
 
