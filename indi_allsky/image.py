@@ -403,7 +403,7 @@ class ImageWorker(Process):
             self.image_processor.contrast_clahe()
 
 
-        self.image_processor.apply_privacy_mask()
+        self.image_processor.apply_logo_mask()
 
 
         if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
@@ -2257,14 +2257,14 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
 
 
-    def apply_privacy_mask(self):
-        privacy_mask = self.config.get('PRIVACY_MASK', '')
+    def apply_logo_mask(self):
+        privacy_mask = self.config.get('LOGO_MASK', '')
         if not privacy_mask:
             return
 
 
         if isinstance(self._overlay, type(None)):
-            self._overlay, self._alpha_mask = self._load_privacy_mask(self.image)
+            self._overlay, self._alpha_mask = self._load_logo_mask(self.image)
 
             if isinstance(self._overlay, type(None)):
                 return
@@ -2638,34 +2638,38 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def _load_privacy_mask(self, image):
-        privacy_mask = self.config.get('PRIVACY_MASK', '')
-        #privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
+    def _load_logo_mask(self, image):
+        logo_mask = self.config.get('LOGO_MASK', '')
 
-        if not privacy_mask:
-            logger.warning('No privacy mask defined')
+        if not logo_mask:
+            logger.warning('No logo mask defined')
             return
 
 
-        privacy_mask_p = Path(privacy_mask)
+        logo_mask_p = Path(logo_mask)
 
         try:
-            if not privacy_mask_p.exists():
-                logger.error('%s does not exist', privacy_mask_p)
+            if not logo_mask_p.exists():
+                logger.error('%s does not exist', logo_mask_p)
                 return
 
 
-            if not privacy_mask_p.is_file():
-                logger.error('%s is not a file', privacy_mask_p)
+            if not logo_mask_p.is_file():
+                logger.error('%s is not a file', logo_mask_p)
                 return
 
         except PermissionError as e:
             logger.error(str(e))
             return
 
-        overlay_img = cv2.imread(str(privacy_mask_p), cv2.IMREAD_UNCHANGED)
+        overlay_img = cv2.imread(str(logo_mask_p), cv2.IMREAD_UNCHANGED)
         if isinstance(overlay_img, type(None)):
-            logger.error('%s is not a valid image', privacy_mask_p)
+            logger.error('%s is not a valid image', logo_mask_p)
+            return
+
+
+        if overlay_img.shape[2] != 3:
+            logger.error('%s does not have an alpha channel')
             return
 
 
