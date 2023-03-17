@@ -1436,7 +1436,8 @@ class ImageProcessor(object):
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
         self._detection_mask = mask
-        self._privacy_gradient = None
+        self._overlay = None
+        self._overlay_inv = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -2262,15 +2263,15 @@ class ImageProcessor(object):
             return
 
 
-        if isinstance(self._privacy_gradient, type(None)):
-            self._privacy_gradient = self._load_privacy_mask(self.image)
+        if isinstance(self._overlay, type(None)):
+            self._overlay, self._overlay_inv = self._load_privacy_mask(self.image)
 
-            if isinstance(self._privacy_gradient, type(None)):
+            if isinstance(self._overlay, type(None)):
                 return
 
 
-        # apply the gradient to the image
-        self.image = (self.image * self._privacy_gradient).astype(numpy.uint8)
+        image_bg = cv2.bitwise_and(self.image, self.image, mask=self._overlay_inv)
+        self.image = cv2.add(image_bg, self._overlay)
 
 
     #def equalizeHistogram(self, data):
@@ -2636,7 +2637,7 @@ class ImageProcessor(object):
 
     def _load_privacy_mask(self, image):
         privacy_mask = self.config.get('PRIVACY_MASK', '')
-        privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
+        #privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
 
         if not privacy_mask:
             logger.warning('No privacy mask defined')
@@ -2659,28 +2660,20 @@ class ImageProcessor(object):
             logger.error(str(e))
             return
 
-        mask_data = cv2.imread(str(privacy_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
-        if isinstance(mask_data, type(None)):
+        overlay_img = cv2.imread(str(privacy_mask_p), cv2.IMREAD_COLOR)
+        if isinstance(overlay_img, type(None)):
             logger.error('%s is not a valid image', privacy_mask_p)
             return
 
 
-        if len(image.shape) == 2:
-            # mono
-            mask = mask_data
-        else:
-            # color
-            mask = cv2.cvtColor(mask_data, cv2.COLOR_GRAY2BGR)
+        mask_gray = cv2.cvtColor(overlay_img, cv2.COLOR_BGR2GRAY)
+        #ret, mask = cv2.threshold(mask_gray, 250, 255, cv2.THRESH_BINARY_INV)
+        ret, mask = cv2.threshold(mask_gray, 30, 255, cv2.THRESH_BINARY)
+        overlay_inv = cv2.bitwise_not(mask)
 
 
-
-        if privacy_mask_blur:
-            blur_mask = cv2.blur(mask, (privacy_mask_blur, privacy_mask_blur), cv2.BORDER_DEFAULT)
-        else:
-            blur_mask = mask
+        overlay = cv2.bitwise_and(overlay_img, overlay_img, mask=mask)
 
 
-        gradient_mask = (blur_mask / 255).astype(numpy.float16)
-
-        return gradient_mask
+        return overlay, overlay_inv
 
