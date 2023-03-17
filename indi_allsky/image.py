@@ -2258,8 +2258,8 @@ class ImageProcessor(object):
 
 
     def apply_logo_mask(self):
-        privacy_mask = self.config.get('LOGO_MASK', '')
-        if not privacy_mask:
+        logo_mask = self.config.get('LOGO_MASK', '')
+        if not logo_mask:
             return
 
 
@@ -2668,7 +2668,11 @@ class ImageProcessor(object):
             return
 
 
-        if overlay_img.shape[2] != 3:
+        try:
+            if overlay_img.shape[2] != 4:
+                logger.error('%s does not have an alpha channel')
+                return
+        except IndexError:
             logger.error('%s does not have an alpha channel')
             return
 

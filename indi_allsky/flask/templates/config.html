@@ -620,27 +620,14 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.PRIVACY_MASK.label(class='col-form-label') }}
+            {{ form_config.LOGO_MASK.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
-            {{ form_config.PRIVACY_MASK(class='form-control bg-secondary') }}
-            <div id="PRIVACY_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.LOGO_MASK(class='form-control bg-secondary') }}
+            <div id="LOGO_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-5">
-            <div>Image mask to blank areas of image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PRIVACY_MASK_BLUR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.PRIVACY_MASK_BLUR(class='form-control bg-secondary') }}
-            <div id="PRIVACY_MASK_BLUR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Blur factor for edges of privacy mask</div>
+            <div>Logo mask.  Must have an alpha channel.</div>
         </div>
     </div>
 
@@ -2370,8 +2357,7 @@ const field_names = [
     'SQM_ROI_Y2',
     'DETECT_STARS_THOLD',
     'DETECT_MASK',
-    'PRIVACY_MASK',
-    'PRIVACY_MASK_BLUR',
+    'LOGO_MASK',
     'LOCATION_NAME',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
