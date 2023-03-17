@@ -2679,6 +2679,11 @@ class ImageProcessor(object):
             return
 
 
+        if overlay_img.shape[:2] != image.shape[:2]:
+            logger.error('Logo dimensions do not match image')
+            return
+
+
         try:
             if overlay_img.shape[2] != 4:
                 logger.error('%s does not have an alpha channel')
