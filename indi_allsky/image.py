@@ -140,9 +140,21 @@ class ImageWorker(Process):
         self._detection_mask = self._load_detection_mask()
         self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
-
-        self.image_processor = ImageProcessor(self.config, latitude_v, longitude_v, ra_v, dec_v, exposure_v, gain_v, bin_v, sensortemp_v, night_v, moonmode_v, self.astrometric_data, mask=self._detection_mask)
-
+        self.image_processor = ImageProcessor(
+            self.config,
+            latitude_v,
+            longitude_v,
+            ra_v,
+            dec_v,
+            exposure_v,
+            gain_v,
+            bin_v,
+            sensortemp_v,
+            night_v,
+            moonmode_v,
+            self.astrometric_data,
+            mask=self._detection_mask,
+        )
 
         self._miscDb = miscDb(self.config)
 
@@ -389,6 +401,9 @@ class ImageWorker(Process):
         elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
             # Contrast enhancement during night
             self.image_processor.contrast_clahe()
+
+
+        self.image_processor.apply_privacy_mask()
 
 
         if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
@@ -1364,7 +1379,6 @@ class ImageWorker(Process):
         return mask_data
 
 
-
 class ImageProcessor(object):
 
     dark_temperature_range = 5.0  # dark must be within this range
@@ -1422,6 +1436,7 @@ class ImageProcessor(object):
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
         self._detection_mask = mask
+        self._privacy_gradient = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -2241,6 +2256,23 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
 
 
+    def apply_privacy_mask(self):
+        privacy_mask = self.config.get('PRIVACY_MASK', '')
+        if not privacy_mask:
+            return
+
+
+        if isinstance(self._privacy_gradient, type(None)):
+            self._privacy_gradient = self._load_privacy_mask(self.image)
+
+            if isinstance(self._privacy_gradient, type(None)):
+                return
+
+
+        # apply the gradient to the image
+        self.image = (self.image * self._privacy_gradient).astype(numpy.uint8)
+
+
     #def equalizeHistogram(self, data):
     #    if self.focus_mode:
     #        # disable processing in focus mode
@@ -2601,4 +2633,54 @@ class ImageProcessor(object):
 
         return extra_lines
 
+
+    def _load_privacy_mask(self, image):
+        privacy_mask = self.config.get('PRIVACY_MASK', '')
+        privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
+
+        if not privacy_mask:
+            logger.warning('No privacy mask defined')
+            return
+
+
+        privacy_mask_p = Path(privacy_mask)
+
+        try:
+            if not privacy_mask_p.exists():
+                logger.error('%s does not exist', privacy_mask_p)
+                return
+
+
+            if not privacy_mask_p.is_file():
+                logger.error('%s is not a file', privacy_mask_p)
+                return
+
+        except PermissionError as e:
+            logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(privacy_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
+        if isinstance(mask_data, type(None)):
+            logger.error('%s is not a valid image', privacy_mask_p)
+            return
+
+
+        if len(image.shape) == 2:
+            # mono
+            mask = mask_data
+        else:
+            # color
+            mask = cv2.cvtColor(mask_data, cv2.COLOR_GRAY2BGR)
+
+
+
+        if privacy_mask_blur:
+            blur_mask = cv2.blur(mask, (privacy_mask_blur, privacy_mask_blur), cv2.BORDER_DEFAULT)
+        else:
+            blur_mask = mask
+
+
+        gradient_mask = (blur_mask / 255).astype(numpy.float16)
+
+        return gradient_mask
 
