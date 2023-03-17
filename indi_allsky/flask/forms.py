@@ -753,16 +753,42 @@ def DETECT_MASK_validator(form, field):
         raise ValidationError('Mask image is all black')
 
 
-def PRIVACY_MASK_validator(form, field):
-    DETECT_MASK_validator(form, field)
+def LOGO_OVERLAY_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+    ext_regex = r'\.png$'
+    if not re.search(ext_regex, field.data, re.IGNORECASE):
+        raise ValidationError('Mask file must be a PNG')
+
+    detect_mask_p = Path(field.data)
+
+    try:
+        if not detect_mask_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not detect_mask_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(detect_mask_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
 
 
-def PRIVACY_MASK_BLUR_validator(form, field):
-    if not isinstance(field.data, int):
-        raise ValidationError('Please enter valid number')
+    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+    if isinstance(mask_data, type(None)):
+        raise ValidationError('File is not a valid image')
 
-    if field.data < 0:
-        raise ValidationError('Mask blur must be 0 or greater')
+    try:
+        if mask_data.shape[2] != 4:
+            raise ValidationError('Mask does not contain an alpha channel')
+    except IndexError:
+        raise ValidationError('Mask does not contain an alpha channel')
 
 
 def IMAGE_SCALE_validator(form, field):
@@ -1668,8 +1694,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_METEORS                   = BooleanField('Meteor Detection')
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
-    PRIVACY_MASK                     = StringField('Privacy Mask', validators=[PRIVACY_MASK_validator])
-    PRIVACY_MASK_BLUR                = IntegerField('Blur Factor', validators=[PRIVACY_MASK_BLUR_validator])
+    LOGO_OVERLAY                     = StringField('Logo Overlay', validators=[LOGO_OVERLAY_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])

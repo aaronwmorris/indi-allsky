@@ -403,7 +403,10 @@ class ImageWorker(Process):
             self.image_processor.contrast_clahe()
 
 
-        self.image_processor.apply_privacy_mask()
+        self.image_processor.colorize()
+
+
+        self.image_processor.apply_logo_overlay()
 
 
         if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
@@ -1436,7 +1439,8 @@ class ImageProcessor(object):
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
         self._detection_mask = mask
-        self._privacy_gradient = None
+        self._overlay = None
+        self._alpha_mask = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -2256,21 +2260,32 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
 
 
-    def apply_privacy_mask(self):
-        privacy_mask = self.config.get('PRIVACY_MASK', '')
-        if not privacy_mask:
+    def colorize(self):
+        if len(self.image.shape) == 3:
+            # already color
+            return
+
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
+
+
+    def apply_logo_overlay(self):
+        logo_overlay = self.config.get('LOGO_OVERLAY', '')
+        if not logo_overlay:
             return
 
 
-        if isinstance(self._privacy_gradient, type(None)):
-            self._privacy_gradient = self._load_privacy_mask(self.image)
+        if isinstance(self._overlay, type(None)):
+            self._overlay, self._alpha_mask = self._load_logo_overlay(self.image)
 
-            if isinstance(self._privacy_gradient, type(None)):
+            if isinstance(self._overlay, type(None)):
                 return
 
+        alpha_start = time.time()
 
-        # apply the gradient to the image
-        self.image = (self.image * self._privacy_gradient).astype(numpy.uint8)
+        self.image = self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask
+
+        alpha_elapsed_s = time.time() - alpha_start
+        logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
 
 
     #def equalizeHistogram(self, data):
@@ -2634,53 +2649,51 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def _load_privacy_mask(self, image):
-        privacy_mask = self.config.get('PRIVACY_MASK', '')
-        privacy_mask_blur = self.config.get('PRIVACY_MASK_BLUR', 30)
+    def _load_logo_overlay(self, image):
+        logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
-        if not privacy_mask:
-            logger.warning('No privacy mask defined')
+        if not logo_overlay:
+            logger.warning('No logo overlay defined')
             return
 
 
-        privacy_mask_p = Path(privacy_mask)
+        logo_overlay_p = Path(logo_overlay)
 
         try:
-            if not privacy_mask_p.exists():
-                logger.error('%s does not exist', privacy_mask_p)
+            if not logo_overlay_p.exists():
+                logger.error('%s does not exist', logo_overlay_p)
                 return
 
 
-            if not privacy_mask_p.is_file():
-                logger.error('%s is not a file', privacy_mask_p)
+            if not logo_overlay_p.is_file():
+                logger.error('%s is not a file', logo_overlay_p)
                 return
 
         except PermissionError as e:
             logger.error(str(e))
             return
 
-        mask_data = cv2.imread(str(privacy_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
-        if isinstance(mask_data, type(None)):
-            logger.error('%s is not a valid image', privacy_mask_p)
+        overlay_img = cv2.imread(str(logo_overlay_p), cv2.IMREAD_UNCHANGED)
+        if isinstance(overlay_img, type(None)):
+            logger.error('%s is not a valid image', logo_overlay_p)
             return
 
 
-        if len(image.shape) == 2:
-            # mono
-            mask = mask_data
-        else:
-            # color
-            mask = cv2.cvtColor(mask_data, cv2.COLOR_GRAY2BGR)
+        try:
+            if overlay_img.shape[2] != 4:
+                logger.error('%s does not have an alpha channel')
+                return
+        except IndexError:
+            logger.error('%s does not have an alpha channel')
+            return
 
 
-
-        if privacy_mask_blur:
-            blur_mask = cv2.blur(mask, (privacy_mask_blur, privacy_mask_blur), cv2.BORDER_DEFAULT)
-        else:
-            blur_mask = mask
+        overlay_rgb = overlay_img[:, :, :3]
+        overlay_alpha = (overlay_img[:, :, 3] / 255).astype(numpy.float32)
 
 
-        gradient_mask = (blur_mask / 255).astype(numpy.float16)
+        alpha_mask = numpy.dstack((overlay_alpha, overlay_alpha, overlay_alpha))
 
-        return gradient_mask
+
+        return overlay_rgb, alpha_mask
 

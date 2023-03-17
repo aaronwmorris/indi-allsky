@@ -148,7 +148,7 @@ class IndiAllskyDetectLines(object):
             # color
             mask = cv2.cvtColor(blur_mask, cv2.COLOR_GRAY2BGR)
 
-        self._sqm_gradient_mask = (mask / 255).astype(numpy.float16)
+        self._sqm_gradient_mask = (mask / 255).astype(numpy.float32)
 
 
     def _drawLines(self, img, lines):
