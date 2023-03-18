@@ -62,7 +62,7 @@ def CAMERA_INTERFACE_validator(form, field):
         'libcamera_imx477',
         'libcamera_imx378',
         'libcamera_64mp_hawkeye',
-        'libcamera_imx407',
+        'libcamera_imx708',
         'libcamera_imx290',
         'libcamera_imx462',
     ):
@@ -1527,7 +1527,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libcamera_imx477', 'libcamera IMX477'),
         ('libcamera_imx378', 'libcamera_IMX378'),
         ('libcamera_64mp_hawkeye', 'libcamera_64mp_Hawkeye'),
-        ('libcamera_imx407', 'libcamera_IMX407'),
+        ('libcamera_imx708', 'libcamera_IMX708'),
         ('libcamera_imx290', 'libcamera_IMX290'),
         ('libcamera_imx462', 'libcamera_IMX462'),
     )
