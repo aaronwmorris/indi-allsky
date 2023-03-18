@@ -106,7 +106,7 @@ class StarTrailGenerator(object):
 
         for file_p in file_list_ordered:
             logger.info('Reading file: %s', file_p)
-            image = cv2.imread(str(file_p), cv2.IMREAD_UNCHANGED)
+            image = cv2.imread(str(file_p), cv2.IMREAD_COLOR)  # convert graycale to color
 
             if isinstance(image, type(None)):
                 logger.error('Unable to read %s', file_p)

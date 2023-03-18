@@ -77,7 +77,7 @@ class KeogramGenerator(object):
 
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+            image = cv2.imread(str(filename), cv2.IMREAD_COLOR)  # convert grayscale to color
 
             if isinstance(image, type(None)):
                 logger.error('Unable to read %s', filename)

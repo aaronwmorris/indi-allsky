@@ -610,7 +610,7 @@ class VideoWorker(Process):
                 continue
 
             #logger.info('Reading file: %s', p_entry)
-            image = cv2.imread(str(p_entry), cv2.IMREAD_UNCHANGED)
+            image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)  # convert grayscale to color
 
             if isinstance(image, type(None)):
                 logger.error('Unable to read %s', p_entry)
