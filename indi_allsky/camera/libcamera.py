@@ -560,12 +560,12 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
 
 
 
-class IndiClientLibCameraImx407(IndiClientLibCameraGeneric):
+class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
-        super(IndiClientLibCameraImx407, self).__init__(*args, **kwargs)
+        super(IndiClientLibCameraImx708, self).__init__(*args, **kwargs)
 
-        self.ccd_device_name = 'libcamera_imx407'
+        self.ccd_device_name = 'libcamera_imx708'
         self.ccd_driver_exec = 'indi_fake_ccd'
 
         self.camera_info = {
