@@ -1,8 +1,0 @@
-# databases
-mysql-connector-python
-PyMySQL
-
-# S3
-boto3
-apache-libcloud
-google-cloud-storage
