@@ -2277,8 +2277,13 @@ class ImageProcessor(object):
         if isinstance(self._overlay, type(None)):
             self._overlay, self._alpha_mask = self._load_logo_overlay(self.image)
 
-            if isinstance(self._overlay, type(None)):
+            if isinstance(self._overlay, bool):
                 return
+
+        elif isinstance(self._overlay, bool):
+            logger.error('Logo overlay failed to load')
+            return
+
 
         alpha_start = time.time()
 
@@ -2654,7 +2659,7 @@ class ImageProcessor(object):
 
         if not logo_overlay:
             logger.warning('No logo overlay defined')
-            return
+            return None, None
 
 
         logo_overlay_p = Path(logo_overlay)
@@ -2662,35 +2667,35 @@ class ImageProcessor(object):
         try:
             if not logo_overlay_p.exists():
                 logger.error('%s does not exist', logo_overlay_p)
-                return
+                return None, None
 
 
             if not logo_overlay_p.is_file():
                 logger.error('%s is not a file', logo_overlay_p)
-                return
+                return None, None
 
         except PermissionError as e:
             logger.error(str(e))
-            return
+            return None, None
 
         overlay_img = cv2.imread(str(logo_overlay_p), cv2.IMREAD_UNCHANGED)
         if isinstance(overlay_img, type(None)):
             logger.error('%s is not a valid image', logo_overlay_p)
-            return
+            return False, None  # False so the image is not retried
 
 
         if overlay_img.shape[:2] != image.shape[:2]:
             logger.error('Logo dimensions do not match image')
-            return
+            return False, None  # False so the image is not retried
 
 
         try:
             if overlay_img.shape[2] != 4:
                 logger.error('%s does not have an alpha channel')
-                return
+                return False, None  # False so the image is not retried
         except IndexError:
             logger.error('%s does not have an alpha channel')
-            return
+            return False, None  # False so the image is not retried
 
 
         overlay_rgb = overlay_img[:, :, :3]
