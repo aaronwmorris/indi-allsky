@@ -43,6 +43,11 @@ class IndiAllskyOrbGenerator(object):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunrise
         try:
             obs.horizon = math.radians(0.0)
@@ -60,6 +65,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil dawn
         try:
@@ -79,6 +87,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical dawn
         try:
             obs.horizon = math.radians(-12.0)
@@ -96,6 +107,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical dawn
         try:
@@ -115,6 +129,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunset
         try:
             obs.horizon = math.radians(0.0)
@@ -132,6 +149,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil twilight
         try:
@@ -151,6 +171,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical twilight
         try:
             obs.horizon = math.radians(-12.0)
@@ -168,6 +191,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical twilight
         try:
@@ -268,6 +294,9 @@ class IndiAllskyOrbGenerator(object):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunrise
         try:
             obs.horizon = math.radians(0.0)
@@ -285,6 +314,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil dawn
         try:
@@ -304,6 +336,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical dawn
         try:
             obs.horizon = math.radians(-12.0)
@@ -321,6 +356,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical dawn
         try:
@@ -340,6 +378,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunset
         try:
             obs.horizon = math.radians(0.0)
@@ -357,6 +398,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil twilight
         try:
@@ -376,6 +420,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical twilight
         try:
             obs.horizon = math.radians(-12.0)
@@ -393,6 +440,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical twilight
         try:
