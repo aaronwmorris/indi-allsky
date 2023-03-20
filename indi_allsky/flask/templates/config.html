@@ -9,23 +9,21 @@
 
 {% block content %}
 <form id="form_config" onSubmit="return false;" autocomplete="off">
-    {{ form_config.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
 
-    <hr />
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
+    <button class="nav-link" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
+    <button class="nav-link" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
+    <button class="nav-link" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
+    <button class="nav-link" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
+    <button class="nav-link" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+  </div>
+</nav>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ENCRYPT_PASSWORDS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
-                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Encrypt passwords in the database</div>
-    </div>
+
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
 
     <hr />
 
@@ -71,98 +69,6 @@
             <div id="INDI_CAMERA_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">Leave blank to select first detected camera</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_NAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_config.LOCATION_NAME(class='form-control bg-secondary') }}
-            <div id="LOCATION_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">Free form input</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Min: -90, Max: 90</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LONGITUDE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
-            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Min: -180, Max: 180</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LENS_NAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
-            <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LENS_FOCAL_LENGTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LENS_FOCAL_LENGTH(class='form-control bg-secondary') }}
-            <div id="LENS_FOCAL_LENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LENS_FOCAL_RATIO.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LENS_FOCAL_RATIO(class='form-control bg-secondary') }}
-            <div id="LENS_FOCAL_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LENS_ALTITUDE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LENS_ALTITUDE(class='form-control bg-secondary') }}
-            <div id="LENS_ALTITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LENS_AZIMUTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LENS_AZIMUTH(class='form-control bg-secondary') }}
-            <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
     </div>
 
     <hr />
@@ -326,6 +232,177 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CCD_COOLING.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CCD_COOLING(class='form-check-input') }}
+                <div id="CCD_COOLING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Activate CCD Cooling (requires hardware support)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP(class='form-control bg-secondary') }}
+            <div id="CCD_TEMP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Temperature target</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_DISPLAY(class='form-control bg-secondary') }}
+            <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Temperature system for display</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP_SCRIPT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.CCD_TEMP_SCRIPT(class='form-control bg-secondary') }}
+            <div id="CCD_TEMP_SCRIPT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>External script used for CCD temperature.  Used when a camera does not support temperature measurements.</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>File type for libcamera acquistion.  This has no effect when using indi.</div>
+            <div>Auto White Balance is disabled in DNG mode</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Extra options for libcamera-still.</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" target="_blank">libcamera customizations Wiki</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.INDI_CONFIG_DEFAULTS(class='form-control bg-secondary', rows='10') }}
+            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config" target="_blank">INDI Config Wiki</a></div>
+        </div>
+    </div>
+
+</div><!-- end camera tab -->
+<div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE_ENABLE(class='form-check-input') }}
+                <div id="TIMELAPSE_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable timelapse, keogram, and star trail creation</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_CAPTURE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_CAPTURE(class='form-check-input') }}
+                <div id="DAYTIME_CAPTURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable daytime image capture</div>
+            <div><span class="badge rounded-pill bg-info">Note</span> If Daytime Timelapse is disabled, no images will be saved</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
+                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable daytime timelapse generation</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CFA_PATTERN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -398,74 +475,6 @@
             </div>
         </div>
         <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_COOLING.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CCD_COOLING(class='form-check-input') }}
-                <div id="CCD_COOLING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Activate CCD Cooling (requires hardware support)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP(class='form-control bg-secondary') }}
-            <div id="CCD_TEMP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Temperature target</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_DISPLAY(class='form-control bg-secondary') }}
-            <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Temperature system for display</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP_SCRIPT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.CCD_TEMP_SCRIPT(class='form-control bg-secondary') }}
-            <div id="CCD_TEMP_SCRIPT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>External script used for CCD temperature.  Used when a camera does not support temperature measurements.</div>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.GPS_TIMESYNC.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
-                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Sync system time from GPS.  Requires GPS hardware and GPSd installation.</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
-        </div>
     </div>
 
     <hr />
@@ -545,445 +554,6 @@
             <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">x2, y2</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DETECT_STARS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DETECT_STARS(class='form-check-input') }}
-                <div id="DETECT_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DETECT_STARS_THOLD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
-            <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">0.6 is a good value for color images, 0.55 for mono</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DETECT_METEORS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DETECT_METEORS(class='form-check-input') }}
-                <div id="DETECT_METEORS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DETECT_MASK.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.DETECT_MASK(class='form-control bg-secondary') }}
-            <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Image mask file for detection area.  Must be a PNG</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DETECT_DRAW.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DETECT_DRAW(class='form-check-input') }}
-                <div id="DETECT_DRAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Mark detections on image for calibration</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
-            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Logo overlay image.  Must have an alpha channel.</div>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label">
-            SQM/Star Region of Interest
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.SQM_ROI_X1(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_config.SQM_ROI_Y1(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label"></div>
-        <div class="col-sm-2">
-            {{ form_config.SQM_ROI_X2(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_config.SQM_ROI_Y2(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">x2, y2</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TIMELAPSE_ENABLE(class='form-check-input') }}
-                <div id="TIMELAPSE_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Enable timelapse, keogram, and star trail creation</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DAYTIME_CAPTURE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DAYTIME_CAPTURE(class='form-check-input') }}
-                <div id="DAYTIME_CAPTURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Enable daytime image capture</div>
-            <div><span class="badge rounded-pill bg-info">Note</span> If Daytime Timelapse is disabled, no images will be saved</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DAYTIME_TIMELAPSE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
-                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Enable daytime timelapse generation</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='form-check-input') }}
-                <div id="DAYTIME_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_CONTRAST_ENHANCE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
-                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_SUN_ALT_DEG.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
-            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Sun altitude for start of night</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_MOONMODE_ALT_DEG.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
-            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Moon altitude to enable Moon Mode (91 will disable)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_MOONMODE_PHASE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
-            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.WEB_EXTRA_TEXT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.WEB_EXTRA_TEXT(class='form-control bg-secondary') }}
-            <div id="WEB_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">File containing extra text to be included in info box</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_METHOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_METHOD(class='form-control bg-secondary') }}
-            <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Method to use for image stacking</div>
-            <div><span class="badge rounded-pill bg-info">Note</span>Stacking disabled during daytime and moon mode</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_COUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_COUNT(class='form-control bg-secondary') }}
-            <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Number of images to be stacked</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_ALIGN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.IMAGE_STACK_ALIGN(class='form-check-input') }}
-                <div id="IMAGE_STACK_ALIGN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
-            <div>Align images before stacking.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Factor of background std-dev above which is considered a detection.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">The maximum number of control point-sources to find the transformation.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Minimum number of connected pixels to be considered a source.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_SPLIT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.IMAGE_STACK_SPLIT(class='form-check-input') }}
-                <div id="IMAGE_STACK_SPLIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Stacking split screen.  Left is original, right is stacked</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" target="_blank">Keogram Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_H_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Keogram horizontal scale factor</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_V_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
-            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Keogram vertical scale factor</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.KEOGRAM_LABEL.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
-                <div id="KEOGRAM_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Add keogram time labels</div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Max average image brightness to include in star trails</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_MASK_THOLD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Mask threshold for image brightness exclusion</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_PIXEL_THOLD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Pixel threshold for mask threshold</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_TIMELAPSE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.STARTRAILS_TIMELAPSE(class='form-check-input') }}
-                <div id="STARTRAILS_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Generate star trails timelapse</div>
-    </div>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES(class='form-control bg-secondary') }}
-            <div id="STARTRAILS_TIMELAPSE_MINFRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Minimum frames for star trails timelapse.  250 frames = 10s @ 25fps</div>
     </div>
 
     <hr />
@@ -1526,6 +1096,509 @@
             <div id="ORB_PROPERTIES__MOON_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Color of Moon Orb</div>
+    </div>
+
+</div><!-- end image tab -->
+<div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DETECT_STARS(class='form-check-input') }}
+                <div id="DETECT_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0.6 is a good value for color images, 0.55 for mono</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_METEORS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DETECT_METEORS(class='form-check-input') }}
+                <div id="DETECT_METEORS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>SQM Region of Interest used for detection area unless Detection Mask is defined</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_MASK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.DETECT_MASK(class='form-control bg-secondary') }}
+            <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Image mask file for detection area.  Must be a PNG</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_DRAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DETECT_DRAW(class='form-check-input') }}
+                <div id="DETECT_DRAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Mark detections on image for calibration</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
+            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Logo overlay image.  Must have an alpha channel.</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            SQM/Star Region of Interest
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_X1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>x1, y1</div>
+            <div>* Not used if Detection Mask is defined *</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label"></div>
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_X2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.SQM_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_METHOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_METHOD(class='form-control bg-secondary') }}
+            <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Method to use for image stacking</div>
+            <div><span class="badge rounded-pill bg-info">Note</span>Stacking disabled during daytime and moon mode</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_COUNT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_COUNT(class='form-control bg-secondary') }}
+            <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Number of images to be stacked</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_ALIGN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STACK_ALIGN(class='form-check-input') }}
+                <div id="IMAGE_STACK_ALIGN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
+            <div>Align images before stacking.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Factor of background std-dev above which is considered a detection.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">The maximum number of control point-sources to find the transformation.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum number of connected pixels to be considered a source.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STACK_SPLIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STACK_SPLIT(class='form-check-input') }}
+                <div id="IMAGE_STACK_SPLIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Stacking split screen.  Left is original, right is stacked</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" target="_blank">Keogram Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_H_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_H_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Keogram horizontal scale factor</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_V_SCALE(class='form-control bg-secondary') }}
+            <div id="KEOGRAM_V_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Keogram vertical scale factor</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.KEOGRAM_LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.KEOGRAM_LABEL(class='form-check-input') }}
+                <div id="KEOGRAM_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Add keogram time labels</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Max average image brightness to include in star trails</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Mask threshold for image brightness exclusion</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Pixel threshold for mask threshold</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.STARTRAILS_TIMELAPSE(class='form-check-input') }}
+                <div id="STARTRAILS_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Generate star trails timelapse</div>
+    </div>
+
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_TIMELAPSE_MINFRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum frames for star trails timelapse.  250 frames = 10s @ 25fps</div>
+    </div>
+
+</div><!-- end processing tab -->
+<div class="tab-pane fade" id="nav-location" role="tabpanel" aria-labelledby="nav-location-tab">
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.LOCATION_NAME(class='form-control bg-secondary') }}
+            <div id="LOCATION_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">Free form input</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -90, Max: 90</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
+            <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Min: -180, Max: 180</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
+            <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_LENGTH(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_LENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_FOCAL_RATIO(class='form-control bg-secondary') }}
+            <div id="LENS_FOCAL_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_ALTITUDE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_ALTITUDE(class='form-control bg-secondary') }}
+            <div id="LENS_ALTITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_AZIMUTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_AZIMUTH(class='form-control bg-secondary') }}
+            <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GPS_TIMESYNC.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
+                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Sync system time from GPS.  Requires GPS hardware and GPSd installation.</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_SUN_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_SUN_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sun altitude for start of night</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_ALT_DEG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon altitude to enable Moon Mode (91 will disable)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.NIGHT_MOONMODE_PHASE(class='form-control bg-secondary') }}
+            <div id="NIGHT_MOONMODE_PHASE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_EXTRA_TEXT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WEB_EXTRA_TEXT(class='form-control bg-secondary') }}
+            <div id="WEB_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">File containing extra text to be included in info box</div>
+    </div>
+
+</div><!-- end location tab -->
+<div class="tab-pane fade" id="nav-filetransfer" role="tabpanel" aria-labelledby="nav-filetransfer-tab">
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ENCRYPT_PASSWORDS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
+                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Encrypt passwords in the database</div>
     </div>
 
     <hr />
@@ -2149,6 +2222,9 @@
         <div class="col-sm-8">Bypass certificate validation</div>
     </div>
 
+</div><!-- end filetransfer tab -->
+<div class="tab-pane fade" id="nav-syncapi" role="tabpanel" aria-labelledby="nav-syncapi-tab">
+
     <hr />
 
     <div class="form-group row">
@@ -2223,53 +2299,11 @@
         <div class="col-sm-8">Sync after S3 upload</div>
     </div>
 
-    <hr />
+</div><!-- end syncapi tab -->
+</div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>File type for libcamera acquistion.  This has no effect when using indi.</div>
-            <div>Auto White Balance is disabled in DNG mode</div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Extra options for libcamera-still.</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" target="_blank">libcamera customizations Wiki</a></div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config.INDI_CONFIG_DEFAULTS(class='form-control bg-secondary', rows='10') }}
-            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config" target="_blank">INDI Config Wiki</a></div>
-        </div>
-    </div>
-
-    <hr />
+    <hr /> <hr /> <hr />
 
     <div class="form-group row">
         <div class="col-sm-2">
