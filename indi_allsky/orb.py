@@ -43,6 +43,11 @@ class IndiAllskyOrbGenerator(object):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunrise
         try:
             obs.horizon = math.radians(0.0)
@@ -60,6 +65,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil dawn
         try:
@@ -79,6 +87,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical dawn
         try:
             obs.horizon = math.radians(-12.0)
@@ -96,6 +107,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical dawn
         try:
@@ -115,6 +129,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunset
         try:
             obs.horizon = math.radians(0.0)
@@ -132,6 +149,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil twilight
         try:
@@ -151,6 +171,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical twilight
         try:
             obs.horizon = math.radians(-12.0)
@@ -169,6 +192,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Astronomical twilight
         try:
             obs.horizon = math.radians(-18.0)
@@ -185,6 +211,49 @@ class IndiAllskyOrbGenerator(object):
         except ephem.NeverUpError:
             # southern hemisphere
             pass
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Night/Day boundary
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_nightDay_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nightDay_date
+            sun.compute(obs)
+            sunNightDayX, sunNightDayY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Day/Night boundary
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_dayNight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_dayNight_date
+            sun.compute(obs)
+            sunDayNightX, sunDayNightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
 
 
     def getOrbHourAngleXY(self, skyObj, obs, image_size):
@@ -268,6 +337,9 @@ class IndiAllskyOrbGenerator(object):
         self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunrise
         try:
             obs.horizon = math.radians(0.0)
@@ -285,6 +357,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil dawn
         try:
@@ -304,6 +379,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical dawn
         try:
             obs.horizon = math.radians(-12.0)
@@ -321,6 +399,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Astronomical dawn
         try:
@@ -340,6 +421,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Sunset
         try:
             obs.horizon = math.radians(0.0)
@@ -357,6 +441,9 @@ class IndiAllskyOrbGenerator(object):
             # southern hemisphere
             pass
 
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         # Civil twilight
         try:
@@ -376,6 +463,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Nautical twilight
         try:
             obs.horizon = math.radians(-12.0)
@@ -394,6 +484,9 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         # Astronomical twilight
         try:
             obs.horizon = math.radians(-18.0)
@@ -408,6 +501,48 @@ class IndiAllskyOrbGenerator(object):
             # northern hemisphere
             pass
         except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Night/Day
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_nightDay_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nightDay_date
+            sun.compute(obs)
+            sunNightDayX, sunNightDayY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
+            # southern hemisphere
+            pass
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Day/Night
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_dayNight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_dayNight_date
+            sun.compute(obs)
+            sunDayNightX, sunDayNightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+        except ephem.NeverUpError:
+            # northern hemisphere
+            pass
+        except ephem.AlwaysUpError:
             # southern hemisphere
             pass
 
@@ -551,6 +686,21 @@ class IndiAllskyOrbGenerator(object):
         sunAstroTwilightY = sunAstroDawnY  # reuse
 
         self.drawEdgeLine(data_bytes, (sunAstroTwilightX, int(sunAstroTwilightY)), (100, 100, 100))
+
+
+        # Night/Day
+        sunNightDayX = image_width
+        sunNightDayY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
+        sunNightDayY = image_height - sunNightDayY  # need to map from the top down
+
+        self.drawEdgeLine(data_bytes, (sunNightDayX, int(sunNightDayY)), color_bgr)
+
+
+        # Day/Night
+        sunDayNightX = 0
+        sunDayNightY = sunNightDayY  # reuse
+
+        self.drawEdgeLine(data_bytes, (sunDayNightX, int(sunDayNightY)), color_bgr)
 
 
     def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
