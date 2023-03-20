@@ -213,6 +213,49 @@ class IndiAllskyOrbGenerator(object):
             pass
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Night/Day boundary
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_nightDay_date = obs.next_rising(sun, use_center=True)
+
+            obs.date = sun_nightDay_date
+            sun.compute(obs)
+            sunNightDayX, sunNightDayY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        # Day/Night boundary
+        try:
+            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            sun_dayNight_date = obs.next_setting(sun, use_center=True)
+
+            obs.date = sun_dayNight_date
+            sun.compute(obs)
+            sunDayNightX, sunDayNightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
+
+            self.drawEdgeLine(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            pass
+        except ephem.NeverUpError:
+            # southern hemisphere
+            pass
+
+
+
     def getOrbHourAngleXY(self, skyObj, obs, image_size):
         image_height, image_width = image_size
 
