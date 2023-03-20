@@ -688,6 +688,21 @@ class IndiAllskyOrbGenerator(object):
         self.drawEdgeLine(data_bytes, (sunAstroTwilightX, int(sunAstroTwilightY)), (100, 100, 100))
 
 
+        # Night/Day
+        sunNightDayX = image_width
+        sunNightDayY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
+        sunNightDayY = image_height - sunNightDayY  # need to map from the top down
+
+        self.drawEdgeLine(data_bytes, (sunNightDayX, int(sunNightDayY)), color_bgr)
+
+
+        # Day/Night
+        sunDayNightX = 0
+        sunDayNightY = sunNightDayY  # reuse
+
+        self.drawEdgeLine(data_bytes, (sunDayNightX, int(sunDayNightY)), color_bgr)
+
+
     def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
         image_height, image_width = image_size
 
