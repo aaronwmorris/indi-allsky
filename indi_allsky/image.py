@@ -2286,6 +2286,23 @@ class ImageProcessor(object):
 
         self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
+
+        if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
+            image_height, image_width = self.image.shape[:2]
+
+            center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
+            center_y = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
+            radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+
+            cv2.circle(
+                img=self.image,
+                center=(center_x, center_y),
+                radius=radius,
+                color=(64, 64, 64),
+                thickness=3,
+            )
+
+
         alpha_elapsed_s = time.time() - alpha_start
         logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
@@ -2733,7 +2750,14 @@ class ImageProcessor(object):
     def _generate_image_circle_mask(self, image):
         image_height, image_width = image.shape[:2]
 
-        background = int(255 * (100 - self.config['IMAGE_CIRCLE_MASK']['OPACITY']) / 100)
+
+        opacity = self.config['IMAGE_CIRCLE_MASK']['OPACITY']
+        if self.config['IMAGE_CIRCLE_MASK']['OUTLINE']:
+            logger.warning('Opacity disabled for image circle outline')
+            opacity = 0
+
+
+        background = int(255 * (100 - opacity) / 100)
         #logger.info('Image circle backgound: %d', background)
 
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
@@ -2756,10 +2780,10 @@ class ImageProcessor(object):
 
         if blur:
             # blur circle
-            channel_mask = cv2.GaussianBlur(
-                channel_mask,
-                (blur, blur),
-                cv2.BORDER_DEFAULT,
+            channel_mask = cv2.blur(
+                src=channel_mask,
+                ksize=(blur, blur),
+                borderType=cv2.BORDER_DEFAULT,
             )
 
 
