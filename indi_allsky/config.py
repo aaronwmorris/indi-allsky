@@ -130,6 +130,13 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_SCALE"      : 100,
         "NIGHT_GRAYSCALE"  : False,
         "DAYTIME_GRAYSCALE": False,
+        "IMAGE_CIRCLE_MASK" : {
+            "ENABLE"   : False,
+            "DIAMETER" : 1000,
+            "OFFSET_X" : 0,
+            "OFFSET_Y" : 0,
+            "BLUR"     : 30,
+        },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
         "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
