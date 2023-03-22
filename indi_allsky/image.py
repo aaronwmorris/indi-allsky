@@ -2291,7 +2291,7 @@ class ImageProcessor(object):
             image_height, image_width = self.image.shape[:2]
 
             center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
-            center_y = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
+            center_y = int(image_height / 2) - self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']  # minus
             radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
 
             cv2.circle(
@@ -2763,7 +2763,7 @@ class ImageProcessor(object):
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
 
         center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
-        center_y = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
+        center_y = int(image_height / 2) - self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']  # minus
         radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
         blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
 
