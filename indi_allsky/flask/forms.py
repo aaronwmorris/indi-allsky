@@ -824,8 +824,10 @@ def IMAGE_CIRCLE_MASK__BLUR_validator(form, field):
     if field.data < 0:
         raise ValidationError('Blur must be 0 or more')
 
-
-    if field.data % 2 == 0:
+    if field.data == 0:
+        # 0 is disabled, but technically an even number
+        pass
+    elif field.data % 2 == 0:
         raise ValidationError('Blur must be an odd number')
 
 
