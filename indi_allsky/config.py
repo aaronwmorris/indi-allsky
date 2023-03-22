@@ -135,7 +135,7 @@ class IndiAllSkyConfigBase(object):
             "DIAMETER" : 1000,
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
-            "BLUR"     : 30,
+            "BLUR"     : 75,
         },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)

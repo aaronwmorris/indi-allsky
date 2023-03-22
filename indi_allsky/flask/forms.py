@@ -825,6 +825,10 @@ def IMAGE_CIRCLE_MASK__BLUR_validator(form, field):
         raise ValidationError('Blur must be 0 or more')
 
 
+    if field.data % 2 == 0:
+        raise ValidationError('Blur must be an odd number')
+
+
 def IMAGE_CROP_ROI_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
