@@ -21,6 +21,7 @@ class IndiAllSkyDraw(object):
         image_height, image_width = sep_data.shape[:2]
 
 
+        ### ADU ROI ###
         if isinstance(self._sqm_mask, type(None)):
             ### Draw ADU ROI if detection mask is not defined
             ###  Make sure the box calculation matches image.py
@@ -51,6 +52,7 @@ class IndiAllSkyDraw(object):
             sep_data = cv2.bitwise_and(sep_data, sep_data, mask=self._sqm_mask)
 
 
+        ### Keogram meridian ###
         logger.info('Draw keogram meridian')
         if abs(self.config['KEOGRAM_ANGLE']) == 90.0:
             # line is straight across

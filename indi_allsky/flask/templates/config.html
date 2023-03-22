@@ -1189,6 +1189,99 @@
     <hr />
 
     <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_CIRCLE_MASK__ENABLE(class='form-check-input') }}
+                <div id="IMAGE_CIRCLE_MASK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__DIAMETER(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Diameter in pixels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>X Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Y Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__BLUR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__BLUR(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__BLUR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OPACITY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OPACITY(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CIRCLE_MASK__OUTLINE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_CIRCLE_MASK__OUTLINE(class='form-check-input') }}
+                <div id="IMAGE_CIRCLE_MASK__OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Outline image circle.  Opacity will be set to 0%.</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
         <div class="col-sm-2 col-form-label">
             SQM/Star Region of Interest
         </div>
@@ -2418,6 +2511,11 @@ const field_names = [
     'IMAGE_EXTRA_TEXT',
     'IMAGE_ROTATE',
     'IMAGE_SCALE',
+    'IMAGE_CIRCLE_MASK__DIAMETER',
+    'IMAGE_CIRCLE_MASK__OFFSET_X',
+    'IMAGE_CIRCLE_MASK__OFFSET_Y',
+    'IMAGE_CIRCLE_MASK__BLUR',
+    'IMAGE_CIRCLE_MASK__OPACITY',
     'IMAGE_CROP_ROI_X1',
     'IMAGE_CROP_ROI_Y1',
     'IMAGE_CROP_ROI_X2',
@@ -2521,6 +2619,8 @@ const checkbox_field_names = [
     'IMAGE_LABEL',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
+    'IMAGE_CIRCLE_MASK__ENABLE',
+    'IMAGE_CIRCLE_MASK__OUTLINE',
     'IMAGE_SAVE_FITS',
     'IMAGE_STACK_ALIGN',
     'IMAGE_STACK_SPLIT',
