@@ -2736,8 +2736,8 @@ class ImageProcessor(object):
         # start with a black image
         channel_mask = numpy.zeros([image_height, image_width], dtype=numpy.uint8)
 
-        center_x = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
-        center_y = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
+        center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
+        center_y = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
         radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
         blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
 
