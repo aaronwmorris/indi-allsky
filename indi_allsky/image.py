@@ -406,6 +406,9 @@ class ImageWorker(Process):
         self.image_processor.colorize()
 
 
+        self.image_processor.apply_image_circle_mask()
+
+
         self.image_processor.apply_logo_overlay()
 
 
@@ -1439,6 +1442,9 @@ class ImageProcessor(object):
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
         self._detection_mask = mask
+
+        self._image_circle_alpha_mask = None
+
         self._overlay = None
         self._alpha_mask = None
 
@@ -2268,6 +2274,22 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
+    def apply_image_circle_mask(self):
+        if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
+            return
+
+        if isinstance(self._image_circle_alpha_mask, type(None)):
+            self._image_circle_alpha_mask = self._generate_image_circle_mask(self.image)
+
+
+        alpha_start = time.time()
+
+        self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
+
+        alpha_elapsed_s = time.time() - alpha_start
+        logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
+
+
     def apply_logo_overlay(self):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
         if not logo_overlay:
@@ -2706,4 +2728,42 @@ class ImageProcessor(object):
 
 
         return overlay_rgb, alpha_mask
+
+
+    def _generate_image_circle_mask(self, image):
+        image_height, image_width = image.shape[:2]
+
+        # start with a black image
+        channel_mask = numpy.zeros([image_height, image_width], dtype=numpy.uint8)
+
+        center_x = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
+        center_y = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
+        radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+        blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
+
+
+        # draw a white circle
+        cv2.circle(
+            img=channel_mask,
+            center=(center_x, center_y),
+            radius=radius,
+            color=(255),
+            thickness=cv2.FILLED,
+        )
+
+
+        if blur:
+            # blur circle
+            channel_mask = cv2.GaussianBlur(
+                channel_mask,
+                (blur, blur),
+                cv2.BORDER_DEFAULT,
+            )
+
+
+        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+
+        alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
+
+        return alpha_mask
 
