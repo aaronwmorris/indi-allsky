@@ -78,20 +78,9 @@ class IndiClient(PyIndi.BaseClient):
     }
 
 
-    __canon_iso_switch = {
-        'auto' : 'ISO0',
-        0      : 'ISO0',  # ISO0 is auto
-        100    : 'ISO1',
-        200    : 'ISO2',
-        400    : 'ISO3',
-        800    : 'ISO4',
-        1600   : 'ISO5',
-        3200   : 'ISO6',
-        6400   : 'ISO7',
-        12800  : 'ISO8',   # untested
-        25600  : 'ISO9',   # untested
-        51200  : 'ISO10',  # untested
-    }
+    __canon_gain_to_iso = {}  # auto generated
+    __canon_iso_to_gain = {}  # auto generated
+
 
 
     def __init__(
@@ -1007,8 +996,33 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning('indi_sx_ccd does not support gain settings')
             return fake_gain_info
         elif indi_exec in ['indi_canon_ccd']:
-            logger.warning('indi_canon_ccd does not support gain settings')
-            return fake_gain_info
+            gain_ctl = self.get_control(self._ccd_device, 'CCD_ISO', 'switch')
+
+            gain_max = int(gain_ctl[len(gain_ctl) - 1].getLabel())  # dont slice
+
+            for index in range(0, len(gain_ctl)):
+                try:
+                    # The label should be the ISO number in string format
+                    gain = int(gain_ctl[index].getLabel())
+                except ValueError:
+                    # skip values like "auto"
+                    continue
+
+
+                # populate translation dicts
+                self.__canon_gain_to_iso[gain] = gain_ctl[index].getName()
+                self.__canon_iso_to_gain[gain_ctl[index].getName()] = gain
+
+
+            gain_info = {
+                'current' : 0,  # this should not matter
+                'min'     : 100,   # make ISO 100 the minimum
+                'max'     : gain_max,
+                'step'    : None,
+                'format'  : '',
+            }
+
+            return gain_info
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
             return fake_gain_info
@@ -1069,10 +1083,11 @@ class IndiClient(PyIndi.BaseClient):
             logger.info('Mapping gain to ISO for Canon device')
 
             try:
-                gain_switch = self.__canon_iso_switch[gain_value]
+                gain_switch = self.__canon_gain_to_iso[gain_value]
+                logger.info('Setting ISO switch: %s', gain_switch)
             except KeyError:
-                logger.error('Canon ISO not found for %s, using auto', str(gain_value))
-                gain_switch = 'ISO0'
+                logger.error('Canon ISO not found for %s, using ISO 100', str(gain_value))
+                gain_switch = 'ISO1'
 
             gain_config = {
                 'SWITCHES' : {
