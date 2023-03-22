@@ -136,6 +136,7 @@ class IndiAllSkyConfigBase(object):
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
             "BLUR"     : 75,
+            "OPACITY"  : 100,
         },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)

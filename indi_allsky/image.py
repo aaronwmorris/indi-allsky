@@ -2733,8 +2733,10 @@ class ImageProcessor(object):
     def _generate_image_circle_mask(self, image):
         image_height, image_width = image.shape[:2]
 
-        # start with a black image
-        channel_mask = numpy.zeros([image_height, image_width], dtype=numpy.uint8)
+        background = int(255 * (100 - self.config['IMAGE_CIRCLE_MASK']['OPACITY']) / 100)
+        #logger.info('Image circle backgound: %d', background)
+
+        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
 
         center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
         center_y = int(image_height / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']
