@@ -199,7 +199,7 @@ class JsonLatestImageView(JsonView):
             # Do not serve local assets
             latest_image_q = latest_image_q\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -424,7 +424,7 @@ class JsonImageLoopView(JsonView):
             # Do not serve local assets
             latest_images_q = latest_images_q\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )

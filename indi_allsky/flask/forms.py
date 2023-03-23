@@ -31,7 +31,7 @@ from sqlalchemy import func
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.types import Date
 from sqlalchemy import and_
-#from sqlalchemy import or_
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
@@ -1939,7 +1939,7 @@ class IndiAllskyImageViewer(FlaskForm):
             # Do not serve local assets
             years_query = years_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -1982,7 +1982,7 @@ class IndiAllskyImageViewer(FlaskForm):
             # Do not serve local assets
             months_query = months_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -2030,7 +2030,7 @@ class IndiAllskyImageViewer(FlaskForm):
             # Do not serve local assets
             days_query = days_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -2079,7 +2079,7 @@ class IndiAllskyImageViewer(FlaskForm):
             # Do not serve local assets
             hours_query = hours_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -2124,7 +2124,7 @@ class IndiAllskyImageViewer(FlaskForm):
             # Do not serve local assets
             images_query = images_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbImageTable.remote_url != sa_null(),
                         IndiAllSkyDbImageTable.s3_key != sa_null(),
                     )
@@ -2272,7 +2272,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Do not serve local assets
             years_query = years_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbVideoTable.remote_url != sa_null(),
                         IndiAllSkyDbVideoTable.s3_key != sa_null(),
                     )
@@ -2314,7 +2314,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Do not serve local assets
             months_query = months_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbVideoTable.remote_url != sa_null(),
                         IndiAllSkyDbVideoTable.s3_key != sa_null(),
                     )
@@ -2366,7 +2366,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # Do not serve local assets
             videos_query = videos_query\
                 .filter(
-                    and_(
+                    or_(
                         IndiAllSkyDbVideoTable.remote_url != sa_null(),
                         IndiAllSkyDbVideoTable.s3_key != sa_null(),
                     )
@@ -2418,7 +2418,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 # Do not serve local assets
                 keogram_entry_q = keogram_entry_q\
                     .filter(
-                        and_(
+                        or_(
                             IndiAllSkyDbKeogramTable.remote_url != sa_null(),
                             IndiAllSkyDbKeogramTable.s3_key != sa_null(),
                         )
@@ -2456,7 +2456,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 # Do not serve local assets
                 startrail_entry_q = startrail_entry_q\
                     .filter(
-                        and_(
+                        or_(
                             IndiAllSkyDbStarTrailsTable.remote_url != sa_null(),
                             IndiAllSkyDbStarTrailsTable.s3_key != sa_null(),
                         )
@@ -2494,7 +2494,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 # Do not serve local assets
                 startrail_video_entry_q = startrail_video_entry_q\
                     .filter(
-                        and_(
+                        or_(
                             IndiAllSkyDbStarTrailsVideoTable.remote_url != sa_null(),
                             IndiAllSkyDbStarTrailsVideoTable.s3_key != sa_null(),
                         )
