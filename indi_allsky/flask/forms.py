@@ -30,6 +30,8 @@ from sqlalchemy import extract
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
 #from sqlalchemy.types import Date
+from sqlalchemy import and_
+#from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
@@ -1923,8 +1925,12 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_year,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                )
+        )\
             .distinct()\
             .order_by(createDate_year.desc())
 
@@ -1946,9 +1952,13 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_month,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
-            .filter(createDate_year == year)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                )
+        )\
             .distinct()\
             .order_by(createDate_month.desc())
 
@@ -1974,10 +1984,14 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_day,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
-            .filter(createDate_year == year)\
-            .filter(createDate_month == month)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                )
+        )\
             .distinct()\
             .order_by(createDate_day.desc())
 
@@ -2003,11 +2017,15 @@ class IndiAllskyImageViewer(FlaskForm):
             createDate_hour,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
-            .filter(createDate_year == year)\
-            .filter(createDate_month == month)\
-            .filter(createDate_day == day)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                    createDate_day == day,
+                )
+        )\
             .distinct()\
             .order_by(createDate_hour.desc())
 
@@ -2028,12 +2046,16 @@ class IndiAllskyImageViewer(FlaskForm):
 
         images_query = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
-            .filter(createDate_year == year)\
-            .filter(createDate_month == month)\
-            .filter(createDate_day == day)\
-            .filter(createDate_hour == hour)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                    createDate_day == day,
+                    createDate_hour == hour,
+                )
+            )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
         images_choices = list()
@@ -2093,8 +2115,12 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
 
         last_image = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(IndiAllSkyDbImageTable.detections >= self.detections_count)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                )
+            )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
@@ -2183,8 +2209,12 @@ class IndiAllskyVideoViewer(FlaskForm):
             dayDate_month,
         )\
             .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(dayDate_year == year)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                )
+        )\
             .distinct()\
             .order_by(dayDate_month.desc())
 
@@ -2206,9 +2236,13 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         videos_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-            .filter(dayDate_year == year)\
-            .filter(dayDate_month == month)
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                    dayDate_month == month,
+                )
+            )
 
 
         # add time of day filter
@@ -2252,9 +2286,13 @@ class IndiAllskyVideoViewer(FlaskForm):
             ### Keogram
             keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .join(IndiAllSkyDbKeogramTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbKeogramTable.dayDate == dayDate)\
-                .filter(IndiAllSkyDbKeogramTable.night == entry['night'])\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbKeogramTable.dayDate == dayDate,
+                        IndiAllSkyDbKeogramTable.night == entry['night'],
+                    )
+                )\
                 .order_by(IndiAllSkyDbKeogramTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
@@ -2272,9 +2310,13 @@ class IndiAllskyVideoViewer(FlaskForm):
             ### Star trail
             startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .join(IndiAllSkyDbStarTrailsTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbStarTrailsTable.dayDate == dayDate)\
-                .filter(IndiAllSkyDbStarTrailsTable.night == entry['night'])\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbStarTrailsTable.dayDate == dayDate,
+                        IndiAllSkyDbStarTrailsTable.night == entry['night'],
+                    )
+                )\
                 .order_by(IndiAllSkyDbStarTrailsTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
@@ -2292,9 +2334,13 @@ class IndiAllskyVideoViewer(FlaskForm):
             ### Star trail timelapses
             startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate)\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.night == entry['night'])\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate,
+                        IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
+                    )
+                )\
                 .order_by(IndiAllSkyDbStarTrailsVideoTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
@@ -2435,8 +2481,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
             day_day_str = '{0:s} Day'.format(day_str)
 
             video_entry_night = IndiAllSkyDbVideoTable.query\
-                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbVideoTable.night == true)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbVideoTable.dayDate == day_date,
+                        IndiAllSkyDbVideoTable.night == true,
+                    )
+                )\
                 .first()
 
             if video_entry_night:
@@ -2449,8 +2499,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             video_entry_day = IndiAllSkyDbVideoTable.query\
-                .filter(IndiAllSkyDbVideoTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbVideoTable.night == false)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbVideoTable.dayDate == day_date,
+                        IndiAllSkyDbVideoTable.night == false,
+                    )
+                )\
                 .first()
 
             if video_entry_day:
@@ -2463,8 +2517,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             keogram_entry_night = IndiAllSkyDbKeogramTable.query\
-                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbKeogramTable.night == true)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbKeogramTable.dayDate == day_date,
+                        IndiAllSkyDbKeogramTable.night == true,
+                    )
+                )\
                 .first()
 
             if keogram_entry_night:
@@ -2477,8 +2535,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             keogram_entry_day = IndiAllSkyDbKeogramTable.query\
-                .filter(IndiAllSkyDbKeogramTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbKeogramTable.night == false)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbKeogramTable.dayDate == day_date,
+                        IndiAllSkyDbKeogramTable.night == false,
+                    )
+                )\
                 .first()
 
             if keogram_entry_day:
@@ -2491,8 +2553,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             startrail_entry_night = IndiAllSkyDbStarTrailsTable.query\
-                .filter(IndiAllSkyDbStarTrailsTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbStarTrailsTable.night == true)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbStarTrailsTable.dayDate == day_date,
+                        IndiAllSkyDbStarTrailsTable.night == true,
+                    )
+                )\
                 .first()
 
             if startrail_entry_night:
@@ -2505,8 +2571,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             startrail_video_entry_night = IndiAllSkyDbStarTrailsVideoTable.query\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date)\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.night == true)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date,
+                        IndiAllSkyDbStarTrailsVideoTable.night == true,
+                    )
+                )\
                 .first()
 
             if startrail_video_entry_night:
