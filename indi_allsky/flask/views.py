@@ -1480,7 +1480,12 @@ class ImageViewerView(FormView):
             'FILTER_DETECTIONS' : None,
         }
 
-        context['form_viewer'] = IndiAllskyImageViewerPreload(data=form_data, camera_id=session['camera_id'], s3_prefix=self.s3_prefix)
+        context['form_viewer'] = IndiAllskyImageViewerPreload(
+            data=form_data,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+        )
 
         return context
 
@@ -1502,9 +1507,21 @@ class AjaxImageViewerView(BaseView):
 
         if form_filter_detections:
             # filter images that have a detection
-            form_viewer = IndiAllskyImageViewer(data=request.json, camera_id=session['camera_id'], detections_count=1, s3_prefix=self.s3_prefix)
+            form_viewer = IndiAllskyImageViewer(
+                data=request.json,
+                camera_id=session['camera_id'],
+                detections_count=1,
+                s3_prefix=self.s3_prefix,
+                non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+            )
         else:
-            form_viewer = IndiAllskyImageViewer(data=request.json, camera_id=session['camera_id'], detections_count=0, s3_prefix=self.s3_prefix)
+            form_viewer = IndiAllskyImageViewer(
+                data=request.json,
+                camera_id=session['camera_id'],
+                detections_count=0,
+                s3_prefix=self.s3_prefix,
+                non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+            )
 
 
         json_data = {}
@@ -1621,7 +1638,12 @@ class VideoViewerView(FormView):
             'MONTH_SELECT' : None,
         }
 
-        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(data=form_data, camera_id=session['camera_id'], s3_prefix=self.s3_prefix)
+        context['form_video_viewer'] = IndiAllskyVideoViewerPreload(
+            data=form_data,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+        )
 
         return context
 
@@ -1634,7 +1656,12 @@ class AjaxVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
-        form_video_viewer = IndiAllskyVideoViewer(data=request.json, camera_id=session['camera_id'], s3_prefix=self.s3_prefix)
+        form_video_viewer = IndiAllskyVideoViewer(
+            data=request.json,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+        )
 
 
         form_year      = request.json.get('YEAR_SELECT')

@@ -35,6 +35,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
+from sqlalchemy.sql.expression import null as sa_null
 
 from flask import current_app as app
 
@@ -1916,6 +1917,7 @@ class IndiAllskyImageViewer(FlaskForm):
         self.detections_count = kwargs.get('detections_count', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
+        self.non_local = kwargs.get('non_local')
 
 
     def getYears(self):
@@ -1930,9 +1932,24 @@ class IndiAllskyImageViewer(FlaskForm):
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
-        )\
+        )
+
+
+        if self.non_local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        years_query = years_query\
             .distinct()\
             .order_by(createDate_year.desc())
+
 
         year_choices = []
         for y in years_query:
@@ -1959,8 +1976,23 @@ class IndiAllskyImageViewer(FlaskForm):
                     createDate_year == year,
                 )
         )\
+
+
+        if self.non_local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        months_query = months_query\
             .distinct()\
             .order_by(createDate_month.desc())
+
 
         month_choices = []
         for m in months_query:
@@ -1991,9 +2023,24 @@ class IndiAllskyImageViewer(FlaskForm):
                     createDate_year == year,
                     createDate_month == month,
                 )
-        )\
+        )
+
+
+        if self.non_local:
+            # Do not serve local assets
+            days_query = days_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        days_query = days_query\
             .distinct()\
             .order_by(createDate_day.desc())
+
 
         day_choices = []
         for d in days_query:
@@ -2025,9 +2072,24 @@ class IndiAllskyImageViewer(FlaskForm):
                     createDate_month == month,
                     createDate_day == day,
                 )
-        )\
+        )
+
+
+        if self.non_local:
+            # Do not serve local assets
+            hours_query = hours_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        hours_query = hours_query\
             .distinct()\
             .order_by(createDate_hour.desc())
+
 
         hour_choices = []
         for h in hours_query:
@@ -2055,8 +2117,23 @@ class IndiAllskyImageViewer(FlaskForm):
                     createDate_day == day,
                     createDate_hour == hour,
                 )
-            )\
+            )
+
+
+        if self.non_local:
+            # Do not serve local assets
+            images_query = images_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        images_query = images_query\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
 
         images_choices = list()
         fits_choices = list()
@@ -2178,6 +2255,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
+        self.non_local = kwargs.get('non_local')
 
 
     def getYears(self):
@@ -2187,9 +2265,24 @@ class IndiAllskyVideoViewer(FlaskForm):
             dayDate_year,
         )\
             .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+
+
+        if self.non_local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        years_query = years_query\
             .distinct()\
             .order_by(dayDate_year.desc())
+
 
         year_choices = []
         for y in years_query:
@@ -2214,9 +2307,24 @@ class IndiAllskyVideoViewer(FlaskForm):
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     dayDate_year == year,
                 )
-        )\
+        )
+
+
+        if self.non_local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        months_query = months_query\
             .distinct()\
             .order_by(dayDate_month.desc())
+
 
         month_choices = []
         for m in months_query:
@@ -2254,6 +2362,17 @@ class IndiAllskyVideoViewer(FlaskForm):
             pass
 
 
+        if self.non_local:
+            # Do not serve local assets
+            videos_query = videos_query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
         # set order
         videos_query = videos_query.order_by(
             IndiAllSkyDbVideoTable.dayDate.desc(),
@@ -2284,7 +2403,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             # fix is inbound
 
             ### Keogram
-            keogram_entry = IndiAllSkyDbKeogramTable.query\
+            keogram_entry_q = IndiAllSkyDbKeogramTable.query\
                 .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
@@ -2292,7 +2411,21 @@ class IndiAllskyVideoViewer(FlaskForm):
                         IndiAllSkyDbKeogramTable.dayDate == dayDate,
                         IndiAllSkyDbKeogramTable.night == entry['night'],
                     )
-                )\
+                )
+
+
+            if self.non_local:
+                # Do not serve local assets
+                keogram_entry_q = keogram_entry_q\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbKeogramTable.remote_url != sa_null(),
+                            IndiAllSkyDbKeogramTable.s3_key != sa_null(),
+                        )
+                    )
+
+
+            keogram_entry = keogram_entry_q\
                 .order_by(IndiAllSkyDbKeogramTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
@@ -2308,7 +2441,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             ### Star trail
-            startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+            startrail_entry_q = IndiAllSkyDbStarTrailsTable.query\
                 .join(IndiAllSkyDbStarTrailsTable.camera)\
                 .filter(
                     and_(
@@ -2316,7 +2449,21 @@ class IndiAllskyVideoViewer(FlaskForm):
                         IndiAllSkyDbStarTrailsTable.dayDate == dayDate,
                         IndiAllSkyDbStarTrailsTable.night == entry['night'],
                     )
-                )\
+                )
+
+
+            if self.non_local:
+                # Do not serve local assets
+                startrail_entry_q = startrail_entry_q\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbStarTrailsTable.remote_url != sa_null(),
+                            IndiAllSkyDbStarTrailsTable.s3_key != sa_null(),
+                        )
+                    )
+
+
+            startrail_entry = startrail_entry_q\
                 .order_by(IndiAllSkyDbStarTrailsTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
@@ -2332,7 +2479,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             ### Star trail timelapses
-            startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+            startrail_video_entry_q = IndiAllSkyDbStarTrailsVideoTable.query\
                 .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
                 .filter(
                     and_(
@@ -2340,7 +2487,21 @@ class IndiAllskyVideoViewer(FlaskForm):
                         IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate,
                         IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
                     )
-                )\
+                )
+
+
+            if self.non_local:
+                # Do not serve local assets
+                startrail_video_entry_q = startrail_video_entry_q\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbStarTrailsVideoTable.remote_url != sa_null(),
+                            IndiAllSkyDbStarTrailsVideoTable.s3_key != sa_null(),
+                        )
+                    )
+
+
+            startrail_video_entry = startrail_video_entry_q\
                 .order_by(IndiAllSkyDbStarTrailsVideoTable.dayDate.asc())\
                 .first()  # use the oldest (asc)
 
