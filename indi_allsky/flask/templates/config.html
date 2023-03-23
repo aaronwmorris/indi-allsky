@@ -1677,6 +1677,21 @@
         <div class="col-sm-8">File containing extra text to be included in info box</div>
     </div>
 
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_NONLOCAL_IMAGES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.WEB_NONLOCAL_IMAGES(class='form-check-input') }}
+                <div id="WEB_NONLOCAL_IMAGES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable serving images/videos exclusively from non-local sources (S3, etc)</div>
+    </div>
+
 </div><!-- end location tab -->
 <div class="tab-pane fade" id="nav-filetransfer" role="tabpanel" aria-labelledby="nav-filetransfer-tab">
 
@@ -2644,6 +2659,7 @@ const checkbox_field_names = [
     'SYNCAPI__ENABLE',
     'SYNCAPI__CERT_BYPASS',
     'SYNCAPI__POST_S3',
+    'WEB_NONLOCAL_IMAGES',
     'RELOAD_ON_SAVE',
 ];
 

@@ -104,6 +104,7 @@ class IndiAllSkyConfigBase(object):
         "NIGHT_MOONMODE_ALT_DEG"   : 0,
         "NIGHT_MOONMODE_PHASE"     : 33,
         "WEB_EXTRA_TEXT" : "",
+        "WEB_NONLOCAL_IMAGES" : False,
         "KEOGRAM_ANGLE"    : 0,
         "KEOGRAM_H_SCALE"  : 100,
         "KEOGRAM_V_SCALE"  : 33,
