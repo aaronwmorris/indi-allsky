@@ -185,14 +185,28 @@ class JsonLatestImageView(JsonView):
     def getLatestImage(self, camera_id, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
-        latest_image = IndiAllSkyDbImageTable.query\
+        latest_image_q = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > now_minus_seconds,
                 )
-            )\
+            )
+
+
+        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+            # Do not serve local assets
+            latest_image_q = latest_image_q\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        latest_image = latest_image_q\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
@@ -396,16 +410,31 @@ class JsonImageLoopView(JsonView):
     def getLatestImages(self, camera_id, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
-        latest_images = IndiAllSkyDbImageTable.query\
+        latest_images_q = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > now_minus_seconds,
                 )
-            )\
+            )
+
+
+        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+            # Do not serve local assets
+            latest_images_q = latest_images_q\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        latest_images = latest_images_q\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(self.limit)
+
 
         image_list = list()
         for i in latest_images:
