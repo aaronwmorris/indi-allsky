@@ -20,7 +20,11 @@ logger = logging
 
 class TimelapseGenerator(object):
     FFMPEG_FRAMERATE = 25
+
     FFMPEG_BITRATE = '2500k'
+    FFMPEG_BITRATE_MAX = '5000k'
+    FFMPEG_BITRATE_MIN = '1000k'
+    FFMPEG_BITRATE_BUF = '2000k'
 
     FFMPEG_QSCALE = 25
 
@@ -75,9 +79,14 @@ class TimelapseGenerator(object):
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
             '-c:v', 'libx264',
+
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
-            '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),  # cbr
-            #'-qscale', '{0:d}'.format(self.FFMPEG_QSCALE),  # vbr
+            #'-minrate', '{0:s}'.format(self.FFMPEG_BITRATE_MIN),
+            #'-maxrate', '{0:s}'.format(self.FFMPEG_BITRATE_MAX),
+            #'-bufsize', '{0:s}'.format(self.FFMPEG_BITRATE_BUF),
+
+            #'-qscale', '{0:d}'.format(self.FFMPEG_QSCALE),
+
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
             '{0:s}'.format(str(outfile_p)),
