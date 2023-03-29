@@ -22,7 +22,7 @@ class TimelapseGenerator(object):
     FFMPEG_FRAMERATE = 25
     FFMPEG_BITRATE = '2500k'
 
-    FFMPEG_QSCALE = 15
+    FFMPEG_QSCALE = 25
 
 
     def __init__(self):
