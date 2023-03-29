@@ -416,9 +416,9 @@ class TemplateView(BaseView):
 
     def get_user_info(self):
         if not current_user.is_authenticated:
-            return '<a href="{0:s}">Login</a>'.format(url_for('auth_indi_allsky.login_view'))
+            return '<a href="{0:s}" style="text-decoration: none">Login</a>'.format(url_for('auth_indi_allsky.login_view'))
 
-        return '{0:s} <a href="{1:s}">*</a>'.format(current_user.username, url_for('auth_indi_allsky.logout_view'))
+        return '<a href="{0:s}" style="text-decoration: none">{1:s}</a>'.format(url_for('indi_allsky.user_view'), current_user.username)
 
 
 class FormView(TemplateView):
