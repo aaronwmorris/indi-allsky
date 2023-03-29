@@ -11,6 +11,8 @@ import cv2
 import numpy
 import pycurl
 
+from passlib.hash import argon2
+
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
@@ -2873,4 +2875,49 @@ class IndiAllskyCameraSelectForm(FlaskForm):
             camera_list.append((camera.id, camera.name))
 
         return camera_list
+
+
+
+
+def USER__NAME_validator(form, field):
+    pass
+
+
+def USER__EMAIL_validator(form, field):
+    email_regex = r'[^@]+@[^@]+\.[^@]+'
+
+    if not re.search(email_regex, field.data):
+        raise ValidationError('Email address is not valid')
+
+
+def USER__PASSWORD_validator(form, field):
+    if not field.data:
+        return
+
+    if len(field.data) < 8:
+        raise ValidationError('Password must be 8 characters or more')
+
+
+class IndiAllskyUserInfoForm(FlaskForm):
+    USERNAME          = StringField('Username', render_kw={'readonly' : True})
+    NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
+    EMAIL             = StringField('Email', validators=[DataRequired(), USER__EMAIL_validator])
+    ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
+    PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[USER__PASSWORD_validator])
+    PASSWORD2         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[])
+
+
+    def validate(self, user):
+        result = super(IndiAllskyUserInfoForm, self).validate()
+
+        if self.PASSWORD.data != self.PASSWORD2.data:
+            self.PASSWORD2.errors.append('Passwords do not match')
+            result = False
+
+
+        if argon2.verify(self.PASSWORD.data, user.password):
+            self.PASSWORD.errors.append('Password cannot be the same as the old password')
+            result = False
+
+        return result
 

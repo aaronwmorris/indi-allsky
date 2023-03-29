@@ -19,6 +19,8 @@ import ccdproc
 
 import ephem
 
+from passlib.hash import argon2
+
 # for version reporting
 import PyIndi
 import cv2
@@ -83,6 +85,7 @@ from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
+from .forms import IndiAllskyUserInfoForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -3131,6 +3134,74 @@ class AjaxNotificationView(BaseView):
         return self.get()
 
 
+class UserInfoView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(UserInfoView, self).get_context()
+
+        form_data = {
+            'USERNAME' : current_user.username,
+            'NAME'     : current_user.name,
+            'EMAIL'    : current_user.email,
+            'ADMIN'    : current_user.admin,
+        }
+
+        context['form_userinfo'] = IndiAllskyUserInfoForm(data=form_data)
+
+        return context
+
+
+class AjaxUserInfoView(BaseView):
+    methods = ['POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxUserInfoView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if request.method == 'POST':
+            return self.post()
+        else:
+            return jsonify({}), 400
+
+
+    def post(self):
+        form_userinfo = IndiAllskyUserInfoForm(data=request.json)
+
+
+        if not form_userinfo.validate(current_user):
+            form_errors = form_userinfo.errors  # this must be a property
+            form_errors['form_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+        new_name = str(request.json['NAME'])
+        new_email = str(request.json['EMAIL'])
+        new_password = str(request.json['PASSWORD'])
+
+
+        current_user.name = new_name
+        current_user.email = new_email
+
+
+        if new_password:
+            # do not update password if not defined
+            hashed_password = argon2.hash(new_password)
+            current_user.password = hashed_password
+            current_user.passwordDate = datetime.now()
+
+
+        db.session.commit()
+
+
+        message = {
+            'success-message' : 'User info updated',
+        }
+        return jsonify(message)
+
+
 class UsersView(TemplateView):
     decorators = [login_required]
 
@@ -3173,7 +3244,6 @@ class ConfigListView(TemplateView):
 
 class AjaxSelectCameraView(BaseView):
     methods = ['POST']
-    decorators = []  # manually handle if user is logged in
 
 
     def __init__(self, **kwargs):
@@ -3230,6 +3300,8 @@ bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', templ
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
+bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

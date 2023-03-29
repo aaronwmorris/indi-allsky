@@ -22,6 +22,8 @@ class TimelapseGenerator(object):
     FFMPEG_FRAMERATE = 25
     FFMPEG_BITRATE = '2500k'
 
+    FFMPEG_QSCALE = 25
+
 
     def __init__(self):
         pass
@@ -74,6 +76,8 @@ class TimelapseGenerator(object):
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
             '-c:v', 'libx264',
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
+            '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),  # cbr
+            #'-qscale', '{0:d}'.format(self.FFMPEG_QSCALE),  # vbr
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
             '{0:s}'.format(str(outfile_p)),
