@@ -2874,3 +2874,31 @@ class IndiAllskyCameraSelectForm(FlaskForm):
 
         return camera_list
 
+
+
+def PASSWORD_validator(form, field):
+    if not field.data:
+        return
+
+    if len(field.data) < 8:
+        raise ValidationError('Password must be 8 characters or more')
+
+
+class IndiAllskyUserInfoForm(FlaskForm):
+    USERNAME          = StringField('Username', render_kw={'readonly' : True})
+    NAME              = StringField('Name', render_kw={'readonly' : True})
+    EMAIL             = StringField('Email', render_kw={'readonly' : True})
+    ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
+    PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PASSWORD_validator])
+    PASSWORD2         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[])
+
+
+    def validate(self):
+        result = super(IndiAllskyUserInfoForm, self).validate()
+
+        if self.PASSWORD.data != self.PASSWORD2.data:
+            self.PASSWORD2.errors.append('Passwords do not match')
+            result = False
+
+        return result
+
