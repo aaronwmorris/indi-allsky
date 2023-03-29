@@ -35,8 +35,8 @@ logger = logging
 
 class UserManager(object):
 
-    username_regex = r'^[a-zA-Z0-9\@\.\-]+$'
-    name_regex = r'^[a-zA-Z0-9_\ \@\.\-]+$'
+    username_regex = r'[\ ]+'  # no spaces
+    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
 
     protected_users = [
         'system',
@@ -72,7 +72,7 @@ class UserManager(object):
             if not username:
                 username = input('Username: ')
 
-            if not re.search(self.username_regex, username):
+            if re.search(self.username_regex, username):
                 logger.error('Username contains illegal characters')
                 username = None
                 continue
@@ -96,10 +96,12 @@ class UserManager(object):
 
             if password != password2:
                 logger.error('Password does not match')
+                password = None
                 continue
 
             if len(password) < 8:
                 logger.error('Password must be 8 characters or longer')
+                password = None
                 continue
 
             break
@@ -109,9 +111,9 @@ class UserManager(object):
             if not name:
                 name = input('Name: ')
 
-            if not re.search(self.name_regex, name):
-                logger.error('Name contains illegal characters')
-                continue
+            #if not re.search(self.name_regex, name):
+            #    logger.error('Name contains illegal characters')
+            #    continue
 
             break
 
@@ -120,8 +122,9 @@ class UserManager(object):
             if not email:
                 email = input('Email: ')
 
-            if not re.search(self.username_regex, email):
-                logger.error('Email contains illegal characters')
+            if not re.search(self.email_regex, email):
+                logger.error('Email not valid')
+                email = None
                 continue
 
             break
