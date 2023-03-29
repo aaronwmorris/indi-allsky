@@ -19,6 +19,8 @@ import ccdproc
 
 import ephem
 
+from passlib.hash import argon2
+
 # for version reporting
 import PyIndi
 import cv2
@@ -3169,14 +3171,35 @@ class AjaxUserInfoView(BaseView):
         form_userinfo = IndiAllskyUserInfoForm(data=request.json)
 
 
-        if not form_userinfo.validate():
+        if not form_userinfo.validate(current_user):
             form_errors = form_userinfo.errors  # this must be a property
             form_errors['form_global'] = ['Please fix the errors above']
             return jsonify(form_errors), 400
 
 
-        # return next notification
-        return jsonify({})
+        new_name = str(request.json['NAME'])
+        new_email = str(request.json['EMAIL'])
+        new_password = str(request.json['PASSWORD'])
+
+
+        current_user.name = new_name
+        current_user.email = new_email
+
+
+        if new_password:
+            # do not update password if not defined
+            hashed_password = argon2.hash(new_password)
+            current_user.password = hashed_password
+            current_user.passwordDate = datetime.now()
+
+
+        db.session.commit()
+
+
+        message = {
+            'success-message' : 'User info updated',
+        }
+        return jsonify(message)
 
 
 class UsersView(TemplateView):
