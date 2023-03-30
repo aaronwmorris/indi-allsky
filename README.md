@@ -23,6 +23,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Multi-image stacking
 * Timelapse video generation
 * GPS support
+* Remote web portal
 * Network file transfers - Upload images and videos to remote site
     * S3 Object Storage support
 * Publish data to an MQTT service for monitoring
@@ -184,6 +185,7 @@ CPU utilization and memory is reasonable for stacking 1K images on Raspberry Pi 
 
 Registration (alignment) requires significantly more CPU time and doubles the memory requirement since the registered images must also be stored in memory.  Registering one 1920x1080 (1K) image (reference + image) requires 2-3 seconds on Raspberry Pi 3 hardware.
 
+
 ## Web Interface
 
 The indi-allsky web interface is built on the Flask MVC framework.  It is designed to be a dashboard for your sky.  Included is the ability to fully manage the camera configuration without having to manually edit from the command line.
@@ -219,6 +221,36 @@ All media generated are logged in a local SQLite database stored in /var/lib/ind
 
 The database is managed via the python modules SQLAlchemy and alembic to provide migrations (schema upgrades) automatically in the setup.sh script.
 
+
+## Remote Web Portal - SyncAPI
+
+An on-premises indi-allsky system can synchronize images and timelapses to a cloud-based indi-allsky web server instance using the built in SyncAPI.  Remote users can browse the remote indi-allsky web instance without touching the system running the camera.  Images are synced in real-time.
+
+In effect, the indi-allsky web interface is its own remote web portal.
+
+A remote indi-allsky instance can support multiple clients using SyncAPI with a single instance.  Users can easily switch between the cameras in the web interface.  The SyncAPI can also be combined with the S3 Object Storage functionality to offload image storage to a cloud service.
+
+
+### Home Hosting
+
+The indi-allsky web interface is designed to be directly exposed to the Internet, if you have sufficient bandwidth on your home Internet connection.  A simple, yet effective, access control system is implemented to let anonymous (or authenticated) users safely browse images and videos without exposing privileged controls.  Only users with assigned administrative authority can make changes.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Security-considerations
+
+It is also possible to use cloud security offerings like [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) to further protect your indi-allsky site.
+
+
+## S3 Object Storage
+
+You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the local indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
+
+Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
+
+Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
+
+Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.
+
+
 ## GPS
 
 GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html) and GPSd integration.  Any GPS hardware supported by GPSd will work.
@@ -249,12 +281,18 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 | File transfer     | pycurl        | http://pycurl.io/ |
 |                   | paramiko      | http://www.paramiko.org/ |
 |                   | paho-mqtt     | https://www.eclipse.org/paho/ |
+|                   | requests      | https://requests.readthedocs.io/en/latest/ |
+| S3 Object Storage | boto3         | https://boto3.amazonaws.com/v1/documentation/api/latest/index.html |
+|                   | apache-libcloud | https://libcloud.apache.org/ |
 | Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
+|                   | mysql-connector-python | https://dev.mysql.com/doc/connector-python/en/ |
+|                   | PyMySQL       | https://pymysql.readthedocs.io/en/latest/ |
 | GPS               | GPSd          | https://gpsd.gitlab.io/gpsd/ |
 | Web interface     | Flask         | https://flask.palletsprojects.com/ |
 |                   | WTForms       | https://wtforms.readthedocs.io/ |
+|                   | flask-login   | https://flask-login.readthedocs.io/ |
 |                   | Gunicorn      | https://gunicorn.org/ |
 |                   | Apache        | https://httpd.apache.org/ |
 
@@ -339,15 +377,6 @@ https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
 | sftp           | 22   |
 | webdav (https) | 443  |
 
-## S3 Object Storage
-
-You may choose to upload images and timelapse files to an S3 bucket.  Once the images are in the bucket, images and videos in the web interface will be loaded directly from S3 instead of the local indi-allsky web server.  You could easy host the web interface from your home internet connection and just have the large media files served from S3.
-
-Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
-
-Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
-
-Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.
 
 ## MQTT Publishing
 
