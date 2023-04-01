@@ -2587,6 +2587,14 @@ class AjaxTimelapseGeneratorView(BaseView):
             form_errors = form_timelapsegen.errors  # this must be a property
             return jsonify(form_errors), 400
 
+
+        if not self.verify_admin_network():
+            json_data = {
+                'form_global' : ['Request not from admin network'],
+            }
+            return jsonify(json_data), 400
+
+
         action = request.json['ACTION_SELECT']
         day_select_str = request.json['DAY_SELECT']
 
