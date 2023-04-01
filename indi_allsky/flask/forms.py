@@ -2903,7 +2903,7 @@ def USER__PASSWORD_validator(form, field):
 class IndiAllskyUserInfoForm(FlaskForm):
     USERNAME          = StringField('Username', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
-    EMAIL             = StringField('Email', validators=[DataRequired(), USER__EMAIL_validator])
+    EMAIL             = StringField('Email', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
     PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[USER__PASSWORD_validator])
     PASSWORD2         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[])

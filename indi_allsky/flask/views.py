@@ -3183,12 +3183,12 @@ class AjaxUserInfoView(BaseView):
 
 
         new_name = str(request.json['NAME'])
-        new_email = str(request.json['EMAIL'])
         new_password = str(request.json['PASSWORD'])
+        # email is read only
+        # admin is read only
 
 
         current_user.name = new_name
-        current_user.email = new_email
 
 
         if new_password:
