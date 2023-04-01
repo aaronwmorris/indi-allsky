@@ -1897,7 +1897,7 @@ class IndiAllskyConfigForm(FlaskForm):
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
     CONFIG_NOTE                      = StringField('Config Note')
 
-    ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True})
+    ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})
 
 
     #def __init__(self, *args, **kwargs):
@@ -2901,7 +2901,7 @@ def USER__PASSWORD_validator(form, field):
 
 
 class IndiAllskyUserInfoForm(FlaskForm):
-    USERNAME          = StringField('Username', render_kw={'readonly' : True})
+    USERNAME          = StringField('Username', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
     EMAIL             = StringField('Email', validators=[DataRequired(), USER__EMAIL_validator])
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
