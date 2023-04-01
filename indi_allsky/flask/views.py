@@ -7,7 +7,6 @@ import json
 import time
 import math
 import base64
-import ipaddress
 from pathlib import Path
 import socket
 import re
@@ -2138,38 +2137,6 @@ class AjaxSystemInfoView(BaseView):
         }
 
         return jsonify(json_data)
-
-
-    def verify_admin_network(self):
-        for n in app.config.get('ADMIN_NETWORKS', []):
-            try:
-                admin_network = ipaddress.ip_network(n, strict=False)
-            except ValueError:
-                app.logger.error('Invalid network: %s', n)
-                continue
-
-
-            if request.headers.get('X-Forwarded-For'):
-                remote_addrs = request.headers.get('X-Forwarded-For')
-            else:
-                remote_addrs = request.remote_addr
-
-
-            remote_addrs_list = remote_addrs.split(',')
-
-            # we only want to validate the last IP in the list
-            client_addr = remote_addrs_list[-1].strip()
-
-            try:
-                client_ip = ipaddress.ip_address(client_addr)
-            except ValueError:
-                app.logger.error('Invalid IP: %s', client_addr)
-                continue
-
-
-            if client_ip in admin_network:
-                app.logger.info('Matched client IP %s in admin network %s', str(client_ip), str(admin_network))
-                return True
 
 
     def stopSystemdUnit(self, unit):

@@ -1,11 +1,13 @@
 import io
 import math
 import time
+import ipaddress
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 import ephem
 
+from flask import request
 from flask import session
 from flask import render_template
 from flask import jsonify
@@ -94,6 +96,40 @@ class BaseView(View):
             return FakeCamera()
 
         return camera
+
+
+    def verify_admin_network(self):
+        for n in app.config.get('ADMIN_NETWORKS', []):
+            try:
+                admin_network = ipaddress.ip_network(n, strict=False)
+            except ValueError:
+                app.logger.error('Invalid network: %s', n)
+                continue
+
+
+            if request.headers.get('X-Forwarded-For'):
+                remote_addrs = request.headers.get('X-Forwarded-For')
+            else:
+                remote_addrs = request.remote_addr
+
+
+            remote_addrs_list = remote_addrs.split(',')
+
+            # we only want to validate the last IP in the list
+            client_addr = remote_addrs_list[-1].strip()
+
+            try:
+                client_ip = ipaddress.ip_address(client_addr)
+            except ValueError:
+                app.logger.error('Invalid IP: %s', client_addr)
+                continue
+
+
+            if client_ip in admin_network:
+                app.logger.info('Matched client IP %s in admin network %s', str(client_ip), str(admin_network))
+                return True
+
+
 
 
 class TemplateView(BaseView):
