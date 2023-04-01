@@ -2071,9 +2071,17 @@ class AjaxSystemInfoView(BaseView):
 
         elif service == 'system':
             if command == 'reboot':
+                # allowing rebooting from non-admin networks for now
                 r = self.rebootSystemd()
             elif command == 'poweroff':
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
+
                 r = self.poweroffSystemd()
+
             elif command == 'validate_db':
                 message_list = self.validateDbEntries()
 
@@ -2082,13 +2090,9 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(json_data)
             elif command == 'flush_images':
-                ### testing
-                #time.sleep(5.0)
-                #return jsonify({'success-message' : 'Test'})
-
                 if not self.verify_admin_network():
                     json_data = {
-                        'form_global' : ['Request not from admin network'],
+                        'form_global' : ['Request not from admin network (flask.json)'],
                     }
                     return jsonify(json_data), 400
 
@@ -2099,13 +2103,9 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(json_data)
             elif command == 'flush_timelapses':
-                ### testing
-                #time.sleep(5.0)
-                #return jsonify({'success-message' : 'Test'})
-
                 if not self.verify_admin_network():
                     json_data = {
-                        'form_global' : ['Request not from admin network'],
+                        'form_global' : ['Request not from admin network (flask.json)'],
                     }
                     return jsonify(json_data), 400
 
@@ -2590,7 +2590,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         if not self.verify_admin_network():
             json_data = {
-                'form_global' : ['Request not from admin network'],
+                'form_global' : ['Request not from admin network (flask.json)'],
             }
             return jsonify(json_data), 400
 
