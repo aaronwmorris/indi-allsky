@@ -7,6 +7,7 @@ import json
 import time
 import math
 import base64
+import ipaddress
 from pathlib import Path
 import socket
 import re
@@ -893,6 +894,7 @@ class ConfigView(FormView):
             'SYNCAPI__POST_S3'               : self.indi_allsky_config.get('SYNCAPI', {}).get('POST_S3', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
+            'ADMIN_NETWORKS_INPUT'           : self.indi_allsky_config.get('ADMIN_NETWORKS_INPUT', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1304,6 +1306,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FITSHEADERS'][4][1]                    = str(request.json['FITSHEADERS__4__VAL'])
         self.indi_allsky_config['LIBCAMERA']['IMAGE_FILE_TYPE']         = str(request.json['LIBCAMERA__IMAGE_FILE_TYPE'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
+        self.indi_allsky_config['ADMIN_NETWORKS_INPUT']                 = str(request.json['ADMIN_NETWORKS_INPUT'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
@@ -1368,6 +1371,27 @@ class AjaxConfigView(BaseView):
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
         moon_r, moon_g, moon_b = moon_color_str.split(',')
         self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+
+
+        admin_networks_input = str(request.json['ADMIN_NETWORKS_INPUT'])
+
+        self.indi_allsky_config['ADMIN_NETWORKS'] = list()
+        for network in admin_networks_input.splitlines():
+            if not network:
+                continue
+
+            if network.startswith('#'):
+                continue
+
+            network_str = network.strip()
+
+            try:
+                network = ipaddress.ip_network(network_str, strict=False)
+            except ValueError:
+                app.logger.error('"%s" is not a valid network', network_str)
+                continue
+
+            self.indi_allsky_config['ADMIN_NETWORKS'].append(str(network))
 
 
         # save new config

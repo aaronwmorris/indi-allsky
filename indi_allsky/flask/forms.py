@@ -6,6 +6,7 @@ import json
 import time
 from datetime import datetime
 import tempfile
+import ipaddress
 import subprocess
 import cv2
 import numpy
@@ -1568,6 +1569,21 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
         #    raise ValidationError('Switch {0:s} requires at least one "on" key'.format(k))
 
 
+def ADMIN_NETWORKS_INPUT_validator(form, field):
+    for network in field.data.splitlines():
+        if not network:
+            continue
+
+        if network.startswith('#'):
+            continue
+
+        network_str = network.strip()
+
+        try:
+            ipaddress.ip_network(network_str, strict=False)
+        except ValueError:
+            raise ValidationError('"{0:s}" is not a valid network'.format(network_str))
+
 
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = (
@@ -1891,6 +1907,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FITSHEADERS__3__VAL              = StringField('FITS Header 4 Value', validators=[])
     FITSHEADERS__4__KEY              = StringField('FITS Header 5', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__4__VAL              = StringField('FITS Header 5 Value', validators=[])
+    ADMIN_NETWORKS_INPUT             = TextAreaField('Admin Networks', validators=[DataRequired(), ADMIN_NETWORKS_INPUT_validator])
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
