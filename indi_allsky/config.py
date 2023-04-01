@@ -253,15 +253,6 @@ class IndiAllSkyConfigBase(object):
             "IMAGE_FILE_TYPE"        : "dng",
             "EXTRA_OPTIONS"          : "",
         },
-        "ADMIN_NETWORKS_INPUT" : "# private\n10.0.0.0/8\n192.168.0.0/16\n172.16.0.0/12\nfe80::/64\n# loopback\n127.0.0.1/32\n::1/128",
-        "ADMIN_NETWORKS" : [
-            "10.0.0.0/8",
-            "192.168.0.0/16",
-            "172.16.0.0/12",
-            "fe80::/64",
-            "127.0.0.1/32",
-            "::1/128",
-        ],
     })
 
 

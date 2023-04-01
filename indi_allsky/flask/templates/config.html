@@ -1524,13 +1524,16 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.ADMIN_NETWORKS_INPUT.label(class='col-form-label') }}
+            {{ form_config.ADMIN_NETWORKS_FLASK.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.ADMIN_NETWORKS_INPUT(class='form-control bg-secondary', rows='10') }}
-            <div id="ADMIN_NETWORKS_INPUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.ADMIN_NETWORKS_FLASK(class='form-control bg-secondary', rows='10') }}
+            <div id="ADMIN_NETWORKS_FLASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Networks which administrative requests have to originate</div>
+        <div class="col-sm-8">
+            <div>Networks which administrative requests have to originate</div>
+            <div>(updated in flask.json)</div>
+        </div>
     </div>
 
 </div><!-- end processing tab -->
@@ -2626,7 +2629,7 @@ const field_names = [
     'FITSHEADERS__3__VAL',
     'FITSHEADERS__4__KEY',
     'FITSHEADERS__4__VAL',
-    'ADMIN_NETWORKS_INPUT',
+    'ADMIN_NETWORKS_FLASK',
     'LIBCAMERA__IMAGE_FILE_TYPE',
     'LIBCAMERA__EXTRA_OPTIONS',
     'INDI_CONFIG_DEFAULTS',
