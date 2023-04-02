@@ -34,7 +34,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Moon mode - reduced gain when the moon is overhead
 * Remote INDI server operation - operate camera remotely over the network
 * Pseudo-Sky Quality Meter - Use your all sky camera to measure sky brightness/quality
-* SQLite database stores image metadata
+* Relational database stores image and timelapse information
+    * SQLite (default)
+    * MySQL/MariaDB
 
 ## Requirements
 * A computer running a modern Linux distribution, such as a Raspberry Pi
@@ -45,9 +47,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * 512MB is adequate for image acquisition, but not enough to generate timelapse videos with ffmpeg
     * 64GB of storage minimum to store 2 months of videos and 30 days of JPEG images.
     * (Optional) Internet connectivity for image uploading
-* An INDI supported camera
-    * CPU architecture support varies between camera manufacturers
-* NEW: A libcamera supported camera
+* Camera
+    * Most INDI supported astro/planetary cameras will work
+    * libcamera/Raspberry Pi camera module
 
 ### Distibution support
 | Distribution          | Arch           | Note |
