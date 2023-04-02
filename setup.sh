@@ -320,7 +320,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
             wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+            echo "deb https://www.astroberry.io/repo/ bullseye main" | sudo tee /etc/apt/sources.list.d/astroberry.list
         fi
     else
         INSTALL_INDI="false"
@@ -466,7 +466,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
             wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
         fi
     fi
 
@@ -598,7 +598,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
             wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            sudo su -c "echo 'deb https://www.astroberry.io/repo/ bullseye main' > /etc/apt/sources.list.d/astroberry.list"
+            echo "deb https://www.astroberry.io/repo/ bullseye main" | sudo tee /etc/apt/sources.list.d/astroberry.list
         fi
     else
         INSTALL_INDI="false"
@@ -735,7 +735,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
             wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            sudo su -c "echo 'deb https://www.astroberry.io/repo/ buster main' > /etc/apt/sources.list.d/astroberry.list"
+            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
         fi
     else
         INSTALL_INDI="false"

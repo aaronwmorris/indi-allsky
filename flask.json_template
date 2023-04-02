@@ -31,6 +31,16 @@
     "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
     "PASSWORD_KEY" : "",
 
+    "ADMIN_NETWORKS" : [
+        "10.0.0.0/8",
+        "192.168.0.0/16",
+        "172.16.0.0/12",
+        "169.254.0.0/16",
+        "fe80::/64",
+        "127.0.0.1/32",
+        "::1/128"
+    ],
+
     "INDISERVER_SERVICE_NAME" : "%INDISERVER_SERVICE_NAME%.service",
     "ALLSKY_SERVICE_NAME" : "%ALLSKY_SERVICE_NAME%.service",
     "GUNICORN_SERVICE_NAME" : "%GUNICORN_SERVICE_NAME%.service"

@@ -16,6 +16,7 @@
     <button class="nav-link" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
     <button class="nav-link" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
     <button class="nav-link" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
+    <button class="nav-link" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
     <button class="nav-link" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
     <button class="nav-link" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">S3 Object Storage</button>
     <button class="nav-link" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
@@ -1615,24 +1616,6 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.GPS_TIMESYNC.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
-                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Sync system time from GPS.  Requires GPS hardware and GPSd installation.</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.NIGHT_SUN_ALT_DEG.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1664,6 +1647,42 @@
         <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
     </div>
 
+</div><!-- end location tab -->
+<div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ENCRYPT_PASSWORDS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
+                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Encrypt passwords in the database</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GPS_TIMESYNC.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
+                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Sync system time from GPS.  Requires GPS hardware and GPSd installation.</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
+        </div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -1692,23 +1711,24 @@
         <div class="col-sm-8">Enable serving images/videos exclusively from non-local sources (S3, etc)</div>
     </div>
 
-</div><!-- end location tab -->
-<div class="tab-pane fade" id="nav-filetransfer" role="tabpanel" aria-labelledby="nav-filetransfer-tab">
-
     <hr />
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.ENCRYPT_PASSWORDS.label }}
+            {{ form_config.ADMIN_NETWORKS_FLASK.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
-                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
+            {{ form_config.ADMIN_NETWORKS_FLASK(class='form-control bg-secondary', rows='10') }}
+            <div id="ADMIN_NETWORKS_FLASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Encrypt passwords in the database</div>
+        <div class="col-sm-8">
+            <div>Networks which administrative requests have to originate</div>
+            <div>(updated in flask.json)</div>
+        </div>
     </div>
+
+</div><!-- end admin tab -->
+<div class="tab-pane fade" id="nav-filetransfer" role="tabpanel" aria-labelledby="nav-filetransfer-tab">
 
     <hr />
 
@@ -2609,6 +2629,7 @@ const field_names = [
     'FITSHEADERS__3__VAL',
     'FITSHEADERS__4__KEY',
     'FITSHEADERS__4__VAL',
+    'ADMIN_NETWORKS_FLASK',
     'LIBCAMERA__IMAGE_FILE_TYPE',
     'LIBCAMERA__EXTRA_OPTIONS',
     'INDI_CONFIG_DEFAULTS',

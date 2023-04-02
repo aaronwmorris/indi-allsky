@@ -1047,6 +1047,11 @@ class ConfigView(FormView):
         indi_config_defaults = self.indi_allsky_config.get('INDI_CONFIG_DEFAULTS', {})
         form_data['INDI_CONFIG_DEFAULTS'] = json.dumps(indi_config_defaults, indent=4)
 
+
+        # populated from flask config
+        form_data['ADMIN_NETWORKS_FLASK'] = '\n'.join(app.config.get('ADMIN_NETWORKS', []))
+
+
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
         return context
@@ -2066,9 +2071,17 @@ class AjaxSystemInfoView(BaseView):
 
         elif service == 'system':
             if command == 'reboot':
+                # allowing rebooting from non-admin networks for now
                 r = self.rebootSystemd()
             elif command == 'poweroff':
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
+
                 r = self.poweroffSystemd()
+
             elif command == 'validate_db':
                 message_list = self.validateDbEntries()
 
@@ -2077,9 +2090,11 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(json_data)
             elif command == 'flush_images':
-                ### testing
-                #time.sleep(5.0)
-                #return jsonify({'success-message' : 'Test'})
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
 
                 image_count = self.flushImages(session['camera_id'])
 
@@ -2088,9 +2103,12 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(json_data)
             elif command == 'flush_timelapses':
-                ### testing
-                #time.sleep(5.0)
-                #return jsonify({'success-message' : 'Test'})
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
+
 
                 file_count = self.flushTimelapses(session['camera_id'])
 
@@ -2568,6 +2586,14 @@ class AjaxTimelapseGeneratorView(BaseView):
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
             return jsonify(form_errors), 400
+
+
+        if not self.verify_admin_network():
+            json_data = {
+                'form_global' : ['Request not from admin network (flask.json)'],
+            }
+            return jsonify(json_data), 400
+
 
         action = request.json['ACTION_SELECT']
         day_select_str = request.json['DAY_SELECT']
@@ -3178,12 +3204,12 @@ class AjaxUserInfoView(BaseView):
 
 
         new_name = str(request.json['NAME'])
-        new_email = str(request.json['EMAIL'])
         new_password = str(request.json['PASSWORD'])
+        # email is read only
+        # admin is read only
 
 
         current_user.name = new_name
-        current_user.email = new_email
 
 
         if new_password:

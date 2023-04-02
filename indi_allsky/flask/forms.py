@@ -1568,7 +1568,6 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
         #    raise ValidationError('Switch {0:s} requires at least one "on" key'.format(k))
 
 
-
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = (
         ('indi', 'INDI'),
@@ -1894,8 +1893,11 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
+
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
     CONFIG_NOTE                      = StringField('Config Note')
+
+    ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})
 
 
     #def __init__(self, *args, **kwargs):
@@ -2899,9 +2901,9 @@ def USER__PASSWORD_validator(form, field):
 
 
 class IndiAllskyUserInfoForm(FlaskForm):
-    USERNAME          = StringField('Username', render_kw={'readonly' : True})
+    USERNAME          = StringField('Username', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
-    EMAIL             = StringField('Email', validators=[DataRequired(), USER__EMAIL_validator])
+    EMAIL             = StringField('Email', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
     PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[USER__PASSWORD_validator])
     PASSWORD2         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[])
