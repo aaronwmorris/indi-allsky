@@ -130,6 +130,8 @@ class BaseView(View):
                 return True
 
 
+        app.logger.warning('Client IP %s not in any admin network', client_addr)
+        return False
 
 
 class TemplateView(BaseView):
