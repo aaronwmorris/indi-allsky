@@ -1931,10 +1931,14 @@ else
         sudo a2enmod rewrite
         sudo a2enmod headers
         sudo a2enmod ssl
+        #sudo a2enmod http2
         sudo a2enmod proxy
         sudo a2enmod proxy_http
+        #sudo a2enmod proxy_http2
+
         sudo a2dissite 000-default
         sudo a2dissite default-ssl
+
         sudo a2ensite indi-allsky
 
         if [[ ! -f "/etc/apache2/ports.conf_pre_indiallsky" ]]; then
