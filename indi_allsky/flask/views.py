@@ -1439,7 +1439,7 @@ class AjaxSetTimeView(BaseView):
         new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
-        systemtime_utc = datetime.now().astimezone(tz=timezone.utc)
+        systemtime_utc = datetime.utcnow()
 
         time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
         app.logger.info('Time offset: %ds', int(time_offset))

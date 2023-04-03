@@ -1222,9 +1222,9 @@ class IndiAllSky(object):
 
                     # update system time from GPS offset
                     if self.update_time_offset:
-                        now_ts = datetime.now().timestamp()
+                        utcnow = datetime.utcnow()
 
-                        gps_utc = datetime.fromtimestamp(now_ts - self.update_time_offset).astimezone(tz=timezone.utc)
+                        gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
 
                         try:
                             self.setTimeSystemd(gps_utc)
@@ -1829,7 +1829,7 @@ class IndiAllSky(object):
             return
 
 
-        systemtime_utc = datetime.now().astimezone(tz=timezone.utc)
+        systemtime_utc = datetime.utcnow()
         logger.info('System time: %s', systemtime_utc)
 
         time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
