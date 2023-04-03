@@ -1233,6 +1233,14 @@ class IndiAllSky(object):
 
                         self.update_time_offset = None
 
+                        # time change, need to update next frame time
+                        if self.night:
+                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD']
+                        else:
+                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD_DAY']
+
+                        break  # go ahead and break the loop to update other timestamps
+
 
 
                     if now >= next_frame_time:
