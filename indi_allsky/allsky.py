@@ -135,7 +135,7 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
-        self.gps_update_time_offset = None  # when time needs to be updated, this will be the offset
+        self.update_time_offset = None  # when time needs to be updated, this will be the offset
 
         self.image_q = Queue()
         self.image_error_q = Queue()
@@ -1221,17 +1221,17 @@ class IndiAllSky(object):
 
 
                     # update system time from GPS offset
-                    if self.gps_update_time_offset:
+                    if self.update_time_offset:
                         now_ts = datetime.now().timestamp()
 
-                        gps_utc = datetime.fromtimestamp(now_ts - self.gps_update_time_offset).astimezone(tz=datetime.timezone.utc)
+                        gps_utc = datetime.fromtimestamp(now_ts - self.update_time_offset).astimezone(tz=datetime.timezone.utc)
 
                         try:
                             self.setTimeSystemd(gps_utc)
                         except dbus.exceptions.DBusException as e:
                             logger.error('DBus Error: %s', str(e))
 
-                        self.gps_update_time_offset = None
+                        self.update_time_offset = None
 
 
 
@@ -1839,7 +1839,7 @@ class IndiAllSky(object):
         # if there is a delta of more than 60 seconds, update system time
         if abs(time_offset) > 60:
             # time will be updated next time the camera is not taking an exposure
-            self.gps_update_time_offset = time_offset
+            self.update_time_offset = time_offset
 
 
     def setTimeSystemd(self, new_datetime_utc):
@@ -2420,6 +2420,7 @@ class IndiAllSky(object):
 
 
         reload_received = False
+
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
                 logger.info('Queuing manual task %d', task.id)
@@ -2439,7 +2440,15 @@ class IndiAllSky(object):
 
                     reload_received = True
                     os.kill(os.getpid(), signal.SIGHUP)
+
                     task.setSuccess('Reloaded indi-allsky process')
+
+                elif action == 'settime':
+                    self.update_time_offset = task.data['time_offset']
+                    logger.info('Set time offset: %ds', int(self.update_time_offset))
+
+                    task.setSuccess('Set time queued')
+
                 else:
                     logger.error('Unknown action: %s', action)
                     task.setFailed()
