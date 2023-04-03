@@ -1224,7 +1224,7 @@ class IndiAllSky(object):
                     if self.update_time_offset:
                         now_ts = datetime.now().timestamp()
 
-                        gps_utc = datetime.fromtimestamp(now_ts - self.update_time_offset).astimezone(tz=datetime.timezone.utc)
+                        gps_utc = datetime.fromtimestamp(now_ts - self.update_time_offset).astimezone(tz=timezone.utc)
 
                         try:
                             self.setTimeSystemd(gps_utc)
