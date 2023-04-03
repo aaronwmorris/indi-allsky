@@ -135,6 +135,8 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
+        self.gps_update_time_offset = None  # when time needs to be updated, this will be the offset
+
         self.image_q = Queue()
         self.image_error_q = Queue()
         self.image_worker = None
@@ -1218,6 +1220,21 @@ class IndiAllSky(object):
                     self.periodic_tasks()
 
 
+                    # update system time from GPS offset
+                    if self.gps_update_time_offset:
+                        now_ts = datetime.now().timestamp()
+
+                        gps_utc = datetime.fromtimestamp(now_ts - self.gps_update_time_offset).astimezone(tz=datetime.timezone.utc)
+
+                        try:
+                            self.setTimeSystemd(gps_utc)
+                        except dbus.exceptions.DBusException as e:
+                            logger.error('DBus Error: %s', str(e))
+
+                        self.gps_update_time_offset = None
+
+
+
                     if now >= next_frame_time:
                         #######################
                         # Start next exposure #
@@ -1821,17 +1838,13 @@ class IndiAllSky(object):
 
         # if there is a delta of more than 60 seconds, update system time
         if abs(time_offset) > 60:
-            logger.warning('Setting system time to %s (UTC)', gps_utc)
-
-            # This may not result in a perfect sync.  Due to delays in commands,
-            # time can still be off by several seconds
-            try:
-                self.setTimeSystemd(gps_utc)
-            except dbus.exceptions.DBusException as e:
-                logger.error('DBus Error: %s', str(e))
+            # time will be updated next time the camera is not taking an exposure
+            self.gps_update_time_offset = time_offset
 
 
     def setTimeSystemd(self, new_datetime_utc):
+        logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
+
         epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
         epoch_msec = epoch * 1000000
 
