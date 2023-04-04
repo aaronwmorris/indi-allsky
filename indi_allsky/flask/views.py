@@ -1437,9 +1437,9 @@ class AjaxSetTimeView(BaseView):
 
         new_datetime_str = str(request.json['NEW_DATETIME'])
         new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
-        app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
 
         try:
             self.setTimeSystemd(new_datetime_utc)
@@ -1454,6 +1454,29 @@ class AjaxSetTimeView(BaseView):
         message = {
             'success-message' : 'System time updated',
         }
+
+
+        #systemtime_utc = datetime.utcnow()
+
+        #time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
+        #app.logger.info('Time offset: %ds', int(time_offset))
+
+        #task_settime = IndiAllSkyDbTaskQueueTable(
+        #    queue=TaskQueueQueue.MAIN,
+        #    state=TaskQueueState.MANUAL,
+        #    data={
+        #        'action'      : 'settime',
+        #        'time_offset' : time_offset,
+        #    },
+        #)
+
+        #db.session.add(task_settime)
+        #db.session.commit()
+
+        ## form passed validation
+        #message = {
+        #    'success-message' : 'System time update queued.',
+        #}
 
         return jsonify(message)
 
@@ -1473,7 +1496,6 @@ class AjaxSetTimeView(BaseView):
         r2 = manager.SetTime(epoch_msec, False, False)
 
         return r2
-
 
 
 class ImageViewerView(FormView):

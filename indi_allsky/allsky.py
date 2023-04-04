@@ -135,6 +135,8 @@ class IndiAllSky(object):
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
+        self.update_time_offset = None  # when time needs to be updated, this will be the offset
+
         self.image_q = Queue()
         self.image_error_q = Queue()
         self.image_worker = None
@@ -1218,6 +1220,29 @@ class IndiAllSky(object):
                     self.periodic_tasks()
 
 
+                    # update system time from GPS offset
+                    if self.update_time_offset:
+                        utcnow = datetime.utcnow()
+
+                        gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
+
+                        try:
+                            self.setTimeSystemd(gps_utc)
+                        except dbus.exceptions.DBusException as e:
+                            logger.error('DBus Error: %s', str(e))
+
+                        self.update_time_offset = None
+
+                        # time change, need to update next frame time
+                        if self.night:
+                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD']
+                        else:
+                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD_DAY']
+
+                        break  # go ahead and break the loop to update other timestamps
+
+
+
                     if now >= next_frame_time:
                         #######################
                         # Start next exposure #
@@ -1812,7 +1837,7 @@ class IndiAllSky(object):
             return
 
 
-        systemtime_utc = datetime.now().astimezone(tz=timezone.utc)
+        systemtime_utc = datetime.utcnow()
         logger.info('System time: %s', systemtime_utc)
 
         time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
@@ -1821,17 +1846,13 @@ class IndiAllSky(object):
 
         # if there is a delta of more than 60 seconds, update system time
         if abs(time_offset) > 60:
-            logger.warning('Setting system time to %s (UTC)', gps_utc)
-
-            # This may not result in a perfect sync.  Due to delays in commands,
-            # time can still be off by several seconds
-            try:
-                self.setTimeSystemd(gps_utc)
-            except dbus.exceptions.DBusException as e:
-                logger.error('DBus Error: %s', str(e))
+            # time will be updated next time the camera is not taking an exposure
+            self.update_time_offset = time_offset
 
 
     def setTimeSystemd(self, new_datetime_utc):
+        logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
+
         epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
         epoch_msec = epoch * 1000000
 
@@ -2407,6 +2428,7 @@ class IndiAllSky(object):
 
 
         reload_received = False
+
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
                 logger.info('Queuing manual task %d', task.id)
@@ -2426,7 +2448,15 @@ class IndiAllSky(object):
 
                     reload_received = True
                     os.kill(os.getpid(), signal.SIGHUP)
+
                     task.setSuccess('Reloaded indi-allsky process')
+
+                elif action == 'settime':
+                    self.update_time_offset = task.data['time_offset']
+                    logger.info('Set time offset: %ds', int(self.update_time_offset))
+
+                    task.setSuccess('Set time queued')
+
                 else:
                     logger.error('Unknown action: %s', action)
                     task.setFailed()
