@@ -531,6 +531,35 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         self.gps_driver_exec = 'indi_fake_gps'
 
 
+class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
+    # this model is almost identical to the imx477
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx519, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx519'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 4656,
+            'height'        : 3496,
+            'pixel'         : 1.22,
+            'min_gain'      : 1,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
 class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
@@ -544,7 +573,7 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'height'        : 6944,
             'pixel'         : 0.8,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 22,  # unverified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
@@ -573,7 +602,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'height'        : 2592,
             'pixel'         : 1.4,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 22,  # unverified
             'min_exposure'  : 0.001,
             'max_exposure'  : 112.0,
             'cfa'           : 'BGGR',  # untested
@@ -601,7 +630,7 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 22,  # unverified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'GRGB',
@@ -629,7 +658,7 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 22,  # unverified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
