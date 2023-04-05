@@ -195,8 +195,9 @@ $('#form_userinfo').on('submit', function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
 
-            $('#PASSWORD').val('');
-            $('#PASSWORD2').val('');
+            $('#CURRENT_PASSWORD').val('');
+            $('#NEW_PASSWORD').val('');
+            $('#NEW_PASSWORD2').val('');
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
