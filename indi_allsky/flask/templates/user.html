@@ -67,24 +67,37 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <hr />
+
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_userinfo.PASSWORD.label(class='col-form-label') }}
+            {{ form_userinfo.CURRENT_PASSWORD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
-            {{ form_userinfo.PASSWORD(class='form-control bg-secondary') }}
-            <div id="PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_userinfo.CURRENT_PASSWORD(class='form-control bg-secondary') }}
+            <div id="CURRENT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7"></div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_userinfo.PASSWORD2.label(class='col-form-label') }}
+            {{ form_userinfo.NEW_PASSWORD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
-            {{ form_userinfo.PASSWORD2(class='form-control bg-secondary') }}
-            <div id="PASSWORD2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_userinfo.NEW_PASSWORD(class='form-control bg-secondary') }}
+            <div id="NEW_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_userinfo.NEW_PASSWORD2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_userinfo.NEW_PASSWORD2(class='form-control bg-secondary') }}
+            <div id="NEW_PASSWORD2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7"></div>
     </div>
@@ -114,8 +127,9 @@ const field_names = [
     'USERNAME',
     'NAME',
     'EMAIL',
-    'PASSWORD',
-    'PASSWORD2',
+    'CURRENT_PASSWORD',
+    'NEW_PASSWORD',
+    'NEW_PASSWORD2',
 ];
 
 const checkbox_field_names = [
@@ -181,8 +195,9 @@ $('#form_userinfo').on('submit', function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
 
-            $('#PASSWORD').val('');
-            $('#PASSWORD2').val('');
+            $('#CURRENT_PASSWORD').val('');
+            $('#NEW_PASSWORD').val('');
+            $('#NEW_PASSWORD2').val('');
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);

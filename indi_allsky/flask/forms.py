@@ -2894,7 +2894,7 @@ def USER__EMAIL_validator(form, field):
         raise ValidationError('Email address is not valid')
 
 
-def USER__PASSWORD_validator(form, field):
+def USER__NEW_PASSWORD_validator(form, field):
     if not field.data:
         return
 
@@ -2907,20 +2907,27 @@ class IndiAllskyUserInfoForm(FlaskForm):
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
     EMAIL             = StringField('Email', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
-    PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[USER__PASSWORD_validator])
-    PASSWORD2         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[])
+    CURRENT_PASSWORD  = PasswordField('Current Password', widget=PasswordInput(), validators=[])
+    NEW_PASSWORD      = PasswordField('New Password', widget=PasswordInput(), validators=[USER__NEW_PASSWORD_validator])
+    NEW_PASSWORD2     = PasswordField('', widget=PasswordInput(), validators=[])
 
 
     def validate(self, user):
         result = super(IndiAllskyUserInfoForm, self).validate()
 
-        if self.PASSWORD.data != self.PASSWORD2.data:
-            self.PASSWORD2.errors.append('Passwords do not match')
+        if self.CURRENT_PASSWORD.data:
+            if not argon2.verify(self.CURRENT_PASSWORD.data, user.password):
+                self.CURRENT_PASSWORD.errors.append('Current password is not valid')
+                result = False
+
+
+        if self.NEW_PASSWORD.data != self.NEW_PASSWORD2.data:
+            self.NEW_PASSWORD2.errors.append('Passwords do not match')
             result = False
 
 
-        if argon2.verify(self.PASSWORD.data, user.password):
-            self.PASSWORD.errors.append('Password cannot be the same as the old password')
+        if argon2.verify(self.NEW_PASSWORD.data, user.password):
+            self.NEW_PASSWORD.errors.append('Password cannot be the same as the old password')
             result = False
 
         return result

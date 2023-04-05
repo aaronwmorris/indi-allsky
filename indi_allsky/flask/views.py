@@ -3225,8 +3225,17 @@ class AjaxUserInfoView(BaseView):
             return jsonify(form_errors), 400
 
 
+        # check current password (again)
+        current_password = str(request.json['CURRENT_PASSWORD'])
+        if not argon2.verify(current_password, current_user.password):
+            message = {
+                'CURRENT_PASSWORD' : ['Current password is not valid'],
+            }
+            return jsonify(message), 400
+
+
         new_name = str(request.json['NAME'])
-        new_password = str(request.json['PASSWORD'])
+        new_password = str(request.json['NEW_PASSWORD'])
         # email is read only
         # admin is read only
 
