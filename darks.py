@@ -31,7 +31,7 @@ if __name__ == "__main__":
         ),
     )
     argparser.add_argument(
-        '--count',
+        '--Count',
         '-C',
         help='image count',
         type=int,
