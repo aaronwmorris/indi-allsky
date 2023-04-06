@@ -2053,11 +2053,13 @@ if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         imx378
         imx477
         imx477_noir
+        imx477_af
         imx519
         imx708
         imx708_noir
         imx708_wide
         imx708_wide_noir
+        arducam_64mp
     "
 
     for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
