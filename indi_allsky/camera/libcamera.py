@@ -576,7 +576,7 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'max_gain'      : 22,  # unverified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
-            'cfa'           : 'BGGR',
+            'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
 
