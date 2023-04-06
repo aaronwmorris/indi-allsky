@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
 
     iad = IndiAllSkyDarks()
-    iad.count = args.count
+    iad.count = args.Count
     iad.temp_delta = args.temp_delta
     iad.time_delta = args.Time_delta
     iad.bitmax = args.bitmax
