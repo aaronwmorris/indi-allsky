@@ -3367,11 +3367,12 @@ class CameraLensView(TemplateView):
 
         arcsec_pixel = camera.pixelSize / camera.lensFocalLength * 206.2648
         context['arcsec_pixel'] = arcsec_pixel
-        context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600)
+        context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600.0)
 
 
         image_circle_diameter = self.indi_allsky_config['IMAGE_CIRCLE_MASK']['DIAMETER']
         context['image_circle_diameter'] = image_circle_diameter
+        context['image_circle_diameter_mm'] = image_circle_diameter * camera.pixelSize / 1000.0
 
 
         if image_circle_diameter <= camera.width:
