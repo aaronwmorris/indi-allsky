@@ -29,6 +29,7 @@ import astropy
 import flask
 
 from ..version import __version__
+from .. import constants
 
 from flask import request
 from flask import session
@@ -3332,6 +3333,47 @@ class AjaxSelectCameraView(BaseView):
         return jsonify({})
 
 
+class CameraLensView(TemplateView):
+
+    def __init__(self, **kwargs):
+        super(CameraLensView, self).__init__(**kwargs)
+
+
+    def get_context(self):
+        context = super(CameraLensView, self).get_context()
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .one()
+
+
+        context['camera'] = camera
+        context['cfa'] = constants.CFA_MAP_STR[camera.cfa]
+
+        context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
+
+        arcsec_pixel = camera.lensFocalLength * camera.pixelSize * 206.2648
+        context['arcsec_pixel'] = arcsec_pixel
+
+        image_circle_diameter = self.indi_allsky_config['IMAGE_CIRCLE_MASK']['DIAMETER']
+
+        if image_circle_diameter <= camera.width:
+            arcsec_fov_width = image_circle_diameter * arcsec_pixel
+        else:
+            arcsec_fov_width = camera.width * arcsec_pixel
+
+        if image_circle_diameter <= camera.height:
+            arcsec_fov_height = image_circle_diameter * arcsec_pixel
+        else:
+            arcsec_fov_height = camera.height * arcsec_pixel
+
+
+        context['arcsec_fov_width'] = arcsec_fov_width
+        context['arcsec_fov_height'] = arcsec_fov_height
+
+        return context
+
+
 
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
@@ -3372,6 +3414,7 @@ bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_v
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 
 # hidden
+bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_view', template_name='cameraLens.html'))
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))

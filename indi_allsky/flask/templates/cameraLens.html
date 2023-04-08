@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Camera/Lens Info{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Name</div>
+        <div class="col-2">{{ camera.name }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Resolution</div>
+        <div class="col-2">{{ camera.width}}x{{ camera.height }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Pixels</div>
+        <div class="col-2">{{ "%0.2f"|format(camera.pixelSize | float) }}&micro;m</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">CFA</div>
+        <div class="col-2">{{ cfa }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Bits</div>
+        <div class="col-2">{{ camera.bits | int }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Gain</div>
+        <div class="col-2">{{ camera.minGain | int }}-{{ camera.maxGain | int }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Exposure</div>
+        <div class="col-2">{{ "%0.6f"|format(camera.minExposure | float) }}-{{ camera.maxExposure | int }}s</div>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Lens</div>
+        <div class="col-2">{{ camera.lensName }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Focal Length</div>
+        <div class="col-2">{{ "%0.2f"|format(camera.lensFocalLength | float) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Aperture</div>
+        <div class="col-2">{{ "%0.2f"|format(lensAperture | float) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Focal Ratio</div>
+        <div class="col-2">&#402;/{{ "%0.2f"|format(camera.lensFocalRatio | float) }}</div>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Arcsec/px</div>
+        <div class="col-2">{{ "%0.2f"|format(arcsec_pixel | float) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">FoV</div>
+        <div class="col-2">{{ "%0.2f"|format(arcsec_fov_width | float) }}x{{ "%0.2f"|format(arcsec_fov_height | float) }}</div></div>
+    </div>
+
+{% endblock %}

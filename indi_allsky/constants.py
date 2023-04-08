@@ -49,7 +49,7 @@ CFA_STR_MAP = {
     'GRBG' : CFA_GRBG,
     'BGGR' : CFA_BGGR,
     'GBRG' : CFA_GBRG,
-    None   : None
+    None   : None,
 }
 
 CFA_MAP_STR = {
@@ -57,5 +57,6 @@ CFA_MAP_STR = {
     CFA_GRBG : 'GRBG',
     CFA_BGGR : 'BGGR',
     CFA_GBRG : 'GBRG',
+    None     : 'None',
 }
 
