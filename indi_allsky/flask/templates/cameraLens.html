@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Camera/Lens Info{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Name</div>
+        <div class="col-4">{{ camera.name }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Resolution</div>
+        <div class="col-4">{{ camera.width }} x {{ camera.height }} ({{ camera_diagonal | int }} diag)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Dimensions</div>
+        <div class="col-4">{{ "%0.1f"|format(camera_width_mm | float) }}mm x {{ "%0.1f"|format(camera_height_mm | float) }}mm ({{ "%0.1f"|format(camera_diagonal_mm | float) }}mm diag)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Pixels</div>
+        <div class="col-4">{{ "%0.2f"|format(camera.pixelSize | float) }}&micro;m</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">CFA</div>
+        <div class="col-4">{{ camera_cfa }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Bits</div>
+        <div class="col-4">{{ camera.bits | int }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Gain</div>
+        <div class="col-4">{{ camera.minGain | int }}-{{ camera.maxGain | int }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Exposure</div>
+        <div class="col-4">{{ "%0.6f"|format(camera.minExposure | float) }}-{{ camera.maxExposure | int }}s</div>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Lens</div>
+        <div class="col-4">{{ camera.lensName }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Focal Length</div>
+        <div class="col-4">{{ "%0.2f"|format(camera.lensFocalLength | float) }}mm</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Aperture</div>
+        <div class="col-4">{{ "%0.2f"|format(lensAperture | float) }}mm</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Focal Ratio</div>
+        <div class="col-4">&#402;/{{ "%0.2f"|format(camera.lensFocalRatio | float) }}</div>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-2">Image circle</div>
+        <div class="col-4">{{ image_circle_diameter }}px ({{ "%0.1f"|format(image_circle_diameter_mm | float) }}mm)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Arcsec/px</div>
+        <div class="col-4">{{ "%0.2f"|format(arcsec_pixel | float) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Deg/px</div>
+        <div class="col-4">{{ dms_pixel[0] | int }}&deg; {{ dms_pixel[1] | int }}' {{ dms_pixel[2] | int }}"</div>
+        <div class="col-6">This is only true at the center of the image.  The image becomes more distorted/compressed at the edge of the view.</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">FoV</div>
+        <div class="col-4">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg; ({{ "%0.1f"|format(deg_fov_diagonal | float) }}&deg; diag)</div>
+    </div>
+
+    <hr />
+
+{% endblock %}
