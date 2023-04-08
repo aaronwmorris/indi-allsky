@@ -22,13 +22,18 @@
     </div>
 
     <div class="row">
+        <div class="col-2">Diagonal</div>
+        <div class="col-2">{{ camera_diagonal | int }}</div>
+    </div>
+
+    <div class="row">
         <div class="col-2">Pixels</div>
         <div class="col-2">{{ "%0.2f"|format(camera.pixelSize | float) }}&micro;m</div>
     </div>
 
     <div class="row">
         <div class="col-2">CFA</div>
-        <div class="col-2">{{ cfa }}</div>
+        <div class="col-2">{{ camera_cfa }}</div>
     </div>
 
     <div class="row">
@@ -75,7 +80,6 @@
         <div class="col-2">{{ image_circle_diameter }}</div>
     </div>
 
-
     <div class="row">
         <div class="col-2">Arcsec/px</div>
         <div class="col-2">{{ "%0.2f"|format(arcsec_pixel | float) }}</div>
@@ -88,7 +92,7 @@
 
     <div class="row">
         <div class="col-2">FoV</div>
-        <div class="col-2">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg;</div></div>
+        <div class="col-2">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg; ({{ "%0.1f"|format(deg_fov_diagonal | float) }}&deg; diag)</div>
     </div>
 
 {% endblock %}
