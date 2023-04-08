@@ -3349,13 +3349,17 @@ class CameraLensView(TemplateView):
 
         context['camera'] = camera
         context['cfa'] = constants.CFA_MAP_STR[camera.cfa]
-
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
+
 
         arcsec_pixel = camera.lensFocalLength * camera.pixelSize * 206.2648
         context['arcsec_pixel'] = arcsec_pixel
+        context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600)
+
 
         image_circle_diameter = self.indi_allsky_config['IMAGE_CIRCLE_MASK']['DIAMETER']
+        context['image_circle_diameter'] = image_circle_diameter
+
 
         if image_circle_diameter <= camera.width:
             arcsec_fov_width = image_circle_diameter * arcsec_pixel
@@ -3368,10 +3372,22 @@ class CameraLensView(TemplateView):
             arcsec_fov_height = camera.height * arcsec_pixel
 
 
-        context['arcsec_fov_width'] = arcsec_fov_width
-        context['arcsec_fov_height'] = arcsec_fov_height
+        #context['arcsec_fov_width'] = arcsec_fov_width
+        #context['arcsec_fov_height'] = arcsec_fov_height
+
+        context['deg_fov_width'] = arcsec_fov_width / 3600
+        context['deg_fov_height'] = arcsec_fov_height / 3600
 
         return context
+
+
+    def decdeg2dms(self, dd):
+        is_positive = dd >= 0
+        dd = abs(dd)
+        minutes, seconds = divmod(dd * 3600, 60)
+        degrees, minutes = divmod(minutes, 60)
+        degrees = degrees if is_positive else -degrees
+        return degrees, minutes, seconds
 
 
 

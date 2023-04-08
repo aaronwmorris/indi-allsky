@@ -71,13 +71,24 @@
     <hr />
 
     <div class="row">
+        <div class="col-2">Image circle</div>
+        <div class="col-2">{{ image_circle_diameter }}</div>
+    </div>
+
+
+    <div class="row">
         <div class="col-2">Arcsec/px</div>
         <div class="col-2">{{ "%0.2f"|format(arcsec_pixel | float) }}</div>
     </div>
 
     <div class="row">
+        <div class="col-2">Deg/px</div>
+        <div class="col-2">{{ dms_pixel[0] | int }}&deg; {{ dms_pixel[1] | int }}' {{ dms_pixel[2] | int }}"</div>
+    </div>
+
+    <div class="row">
         <div class="col-2">FoV</div>
-        <div class="col-2">{{ "%0.2f"|format(arcsec_fov_width | float) }}x{{ "%0.2f"|format(arcsec_fov_height | float) }}</div></div>
+        <div class="col-2">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg;</div></div>
     </div>
 
 {% endblock %}
