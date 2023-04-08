@@ -18,12 +18,12 @@
 
     <div class="row">
         <div class="col-2">Resolution</div>
-        <div class="col-4">{{ camera.width}}x{{ camera.height }}</div>
+        <div class="col-4">{{ camera.width }} x {{ camera.height }} ({{ camera_diagonal | int }} diag)</div>
     </div>
 
     <div class="row">
-        <div class="col-2">Diagonal</div>
-        <div class="col-4">{{ camera_diagonal | int }}</div>
+        <div class="col-2">Dimensions</div>
+        <div class="col-4">{{ "%0.1f"|format(camera_width_mm | float) }}mm x {{ "%0.1f"|format(camera_height_mm | float) }}mm ({{ "%0.1f"|format(camera_diagonal_mm | float) }}mm diag)</div>
     </div>
 
     <div class="row">
@@ -60,12 +60,12 @@
 
     <div class="row">
         <div class="col-2">Focal Length</div>
-        <div class="col-4">{{ "%0.2f"|format(camera.lensFocalLength | float) }}</div>
+        <div class="col-4">{{ "%0.2f"|format(camera.lensFocalLength | float) }}mm</div>
     </div>
 
     <div class="row">
         <div class="col-2">Aperture</div>
-        <div class="col-4">{{ "%0.2f"|format(lensAperture | float) }}</div>
+        <div class="col-4">{{ "%0.2f"|format(lensAperture | float) }}mm</div>
     </div>
 
     <div class="row">

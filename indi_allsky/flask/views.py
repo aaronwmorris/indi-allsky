@@ -3356,6 +3356,15 @@ class CameraLensView(TemplateView):
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
 
 
+        camera_width_mm = camera.width * camera.pixelSize / 1000.0
+        camera_height_mm = camera.height * camera.pixelSize / 1000.0
+        camera_diagonal_mm = math.hypot(camera_width_mm, camera_height_mm)
+
+        context['camera_width_mm'] = camera_width_mm
+        context['camera_height_mm'] = camera_height_mm
+        context['camera_diagonal_mm'] = camera_diagonal_mm
+
+
         arcsec_pixel = camera.pixelSize / camera.lensFocalLength * 206.2648
         context['arcsec_pixel'] = arcsec_pixel
         context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600)
