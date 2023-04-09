@@ -277,6 +277,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+            'driver'      : self.camera_server,
 
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
@@ -598,6 +599,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+            'driver'      : self.camera_server,
 
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),

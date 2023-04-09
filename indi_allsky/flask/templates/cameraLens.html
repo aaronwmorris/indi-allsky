@@ -17,6 +17,11 @@
     </div>
 
     <div class="row">
+        <div class="col-2">Driver</div>
+        <div class="col-4">{{ camera.driver }}</div>
+    </div>
+
+    <div class="row">
         <div class="col-2">Resolution</div>
         <div class="col-4">{{ camera.width }} x {{ camera.height }} ({{ camera_diagonal | int }} diag)</div>
     </div>
@@ -97,5 +102,9 @@
     </div>
 
     <hr />
+
+    <div class="row">
+        <div><span class="badge rounded-pill bg-info">Note</span> The indi-allsky service will need to be reloaded if any changes are made to these parameters.</div>
+    <div class="row">
 
 {% endblock %}
