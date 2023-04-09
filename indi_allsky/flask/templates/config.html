@@ -37,7 +37,7 @@
             {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
             <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"></div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
     </div>
 
     <hr />
@@ -1565,7 +1565,7 @@
             {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
             <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">Optional information</div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
     </div>
 
     <div class="form-group row">
