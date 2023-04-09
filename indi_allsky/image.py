@@ -2546,7 +2546,7 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_v.value and not self.moonmode_v:
+        if self.night_v.value and not self.moonmode_v.value:
             if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
                 label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
                 label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
