@@ -3370,6 +3370,7 @@ class CameraLensView(TemplateView):
         arcsec_pixel = camera.pixelSize / camera.lensFocalLength * 206.2648
         context['arcsec_pixel'] = arcsec_pixel
         context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600.0)
+        context['arcsec_um'] = arcsec_pixel / camera.pixelSize
 
 
         image_circle_diameter = int(camera.lensImageCircle)  # might be null

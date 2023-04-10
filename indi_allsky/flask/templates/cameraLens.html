@@ -97,6 +97,11 @@
     </div>
 
     <div class="row">
+        <div class="col-2">Arcsec/&micro;m</div>
+        <div class="col-4">{{ "%0.2f"|format(arcsec_um | float) }}</div>
+    </div>
+
+    <div class="row">
         <div class="col-2">FoV</div>
         <div class="col-4">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg; ({{ "%0.1f"|format(deg_fov_diagonal | float) }}&deg; diag)</div>
     </div>
