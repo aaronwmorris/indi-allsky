@@ -41,6 +41,7 @@ class IndiAllSkyConfigBase(object):
         "LENS_NAME" : "AllSky Lens",
         "LENS_FOCAL_LENGTH" : 2.5,
         "LENS_FOCAL_RATIO"  : 2.0,
+        "LENS_IMAGE_CIRCLE" : 4000,
         "LENS_ALTITUDE"     : 90.0,
         "LENS_AZIMUTH"      : 0.0,
         "CCD_CONFIG" : {

@@ -277,6 +277,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+            'driver'      : self.camera_server,
 
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
@@ -295,6 +296,7 @@ class IndiAllSky(object):
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
             'alt'             : self.config['LENS_ALTITUDE'],
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
@@ -597,6 +599,7 @@ class IndiAllSky(object):
         # need to get camera info before adding to DB
         camera_metadata = {
             'name'        : self.camera_name,
+            'driver'      : self.camera_server,
 
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
@@ -615,6 +618,7 @@ class IndiAllSky(object):
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
             'alt'             : self.config['LENS_ALTITUDE'],
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],

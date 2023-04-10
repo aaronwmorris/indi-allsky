@@ -60,6 +60,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     lensName = db.Column(db.String(length=100), nullable=True)
     lensFocalLength = db.Column(db.Float, nullable=True)
     lensFocalRatio = db.Column(db.Float, nullable=True)
+    lensImageCircle = db.Column(db.Integer, nullable=True)  # pixels
 
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     sync_id = db.Column(db.Integer, nullable=True, index=True)

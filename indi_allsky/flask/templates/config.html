@@ -37,7 +37,7 @@
             {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
             <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"></div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
     </div>
 
     <hr />
@@ -1565,7 +1565,7 @@
             {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
             <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"></div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
     </div>
 
     <div class="form-group row">
@@ -1588,6 +1588,17 @@
             <div id="LENS_FOCAL_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_IMAGE_CIRCLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
+            <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
     </div>
 
     <div class="form-group row">
@@ -2486,6 +2497,7 @@ const field_names = [
     'LENS_NAME',
     'LENS_FOCAL_LENGTH',
     'LENS_FOCAL_RATIO',
+    'LENS_IMAGE_CIRCLE',
     'LENS_ALTITUDE',
     'LENS_AZIMUTH',
     'CCD_CONFIG__NIGHT__GAIN',
