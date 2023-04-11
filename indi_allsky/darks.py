@@ -704,7 +704,7 @@ class IndiAllSkyDarks(object):
 
             #logger.info('FIT: %s', f_tmp_fit.name)
 
-            m_avg = numpy.mean(hdulist[0].data, axis=1)[0]
+            m_avg = numpy.mean(hdulist[0].data, axis=0)[0]
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getSensorTemperature()
