@@ -1212,6 +1212,7 @@ class IndiClient(PyIndi.BaseClient):
             return c
 
         for control_name, index in self.__map_indexes(c, values.keys()).items():
+            logger.info('Setting %s = %s', c[index].getLabel(), str(values[control_name]))
             c[index].setValue(values[control_name])
 
         self.sendNewNumber(c)
@@ -1239,6 +1240,7 @@ class IndiClient(PyIndi.BaseClient):
             new_state = current_state
 
             if c[index].getName() in on_switches:
+                logger.info('Enabling %s (%s)', c[index].getLabel(), c[index].getName())
                 new_state = PyIndi.ISS_ON
             elif is_exclusive or c[index].getName() in off_switches:
                 new_state = PyIndi.ISS_OFF
@@ -1258,6 +1260,7 @@ class IndiClient(PyIndi.BaseClient):
             return c
 
         for control_name, index in self.__map_indexes(c, values.keys()).items():
+            logger.info('Setting %s = %s', c[index].getLabel(), str(values[control_name]))
             c[index].setText(values[control_name])
 
         self.sendNewText(c)
