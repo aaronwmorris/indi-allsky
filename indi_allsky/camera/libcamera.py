@@ -289,9 +289,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         try:
             ccm = metadata_dict[self._ccm_metadata_key]
             self._ccm = [
-                [ccm[8], ccm[7], ccm[6]],
-                [ccm[5], ccm[4], ccm[3]],
-                [ccm[2], ccm[1], ccm[0]],
+                [ccm[6], ccm[7], ccm[8]],
+                [ccm[3], ccm[4], ccm[5]],
+                [ccm[0], ccm[1], ccm[2]],
             ]
         except KeyError:
             logger.error('libcamera CCM key not found')
