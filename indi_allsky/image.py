@@ -268,6 +268,7 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+        black_level = i_dict.get('black_level', 0)
         awb_gains = i_dict.get('awb_gains')
         ccm = i_dict.get('ccm')
 
@@ -339,6 +340,9 @@ class ImageWorker(Process):
         i_ref = self.image_processor.getLatestImage()
 
         ### IMAGE IS CALIBRATED ###
+
+
+        self.image_processor.subtract_black_level(black_level)
 
 
         # Not quite working
@@ -2057,6 +2061,12 @@ class ImageProcessor(object):
         # for raw export
         if not isinstance(self.non_stacked_image, type(None)):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
+
+
+    def subtract_black_level(self, black_level):
+        black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+
+        self.image -= black_level_depth
 
 
     #def apply_awb_gains(self, awb_gains):

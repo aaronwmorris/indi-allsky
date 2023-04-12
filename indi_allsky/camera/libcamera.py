@@ -42,6 +42,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._awb_gains = None
         self._awb_gains_metadata_key = 'ColourGains'
 
+        self._black_level = 0
+        self._black_level_metadata_key = 'SensorBlackLevels'
+
         self.active_exposure = False
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
@@ -309,9 +312,19 @@ class IndiClientLibCameraGeneric(IndiClient):
             awb_gains = metadata_dict[self._awb_gains_metadata_key]
             self._awb_gains = [awb_gains[0], awb_gains[1]]
         except KeyError:
-            logger.error('libcamera sensor temperature key not found')
+            logger.error('libcamera sensor AWB key not found')
         except IndexError:
             logger.error('Invalid color gain values')
+
+
+        try:
+            black_level = metadata_dict[self._black_level_metadata_key]
+            self._black_level = black_level[0]
+        except KeyError:
+            logger.error('libcamera sensor black level key not found')
+        except IndexError:
+            logger.error('Invalid black level values')
+
 
 
     def abortCcdExposure(self):
@@ -355,6 +368,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
+            'black_level' : self._black_level,
             'awb_gains'   : self._awb_gains,
             'ccm'         : self._ccm,
         }

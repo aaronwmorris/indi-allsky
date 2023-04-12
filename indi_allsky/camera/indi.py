@@ -301,6 +301,7 @@ class IndiClient(PyIndi.BaseClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
+            'black_level' : 0,  # not used
             'color_gains' : None,  # not used
             'ccm'         : None,  # not used
         }
