@@ -268,7 +268,19 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+        awb_gains = i_dict.get('awb_gains')
         ccm = i_dict.get('ccm')
+
+
+        try:
+            # These values come from libcamera
+            if awb_gains:
+                logger.info('Overriding Red balance: %f', awb_gains[0])
+                logger.info('Overriding Blue balance: %f', awb_gains[1])
+                self.config['WBR_FACTOR'] = float(awb_gains[0])
+                self.config['WBB_FACTOR'] = float(awb_gains[1])
+        except IndexError:
+            logger.error('Invalid color gain values')
 
 
         if filename_t:
@@ -329,8 +341,9 @@ class ImageWorker(Process):
         ### IMAGE IS CALIBRATED ###
 
 
-        if ccm:
-            self.image_processor.apply_color_correction_matrix(ccm)
+        # Not quite working
+        #if ccm:
+        #    self.image_processor.apply_color_correction_matrix(ccm)
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
@@ -2046,8 +2059,17 @@ class ImageProcessor(object):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
+    #def apply_awb_gains(self, awb_gains):
+    #    dtype = self.image.dtype
+
+    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float16) * float(awb_gains[0])  # red
+    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float16) * float(awb_gains[1])  # blue
+
+    #    self.image = self.image.astype(dtype)
+
+
     def apply_color_correction_matrix(self, ccm):
-        self.image = numpy.matmul(self.image, numpy.array(ccm).T)
+        self.image = numpy.matmul(self.image, numpy.array(ccm).T).astype(self.image.dtype)
 
         #ccm_m = numpy.array(ccm)
 

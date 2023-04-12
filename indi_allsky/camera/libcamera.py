@@ -39,6 +39,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._ccm = None
         self._ccm_metadata_key = 'ColourCorrectionMatrix'
 
+        self._awb_gains = None
+        self._awb_gains_metadata_key = 'ColourGains'
+
         self.active_exposure = False
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
@@ -157,7 +160,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                '--awbgains', '1,1',  # disable awb
+                #'--awbgains', '1,1',  # the AWB values are not return if this is defined
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -302,6 +305,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             logger.error('Invalid CCM values')
 
 
+        try:
+            awb_gains = metadata_dict[self._awb_gains_metadata_key]
+            self._awb_gains = [awb_gains[0], awb_gains[1]]
+        except KeyError:
+            logger.error('libcamera sensor temperature key not found')
+        except IndexError:
+            logger.error('Invalid color gain values')
+
+
     def abortCcdExposure(self):
         logger.warning('Aborting exposure')
 
@@ -343,6 +355,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
+            'awb_gains'   : self._awb_gains,
             'ccm'         : self._ccm,
         }
 
