@@ -2047,7 +2047,14 @@ class ImageProcessor(object):
 
 
     def apply_color_correction_matrix(self, ccm):
-        self.image = numpy.matmul(self.image, ccm)
+        self.image = numpy.matmul(self.image, numpy.array(ccm).T)
+
+        #ccm_m = numpy.array(ccm)
+
+        #reshaped_image = self.image.reshape((-1, 3))
+        #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
+
+        #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
 
 
     def convert_16bit_to_8bit(self):
