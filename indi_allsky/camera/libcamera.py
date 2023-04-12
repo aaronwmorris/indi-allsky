@@ -36,6 +36,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._temp_val = -273.15  # absolute zero  :-)
         self._sensor_temp_metadata_key = 'SensorTemperature'
 
+        self._ccm_matrix = None
+        self._ccm_metadata_key = 'ColourCorrectionMatrix'
+
         self.active_exposure = False
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
@@ -283,6 +286,18 @@ class IndiClientLibCameraGeneric(IndiClient):
         except ValueError:
             logger.error('Unable to parse libcamera sensor temperature')
 
+        try:
+            ccm_matrix = float(metadata_dict[self._ccm_metadata_key])
+            self._ccm_matrix = [
+                [ccm_matrix[8], ccm_matrix[7], ccm_matrix[6]],
+                [ccm_matrix[5], ccm_matrix[4], ccm_matrix[3]],
+                [ccm_matrix[2], ccm_matrix[1], ccm_matrix[0]],
+            ]
+        except KeyError:
+            logger.error('libcamera CCM key not found')
+        except IndexError:
+            logger.error('Invalid CCM values')
+
 
     def abortCcdExposure(self):
         logger.warning('Aborting exposure')
@@ -325,6 +340,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
+            'ccm'         : self._ccm_matrix,
         }
 
         self.image_q.put(jobdata)
