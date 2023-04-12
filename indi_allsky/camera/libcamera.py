@@ -295,19 +295,22 @@ class IndiClientLibCameraGeneric(IndiClient):
         except ValueError:
             logger.error('Unable to parse libcamera sensor temperature')
 
-        try:
-            ccm = metadata_dict[self._ccm_metadata_key]
-            self._ccm = [
-                [ccm[8], ccm[7], ccm[6]],
-                [ccm[5], ccm[4], ccm[3]],
-                [ccm[2], ccm[1], ccm[0]],
-            ]
-        except KeyError:
-            logger.error('libcamera CCM key not found')
-        except IndexError:
-            logger.error('Invalid CCM values')
+
+        # Color correction matrix
+        #try:
+        #    ccm = metadata_dict[self._ccm_metadata_key]
+        #    self._ccm = [
+        #        [ccm[8], ccm[7], ccm[6]],
+        #        [ccm[5], ccm[4], ccm[3]],
+        #        [ccm[2], ccm[1], ccm[0]],
+        #    ]
+        #except KeyError:
+        #    logger.error('libcamera CCM key not found')
+        #except IndexError:
+        #    logger.error('Invalid CCM values')
 
 
+        # Auto white balance
         try:
             awb_gains = metadata_dict[self._awb_gains_metadata_key]
             self._awb_gains = [awb_gains[0], awb_gains[1]]
@@ -317,6 +320,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             logger.error('Invalid color gain values')
 
 
+        # Black Level
         try:
             black_level = metadata_dict[self._black_level_metadata_key]
             self._black_level = black_level[0]
