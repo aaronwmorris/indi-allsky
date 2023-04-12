@@ -1784,12 +1784,14 @@ class ImageProcessor(object):
 
             i_ref['calibrated'] = True
         except CalibrationNotFound:
-            # black_level is a libcamera value
-            if black_level:
-                black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+            # only subtract dark level if dark frame is not found
 
-                i_ref['hdulist'][0].data -= black_level_depth
-                #self.image -= (black_level_depth - 10)  # offset slightly
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+                # black_level is a libcamera value
+                if black_level:
+                    black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+
+                    i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
@@ -2068,17 +2070,17 @@ class ImageProcessor(object):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
-    def subtract_black_level(self, black_level):
-        i_ref = self.getLatestImage()
+    #def subtract_black_level(self, black_level):
+    #    i_ref = self.getLatestImage()
 
-        if i_ref['calibrated']:
-            # do not subtract black level if dark frame calibrated
-            return
+    #    if i_ref['calibrated']:
+    #        # do not subtract black level if dark frame calibrated
+    #        return
 
-        # for some reason the black levels are in a 16bit space even though the cameras only return 12 bit data
-        black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+    #    # for some reason the black levels are in a 16bit space even though the cameras only return 12 bit data
+    #    black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
 
-        self.image -= (black_level_depth - 10)  # offset slightly
+    #    self.image -= (black_level_depth - 10)  # offset slightly
 
 
     #def apply_awb_gains(self, awb_gains):
