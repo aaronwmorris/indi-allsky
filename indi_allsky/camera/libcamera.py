@@ -163,7 +163,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                #'--awbgains', '1,1',  # the AWB values are not return if this is defined
+                '--awbgains', '1,1',
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -311,13 +311,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Auto white balance
-        try:
-            awb_gains = metadata_dict[self._awb_gains_metadata_key]
-            self._awb_gains = [awb_gains[0], awb_gains[1]]
-        except KeyError:
-            logger.error('libcamera sensor AWB key not found')
-        except IndexError:
-            logger.error('Invalid color gain values')
+        #try:
+        #    awb_gains = metadata_dict[self._awb_gains_metadata_key]
+        #    self._awb_gains = [awb_gains[0], awb_gains[1]]
+        #except KeyError:
+        #    logger.error('libcamera sensor AWB key not found')
+        #except IndexError:
+        #    logger.error('Invalid color gain values')
 
 
         # Black Level
