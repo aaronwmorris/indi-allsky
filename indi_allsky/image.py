@@ -308,7 +308,8 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
-        self.image_processor.calibrate()
+
+        self.image_processor.calibrate(black_level)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -345,8 +346,6 @@ class ImageWorker(Process):
             except IndexError:
                 logger.error('Invalid color gain values')
 
-
-            self.image_processor.subtract_black_level(black_level)
 
             # Not quite working
             #if ccm:
@@ -1772,7 +1771,7 @@ class ImageProcessor(object):
         return self.image_list[0]
 
 
-    def calibrate(self):
+    def calibrate(self, black_level):
         i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
@@ -1785,7 +1784,12 @@ class ImageProcessor(object):
 
             i_ref['calibrated'] = True
         except CalibrationNotFound:
-            pass
+            # black_level is a libcamera value
+            if black_level:
+                black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+
+                i_ref['hdulist'][0].data -= black_level_depth
+                #self.image -= (black_level_depth - 10)  # offset slightly
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
