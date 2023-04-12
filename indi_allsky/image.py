@@ -268,6 +268,7 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+        ccm = i_dict.get('ccm')
 
 
         if filename_t:
