@@ -2069,7 +2069,7 @@ class ImageProcessor(object):
     def subtract_black_level(self, black_level):
         black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
 
-        self.image -= black_level_depth
+        self.image -= (black_level_depth - 10)
 
 
     #def apply_awb_gains(self, awb_gains):
