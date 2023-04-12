@@ -268,20 +268,11 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+
+        # libcamera
         black_level = i_dict.get('black_level', 0)
         awb_gains = i_dict.get('awb_gains')
         ccm = i_dict.get('ccm')
-
-
-        try:
-            # These values come from libcamera
-            if awb_gains:
-                logger.info('Overriding Red balance: %f', awb_gains[0])
-                logger.info('Overriding Blue balance: %f', awb_gains[1])
-                self.config['WBR_FACTOR'] = float(awb_gains[0])
-                self.config['WBB_FACTOR'] = float(awb_gains[1])
-        except IndexError:
-            logger.error('Invalid color gain values')
 
 
         if filename_t:
@@ -342,12 +333,24 @@ class ImageWorker(Process):
         ### IMAGE IS CALIBRATED ###
 
 
-        self.image_processor.subtract_black_level(black_level)
+        # only perform this processing if libcamera is set to raw mode
+        if self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+            try:
+                # These values come from libcamera
+                if awb_gains:
+                    logger.info('Overriding Red balance: %f', awb_gains[0])
+                    logger.info('Overriding Blue balance: %f', awb_gains[1])
+                    self.config['WBR_FACTOR'] = float(awb_gains[0])
+                    self.config['WBB_FACTOR'] = float(awb_gains[1])
+            except IndexError:
+                logger.error('Invalid color gain values')
 
 
-        # Not quite working
-        #if ccm:
-        #    self.image_processor.apply_color_correction_matrix(ccm)
+            self.image_processor.subtract_black_level(black_level)
+
+            # Not quite working
+            #if ccm:
+            #    self.image_processor.apply_color_correction_matrix(ccm)
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
