@@ -329,6 +329,10 @@ class ImageWorker(Process):
         ### IMAGE IS CALIBRATED ###
 
 
+        if ccm:
+            self.image_processor.apply_color_correction_matrix(ccm)
+
+
         if self.config.get('IMAGE_EXPORT_RAW'):
             self.export_raw_image(i_ref)
 
@@ -2040,6 +2044,10 @@ class ImageProcessor(object):
         # for raw export
         if not isinstance(self.non_stacked_image, type(None)):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
+
+
+    def apply_color_correction_matrix(self, ccm):
+        self.image = numpy.matmul(self.image, ccm)
 
 
     def convert_16bit_to_8bit(self):
