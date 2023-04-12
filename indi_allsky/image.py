@@ -272,7 +272,7 @@ class ImageWorker(Process):
         # libcamera
         black_level = i_dict.get('black_level', 0)
         awb_gains = i_dict.get('awb_gains')
-        ccm = i_dict.get('ccm')
+        #ccm = i_dict.get('ccm')
 
 
         if filename_t:
@@ -334,7 +334,7 @@ class ImageWorker(Process):
 
 
         # only perform this processing if libcamera is set to raw mode
-        if self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
             try:
                 # These values come from libcamera
                 if awb_gains:
