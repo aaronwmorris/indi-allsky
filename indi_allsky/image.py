@@ -1814,9 +1814,12 @@ class ImageProcessor(object):
 
             if self.libcamera_raw:
                 if libcamera_black_level:
-                    black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+                    # use opencv to prevent underruns
+                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, libcamera_black_level)
 
-                    i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
+                    #black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+                    #i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
+
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
