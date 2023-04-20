@@ -288,9 +288,9 @@ class ImageWorker(Process):
         filename_t = i_dict.get('filename_t')
 
         # libcamera
-        black_level = i_dict.get('black_level', 0)
-        awb_gains = i_dict.get('awb_gains')
-        #ccm = i_dict.get('ccm')
+        libcamera_black_level = i_dict.get('libcamera_black_level', 0)
+        libcamera_awb_gains = i_dict.get('libcamera_awb_gains')
+        #libcamera_ccm = i_dict.get('libcamera_ccm')
 
 
         if filename_t:
@@ -327,7 +327,7 @@ class ImageWorker(Process):
             return
 
 
-        self.image_processor.calibrate(black_level)
+        self.image_processor.calibrate(libcamera_black_level)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -356,7 +356,7 @@ class ImageWorker(Process):
         if self.libcamera_raw:
             try:
                 # These values come from libcamera
-                if awb_gains:
+                if libcamera_awb_gains:
                     logger.info('Overriding Red balance: %f', awb_gains[0])
                     logger.info('Overriding Blue balance: %f', awb_gains[1])
                     self.config['WBR_FACTOR'] = float(awb_gains[0])
@@ -366,8 +366,8 @@ class ImageWorker(Process):
 
 
             # Not quite working
-            #if ccm:
-            #    self.image_processor.apply_color_correction_matrix(ccm)
+            #if libcamera_ccm:
+            #    self.image_processor.apply_color_correction_matrix(libcamera_ccm)
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
@@ -1800,7 +1800,7 @@ class ImageProcessor(object):
         return self.image_list[0]
 
 
-    def calibrate(self, black_level):
+    def calibrate(self, libcamera_black_level):
         i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
@@ -1816,9 +1816,8 @@ class ImageProcessor(object):
             # only subtract dark level if dark frame is not found
 
             if self.libcamera_raw:
-                # black_level is a libcamera value
-                if black_level:
-                    black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+                if libcamera_black_level:
+                    black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
 
                     i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
 
@@ -2099,7 +2098,8 @@ class ImageProcessor(object):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
-    #def subtract_black_level(self, black_level):
+    #def subtract_black_level(self, libcamera_black_level):
+    #    # not used
     #    i_ref = self.getLatestImage()
 
     #    if i_ref['calibrated']:
@@ -2107,29 +2107,31 @@ class ImageProcessor(object):
     #        return
 
     #    # for some reason the black levels are in a 16bit space even though the cameras only return 12 bit data
-    #    black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
+    #    black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
 
     #    self.image -= (black_level_depth - 10)  # offset slightly
 
 
-    #def apply_awb_gains(self, awb_gains):
+    #def apply_awb_gains(self, libcamera_awb_gains):
+    #    # not used
     #    dtype = self.image.dtype
 
-    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float16) * float(awb_gains[0])  # red
-    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float16) * float(awb_gains[1])  # blue
+    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float16) * float(libcamera_awb_gains[0])  # red
+    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float16) * float(libcamera_awb_gains[1])  # blue
 
     #    self.image = self.image.astype(dtype)
 
 
-    def apply_color_correction_matrix(self, ccm):
-        self.image = numpy.matmul(self.image, numpy.array(ccm).T).astype(self.image.dtype)
+    #def apply_color_correction_matrix(self, libcamera_ccm):
+    #    # not used
+    #    self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
 
-        #ccm_m = numpy.array(ccm)
+    #    #ccm_m = numpy.array(ccm)
 
-        #reshaped_image = self.image.reshape((-1, 3))
-        #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
+    #    #reshaped_image = self.image.reshape((-1, 3))
+    #    #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
 
-        #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
+    #    #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
 
 
     def convert_16bit_to_8bit(self):

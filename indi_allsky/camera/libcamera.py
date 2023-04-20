@@ -163,7 +163,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                '--awbgains', '1,1',
+                '--awbgains', '1,1',  # AWB causes long exposure times at night
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -288,6 +288,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             pass
 
 
+        ### Temperature
         try:
             self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
         except KeyError:
@@ -296,7 +297,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             logger.error('Unable to parse libcamera sensor temperature')
 
 
-        # Color correction matrix
+        ### Color correction matrix
         #try:
         #    ccm = metadata_dict[self._ccm_metadata_key]
         #    self._ccm = [
@@ -310,7 +311,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         #    logger.error('Invalid CCM values')
 
 
-        # Auto white balance
+        ### Auto white balance
         #try:
         #    awb_gains = metadata_dict[self._awb_gains_metadata_key]
         #    self._awb_gains = [awb_gains[0], awb_gains[1]]
@@ -320,10 +321,10 @@ class IndiClientLibCameraGeneric(IndiClient):
         #    logger.error('Invalid color gain values')
 
 
-        # Black Level
+        ### Black Level
         try:
             black_level = metadata_dict[self._black_level_metadata_key]
-            self._black_level = black_level[0]
+            self._black_level = black_level[0]  # Only going to use the first key for now
         except KeyError:
             logger.error('libcamera sensor black level key not found')
         except IndexError:
@@ -372,9 +373,9 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
-            'black_level' : self._black_level,
-            'awb_gains'   : self._awb_gains,
-            'ccm'         : self._ccm,
+            'libcamera_black_level' : self._black_level,
+            'libcamera_awb_gains'   : self._awb_gains,  # Not implemented
+            #'libcamera_ccm'         : self._ccm,
         }
 
         self.image_q.put(jobdata)
