@@ -158,6 +158,14 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
 
+
+        self._libcamera_raw = False
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+            self.libcamera_raw = True
+            self.image_processor.libcamera_raw = True
+
+
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -165,6 +173,16 @@ class ImageWorker(Process):
 
 
         self._shutdown = False
+
+
+    @property
+    def libcamera_raw(self):
+        return self._libcamera_raw
+
+    @libcamera_raw.setter
+    def libcamera_raw(self, new_libcamera_raw):
+        self._libcamera_raw = bool(new_libcamera_raw)
+
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -269,6 +287,11 @@ class ImageWorker(Process):
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
 
+        # libcamera
+        libcamera_black_level = i_dict.get('libcamera_black_level', 0)
+        libcamera_awb_gains = i_dict.get('libcamera_awb_gains')
+        libcamera_ccm = i_dict.get('libcamera_ccm')
+
 
         if filename_t:
             self.filename_t = filename_t
@@ -303,7 +326,8 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
-        self.image_processor.calibrate()
+
+        self.image_processor.calibrate(libcamera_black_level)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -326,6 +350,21 @@ class ImageWorker(Process):
         i_ref = self.image_processor.getLatestImage()
 
         ### IMAGE IS CALIBRATED ###
+
+
+        # only perform this processing if libcamera is set to raw mode
+        if self.libcamera_raw:
+            # These values come from libcamera
+            if libcamera_awb_gains:
+                logger.info('Overriding Red balance: %f', awb_gains[0])
+                logger.info('Overriding Blue balance: %f', awb_gains[1])
+                self.config['WBR_FACTOR'] = float(awb_gains[0])
+                self.config['WBB_FACTOR'] = float(awb_gains[1])
+
+
+            # Not quite working
+            if libcamera_ccm:
+                self.image_processor.apply_color_correction_matrix(libcamera_ccm)
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
@@ -1453,6 +1492,8 @@ class ImageProcessor(object):
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
+        self._libcamera_raw = False
+
         # contains the current stacked image
         self._image = None
         self._non_stacked_image = None  # used when raw exports are enabled
@@ -1508,6 +1549,15 @@ class ImageProcessor(object):
     @max_bit_depth.setter
     def max_bit_depth(self, *args):
         pass  # read only
+
+
+    @property
+    def libcamera_raw(self):
+        return self._libcamera_raw
+
+    @libcamera_raw.setter
+    def libcamera_raw(self, new_libcamera_raw):
+        self._libcamera_raw = bool(new_libcamera_raw)
 
 
 
@@ -1747,7 +1797,7 @@ class ImageProcessor(object):
         return self.image_list[0]
 
 
-    def calibrate(self):
+    def calibrate(self, libcamera_black_level):
         i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
@@ -1760,7 +1810,16 @@ class ImageProcessor(object):
 
             i_ref['calibrated'] = True
         except CalibrationNotFound:
-            pass
+            # only subtract dark level if dark frame is not found
+
+            if self.libcamera_raw:
+                if libcamera_black_level:
+                    # use opencv to prevent underruns
+                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, libcamera_black_level)
+
+                    #black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+                    #i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
+
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
@@ -2001,8 +2060,6 @@ class ImageProcessor(object):
 
 
     def debayer(self):
-        i_ref = self.getLatestImage()
-
         # sanity check
         if not len(self.image.shape) == 2:
             # already debayered
@@ -2039,6 +2096,41 @@ class ImageProcessor(object):
         # for raw export
         if not isinstance(self.non_stacked_image, type(None)):
             self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
+
+
+    #def subtract_black_level(self, libcamera_black_level):
+    #    # not used
+    #    i_ref = self.getLatestImage()
+
+    #    if i_ref['calibrated']:
+    #        # do not subtract black level if dark frame calibrated
+    #        return
+
+    #    # for some reason the black levels are in a 16bit space even though the cameras only return 12 bit data
+    #    black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+
+    #    self.image -= (black_level_depth - 10)  # offset slightly
+
+
+    #def apply_awb_gains(self, libcamera_awb_gains):
+    #    # not used
+    #    dtype = self.image.dtype
+
+    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float16) * float(libcamera_awb_gains[0])  # red
+    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float16) * float(libcamera_awb_gains[1])  # blue
+
+    #    self.image = self.image.astype(dtype)
+
+
+    def apply_color_correction_matrix(self, libcamera_ccm):
+        self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
+
+        #ccm_m = numpy.array(ccm)
+
+        #reshaped_image = self.image.reshape((-1, 3))
+        #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
+
+        #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
 
 
     def convert_16bit_to_8bit(self):

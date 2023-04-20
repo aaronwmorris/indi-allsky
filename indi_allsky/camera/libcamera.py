@@ -36,6 +36,15 @@ class IndiClientLibCameraGeneric(IndiClient):
         self._temp_val = -273.15  # absolute zero  :-)
         self._sensor_temp_metadata_key = 'SensorTemperature'
 
+        self._ccm = None
+        self._ccm_metadata_key = 'ColourCorrectionMatrix'
+
+        self._awb_gains = None
+        self._awb_gains_metadata_key = 'ColourGains'
+
+        self._black_level = 0
+        self._black_level_metadata_key = 'SensorBlackLevels'
+
         self.active_exposure = False
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
@@ -154,7 +163,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                '--awbgains', '1,1',  # disable awb
+                '--awbgains', '1,1',  # AWB causes long exposure times at night
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -270,18 +279,57 @@ class IndiClientLibCameraGeneric(IndiClient):
                 metadata_dict = dict()
 
 
+        #logger.info('Metadata: %s', metadata_dict)
+
+
         try:
             self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
 
 
+        ### Temperature
         try:
             self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
         except KeyError:
             logger.error('libcamera sensor temperature key not found')
         except ValueError:
             logger.error('Unable to parse libcamera sensor temperature')
+
+
+        ### Color correction matrix
+        #try:
+        #    ccm = metadata_dict[self._ccm_metadata_key]
+        #    self._ccm = [
+        #        [ccm[8], ccm[7], ccm[6]],
+        #        [ccm[5], ccm[4], ccm[3]],
+        #        [ccm[2], ccm[1], ccm[0]],
+        #    ]
+        #except KeyError:
+        #    logger.error('libcamera CCM key not found')
+        #except IndexError:
+        #    logger.error('Invalid CCM values')
+
+
+        ### Auto white balance
+        #try:
+        #    awb_gains = metadata_dict[self._awb_gains_metadata_key]
+        #    self._awb_gains = [awb_gains[0], awb_gains[1]]
+        #except KeyError:
+        #    logger.error('libcamera sensor AWB key not found')
+        #except IndexError:
+        #    logger.error('Invalid color gain values')
+
+
+        ### Black Level
+        try:
+            black_level = metadata_dict[self._black_level_metadata_key]
+            self._black_level = black_level[0]  # Only going to use the first key for now
+        except KeyError:
+            logger.error('libcamera sensor black level key not found')
+        except IndexError:
+            logger.error('Invalid black level values')
+
 
 
     def abortCcdExposure(self):
@@ -325,6 +373,9 @@ class IndiClientLibCameraGeneric(IndiClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
+            'libcamera_black_level' : self._black_level,
+            'libcamera_awb_gains'   : self._awb_gains,  # Not implemented
+            'libcamera_ccm'         : self._ccm,
         }
 
         self.image_q.put(jobdata)
