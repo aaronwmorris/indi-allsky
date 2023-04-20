@@ -158,6 +158,14 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
 
+
+        self._libcamera_raw = False
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+            self.libcamera_raw = True
+            self.image_processor.libcamera_raw = True
+
+
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -165,6 +173,16 @@ class ImageWorker(Process):
 
 
         self._shutdown = False
+
+
+    @property
+    def libcamera_raw(self):
+        return self._libcamera_raw
+
+    @libcamera_raw.setter
+    def libcamera_raw(self, new_libcamera_raw):
+        self._libcamera_raw = bool(new_libcamera_raw)
+
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -335,7 +353,7 @@ class ImageWorker(Process):
 
 
         # only perform this processing if libcamera is set to raw mode
-        if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+        if self.libcamera_raw:
             try:
                 # These values come from libcamera
                 if awb_gains:
@@ -1477,6 +1495,8 @@ class ImageProcessor(object):
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
+        self._libcamera_raw = False
+
         # contains the current stacked image
         self._image = None
         self._non_stacked_image = None  # used when raw exports are enabled
@@ -1532,6 +1552,15 @@ class ImageProcessor(object):
     @max_bit_depth.setter
     def max_bit_depth(self, *args):
         pass  # read only
+
+
+    @property
+    def libcamera_raw(self):
+        return self._libcamera_raw
+
+    @libcamera_raw.setter
+    def libcamera_raw(self, new_libcamera_raw):
+        self._libcamera_raw = bool(new_libcamera_raw)
 
 
 
@@ -1786,7 +1815,7 @@ class ImageProcessor(object):
         except CalibrationNotFound:
             # only subtract dark level if dark frame is not found
 
-            if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
+            if self.libcamera_raw:
                 # black_level is a libcamera value
                 if black_level:
                     black_level_depth = int(black_level) >> (16 - self._max_bit_depth)
