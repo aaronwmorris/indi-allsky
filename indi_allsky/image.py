@@ -290,7 +290,7 @@ class ImageWorker(Process):
         # libcamera
         libcamera_black_level = i_dict.get('libcamera_black_level', 0)
         libcamera_awb_gains = i_dict.get('libcamera_awb_gains')
-        #libcamera_ccm = i_dict.get('libcamera_ccm')
+        libcamera_ccm = i_dict.get('libcamera_ccm')
 
 
         if filename_t:
@@ -354,20 +354,17 @@ class ImageWorker(Process):
 
         # only perform this processing if libcamera is set to raw mode
         if self.libcamera_raw:
-            try:
-                # These values come from libcamera
-                if libcamera_awb_gains:
-                    logger.info('Overriding Red balance: %f', awb_gains[0])
-                    logger.info('Overriding Blue balance: %f', awb_gains[1])
-                    self.config['WBR_FACTOR'] = float(awb_gains[0])
-                    self.config['WBB_FACTOR'] = float(awb_gains[1])
-            except IndexError:
-                logger.error('Invalid color gain values')
+            # These values come from libcamera
+            if libcamera_awb_gains:
+                logger.info('Overriding Red balance: %f', awb_gains[0])
+                logger.info('Overriding Blue balance: %f', awb_gains[1])
+                self.config['WBR_FACTOR'] = float(awb_gains[0])
+                self.config['WBB_FACTOR'] = float(awb_gains[1])
 
 
             # Not quite working
-            #if libcamera_ccm:
-            #    self.image_processor.apply_color_correction_matrix(libcamera_ccm)
+            if libcamera_ccm:
+                self.image_processor.apply_color_correction_matrix(libcamera_ccm)
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
@@ -2122,16 +2119,15 @@ class ImageProcessor(object):
     #    self.image = self.image.astype(dtype)
 
 
-    #def apply_color_correction_matrix(self, libcamera_ccm):
-    #    # not used
-    #    self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
+    def apply_color_correction_matrix(self, libcamera_ccm):
+        self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
 
-    #    #ccm_m = numpy.array(ccm)
+        #ccm_m = numpy.array(ccm)
 
-    #    #reshaped_image = self.image.reshape((-1, 3))
-    #    #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
+        #reshaped_image = self.image.reshape((-1, 3))
+        #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
 
-    #    #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
+        #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
 
 
     def convert_16bit_to_8bit(self):
