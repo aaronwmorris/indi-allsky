@@ -582,6 +582,34 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         self.gps_driver_exec = 'indi_fake_gps'
 
 
+class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx219, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx219'
+        self.ccd_driver_exec = 'indi_fake_ccd'
+
+        self.camera_info = {
+            'width'         : 3280,
+            'height'        : 2464,
+            'pixel'         : 1.12,
+            'min_gain'      : 1,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+
+        self.telescope_device_name = 'fake_telescope'
+        self.telescope_driver_exec = 'indi_fake_telescope'
+
+        self.gps_device_name = 'fake_gps'
+        self.gps_driver_exec = 'indi_fake_gps'
+
+
 class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
     # this model is almost identical to the imx477
 

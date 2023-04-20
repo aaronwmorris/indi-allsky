@@ -257,7 +257,7 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
     if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
         echo
         PS3="Select a libcamera interface: "
-        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx519 libcamera_imx708 libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
+        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx219 libcamera_imx519 libcamera_imx708 libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
             if [ -n "$libcamera_interface" ]; then
                 # overwrite variable
                 CAMERA_INTERFACE=$libcamera_interface
@@ -2058,6 +2058,8 @@ if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
         imx477
         imx477_noir
         imx477_af
+        imx219
+        imx219_noir
         imx519
         imx708
         imx708_noir
@@ -2105,7 +2107,7 @@ if [ "$MEM_TOTAL" -lt "768000" ]; then
 fi
 
 # 25% ffmpeg scaling with libcamera when running 1GB of memory
-if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx519" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
+if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libcamera_imx378" || "$CAMERA_INTERFACE" == "libcamera_imx219" || "$CAMERA_INTERFACE" == "libcamera_imx519" || "$CAMERA_INTERFACE" == "libcamera_imx708" || "$CAMERA_INTERFACE" == "libcamera_64mp_hawkeye" ]]; then
     if [ "$MEM_TOTAL" -lt "1536000" ]; then
         TMP_LIBCAM_FFMPEG=$(mktemp --suffix=.json)
         jq --arg ffmpeg_vfscale "iw*.25:ih*.25" '.FFMPEG_VFSCALE = $ffmpeg_vfscale' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_FFMPEG"

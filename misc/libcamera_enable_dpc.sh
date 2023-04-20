@@ -58,6 +58,8 @@ LIBCAMERA_CAMERAS="
     imx477
     imx477_noir
     imx477_af
+    imx219
+    imx219_noir
     imx519
     imx708
     imx708_noir
