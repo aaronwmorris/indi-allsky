@@ -420,6 +420,8 @@ class IndiAllSky(object):
         uptime_s = time.time() - psutil.boot_time()
         logger.info('System uptime: %ds', uptime_s)
 
+        #logger.info('Temp dir: %s', tempfile.gettempdir())
+
 
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
