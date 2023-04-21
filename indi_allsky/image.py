@@ -356,10 +356,10 @@ class ImageWorker(Process):
         if self.libcamera_raw:
             # These values come from libcamera
             if libcamera_awb_gains:
-                logger.info('Overriding Red balance: %f', awb_gains[0])
-                logger.info('Overriding Blue balance: %f', awb_gains[1])
-                self.config['WBR_FACTOR'] = float(awb_gains[0])
-                self.config['WBB_FACTOR'] = float(awb_gains[1])
+                logger.info('Overriding Red balance: %f', libcamera_awb_gains[0])
+                logger.info('Overriding Blue balance: %f', libcamera_awb_gains[1])
+                self.config['WBR_FACTOR'] = float(libcamera_awb_gains[0])
+                self.config['WBB_FACTOR'] = float(libcamera_awb_gains[1])
 
 
             # Not quite working
