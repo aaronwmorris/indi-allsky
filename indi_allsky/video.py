@@ -683,7 +683,7 @@ class VideoWorker(Process):
             if startrail_video_file.exists():
                 self._s3_upload(startrail_video_entry, startrail_video_metadata)
                 self._syncapi(startrail_video_entry, startrail_video_metadata)
-                self._uploadStarTrailVideo(startrail_video_file, camera)
+                self._uploadStarTrailVideo(startrail_video_entry, startrail_video_file, camera)
             else:
                 # success flag set above
                 pass
