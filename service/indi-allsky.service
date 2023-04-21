@@ -3,7 +3,7 @@ Description=Indi AllSky Service
 After=network.target indiserver.service
  
 [Service]
-#User=%INDISERVER_USER%
+EnvironmentFile=%ALLSKY_ETC%/indi-allsky.env
 WorkingDirectory=%ALLSKY_DIRECTORY%
 ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/python3 allsky.py --log syslog run
 ExecReload=/bin/kill -HUP $MAINPID

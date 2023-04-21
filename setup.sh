@@ -1486,6 +1486,10 @@ else
 fi
 
 
+touch "${ALLSKY_ETC}/indi-allsky.env"
+chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
+
+
 echo "**** Setting up indi-allsky service ****"
 TMP2=$(mktemp)
 sed \
@@ -1503,6 +1507,7 @@ echo "**** Setting up gunicorn service ****"
 TMP5=$(mktemp)
 sed \
  -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  "${ALLSKY_DIRECTORY}/service/gunicorn-indi-allsky.socket" > "$TMP5"
 

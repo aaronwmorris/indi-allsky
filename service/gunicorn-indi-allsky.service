@@ -5,7 +5,7 @@ After=network.target
 
 [Service]
 Type=notify
-#User=%ALLSKY_USER%
+EnvironmentFile=%ALLSKY_ETC%/indi-allsky.env
 #RuntimeDirectory=%GUNICORN_SERVICE_NAME%
 WorkingDirectory=%ALLSKY_DIRECTORY%
 ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/gunicorn --config %ALLSKY_ETC%/gunicorn.conf.py indi_allsky.wsgi
