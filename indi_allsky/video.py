@@ -778,7 +778,45 @@ class VideoWorker(Process):
 
 
     def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file, camera):
-        self._uploadVideo(startrail_video_entry, startrail_video_file, camera)
+        ### Upload video
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
+            logger.warning('Startrail video uploading disabled')
+            return
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'camera_uuid'  : camera.uuid,
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'].format(**file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(startrail_video_file.name)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : startrail_video_entry.__class__.__name__,
+            'id'          : startrail_video_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
