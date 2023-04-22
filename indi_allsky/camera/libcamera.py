@@ -176,7 +176,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--immediate',
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
-                '--quality', '100',
+                '--quality', '95',
                 #'--denoise', 'off',
                 #'--awbgains', '1,1',  # enable awb in jpg mode
                 '--gain', '{0:d}'.format(self._ccd_gain),
