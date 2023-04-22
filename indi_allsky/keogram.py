@@ -1,6 +1,7 @@
 import cv2
-from PIL import Image
 import numpy
+import PIL
+from PIL import Image
 import math
 import time
 #import copy
@@ -78,11 +79,14 @@ class KeogramGenerator(object):
 
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_COLOR)  # convert grayscale to color
 
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(filename)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', filename)
                 continue
+
 
             self.processImage(filename, image)
 

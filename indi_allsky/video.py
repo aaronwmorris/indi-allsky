@@ -3,6 +3,7 @@ import time
 import math
 import json
 import cv2
+import numpy
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -12,6 +13,9 @@ import tempfile
 import signal
 import traceback
 import logging
+
+import PIL
+from PIL import Image
 
 import ephem
 
@@ -610,11 +614,13 @@ class VideoWorker(Process):
                 continue
 
             #logger.info('Reading file: %s', p_entry)
-            image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)  # convert grayscale to color
-
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(p_entry)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', p_entry)
                 continue
+
 
             kg.processImage(p_entry, image)
 

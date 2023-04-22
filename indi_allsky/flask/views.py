@@ -25,6 +25,8 @@ from passlib.hash import argon2
 import PyIndi
 import cv2
 import numpy
+import PIL
+from PIL import Image
 import astropy
 import flask
 
@@ -669,11 +671,13 @@ class JsonChartView(JsonView):
 
         image_start = time.time()
 
-        image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
-
-        if isinstance(image_data, type(None)):
+        try:
+            with Image.open(str(latest_image_p)) as img:
+                image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        except PIL.UnidentifiedImageError:
             app.logger.error('Unable to read %s', latest_image_p)
             return chart_data
+
 
         image_elapsed_s = time.time() - image_start
         app.logger.info('Image read in %0.4f s', image_elapsed_s)
@@ -2977,8 +2981,10 @@ class JsonFocusView(JsonView):
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
 
-        image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
-        if isinstance(image_data, type(None)):
+        try:
+            with Image.open(str(latest_image_p)) as img:
+                image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        except PIL.UnidentifiedImageError:
             app.logger.error('Unable to read %s', latest_image_p)
             return jsonify({}), 400
 
@@ -2998,8 +3004,11 @@ class JsonFocusView(JsonView):
 
 
         # returns tuple: rc, data
-        json_image_data = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 75])
-        json_image_b64 = base64.b64encode(json_image_data[1])
+        json_image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB))
+        img.save(json_image_buffer, format='JPEG', compress=75)
+
+        json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
 
         json_data['image_b64'] = json_image_b64.decode('utf-8')
 

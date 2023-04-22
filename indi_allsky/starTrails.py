@@ -1,7 +1,8 @@
 import os
 import cv2
-from PIL import Image
 import numpy
+import PIL
+from PIL import Image
 import time
 from pathlib import Path
 import tempfile
@@ -107,11 +108,14 @@ class StarTrailGenerator(object):
 
         for file_p in file_list_ordered:
             logger.info('Reading file: %s', file_p)
-            image = cv2.imread(str(file_p), cv2.IMREAD_COLOR)  # convert graycale to color
 
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(file_p)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', file_p)
                 continue
+
 
             self.processImage(file_p, image)
 

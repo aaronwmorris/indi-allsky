@@ -26,8 +26,10 @@ import queue
 from astropy.io import fits
 
 import cv2
-from PIL import Image
 import numpy
+
+import PIL
+from PIL import Image
 
 from . import constants
 
@@ -1601,11 +1603,13 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             indi_rgb = False
 
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(data, type(None)):
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 filename_p.unlink()
                 raise BadImage('Bad jpeg image')
+
 
             image_bitpix = 8
             image_bayerpat = None
@@ -1616,11 +1620,13 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.png']:
             indi_rgb = False
 
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(data, type(None)):
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 filename_p.unlink()
                 raise BadImage('Bad png image')
+
 
             image_bitpix = 8
             image_bayerpat = None
