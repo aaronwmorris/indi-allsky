@@ -17,8 +17,6 @@ import logging
 import traceback
 #from pprint import pformat
 
-#from tifffile import TiffWriter
-
 import ephem
 
 from multiprocessing import Process
@@ -28,6 +26,7 @@ import queue
 from astropy.io import fits
 
 import cv2
+from PIL import Image
 import numpy
 
 from . import constants
@@ -1000,6 +999,8 @@ class ImageWorker(Process):
             raise Exception('Unsupported bit depth')
 
 
+        #logger.info('Image type: %s', str(scaled_data.dtype))
+        #logger.info('Image shape: %s', str(scaled_data.shape))
 
         write_img_start = time.time()
 
@@ -1013,18 +1014,18 @@ class ImageWorker(Process):
                 div_factor = int((2 ** max_bit_depth) / 255)
                 scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
 
-            cv2.imwrite(str(tmpfile_name), scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            if len(scaled_data_8.shape) == 2:
+                img = Image.fromarray(scaled_data_8)
+            else:
+                img = Image.fromarray(cv2.cvtColor(scaled_data_8, cv2.COLOR_BGR2RGB))
+
+            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            # Pillow does not support 16-bit RGB data
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
-            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
-
-            #with TiffWriter(str(tmpfile_name), ) as tif:
-            #    tif.write(
-            #        scaled_data,
-            #        compression='lzw',  # requires imagecodecs
-            #        metadata={'foo': 'bar'},
-            #    )
+            # Pillow does not support 16-bit RGB data
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, 5])  # LZW
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 
@@ -1109,13 +1110,16 @@ class ImageWorker(Process):
 
         write_img_start = time.time()
 
+        # images are always color here
+        img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
