@@ -5,6 +5,8 @@ numpy
 opencv-python-headless
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
+# https://www.piwheels.org/project/Pillow/
+Pillow
 bottleneck
 ephem
 paramiko

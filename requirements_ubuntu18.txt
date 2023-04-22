@@ -17,6 +17,8 @@ ephem
 paramiko
 # https://www.piwheels.org/project/pycurl/
 pycurl<=7.44.1
+# https://www.piwheels.org/project/Pillow/
+Pillow
 imageio
 imageio-ffmpeg
 # https://www.piwheels.org/project/imagecodecs/
