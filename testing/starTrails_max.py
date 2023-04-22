@@ -2,6 +2,8 @@
 
 import cv2
 import numpy
+import PIL
+from PIL import Image
 import argparse
 import logging
 import time
@@ -70,11 +72,14 @@ class StarTrailGenerator(object):
 
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
 
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(filename)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', filename)
                 continue
+
 
             self.processImage(filename, image)
 
@@ -148,7 +153,8 @@ class StarTrailGenerator(object):
 
 
         logger.warning('Creating %s', outfile)
-        cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        trail_image_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+        trail_image_rgb.save(str(outfile), quality=90)
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
