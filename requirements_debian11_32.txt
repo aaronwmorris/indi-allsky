@@ -18,6 +18,7 @@ paramiko
 pycurl
 # https://www.piwheels.org/project/Pillow/
 Pillow
+piexif
 imageio
 imageio-ffmpeg
 # https://www.piwheels.org/project/imagecodecs/
