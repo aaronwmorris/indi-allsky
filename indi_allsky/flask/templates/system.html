@@ -188,8 +188,7 @@
 </div>
 {% for t in temp_list %}
     <div class="row">
-        <div class="col-sm-1"></div>
-        <div class="col-sm-2">{{t['name']}}</div>
+        <div class="col-sm-3 text-end">{{t['name']}}</div>
         <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</div>
     </div>
 {% endfor %}

@@ -1486,10 +1486,6 @@ else
 fi
 
 
-touch "${ALLSKY_ETC}/indi-allsky.env"
-chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
-
-
 echo "**** Setting up indi-allsky service ****"
 TMP2=$(mktemp)
 sed \
@@ -1586,6 +1582,9 @@ echo "**** Indi-allsky config ****"
 [[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
 sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 775 "${ALLSKY_ETC}"
+
+touch "${ALLSKY_ETC}/indi-allsky.env"
+chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
 
 
 echo "**** Flask config ****"
