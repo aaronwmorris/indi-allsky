@@ -151,7 +151,7 @@ class KeogramGenerator(object):
 
         write_img_start = time.time()
 
-        img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+        img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
 
         logger.warning('Creating keogram: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
