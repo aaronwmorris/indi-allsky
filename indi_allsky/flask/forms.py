@@ -647,11 +647,6 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
         raise ValidationError('PNG compression must be 9 or less')
 
 
-def IMAGE_FILE_COMPRESSION__TIF_validator(form, field):
-    if not isinstance(field.data, int):
-        raise ValidationError('Please enter valid number')
-
-
 def IMAGE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
@@ -1027,20 +1022,6 @@ def TEXT_PROPERTIES__FONT_THICKNESS_validator(form, field):
 
     if field.data > 20:
         raise ValidationError('Font thickness must be less than 20')
-
-
-def TEXT_PROPERTIES__DATE_FORMAT_validator(form, field):
-    format_regex = r'^[a-zA-Z0-9_,\%\.\-\/\\\:\ ]+$'
-
-    if not re.search(format_regex, field.data):
-        raise ValidationError('Invalid datetime format')
-
-    try:
-        # test the format
-        now = datetime.now()
-        now.strftime(field.data)
-    except ValueError as e:
-        raise ValidationError(str(e))
 
 
 def ORB_PROPERTIES__MODE_validator(form, field):
@@ -1785,7 +1766,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
-    IMAGE_FILE_COMPRESSION__TIF      = IntegerField('TIFF Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__TIF_validator])
+    IMAGE_FILE_COMPRESSION__TIF      = StringField('TIFF Compression', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
     IMAGE_LABEL                      = BooleanField('Label Images')
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
@@ -1832,7 +1813,6 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
     TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
-    TEXT_PROPERTIES__DATE_FORMAT     = StringField('Date Format', render_kw={'readonly' : True}, validators=[DataRequired(), TEXT_PROPERTIES__DATE_FORMAT_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])

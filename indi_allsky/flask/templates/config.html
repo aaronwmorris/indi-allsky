@@ -601,7 +601,7 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__TIF(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__TIF-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">[int] Compression flag for TIFF images. 5 = LZW - See libtiff.h for valid options</div>
+        <div class="col-sm-8">(read-only)</div>
     </div>
 
     <div class="form-group row">
@@ -1039,19 +1039,6 @@
             </div>
         </div>
         <div class="col-sm-8">Add black outline to text</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEXT_PROPERTIES__DATE_FORMAT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEXT_PROPERTIES__DATE_FORMAT(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__DATE_FORMAT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div>(read-only) No longer used, see Label Template above</div>
-        </div>
     </div>
 
     <hr />
@@ -2611,7 +2598,6 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_COLOR',
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
-    'TEXT_PROPERTIES__DATE_FORMAT',
     'ORB_PROPERTIES__MODE',
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',
