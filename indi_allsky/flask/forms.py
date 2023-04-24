@@ -506,6 +506,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'timestamp'  : datetime.now(),
         'ts'         : datetime.now(),
         'exposure'   : 1.0,
+        'rational_exp' : '',
         'gain'       : 1,
         'temp'       : -5.1,
         'temp_unit'  : 'C',
