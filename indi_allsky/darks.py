@@ -1042,7 +1042,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)
 
-        dark_adu_avg = numpy.mean(avg_image, axis=0)[0]
+        dark_adu_avg = numpy.mean(data, axis=0)[0]
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
         hdulist[0].data = data
@@ -1087,7 +1087,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         combined_dark.meta['combined'] = True
 
-        dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)[0]
+        dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
         combined_dark.write(filename_p)
