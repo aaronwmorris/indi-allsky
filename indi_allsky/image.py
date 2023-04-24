@@ -369,12 +369,29 @@ class ImageWorker(Process):
             piexif.ExifIFD.FNumber           : Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio(),
             #piexif.ExifIFD.ApertureValue  # this is not the Aperture size
         }
+
+
+        long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(self.latitude_v.value)
+
+        if long_deg < 0:
+            long_ref = 'W'
+        else:
+            long_ref = 'E'
+
+        if lat_deg < 0:
+            lat_ref = 'S'
+        else:
+            lat_ref = 'N'
+
         gps_ifd = {
-            piexif.GPSIFD.GPSVersionID       : (2, 0, 0, 0),
-            piexif.GPSIFD.GPSLatitudeRef     : 'N',
-            piexif.GPSIFD.GPSLatitude        : ((33, 1), (0, 1), (0, 1)),
-            piexif.GPSIFD.GPSLongitudeRef    : 'W',
-            piexif.GPSIFD.GPSLongitude       : ((84, 1), (0, 1), (0, 1)),
+            piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+            piexif.GPSIFD.GPSLongitudeRef    : long_ref,
+            piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
+            piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
+            piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
+            #piexif.GPSIFD.GPSAltitudeRef     : 0,
+            #piexif.GPSIFD.GPSAltitude        : (0, 1),
         }
 
         exif_dict = {
@@ -402,7 +419,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
-            self.export_raw_image(i_ref)
+            self.export_raw_image(i_ref, exif)
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -637,6 +654,15 @@ class ImageWorker(Process):
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
             self.upload_metadata(i_ref, adu, adu_average)
+
+
+    def decdeg2dms(self, dd):
+        is_positive = dd >= 0
+        dd = abs(dd)
+        minutes, seconds = divmod(dd * 3600, 60)
+        degrees, minutes = divmod(minutes, 60)
+        degrees = degrees if is_positive else -degrees
+        return degrees, minutes, seconds
 
 
     def upload_image(self, i_ref, image_entry, camera):
@@ -978,7 +1004,7 @@ class ImageWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def export_raw_image(self, i_ref):
+    def export_raw_image(self, i_ref, exif):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1054,7 +1080,7 @@ class ImageWorker(Process):
             else:
                 img = Image.fromarray(cv2.cvtColor(scaled_data_8, cv2.COLOR_BGR2RGB))
 
-            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
             # Pillow does not support 16-bit RGB data
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
