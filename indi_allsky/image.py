@@ -403,13 +403,13 @@ class ImageWorker(Process):
             #piexif.GPSIFD.GPSAltitude        : (0, 1),
         }
 
-        exif_dict = {
+        jpeg_exif_dict = {
             '0th'   : zeroth_ifd,
             'Exif'  : exif_ifd,
             'GPS'   : gps_ifd,
         }
 
-        exif = piexif.dump(exif_dict)
+        jpeg_exif = piexif.dump(jpeg_exif_dict)
 
 
         # only perform this processing if libcamera is set to raw mode
@@ -428,7 +428,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
-            self.export_raw_image(i_ref, exif)
+            self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -532,7 +532,7 @@ class ImageWorker(Process):
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, exif)
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
             image_metadata = {
@@ -1171,7 +1171,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
-    def write_img(self, data, i_ref, camera, exif):
+    def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1185,10 +1185,12 @@ class ImageWorker(Process):
 
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            # exif does not appear to work with png
             img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            # exif does not appear to work with tiff
             img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
