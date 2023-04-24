@@ -251,6 +251,7 @@ class IndiAllSkyDarks(object):
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
 
+            'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],

@@ -376,6 +376,10 @@ class ImageWorker(Process):
         }
 
 
+        if camera.owner:
+            zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
+
+
         if self.sensortemp_v.value > -150:
             # Add temperature data
             exif_ifd[piexif.ExifIFD.Temperature] = Fraction(self.sensortemp_v.value).limit_denominator().as_integer_ratio()
@@ -1747,6 +1751,8 @@ class ImageProcessor(object):
             hdulist[0].header['DEC'] = self.dec_v.value
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
 
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
