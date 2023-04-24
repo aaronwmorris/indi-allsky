@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
-#from datetime import timezone
+from datetime import timezone
 import time
 import functools
 import tempfile
@@ -357,13 +357,15 @@ class ImageWorker(Process):
 
 
         ### EXIF tags ###
+        exp_date_utc = exp_date.replace(tzinfo=timezone.utc)
+
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,
             piexif.ImageIFD.Software         : 'indi-allsky',
             piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator().as_integer_ratio(),
         }
         exif_ifd = {
-            piexif.ExifIFD.DateTimeOriginal  : exp_date.strftime('%Y:%m:%d %H:%M:%S'),
+            piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
             piexif.ExifIFD.LensModel         : camera.lensName,
             piexif.ExifIFD.FocalLength       : Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio(),
             piexif.ExifIFD.FNumber           : Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio(),
@@ -384,13 +386,20 @@ class ImageWorker(Process):
         else:
             lat_ref = 'N'
 
+        gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
+        gps_hour   = int(exp_date_utc.strftime('%H'))
+        gps_minute = int(exp_date_utc.strftime('%M'))
+        gps_second = int(exp_date_utc.strftime('%S'))
+
         gps_ifd = {
             piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+            piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
+            piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
             piexif.GPSIFD.GPSLongitudeRef    : long_ref,
             piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
             piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
             piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
-            #piexif.GPSIFD.GPSAltitudeRef     : 0,
+            #piexif.GPSIFD.GPSAltitudeRef     : 0,  # 0 = above sea level, 1 = below
             #piexif.GPSIFD.GPSAltitude        : (0, 1),
         }
 
