@@ -30,6 +30,8 @@ import numpy
 
 import PIL
 from PIL import Image
+#from PIL.ExifTags import Base as ExifBase
+#from PIL.ExifTags import GPS as ExifGPS
 
 from . import constants
 
@@ -351,6 +353,25 @@ class ImageWorker(Process):
         i_ref = self.image_processor.getLatestImage()
 
         ### IMAGE IS CALIBRATED ###
+
+
+        # EXIF data
+        #exif = Image.Exif()
+        #exif[ExifBase.Model.value]              = camera.name
+        #exif[ExifBase.Software.value]           = 'indi-allsky'
+        #exif[ExifBase.ExposureTime.value]       = exposure
+        #exif[ExifBase.FNumber.value]            = round(camera.lensFocalRatio, 1)
+        #exif[ExifBase.ApertureValue.value]      = round(camera.lensFocalLength / camera.lensFocalRatio, 1)
+        #exif[ExifBase.FocalLength.value]        = round(camera.lensFocalLength, 1)
+        #exif[ExifBase.DateTimeOriginal.value]   = exp_date.strftime('%Y:%m:%d %H:%M:%S')
+
+        # wrong
+        #exif[ExifBase.LensModel.value]          = camera.lensName  # Photo.LensModel
+
+        #exif[0xa434] = camera.lensName                                           # Photo.LensModel
+
+        #exif[ExifBase.GPSInfo.value] = offset
+        #ExifGPS.GPSVersionID.value       : b'\x02\x00\x00\x00'
 
 
         # only perform this processing if libcamera is set to raw mode
