@@ -364,7 +364,7 @@ class ImageWorker(Process):
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,
             piexif.ImageIFD.Software         : 'indi-allsky',
-            piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator(max_denominator=50000).as_integer_ratio(),
+            piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator(max_denominator=31250).as_integer_ratio(),
         }
         exif_ifd = {
             piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
@@ -2715,7 +2715,7 @@ class ImageProcessor(object):
         exp_whole = int(i_ref['exposure'])
         exp_remain = i_ref['exposure'] - exp_whole
 
-        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=50000)
+        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
 
         if exp_whole:
             if exp_remain:
