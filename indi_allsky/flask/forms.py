@@ -107,6 +107,16 @@ def INDI_CAMERA_NAME_validator(form, field):
         raise ValidationError('Invalid camera name')
 
 
+def OWNER_validator(form, field):
+    if not field.data:
+        return
+
+    owner_regex = r'^[a-zA-Z0-9\_\.\ \-\@]+$'
+
+    if not re.search(owner_regex, field.data):
+        raise ValidationError('Invalid characters in owner name')
+
+
 def LENS_NAME_validator(form, field):
     if not field.data:
         return
@@ -1693,6 +1703,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
+    OWNER                            = StringField('Owner', validators=[OWNER_validator])
     LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
     LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
     LENS_FOCAL_RATIO                 = FloatField('Focal Ratio', validators=[LENS_FOCAL_RATIO_validator])

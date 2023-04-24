@@ -1546,6 +1546,22 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.OWNER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.OWNER(class='form-control bg-secondary') }}
+            <div id="OWNER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Owner information for copyright tags</div>
+            <div>Restricted to simplified characters</div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LENS_NAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -2505,6 +2521,7 @@ const field_names = [
     'INDI_SERVER',
     'INDI_PORT',
     'INDI_CAMERA_NAME',
+    'OWNER',
     'LENS_NAME',
     'LENS_FOCAL_LENGTH',
     'LENS_FOCAL_RATIO',

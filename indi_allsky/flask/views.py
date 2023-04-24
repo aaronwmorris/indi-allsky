@@ -733,6 +733,7 @@ class ConfigView(FormView):
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
             'INDI_CAMERA_NAME'               : self.indi_allsky_config.get('INDI_CAMERA_NAME', ''),
+            'OWNER'                          : self.indi_allsky_config.get('OWNER', ''),
             'LENS_NAME'                      : self.indi_allsky_config.get('LENS_NAME', 'AllSky Lens'),
             'LENS_FOCAL_LENGTH'              : self.indi_allsky_config.get('LENS_FOCAL_LENGTH', 2.5),
             'LENS_FOCAL_RATIO'               : self.indi_allsky_config.get('LENS_FOCAL_RATIO', 2.0),
@@ -1139,6 +1140,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
         self.indi_allsky_config['INDI_CAMERA_NAME']                     = str(request.json['INDI_CAMERA_NAME'])
+        self.indi_allsky_config['OWNER']                                = str(request.json['OWNER'])
         self.indi_allsky_config['LENS_NAME']                            = str(request.json['LENS_NAME'])
         self.indi_allsky_config['LENS_FOCAL_LENGTH']                    = float(request.json['LENS_FOCAL_LENGTH'])
         self.indi_allsky_config['LENS_FOCAL_RATIO']                     = float(request.json['LENS_FOCAL_RATIO'])
