@@ -371,7 +371,10 @@ class ImageWorker(Process):
         }
         gps_ifd = {
             piexif.GPSIFD.GPSVersionID       : (2, 0, 0, 0),
-            piexif.GPSIFD.GPSAltitudeRef     : 1,
+            piexif.GPSIFD.GPSLatitudeRef     : 'N',
+            piexif.GPSIFD.GPSLatitude        : ((33, 1), (0, 1), (0, 1)),
+            piexif.GPSIFD.GPSLongitudeRef    : 'W',
+            piexif.GPSIFD.GPSLongitude       : ((84, 1), (0, 1), (0, 1)),
         }
 
         exif_dict = {
