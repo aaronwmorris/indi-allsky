@@ -358,6 +358,8 @@ class ImageWorker(Process):
 
         ### EXIF tags ###
         exp_date_utc = exp_date.replace(tzinfo=timezone.utc)
+        focal_length = Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio()
+        f_number = Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio()
 
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,
@@ -367,10 +369,16 @@ class ImageWorker(Process):
         exif_ifd = {
             piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
             piexif.ExifIFD.LensModel         : camera.lensName,
-            piexif.ExifIFD.FocalLength       : Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio(),
-            piexif.ExifIFD.FNumber           : Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio(),
+            piexif.ExifIFD.LensSpecification : (focal_length, focal_length, f_number, f_number),
+            piexif.ExifIFD.FocalLength       : focal_length,
+            piexif.ExifIFD.FNumber           : f_number,
             #piexif.ExifIFD.ApertureValue  # this is not the Aperture size
         }
+
+
+        if self.sensortemp_v.value > -150:
+            # Add temperature data
+            exif_ifd[piexif.ExifIFD.Temperature] = Fraction(self.sensortemp_v.value).limit_denominator().as_integer_ratio()
 
 
         long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
