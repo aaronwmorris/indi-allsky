@@ -211,6 +211,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     gain = db.Column(db.Integer, nullable=False, index=True)
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
+    adu = db.Column(db.Float, nullable=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
@@ -229,6 +230,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     gain = db.Column(db.Integer, nullable=False, index=True)
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
+    adu = db.Column(db.Float, nullable=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
 
