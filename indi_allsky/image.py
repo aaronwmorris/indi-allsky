@@ -30,8 +30,9 @@ import numpy
 
 import PIL
 from PIL import Image
-#from PIL.ExifTags import Base as ExifBase
-#from PIL.ExifTags import GPS as ExifGPS
+
+import piexif
+from fractions import Fraction
 
 from . import constants
 
@@ -355,23 +356,31 @@ class ImageWorker(Process):
         ### IMAGE IS CALIBRATED ###
 
 
-        # EXIF data
-        #exif = Image.Exif()
-        #exif[ExifBase.Model.value]              = camera.name
-        #exif[ExifBase.Software.value]           = 'indi-allsky'
-        #exif[ExifBase.ExposureTime.value]       = exposure
-        #exif[ExifBase.FNumber.value]            = round(camera.lensFocalRatio, 1)
-        #exif[ExifBase.ApertureValue.value]      = round(camera.lensFocalLength / camera.lensFocalRatio, 1)
-        #exif[ExifBase.FocalLength.value]        = round(camera.lensFocalLength, 1)
-        #exif[ExifBase.DateTimeOriginal.value]   = exp_date.strftime('%Y:%m:%d %H:%M:%S')
+        ### EXIF tags ###
+        zeroth_ifd = {
+            piexif.ImageIFD.Model            : camera.name,
+            piexif.ImageIFD.Software         : 'indi-allsky',
+            piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator().as_integer_ratio(),
+        }
+        exif_ifd = {
+            piexif.ExifIFD.DateTimeOriginal  : exp_date.strftime('%Y:%m:%d %H:%M:%S'),
+            piexif.ExifIFD.LensModel         : camera.lensName,
+            piexif.ExifIFD.FocalLength       : Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio(),
+            piexif.ExifIFD.FNumber           : Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio(),
+            #piexif.ExifIFD.ApertureValue  # this is not the Aperture size
+        }
+        gps_ifd = {
+            piexif.GPSIFD.GPSVersionID       : (2, 0, 0, 0),
+            piexif.GPSIFD.GPSAltitudeRef     : 1,
+        }
 
-        # wrong
-        #exif[ExifBase.LensModel.value]          = camera.lensName  # Photo.LensModel
+        exif_dict = {
+            '0th'   : zeroth_ifd,
+            'Exif'  : exif_ifd,
+            'GPS'   : gps_ifd,
+        }
 
-        #exif[0xa434] = camera.lensName                                           # Photo.LensModel
-
-        #exif[ExifBase.GPSInfo.value] = offset
-        #ExifGPS.GPSVersionID.value       : b'\x02\x00\x00\x00'
+        exif = piexif.dump(exif_dict)
 
 
         # only perform this processing if libcamera is set to raw mode
@@ -494,7 +503,7 @@ class ImageWorker(Process):
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera)
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, exif)
 
         if new_filename:
             image_metadata = {
@@ -1124,7 +1133,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
-    def write_img(self, data, i_ref, camera):
+    def write_img(self, data, i_ref, camera, exif):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1138,7 +1147,7 @@ class ImageWorker(Process):
 
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
