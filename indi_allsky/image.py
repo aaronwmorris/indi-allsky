@@ -358,13 +358,21 @@ class ImageWorker(Process):
 
         ### EXIF tags ###
         exp_date_utc = exp_date.replace(tzinfo=timezone.utc)
-        focal_length = Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio()
-        f_number = Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio()
+
+        # Python 3.6, 3.7 does not support as_integer_ratio()
+        focal_length_frac = Fraction(camera.lensFocalLength).limit_denominator()
+        focal_length = (focal_length_frac.numerator, focal_length_frac.denominator)
+
+        f_number_frac = Fraction(camera.lensFocalRatio).limit_denominator()
+        f_number = (f_number_frac.numerator, f_number_frac.denominator)
+
+        exposure_time_frac = Fraction(exposure).limit_denominator(max_denominator=31250)
+        exposure_time = (exposure_time_frac.numerator, exposure_time_frac.denominator)
 
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,
             piexif.ImageIFD.Software         : 'indi-allsky',
-            piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator(max_denominator=31250).as_integer_ratio(),
+            piexif.ImageIFD.ExposureTime     : exposure_time,
         }
         exif_ifd = {
             piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
@@ -382,7 +390,8 @@ class ImageWorker(Process):
 
         if self.sensortemp_v.value > -150:
             # Add temperature data
-            exif_ifd[piexif.ExifIFD.Temperature] = Fraction(self.sensortemp_v.value).limit_denominator().as_integer_ratio()
+            temperature_frac = Fraction(self.sensortemp_v.value).limit_denominator()
+            exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
         long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
