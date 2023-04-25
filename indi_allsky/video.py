@@ -619,13 +619,22 @@ class VideoWorker(Process):
             if p_entry.stat().st_size == 0:
                 continue
 
+
             #logger.info('Reading file: %s', p_entry)
-            try:
-                with Image.open(str(p_entry)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', p_entry)
-                continue
+            if p_entry.suffix in ('.png',):
+                # opencv is faster than Pillow with PNG
+                image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)
+
+                if isinstance(image, type(None)):
+                    logger.error('Unable to read %s', p_entry)
+                    continue
+            else:
+                try:
+                    with Image.open(str(p_entry)) as img:
+                        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                except PIL.UnidentifiedImageError:
+                    logger.error('Unable to read %s', p_entry)
+                    continue
 
 
             kg.processImage(p_entry, image)

@@ -1113,6 +1113,7 @@ class ImageWorker(Process):
             img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
             # Pillow does not support 16-bit RGB data
+            # opencv is faster than Pillow with PNG
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             # Pillow does not support 16-bit RGB data
@@ -1201,17 +1202,20 @@ class ImageWorker(Process):
 
         write_img_start = time.time()
 
-        # images are always color here
-        img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
-
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             # exif does not appear to work with png
-            img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+            #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            #img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+
+            # opencv is faster than Pillow with PNG
+            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
