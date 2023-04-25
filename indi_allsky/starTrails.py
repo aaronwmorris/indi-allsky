@@ -230,8 +230,13 @@ class StarTrailGenerator(object):
 
         ### EXIF tags ###
         exp_date_utc = datetime.utcnow()
-        focal_length = Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio()
-        f_number = Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio()
+
+        # Python 3.6, 3.7 does not support as_integer_ratio()
+        focal_length_frac = Fraction(camera.lensFocalLength).limit_denominator()
+        focal_length = (focal_length_frac.numerator, focal_length_frac.denominator)
+
+        f_number_frac = Fraction(camera.lensFocalRatio).limit_denominator()
+        f_number = (f_number_frac.numerator, f_number_frac.denominator)
 
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,
