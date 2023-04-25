@@ -195,13 +195,17 @@ class StarTrailGenerator(object):
 
             f_tmp_frame_p = Path(f_tmp_frame.name)
 
-            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
-
             if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+                img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
                 img_rgb.save(str(f_tmp_frame_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
             elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-                img_rgb.save(str(f_tmp_frame_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+                #img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+                #img_rgb.save(str(f_tmp_frame_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+
+                # opencv is faster than Pillow with PNG
+                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
             elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+                img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
                 img_rgb.save(str(f_tmp_frame_p), compression='tiff_lzw')
             else:
                 raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
@@ -294,14 +298,18 @@ class StarTrailGenerator(object):
 
         write_img_start = time.time()
 
-        img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
-
         logger.warning('Creating star trail: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            img_rgb.save(str(outfile_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+            #img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+            #img_rgb.save(str(outfile_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+
+            # opencv is faster than Pillow with PNG
+            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
