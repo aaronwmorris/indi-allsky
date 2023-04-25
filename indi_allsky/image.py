@@ -2525,7 +2525,7 @@ class ImageProcessor(object):
 
         alpha_start = time.time()
 
-        self.image = self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask
+        self.image = (self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask).astype(numpy.uint8)
 
         alpha_elapsed_s = time.time() - alpha_start
         logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
