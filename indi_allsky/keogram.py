@@ -2,6 +2,7 @@ import cv2
 import numpy
 import PIL
 from PIL import Image
+import piexif
 import math
 import time
 #import copy
@@ -21,8 +22,10 @@ class KeogramGenerator(object):
     line_length = 35
 
 
-    def __init__(self, config):
+    def __init__(self, config, latitude_v, longitude_v):
         self.config = config
+        self.latitude_v = latitude_v
+        self.longitude_v = longitude_v
 
         self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
@@ -131,7 +134,7 @@ class KeogramGenerator(object):
         self.image_processing_elapsed_s += time.time() - image_processing_start
 
 
-    def finalize(self, outfile):
+    def finalize(self, outfile, camera):
         outfile_p = Path(outfile)
 
         logger.info('Images processed for keogram in %0.1f s', self.image_processing_elapsed_s)
@@ -149,13 +152,67 @@ class KeogramGenerator(object):
         self.applyLabels(keogram_resized)
 
 
+        ### EXIF tags ###
+        exp_date_utc = datetime.utcnow()
+
+        zeroth_ifd = {
+            piexif.ImageIFD.Model            : camera.name,
+            piexif.ImageIFD.Software         : 'indi-allsky',
+        }
+        exif_ifd = {
+            piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
+            piexif.ExifIFD.LensModel         : camera.lensName,
+        }
+
+
+        if camera.owner:
+            zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
+
+
+        long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(self.latitude_v.value)
+
+        if long_deg < 0:
+            long_ref = 'W'
+        else:
+            long_ref = 'E'
+
+        if lat_deg < 0:
+            lat_ref = 'S'
+        else:
+            lat_ref = 'N'
+
+        gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
+        gps_hour   = int(exp_date_utc.strftime('%H'))
+        gps_minute = int(exp_date_utc.strftime('%M'))
+        gps_second = int(exp_date_utc.strftime('%S'))
+
+        gps_ifd = {
+            piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+            piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
+            piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
+            piexif.GPSIFD.GPSLongitudeRef    : long_ref,
+            piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
+            piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
+            piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
+        }
+
+        jpeg_exif_dict = {
+            '0th'   : zeroth_ifd,
+            'Exif'  : exif_ifd,
+            'GPS'   : gps_ifd,
+        }
+
+        jpeg_exif = piexif.dump(jpeg_exif_dict)
+
+
         write_img_start = time.time()
 
         img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
 
         logger.warning('Creating keogram: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+            img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             img_rgb.save(str(outfile_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):

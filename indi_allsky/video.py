@@ -545,7 +545,11 @@ class VideoWorker(Process):
 
         processing_start = time.time()
 
-        kg = KeogramGenerator(self.config)
+        kg = KeogramGenerator(
+            self.config,
+            self.latitude_v,
+            self.longitude_v,
+        )
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
@@ -593,7 +597,13 @@ class VideoWorker(Process):
             startrail_video_entry = None
 
 
-        stg = StarTrailGenerator(self.config, self.bin_v, mask=self._detection_mask)
+        stg = StarTrailGenerator(
+            self.config,
+            self.latitude_v,
+            self.longitude_v,
+            self.bin_v,
+            mask=self._detection_mask,
+        )
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
@@ -628,10 +638,10 @@ class VideoWorker(Process):
                 stg.processImage(p_entry, image)
 
 
-        kg.finalize(keogram_file)
+        kg.finalize(keogram_file, camera)
 
         if night:
-            stg.finalize(startrail_file)
+            stg.finalize(startrail_file, camera)
 
             st_frame_count = stg.timelapse_frame_count
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
