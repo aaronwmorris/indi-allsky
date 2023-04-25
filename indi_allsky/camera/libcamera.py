@@ -374,8 +374,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
             'libcamera_black_level' : self._black_level,
-            'libcamera_awb_gains'   : self._awb_gains,  # Not implemented
-            'libcamera_ccm'         : self._ccm,
+            #'libcamera_awb_gains'   : self._awb_gains,  # This has side effects
+            #'libcamera_ccm'         : self._ccm,
         }
 
         self.image_q.put(jobdata)
