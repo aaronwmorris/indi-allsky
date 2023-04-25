@@ -7,7 +7,7 @@ import timeit
 #import cv2
 #from PIL import Image
 
-ROUNDS = 250
+ROUNDS = 25
 
 
 setup_pillow_read = '''
@@ -39,6 +39,7 @@ s_pillow_write = '''
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 i = Image.fromarray(img_bgr)
 i.save(out, format="JPEG", quality=90)
+#i.save(out, format="PNG", compression=7)
 '''
 
 setup_opencv_read = '''
@@ -56,6 +57,7 @@ img = cv2.imread("blob_detection/test_transparent_clouds_plane.jpg", cv2.IMREAD_
 
 s_opencv_write = '''
 cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+#cv2.imencode(".png", img, [cv2.IMWRITE_PNG_COMPRESSION, 7])
 '''
 
 
