@@ -385,8 +385,8 @@ class ImageWorker(Process):
             exif_ifd[piexif.ExifIFD.Temperature] = Fraction(self.sensortemp_v.value).limit_denominator().as_integer_ratio()
 
 
-        long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
-        lat_deg, lat_min, lat_sec = self.decdeg2dms(self.latitude_v.value)
+        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
 
         if long_deg < 0:
             long_ref = 'W'

@@ -22,10 +22,8 @@ class KeogramGenerator(object):
     line_length = 35
 
 
-    def __init__(self, config, latitude_v, longitude_v):
+    def __init__(self, config):
         self.config = config
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
 
         self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
@@ -169,8 +167,8 @@ class KeogramGenerator(object):
             zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
 
 
-        long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
-        lat_deg, lat_min, lat_sec = self.decdeg2dms(self.latitude_v.value)
+        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
 
         if long_deg < 0:
             long_ref = 'W'

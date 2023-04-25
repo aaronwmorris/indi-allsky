@@ -18,10 +18,8 @@ logger = logging.getLogger('indi_allsky')
 
 class StarTrailGenerator(object):
 
-    def __init__(self, config, latitude_v, longitude_v, bin_v, mask=None):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
         self.bin_v = bin_v
 
         self._max_brightness = 50
@@ -252,8 +250,8 @@ class StarTrailGenerator(object):
             zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
 
 
-        long_deg, long_min, long_sec = self.decdeg2dms(self.longitude_v.value)
-        lat_deg, lat_min, lat_sec = self.decdeg2dms(self.latitude_v.value)
+        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
 
         if long_deg < 0:
             long_ref = 'W'

@@ -547,8 +547,6 @@ class VideoWorker(Process):
 
         kg = KeogramGenerator(
             self.config,
-            self.latitude_v,
-            self.longitude_v,
         )
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
@@ -599,8 +597,6 @@ class VideoWorker(Process):
 
         stg = StarTrailGenerator(
             self.config,
-            self.latitude_v,
-            self.longitude_v,
             self.bin_v,
             mask=self._detection_mask,
         )
