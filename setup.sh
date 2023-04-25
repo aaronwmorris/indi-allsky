@@ -1487,6 +1487,11 @@ fi
 
 
 echo "**** Setting up indi-allsky service ****"
+# timer
+cp -f "${ALLSKY_DIRECTORY}/service/${ALLSKY_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+
+
 TMP2=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
@@ -1527,9 +1532,14 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
-systemctl --user enable ${ALLSKY_SERVICE_NAME}.service
+
+# indi-allsky service is started by the timer (2 minutes after boot)
+systemctl --user disable ${ALLSKY_SERVICE_NAME}.service
+systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
+
+# gunicorn service is started by the socket
+systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
-systemctl --user enable ${GUNICORN_SERVICE_NAME}.service
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
     systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
