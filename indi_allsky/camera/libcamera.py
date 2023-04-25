@@ -176,7 +176,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--immediate',
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
-                '--quality', '100',
+                '--quality', '95',
                 #'--denoise', 'off',
                 #'--awbgains', '1,1',  # enable awb in jpg mode
                 '--gain', '{0:d}'.format(self._ccd_gain),
@@ -374,8 +374,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
             'libcamera_black_level' : self._black_level,
-            'libcamera_awb_gains'   : self._awb_gains,  # Not implemented
-            'libcamera_ccm'         : self._ccm,
+            #'libcamera_awb_gains'   : self._awb_gains,  # This has side effects
+            #'libcamera_ccm'         : self._ccm,
         }
 
         self.image_q.put(jobdata)

@@ -57,6 +57,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     az = db.Column(db.Float, nullable=True)
     nightSunAlt = db.Column(db.Float, nullable=True)
 
+    owner = db.Column(db.String(length=100), nullable=True)
     lensName = db.Column(db.String(length=100), nullable=True)
     lensFocalLength = db.Column(db.Float, nullable=True)
     lensFocalRatio = db.Column(db.Float, nullable=True)
@@ -211,6 +212,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     gain = db.Column(db.Integer, nullable=False, index=True)
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
+    adu = db.Column(db.Float, nullable=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
@@ -229,6 +231,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     gain = db.Column(db.Integer, nullable=False, index=True)
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
+    adu = db.Column(db.Float, nullable=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
 

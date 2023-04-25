@@ -2,6 +2,8 @@
 
 import cv2
 import numpy
+import PIL
+from PIL import Image
 import math
 import argparse
 import logging
@@ -80,11 +82,14 @@ class KeogramGenerator(object):
 
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
-            image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
 
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(filename)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', filename)
                 continue
+
 
             self.processImage(filename, image)
 
@@ -137,16 +142,8 @@ class KeogramGenerator(object):
     def finalize(self, outfile):
         logger.warning('Keogram images processed in %0.1f s', self.image_processing_elapsed_s)
 
-        logger.warning('Creating %s', outfile)
-        cv2.imwrite(outfile, self.keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
-
-
         # trim bars at top and bottom
         trimmed_keogram = self.trimEdges(self.keogram_data)
-
-        logger.warning('Creating trim_%s', outfile)
-        cv2.imwrite('trim_{0:s}'.format(outfile), trimmed_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
-
 
         # scale horizontal
         trimmed_height, trimmed_width = trimmed_keogram.shape[:2]
@@ -155,41 +152,39 @@ class KeogramGenerator(object):
         keogram_resized = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-        logger.warning('Creating trim_resize_%s', outfile)
-        cv2.imwrite('trim_resize_{0:s}'.format(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, 90])
-
-
         # apply time labels
         self.applyLabels(keogram_resized)
 
 
         logger.warning('Creating labeled_trim_resize_%s', outfile)
-        cv2.imwrite('labeled_trim_resize_{0:s}'.format(outfile), keogram_resized, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        keogram_resized_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+        keogram_resized_rgb.save(str(outfile), quality=90)
 
 
     def rotate(self, image):
-            height, width = image.shape[:2]
-            center = (width / 2, height / 2)
+        height, width = image.shape[:2]
+        center = (width / 2, height / 2)
 
-            rot = cv2.getRotationMatrix2D(center, self._angle, 1.0)
-            #bbox = cv2.boundingRect2f((0, 0), image.size(), self._angle)
+        rot = cv2.getRotationMatrix2D(center, self._angle, 1.0)
+        #bbox = cv2.boundingRect2f((0, 0), image.size(), self._angle)
 
-            #rot[0, 2] += bbox.width / 2.0 - image.cols / 2.0
-            #rot[1, 2] += bbox.height / 2.0 - imagesrc.rows / 2.0
+        #rot[0, 2] += bbox.width / 2.0 - image.cols / 2.0
+        #rot[1, 2] += bbox.height / 2.0 - imagesrc.rows / 2.0
 
-            abs_cos = abs(rot[0, 0])
-            abs_sin = abs(rot[0, 1])
+        abs_cos = abs(rot[0, 0])
+        abs_sin = abs(rot[0, 1])
 
-            bound_w = int(height * abs_sin + width * abs_cos)
-            bound_h = int(height * abs_cos + width * abs_sin)
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
 
-            rot[0, 2] += bound_w / 2 - center[0]
-            rot[1, 2] += bound_h / 2 - center[1]
+        rot[0, 2] += bound_w / 2 - center[0]
+        rot[1, 2] += bound_h / 2 - center[1]
 
-            #rotated = cv2.warpAffine(image, rot, bbox.size())
-            rotated = cv2.warpAffine(image, rot, (bound_w, bound_h))
+        #rotated = cv2.warpAffine(image, rot, bbox.size())
+        rotated = cv2.warpAffine(image, rot, (bound_w, bound_h))
 
-            return rotated
+        return rotated
 
 
     def trimEdges(self, image):

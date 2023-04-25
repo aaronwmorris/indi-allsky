@@ -251,6 +251,7 @@ class IndiAllSkyDarks(object):
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
 
+            'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
@@ -743,18 +744,8 @@ class IndiAllSkyDarks(object):
         s.bitmax = self._bitmax
         s.hotpixel_adu_percent = self._hotpixel_adu_percent
 
-        s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
-        s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
-
-        dark_metadata = {
-            'type'       : constants.DARK_FRAME,
-            'createDate' : exp_date.timestamp(),
-            'bitdepth'   : image_bitpix,
-            'exposure'   : exposure_f,
-            'gain'       : self.gain_v.value,
-            'binmode'    : self.bin_v.value,
-            'temp'       : self.sensortemp_v.value,
-        }
+        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+        dark_adu_avg = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
 
         bpm_metadata = {
             'type'       : constants.BPM_FRAME,
@@ -764,19 +755,30 @@ class IndiAllSkyDarks(object):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'temp'       : self.sensortemp_v.value,
+            'adu'        : bpm_adu_avg,
         }
 
+        dark_metadata = {
+            'type'       : constants.DARK_FRAME,
+            'createDate' : exp_date.timestamp(),
+            'bitdepth'   : image_bitpix,
+            'exposure'   : exposure_f,
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'temp'       : self.sensortemp_v.value,
+            'adu'        : dark_adu_avg,
+        }
 
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
             self.camera_id,
-            dark_metadata,
+            bpm_metadata,
         )
 
         self._miscDb.addDarkFrame(
             full_dark_filename_p,
             self.camera_id,
-            bpm_metadata,
+            dark_metadata,
         )
 
         tmp_fit_dir.cleanup()
@@ -997,10 +999,15 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
 
+        bpm_adu_avg = numpy.mean(bpm, axis=0)[0]
+        logger.info('Master BPM average adu: %0.2f', bpm_adu_avg)
+
         hdulist[0].data = bpm
 
         # reuse the last fits file for the stacked data
         hdulist.writeto(filename_p)
+
+        return bpm_adu_avg
 
 
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
@@ -1036,12 +1043,15 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)
 
+        dark_adu_avg = numpy.mean(data, axis=0)[0]
+        logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
         hdulist[0].data = data
 
         # reuse the last fits file for the stacked data
         hdulist.writeto(filename_p)
 
+        return dark_adu_avg
 
 
 class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
@@ -1078,5 +1088,10 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         combined_dark.meta['combined'] = True
 
+        dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)
+        logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
+
         combined_dark.write(filename_p)
+
+        return dark_adu_avg
 

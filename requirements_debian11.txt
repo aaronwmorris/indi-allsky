@@ -16,6 +16,9 @@ ephem
 paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
+# https://www.wheelodex.org/projects/pillow/ or https://www.piwheels.org/project/Pillow/
+Pillow
+piexif
 imageio
 imageio-ffmpeg
 # https://www.wheelodex.org/projects/imagecodecs/

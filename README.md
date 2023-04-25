@@ -23,6 +23,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Multi-image stacking
 * Timelapse video generation
 * GPS support
+* Images tagged with EXIF data (JPEG only)
 * Remote web portal
 * Network file transfers - Upload images and videos to remote site
     * S3 Object Storage support

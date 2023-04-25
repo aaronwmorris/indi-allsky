@@ -579,7 +579,7 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">[1-100] Compression factor for JPEG images.  Higher numbers increase quality and file sizes.  Default: 90</div>
+        <div class="col-sm-8">[1-100] Quality factor for JPEG images.  Higher numbers increase quality and file sizes.  Default: 90</div>
     </div>
 
     <div class="form-group row">
@@ -590,7 +590,7 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">[1-9] Compression factor for PNG images. Higher numbers increase file sizes.  Default: 5</div>
+        <div class="col-sm-8">[1-9] Compression factor for PNG images. Lower numbers increase file sizes.  Default: 5</div>
     </div>
 
     <div class="form-group row">
@@ -601,7 +601,7 @@
             {{ form_config.IMAGE_FILE_COMPRESSION__TIF(class='form-control bg-secondary') }}
             <div id="IMAGE_FILE_COMPRESSION__TIF-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">[int] Compression flag for TIFF images. 5 = LZW - See libtiff.h for valid options</div>
+        <div class="col-sm-8">(read-only)</div>
     </div>
 
     <div class="form-group row">
@@ -643,7 +643,7 @@
         <div class="col-sm-6">
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
             <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
-            <div>Available variables: <pre>timestamp, ts, exposure, gain, temp, temp_unit, sqm, stars,<br />detections, sun_alt, moon_alt, moon_phase, sun_moon_sep,<br />latitude, longitude, stack_method, stack_count</pre></div>
+            <div>Available variables: <pre>timestamp, ts, exposure, rational_exp, gain, temp, temp_unit, sqm, stars,<br />detections, sun_alt, moon_alt, moon_phase, sun_moon_sep,<br />latitude, longitude, stack_method, stack_count</pre></div>
 
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" target="_blank">Image Labels Wiki</a></div>
         </div>
@@ -1039,19 +1039,6 @@
             </div>
         </div>
         <div class="col-sm-8">Add black outline to text</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEXT_PROPERTIES__DATE_FORMAT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEXT_PROPERTIES__DATE_FORMAT(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__DATE_FORMAT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div>(read-only) No longer used, see Label Template above</div>
-        </div>
     </div>
 
     <hr />
@@ -1553,6 +1540,22 @@
             <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min: -180, Max: 180</div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OWNER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.OWNER(class='form-control bg-secondary') }}
+            <div id="OWNER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Owner information for copyright tags</div>
+            <div>Restricted to simplified characters</div>
+        </div>
     </div>
 
     <hr />
@@ -2518,6 +2521,7 @@ const field_names = [
     'INDI_SERVER',
     'INDI_PORT',
     'INDI_CAMERA_NAME',
+    'OWNER',
     'LENS_NAME',
     'LENS_FOCAL_LENGTH',
     'LENS_FOCAL_RATIO',
@@ -2611,7 +2615,6 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_COLOR',
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
-    'TEXT_PROPERTIES__DATE_FORMAT',
     'ORB_PROPERTIES__MODE',
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',

@@ -243,6 +243,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'temp'
+        #    'adu'
         #}
 
 
@@ -281,6 +282,7 @@ class miscDb(object):
             gain=metadata['gain'],
             binmode=metadata['binmode'],
             temp=temp_val,
+            adu=metadata['adu'],
         )
 
         db.session.add(dark)
@@ -299,6 +301,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'temp'
+        #    'adu'
         #}
 
 
@@ -336,6 +339,7 @@ class miscDb(object):
             gain=metadata['gain'],
             binmode=metadata['binmode'],
             temp=temp_val,
+            adu=metadata['adu'],
         )
 
         db.session.add(bpm)

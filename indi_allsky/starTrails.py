@@ -1,6 +1,11 @@
 import os
 import cv2
+from fractions import Fraction
 import numpy
+from datetime import datetime
+import PIL
+from PIL import Image
+import piexif
 import time
 from pathlib import Path
 import tempfile
@@ -106,11 +111,14 @@ class StarTrailGenerator(object):
 
         for file_p in file_list_ordered:
             logger.info('Reading file: %s', file_p)
-            image = cv2.imread(str(file_p), cv2.IMREAD_COLOR)  # convert graycale to color
 
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(file_p)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', file_p)
                 continue
+
 
             self.processImage(file_p, image)
 
@@ -187,12 +195,14 @@ class StarTrailGenerator(object):
 
             f_tmp_frame_p = Path(f_tmp_frame.name)
 
+            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+
             if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+                img_rgb.save(str(f_tmp_frame_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
             elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+                img_rgb.save(str(f_tmp_frame_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
             elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-                cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+                img_rgb.save(str(f_tmp_frame_p), compression='tiff_lzw')
             else:
                 raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
@@ -206,7 +216,7 @@ class StarTrailGenerator(object):
         self.image_processing_elapsed_s += time.time() - image_processing_start
 
 
-    def finalize(self, outfile):
+    def finalize(self, outfile, camera):
         outfile_p = Path(outfile)
 
         logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
@@ -218,15 +228,76 @@ class StarTrailGenerator(object):
             self.trail_image = self.placeholder_image
 
 
+        ### EXIF tags ###
+        exp_date_utc = datetime.utcnow()
+        focal_length = Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio()
+        f_number = Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio()
+
+        zeroth_ifd = {
+            piexif.ImageIFD.Model            : camera.name,
+            piexif.ImageIFD.Software         : 'indi-allsky',
+        }
+        exif_ifd = {
+            piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
+            piexif.ExifIFD.LensModel         : camera.lensName,
+            piexif.ExifIFD.LensSpecification : (focal_length, focal_length, f_number, f_number),
+            piexif.ExifIFD.FocalLength       : focal_length,
+            piexif.ExifIFD.FNumber           : f_number,
+        }
+
+
+        if camera.owner:
+            zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
+
+
+        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
+
+        if long_deg < 0:
+            long_ref = 'W'
+        else:
+            long_ref = 'E'
+
+        if lat_deg < 0:
+            lat_ref = 'S'
+        else:
+            lat_ref = 'N'
+
+        gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
+        gps_hour   = int(exp_date_utc.strftime('%H'))
+        gps_minute = int(exp_date_utc.strftime('%M'))
+        gps_second = int(exp_date_utc.strftime('%S'))
+
+        gps_ifd = {
+            piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+            piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
+            piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
+            piexif.GPSIFD.GPSLongitudeRef    : long_ref,
+            piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
+            piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
+            piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
+        }
+
+        jpeg_exif_dict = {
+            '0th'   : zeroth_ifd,
+            'Exif'  : exif_ifd,
+            'GPS'   : gps_ifd,
+        }
+
+        jpeg_exif = piexif.dump(jpeg_exif_dict)
+
+
         write_img_start = time.time()
+
+        img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
 
         logger.warning('Creating star trail: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            img_rgb.save(str(outfile_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
@@ -236,6 +307,15 @@ class StarTrailGenerator(object):
 
         # set default permissions
         outfile_p.chmod(0o644)
+
+
+    def decdeg2dms(self, dd):
+        is_positive = dd >= 0
+        dd = abs(dd)
+        minutes, seconds = divmod(dd * 3600, 60)
+        degrees, minutes = divmod(minutes, 60)
+        degrees = degrees if is_positive else -degrees
+        return degrees, minutes, seconds
 
 
     def cleanup(self):

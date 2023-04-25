@@ -3,6 +3,7 @@ import time
 import math
 import json
 import cv2
+import numpy
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -12,6 +13,9 @@ import tempfile
 import signal
 import traceback
 import logging
+
+import PIL
+from PIL import Image
 
 import ephem
 
@@ -541,7 +545,9 @@ class VideoWorker(Process):
 
         processing_start = time.time()
 
-        kg = KeogramGenerator(self.config)
+        kg = KeogramGenerator(
+            self.config,
+        )
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
@@ -589,7 +595,11 @@ class VideoWorker(Process):
             startrail_video_entry = None
 
 
-        stg = StarTrailGenerator(self.config, self.bin_v, mask=self._detection_mask)
+        stg = StarTrailGenerator(
+            self.config,
+            self.bin_v,
+            mask=self._detection_mask,
+        )
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
@@ -610,11 +620,13 @@ class VideoWorker(Process):
                 continue
 
             #logger.info('Reading file: %s', p_entry)
-            image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)  # convert grayscale to color
-
-            if isinstance(image, type(None)):
+            try:
+                with Image.open(str(p_entry)) as img:
+                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Unable to read %s', p_entry)
                 continue
+
 
             kg.processImage(p_entry, image)
 
@@ -622,10 +634,10 @@ class VideoWorker(Process):
                 stg.processImage(p_entry, image)
 
 
-        kg.finalize(keogram_file)
+        kg.finalize(keogram_file, camera)
 
         if night:
-            stg.finalize(startrail_file)
+            stg.finalize(startrail_file, camera)
 
             st_frame_count = stg.timelapse_frame_count
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):

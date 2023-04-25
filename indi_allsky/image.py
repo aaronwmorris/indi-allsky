@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
-#from datetime import timezone
+from datetime import timezone
 import time
 import functools
 import tempfile
@@ -17,8 +17,6 @@ import logging
 import traceback
 #from pprint import pformat
 
-#from tifffile import TiffWriter
-
 import ephem
 
 from multiprocessing import Process
@@ -29,6 +27,12 @@ from astropy.io import fits
 
 import cv2
 import numpy
+
+import PIL
+from PIL import Image
+
+import piexif
+from fractions import Fraction
 
 from . import constants
 
@@ -352,6 +356,74 @@ class ImageWorker(Process):
         ### IMAGE IS CALIBRATED ###
 
 
+        ### EXIF tags ###
+        exp_date_utc = exp_date.replace(tzinfo=timezone.utc)
+        focal_length = Fraction(camera.lensFocalLength).limit_denominator().as_integer_ratio()
+        f_number = Fraction(camera.lensFocalRatio).limit_denominator().as_integer_ratio()
+
+        zeroth_ifd = {
+            piexif.ImageIFD.Model            : camera.name,
+            piexif.ImageIFD.Software         : 'indi-allsky',
+            piexif.ImageIFD.ExposureTime     : Fraction(exposure).limit_denominator(max_denominator=31250).as_integer_ratio(),
+        }
+        exif_ifd = {
+            piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
+            piexif.ExifIFD.LensModel         : camera.lensName,
+            piexif.ExifIFD.LensSpecification : (focal_length, focal_length, f_number, f_number),
+            piexif.ExifIFD.FocalLength       : focal_length,
+            piexif.ExifIFD.FNumber           : f_number,
+            #piexif.ExifIFD.ApertureValue  # this is not the Aperture size
+        }
+
+
+        if camera.owner:
+            zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
+
+
+        if self.sensortemp_v.value > -150:
+            # Add temperature data
+            exif_ifd[piexif.ExifIFD.Temperature] = Fraction(self.sensortemp_v.value).limit_denominator().as_integer_ratio()
+
+
+        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
+
+        if long_deg < 0:
+            long_ref = 'W'
+        else:
+            long_ref = 'E'
+
+        if lat_deg < 0:
+            lat_ref = 'S'
+        else:
+            lat_ref = 'N'
+
+        gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
+        gps_hour   = int(exp_date_utc.strftime('%H'))
+        gps_minute = int(exp_date_utc.strftime('%M'))
+        gps_second = int(exp_date_utc.strftime('%S'))
+
+        gps_ifd = {
+            piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+            piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
+            piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
+            piexif.GPSIFD.GPSLongitudeRef    : long_ref,
+            piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
+            piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
+            piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
+            #piexif.GPSIFD.GPSAltitudeRef     : 0,  # 0 = above sea level, 1 = below
+            #piexif.GPSIFD.GPSAltitude        : (0, 1),
+        }
+
+        jpeg_exif_dict = {
+            '0th'   : zeroth_ifd,
+            'Exif'  : exif_ifd,
+            'GPS'   : gps_ifd,
+        }
+
+        jpeg_exif = piexif.dump(jpeg_exif_dict)
+
+
         # only perform this processing if libcamera is set to raw mode
         if self.libcamera_raw:
             # These values come from libcamera
@@ -368,7 +440,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
-            self.export_raw_image(i_ref)
+            self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -472,7 +544,7 @@ class ImageWorker(Process):
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera)
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
             image_metadata = {
@@ -603,6 +675,15 @@ class ImageWorker(Process):
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
             self.upload_metadata(i_ref, adu, adu_average)
+
+
+    def decdeg2dms(self, dd):
+        is_positive = dd >= 0
+        dd = abs(dd)
+        minutes, seconds = divmod(dd * 3600, 60)
+        degrees, minutes = divmod(minutes, 60)
+        degrees = degrees if is_positive else -degrees
+        return degrees, minutes, seconds
 
 
     def upload_image(self, i_ref, image_entry, camera):
@@ -944,7 +1025,7 @@ class ImageWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def export_raw_image(self, i_ref):
+    def export_raw_image(self, i_ref, exif):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1000,6 +1081,8 @@ class ImageWorker(Process):
             raise Exception('Unsupported bit depth')
 
 
+        #logger.info('Image type: %s', str(scaled_data.dtype))
+        #logger.info('Image shape: %s', str(scaled_data.shape))
 
         write_img_start = time.time()
 
@@ -1013,18 +1096,18 @@ class ImageWorker(Process):
                 div_factor = int((2 ** max_bit_depth) / 255)
                 scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
 
-            cv2.imwrite(str(tmpfile_name), scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            if len(scaled_data_8.shape) == 2:
+                img = Image.fromarray(scaled_data_8)
+            else:
+                img = Image.fromarray(cv2.cvtColor(scaled_data_8, cv2.COLOR_BGR2RGB))
+
+            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
+            # Pillow does not support 16-bit RGB data
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
-            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
-
-            #with TiffWriter(str(tmpfile_name), ) as tif:
-            #    tif.write(
-            #        scaled_data,
-            #        compression='lzw',  # requires imagecodecs
-            #        metadata={'foo': 'bar'},
-            #    )
+            # Pillow does not support 16-bit RGB data
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, 5])  # LZW
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_EXPORT_RAW'])
 
@@ -1100,7 +1183,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
 
-    def write_img(self, data, i_ref, camera):
+    def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1109,13 +1192,18 @@ class ImageWorker(Process):
 
         write_img_start = time.time()
 
+        # images are always color here
+        img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            # exif does not appear to work with png
+            img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_TIFF_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['tif']])
+            # exif does not appear to work with tiff
+            img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
@@ -1597,11 +1685,13 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             indi_rgb = False
 
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(data, type(None)):
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 filename_p.unlink()
                 raise BadImage('Bad jpeg image')
+
 
             image_bitpix = 8
             image_bayerpat = None
@@ -1612,11 +1702,13 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.png']:
             indi_rgb = False
 
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(data, type(None)):
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 filename_p.unlink()
                 raise BadImage('Bad png image')
+
 
             image_bitpix = 8
             image_bayerpat = None
@@ -1659,6 +1751,8 @@ class ImageProcessor(object):
             hdulist[0].header['DEC'] = self.dec_v.value
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
 
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
@@ -1814,11 +1908,11 @@ class ImageProcessor(object):
 
             if self.libcamera_raw:
                 if libcamera_black_level:
-                    # use opencv to prevent underruns
-                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, libcamera_black_level)
+                    black_level_scaled = int(libcamera_black_level) >> (16 - self._max_bit_depth)
 
-                    #black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
-                    #i_ref['hdulist'][0].data -= (black_level_depth - 15)  # offset slightly
+                    # use opencv to prevent underruns
+                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
+                    #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
 
 
 
@@ -2617,10 +2711,27 @@ class ImageProcessor(object):
             temp_unit = 'C'
 
 
+        # calculate rational exposure ("1 1/4")
+        exp_whole = int(i_ref['exposure'])
+        exp_remain = i_ref['exposure'] - exp_whole
+
+        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
+
+        if exp_whole:
+            if exp_remain:
+                rational_exp = '{0:d} {1:d}/{2:d}'.format(exp_whole, exp_remain_frac.numerator, exp_remain_frac.denominator)
+            else:
+                rational_exp = '{0:d}'.format(exp_whole)
+        else:
+            rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
+
+
+
         label_data = {
             'timestamp'    : i_ref['exp_date'],
             'ts'           : i_ref['exp_date'],  # shortcut
             'exposure'     : i_ref['exposure'],
+            'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
