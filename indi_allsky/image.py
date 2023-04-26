@@ -3064,12 +3064,19 @@ class ImageProcessor(object):
 
 
     def drawText_pillow(self, draw, text, font, pt, color_rgb):
-        # black outline
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 1
+        else:
+            stroke_width = 0
+
         draw.text(
             pt,
             text,
             fill=color_rgb,
             font=font,
+            stroke_width=stroke_width,
+            stroke_fill=(0, 0, 0),
         )
 
 
