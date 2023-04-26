@@ -1622,7 +1622,6 @@ class ImageProcessor(object):
         self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
         self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
-
         base_path  = Path(__file__).parent
         self.font_path  = base_path.joinpath('fonts')
 
