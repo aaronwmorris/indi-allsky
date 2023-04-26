@@ -275,7 +275,8 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 |                   | libcamera     | https://libcamera.org/ |
 | Image processing  | OpenCV        | https://opencv.org/ |
 |                   | opencv-python | https://github.com/opencv/opencv-python |
-|                   | pillow        | https://pillow.readthedocs.io/ |
+|                   | Pillow        | https://pillow.readthedocs.io/ |
+|                   | piexif        | https://piexif.readthedocs.io/ |
 |                   | astropy       | https://www.astropy.org/ |
 |                   | astroalign    | https://astroalign.quatrope.org/ |
 |                   | ccdproc       | https://ccdproc.readthedocs.io/ |
