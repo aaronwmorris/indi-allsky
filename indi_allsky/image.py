@@ -2897,7 +2897,10 @@ class ImageProcessor(object):
         img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         image_width, image_height  = img_rgb.size  # backwards from opencv
 
-        font = ImageFont.truetype(str(self.font_path.joinpath('FreeMono.ttf')), 30)
+        pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
 
         color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])  # RGB for pillow
