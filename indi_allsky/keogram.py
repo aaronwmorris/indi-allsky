@@ -463,7 +463,7 @@ class KeogramGenerator(object):
 
 
             draw.text(
-                (line_x + 5, height - (pillow_font_size + 4)),
+                (line_x + 5, height - (pillow_font_size + 3)),
                 hour_str,
                 fill=tuple(color_rgb),
                 font=font,
