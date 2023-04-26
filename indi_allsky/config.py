@@ -123,7 +123,6 @@ class IndiAllSkyConfigBase(object):
             "tif"   : 5,  # 5 = LZW
         },
         "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
-        "IMAGE_LABEL"      : True,
         "IMAGE_LABEL_TEMPLATE" : "{timestamp:%Y.%m.%d %H:%M:%S}\nLat {latitude:0.1f} Long {longitude:0.1f}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStacking {stack_method:s}\nStars {stars:d}",
         "IMAGE_EXTRA_TEXT" : "",
         "IMAGE_CROP_ROI"   : [],
@@ -165,17 +164,18 @@ class IndiAllSkyConfigBase(object):
             [ "OBJECT", "" ],
             [ "NOTES", "" ],
         ],
+        "IMAGE_LABEL_SYSTEM" : "opencv",
         "TEXT_PROPERTIES" : {
             "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
             "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
-            "FONT_HEIGHT"    : 30,
-            "FONT_X"         : 15,
-            "FONT_Y"         : 30,
-            "FONT_COLOR"     : [200, 200, 200],
             "FONT_AA"        : "LINE_AA",
             "FONT_SCALE"     : 0.80,
             "FONT_THICKNESS" : 1,
             "FONT_OUTLINE"   : True,
+            "FONT_HEIGHT"    : 30,
+            "FONT_X"         : 15,
+            "FONT_Y"         : 30,
+            "FONT_COLOR"     : [200, 200, 200],
         },
         "ORB_PROPERTIES" : {
             "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
