@@ -204,6 +204,9 @@ class StarTrailGenerator(object):
 
                 # opencv is faster than Pillow with PNG
                 cv2.imwrite(str(f_tmp_frame_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+                img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+                img_rgb.save(str(f_tmp_frame_p))
             elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
                 img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
                 img_rgb.save(str(f_tmp_frame_p), compression='tiff_lzw')
@@ -308,6 +311,9 @@ class StarTrailGenerator(object):
 
             # opencv is faster than Pillow with PNG
             cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(outfile_p), exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')

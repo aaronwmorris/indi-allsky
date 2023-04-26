@@ -216,6 +216,9 @@ class KeogramGenerator(object):
 
             # opencv is faster than Pillow with PNG
             cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(outfile_p), exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')

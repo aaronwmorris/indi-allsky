@@ -638,7 +638,7 @@ def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
 
 
 def IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('jpg', 'png', 'tif'):
+    if field.data not in ('jpg', 'png', 'tif', 'webp'):
         raise ValidationError('Please select a valid file type')
 
 
@@ -1593,6 +1593,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
+        ('webp', 'WebP'),
         ('tif', 'TIFF'),
     )
 

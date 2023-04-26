@@ -2162,7 +2162,7 @@ class IndiAllSky(object):
 
         ### find all imaegs
         file_list_images = list()
-        self._getFolderFilesByExt(self.image_dir, file_list_images, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff'])
+        self._getFolderFilesByExt(self.image_dir, file_list_images, extension_list=['jpg', 'jpeg', 'png', 'tif', 'tiff', 'webp'])
 
 
         ### Keograms

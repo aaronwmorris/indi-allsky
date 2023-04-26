@@ -1217,6 +1217,9 @@ class ImageWorker(Process):
 
             # opencv is faster than Pillow with PNG
             cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
