@@ -1001,6 +1001,30 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr />
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2619,6 +2643,8 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_COLOR',
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
+    'TEXT_PROPERTIES__PIL_FONT_FILE',
+    'TEXT_PROPERTIES__PIL_FONT_SIZE',
     'ORB_PROPERTIES__MODE',
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',

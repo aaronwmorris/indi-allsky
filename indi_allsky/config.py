@@ -176,6 +176,8 @@ class IndiAllSkyConfigBase(object):
             "FONT_X"         : 15,
             "FONT_Y"         : 30,
             "FONT_COLOR"     : [200, 200, 200],
+            "PIL_FONT_FILE"  : "fonts-freefont-ttf/FreeSans.ttf",
+            "PIL_FONT_SIZE"  : 30,
         },
         "ORB_PROPERTIES" : {
             "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off

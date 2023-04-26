@@ -1013,6 +1013,19 @@ def TEXT_PROPERTIES__FONT_Y_validator(form, field):
         raise ValidationError('Font offset must be greater than 1')
 
 
+def TEXT_PROPERTIES__PIL_FONT_FILE_validator(form, field):
+    if field.data not in list(zip(*form.TEXT_PROPERTIES__PIL_FONT_FILE_choices))[0]:
+        raise ValidationError('Invalid font selection')
+
+
+def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Size must be 10 or greater')
+
+
 def RGB_COLOR_validator(form, field):
     color_regex = r'^\d+\,\d+\,\d+$'
 
@@ -1688,6 +1701,21 @@ class IndiAllskyConfigForm(FlaskForm):
         ('FONT_HERSHEY_SCRIPT_COMPLEX', 'Script (complex)'),
     )
 
+    TEXT_PROPERTIES__PIL_FONT_FILE_choices = (
+        ('fonts-freefont-ttf/FreeSans.ttf', 'Free Sans'),
+        ('fonts-freefont-ttf/FreeSansBold.ttf', 'Free Sans Bold'),
+        ('fonts-freefont-ttf/FreeSansOblique.ttf', 'Free Oblique'),
+        ('fonts-freefont-ttf/FreeSansBoldOblique.ttf', 'Free Bold Oblique'),
+        ('fonts-freefont-ttf/FreeSerif.ttf', 'Free Serif'),
+        ('fonts-freefont-ttf/FreeSerifBold.ttf', 'Free Serif Bold'),
+        ('fonts-freefont-ttf/FreeSerifItalic.ttf', 'Free Serif Italic'),
+        ('fonts-freefont-ttf/FreeSerifBoldItalic.ttf', 'Free Serif Bold Italic'),
+        ('fonts-freefont-ttf/FreeMono.ttf', 'Free Mono'),
+        ('fonts-freefont-ttf/FreeMonoBold.ttf', 'Free Mono Bold'),
+        ('fonts-freefont-ttf/FreeMonoOblique.ttf', 'Free Mono Oblique'),
+        ('fonts-freefont-ttf/FreeMonoBoldOblique.ttf', 'Free Mono Bold Oblique'),
+    )
+
     FILETRANSFER__CLASSNAME_choices = (
         ('pycurl_sftp', 'PycURL SFTP [22]'),
         ('paramiko_sftp', 'Paramiko SFTP [22]'),
@@ -1842,6 +1870,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_X          = IntegerField('Text X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
     TEXT_PROPERTIES__FONT_Y          = IntegerField('Text Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
     TEXT_PROPERTIES__FONT_COLOR      = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
+    TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
