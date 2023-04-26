@@ -1118,7 +1118,7 @@ class ImageWorker(Process):
         elif self.config['IMAGE_EXPORT_RAW'] in ('jp2',):
             cv2.imwrite(str(tmpfile_name), scaled_data)
         elif self.config['IMAGE_EXPORT_RAW'] in ('webp',):
-            cv2.imwrite(str(tmpfile_name), scaled_data)
+            cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             # Pillow does not support 16-bit RGB data
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, 5])  # LZW
@@ -1219,7 +1219,7 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
