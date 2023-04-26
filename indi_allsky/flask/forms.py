@@ -1593,7 +1593,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
-        ('webp', 'WebP'),
+        #('webp', 'WebP'),  # ffmpeg support broken
         ('tif', 'TIFF'),
     )
 
