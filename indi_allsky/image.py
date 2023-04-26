@@ -2636,10 +2636,10 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-        self._image_text(i_ref)
+        self._image_text_opencv(i_ref)
 
 
-    def _image_text(self, i_ref):
+    def _image_text_opencv(self, i_ref):
         # Legacy setting, code to be removed later
         if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
             logger.warning('Image labels disabled')
@@ -2662,7 +2662,7 @@ class ImageProcessor(object):
             logger.warning('Focus mode enabled, Image labels disabled')
 
             # indicate focus mode is enabled in indi-allsky
-            self.drawText(
+            self.drawText_opencv(
                 self.image,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
                 (image_width - 125, image_height - 10),
@@ -2704,11 +2704,11 @@ class ImageProcessor(object):
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
         if orb_mode == 'ha':
-            self._orb.drawOrbsHourAngle(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'az':
-            self._orb.drawOrbsAzimuth(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAzimuth_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'alt':
-            self._orb.drawOrbsAltitude(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAltitude_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
         elif orb_mode == 'off':
             # orbs disabled
             pass
@@ -2787,7 +2787,7 @@ class ImageProcessor(object):
 
         line_offset = 0
         for line in image_label.split('\n'):
-            self.drawText(
+            self.drawText_opencv(
                 self.image,
                 line,
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
@@ -2799,7 +2799,7 @@ class ImageProcessor(object):
 
         # Add moon mode indicator
         if self.moonmode_v.value:
-            self.drawText(
+            self.drawText_opencv(
                 self.image,
                 '* Moon Mode *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
@@ -2812,7 +2812,7 @@ class ImageProcessor(object):
         # Add eclipse indicator
         if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
             # Lunar eclipse (earth's penumbra is large)
-            self.drawText(
+            self.drawText_opencv(
                 self.image,
                 '* LUNAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
@@ -2823,7 +2823,7 @@ class ImageProcessor(object):
 
         elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
             # Solar eclipse
-            self.drawText(
+            self.drawText_opencv(
                 self.image,
                 '* SOLAR ECLIPSE *',
                 (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
@@ -2839,7 +2839,7 @@ class ImageProcessor(object):
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
             for extra_text_line in extra_text_lines:
-                self.drawText(
+                self.drawText_opencv(
                     self.image,
                     extra_text_line,
                     (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
@@ -2849,7 +2849,7 @@ class ImageProcessor(object):
                 line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
 
 
-    def drawText(self, data, text, pt, color_bgr):
+    def drawText_opencv(self, data, text, pt, color_bgr):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 

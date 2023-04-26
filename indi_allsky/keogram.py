@@ -147,7 +147,7 @@ class KeogramGenerator(object):
         keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
         # apply time labels
-        self.applyLabels(keogram_resized)
+        self.applyLabels_opencv(keogram_resized)
 
 
         ### EXIF tags ###
@@ -320,7 +320,7 @@ class KeogramGenerator(object):
         return trimmed_image
 
 
-    def applyLabels(self, keogram):
+    def applyLabels_opencv(self, keogram):
         # Keogram labels enabled by default
         if not self.config.get('KEOGRAM_LABEL', True):
             logger.warning('Keogram labels disabled')
