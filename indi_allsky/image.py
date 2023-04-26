@@ -3066,7 +3066,7 @@ class ImageProcessor(object):
     def drawText_pillow(self, draw, text, font, pt, color_rgb):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             # black outline
-            stroke_width = 1
+            stroke_width = 2
         else:
             stroke_width = 0
 
