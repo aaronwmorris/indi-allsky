@@ -17,7 +17,7 @@ class IndiAllskyOrbGenerator(object):
         self.config = config
 
 
-    def drawOrbsHourAngle(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+    def drawOrbsHourAngle_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -33,14 +33,14 @@ class IndiAllskyOrbGenerator(object):
         sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
         sun_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
         moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
         moon_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
 
@@ -57,7 +57,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunRiseX, sunRiseY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunRiseX, sunRiseY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunRiseX, sunRiseY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -78,7 +78,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunCivilDawnX, sunCivilDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunCivilDawnX, sunCivilDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -99,7 +99,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNauticalDawnX, sunNauticalDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -120,7 +120,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunAstroDawnX, sunAstroDawnY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -141,7 +141,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunSunSetX, sunSunSetY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunSunSetX, sunSunSetY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunSunSetX, sunSunSetY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -162,7 +162,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunCivilTwilightX, sunCivilTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -183,7 +183,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -204,7 +204,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunAstroTwilightX, sunAstroTwilightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -225,7 +225,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNightDayX, sunNightDayY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -246,7 +246,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunDayNightX, sunDayNightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -311,7 +311,7 @@ class IndiAllskyOrbGenerator(object):
         return int(x), int(y)
 
 
-    def drawOrbsAzimuth(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+    def drawOrbsAzimuth_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -327,14 +327,14 @@ class IndiAllskyOrbGenerator(object):
         sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
         sun_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
         moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
         moon_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
         obs.date = utcnow  # reset
@@ -349,7 +349,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunSunRiseX, sunSunRiseY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunSunRiseX, sunSunRiseY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunSunRiseX, sunSunRiseY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -370,7 +370,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunCivilDawnX, sunCivilDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilDawnX, sunCivilDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunCivilDawnX, sunCivilDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -391,7 +391,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNauticalDawnX, sunNauticalDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunNauticalDawnX, sunNauticalDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -412,7 +412,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunAstroDawnX, sunAstroDawnY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunAstroDawnX, sunAstroDawnY), (100, 100, 100))
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -433,7 +433,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunSunSetX, sunSunSetY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunSunSetX, sunSunSetY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunSunSetX, sunSunSetY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -454,7 +454,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunCivilTwilightX, sunCivilTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunCivilTwilightX, sunCivilTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -475,7 +475,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNauticalTwilightX, sunNauticalTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunNauticalTwilightX, sunNauticalTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -496,7 +496,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunAstroTwilightX, sunAstroTwilightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
+            self.drawEdgeLine_opencv(data_bytes, (sunAstroTwilightX, sunAstroTwilightY), (100, 100, 100))
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -517,7 +517,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNightDayX, sunNightDayY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -538,7 +538,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunDayNightX, sunDayNightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -602,7 +602,7 @@ class IndiAllskyOrbGenerator(object):
         return int(x), int(y)
 
 
-    def drawOrbsAltitude(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+    def drawOrbsAltitude_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -618,14 +618,14 @@ class IndiAllskyOrbGenerator(object):
         sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
         sun_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
 
 
         # Moon
         moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
         moon_color_bgr.reverse()
 
-        self.drawEdgeCircle(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
 
 
         # Sunrise
@@ -633,7 +633,7 @@ class IndiAllskyOrbGenerator(object):
         sunRiseY = self.remap(0.0, -90.0, 90.0, 0.0, image_height)
         sunRiseY = image_height - sunRiseY  # need to map from the top down
 
-        self.drawEdgeLine(data_bytes, (sunRiseX, int(sunRiseY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunRiseX, int(sunRiseY)), (100, 100, 100))
 
 
         # Civil dawn
@@ -641,7 +641,7 @@ class IndiAllskyOrbGenerator(object):
         sunCivilDawnY = self.remap(-6.0, -90.0, 90.0, 0.0, image_height)
         sunCivilDawnY = image_height - sunCivilDawnY  # need to map from the top down
 
-        self.drawEdgeLine(data_bytes, (sunCivilDawnX, int(sunCivilDawnY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunCivilDawnX, int(sunCivilDawnY)), (100, 100, 100))
 
 
         # Nautical dawn
@@ -649,7 +649,7 @@ class IndiAllskyOrbGenerator(object):
         sunNauticalDawnY = self.remap(-12.0, -90.0, 90.0, 0.0, image_height)
         sunNauticalDawnY = image_height - sunNauticalDawnY  # need to map from the top down
 
-        self.drawEdgeLine(data_bytes, (sunNauticalDawnX, int(sunNauticalDawnY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunNauticalDawnX, int(sunNauticalDawnY)), (100, 100, 100))
 
 
         # Astronomical dawn
@@ -657,35 +657,35 @@ class IndiAllskyOrbGenerator(object):
         sunAstroDawnY = self.remap(-18.0, -90.0, 90.0, 0.0, image_height)
         sunAstroDawnY = image_height - sunAstroDawnY  # need to map from the top down
 
-        self.drawEdgeLine(data_bytes, (sunAstroDawnX, int(sunAstroDawnY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunAstroDawnX, int(sunAstroDawnY)), (100, 100, 100))
 
 
         # Sunset
         sunSetX = 0
         sunSetY = sunRiseY  # reuse
 
-        self.drawEdgeLine(data_bytes, (sunSetX, int(sunSetY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunSetX, int(sunSetY)), (100, 100, 100))
 
 
         # Civil twilight
         sunCivilTwilightX = 0
         sunCivilTwilightY = sunCivilDawnY  # reuse
 
-        self.drawEdgeLine(data_bytes, (sunCivilTwilightX, int(sunCivilTwilightY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunCivilTwilightX, int(sunCivilTwilightY)), (100, 100, 100))
 
 
         # Nautical twilight
         sunNauticalTwilightX = 0
         sunNauticalTwilightY = sunNauticalDawnY  # reuse
 
-        self.drawEdgeLine(data_bytes, (sunNauticalTwilightX, int(sunNauticalTwilightY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunNauticalTwilightX, int(sunNauticalTwilightY)), (100, 100, 100))
 
 
         # Astronomical twilight
         sunAstroTwilightX = 0
         sunAstroTwilightY = sunAstroDawnY  # reuse
 
-        self.drawEdgeLine(data_bytes, (sunAstroTwilightX, int(sunAstroTwilightY)), (100, 100, 100))
+        self.drawEdgeLine_opencv(data_bytes, (sunAstroTwilightX, int(sunAstroTwilightY)), (100, 100, 100))
 
 
         # Night/Day
@@ -693,14 +693,14 @@ class IndiAllskyOrbGenerator(object):
         sunNightDayY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
         sunNightDayY = image_height - sunNightDayY  # need to map from the top down
 
-        self.drawEdgeLine(data_bytes, (sunNightDayX, int(sunNightDayY)), color_bgr)
+        self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, int(sunNightDayY)), color_bgr)
 
 
         # Day/Night
         sunDayNightX = 0
         sunDayNightY = sunNightDayY  # reuse
 
-        self.drawEdgeLine(data_bytes, (sunDayNightX, int(sunDayNightY)), color_bgr)
+        self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, int(sunDayNightY)), color_bgr)
 
 
     def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
@@ -723,7 +723,7 @@ class IndiAllskyOrbGenerator(object):
         return int(x), int(y)
 
 
-    def drawEdgeCircle(self, data_bytes, pt, color_bgr):
+    def drawEdgeCircle_opencv(self, data_bytes, pt, color_bgr):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.circle(
                 img=data_bytes,
@@ -742,7 +742,7 @@ class IndiAllskyOrbGenerator(object):
         )
 
 
-    def drawEdgeLine(self, data_bytes, pt, color_bgr):
+    def drawEdgeLine_opencv(self, data_bytes, pt, color_bgr):
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
         image_height, image_width = data_bytes.shape[:2]

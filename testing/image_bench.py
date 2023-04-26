@@ -31,6 +31,7 @@ class ImageBench(object):
     def __init__(self):
         self.f_tmp_name = Path('/dev/shm/image_bench.jpg')
         #self.f_tmp_name = Path('/dev/shm/image_bench.png')
+        #self.f_tmp_name = Path('/dev/shm/image_bench.webp')
 
         # random
         random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
@@ -41,8 +42,10 @@ class ImageBench(object):
         # black
         #random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
 
-        cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 95])
         #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 7])
+        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 90])
+        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
 
 
     def __del__(self):
@@ -59,6 +62,7 @@ import numpy
         s_pillow_read = '''
 img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
+#img = Image.open("/dev/shm/image_bench.webp")
 
 img_n = numpy.array(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
@@ -72,6 +76,7 @@ import numpy
 
 img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
+#img = Image.open("/dev/shm/image_bench.webp")
 
 img_n = numpy.array(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
@@ -85,6 +90,7 @@ i = Image.fromarray(img_bgr)
 
 i.save(out, format="JPEG", quality=90)
 #i.save(out, format="PNG", compression=7)
+#i.save(out, format="WEBP", quality=90, lossless=True)
 '''
 
         setup_opencv_read = '''
@@ -94,6 +100,7 @@ import cv2
         s_opencv_read = '''
 cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
 #cv2.imread("/dev/shm/image_bench.png", cv2.IMREAD_UNCHANGED)
+#cv2.imread("/dev/shm/image_bench.webp", cv2.IMREAD_UNCHANGED)
 '''
 
         setup_opencv_write = '''
@@ -101,11 +108,13 @@ import cv2
 
 img = cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
 #img = cv2.imread("/dev/shm/image_bench.png", cv2.IMREAD_UNCHANGED)
+#img = cv2.imread("/dev/shm/image_bench.webp", cv2.IMREAD_UNCHANGED)
 '''
 
         s_opencv_write = '''
 cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 #cv2.imencode(".png", img, [cv2.IMWRITE_PNG_COMPRESSION, 7])
+#cv2.imencode(".webp", img, [cv2.IMWRITE_WEBP_QUALITY, 101])
 '''
 
 

@@ -2,6 +2,8 @@ import cv2
 import numpy
 import PIL
 from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 import piexif
 import math
 import time
@@ -39,6 +41,9 @@ class KeogramGenerator(object):
 
         self.timestamps_list = list()
         self.image_processing_elapsed_s = 0
+
+        base_path  = Path(__file__).parent
+        self.font_path  = base_path.joinpath('fonts')
 
 
     @property
@@ -146,8 +151,19 @@ class KeogramGenerator(object):
         new_height = int(trimmed_height * self._v_scale_factor / 100)
         keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
+
         # apply time labels
-        self.applyLabels(keogram_resized)
+        if self.config.get('KEOGRAM_LABEL', True):
+            # Keogram labels enabled by default
+            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
+
+            if image_label_system == 'pillow':
+                keogram_resized = self.applyLabels_pillow(keogram_resized)
+            else:
+                # opencv is default
+                keogram_resized = self.applyLabels_opencv(keogram_resized)
+        else:
+            logger.warning('Keogram labels disabled')
 
 
         ### EXIF tags ###
@@ -216,6 +232,9 @@ class KeogramGenerator(object):
 
             # opencv is faster than Pillow with PNG
             cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(outfile_p), quality=90, lossless=False, exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
@@ -317,17 +336,7 @@ class KeogramGenerator(object):
         return trimmed_image
 
 
-    def applyLabels(self, keogram):
-        # Keogram labels enabled by default
-        if not self.config.get('KEOGRAM_LABEL', True):
-            logger.warning('Keogram labels disabled')
-            return
-
-        # Legacy setting, code to be removed
-        if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
-            logger.warning('Image labels disabled')
-            return
-
+    def applyLabels_opencv(self, keogram):
         height, width = keogram.shape[:2]
 
         # starting point
@@ -396,3 +405,72 @@ class KeogramGenerator(object):
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 
+
+        return keogram
+
+
+    def applyLabels_pillow(self, keogram):
+        img_rgb = Image.fromarray(cv2.cvtColor(keogram, cv2.COLOR_BGR2RGB))
+        width, height  = img_rgb.size  # backwards from opencv
+
+        pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
+        draw = ImageDraw.Draw(img_rgb)
+
+        color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])  # RGB for pillow
+
+
+        # starting point
+        last_time = datetime.fromtimestamp(self.timestamps_list[0])
+        last_hour_str = last_time.strftime('%H')
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 4
+        else:
+            stroke_width = 0
+
+
+        for i, u_ts in enumerate(self.timestamps_list):
+            ts = datetime.fromtimestamp(u_ts)
+            hour_str = ts.strftime('%H')
+
+            if not hour_str != last_hour_str:
+                continue
+
+            last_hour_str = hour_str
+
+            line_x = int(i * width / len(self.timestamps_list))
+
+            line_start = (line_x, height)
+            line_end = (line_x, height - self.line_length)
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                draw.line(
+                    ((line_start[0] - 2), (line_start[1] - 2), line_end),
+                    fill=(0, 0, 0),
+                    width=self.line_thickness + 5,  # +4
+                )
+            draw.line(
+                (line_start, line_end),
+                fill=tuple(color_rgb),
+                width=self.line_thickness + 1,
+            )
+
+
+            draw.text(
+                (line_x + 5, height - (pillow_font_size + 3)),
+                hour_str,
+                fill=tuple(color_rgb),
+                font=font,
+                stroke_width=stroke_width,
+                stroke_fill=(0, 0, 0),
+            )
+
+
+        # convert back to numpy array
+        return cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)

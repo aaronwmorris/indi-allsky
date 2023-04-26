@@ -495,6 +495,14 @@ def NIGHT_MOONMODE_PHASE_validator(form, field):
         raise ValidationError('Moon illumination must be 100 or less')
 
 
+def IMAGE_LABEL_SYSTEM_validator(form, field):
+    if not field.data:
+        return
+
+    if field.data not in ['opencv', 'pillow']:
+        raise ValidationError('Unknown label system')
+
+
 def IMAGE_LABEL_TEMPLATE_validator(form, field):
     template_regex = r'^[a-zA-Z0-9_,\%\.\-\/\\\:\{\}\ \n]+$'
 
@@ -638,7 +646,7 @@ def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
 
 
 def IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('jpg', 'png', 'tif'):
+    if field.data not in ('jpg', 'png', 'tif', 'webp'):
         raise ValidationError('Please select a valid file type')
 
 
@@ -706,7 +714,7 @@ def IMAGE_EXPORT_RAW_validator(form, field):
     if not field.data:
         return
 
-    if field.data not in ('png', 'tif', 'jpg'):
+    if field.data not in ('png', 'tif', 'jpg', 'jp2', 'webp'):
         raise ValidationError('Please select a valid file type')
 
 
@@ -1003,6 +1011,19 @@ def TEXT_PROPERTIES__FONT_X_validator(form, field):
 def TEXT_PROPERTIES__FONT_Y_validator(form, field):
     if field.data < 1:
         raise ValidationError('Font offset must be greater than 1')
+
+
+def TEXT_PROPERTIES__PIL_FONT_FILE_validator(form, field):
+    if field.data not in list(zip(*form.TEXT_PROPERTIES__PIL_FONT_FILE_choices))[0]:
+        raise ValidationError('Invalid font selection')
+
+
+def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Size must be 10 or greater')
 
 
 def RGB_COLOR_validator(form, field):
@@ -1593,6 +1614,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
+        #('webp', 'WebP'),  # ffmpeg support broken
         ('tif', 'TIFF'),
     )
 
@@ -1614,6 +1636,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'Disabled'),
         ('png', 'PNG'),
         ('tif', 'TIFF'),
+        ('jp2', 'JPEG 2000'),
+        ('webp', 'WEBP'),
         ('jpg', 'JPEG'),
     )
 
@@ -1660,6 +1684,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('off', 'Off'),
     )
 
+    IMAGE_LABEL_SYSTEM_choices = (
+        ('', 'Off'),
+        ('opencv', 'OpenCV'),
+        ('pillow', 'Pillow'),
+    )
+
     TEXT_PROPERTIES__FONT_FACE_choices = (
         ('FONT_HERSHEY_SIMPLEX', 'Sans-Serif'),
         ('FONT_HERSHEY_PLAIN', 'Sans-Serif (small)'),
@@ -1669,6 +1699,21 @@ class IndiAllskyConfigForm(FlaskForm):
         ('FONT_HERSHEY_COMPLEX_SMALL', 'Serif (small)'),
         ('FONT_HERSHEY_SCRIPT_SIMPLEX', 'Script'),
         ('FONT_HERSHEY_SCRIPT_COMPLEX', 'Script (complex)'),
+    )
+
+    TEXT_PROPERTIES__PIL_FONT_FILE_choices = (
+        ('fonts-freefont-ttf/FreeSans.ttf', 'Free Sans'),
+        ('fonts-freefont-ttf/FreeSansBold.ttf', 'Free Sans Bold'),
+        ('fonts-freefont-ttf/FreeSansOblique.ttf', 'Free Oblique'),
+        ('fonts-freefont-ttf/FreeSansBoldOblique.ttf', 'Free Bold Oblique'),
+        ('fonts-freefont-ttf/FreeSerif.ttf', 'Free Serif'),
+        ('fonts-freefont-ttf/FreeSerifBold.ttf', 'Free Serif Bold'),
+        ('fonts-freefont-ttf/FreeSerifItalic.ttf', 'Free Serif Italic'),
+        ('fonts-freefont-ttf/FreeSerifBoldItalic.ttf', 'Free Serif Bold Italic'),
+        ('fonts-freefont-ttf/FreeMono.ttf', 'Free Mono'),
+        ('fonts-freefont-ttf/FreeMonoBold.ttf', 'Free Mono Bold'),
+        ('fonts-freefont-ttf/FreeMonoOblique.ttf', 'Free Mono Oblique'),
+        ('fonts-freefont-ttf/FreeMonoBoldOblique.ttf', 'Free Mono Bold Oblique'),
     )
 
     FILETRANSFER__CLASSNAME_choices = (
@@ -1780,7 +1825,6 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
     IMAGE_FILE_COMPRESSION__TIF      = StringField('TIFF Compression', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
-    IMAGE_LABEL                      = BooleanField('Label Images')
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
     IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
@@ -1816,15 +1860,18 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
     FFMPEG_VFSCALE                   = SelectField('FFMPEG Scaling', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
     FFMPEG_CODEC                     = SelectField('FFMPEG Codec', choices=FFMPEG_CODEC_choices, validators=[FFMPEG_CODEC_validator])
-    TEXT_PROPERTIES__FONT_FACE       = SelectField('Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
-    TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Font Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
-    TEXT_PROPERTIES__FONT_X          = IntegerField('Font X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
-    TEXT_PROPERTIES__FONT_Y          = IntegerField('Font Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
-    TEXT_PROPERTIES__FONT_COLOR      = StringField('Font Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    IMAGE_LABEL_SYSTEM               = SelectField('Label Images', choices=IMAGE_LABEL_SYSTEM_choices, validators=[IMAGE_LABEL_SYSTEM_validator])
+    TEXT_PROPERTIES__FONT_FACE       = SelectField('OpenCV Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
     #TEXT_PROPERTIES__FONT_AA
     TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
     TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
+    TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Text Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
+    TEXT_PROPERTIES__FONT_X          = IntegerField('Text X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
+    TEXT_PROPERTIES__FONT_Y          = IntegerField('Text Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
+    TEXT_PROPERTIES__FONT_COLOR      = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
+    TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
