@@ -1034,7 +1034,7 @@ class ImageWorker(Process):
         logger.info('Finished writing fit file')
 
 
-    def export_raw_image(self, i_ref, exif):
+    def export_raw_image(self, i_ref, jpeg_exif=None):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1110,11 +1110,15 @@ class ImageWorker(Process):
             else:
                 img = Image.fromarray(cv2.cvtColor(scaled_data_8, cv2.COLOR_BGR2RGB))
 
-            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=exif)
+            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
             # Pillow does not support 16-bit RGB data
             # opencv is faster than Pillow with PNG
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_EXPORT_RAW'] in ('jp2',):
+            cv2.imwrite(str(tmpfile_name), scaled_data)
+        elif self.config['IMAGE_EXPORT_RAW'] in ('webp',):
+            cv2.imwrite(str(tmpfile_name), scaled_data)
         elif self.config['IMAGE_EXPORT_RAW'] in ('tif', 'tiff'):
             # Pillow does not support 16-bit RGB data
             cv2.imwrite(str(tmpfile_name), scaled_data, [cv2.IMWRITE_TIFF_COMPRESSION, 5])  # LZW

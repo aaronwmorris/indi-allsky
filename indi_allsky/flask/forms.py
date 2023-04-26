@@ -706,7 +706,7 @@ def IMAGE_EXPORT_RAW_validator(form, field):
     if not field.data:
         return
 
-    if field.data not in ('png', 'tif', 'jpg'):
+    if field.data not in ('png', 'tif', 'jpg', 'jp2', 'webp'):
         raise ValidationError('Please select a valid file type')
 
 
@@ -1614,6 +1614,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'Disabled'),
         ('png', 'PNG'),
         ('tif', 'TIFF'),
+        ('jp2', 'JPEG 2000'),
+        ('webp', 'WEBP'),
         ('jpg', 'JPEG'),
     )
 
