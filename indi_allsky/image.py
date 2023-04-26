@@ -30,6 +30,8 @@ import numpy
 
 import PIL
 from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 
 import piexif
 from fractions import Fraction
@@ -174,7 +176,6 @@ class ImageWorker(Process):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
-
 
         self._shutdown = False
 
@@ -1622,6 +1623,10 @@ class ImageProcessor(object):
         self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
 
+        base_path  = Path(__file__).parent
+        self.font_path  = base_path.joinpath('fonts')
+
+
 
     @property
     def image(self):
@@ -2636,11 +2641,15 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
+        # Labels are enabled by default
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
 
         if image_label_system == 'opencv':
             self._image_orb_opencv(i_ref)
             self._image_text_opencv(i_ref)
+        elif image_label_system == 'pillow':
+            self._image_orb_opencv(i_ref)
+            self._image_text_pillow(i_ref)
         else:
             logger.warning('Image labels disabled')
             return
@@ -2655,16 +2664,7 @@ class ImageProcessor(object):
 
         # Disabled when focus mode is enabled
         if self.config.get('FOCUS_MODE', False):
-            logger.warning('Focus mode enabled, Image labels disabled')
-
-            # indicate focus mode is enabled in indi-allsky
-            self.drawText_opencv(
-                self.image,
-                i_ref['exp_date'].strftime('%H:%M:%S'),
-                (image_width - 125, image_height - 10),
-                tuple(color_bgr),
-            )
-
+            logger.warning('Focus mode enabled, orbs disabled')
             return
 
 
@@ -2713,8 +2713,26 @@ class ImageProcessor(object):
 
 
     def _image_text_opencv(self, i_ref):
+        image_height, image_width = self.image.shape[:2]
+
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, labels disabled')
+
+            # indicate focus mode is enabled in indi-allsky
+            self.drawText_opencv(
+                self.image,
+                i_ref['exp_date'].strftime('%H:%M:%S'),
+                (image_width - 125, image_height - 10),
+                tuple(color_bgr),
+            )
+
+            return
+
 
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
@@ -2872,6 +2890,183 @@ class ImageProcessor(object):
             lineType=lineType,
             fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        )
+
+
+    def _image_text_pillow(self, i_ref):
+        img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
+        image_width, image_height  = img_rgb.size  # backwards from opencv
+
+        font = ImageFont.truetype(str(self.font_path.joinpath('FreeMono.ttf')), 30)
+        draw = ImageDraw.Draw(img_rgb)
+
+        color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])  # RGB for pillow
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, labels disabled')
+
+            # indicate focus mode is enabled in indi-allsky
+            self.drawText_pillow(
+                draw,
+                i_ref['exp_date'].strftime('%H:%M:%S'),
+                font,
+                (image_width - 125, image_height - 10),
+                tuple(color_rgb),
+            )
+
+            return
+
+
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
+
+
+        if self.config.get('TEMP_DISPLAY') == 'f':
+            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+            temp_unit = 'F'
+        elif self.config.get('TEMP_DISPLAY') == 'k':
+            sensortemp = self.sensortemp_v.value + 273.15
+            temp_unit = 'K'
+        else:
+            sensortemp = self.sensortemp_v.value
+            temp_unit = 'C'
+
+
+        # calculate rational exposure ("1 1/4")
+        exp_whole = int(i_ref['exposure'])
+        exp_remain = i_ref['exposure'] - exp_whole
+
+        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
+
+        if exp_whole:
+            if exp_remain:
+                rational_exp = '{0:d} {1:d}/{2:d}'.format(exp_whole, exp_remain_frac.numerator, exp_remain_frac.denominator)
+            else:
+                rational_exp = '{0:d}'.format(exp_whole)
+        else:
+            rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
+
+
+
+        label_data = {
+            'timestamp'    : i_ref['exp_date'],
+            'ts'           : i_ref['exp_date'],  # shortcut
+            'exposure'     : i_ref['exposure'],
+            'rational_exp' : rational_exp,
+            'gain'         : self.gain_v.value,
+            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
+            'temp_unit'    : temp_unit,
+            'sqm'          : i_ref['sqm_value'],
+            'stars'        : len(i_ref['stars']),
+            'detections'   : str(bool(len(i_ref['lines']))),
+            'sun_alt'      : self.astrometric_data['sun_alt'],
+            'moon_alt'     : self.astrometric_data['moon_alt'],
+            'moon_phase'   : self.astrometric_data['moon_phase'],
+            'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
+            'latitude'     : self.latitude_v.value,
+            'longitude'    : self.longitude_v.value,
+            'sidereal_time': self.astrometric_data['sidereal_time'],
+        }
+
+
+        # stacking data
+        if self.night_v.value and not self.moonmode_v.value:
+            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
+                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
+                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
+            else:
+                label_data['stack_method'] = 'Off'
+                label_data['stack_count'] = 0
+        else:
+            # stacking disabled during the day and moonmode
+            label_data['stack_method'] = 'Off'
+            label_data['stack_count'] = 0
+
+
+        image_label = image_label_tmpl.format(**label_data)  # fill in the data
+
+
+        line_offset = 0
+        for line in image_label.split('\n'):
+            self.drawText_pillow(
+                draw,
+                line,
+                font,
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_rgb),
+            )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+
+        # Add moon mode indicator
+        if self.moonmode_v.value:
+            self.drawText_pillow(
+                draw,
+                '* Moon Mode *',
+                font,
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_rgb),
+            )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+
+        # Add eclipse indicator
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
+            # Lunar eclipse (earth's penumbra is large)
+            self.drawText_pillow(
+                draw,
+                '* LUNAR ECLIPSE *',
+                font,
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_rgb),
+            )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
+            # Solar eclipse
+            self.drawText_pillow(
+                draw,
+                '* SOLAR ECLIPSE *',
+                font,
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                tuple(color_rgb),
+            )
+
+            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for extra_text_line in extra_text_lines:
+                self.drawText_pillow(
+                    draw,
+                    extra_text_line,
+                    font,
+                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
+                    tuple(color_rgb),
+                )
+
+                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+
+        # convert back to numpy array
+        self.image = cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
+
+
+    def drawText_pillow(self, draw, text, font, pt, color_rgb):
+        # black outline
+        draw.text(
+            pt,
+            text,
+            fill=color_rgb,
+            font=font,
         )
 
 
