@@ -2636,21 +2636,17 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-        self._image_text_opencv(i_ref)
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
 
-
-    def _image_text_opencv(self, i_ref):
-        # Legacy setting, code to be removed later
-        if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
-            logger.warning('Image labels disabled')
-            return
-
-        # Image labels are enabled by default
-        if not self.config.get('IMAGE_LABEL', True):
+        if image_label_system == 'opencv':
+            self._image_orb_opencv(i_ref)
+            self._image_text_opencv(i_ref)
+        else:
             logger.warning('Image labels disabled')
             return
 
 
+    def _image_orb_opencv(self, i_ref):
         image_height, image_width = self.image.shape[:2]
 
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
@@ -2716,6 +2712,9 @@ class ImageProcessor(object):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
+    def _image_text_opencv(self, i_ref):
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
 
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 

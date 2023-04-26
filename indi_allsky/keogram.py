@@ -326,10 +326,6 @@ class KeogramGenerator(object):
             logger.warning('Keogram labels disabled')
             return
 
-        # Legacy setting, code to be removed
-        if not self.config['TEXT_PROPERTIES'].get('FONT_FACE'):
-            logger.warning('Image labels disabled')
-            return
 
         height, width = keogram.shape[:2]
 
