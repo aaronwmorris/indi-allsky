@@ -56,9 +56,7 @@ class IndiAllSkyLatestImages {
 
             $relpath = str_replace($this->rootpath, '', $filename);
 
-            $image_list[] = array(
-                'file' => $relpath,
-            );
+            $image_list[] = $relpath;
         }
 
         return($image_list);
