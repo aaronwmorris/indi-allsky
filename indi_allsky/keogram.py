@@ -413,7 +413,13 @@ class KeogramGenerator(object):
         img_rgb = Image.fromarray(cv2.cvtColor(keogram, cv2.COLOR_BGR2RGB))
         width, height  = img_rgb.size  # backwards from opencv
 
-        pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+        if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
+            pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
+        else:
+            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+
         pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
 
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)

@@ -177,6 +177,7 @@ class IndiAllSkyConfigBase(object):
             "FONT_Y"         : 30,
             "FONT_COLOR"     : [200, 200, 200],
             "PIL_FONT_FILE"  : "fonts-freefont-ttf/FreeSans.ttf",
+            "PIL_FONT_CUSTOM": "",
             "PIL_FONT_SIZE"  : 30,
         },
         "ORB_PROPERTIES" : {

@@ -11,6 +11,8 @@ import cv2
 import numpy
 import pycurl
 
+from PIL import ImageFont
+
 from passlib.hash import argon2
 
 from flask_wtf import FlaskForm
@@ -1018,6 +1020,28 @@ def TEXT_PROPERTIES__PIL_FONT_FILE_validator(form, field):
         raise ValidationError('Invalid font selection')
 
 
+def TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator(form, field):
+    if not field.data:
+        return
+
+    font_file_p = Path(field.data)
+
+    try:
+        if not font_file_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not font_file_p.is_file():
+            raise ValidationError('Path is not a file')
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+    try:
+        ImageFont.truetype(str(font_file_p), 30)
+    except OSError as e:
+        raise ValidationError(str(e))
+
+
 def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -1714,6 +1738,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('fonts-freefont-ttf/FreeMonoBold.ttf', 'Free Mono Bold'),
         ('fonts-freefont-ttf/FreeMonoOblique.ttf', 'Free Mono Oblique'),
         ('fonts-freefont-ttf/FreeMonoBoldOblique.ttf', 'Free Mono Bold Oblique'),
+        ('custom', 'Custom (below)'),
     )
 
     FILETRANSFER__CLASSNAME_choices = (
@@ -1871,6 +1896,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_Y          = IntegerField('Text Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
     TEXT_PROPERTIES__FONT_COLOR      = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
+    TEXT_PROPERTIES__PIL_FONT_CUSTOM = StringField('Custom Font', validators=[TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator])
     TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
@@ -1956,6 +1982,18 @@ class IndiAllskyConfigForm(FlaskForm):
 
     #def __init__(self, *args, **kwargs):
     #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
+
+
+    def validate(self):
+        result = super(IndiAllskyConfigForm, self).validate()
+
+        # require custom font to be defined
+        if self.TEXT_PROPERTIES__PIL_FONT_FILE.data == 'custom':
+            if not self.TEXT_PROPERTIES__PIL_FONT_CUSTOM.data:
+                self.TEXT_PROPERTIES__PIL_FONT_CUSTOM.errors.append('Please set a custom font')
+                result = False
+
+        return result
 
 
 class IndiAllskyImageViewer(FlaskForm):

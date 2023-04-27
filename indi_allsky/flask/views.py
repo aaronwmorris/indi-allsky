@@ -841,6 +841,7 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__FONT_X'        : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_X', 15),
             'TEXT_PROPERTIES__FONT_Y'        : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_Y', 30),
             'TEXT_PROPERTIES__PIL_FONT_FILE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_FILE', 'fonts-freefont-ttf/FreeSans.ttf'),
+            'TEXT_PROPERTIES__PIL_FONT_CUSTOM' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_CUSTOM', ''),
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
@@ -1252,6 +1253,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEXT_PROPERTIES']['FONT_X']            = int(request.json['TEXT_PROPERTIES__FONT_X'])
         self.indi_allsky_config['TEXT_PROPERTIES']['FONT_Y']            = int(request.json['TEXT_PROPERTIES__FONT_Y'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_FILE']     = str(request.json['TEXT_PROPERTIES__PIL_FONT_FILE'])
+        self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
         self.indi_allsky_config['ORB_PROPERTIES']['MODE']               = str(request.json['ORB_PROPERTIES__MODE'])
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
