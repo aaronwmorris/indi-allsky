@@ -1103,8 +1103,12 @@ class ImageWorker(Process):
                 # jpeg has to be 8 bits
                 logger.info('Resampling image from %d to 8 bits', i_ref['image_bitpix'])
 
-                div_factor = int((2 ** max_bit_depth) / 255)
-                scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
+                #div_factor = int((2 ** max_bit_depth) / 255)
+                #scaled_data_8 = (scaled_data / div_factor).astype(numpy.uint8)
+
+                # shifting is 5x faster than division
+                shift_factor = max_bit_depth - 8
+                scaled_data_8 = numpy.right_shift(scaled_data, shift_factor).astype(numpy.uint8)
 
             if len(scaled_data_8.shape) == 2:
                 img = Image.fromarray(scaled_data_8)
@@ -2263,9 +2267,12 @@ class ImageProcessor(object):
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
-        div_factor = int((2 ** self._max_bit_depth) / 255)
+        #div_factor = int((2 ** self._max_bit_depth) / 255)
+        #self.image = (self.image / div_factor).astype(numpy.uint8)
 
-        self.image = (self.image / div_factor).astype(numpy.uint8)
+        # shifting is 5x faster than division
+        shift_factor = self._max_bit_depth - 8
+        self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
     def rotate(self, rotate_enum):

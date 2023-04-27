@@ -42,10 +42,17 @@ class ImageWorker(Process):
 
         logger.info('*** Generating random %d x %d image ***', self.width, self.height)
 
+        bits = 16
+
         # random colors (16bit -> 8bit)
-        random_rgb_16 = numpy.random.randint(((2 ** 16) - 1), size=(self.width, self.height, 3), dtype=numpy.uint16)
-        div_factor = int((2 ** 16) / 255)
-        self.random_rgb = (random_rgb_16 / div_factor).astype('uint8')
+        random_rgb_full = numpy.random.randint(((2 ** bits) - 1), size=(self.width, self.height, 3), dtype=numpy.uint16)
+
+        #div_factor = int((2 ** 16) / 255)
+        #self.random_rgb = (random_rgb_full / div_factor).astype('uint8')
+
+        # shifting is 5x faster than division
+        shift_factor = bits - 8
+        self.random_rgb = numpy.right_shift(random_rgb_full, shift_factor).astype(numpy.uint8)
 
         # grey
         #self.random_rgb = numpy.full([self.width, self.height, 3], 127, dtype=numpy.uint8)
