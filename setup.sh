@@ -1409,7 +1409,7 @@ fi
 # get list of ccd drivers
 INDI_CCD_DRIVERS=()
 cd "$INDI_DRIVER_PATH" || catch_error
-for I in indi_*_ccd indi_rpicam*; do
+for I in indi_*_ccd indi_rpicam* indi_pylibcamera*; do
     INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I $I OFF"
 done
 cd "$OLDPWD" || catch_error

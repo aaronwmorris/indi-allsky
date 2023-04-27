@@ -1034,7 +1034,7 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
             return fake_gain_info
-        elif indi_exec in ['indi_fake_ccd']:
+        elif indi_exec in ['libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.getCcdGain()
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
@@ -1115,7 +1115,7 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
             gain_config = {}
-        elif indi_exec in ['indi_fake_ccd']:
+        elif indi_exec in ['libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdGain(gain_value)
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
@@ -1178,7 +1178,7 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support bin settings')
             return
-        elif indi_exec in ['indi_fake_ccd']:
+        elif indi_exec in ['libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdBinMode(bin_value)
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))

@@ -83,9 +83,12 @@ class Debayer(object):
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
-        div_factor = int((2 ** image_bit_depth) / 255)
+        #div_factor = int((2 ** image_bit_depth) / 255)
+        #return (data / div_factor).astype(numpy.uint8)
 
-        return (data / div_factor).astype(numpy.uint8)
+        # shifting is 5x faster than division
+        shift_factor = image_bit_depth - 8
+        return numpy.right_shift(data, shift_factor).astype(numpy.uint8)
 
 
     def _detectBitDepth(self, data):
