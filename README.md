@@ -55,7 +55,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ### Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
-| Raspbian 11 64-bit    | arm64          | Indi installed from Astroberry apt repo<br />Use libcamera for Raspberry PI HQ camera |
+| Raspbian 11 64-bit    | arm64          | Indi installed from Astroberry apt repo<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh<br />The rawpy module is not availble on 32-bit Arm, therefore DNG/raw libcamera image processing is not available (jpeg/png still possible) |
 | Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
 | Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
@@ -337,14 +337,16 @@ The hardware below has at least been plugged in and tested for correct detection
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G3CMOS06300KPA (IMX178) | A  |       |
 | Touptek  | G-1200-KMB          | A      |       |
-| Player One   | Mars-C          | A      |       |
-| Player One   | Neptune-C       | A      |       |
-| Starlight Xpress | Superstar   | A      |       |
-| Datyson  | T7C                 | A      | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
-| Raspberry Pi | HQ Camera       | C      | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
-| Raspberry Pi | HQ Camera (libcamera) | A      | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
-| Waveshare    | imx378 (libcamera)    | A      | Select libcamera_imx477 interface |
-| ArduCam  | 64MP HawkEye        | A      | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
+| Player One        | Mars-C                        | A | |
+| Player One        | Neptune-C                     | A | |
+| Starlight Xpress  | Superstar                     | A | |
+| Datyson           | T7C                           | A | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
+| Raspberry Pi      | CM3 (libcamera)               | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
+| Raspberry Pi      | HQ Camera (libcamera)         | A | |
+| Raspberry Pi      | HQ Camera (indi_pylibcamera)  | A | https://github.com/scriptorron/indi_pylibcamera |
+| Raspberry Pi      | HQ Camera (indi_rpicam)       | C | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
+| Waveshare         | imx378 (libcamera)            | A | Select libcamera_imx477 interface |
+| ArduCam           | 64MP HawkEye                  | A | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | IP Cameras | indi_webcam_ccd   | B      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for operation |
