@@ -54,7 +54,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.ccd_device_name = 'CHANGEME'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 0,
@@ -66,24 +66,6 @@ class IndiClientLibCameraGeneric(IndiClient):
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
             'bit_depth'     : 16,
-        }
-
-
-        self.telescope_device_name = 'CHANGEME'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.telescope_info = {
-            'lat'           : self.latitude_v.value,
-            'long'          : self.longitude_v.value,
-        }
-
-
-        self.gps_device_name = 'CHANGEME'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-        self.gps_info = {
-            'lat'           : self.latitude_v.value,
-            'long'          : self.longitude_v.value,
         }
 
 
@@ -531,7 +513,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx477, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx477'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4056,
@@ -544,13 +526,6 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
-
-
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
 
 
 class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
@@ -560,7 +535,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx378, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx378'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4056,
@@ -575,20 +550,13 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
 class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraImx219, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx219'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 3280,
@@ -603,13 +571,6 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
 class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
     # this model is almost identical to the imx477
 
@@ -617,7 +578,7 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx519, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx519'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4656,
@@ -632,20 +593,13 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
 class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCamera64mpHawkeye, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_64mp_hawkeye'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 9152,
@@ -660,21 +614,13 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
-
 class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraImx708, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx708'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4608,
@@ -689,20 +635,13 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
 class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraImx290, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx290'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 1920,
@@ -717,20 +656,13 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
         }
 
 
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
-
-
 class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraImx462, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx462'
-        self.ccd_driver_exec = 'indi_fake_ccd'
+        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 1920,
@@ -744,11 +676,5 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
-
-        self.telescope_device_name = 'fake_telescope'
-        self.telescope_driver_exec = 'indi_fake_telescope'
-
-        self.gps_device_name = 'fake_gps'
-        self.gps_driver_exec = 'indi_fake_gps'
 
 
