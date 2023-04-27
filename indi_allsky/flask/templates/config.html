@@ -1008,6 +1008,17 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_CUSTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">Custom TrueType font</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -2643,6 +2654,7 @@ const field_names = [
     'TEXT_PROPERTIES__FONT_SCALE',
     'TEXT_PROPERTIES__FONT_THICKNESS',
     'TEXT_PROPERTIES__PIL_FONT_FILE',
+    'TEXT_PROPERTIES__PIL_FONT_CUSTOM',
     'TEXT_PROPERTIES__PIL_FONT_SIZE',
     'ORB_PROPERTIES__MODE',
     'ORB_PROPERTIES__RADIUS',
