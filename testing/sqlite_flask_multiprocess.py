@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+# Multiprocess test for DB concurrency for SQLite in Flask
+
+
+import time
+from datetime import datetime
+import random
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.exc import NoResultFound
+
+from multiprocessing import Process
+#from threading import Thread
+
+import logging
+from multiprocessing import log_to_stderr
+
+
+READ_WORKERS  = 10
+WRITE_WORKERS = 10
+
+DATABASE_URL = 'sqlite:///test_deleteme.sqlite'  # /// is relative path
+
+
+logger = log_to_stderr()
+logger.setLevel(logging.INFO)
+
+
+db = SQLAlchemy()
+
+
+class TestTable(db.Model):
+    __tablename__ = 'test'
+
+    key = db.Column(db.String(length=32), primary_key=True)
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    value = db.Column(db.String(length=255), nullable=False)
+
+
+
+def _sqlite_pragma_on_connect(dbapi_con, con_record):
+    dbapi_con.execute('PRAGMA journal_mode=WAL')
+
+    #dbapi_con.execute('PRAGMA synchronous=OFF')
+    dbapi_con.execute('PRAGMA synchronous=NORMAL')
+    #dbapi_con.execute('PRAGMA synchronous=FULL')
+
+    #dbapi_con.execute('PRAGMA busy_timeout=3000')
+    #dbapi_con.execute('PRAGMA read_uncommitted=ON')
+    #dbapi_con.execute('PRAGMA foreign_keys=ON')
+
+
+def create_app():
+    """Construct the core application."""
+    app = Flask(
+        __name__,
+        instance_relative_config=False,
+    )
+
+    app.config['SECRET_KEY'] = 'secretkey'
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+
+
+    db.init_app(app)
+    #migrate.init_app(app, db, directory=foobar)
+
+
+    with app.app_context():
+        from sqlalchemy import event
+
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+            event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
+
+        db.create_all()  # Create sql tables for our data models
+
+        return app
+
+
+
+app = create_app()
+
+
+#class BaseWorker(Thread):
+
+
+class BaseWorker(Process):
+
+    def setState(self, key, value):
+        now = datetime.now()
+
+        # all keys must be upper-case
+        key_upper = str(key).upper()
+
+        # all values must be strings
+        value_str = str(value)
+
+        try:
+            state = TestTable.query\
+                .filter(TestTable.key == key_upper)\
+                .one()
+
+            state.value = value_str
+            state.createDate = now
+        except NoResultFound:
+            state = TestTable(
+                key=key_upper,
+                value=value_str,
+                createDate=now,
+            )
+
+            db.session.add(state)
+
+
+        db.session.commit()
+
+
+    def getState(self, key):
+        # all values must be upper-case strings
+        key_upper = str(key).upper()
+
+        # not catching NoResultFound
+        state = TestTable.query\
+            .filter(TestTable.key == key_upper)\
+            .one()
+
+        return state.value
+
+
+
+class ReaderWorker(BaseWorker):
+
+    def __init__(self, idx):
+        super(ReaderWorker, self).__init__()
+
+        self.threadID = idx
+        self.name = 'ReaderWorker{0:03d}'.format(idx)
+
+
+    def run(self):
+        while True:
+            random_sleep = random.randrange(100, 300, 10) / 1000
+
+            start = time.time()
+
+            with app.app_context():
+                try:
+                    self.getState('FOOBAR')
+                except NoResultFound:
+                    pass
+
+            elapsed_s = time.time() - start
+            logger.info('Read in %0.4f s', elapsed_s)
+
+            time.sleep(random_sleep)
+            #time.sleep(0.1)
+
+
+class WriterWorker(BaseWorker):
+
+    def __init__(self, idx):
+        super(WriterWorker, self).__init__()
+
+        self.threadID = idx
+        self.name = 'WriterWorker{0:03d}'.format(idx)
+
+
+    def run(self):
+        while True:
+            random_sleep = random.randrange(100, 300, 10) / 1000
+
+            start = time.time()
+
+            with app.app_context():
+                self.setState('FOOBAR', int(time.time()))
+
+            elapsed_s = time.time() - start
+            logger.info('Write in %0.4f s', elapsed_s)
+
+            time.sleep(random_sleep)
+            #time.sleep(0.1)
+
+
+
+class SqliteDbTest(object):
+
+    def __init__(self):
+        pass
+
+
+    def main(self):
+        reader_workers = list()
+        for x in range(READ_WORKERS):
+            p = ReaderWorker(x)
+            reader_workers.append(p)
+            p.start()
+
+
+
+        writer_workers = list()
+        for x in range(WRITE_WORKERS):
+            p = WriterWorker(x)
+            writer_workers.append(p)
+            p.start()
+
+
+
+
+if __name__ == "__main__":
+    t = SqliteDbTest()
+    t.main()
+
