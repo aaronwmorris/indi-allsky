@@ -234,6 +234,7 @@ class SqliteDbTest(object):
         )
 
 
+
         logger.warning('Creating key: %s', key)
         with app.app_context():
             db.session.add(state)
@@ -257,12 +258,20 @@ class SqliteDbTest(object):
             p.start()
 
 
-        while True:
-            if not self.shutdown:
-                time.sleep(2)
-                continue
 
-            break
+        start_time = time.time()
+
+
+        while True:
+            now = time.time()
+            if now - start_time > 180:  # 3 minutes
+                logger.error('Safety limit reached, terminating')
+                self.shutdown = True
+
+            if self.shutdown:
+                break
+
+            time.sleep(2)
 
 
         for x in reader_workers:
