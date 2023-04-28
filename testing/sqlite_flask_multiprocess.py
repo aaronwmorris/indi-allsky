@@ -4,6 +4,7 @@
 
 import time
 from datetime import datetime
+import string
 import random
 
 from flask import Flask
@@ -130,11 +131,13 @@ class BaseWorker(Process):
 
 class ReaderWorker(BaseWorker):
 
-    def __init__(self, idx):
+    def __init__(self, idx, key):
         super(ReaderWorker, self).__init__()
 
         self.threadID = idx
         self.name = 'ReaderWorker{0:03d}'.format(idx)
+
+        self.key = key
 
 
     def run(self):
@@ -145,7 +148,7 @@ class ReaderWorker(BaseWorker):
 
             with app.app_context():
                 try:
-                    self.getState('FOOBAR')
+                    self.getState(self.key)
                 except NoResultFound:
                     pass
 
@@ -158,11 +161,13 @@ class ReaderWorker(BaseWorker):
 
 class WriterWorker(BaseWorker):
 
-    def __init__(self, idx):
+    def __init__(self, idx, key):
         super(WriterWorker, self).__init__()
 
         self.threadID = idx
         self.name = 'WriterWorker{0:03d}'.format(idx)
+
+        self.key = key
 
 
     def run(self):
@@ -172,7 +177,7 @@ class WriterWorker(BaseWorker):
             start = time.time()
 
             with app.app_context():
-                self.setState('FOOBAR', int(time.time()))
+                self.setState(self.key, int(time.time()))
 
             elapsed_s = time.time() - start
             logger.info('Write in %0.4f s', elapsed_s)
@@ -189,20 +194,32 @@ class SqliteDbTest(object):
 
 
     def main(self):
+        # create initial data
+        key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=25))
+        state = TestTable(
+            key=key,
+            value=str(int(time.time())),
+            createDate=datetime.now(),
+        )
+
+        with app.app_context():
+            db.session.add(state)
+            db.session.commit()
+
+
+
         reader_workers = list()
         for x in range(READ_WORKERS):
-            p = ReaderWorker(x)
+            p = ReaderWorker(x, key)
             reader_workers.append(p)
             p.start()
 
 
-
         writer_workers = list()
         for x in range(WRITE_WORKERS):
-            p = WriterWorker(x)
+            p = WriterWorker(x, key)
             writer_workers.append(p)
             p.start()
-
 
 
 
