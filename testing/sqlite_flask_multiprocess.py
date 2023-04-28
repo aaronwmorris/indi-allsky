@@ -22,6 +22,10 @@ from multiprocessing import log_to_stderr
 READ_WORKERS  = 10
 WRITE_WORKERS = 10
 
+# This will cause locking
+#READ_WORKERS  = 10
+#WRITE_WORKERS = 100
+
 DATABASE_URL = 'sqlite:///test_deleteme.sqlite'  # /// is relative path
 
 
@@ -152,7 +156,7 @@ class ReaderWorker(BaseWorker):
         while True:
             #random_sleep = random.randrange(100, 300, 10) / 1000
             #time.sleep(random_sleep)
-            time.sleep(0.01)
+            #time.sleep(0.001)
 
             start = time.time()
 
@@ -186,7 +190,7 @@ class WriterWorker(BaseWorker):
         while True:
             #random_sleep = random.randrange(100, 300, 10) / 1000
             #time.sleep(random_sleep)
-            time.sleep(0.01)
+            #time.sleep(0.001)
 
             start = time.time()
 
