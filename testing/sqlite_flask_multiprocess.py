@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import string
 import random
+import signal
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -86,6 +87,10 @@ app = create_app()
 
 class BaseWorker(Process):
 
+    def __init__(self, *args, **kwargs):
+        super(BaseWorker, self).__init__(*args, **kwargs)
+
+
     def setState(self, key, value):
         now = datetime.now()
 
@@ -127,6 +132,9 @@ class BaseWorker(Process):
         return state.value
 
 
+    def sigint_handler_worker(self, signum, frame):
+        pass
+
 
 class ReaderWorker(BaseWorker):
 
@@ -140,6 +148,8 @@ class ReaderWorker(BaseWorker):
 
 
     def run(self):
+        signal.signal(signal.SIGINT, self.sigint_handler_worker)
+
         while True:
             random_sleep = random.randrange(100, 300, 10) / 1000
 
@@ -170,6 +180,8 @@ class WriterWorker(BaseWorker):
 
 
     def run(self):
+        signal.signal(signal.SIGINT, self.sigint_handler_worker)
+
         while True:
             random_sleep = random.randrange(100, 300, 10) / 1000
 
@@ -185,11 +197,17 @@ class WriterWorker(BaseWorker):
             #time.sleep(0.1)
 
 
-
 class SqliteDbTest(object):
 
     def __init__(self):
-        pass
+        self.shutdown = False
+
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught SIGINT')
+        self.shutdown = True
 
 
     def main(self):
@@ -220,6 +238,30 @@ class SqliteDbTest(object):
             writer_workers.append(p)
             p.start()
 
+
+        while True:
+            if not self.shutdown:
+                time.sleep(2)
+                continue
+
+            break
+
+
+        for x in reader_workers:
+            x.terminate()
+        for x in writer_workers:
+            x.terminate()
+
+
+        # Wait for the log workers to finish
+        for p in reader_workers:
+            p.join()
+
+        for p in writer_workers:
+            p.join()
+
+
+        logger.info('Finished')
 
 
 if __name__ == "__main__":
