@@ -26,7 +26,7 @@ DATABASE_URL = 'sqlite:///test_deleteme.sqlite'  # /// is relative path
 
 
 logger = log_to_stderr()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 
 db = SQLAlchemy()
@@ -140,7 +140,6 @@ class ReaderWorker(BaseWorker):
 
     def __init__(self, idx, key):
         super(ReaderWorker, self).__init__()
-
         self.threadID = idx
         self.name = 'ReaderWorker{0:03d}'.format(idx)
 
@@ -226,6 +225,8 @@ class SqliteDbTest(object):
             createDate=datetime.now(),
         )
 
+
+        logger.warning('Creating key: %s', key)
         with app.app_context():
             db.session.add(state)
             db.session.commit()
@@ -234,6 +235,7 @@ class SqliteDbTest(object):
 
         reader_workers = list()
         for x in range(READ_WORKERS):
+            logger.warning('Creating reader worker %d', x)
             p = ReaderWorker(x, key)
             reader_workers.append(p)
             p.start()
@@ -241,6 +243,7 @@ class SqliteDbTest(object):
 
         writer_workers = list()
         for x in range(WRITE_WORKERS):
+            logger.warning('Creating writer worker %d', x)
             p = WriterWorker(x, key)
             writer_workers.append(p)
             p.start()
