@@ -219,6 +219,12 @@ class SqliteDbTest(object):
 
 
     def main(self):
+        logger.warning('This will cause a lot of disk I/O')
+        logger.warning('!!!! DO NOT LEAVE RUNNING FOR LONG PERIODS !!!!')
+        logger.warning('Starting in 5 seconds')
+
+        time.sleep(5)
+
         # create initial data
         key = ''.join(random.choices(string.ascii_uppercase + string.digits, k=25))
         state = TestTable(
