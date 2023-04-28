@@ -156,6 +156,8 @@ class ReaderWorker(BaseWorker):
             start = time.time()
 
             with app.app_context():
+                #self.setState(self.key, int(time.time()))
+
                 try:
                     self.getState(self.key)
                 except NoResultFound:
@@ -189,6 +191,11 @@ class WriterWorker(BaseWorker):
 
             with app.app_context():
                 self.setState(self.key, int(time.time()))
+
+                #try:
+                #    self.getState(self.key)
+                #except NoResultFound:
+                #    pass
 
             elapsed_s = time.time() - start
             logger.info('Write in %0.4f s', elapsed_s)
