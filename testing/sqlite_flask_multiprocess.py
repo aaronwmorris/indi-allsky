@@ -19,12 +19,10 @@ import logging
 from multiprocessing import log_to_stderr
 
 
-READ_WORKERS  = 10
-WRITE_WORKERS = 10
-
 # This will cause locking
-#READ_WORKERS  = 10
-#WRITE_WORKERS = 100
+READ_WORKERS  = 10
+WRITE_WORKERS = 100
+
 
 DATABASE_URL = 'sqlite:///test_deleteme.sqlite'  # /// is relative path
 
@@ -52,8 +50,8 @@ def _sqlite_pragma_on_connect(dbapi_con, con_record):
     dbapi_con.execute('PRAGMA synchronous=NORMAL')
     #dbapi_con.execute('PRAGMA synchronous=FULL')
 
-    #dbapi_con.execute('PRAGMA busy_timeout=3000')
-    #dbapi_con.execute('PRAGMA read_uncommitted=ON')
+    dbapi_con.execute('PRAGMA busy_timeout=1000')
+    #dbapi_con.execute('PRAGMA busy_timeout=10000')
 
 
 def create_app():
