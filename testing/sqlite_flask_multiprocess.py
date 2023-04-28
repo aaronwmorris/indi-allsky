@@ -150,7 +150,9 @@ class ReaderWorker(BaseWorker):
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
         while True:
-            random_sleep = random.randrange(100, 300, 10) / 1000
+            #random_sleep = random.randrange(100, 300, 10) / 1000
+            #time.sleep(random_sleep)
+            time.sleep(0.01)
 
             start = time.time()
 
@@ -165,8 +167,6 @@ class ReaderWorker(BaseWorker):
             elapsed_s = time.time() - start
             logger.info('Read in %0.4f s', elapsed_s)
 
-            time.sleep(random_sleep)
-            #time.sleep(0.1)
 
 
 class WriterWorker(BaseWorker):
@@ -184,7 +184,9 @@ class WriterWorker(BaseWorker):
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
         while True:
-            random_sleep = random.randrange(100, 300, 10) / 1000
+            #random_sleep = random.randrange(100, 300, 10) / 1000
+            #time.sleep(random_sleep)
+            time.sleep(0.01)
 
             start = time.time()
 
@@ -199,8 +201,6 @@ class WriterWorker(BaseWorker):
             elapsed_s = time.time() - start
             logger.info('Write in %0.4f s', elapsed_s)
 
-            time.sleep(random_sleep)
-            #time.sleep(0.1)
 
 
 class SqliteDbTest(object):
