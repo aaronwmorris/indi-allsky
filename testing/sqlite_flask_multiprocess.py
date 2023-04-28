@@ -49,7 +49,6 @@ def _sqlite_pragma_on_connect(dbapi_con, con_record):
 
     #dbapi_con.execute('PRAGMA busy_timeout=3000')
     #dbapi_con.execute('PRAGMA read_uncommitted=ON')
-    #dbapi_con.execute('PRAGMA foreign_keys=ON')
 
 
 def create_app():
