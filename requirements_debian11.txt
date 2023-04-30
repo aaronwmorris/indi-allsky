@@ -9,6 +9,8 @@ opencv-python-headless
 scipy
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
+# https://www.wheelodex.org/projects/scikit-image/
+scikit-image
 astroalign
 bottleneck
 python-dateutil

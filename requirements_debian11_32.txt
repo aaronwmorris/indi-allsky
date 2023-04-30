@@ -9,6 +9,8 @@ opencv-python-headless<=4.6.0.66
 scipy<=1.8.1
 # https://www.piwheels.org/project/ccdproc/
 ccdproc
+# https://www.piwheels.org/project/scikit-image/
+scikit-image<=0.19.3
 astroalign
 bottleneck
 python-dateutil
