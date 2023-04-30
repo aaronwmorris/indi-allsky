@@ -2732,8 +2732,15 @@ class ImageProcessor(object):
             # indicate focus mode is enabled in indi-allsky
             self.drawText_opencv(
                 self.image,
+                'Focus Mode',
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
+                tuple(color_bgr),
+            )
+
+            self.drawText_opencv(
+                self.image,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
-                (image_width - 125, image_height - 10),
+                (image_width - 250, image_height - 10),
                 tuple(color_bgr),
             )
 
@@ -2925,11 +2932,22 @@ class ImageProcessor(object):
             # indicate focus mode is enabled in indi-allsky
             self.drawText_pillow(
                 draw,
-                i_ref['exp_date'].strftime('%H:%M:%S'),
+                'Focus Mode',
                 font,
-                (image_width - 125, image_height - 10),
+                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
                 tuple(color_rgb),
             )
+
+            self.drawText_pillow(
+                draw,
+                i_ref['exp_date'].strftime('%H:%M:%S'),
+                font,
+                (image_width - 300, image_height - (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
+                tuple(color_rgb),
+            )
+
+            # convert back to numpy array
+            self.image = cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
 
             return
 
