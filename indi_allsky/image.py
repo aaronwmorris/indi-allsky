@@ -453,6 +453,9 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
+        self.image_processor.apply_gamma(gamma=3.0)
+
+
         self.image_processor.convert_16bit_to_8bit()
 
 
@@ -3150,6 +3153,27 @@ class ImageProcessor(object):
         return extra_lines
 
 
+    def apply_gamma(self, gamma=3.0):
+        logger.info('Applying gamma correction')
+
+        gamma_start = time.time()
+
+        if self.max_bit_depth == 8:
+            data_max = 256
+            range_array = numpy.arange(0, data_max).astype(numpy.uint8)
+            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint8)
+        else:
+            data_max = 2 ** self.max_bit_depth
+            range_array = numpy.arange(0, data_max).astype(numpy.uint16)
+            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint16)
+
+
+        self.image = lut.take(self.image, mode='raise')
+
+        gamma_elapsed_s = time.time() - gamma_start
+        logger.info('Image gamma in %0.4f s', gamma_elapsed_s)
+
+
     def _load_logo_overlay(self, image):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
@@ -3249,4 +3273,5 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
+
 
