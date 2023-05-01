@@ -3159,6 +3159,9 @@ class ImageProcessor(object):
 
 
     def _apply_gamma(self, gamma=3.0):
+        if not gamma:
+            return
+
         logger.info('Applying gamma correction')
 
         gamma_start = time.time()
