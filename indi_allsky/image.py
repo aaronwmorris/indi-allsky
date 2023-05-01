@@ -453,8 +453,7 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.apply_gamma(gamma=3.0)
-        self.image_processor.adjustImageLevels(devs=3.0)
+        self.image_processor.contrast_enhance_stretch(gamma=3.0, devs=3.0)
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -3154,7 +3153,12 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def apply_gamma(self, gamma=3.0):
+    def contrast_enhance_stretch(self, gamma=3.0, devs=3.0):
+        self._apply_gamma(gamma=gamma)
+        self._adjustImageLevels(devs=devs)
+
+
+    def _apply_gamma(self, gamma=3.0):
         logger.info('Applying gamma correction')
 
         gamma_start = time.time()
@@ -3175,7 +3179,7 @@ class ImageProcessor(object):
         logger.info('Image gamma in %0.4f s', gamma_elapsed_s)
 
 
-    def adjustImageLevels(self, devs=3.0):
+    def _adjustImageLevels(self, devs=3.0):
         mean, stddev = self._get_image_stddev()
         logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
 
