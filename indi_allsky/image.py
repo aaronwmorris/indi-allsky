@@ -38,6 +38,7 @@ from fractions import Fraction
 
 from . import constants
 
+from .stretch import IndiAllSkyStretch
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -453,7 +454,7 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.contrast_enhance_stretch(gamma=3.0, devs=3.0)
+        self.image_processor.stretch()
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -1617,6 +1618,7 @@ class ImageProcessor(object):
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
 
+        self._stretch = IndiAllSkyStretch(self.config, self.night_v, self.moonmode_v)
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
@@ -3153,122 +3155,8 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def contrast_enhance_stretch(self, gamma=3.0, devs=3.0):
-        self._apply_gamma(gamma=gamma)
-        self._adjustImageLevels(devs=devs)
-
-
-    def _apply_gamma(self, gamma=3.0):
-        if not gamma:
-            return
-
-        logger.info('Applying gamma correction')
-
-        gamma_start = time.time()
-
-        if self.max_bit_depth == 8:
-            data_max = 256
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint8)
-        else:
-            data_max = 2 ** self.max_bit_depth
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint16)
-
-
-        self.image = lut.take(self.image, mode='raise')
-
-        gamma_elapsed_s = time.time() - gamma_start
-        logger.info('Image gamma in %0.4f s', gamma_elapsed_s)
-
-
-    def _adjustImageLevels(self, devs=3.0):
-        mean, stddev = self._get_image_stddev()
-        logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
-
-
-        levels_start = time.time()
-
-        data_max = 2 ** self.max_bit_depth
-
-        low = int(mean - (devs * stddev))
-
-        lowPercent  = (low / data_max) * 100
-        highPercent = 100.0
-
-        lowIndex = int((lowPercent / 100) * data_max)
-        highIndex = int((highPercent / 100) * data_max)
-
-
-        if self.max_bit_depth == 8:
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-
-            #range_array[range_array <= lowIndex] = 0
-            #range_array[range_array > data_max] = data_max
-
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
-            lut[lut < 0] = 0
-            lut = lut.astype(numpy.uint8)
-        else:
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-
-            #range_array[range_array <= lowIndex] = 0
-            #range_array[range_array > highIndex] = data_max
-
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
-            lut[lut < 0] = 0
-            lut = lut.astype(numpy.uint16)
-
-
-        self.image = lut.take(self.image, mode='raise')
-
-        levels_elapsed_s = time.time() - levels_start
-        logger.info('Image levels in %0.4f s', levels_elapsed_s)
-
-
-    def _get_image_stddev(self, mask=None):
-        mean_std_start = time.time()
-
-        if isinstance(mask, type(None)):
-            image_height, image_width = self.image.shape[:2]
-
-            x1 = int((image_width / 2) - (image_width / 3))
-            y1 = int((image_height / 2) - (image_height / 3))
-            x2 = int((image_width / 2) + (image_width / 3))
-            y2 = int((image_height / 2) + (image_height / 3))
-
-            roi = self.image[
-                y1:y2,
-                x1:x2,
-            ]
-        else:
-            roi = cv2.bitwise_and(self.image, self.image, mask=mask)
-
-
-        if len(roi.shape) == 2:
-            # mono
-            mean = numpy.mean(roi)
-            stddev = numpy.std(roi)
-        else:
-            # color
-            b, g, r = roi[:, :, 0], roi[:, :, 1], roi[:, :, 2]
-
-            b_mean = numpy.mean(b)
-            g_mean = numpy.mean(g)
-            r_mean = numpy.mean(r)
-
-            b_stddev = numpy.std(b)
-            g_stddev = numpy.std(g)
-            r_stddev = numpy.std(r)
-
-            mean = (b_mean + g_mean + r_mean) / 3
-            stddev = (b_stddev + g_stddev + r_stddev) / 3
-
-
-        mean_std_elapsed_s = time.time() - mean_std_start
-        logger.info('Mean and std dev in %0.4f s', mean_std_elapsed_s)
-
-        return mean, stddev
+    def stretch(self):
+        self.image = self._stretch.stretch(self.image, self.max_bit_depth)
 
 
     def _load_logo_overlay(self, image):
