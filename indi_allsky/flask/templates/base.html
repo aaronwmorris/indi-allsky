@@ -42,6 +42,7 @@
                         <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
                     </li>
+                    {% if current_user.is_authenticated or login_disabled %}
                     <li>
                         <a href="{{ url_for('indi_allsky.focus_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/stars.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Focus</span></a>
@@ -58,6 +59,7 @@
                         <a href="{{ url_for('indi_allsky.log_view') }}" class="nav-link px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/terminal-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Log</span> </a>
                     </li>
+                    {% endif %}
                 </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
