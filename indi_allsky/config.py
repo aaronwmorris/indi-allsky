@@ -111,6 +111,7 @@ class IndiAllSkyConfigBase(object):
             "MODE1_ENABLE"   : False,
             "MODE1_GAMMA"    : 3.0,
             "MODE1_STDDEVS"  : 3.0,
+            "MOONMODE"       : False,
         },
         "KEOGRAM_ANGLE"    : 0,
         "KEOGRAM_H_SCALE"  : 100,

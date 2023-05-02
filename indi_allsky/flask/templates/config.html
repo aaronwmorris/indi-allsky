@@ -436,6 +436,19 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MOONMODE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__MOONMODE(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__MOONMODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -2769,6 +2782,7 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'IMAGE_STRETCH__MODE1_ENABLE',
+    'IMAGE_STRETCH__MOONMODE',
     'KEOGRAM_LABEL',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_FLIP_V',

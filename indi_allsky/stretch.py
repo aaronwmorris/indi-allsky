@@ -22,7 +22,7 @@ class IndiAllSkyStretch(object):
             return data
 
 
-        if self.moonmode_v.value:
+        if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
             logger.info('Moon mode stretching disabled')
             return data
 
