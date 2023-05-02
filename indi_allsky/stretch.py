@@ -49,11 +49,11 @@ class IndiAllSkyStretch(object):
         gamma_start = time.time()
 
         if image_bit_depth == 8:
-            data_max = 256
+            data_max = 255
             range_array = numpy.arange(0, data_max, dtype=numpy.float32)
             lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint8)
         else:
-            data_max = 2 ** image_bit_depth
+            data_max = (2 ** image_bit_depth - 1)
             range_array = numpy.arange(0, data_max, dtype=numpy.float32)
             lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint16)
 
@@ -75,7 +75,7 @@ class IndiAllSkyStretch(object):
 
         levels_start = time.time()
 
-        data_max = 2 ** image_bit_depth
+        data_max = (2 ** image_bit_depth) - 1
 
         low = int(mean - (stddevs * stddev))
 
@@ -94,6 +94,7 @@ class IndiAllSkyStretch(object):
 
             lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
             lut[lut < 0] = 0
+            lut[lut > data_max] = data_max
             lut = lut.astype(numpy.uint8)
         else:
             range_array = numpy.arange(0, data_max, dtype=numpy.float32)
@@ -103,6 +104,7 @@ class IndiAllSkyStretch(object):
 
             lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
             lut[lut < 0] = 0
+            lut[lut > data_max] = data_max
             lut = lut.astype(numpy.uint16)
 
 
