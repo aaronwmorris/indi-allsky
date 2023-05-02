@@ -1,3 +1,4 @@
+### Mode 1 stretch is based on C code provided by a fellow astronomy enthusiast
 
 import time
 import numpy
