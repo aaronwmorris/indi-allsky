@@ -38,6 +38,7 @@ from fractions import Fraction
 
 from . import constants
 
+from .stretch import IndiAllSkyStretch
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -451,6 +452,9 @@ class ImageWorker(Process):
 
         if self.config.get('IMAGE_EXPORT_RAW'):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
+
+
+        self.image_processor.stretch()
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -1614,6 +1618,7 @@ class ImageProcessor(object):
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
 
+        self._stretch = IndiAllSkyStretch(self.config, self.night_v, self.moonmode_v)
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
@@ -3150,6 +3155,10 @@ class ImageProcessor(object):
         return extra_lines
 
 
+    def stretch(self):
+        self.image = self._stretch.main(self.image, self.max_bit_depth)
+
+
     def _load_logo_overlay(self, image):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
@@ -3249,4 +3258,5 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
+
 

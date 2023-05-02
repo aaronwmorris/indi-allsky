@@ -399,7 +399,55 @@
         <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
     </div>
 
+    <hr />
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__MODE1_ENABLE(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__MODE1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Image stretching and contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MOONMODE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__MOONMODE(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__MOONMODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
 
     <hr />
 
@@ -2607,6 +2655,8 @@ const field_names = [
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
     'WEB_EXTRA_TEXT',
+    'IMAGE_STRETCH__MODE1_GAMMA',
+    'IMAGE_STRETCH__MODE1_STDDEVS',
     'KEOGRAM_ANGLE',
     'KEOGRAM_H_SCALE',
     'KEOGRAM_V_SCALE',
@@ -2731,6 +2781,8 @@ const checkbox_field_names = [
     'DAYTIME_TIMELAPSE',
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
+    'IMAGE_STRETCH__MODE1_ENABLE',
+    'IMAGE_STRETCH__MOONMODE',
     'KEOGRAM_LABEL',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_FLIP_V',

@@ -787,6 +787,10 @@ class ConfigView(FormView):
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
+            'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
+            'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
+            'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0),
+            'IMAGE_STRETCH__MOONMODE'        : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MOONMODE', False),
             'KEOGRAM_ANGLE'                  : self.indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
             'KEOGRAM_H_SCALE'                : self.indi_allsky_config.get('KEOGRAM_H_SCALE', 100),
             'KEOGRAM_V_SCALE'                : self.indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
@@ -1117,6 +1121,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('TEXT_PROPERTIES'):
             self.indi_allsky_config['TEXT_PROPERTIES'] = {}
 
+        if not self.indi_allsky_config.get('IMAGE_STRETCH'):
+            self.indi_allsky_config['IMAGE_STRETCH'] = {}
+
         if not self.indi_allsky_config.get('ORB_PROPERTIES'):
             self.indi_allsky_config['ORB_PROPERTIES'] = {}
 
@@ -1197,6 +1204,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MOONMODE']            = bool(request.json['IMAGE_STRETCH__MOONMODE'])
         self.indi_allsky_config['KEOGRAM_ANGLE']                        = float(request.json['KEOGRAM_ANGLE'])
         self.indi_allsky_config['KEOGRAM_H_SCALE']                      = int(request.json['KEOGRAM_H_SCALE'])
         self.indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
