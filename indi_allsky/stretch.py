@@ -64,6 +64,7 @@ class IndiAllSkyStretch(object):
             lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint16)
 
 
+        # apply lookup table
         gamma_data = lut.take(data, mode='raise')
 
         gamma_elapsed_s = time.time() - gamma_start
@@ -98,9 +99,11 @@ class IndiAllSkyStretch(object):
             #range_array[range_array <= lowIndex] = 0
             #range_array[range_array > data_max] = data_max
 
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
-            lut[lut < 0] = 0
-            lut[lut > data_max] = data_max
+            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
+
+            lut[lut < 0] = 0  # clip low end
+            lut[lut > data_max] = data_max  # clip high end
+
             lut = lut.astype(numpy.uint8)
         else:
             range_array = numpy.arange(0, data_max, dtype=numpy.float32)
@@ -108,12 +111,15 @@ class IndiAllSkyStretch(object):
             #range_array[range_array <= lowIndex] = 0
             #range_array[range_array > highIndex] = data_max
 
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
-            lut[lut < 0] = 0
-            lut[lut > data_max] = data_max
+            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
+
+            lut[lut < 0] = 0  # clip low end
+            lut[lut > data_max] = data_max  # clip high end
+
             lut = lut.astype(numpy.uint16)
 
 
+        # apply lookup table
         stretch_image = lut.take(data, mode='raise')
 
         levels_elapsed_s = time.time() - levels_start
