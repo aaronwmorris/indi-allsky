@@ -571,6 +571,22 @@ def WEB_EXTRA_TEXT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def IMAGE_STRETCH__MODE1_GAMMA_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Gamma must be 0 or greater')
+
+
+def IMAGE_STRETCH__MODE1_STDDEVS_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Standard deviations must be 1.0 or greater')
+
+
 def IMAGE_ROTATE_validator(form, field):
     if not field.data:
         return
@@ -1836,6 +1852,9 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
+    IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
+    IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
+    IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
     KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])

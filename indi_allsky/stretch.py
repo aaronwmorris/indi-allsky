@@ -22,7 +22,7 @@ class IndiAllSkyStretch(object):
             return data
 
 
-        if self.config.get('STRETCH', {}).get('MODE1_ENABLE', True):
+        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', True):
             logger.info('Using stretch mode 1')
             return self.mode1_stretch(data, image_bit_depth)
         else:
@@ -39,7 +39,7 @@ class IndiAllSkyStretch(object):
 
 
     def mode1_apply_gamma(self, data, image_bit_depth):
-        gamma = self.config.get('STRETCH', {}).get('MODE1_GAMMA', 3.0)
+        gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
 
         if not gamma:
             return data
@@ -67,7 +67,7 @@ class IndiAllSkyStretch(object):
 
 
     def mode1_adjustImageLevels(self, data, image_bit_depth):
-        stddevs = self.config.get('STRETCH', {}).get('MODE1_STDDEVS', 3.0)
+        stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
 
         mean, stddev = self._get_image_stddev(data)
         logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)

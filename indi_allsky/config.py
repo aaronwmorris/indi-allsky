@@ -107,7 +107,7 @@ class IndiAllSkyConfigBase(object):
         "NIGHT_MOONMODE_PHASE"     : 33,
         "WEB_EXTRA_TEXT" : "",
         "WEB_NONLOCAL_IMAGES" : False,
-        "STRETCH" : {
+        "IMAGE_STRETCH" : {
             "MODE1_ENABLE"   : False,
             "MODE1_GAMMA"    : 3.0,
             "MODE1_STDDEVS"  : 3.0,
