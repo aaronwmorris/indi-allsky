@@ -147,6 +147,8 @@ class TemplateView(BaseView):
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
+        self.login_disabled = app.config.get('LOGIN_DISABLED', False)
+
         # night set in get_astrometric_info()
         self.night = True
 
@@ -190,6 +192,7 @@ class TemplateView(BaseView):
             'astrometric_data'   : self.get_astrometric_info(),
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
+            'login_disabled'     : self.login_disabled,
         }
 
         # night set in get_astrometric_info()
