@@ -17,7 +17,7 @@ class IndiAllSkyStretch(object):
 
 
     def main(self, data, image_bit_depth):
-        if self.night_v.value:
+        if not self.night_v.value:
             # No daytime stretching
             return data
 
