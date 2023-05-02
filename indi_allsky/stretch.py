@@ -22,7 +22,7 @@ class IndiAllSkyStretch(object):
             return data
 
 
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', True):
+        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
             logger.info('Using stretch mode 1')
             return self.mode1_stretch(data, image_bit_depth)
         else:
