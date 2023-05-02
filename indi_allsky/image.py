@@ -3156,7 +3156,7 @@ class ImageProcessor(object):
 
 
     def stretch(self):
-        self.image = self._stretch.stretch(self.image, self.max_bit_depth)
+        self.image = self._stretch.main(self.image, self.max_bit_depth)
 
 
     def _load_logo_overlay(self, image):
