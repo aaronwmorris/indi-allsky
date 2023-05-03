@@ -27,8 +27,10 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Camera temperature control (for cameras with active cooling)
 * Multi-image stacking
 * Timelapse video generation
+* Image histogram stretch support
 * GPS support
 * Images tagged with EXIF data (JPEG only)
+* TrueType font support for image labels
 * Remote web portal
 * Network file transfers - Upload images and videos to remote site
     * S3 Object Storage support
@@ -337,8 +339,9 @@ The hardware below has at least been plugged in and tested for correct detection
 | ZWO      | ASI183MC Pro        | A      |       |
 | QHY      | QHY5LII-M           | A      |       |
 | Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
-| Altair   | GPCAM3 290C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for full resolution |
-| Altair   | GPCAM3 224C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for full resolution |
+| Altair   | Hypercam 178C       | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#altair-hypercam-178c) for full resolution |
+| Altair   | GPCAM3 290C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#altair-290c-resolution) for full resolution |
+| Altair   | GPCAM3 224C         | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#altair-224c-resolution) for full resolution |
 | Altair   | GPCAM2 290M         | A      |       |
 | Touptek  | G3CMOS06300KPA (IMX178) | A  |       |
 | Touptek  | G-1200-KMB          | A      |       |
