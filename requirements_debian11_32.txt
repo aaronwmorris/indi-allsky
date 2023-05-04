@@ -2,7 +2,7 @@
 # https://www.piwheels.org/project/astropy/
 astropy
 # https://www.piwheels.org/project/numpy/
-numpy
+numpy<=1.24.2
 # https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless<=4.6.0.66
 # https://www.piwheels.org/project/scipy/
@@ -25,6 +25,8 @@ imageio
 imageio-ffmpeg
 # https://www.piwheels.org/project/imagecodecs/
 #imagecodecs
+cython
+git+https://github.com/letmaik/rawpy.git#egg=rawpy
 #rawpy  # not available on armv7l
 pygifsicle
 gunicorn[gthread]
@@ -40,7 +42,7 @@ dbus-python
 paho-mqtt
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
-bcrypt<=3.2.2
+bcrypt
 passlib[argon2]
 flask-login
 is-safe-url

@@ -36,11 +36,11 @@ class StretchTestMode1(object):
 
         start = time.time()
 
-        #data = self._apply_gamma(data, 16, gamma=0.0)
+        data = self._apply_gamma(data, 16, gamma=3.0)
 
-        #stretched = self._adjustImageLevels(data, 16, devs=3.0)
+        stretched = self._adjustImageLevels(data, 16, devs=3.0)
 
-        stretched = data
+        #stretched = data
 
 
         elapsed_s = time.time() - start
@@ -110,7 +110,10 @@ class StretchTestMode1(object):
         #range_array[range_array > highIndex] = data_max
 
         lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point match, results in negative numbers
+
         lut[lut < 0] = 0
+        lut[lut > data_max] = data_max
+
         lut = lut.astype(numpy.uint16)
 
 

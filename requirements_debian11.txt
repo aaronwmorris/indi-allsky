@@ -25,6 +25,7 @@ imageio
 imageio-ffmpeg
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
+cython
 rawpy
 pygifsicle
 gunicorn[gthread]

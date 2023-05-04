@@ -119,6 +119,7 @@ IMAGE_FOLDER_FILES="
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
+CPU_BITS=$(getconf LONG_BIT)
 
 # get primary group
 PGRP=$(id -ng)
@@ -183,6 +184,7 @@ echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
+echo "Bits: $CPU_BITS"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
@@ -299,6 +301,10 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
     fi
@@ -316,7 +322,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+    if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         # Astroberry repository
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
@@ -572,9 +578,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
@@ -594,7 +603,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
     # Sometimes raspbian can be detected as debian
-    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+    if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         # Astroberry repository
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
             echo "Installing INDI via Astroberry repository"
@@ -865,6 +874,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
     fi
@@ -878,7 +891,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
@@ -1010,6 +1023,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
     fi
@@ -1023,7 +1040,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
@@ -1153,6 +1170,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements_debian11.txt
