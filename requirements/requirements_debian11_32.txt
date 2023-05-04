@@ -26,8 +26,6 @@ imageio-ffmpeg
 # https://www.piwheels.org/project/imagecodecs/
 #imagecodecs
 cython
-git+https://github.com/letmaik/rawpy.git#egg=rawpy
-#rawpy  # not available on armv7l
 pygifsicle
 gunicorn[gthread]
 inotify

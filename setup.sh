@@ -299,14 +299,19 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     if [ "$CPU_ARCH" == "armv7l" ]; then
         # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
 
@@ -446,6 +451,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
@@ -579,14 +585,19 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
 
@@ -729,6 +740,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
@@ -872,14 +884,19 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     if [ "$CPU_ARCH" == "armv7l" ]; then
         # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
 
@@ -1021,14 +1038,19 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     if [ "$CPU_ARCH" == "armv7l" ]; then
         # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
 
@@ -1169,14 +1191,19 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     if [ "$CPU_ARCH" == "armv7l" ]; then
         # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
 
@@ -1364,6 +1391,9 @@ fi
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
+
+# some modules do not have their prerequisites set
+pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 
 
