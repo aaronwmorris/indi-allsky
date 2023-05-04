@@ -31,6 +31,7 @@ trap catch_sigint SIGINT
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
+CPU_BITS=$(getconf LONG_BIT)
 
 
 echo "#################################################"
@@ -55,6 +56,7 @@ echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
+echo "Bits: $CPU_BITS"
 echo
 
 
@@ -92,9 +94,12 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
@@ -109,9 +114,12 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
@@ -126,9 +134,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
@@ -138,9 +149,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     PYTHON_BIN=python3.9
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
@@ -150,9 +164,12 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     PYTHON_BIN=python3.8
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        # rawpy not available on 32bit
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
     else
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
