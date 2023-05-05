@@ -910,7 +910,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
-    elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
 
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -1063,7 +1067,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
         fi
-    elif [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
 
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -1224,9 +1232,25 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "x86_64" ]]; then
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
         fi
     fi
 
