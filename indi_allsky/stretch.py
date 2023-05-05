@@ -2,6 +2,7 @@
 
 import time
 import numpy
+import cv2
 import logging
 
 
@@ -10,14 +11,24 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyStretch(object):
 
-    def __init__(self, config, night_v, moonmode_v):
+    def __init__(self, config, bin_v, night_v, moonmode_v, mask=None):
         self.config = config
 
+        self.bin_v = bin_v
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
+        self._sqm_mask = mask
+
+        self._numpy_mask = None
+
 
     def main(self, data, image_bit_depth):
+        if isinstance(self._numpy_mask, type(None)):
+            # This only needs to be done once
+            self._generateNumpyMask(data)
+
+
         if not self.night_v.value:
             # No daytime stretching
             return data
@@ -134,34 +145,27 @@ class IndiAllSkyStretch(object):
         mean_std_start = time.time()
 
 
-        image_height, image_width = data.shape[:2]
+        # mask arrays allow using the detection mask to perform calculations on
+        # arbitrary boundaries in the image
+        if len(data.shape) == 2:
+            ma = numpy.ma.masked_array(data, mask=self._numpy_mask)
 
-        x1 = int((image_width / 2) - (image_width / 3))
-        y1 = int((image_height / 2) - (image_height / 3))
-        x2 = int((image_width / 2) + (image_width / 3))
-        y2 = int((image_height / 2) + (image_height / 3))
-
-        roi = data[
-            y1:y2,
-            x1:x2,
-        ]
-
-
-        if len(roi.shape) == 2:
             # mono
-            mean = numpy.mean(roi)
-            stddev = numpy.std(roi)
+            mean = numpy.mean(ma)
+            stddev = numpy.std(ma)
         else:
             # color
-            b, g, r = roi[:, :, 0], roi[:, :, 1], roi[:, :, 2]
+            b_ma = numpy.ma.masked_array(data[:, :, 0], mask=self._numpy_mask)
+            g_ma = numpy.ma.masked_array(data[:, :, 1], mask=self._numpy_mask)
+            r_ma = numpy.ma.masked_array(data[:, :, 2], mask=self._numpy_mask)
 
-            b_mean = numpy.mean(b)
-            g_mean = numpy.mean(g)
-            r_mean = numpy.mean(r)
+            b_mean = numpy.mean(b_ma)
+            g_mean = numpy.mean(g_ma)
+            r_mean = numpy.mean(r_ma)
 
-            b_stddev = numpy.std(b)
-            g_stddev = numpy.std(g)
-            r_stddev = numpy.std(r)
+            b_stddev = numpy.std(b_ma)
+            g_stddev = numpy.std(g_ma)
+            r_stddev = numpy.std(r_ma)
 
             mean = (b_mean + g_mean + r_mean) / 3
             stddev = (b_stddev + g_stddev + r_stddev) / 3
@@ -172,4 +176,46 @@ class IndiAllSkyStretch(object):
 
         return mean, stddev
 
+
+    def _generateNumpyMask(self, img):
+        if isinstance(self._sqm_mask, type(None)):
+            logger.info('Generating mask based on SQM_ROI')
+
+            image_height, image_width = img.shape[:2]
+
+            # create a black background
+            mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+            sqm_roi = self.config.get('SQM_ROI', [])
+
+            try:
+                x1 = int(sqm_roi[0] / self.bin_v.value)
+                y1 = int(sqm_roi[1] / self.bin_v.value)
+                x2 = int(sqm_roi[2] / self.bin_v.value)
+                y2 = int(sqm_roi[3] / self.bin_v.value)
+            except IndexError:
+                logger.warning('Using central ROI for blob calculations')
+                x1 = int((image_width / 2) - (image_width / 3))
+                y1 = int((image_height / 2) - (image_height / 3))
+                x2 = int((image_width / 2) + (image_width / 3))
+                y2 = int((image_height / 2) + (image_height / 3))
+
+            cv2.rectangle(
+                img=mask,
+                pt1=(x1, y1),
+                pt2=(x2, y2),
+                color=(255),  # mono
+                thickness=cv2.FILLED,
+            )
+
+
+            # True values will be masked
+            mask = mask == 0
+
+        else:
+            # True values will be masked
+            mask = self._sqm_mask == 0
+
+
+        self._numpy_mask = mask
 

@@ -1618,7 +1618,7 @@ class ImageProcessor(object):
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
 
-        self._stretch = IndiAllSkyStretch(self.config, self.night_v, self.moonmode_v)
+        self._stretch = IndiAllSkyStretch(self.config, self.bin_v, self.night_v, self.moonmode_v, mask=self._detection_mask)
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
