@@ -601,6 +601,18 @@ def IMAGE_ROTATE_validator(form, field):
         raise ValidationError(str(e))
 
 
+def IMAGE_ROTATE_ANGLE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+    if field.data < -180:
+        raise ValidationError('Rotation angle must be -180 or greater')
+
+    if field.data > 180:
+        raise ValidationError('Rotation angle must be 180 or less')
+
+
 def KEOGRAM_ANGLE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1889,6 +1901,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
     IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
+    IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])

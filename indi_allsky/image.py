@@ -466,10 +466,14 @@ class ImageWorker(Process):
 
 
         # rotation
+        if self.config.get('IMAGE_ROTATE_ANGLE'):
+            self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
+
+
         if self.config.get('IMAGE_ROTATE'):
             try:
                 rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
-                self.image_processor.rotate(rotate_enum)
+                self.image_processor.rotate_90(rotate_enum)
             except AttributeError:
                 logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
 
@@ -2280,8 +2284,35 @@ class ImageProcessor(object):
         self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
-    def rotate(self, rotate_enum):
+    def rotate_90(self, rotate_enum):
         self.image = cv2.rotate(self.image, rotate_enum)
+
+
+    def rotate_angle(self, angle):
+        if not angle:
+            return
+
+        rotate_start = time.time()
+
+        height, width = self.image.shape[:2]
+        center_x = int(width / 2)
+        center_y = int(height / 2)
+
+        rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
+
+        abs_cos = abs(rot[0, 0])
+        abs_sin = abs(rot[0, 1])
+
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
+
+        rot[0, 2] += bound_w / 2 - center_x
+        rot[1, 2] += bound_h / 2 - center_y
+
+        self.image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
+
+        processing_elapsed_s = time.time() - rotate_start
+        logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
 
     def flip(self, cv2_axis):
