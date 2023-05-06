@@ -465,13 +465,21 @@ class ImageWorker(Process):
         #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
-        # rotation
+        # adu calculate (before processing)
+        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
+
+
         if self.config.get('IMAGE_ROTATE'):
             try:
                 rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
-                self.image_processor.rotate(rotate_enum)
+                self.image_processor.rotate_90(rotate_enum)
             except AttributeError:
                 logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+
+
+        # rotation
+        if self.config.get('IMAGE_ROTATE_ANGLE'):
+            self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
 
 
         # verticle flip
@@ -481,10 +489,6 @@ class ImageWorker(Process):
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
             self.image_processor.flip(1)
-
-
-        # adu calculate (before processing)
-        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
 
 
         # line detection
@@ -2280,8 +2284,50 @@ class ImageProcessor(object):
         self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
-    def rotate(self, rotate_enum):
+    def rotate_90(self, rotate_enum):
         self.image = cv2.rotate(self.image, rotate_enum)
+
+
+    def rotate_angle(self, angle):
+        if not angle:
+            return
+
+        rotate_start = time.time()
+
+        height, width = self.image.shape[:2]
+        center_x = int(width / 2)
+        center_y = int(height / 2)
+
+        rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
+
+        abs_cos = abs(rot[0, 0])
+        abs_sin = abs(rot[0, 1])
+
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
+
+        rot[0, 2] += bound_w / 2 - center_x
+        rot[1, 2] += bound_h / 2 - center_y
+
+        self.image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
+
+        rot_height, rot_width = self.image.shape[:2]
+        mod_height = rot_height % 2
+        mod_width = rot_width % 2
+
+        if mod_height or mod_width:
+            # width and height needs to be divisible by 2 for timelapse
+            crop_height = rot_height - mod_height
+            crop_width = rot_width - mod_width
+
+            self.image = self.image[
+                0:crop_height,
+                0:crop_width,
+            ]
+
+
+        processing_elapsed_s = time.time() - rotate_start
+        logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
 
     def flip(self, cv2_axis):
@@ -2597,8 +2643,12 @@ class ImageProcessor(object):
         image_height, image_width = self.image.shape[:2]
 
         logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
-        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
         new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
+        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
+
+        # ensure size is divisible by 2
+        new_height = new_height - (new_height % 2)
+        new_width = new_width - (new_width % 2)
 
         logger.info('New size: %d x %d', new_width, new_height)
 
