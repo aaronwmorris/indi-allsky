@@ -2643,8 +2643,12 @@ class ImageProcessor(object):
         image_height, image_width = self.image.shape[:2]
 
         logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
-        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
         new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
+        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
+
+        # ensure size is divisible by 2
+        new_height = new_height - (new_height % 2)
+        new_width = new_width - (new_width % 2)
 
         logger.info('New size: %d x %d', new_width, new_height)
 
