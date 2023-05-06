@@ -465,6 +465,10 @@ class ImageWorker(Process):
         #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
+        # adu calculate (before processing)
+        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
+
+
         # rotation
         if self.config.get('IMAGE_ROTATE_ANGLE'):
             self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
@@ -485,10 +489,6 @@ class ImageWorker(Process):
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
             self.image_processor.flip(1)
-
-
-        # adu calculate (before processing)
-        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
 
 
         # line detection
