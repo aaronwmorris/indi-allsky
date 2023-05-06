@@ -2311,6 +2311,21 @@ class ImageProcessor(object):
 
         self.image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
 
+        rot_height, rot_width = self.image.shape[:2]
+        mod_height = rot_height % 2
+        mod_width = rot_width % 2
+
+        if mod_height or mod_width:
+            # width and height needs to be divisible by 2 for timelapse
+            crop_height = rot_height - mod_height
+            crop_width = rot_width - mod_width
+
+            self.image = self.image[
+                0:crop_height,
+                0:crop_width,
+            ]
+
+
         processing_elapsed_s = time.time() - rotate_start
         logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
