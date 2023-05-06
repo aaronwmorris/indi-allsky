@@ -469,17 +469,17 @@ class ImageWorker(Process):
         adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
 
 
-        # rotation
-        if self.config.get('IMAGE_ROTATE_ANGLE'):
-            self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
-
-
         if self.config.get('IMAGE_ROTATE'):
             try:
                 rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
                 self.image_processor.rotate_90(rotate_enum)
             except AttributeError:
                 logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+
+
+        # rotation
+        if self.config.get('IMAGE_ROTATE_ANGLE'):
+            self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
 
 
         # verticle flip
