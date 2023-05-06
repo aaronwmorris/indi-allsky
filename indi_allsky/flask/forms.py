@@ -2042,6 +2042,19 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.TEXT_PROPERTIES__PIL_FONT_CUSTOM.errors.append('Please set a custom font')
                 result = False
 
+
+        # check cropping
+        mod_image_crop_x = (self.IMAGE_CROP_ROI_X2.data - self.IMAGE_CROP_ROI_X1.data) % 2
+        if mod_image_crop_x:
+            self.IMAGE_CROP_ROI_X2.errors.append('X coordinates must be divisible by 2')
+            result = False
+
+        mod_image_crop_y = (self.IMAGE_CROP_ROI_Y2.data - self.IMAGE_CROP_ROI_Y1.data) % 2
+        if mod_image_crop_y:
+            self.IMAGE_CROP_ROI_Y2.errors.append('Y coordinates must be divisible by 2')
+            result = False
+
+
         return result
 
 
