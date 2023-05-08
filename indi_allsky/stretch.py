@@ -31,20 +31,20 @@ class IndiAllSkyStretch(object):
 
         if not self.night_v.value:
             # No daytime stretching
-            return data
+            return data, False
 
 
         if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
             logger.info('Moon mode stretching disabled')
-            return data
+            return data, False
 
 
         if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
             logger.info('Using image stretch mode 1')
-            return self.mode1_stretch(data, image_bit_depth)
+            return self.mode1_stretch(data, image_bit_depth), True
         else:
             logger.info('Image stretching disabled')
-            return data
+            return data, False
 
 
     def mode1_stretch(self, data, image_bit_depth):

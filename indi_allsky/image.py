@@ -3197,10 +3197,10 @@ class ImageProcessor(object):
 
 
     def stretch(self):
-        stretched_image = self._stretch.main(self.image, self.max_bit_depth)
+        stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
 
 
-        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
+        if is_stretched and self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
             self.image = self._splitscreen(self.image, stretched_image)
             return
 
