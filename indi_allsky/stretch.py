@@ -29,14 +29,15 @@ class IndiAllSkyStretch(object):
             self._generateNumpyMask(data)
 
 
-        if not self.night_v.value:
-            # No daytime stretching
-            return data, False
-
-
-        if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
-            logger.info('Moon mode stretching disabled')
-            return data, False
+        if self.night_v.value:
+            # night
+            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                logger.info('Moon mode stretching disabled')
+                return data, False
+        else:
+            # daytime
+            if not self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
+                return data, False
 
 
         if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
