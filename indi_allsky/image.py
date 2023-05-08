@@ -454,7 +454,7 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.stretch()
+        self.image_processor.stretch(i_ref)
 
 
         self.image_processor.convert_16bit_to_8bit()
@@ -3205,8 +3205,17 @@ class ImageProcessor(object):
         return extra_lines
 
 
-    def stretch(self):
-        self.image = self._stretch.main(self.image, self.max_bit_depth)
+    def stretch(self, i_ref):
+        stretched_image = self._stretch.main(self.image, self.max_bit_depth)
+
+
+        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
+            self.image = self._splitscreen(self.image, stretched_image)
+            return
+
+
+        self.image = stretched_image
+
 
 
     def _load_logo_overlay(self, image):
