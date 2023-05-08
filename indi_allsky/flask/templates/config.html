@@ -451,6 +451,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__DAYTIME.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__DAYTIME(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__DAYTIME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_STRETCH__SPLIT.label }}
         </div>
         <div class="col-sm-2">
@@ -2812,6 +2825,7 @@ const checkbox_field_names = [
     'IMAGE_STRETCH__MODE1_ENABLE',
     'IMAGE_STRETCH__SPLIT',
     'IMAGE_STRETCH__MOONMODE',
+    'IMAGE_STRETCH__DAYTIME',
     'KEOGRAM_LABEL',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_FLIP_V',

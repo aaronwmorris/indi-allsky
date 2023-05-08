@@ -113,6 +113,7 @@ class IndiAllSkyConfigBase(object):
             "MODE1_STDDEVS"  : 1.5,
             "SPLIT"          : False,
             "MOONMODE"       : False,
+            "DAYTIME"        : False,
         },
         "KEOGRAM_ANGLE"    : 0,
         "KEOGRAM_H_SCALE"  : 100,
