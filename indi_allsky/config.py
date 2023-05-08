@@ -110,7 +110,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_STRETCH" : {
             "MODE1_ENABLE"   : False,
             "MODE1_GAMMA"    : 3.0,
-            "MODE1_STDDEVS"  : 3.0,
+            "MODE1_STDDEVS"  : 1.5,
             "SPLIT"          : False,
             "MOONMODE"       : False,
         },

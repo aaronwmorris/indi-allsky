@@ -789,7 +789,7 @@ class ConfigView(FormView):
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
-            'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0),
+            'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 1.5),
             'IMAGE_STRETCH__SPLIT'           : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('SPLIT', False),
             'IMAGE_STRETCH__MOONMODE'        : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MOONMODE', False),
             'KEOGRAM_ANGLE'                  : self.indi_allsky_config.get('KEOGRAM_ANGLE', 0.0),
