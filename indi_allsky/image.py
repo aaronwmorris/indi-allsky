@@ -453,11 +453,12 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.stretch()
-
-
-        # adu value may be updated below
+        # Calculate ADU before stretch
         adu = self.image_processor.calculate_8bit_adu()
+        # adu value may be updated below
+
+
+        self.image_processor.stretch()
 
 
         self.image_processor.convert_16bit_to_8bit()
