@@ -151,21 +151,21 @@ class IndiAllSkyStretch(object):
             ma = numpy.ma.masked_array(data, mask=self._numpy_mask)
 
             # mono
-            mean = numpy.mean(ma)
-            stddev = numpy.std(ma)
+            mean = numpy.ma.mean(ma)
+            stddev = numpy.ma.std(ma)
         else:
             # color
             b_ma = numpy.ma.masked_array(data[:, :, 0], mask=self._numpy_mask)
             g_ma = numpy.ma.masked_array(data[:, :, 1], mask=self._numpy_mask)
             r_ma = numpy.ma.masked_array(data[:, :, 2], mask=self._numpy_mask)
 
-            b_mean = numpy.mean(b_ma)
-            g_mean = numpy.mean(g_ma)
-            r_mean = numpy.mean(r_ma)
+            b_mean = numpy.ma.mean(b_ma)
+            g_mean = numpy.ma.mean(g_ma)
+            r_mean = numpy.ma.mean(r_ma)
 
-            b_stddev = numpy.std(b_ma)
-            g_stddev = numpy.std(g_ma)
-            r_stddev = numpy.std(r_ma)
+            b_stddev = numpy.ma.std(b_ma)
+            g_stddev = numpy.ma.std(g_ma)
+            r_stddev = numpy.ma.std(r_ma)
 
             mean = (b_mean + g_mean + r_mean) / 3
             stddev = (b_stddev + g_stddev + r_stddev) / 3
