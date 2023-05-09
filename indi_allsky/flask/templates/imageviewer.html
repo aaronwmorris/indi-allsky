@@ -103,6 +103,7 @@ function init() {
     $(document).keydown(function(e) {
         var arrow = { left: 37, up: 38, right: 39, down: 40 };
         var img_select_val = $("#IMG_SELECT").val();
+        var hour_select_val = $("#HOUR_SELECT").val();
 
         switch (e.which) {
             case arrow.left:
@@ -129,12 +130,30 @@ function init() {
                 });
 
                 break;
-            //case arrow.up:
-            //    //..
-            //    break;
-            //case arrow.down:
-            //    //..
-            //    break;
+            case arrow.up:
+                $('#HOUR_SELECT option').each(function(index, element) {
+                    if (index == 0) {
+                        console.log('At latest hour');
+                    } else if (element.value == hour_select_val) {
+                        console.log('Next hour');
+                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
+            case arrow.down:
+                $('#HOUR_SELECT option').each(function(index, element) {
+                    if (index == $("#HOUR_SELECT")[0].options.length - 1) {
+                        console.log('At oldest hour');
+                    } else if (element.value == hour_select_val) {
+                        console.log('Previous hour');
+                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
             default:
                 return;
         }
@@ -286,7 +305,7 @@ $( document ).ready(function() {
 
 <div class="row">
     <div class="col-12 text-center" style="font-size:10px">
-        Use left and right arrow keys to cycle images
+        Use arrow keys to cycle images - Hour: Up/Down - Image: Left/Right
     </div>
 </div>
 
