@@ -131,7 +131,7 @@ class IndiAllSkyConfigBase(object):
             "tif"   : 5,  # 5 = LZW
         },
         "IMAGE_FOLDER"     : "/var/www/html/allsky/images",
-        "IMAGE_LABEL_TEMPLATE" : "{timestamp:%Y.%m.%d %H:%M:%S}\nLat {latitude:0.1f} Long {longitude:0.1f}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStacking {stack_method:s}\nStars {stars:d}",
+        "IMAGE_LABEL_TEMPLATE" : "{timestamp:%Y.%m.%d %H:%M:%S}\nLat {latitude:0.1f} Long {longitude:0.1f}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStretch {stretch:s}\nStacking {stack_method:s}\nStars {stars:d}",
         "IMAGE_EXTRA_TEXT" : "",
         "IMAGE_CROP_ROI"   : [],
         "IMAGE_ROTATE"     : "",  # empty, ROTATE_90_CLOCKWISE, ROTATE_90_COUNTERCLOCKWISE, ROTATE_180
