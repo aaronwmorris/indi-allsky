@@ -2840,7 +2840,9 @@ class ImageProcessor(object):
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
-            'sidereal_time': self.astrometric_data['sidereal_time'],
+            'sidereal_time'        : self.astrometric_data['sidereal_time'],
+            'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
+            'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
         }
 
 
@@ -2858,7 +2860,26 @@ class ImageProcessor(object):
             label_data['stack_count'] = 0
 
 
+        # stretching data
+        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
+            if self.night_v.value:
+                # night
+                label_data['stretch'] = 'On'
+
+                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                    label_data['stretch'] = 'Off'
+            else:
+                # daytime
+                if self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
+                    label_data['stretch'] = 'On'
+                else:
+                    label_data['stretch'] = 'Off'
+        else:
+            label_data['stretch'] = 'Off'
+
+
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
+
 
 
         line_offset = 0
@@ -3045,7 +3066,9 @@ class ImageProcessor(object):
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
-            'sidereal_time': self.astrometric_data['sidereal_time'],
+            'sidereal_time'        : self.astrometric_data['sidereal_time'],
+            'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
+            'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
         }
 
 
@@ -3063,7 +3086,26 @@ class ImageProcessor(object):
             label_data['stack_count'] = 0
 
 
+        # stretching data
+        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
+            if self.night_v.value:
+                # night
+                label_data['stretch'] = 'On'
+
+                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                    label_data['stretch'] = 'Off'
+            else:
+                # daytime
+                if self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
+                    label_data['stretch'] = 'On'
+                else:
+                    label_data['stretch'] = 'Off'
+        else:
+            label_data['stretch'] = 'Off'
+
+
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
+
 
 
         line_offset = 0
