@@ -102,6 +102,46 @@ fields['form_global'] = {
 
 function populate_videos(video_list) {
     $("#videos_div").empty();
+    var h_row_div = $('<div />', {
+        'class' : "row",
+        'style' : "height:100;",
+    });
+
+    var h_datetime_div = $('<div />', {
+        'class' : "col-sm-2",
+    }).appendTo(h_row_div);
+
+    //$('<div />', {
+    //    'text'  : 'Date',
+    //    'style' : "font-size:14px;font-weight:bold"
+    //}).appendTo(h_datetime_div);
+
+
+    var h_startrail_div = $('<div />', {
+        'class' : "col-sm-2",
+    }).appendTo(h_row_div);
+
+    $('<div />', {
+        'text'  : 'Star Trail Timelapse',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(h_startrail_div);
+
+
+    var h_keogram_div = $('<div />', {
+        'class' : "col-sm-8",
+    }).appendTo(h_row_div);
+
+    $('<div />', {
+        'text'  : 'Timelapse Video',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(h_keogram_div);
+
+
+    h_row_div.appendTo($("#videos_div"));
+    $('<hr />').appendTo($("#videos_div"));
+
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
