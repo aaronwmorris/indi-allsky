@@ -249,6 +249,46 @@ function populate_videos(video_list) {
         $('<hr />').appendTo($("#videos_div"));
     });
 
+
+    var f_row_div = $('<div />', {
+        'class' : "row",
+        'style' : "height:100;",
+    });
+
+    var f_datetime_div = $('<div />', {
+        'class' : "col-sm-2",
+    }).appendTo(f_row_div);
+
+    //$('<div />', {
+    //    'text'  : 'Date',
+    //    'style' : "font-size:14px;font-weight:bold"
+    //}).appendTo(f_datetime_div);
+
+
+    var f_startrail_div = $('<div />', {
+        'class' : "col-sm-2",
+    }).appendTo(f_row_div);
+
+    $('<div />', {
+        'text'  : 'Star Trail Timelapse',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(f_startrail_div);
+
+
+    var f_keogram_div = $('<div />', {
+        'class' : "col-sm-8",
+    }).appendTo(f_row_div);
+
+    $('<div />', {
+        'text'  : 'Timelapse Video',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(f_keogram_div);
+
+
+    f_row_div.appendTo($("#videos_div"));
+
 };
 
 
