@@ -49,7 +49,7 @@ $( document ).ready(function() {
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-3">
-            <a href="{{ url_for('indi_allsky.timelapse_view') }}">Generate</a>
+            <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none">Generate</a>
         </div>
 
     </div>
@@ -168,6 +168,7 @@ function populate_videos(video_list) {
                 var st_a = $('<a />', {
                     'href'   : item['startrail'],
                     'target' : "_blank",
+                    'class'  : "text-decoration-none",
                 }).appendTo(datetime_div);
 
                 $('<div />', {
@@ -185,6 +186,7 @@ function populate_videos(video_list) {
         var kl_a = $('<a />', {
             'href'   : item['keogram'],
             'target' : "_blank",
+            'class'  : "text-decoration-none",
         }).appendTo(datetime_div);
         $('<div />', {
             'text'  : "Keogram",
