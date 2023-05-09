@@ -703,13 +703,14 @@ class JsonChartView(JsonView):
             #h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
             gray_ma = numpy.ma.masked_array(image_data, mask=numpy_mask)
             h_numpy = numpy.histogram(gray_ma, bins=numpy.arange(256))
+            #h_numpy = numpy.histogram(image_data[y1:y2, x1:x2], bins=numpy.arange(256))
 
             #for x, val in enumerate(h_numpy.tolist()):
-            for x, val in enumerate(h_numpy[0]):
+            for x, val in enumerate(h_numpy[0].tolist()):
                 h_data = {
                     'x' : str(x),
                     #'y' : val[0]
-                    'y' : int(val),
+                    'y' : val,
                 }
                 chart_data['histogram']['gray'].append(h_data)
 
@@ -720,13 +721,14 @@ class JsonChartView(JsonView):
                 #h_numpy = cv2.calcHist([image_data], [i], mask, [256], [0, 256])
                 col_ma = numpy.ma.masked_array(image_data[:, :, i], mask=numpy_mask)
                 h_numpy = numpy.histogram(col_ma, bins=numpy.arange(256))
+                #h_numpy = numpy.histogram(image_data[:, :, i][y1:y2, x1:x2], bins=numpy.arange(256))
 
                 #for x, val in enumerate(h_numpy.tolist()):
-                for x, val in enumerate(h_numpy[0]):
+                for x, val in enumerate(h_numpy[0].tolist()):
                     h_data = {
                         'x' : str(x),
                         #'y' : val[0]
-                        'y' : int(val),
+                        'y' : val,
                     }
                     chart_data['histogram'][col].append(h_data)
 
