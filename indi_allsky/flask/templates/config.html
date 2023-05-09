@@ -433,7 +433,7 @@
             {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
             <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">Black level cutoff in standard deviations</div>
     </div>
 
     <div class="form-group row">
@@ -447,6 +447,32 @@
             </div>
         </div>
         <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__DAYTIME.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__DAYTIME(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__DAYTIME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__SPLIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_STRETCH__SPLIT(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__SPLIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Left is original, right is stretched</div>
     </div>
 
     <hr />
@@ -2797,7 +2823,9 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'IMAGE_STRETCH__MODE1_ENABLE',
+    'IMAGE_STRETCH__SPLIT',
     'IMAGE_STRETCH__MOONMODE',
+    'IMAGE_STRETCH__DAYTIME',
     'KEOGRAM_LABEL',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_FLIP_V',

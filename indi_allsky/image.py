@@ -145,7 +145,6 @@ class ImageWorker(Process):
         self.sqm_value = 0
 
         self._detection_mask = self._load_detection_mask()
-        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
         self.image_processor = ImageProcessor(
             self.config,
@@ -454,6 +453,11 @@ class ImageWorker(Process):
             self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
 
 
+        # Calculate ADU before stretch
+        adu = self.image_processor.calculate_8bit_adu()
+        # adu value may be updated below
+
+
         self.image_processor.stretch()
 
 
@@ -466,7 +470,7 @@ class ImageWorker(Process):
 
 
         # adu calculate (before processing)
-        adu, adu_average = self.calculate_histogram(self.image_processor.image, exposure)
+        adu, adu_average = self.calculate_exposure(adu, exposure)
 
 
         if self.config.get('IMAGE_ROTATE'):
@@ -1353,27 +1357,11 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def calculate_histogram(self, data, exposure):
-        if isinstance(self._adu_mask, type(None)):
-            # This only needs to be done once if a mask is not provided
-            self._generateAduMask(data)
-
-
-        if len(data.shape) == 2:
-            # mono
-            adu = cv2.mean(src=data, mask=self._adu_mask)[0]
-        else:
-            data_mono = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
-
-
+    def calculate_exposure(self, adu, exposure):
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
             adu = 0.1
-
-
-        logger.info('Brightness average: %0.2f', adu)
 
 
         if self.night_v.value:
@@ -1474,40 +1462,6 @@ class ImageWorker(Process):
             self.exposure_v.value = new_exposure
 
 
-    def _generateAduMask(self, img):
-        logger.info('Generating mask based on ADU_ROI')
-
-        image_height, image_width = img.shape[:2]
-
-        # create a black background
-        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
-
-        adu_roi = self.config.get('ADU_ROI', [])
-
-        try:
-            x1 = int(adu_roi[0] / self.bin_v.value)
-            y1 = int(adu_roi[1] / self.bin_v.value)
-            x2 = int(adu_roi[2] / self.bin_v.value)
-            y2 = int(adu_roi[3] / self.bin_v.value)
-        except IndexError:
-            logger.warning('Using central ROI for ADU calculations')
-            x1 = int((image_width / 2) - (image_width / 3))
-            y1 = int((image_height / 2) - (image_height / 3))
-            x2 = int((image_width / 2) + (image_width / 3))
-            y2 = int((image_height / 2) + (image_height / 3))
-
-        # The white area is what we keep
-        cv2.rectangle(
-            img=mask,
-            pt1=(x1, y1),
-            pt2=(x2, y2),
-            color=(255),  # mono
-            thickness=cv2.FILLED,
-        )
-
-        self._adu_mask = mask
-
-
     def _load_detection_mask(self):
         detect_mask = self.config.get('DETECT_MASK', '')
 
@@ -1602,6 +1556,7 @@ class ImageProcessor(object):
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
         self._detection_mask = mask
+        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
         self._image_circle_alpha_mask = None
 
@@ -2090,6 +2045,42 @@ class ImageProcessor(object):
         data_calibrated = cv2.subtract(data, master_dark)
 
         return data_calibrated
+
+
+    def calculate_8bit_adu(self):
+        i_ref = self.getLatestImage()
+
+        return self._calculate_8bit_adu(i_ref)
+
+
+    def _calculate_8bit_adu(self, i_ref):
+        if isinstance(self._adu_mask, type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateAduMask(self.image)
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            adu = cv2.mean(src=self.image, mask=self._adu_mask)[0]
+        else:
+            data_mono = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
+
+
+        if i_ref['image_bitpix'] == 8:
+            # nothing to scale
+            adu_8 = int(adu)
+        elif i_ref['image_bitpix'] == 16:
+            shift_factor = self._max_bit_depth - 8
+            adu_8 = int(adu) >> shift_factor
+        else:
+            raise Exception('Unsupported bit depth')
+
+
+        logger.info('ADU average: %0.1f (%d)', adu, adu_8)
+
+
+        return adu_8
 
 
     def calculateSqm(self):
@@ -3206,7 +3197,16 @@ class ImageProcessor(object):
 
 
     def stretch(self):
-        self.image = self._stretch.main(self.image, self.max_bit_depth)
+        stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
+
+
+        if is_stretched and self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
+            self.image = self._splitscreen(self.image, stretched_image)
+            return
+
+
+        self.image = stretched_image
+
 
 
     def _load_logo_overlay(self, image):
@@ -3261,6 +3261,40 @@ class ImageProcessor(object):
 
 
         return overlay_rgb, alpha_mask
+
+
+    def _generateAduMask(self, img):
+        logger.info('Generating mask based on ADU_ROI')
+
+        image_height, image_width = img.shape[:2]
+
+        # create a black background
+        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
+        adu_roi = self.config.get('ADU_ROI', [])
+
+        try:
+            x1 = int(adu_roi[0] / self.bin_v.value)
+            y1 = int(adu_roi[1] / self.bin_v.value)
+            x2 = int(adu_roi[2] / self.bin_v.value)
+            y2 = int(adu_roi[3] / self.bin_v.value)
+        except IndexError:
+            logger.warning('Using central ROI for ADU calculations')
+            x1 = int((image_width / 2) - (image_width / 3))
+            y1 = int((image_height / 2) - (image_height / 3))
+            x2 = int((image_width / 2) + (image_width / 3))
+            y2 = int((image_height / 2) + (image_height / 3))
+
+        # The white area is what we keep
+        cv2.rectangle(
+            img=mask,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=(255),  # mono
+            thickness=cv2.FILLED,
+        )
+
+        self._adu_mask = mask
 
 
     def _generate_image_circle_mask(self, image):
