@@ -686,23 +686,30 @@ class JsonChartView(JsonView):
         image_height, image_width = image_data.shape[:2]
         app.logger.info('Calculating histogram from RoI')
 
-        mask = numpy.zeros(image_data.shape[:2], numpy.uint8)
+        #mask = numpy.zeros(image_data.shape[:2], numpy.uint8)
+        numpy_mask = numpy.full(image_data.shape[:2], True, numpy.bool_)
 
         x1 = int((image_width / 2) - (image_width / 3))
         y1 = int((image_height / 2) - (image_height / 3))
         x2 = int((image_width / 2) + (image_width / 3))
         y2 = int((image_height / 2) + (image_height / 3))
 
-        mask[y1:y2, x1:x2] = 255
+        #mask[y1:y2, x1:x2] = 255
+        numpy_mask[y1:y2, x1:x2] = False
 
 
         if len(image_data.shape) == 2:
             # mono
-            h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
-            for x, val in enumerate(h_numpy.tolist()):
+            #h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
+            gray_ma = numpy.ma.masked_array(image_data, mask=numpy_mask)
+            h_numpy = numpy.histogram(gray_ma.compressed(), bins=256, range=(0, 256))
+
+            #for x, val in enumerate(h_numpy.tolist()):
+            for x, val in enumerate(h_numpy[0].tolist()):
                 h_data = {
                     'x' : str(x),
-                    'y' : val[0],
+                    #'y' : val[0]
+                    'y' : val,
                 }
                 chart_data['histogram']['gray'].append(h_data)
 
@@ -710,11 +717,16 @@ class JsonChartView(JsonView):
             # color
             color = ('blue', 'green', 'red')
             for i, col in enumerate(color):
-                h_numpy = cv2.calcHist([image_data], [i], mask, [256], [0, 256])
-                for x, val in enumerate(h_numpy.tolist()):
+                #h_numpy = cv2.calcHist([image_data], [i], mask, [256], [0, 256])
+                col_ma = numpy.ma.masked_array(image_data[:, :, i], mask=numpy_mask)
+                h_numpy = numpy.histogram(col_ma.compressed(), bins=256, range=(0, 256))
+
+                #for x, val in enumerate(h_numpy.tolist()):
+                for x, val in enumerate(h_numpy[0].tolist()):
                     h_data = {
                         'x' : str(x),
-                        'y' : val[0],
+                        #'y' : val[0]
+                        'y' : val,
                     }
                     chart_data['histogram'][col].append(h_data)
 

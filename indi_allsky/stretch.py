@@ -2,7 +2,6 @@
 
 import time
 import numpy
-import cv2
 import logging
 
 
@@ -152,21 +151,21 @@ class IndiAllSkyStretch(object):
             ma = numpy.ma.masked_array(data, mask=self._numpy_mask)
 
             # mono
-            mean = numpy.mean(ma)
-            stddev = numpy.std(ma)
+            mean = numpy.ma.mean(ma)
+            stddev = numpy.ma.std(ma)
         else:
             # color
             b_ma = numpy.ma.masked_array(data[:, :, 0], mask=self._numpy_mask)
             g_ma = numpy.ma.masked_array(data[:, :, 1], mask=self._numpy_mask)
             r_ma = numpy.ma.masked_array(data[:, :, 2], mask=self._numpy_mask)
 
-            b_mean = numpy.mean(b_ma)
-            g_mean = numpy.mean(g_ma)
-            r_mean = numpy.mean(r_ma)
+            b_mean = numpy.ma.mean(b_ma)
+            g_mean = numpy.ma.mean(g_ma)
+            r_mean = numpy.ma.mean(r_ma)
 
-            b_stddev = numpy.std(b_ma)
-            g_stddev = numpy.std(g_ma)
-            r_stddev = numpy.std(r_ma)
+            b_stddev = numpy.ma.std(b_ma)
+            g_stddev = numpy.ma.std(g_ma)
+            r_stddev = numpy.ma.std(r_ma)
 
             mean = (b_mean + g_mean + r_mean) / 3
             stddev = (b_stddev + g_stddev + r_stddev) / 3
@@ -184,8 +183,7 @@ class IndiAllSkyStretch(object):
 
             image_height, image_width = img.shape[:2]
 
-            # create a black background
-            mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+            mask = numpy.full((image_height, image_width), True, dtype=numpy.bool_)
 
             sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -201,17 +199,9 @@ class IndiAllSkyStretch(object):
                 x2 = int((image_width / 2) + (image_width / 3))
                 y2 = int((image_height / 2) + (image_height / 3))
 
-            cv2.rectangle(
-                img=mask,
-                pt1=(x1, y1),
-                pt2=(x2, y2),
-                color=(255),  # mono
-                thickness=cv2.FILLED,
-            )
-
 
             # True values will be masked
-            mask = mask == 0
+            mask[y1:y2, x1:x2] = False
 
         else:
             # True values will be masked

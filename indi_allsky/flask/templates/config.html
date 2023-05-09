@@ -12,14 +12,14 @@
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
-    <button class="nav-link" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
-    <button class="nav-link" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
-    <button class="nav-link" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
-    <button class="nav-link" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
-    <button class="nav-link" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
-    <button class="nav-link" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">S3 Object Storage</button>
-    <button class="nav-link" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+    <button class="nav-link link-info active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
+    <button class="nav-link link-info" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
+    <button class="nav-link link-info" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
+    <button class="nav-link link-info" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
+    <button class="nav-link link-info" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
+    <button class="nav-link link-info" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
+    <button class="nav-link link-info" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">S3 Object Storage</button>
+    <button class="nav-link link-info" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
   </div>
 </nav>
 
@@ -37,7 +37,7 @@
             {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
             <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">Camera Info</a></div>
     </div>
 
     <hr />
@@ -306,7 +306,7 @@
         </div>
         <div class="col-sm-5">
             <div>Extra options for libcamera-still.</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" target="_blank">libcamera customizations Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" class="text-decoration-none link-info" target="_blank">libcamera customizations Wiki</a></div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
         </div>
     </div>
@@ -322,7 +322,7 @@
             <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-4">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config" target="_blank">INDI Config Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config" class="text-decoration-none link-info" target="_blank">INDI Config Wiki</a></div>
         </div>
     </div>
 
@@ -1016,11 +1016,11 @@
             <div id="IMAGE_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
-            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
             <div>Available variables: <pre>timestamp, ts, exposure, rational_exp, gain, temp, temp_unit, sqm, stars,<br />detections, sun_alt, moon_alt, moon_phase, sun_moon_sep,<br />latitude, longitude, stack_method, stack_count</pre></div>
 
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" target="_blank">Image Labels Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
         </div>
     </div>
 
@@ -1530,7 +1530,7 @@
         </div>
         <div class="col-sm-8">
             <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" target="_blank">Keogram Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" class="text-decoration-none link-info" target="_blank">Keogram Wiki</a></div>
         </div>
     </div>
 
@@ -1693,7 +1693,7 @@
             {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
             <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}">Camera Info</a></div>
+        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">Camera Info</a></div>
     </div>
 
     <div class="form-group row">
@@ -1896,7 +1896,7 @@
         </div>
         <div class="col-sm-6">
             <div>File transfer protocol</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers" target="_blank">File Transfer Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers" class="text-decoration-none link-info" target="_blank">File Transfer Wiki</a></div>
         </div>
     </div>
 
@@ -2019,8 +2019,8 @@
         <div class="col-sm-7">
             <div>Remote image name. "{0}" is replaced with the configured image type extension.</div>
             <div>Available variables: <pre>timestamp, ts, ext</pre></div>
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
-            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">Python datetime format codes</a></div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
         </div>
     </div>
 
@@ -2383,7 +2383,7 @@
             <div id="S3UPLOAD__BUCKET-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html" target="_blank">AWS S3 Bucket Access</a></div>
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html" class="text-decoration-none link-info" target="_blank">AWS S3 Bucket Access</a></div>
         </div>
     </div>
 
@@ -2396,7 +2396,7 @@
             <div id="S3UPLOAD__REGION-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html target="_blank"">AWS S3 Regions</a> (scroll on table)</div>
+            <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html" class="text-decoration-none link-info" target="_blank">AWS S3 Regions</a> (scroll on table)</div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
@@ -2432,7 +2432,7 @@
             <div id="S3UPLOAD__URL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
             <div>Available variables: <pre>bucket, region, host</pre></div>
         </div>
     </div>
@@ -2446,7 +2446,7 @@
             <div id="S3UPLOAD__ACL-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" target="_blank">AWS S3 ACLs</a></div>
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" class="text-decoration-none link-info" target="_blank">AWS S3 ACLs</a></div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
@@ -2460,7 +2460,7 @@
             <div id="S3UPLOAD__STORAGE_CLASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://aws.amazon.com/s3/storage-classes/" target="_blank">AWS Storage Classes</a></div>
+            <div><a href="https://aws.amazon.com/s3/storage-classes/" class="text-decoration-none link-info" target="_blank">AWS Storage Classes</a></div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
@@ -2531,7 +2531,7 @@
                 <div id="SYNCAPI__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8"><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup" class="text-decoration-none link-info" target="_blank">SyncAPI Setup Wiki</a></div>
     </div>
 
     <div class="form-group row">
