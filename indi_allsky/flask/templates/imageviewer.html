@@ -49,8 +49,9 @@ function init() {
 
         $('#img_download').html(
             $('<a />', {
-                'href' : this.src,
+                'href'   : this.src,
                 'target' : '_blank',
+                'class'  : "text-decoration-none",
             }).html('Image')
         );
 
@@ -70,8 +71,9 @@ function init() {
             if ($("#FITS_SELECT")[0].options[image_index].value != "None") {
                 $('#fits_download').html(
                     $('<a />', {
-                        'href' : $("#FITS_SELECT")[0].options[image_index].value,
+                        'href'   : $("#FITS_SELECT")[0].options[image_index].value,
                         'target' : '_blank',
+                        'class'  : "text-decoration-none",
                     }).html('FITS')
                 );
             } else {
@@ -82,8 +84,9 @@ function init() {
             if ($("#RAW_SELECT")[0].options[image_index].value != "None") {
                 $('#raw_download').html(
                     $('<a />', {
-                        'href' : $("#RAW_SELECT")[0].options[image_index].value,
+                        'href'   : $("#RAW_SELECT")[0].options[image_index].value,
                         'target' : '_blank',
+                        'class'  : "text-decoration-none",
                     }).html('RAW')
                 );
             } else {
