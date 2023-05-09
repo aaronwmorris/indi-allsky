@@ -702,8 +702,7 @@ class JsonChartView(JsonView):
             # mono
             #h_numpy = cv2.calcHist([image_data], [0], mask, [256], [0, 256])
             gray_ma = numpy.ma.masked_array(image_data, mask=numpy_mask)
-            h_numpy = numpy.histogram(gray_ma, bins=numpy.arange(256))
-            #h_numpy = numpy.histogram(image_data[y1:y2, x1:x2], bins=numpy.arange(256))
+            h_numpy = numpy.histogram(gray_ma.compressed(), bins=256, range=(0, 256))
 
             #for x, val in enumerate(h_numpy.tolist()):
             for x, val in enumerate(h_numpy[0].tolist()):
@@ -720,8 +719,7 @@ class JsonChartView(JsonView):
             for i, col in enumerate(color):
                 #h_numpy = cv2.calcHist([image_data], [i], mask, [256], [0, 256])
                 col_ma = numpy.ma.masked_array(image_data[:, :, i], mask=numpy_mask)
-                h_numpy = numpy.histogram(col_ma, bins=numpy.arange(256))
-                #h_numpy = numpy.histogram(image_data[:, :, i][y1:y2, x1:x2], bins=numpy.arange(256))
+                h_numpy = numpy.histogram(col_ma.compressed(), bins=256, range=(0, 256))
 
                 #for x, val in enumerate(h_numpy.tolist()):
                 for x, val in enumerate(h_numpy[0].tolist()):
