@@ -962,7 +962,11 @@ class VideoWorker(Process):
                 # skip boot filesystem
                 continue
 
-            disk_usage = psutil.disk_usage(fs.mountpoint)
+            try:
+                disk_usage = psutil.disk_usage(fs.mountpoint)
+            except PermissionError as e:
+                logger.error('PermissionError: %s', str(e))
+                continue
 
             if disk_usage.percent >= 90:
                 self._miscDb.addNotification(

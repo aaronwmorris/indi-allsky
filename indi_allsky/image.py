@@ -649,7 +649,11 @@ class ImageWorker(Process):
                     # skip snap filesystems
                     continue
 
-                disk_usage = psutil.disk_usage(fs.mountpoint)
+                try:
+                    disk_usage = psutil.disk_usage(fs.mountpoint)
+                except PermissionError as e:
+                    logger.error('PermissionError: %s', str(e))
+                    continue
 
                 if fs.mountpoint == '/':
                     mqtt_data['disk/root'] = round(disk_usage.percent, 1)  # hopefully there is not a /root filesystem
