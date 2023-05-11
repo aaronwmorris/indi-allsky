@@ -325,11 +325,15 @@ class ImageWorker(Process):
 
 
         try:
-            self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
+            image_data = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
+
+
+        # use original value if not defined
+        libcamera_black_level = image_data.get('libcamera_black_level', libcamera_black_level)
 
 
         self.image_processor.calibrate(libcamera_black_level)
@@ -1763,8 +1767,18 @@ class ImageProcessor(object):
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
 
-        # Override these
+        return_data = dict()
 
+
+        # indi_pylibcamera specific stuff
+        # read this before it is overriden with the customer FITSHEADERS below
+        instrume_header = hdulist[0].header.get('INSTRUME', '')
+        if instrume_header == 'indi_pylibcamera':
+            # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
+            return_data['libcamera_black_level'] = hdulist[0].header.get('OFFSET_0')
+
+
+        # Override these
         hdulist[0].header['OBJECT'] = 'AllSky'
         hdulist[0].header['TELESCOP'] = 'indi-allsky'
 
@@ -1844,6 +1858,8 @@ class ImageProcessor(object):
 
 
         self.image_list.insert(0, image_data)  # new image is first in list
+
+        return return_data
 
 
     def _detectBitDepth(self, hdulist):
