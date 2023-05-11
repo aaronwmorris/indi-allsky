@@ -520,7 +520,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 16,
+            'max_gain'      : 22,  # verified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
@@ -542,7 +542,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 16,
+            'max_gain'      : 22,  # verified
             'min_exposure'  : 0.001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
