@@ -3029,7 +3029,9 @@ class IndiAllskyCameraSelectForm(FlaskForm):
 
 
     def getCameras(self):
-        cameras = IndiAllSkyDbCameraTable.query
+        cameras = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.id)
 
         camera_list = list()
         for camera in cameras:

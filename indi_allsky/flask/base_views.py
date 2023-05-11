@@ -18,6 +18,9 @@ from flask import current_app as app
 from flask_login import current_user
 
 from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.sql.expression import true as sa_true
+from sqlalchemy.sql.expression import false as sa_false
+#from sqlalchemy.sql.expression import null as sa_null
 
 from .misc import login_optional
 
@@ -170,6 +173,7 @@ class TemplateView(BaseView):
 
     def getLatestCamera(self):
         latest_camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
             .limit(1)\
             .one()
