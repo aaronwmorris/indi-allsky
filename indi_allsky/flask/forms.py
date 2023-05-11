@@ -3035,7 +3035,12 @@ class IndiAllskyCameraSelectForm(FlaskForm):
 
         camera_list = list()
         for camera in cameras:
-            camera_list.append((camera.id, camera.name))
+            if camera.friendlyName:
+                camera_name = camera.friendlyName
+            else:
+                camera_name = camera.name
+
+            camera_list.append((camera.id, camera_name))
 
         return camera_list
 
