@@ -39,6 +39,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
     connectDate = db.Column(db.DateTime(), nullable=True)
+    hidden = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
 
     minGain = db.Column(db.Integer, nullable=True)
     maxGain = db.Column(db.Integer, nullable=True)
