@@ -122,6 +122,7 @@ class miscDb(object):
             'filename',
             's3_key',
             'remote_url',
+            'hidden',
         ]
 
         # populate camera info
