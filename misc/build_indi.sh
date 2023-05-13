@@ -28,6 +28,7 @@ fi
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
+CPU_BITS=$(getconf LONG_BIT)
 
 PROJECTS_FOLDER="$HOME/Projects"
 
@@ -85,6 +86,7 @@ echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
+echo "Bits: $CPU_BITS"
 echo
 echo "Indi core:     $INDI_CORE_TAG"
 echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
@@ -100,6 +102,20 @@ echo
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
+
+
+
+if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+    echo
+    echo
+    echo "INDI 3rd party drivers will not build properly on Raspbian 11 32-bit"
+    echo "You must add the following parameter to /boot/config.txt and reboot:"
+    echo
+    echo "  arm_64bit=0"
+    echo
+    exit 1
+fi
+
 
 
 # Run sudo to ask for initial password
