@@ -49,7 +49,9 @@ $( document ).ready(function() {
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-3">
-            <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">Generate</a>
+            <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">
+                <span class="badge pill bg-success">Generate</span>
+            </a>
         </div>
 
     </div>
@@ -168,12 +170,16 @@ function populate_videos(video_list) {
                 var st_a = $('<a />', {
                     'href'   : item['startrail'],
                     'target' : "_blank",
-                    'class'  : "text-decoration-none link-info",
+                    'class'  : "text-decoration-none link-warning",
                 }).appendTo(datetime_div);
 
-                $('<div />', {
-                    'text'  : "Star Trail",
-                }).appendTo(st_a);
+                $('<div />', {}).html(
+                    $('<span />', {
+                        'text'  : "Star Trail",
+                        'class' : "badge pill bg-info text-dark",
+                    })
+                ).appendTo(st_a);
+
             }
         } else {
             $('<div />', {
@@ -186,11 +192,14 @@ function populate_videos(video_list) {
         var kl_a = $('<a />', {
             'href'   : item['keogram'],
             'target' : "_blank",
-            'class'  : "text-decoration-none link-info",
+            'class'  : "text-decoration-none link-warning",
         }).appendTo(datetime_div);
-        $('<div />', {
-            'text'  : "Keogram",
-        }).appendTo(kl_a);
+        $('<div />', {}).html(
+            $('<span />', {
+                'text'  : "Keogram",
+                'class' : "badge pill bg-warning text-dark",
+            })
+        ).appendTo(kl_a);
 
 
         // star trail

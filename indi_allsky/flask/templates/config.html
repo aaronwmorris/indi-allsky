@@ -37,7 +37,11 @@
             {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
             <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">Camera Info</a></div>
+        <div class="col-sm-7">
+            <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">
+                <span class="badge pill bg-danger">Camera Info</span>
+            </a>
+        </div>
     </div>
 
     <hr />
@@ -356,7 +360,7 @@
         </div>
         <div class="col-sm-8">
             <div>Enable daytime image capture</div>
-            <div><span class="badge rounded-pill bg-info">Note</span> If Daytime Timelapse is disabled, no images will be saved</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> If Daytime Timelapse is disabled, no images will be saved</div>
         </div>
     </div>
 
@@ -1439,7 +1443,7 @@
         </div>
         <div class="col-sm-8">
             <div>Method to use for image stacking</div>
-            <div><span class="badge rounded-pill bg-info">Note</span>Stacking disabled during daytime and moon mode</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span>Stacking disabled during daytime and moon mode</div>
         </div>
     </div>
 
@@ -1693,7 +1697,11 @@
             {{ form_config.LENS_NAME(class='form-control bg-secondary') }}
             <div id="LENS_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7"><a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">Camera Info</a></div>
+        <div class="col-sm-7">
+            <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">
+                <span class="badge pill bg-danger">Camera Info</span>
+            </a>
+        </div>
     </div>
 
     <div class="form-group row">
