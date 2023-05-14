@@ -87,7 +87,10 @@
             {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Camera dependent</div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changing gain or binning requires a full restart of indi-allsky
+            <div>Camera dependent</div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
