@@ -757,6 +757,7 @@ class ImageWorker(Process):
             'action'      : constants.TRANSFER_UPLOAD,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
+            'asset_type'  : constants.ASSET_IMAGE,
             'remote_file' : str(remote_file_p),
         }
 
@@ -840,6 +841,7 @@ class ImageWorker(Process):
             'local_file'   : str(tmp_metadata_name_p),
             'remote_file'  : str(remote_file_p),
             'remove_local' : True,
+            'asset_type'   : constants.ASSET_MISC,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(
@@ -863,6 +865,7 @@ class ImageWorker(Process):
             'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
             'metadata'    : mq_data,
+            'asset_type'  : constants.ASSET_MISC,
         }
 
         mqtt_task = IndiAllSkyDbTaskQueueTable(
@@ -925,11 +928,24 @@ class ImageWorker(Process):
             return
 
 
+        if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
+            #logger.warning('Image syncing disabled')
+            return
+
+
+        image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
+        if image_remain != 0:
+            next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
+            logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
         # tell worker to upload file
         jobdata = {
             'action'      : constants.TRANSFER_SYNC_V1,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
+            'asset_type'  : constants.ASSET_IMAGE,
             'metadata'    : asset_metadata,
         }
 

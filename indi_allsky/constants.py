@@ -2,6 +2,7 @@
 # S3 assets
 ASSET_IMAGE     = 1
 ASSET_TIMELAPSE = 2
+ASSET_MISC      = 3
 
 
 # Types

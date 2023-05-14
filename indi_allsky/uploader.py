@@ -493,13 +493,30 @@ class FileUploader(Process):
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
+
         if not self.config.get('SYNCAPI', {}).get('POST_S3'):
             # file is *NOT* uploaded after s3 upload
             return
 
+
         if not asset_entry:
             #logger.warning('S3 uploading disabled')
             return
+
+
+
+        if metadata['asset_type'] == constants.ASSET_IMAGE:
+            if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
+                #logger.warning('Image syncing disabled')
+                return
+
+
+            image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
+            if image_remain != 0:
+                next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
+                logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+                return
+
 
         # tell worker to upload file
         jobdata = {
