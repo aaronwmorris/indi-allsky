@@ -1362,7 +1362,15 @@ def REMOTE_FOLDER_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
-def UPLOAD_IMAGE_validator(form, field):
+def FILETRANSFER__UPLOAD_IMAGE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Image Upload must be 0 or greater')
+
+
+def SYNCAPI__UPLOAD_IMAGE_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
@@ -1976,7 +1984,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER = StringField('Remote Star Trail Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER = StringField('Remote EndOfNight Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[UPLOAD_IMAGE_validator])
+    FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_METADATA    = BooleanField('Transfer metadata')
     FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
@@ -2014,6 +2022,8 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     SYNCAPI__POST_S3                 = BooleanField('Sync after S3 Upload')
+    SYNCAPI__UPLOAD_IMAGE            = IntegerField('Transfer images', validators=[SYNCAPI__UPLOAD_IMAGE_validator])
+    SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
