@@ -429,7 +429,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
@@ -563,7 +565,9 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
@@ -716,7 +720,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 
@@ -866,7 +872,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
@@ -1022,7 +1030,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 
@@ -1179,7 +1189,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
@@ -1335,7 +1347,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
             indi-toupbase \
             libtoupcam \
             indi-gphoto \
-            indi-sx
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
 
             # no packages for 18.04
             #indi-sv305 \
