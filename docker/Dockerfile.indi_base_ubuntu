@@ -1,4 +1,3 @@
-### INCOMPLETE ###
 
 FROM ubuntu:jammy as indi_base_pre
 

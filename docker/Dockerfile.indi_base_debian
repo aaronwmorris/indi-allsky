@@ -1,4 +1,3 @@
-### INCOMPLETE ###
 
 FROM debian:bullseye-slim as indi_base_pre
 
