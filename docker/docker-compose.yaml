@@ -4,7 +4,7 @@ services:
   indi_base:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_base
+      dockerfile: docker/Dockerfile.indi_base_ubuntu
     env_file: .env
 
   indiserver:
