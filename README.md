@@ -62,17 +62,16 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ### Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
-| Raspbian 11 64-bit    | arm64          | Indi installed from Astroberry apt repo<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
-| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry apt repo |
-| Armbian 22.02         | arm64/armhf    | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry (see note below) |
+| Armbian               | aarch64/armhf  | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | Compile indi with build_indi.sh |
-| Ubuntu 22.04          | arm64          | Compile indi with build_indi.sh |
+| Ubuntu 22.04          | aarch64        | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04<br />inc. Ubuntu Mate | arm64 | Compile indi with build_indi.sh |
-| Ubuntu 18.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Astroberry Server 2.0 | armhf          | |
+| Ubuntu 20.04<br />inc. Ubuntu Mate | aarch64 | Compile indi with build_indi.sh |
+| Astroberry Server 2.0 | armhf          | Astroberry is supported, but deprecated, since the project appears to be abandoned |
 
 MacOS support is theoretically possible, but not tested.
 
