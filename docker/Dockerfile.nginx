@@ -1,18 +1,24 @@
-### INCOMPLETE ###
 
-FROM debian:bullseye-slim
+FROM nginx:bullseye as nginx_indi_allsky_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    nginx
+RUN apt-get update && apt-get -y upgrade
 
 
-COPY docker/start_nginx.sh /usr/local/sbin
+# Final
+
+FROM nginx_indi_allsky_pre as nginx_indi_allsky
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update && apt-get -y upgrade
 
 
-CMD ["/usr/local/sbin/start_nginx.sh"]
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY docker/nginx.local.conf /etc/nginx/conf.d/default.conf
+#COPY docker/ssl.crt /etc/ssl/
+#COPY docker/ssl.key /etc/ssl/
 
