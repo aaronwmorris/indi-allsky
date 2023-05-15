@@ -264,6 +264,8 @@ class IndiAllSkyConfigBase(object):
             "APIKEY_E"               : "",
             "CERT_BYPASS"            : False,
             "POST_S3"                : False,
+            "UPLOAD_IMAGE"           : 1,
+            #"UPLOAD_VIDEO"           : True,  # this cannot be changed
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

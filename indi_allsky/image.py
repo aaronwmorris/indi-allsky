@@ -140,8 +140,6 @@ class ImageWorker(Process):
         self.current_adu_target = 0
         self.hist_adu = []
 
-        self.image_count = 0
-
         self.sqm_value = 0
 
         self._detection_mask = self._load_detection_mask()
@@ -300,8 +298,6 @@ class ImageWorker(Process):
 
         if filename_t:
             self.filename_t = filename_t
-
-        self.image_count += 1
 
 
         if not filename_p.exists():
@@ -704,7 +700,7 @@ class ImageWorker(Process):
             self.syncapi(image_entry, image_metadata)
             self.mqtt_publish(upload_filename, mqtt_data)
             self.upload_image(i_ref, image_entry, camera)
-            self.upload_metadata(i_ref, adu, adu_average)
+            self.upload_metadata(i_ref, image_entry, adu, adu_average)
 
 
     def decdeg2dms(self, dd):
@@ -728,8 +724,9 @@ class ImageWorker(Process):
             return
 
 
-        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+        image_remain = image_entry.id % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
+        if image_remain != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_remain
             logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
@@ -760,6 +757,7 @@ class ImageWorker(Process):
             'action'      : constants.TRANSFER_UPLOAD,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
+            'asset_type'  : constants.ASSET_IMAGE,
             'remote_file' : str(remote_file_p),
         }
 
@@ -774,7 +772,7 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_metadata(self, i_ref, adu, adu_average):
+    def upload_metadata(self, i_ref, image_entry, adu, adu_average):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
@@ -786,8 +784,9 @@ class ImageWorker(Process):
 
 
         ### Only uploading metadata if image uploading is enabled
-        if (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])) != 0:
-            #next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - (self.image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE']))
+        image_remain = image_entry.id % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
+        if image_remain != 0:
+            #next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_remain
             #logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
@@ -842,6 +841,7 @@ class ImageWorker(Process):
             'local_file'   : str(tmp_metadata_name_p),
             'remote_file'  : str(remote_file_p),
             'remove_local' : True,
+            'asset_type'   : constants.ASSET_MISC,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(
@@ -865,6 +865,7 @@ class ImageWorker(Process):
             'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
             'metadata'    : mq_data,
+            'asset_type'  : constants.ASSET_MISC,
         }
 
         mqtt_task = IndiAllSkyDbTaskQueueTable(
@@ -927,11 +928,24 @@ class ImageWorker(Process):
             return
 
 
+        if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
+            #logger.warning('Image syncing disabled')
+            return
+
+
+        image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
+        if image_remain != 0:
+            next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
+            logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
         # tell worker to upload file
         jobdata = {
             'action'      : constants.TRANSFER_SYNC_V1,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
+            'asset_type'  : constants.ASSET_IMAGE,
             'metadata'    : asset_metadata,
         }
 

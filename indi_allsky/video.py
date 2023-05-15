@@ -362,6 +362,7 @@ class VideoWorker(Process):
             'action'      : constants.TRANSFER_UPLOAD,
             'model'       : video_entry.__class__.__name__,
             'id'          : video_entry.id,
+            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'remote_file' : str(remote_file_p),
         }
 
@@ -394,7 +395,7 @@ class VideoWorker(Process):
             'action'      : constants.TRANSFER_S3,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,
+            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'metadata'    : asset_metadata,
         }
 
@@ -427,6 +428,7 @@ class VideoWorker(Process):
             'action'      : constants.TRANSFER_SYNC_V1,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
+            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'metadata'    : metadata,
         }
 
