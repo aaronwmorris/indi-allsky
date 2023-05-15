@@ -37,6 +37,7 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 
 COPY misc/build_indi.sh /home/allsky
 RUN chown allsky:allsky /home/allsky/build_indi.sh
+RUN chmod 755 /home/allsky/build_indi.sh
 
 
 USER allsky

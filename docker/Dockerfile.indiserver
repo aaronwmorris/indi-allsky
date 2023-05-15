@@ -1,6 +1,6 @@
 ### INCOMPLETE ###
 
-FROM indi_base
+FROM docker_indi_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,8 +8,16 @@ USER root
 RUN apt-get update && apt-get -y upgrade
 
 
+RUN rm -f /etc/sudoers.d/allsky
+
+
+COPY docker/start_indiserver.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_indiserver.sh
+RUN chmod 755 /home/allsky/start_indiserver.sh
+
+
 USER allsky
 WORKDIR /home/allsky
 
 
-CMD ["/usr/local/bin/indiserver", "-p 7624", "indi_simulator_telescope", $INDIALLSKY_CCD_DRIVER]
+ENTRYPOINT ["./start_indiserver.sh"]
