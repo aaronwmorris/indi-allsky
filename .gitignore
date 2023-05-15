@@ -20,3 +20,5 @@ gunicorn-indi-allsky.sock
 *.retry
 .env
 env.*
+ssl.crt
+ssl.key
