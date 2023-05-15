@@ -5,13 +5,11 @@ FROM debian:bullseye-slim
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get -y install \
     build-essential \
     lsb-release \
-    openssl \
     sudo \
-    whois \
     git
 
 
@@ -23,7 +21,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # need the uid and gid to match in all containers
 RUN groupadd --gid 10001 allsky
 RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
-RUN echo "allsky:$(date +%s | sha256sum | base64 | head -c 32 | mkpasswd -s)" | chpasswd
 
 RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
@@ -32,8 +29,8 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 USER allsky
 WORKDIR /home/allsky
 
-COPY misc/build_indi_noansible.sh /home/allsky
+COPY misc/build_indi.sh /home/allsky
 
-RUN /home/allsky/build_indi_noansible.sh $INDIALLSKY_INDI_VERSION
+RUN /home/allsky/build_indi.sh $INDIALLSKY_INDI_VERSION
 
 

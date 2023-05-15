@@ -1,18 +1,11 @@
 ### INCOMPLETE ###
 
-FROM debian:bullseye-slim
+FROM nginx:bullseye
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    nginx
+RUN apt-get update && apt-get -y upgrade
 
-
-COPY docker/start_nginx.sh /usr/local/sbin
-
-
-CMD ["/usr/local/sbin/start_nginx.sh"]
 

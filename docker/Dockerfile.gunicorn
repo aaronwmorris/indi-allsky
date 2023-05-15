@@ -5,13 +5,12 @@ FROM docker_indi_allsky
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-
-RUN chmod u+s /bin/su
-
-
-#USER allsky
-#WORKDIR /home/allsky/indi-allsky
+RUN apt-get update && apt-get -y upgrade
 
 
-CMD ["su", "-", "allsky", "-c /home/allsky/indi-allsky/docker/start_gunicorn.sh"]
+USER allsky
+WORKDIR /home/allsky/indi-allsky
+
+
+CMD ["/home/allsky/indi-allsky/docker/start_gunicorn.sh"]
 
