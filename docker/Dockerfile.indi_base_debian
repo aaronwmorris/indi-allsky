@@ -1,6 +1,6 @@
 ### INCOMPLETE ###
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim as indi_base_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -12,6 +12,15 @@ RUN apt-get -y install \
     sudo \
     git
 
+
+# Base image
+
+FROM indi_base_pre as indi_base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update && apt-get -y upgrade
 
 
 ENV TZ=$INDIALLSKY_TIMEZONE
@@ -26,11 +35,13 @@ RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
 
 
+COPY misc/build_indi.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/build_indi.sh
+
+
 USER allsky
 WORKDIR /home/allsky
 
-COPY misc/build_indi.sh /home/allsky
-
-RUN /home/allsky/build_indi.sh $INDIALLSKY_INDI_VERSION
+RUN ./build_indi.sh $INDIALLSKY_INDI_VERSION
 
 

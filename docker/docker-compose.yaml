@@ -13,8 +13,8 @@ services:
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     privileged: true
-    #ports:
-    #  - "17624:7624"
+    ports:
+      - "17624:7624"
 
   indi_allsky:
     build:
@@ -50,7 +50,8 @@ services:
       - indi_allsky
     env_file: .env
     ports:
-      - "8443:443"
+      - "8080:80"
+      #- "8443:443"
     volumes:
       - config:/etc/indi-allsky
       - images:/var/www/html/allsky

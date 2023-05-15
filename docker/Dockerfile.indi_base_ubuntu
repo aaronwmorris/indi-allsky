@@ -1,12 +1,15 @@
 ### INCOMPLETE ###
 
-FROM ubuntu:jammy
+FROM ubuntu:jammy as indi_base_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
 RUN apt-get update && apt-get -y upgrade
 
+RUN apt-get -y install \
+    software-properties-common \
+    apt-utils
 
 RUN add-apt-repository -y ppa:mutlaqja/ppa
 RUN apt-get -y install \
@@ -19,8 +22,8 @@ RUN apt-get -y install \
     libqhy \
     indi-playerone \
     libplayerone \
-    indi-sv305 \
-    libsv305 \
+    indi-svbony \
+    libsvbony \
     libaltaircam \
     libmallincam \
     libmicam \
@@ -31,6 +34,20 @@ RUN apt-get -y install \
     indi-sx \
     indi-gpsd \
     indi-gpsnmea
+
+
+# Base image
+
+FROM indi_base_pre as indi_base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update && apt-get -y upgrade
+
+RUN apt-get -y install \
+    tzdata \
+    sudo
 
 
 ENV TZ=$INDIALLSKY_TIMEZONE
