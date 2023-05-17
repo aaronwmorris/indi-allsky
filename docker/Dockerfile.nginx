@@ -4,7 +4,8 @@ FROM nginx:bullseye as nginx_indi_allsky_pre
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
 
 
 # Final

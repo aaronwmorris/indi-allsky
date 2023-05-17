@@ -5,7 +5,8 @@ FROM docker_indi_base as indi_allsky_pre
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
 
 RUN apt-get -y install \
     build-essential \
@@ -70,6 +71,7 @@ WORKDIR /home/allsky
 RUN python3 -m venv /home/allsky/venv
 
 ENV VIRTUAL_ENV=/home/allsky/venv
+RUN /home/allsky/venv/bin/pip3 install --upgrade pip setuptools wheel
 RUN /home/allsky/venv/bin/pip3 install -r /home/allsky/indi-allsky/requirements/requirements_debian11.txt
 RUN /home/allsky/venv/bin/pip3 install "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 
