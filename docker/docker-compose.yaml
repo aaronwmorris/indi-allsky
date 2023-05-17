@@ -16,6 +16,18 @@ services:
     ports:
       - "17624:7624"
 
+  gunicorn_indi_allsky:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gunicorn
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - config:/etc/indi-allsky
+      - database:/var/lib/indi-allsky
+      - /var/www/html/allsky
+
   indi_allsky:
     build:
       context: ..
@@ -27,20 +39,6 @@ services:
       - config:/etc/indi-allsky
       - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
-
-  gunicorn_indi_allsky:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.gunicorn
-    depends_on:
-      - indi_allsky
-    env_file: .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - config:/etc/indi-allsky
-      - database:/var/lib/indi-allsky
-      - /var/www/html/allsky
 
   nginx_indi_allsky:
     build:
