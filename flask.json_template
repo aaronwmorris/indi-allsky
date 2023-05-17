@@ -1,5 +1,5 @@
 {
-    "SQLALCHEMY_DATABASE_URI" : "%SQLALCHEMY_DATABASE_URI%",
+    "SQLALCHEMY_DATABASE_URI" : "sqlite:////var/lib/indi-allsky/indi-allsky.sqlite",
 
     "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
     "SQLALCHEMY_ENGINE_OPTIONS" : {
@@ -11,7 +11,7 @@
     "SESSION_COOKIE_HTTPONLY" : true,
     "SESSION_COOKIE_SAMESITE" : "Lax",
     "TEMPLATES_AUTO_RELOAD" : true,
-    "SECRET_KEY" : "",
+    "SECRET_KEY" : "CHANGEME",
 
     "REMEMBER_COOKIE_DURATION" : 604800,
     "REMEMBER_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
@@ -20,16 +20,16 @@
     "REMEMBER_COOKIE_SAMESITE" : "Lax",
     "SESSION_PROTECTION" : "strong",
 
-    "INDI_ALLSKY_DOCROOT" : "%HTDOCS_FOLDER%",
-    "INDI_ALLSKY_IMAGE_FOLDER" : "",
-    "INDI_ALLSKY_AUTH_ALL_VIEWS" : %FLASK_AUTH_ALL_VIEWS%,
+    "INDI_ALLSKY_DOCROOT" : "/var/www/html/allsky",
+    "INDI_ALLSKY_IMAGE_FOLDER" : "/var/www/html/allsky/images",
+    "INDI_ALLSKY_AUTH_ALL_VIEWS" : False,
     "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
 
-    "MIGRATION_FOLDER" : "%MIGRATION_FOLDER%",
+    "MIGRATION_FOLDER" : "/var/lib/indi-allsky/migrations",
 
     "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
-    "PASSWORD_KEY" : "",
+    "PASSWORD_KEY" : "CHANGEME",
 
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",
@@ -41,7 +41,9 @@
         "::1/128"
     ],
 
-    "INDISERVER_SERVICE_NAME" : "%INDISERVER_SERVICE_NAME%.service",
-    "ALLSKY_SERVICE_NAME" : "%ALLSKY_SERVICE_NAME%.service",
-    "GUNICORN_SERVICE_NAME" : "%GUNICORN_SERVICE_NAME%.service"
+    "INDISERVER_SERVICE_NAME" : "indiserver.service",
+    "INDISERVER_TIMER_NAME" : "indiserver.timer",
+    "ALLSKY_SERVICE_NAME" : "indi-allsky.service",
+    "ALLSKY_TIMER_NAME" : "indi-allsky.timer",
+    "GUNICORN_SERVICE_NAME" : "gunicorn-indi-allsky.service"
 }
