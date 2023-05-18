@@ -79,6 +79,12 @@ RUN chown -R allsky:allsky /home/allsky/indi-allsky
 USER allsky
 WORKDIR /home/allsky
 
+
+RUN mkdir -m 755 /var/www/html/allsky/images
+RUN mkdir -m 755 /var/www/html/allsky/images/darks
+RUN mkdir -m 755 /var/www/html/allsky/images/export
+
+
 COPY requirements/requirements_debian11.txt /home/allsky
 RUN python3 -m venv /home/allsky/venv
 
