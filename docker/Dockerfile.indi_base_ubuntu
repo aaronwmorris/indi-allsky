@@ -10,6 +10,7 @@ RUN apt-get -y upgrade
 RUN apt-get -y install \
     software-properties-common \
     apt-utils \
+    locales \
     vim-tiny \
     nano \
     tzdata \
