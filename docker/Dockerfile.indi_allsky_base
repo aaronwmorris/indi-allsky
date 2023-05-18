@@ -70,12 +70,6 @@ RUN chown -R allsky:allsky /var/www/html/allsky
 VOLUME /var/www/html/indi-allsky
 
 
-RUN mkdir /home/allsky/indi-allsky
-
-COPY . /home/allsky/indi-allsky
-
-RUN chown -R allsky:allsky /home/allsky/indi-allsky
-
 USER allsky
 WORKDIR /home/allsky
 

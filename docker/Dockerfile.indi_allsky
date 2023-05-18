@@ -13,6 +13,11 @@ RUN chown allsky:allsky /home/allsky/start_indi_allsky.sh
 RUN chmod 755 /home/allsky/start_indi_allsky.sh
 
 
+# installs latest code
+RUN mkdir /home/allsky/indi-allsky
+COPY . /home/allsky/indi-allsky
+RUN chown -R allsky:allsky /home/allsky/indi-allsky
+
 
 USER allsky
 WORKDIR /home/allsky
