@@ -916,11 +916,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
@@ -1075,11 +1075,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
@@ -1246,11 +1246,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"

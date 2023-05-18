@@ -17,29 +17,12 @@ RUN apt-get -y install \
     sudo \
     git
 
+
 RUN add-apt-repository -y ppa:mutlaqja/ppa
+
+# Only need indi development package here
 RUN apt-get -y install \
-    indi-full \
-    libindi-dev \
-    indi-webcam \
-    indi-asi \
-    libasi \
-    indi-qhy \
-    libqhy \
-    indi-playerone \
-    libplayerone \
-    indi-svbony \
-    libsvbony \
-    libaltaircam \
-    libmallincam \
-    libmicam \
-    libnncam \
-    indi-toupbase \
-    libtoupcam \
-    indi-gphoto \
-    indi-sx \
-    indi-gpsd \
-    indi-gpsnmea
+    libindi-dev
 
 
 # Base image
