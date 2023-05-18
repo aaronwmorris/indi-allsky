@@ -94,6 +94,13 @@ cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 
 
+USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
+# there is a system user
+if [ "$USER_COUNT" -le 1 ]; then
+    "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$INDIALLSKY_WEB_USER" -p "$INDIALLSKY_WEB_PASS" -f "$INDIALLSKY_WEB_NAME" -e "$INDIALLSKY_WEB_EMAIL"
+    "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$INDIALLSKY_WEB_USER"
+fi
+
 
 # start the program
 gunicorn \
