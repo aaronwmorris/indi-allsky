@@ -1992,7 +1992,12 @@ class SystemInfoView(TemplateView):
 
 
     def getSystemdUnitStatus(self, unit):
-        session_bus = dbus.SessionBus()
+        try:
+            session_bus = dbus.SessionBus()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return 'D-Bus Unavailable'
+
         systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
