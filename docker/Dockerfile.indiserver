@@ -8,7 +8,7 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
-RUN rm -f /etc/sudoers.d/allsky
+#RUN rm -f /etc/sudoers.d/allsky
 
 
 COPY docker/start_indiserver.sh /home/allsky

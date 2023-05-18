@@ -55,7 +55,7 @@ RUN apt-get -y install \
     dbus-user-session
 
 
-RUN rm -f /etc/sudoers.d/allsky
+#RUN rm -f /etc/sudoers.d/allsky
 
 
 RUN mkdir -m 750 /etc/indi-allsky
