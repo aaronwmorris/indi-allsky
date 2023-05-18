@@ -1,6 +1,5 @@
-### INCOMPLETE ###
 
-FROM docker_indi_allsky_pre
+FROM docker_indi_allsky_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -9,8 +8,14 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
+COPY docker/start_indi_allsky.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_indi_allsky.sh
+RUN chmod 755 /home/allsky/start_indi_allsky.sh
+
+
+
 USER allsky
 WORKDIR /home/allsky
 
 
-
+ENTRYPOINT ["./start_indi_allsky.sh"]

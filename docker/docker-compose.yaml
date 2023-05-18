@@ -16,6 +16,15 @@ services:
     ports:
       - "17624:7624"
 
+  indi_allsky_base:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.indi_allsky_base
+    env_file: .env
+    volumes:
+      - database:/var/lib/indi-allsky
+      - images:/var/www/html/allsky
+
   gunicorn_indi_allsky:
     build:
       context: ..
@@ -31,8 +40,6 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky
-    depends_on:
-      - indiserver
     env_file: .env
     volumes:
       - database:/var/lib/indi-allsky
@@ -42,8 +49,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nginx
-    #depends_on:
-    #  - gunicorn_indi_allsky
+    depends_on:
+      - gunicorn_indi_allsky
     env_file: .env
     ports:
       - "8080:80"

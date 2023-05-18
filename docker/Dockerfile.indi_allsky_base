@@ -1,0 +1,90 @@
+
+FROM docker_indi_base
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+
+RUN apt-get -y install \
+    build-essential \
+    python3 \
+    python3-dev \
+    python3-venv \
+    python3-pip \
+    virtualenv \
+    cmake \
+    gfortran \
+    whiptail \
+    rsyslog \
+    cron \
+    git \
+    cpio \
+    tzdata \
+    ca-certificates \
+    avahi-daemon \
+    apache2 \
+    libgnutls28-dev \
+    swig \
+    libatlas-base-dev \
+    libilmbase-dev \
+    libopenexr-dev \
+    libgtk-3-0 \
+    libssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libgnutls28-dev \
+    libcurl4-gnutls-dev \
+    libcfitsio-dev \
+    libnova-dev \
+    libdbus-1-dev \
+    libglib2.0-dev \
+    libffi-dev \
+    libopencv-dev \
+    libopenblas-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
+    rustc \
+    cargo \
+    ffmpeg \
+    gifsicle \
+    jq \
+    sqlite3 \
+    policykit-1 \
+    dbus-user-session
+
+
+RUN rm -f /etc/sudoers.d/allsky
+
+
+RUN mkdir -m 750 /etc/indi-allsky
+RUN chown -R allsky:allsky /etc/indi-allsky
+
+RUN mkdir -m 750 /var/lib/indi-allsky
+RUN chown -R allsky:allsky /var/lib/indi-allsky
+VOLUME /var/lib/indi-allsky
+
+RUN mkdir -p -m 755 /var/www/html/allsky
+RUN chown -R allsky:allsky /var/www/html/allsky
+VOLUME /var/www/html/indi-allsky
+
+
+RUN mkdir /home/allsky/indi-allsky
+
+COPY . /home/allsky/indi-allsky
+
+RUN chown -R allsky:allsky /home/allsky/indi-allsky
+
+USER allsky
+WORKDIR /home/allsky
+
+COPY requirements/requirements_debian11.txt /home/allsky
+RUN python3 -m venv /home/allsky/venv
+
+ENV VIRTUAL_ENV=/home/allsky/venv
+RUN /home/allsky/venv/bin/pip3 install --upgrade pip setuptools wheel
+RUN /home/allsky/venv/bin/pip3 install -r requirements_debian11.txt
+RUN /home/allsky/venv/bin/pip3 install "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
+
+

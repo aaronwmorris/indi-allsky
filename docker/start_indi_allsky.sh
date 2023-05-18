@@ -8,165 +8,93 @@ PATH=/usr/bin:/bin
 export PATH
 
 
-PYTHON_BIN=python3
-
-ALLSKY_DIRECTORY=/home/allsky/indi-allsky
-
+ALLSKY_DIRECTORY="/home/allsky/indi-allsky"
+ALLSKY_ETC="/etc/indi-allsky"
+DB_FOLDER="/var/lib/indi-allsky"
+DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
+SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
+MIGRATION_FOLDER="$DB_FOLDER/migrations"
+DOCROOT_FOLDER="/var/www/html"
+HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
-ALLSKY_ETC=/etc/indi-allsky
-DB_FOLDER="/var/lib/indi-allsky"
-DOCROOT_FOLDER="/var/www/html"
-HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 
-FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-false}"
-HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
-HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
+# shellcheck disable=SC1091
+source /home/allsky/venv/bin/activate
 
 
-# ensure correct permissions
-sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
-sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
-
-
-echo "**** Indi-allsky config ****"
-[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
-sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
-sudo chmod 775 "${ALLSKY_ETC}"
-
-if [[ ! -f "${ALLSKY_ETC}/config.json" ]]; then
-    # create new config
-    cp "${ALLSKY_DIRECTORY}/config.json_template" "${ALLSKY_ETC}/config.json"
-fi
-
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/config.json"
-sudo chmod 660 "${ALLSKY_ETC}/config.json"
-
-
-SQLALCHEMY_DATABASE_URI=$(jq -r '.SQLALCHEMY_DATABASE_URI' "${ALLSKY_ETC}/config.json")
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "${ALLSKY_ETC}/config.json")
-
-
-TMP_FLASK=$(mktemp)
-TMP_FLASK_2=$(mktemp)
-TMP_FLASK_MERGE=$(mktemp)
-
-SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
-sed \
- -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
- -e "s|%DB_FOLDER%|$DB_FOLDER|g" \
- -e "s|%SECRET_KEY%|$SECRET_KEY|g" \
- -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
- -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
- -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
- -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
+TMP_FLASK=$(mktemp --suffix=.json)
+jq \
+ --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" \
+ --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
+ --argjson indi_allsky_auth_all_views "$INDIALLSKY_FLASK_AUTH_ALL_VIEWS" \
+ --arg migration_folder "$MIGRATION_FOLDER" \
+ --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
+ --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
+ --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
+ --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
+ --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
+ 
+
+TMP_FLASK_KEYS=$(mktemp --suffix=.json)
+jq \
+ --arg secret_key "$INDIALLSKY_FLASK_SECRET_KEY" \
+ --arg password_key "$INDIALLSKY_FLASK_PASSWORD_KEY" \
+ '.SECRET_KEY = $secret_key | .PASSWORD_KEY = $password_key' \
+ "${TMP_FLASK}" > "$TMP_FLASK_KEYS"
 
 
-if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
-    # attempt to merge configs giving preference to the original config (listed 2nd)
-    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
-    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
-else
-    # new config
-    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
-fi
-
-
-# always replace the DB URI
-jq --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_2"
-cp -f "$TMP_FLASK_2" "${ALLSKY_ETC}/flask.json"
-
-
-sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
-sudo chmod 660 "${ALLSKY_ETC}/flask.json"
+cp -f "$TMP_FLASK_KEYS" "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
-[[ -f "$TMP_FLASK_2" ]] && rm -f "$TMP_FLASK_2"
-[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+[[ -f "$TMP_FLASK_KEYS" ]] && rm -f "$TMP_FLASK_KEYS"
 
 
-
-TMP7=$(mktemp)
-cat "${ALLSKY_DIRECTORY}/service/gunicorn.conf.py" > "$TMP7"
-
-cp -f "$TMP7" "${ALLSKY_ETC}/gunicorn.conf.py"
-chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
-[[ -f "$TMP7" ]] && rm -f "$TMP7"
+json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 
 
-echo "**** Setup nginx ****"
-TMP3=$(mktemp)
-sed \
- -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
- -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
- -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
- -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
- -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
- -e "s|%UPSTREAM_SERVER%|gunicorn_indi_allsky:8000|g" \
- "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
-
-sudo cp -f "$TMP3" "$ALLSKY_ETC/nginx.conf"
-sudo chown root:root "$ALLSKY_ETC/nginx.conf"
-sudo chmod 644 "$ALLSKY_ETC/nginx.conf"
+# wait for 
+echo "Waiting on migrations to complete (30s)"
+sleep 30
 
 
-if [[ ! -f "$ALLSKY_ETC/self-signed.key" || ! -f "$ALLSKY_ETC/self-signed.pem" ]]; then
-    sudo rm -f "$ALLSKY_ETC/self-signed.key"
-    sudo rm -f "$ALLSKY_ETC/self-signed.pem"
-
-    SHORT_HOSTNAME=indi-allsky
-    KEY_TMP=$(mktemp)
-    CRT_TMP=$(mktemp)
-
-    # sudo has problems with process substitution <()
-    openssl req \
-        -new \
-        -newkey rsa:4096 \
-        -sha512 \
-        -days 3650 \
-        -nodes \
-        -x509 \
-        -subj "/CN=${SHORT_HOSTNAME}.local" \
-        -keyout "$KEY_TMP" \
-        -out "$CRT_TMP" \
-        -extensions san \
-        -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
-
-    sudo cp -f "$KEY_TMP" "$ALLSKY_ETC/self-signed.key"
-    sudo cp -f "$CRT_TMP" "$ALLSKY_ETC/self-signed.pem"
+cd "$ALLSKY_DIRECTORY"
 
 
-
-    rm -f "$KEY_TMP"
-    rm -f "$CRT_TMP"
-fi
-
-
-sudo chown root:root "$ALLSKY_ETC/self-signed.key"
-sudo chmod 600 "$ALLSKY_ETC/self-signed.key"
-sudo chown root:root "$ALLSKY_ETC/self-signed.pem"
-sudo chmod 644 "$ALLSKY_ETC/self-signed.pem"
+# dump config for processing
+TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
+"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
 
 
-# system certificate store
-sudo cp -f "$ALLSKY_ETC/self-signed.pem" /usr/local/share/ca-certificates/self-signed.crt
-sudo chown root:root /usr/local/share/ca-certificates/self-signed.crt
-sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky.crt
-sudo update-ca-certificates
+# Detect IMAGE_FOLDER
+IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
+echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
 
 
-# syntax check
-json_pp < "$ALLSKY_ETC/config.json" >/dev/null
+# replace the flask IMAGE_FOLDER
+TMP_FLASK_3=$(mktemp --suffix=.json)
+jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
+
+
+# replace indiserver host
+TMP_INDI_SERVER=$(mktemp --suffix=.json)
+jq --arg indi_server "indiserver" '.INDI_SERVER = $indi_server' "$TMP_CONFIG_DUMP" > "$TMP_INDI_SERVER"
+
+
+# load all changes
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_INDI_SERVER" --force
+[[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+[[ -f "$TMP_INDI_SERVER" ]] && rm -f "$TMP_INDI_SERVER"
 
 
 # start the program
-cd "$ALLSKY_DIRECTORY"
-"$ALLSKY_DIRECTORY/virtualenv/indi-allsky/bin/python3" allsky.py run
+./allsky.py \
+    --log stderr \
+    run
 
