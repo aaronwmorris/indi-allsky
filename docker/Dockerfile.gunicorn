@@ -1,4 +1,3 @@
-### INCOMPLETE ###
 
 FROM docker_indi_base as indi_allsky_pre
 
@@ -58,8 +57,18 @@ RUN apt-get -y install \
 
 RUN rm -f /etc/sudoers.d/allsky
 
+
 RUN mkdir -m 750 /etc/indi-allsky
 RUN chown -R allsky:allsky /etc/indi-allsky
+
+RUN mkdir -m 750 /var/lib/indi-allsky
+RUN chown -R allsky:allsky /var/lib/indi-allsky
+VOLUME /var/lib/indi-allsky
+
+RUN mkdir -p -m 755 /var/www/html/allsky
+RUN chown -R allsky:allsky /var/www/html/allsky
+VOLUME /var/www/html/indi-allsky
+
 
 RUN mkdir /home/allsky/indi-allsky
 
@@ -70,11 +79,12 @@ RUN chown -R allsky:allsky /home/allsky/indi-allsky
 USER allsky
 WORKDIR /home/allsky
 
+COPY requirements/requirements_debian11.txt /home/allsky
 RUN python3 -m venv /home/allsky/venv
 
 ENV VIRTUAL_ENV=/home/allsky/venv
 RUN /home/allsky/venv/bin/pip3 install --upgrade pip setuptools wheel
-RUN /home/allsky/venv/bin/pip3 install -r /home/allsky/indi-allsky/requirements/requirements_debian11.txt
+RUN /home/allsky/venv/bin/pip3 install -r requirements_debian11.txt
 RUN /home/allsky/venv/bin/pip3 install "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 
 

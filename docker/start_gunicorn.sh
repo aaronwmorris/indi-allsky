@@ -104,8 +104,11 @@ fi
 
 # start the program
 gunicorn \
-    --config service/gunicorn.conf.py \
     --bind 0.0.0.0:8000 \
+    --worker-class gthread \
+    --threads 8 \
+    --timeout 180 \
+    --umask 0022 \
+    --log-level info \
     indi_allsky.wsgi
-
 
