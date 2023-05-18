@@ -1725,25 +1725,25 @@ else
 fi
 
 
-SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$SECRET_KEY" ]; then
+INDIALLSKY_FLASK_SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$INDIALLSKY_FLASK_SECRET_KEY" ]; then
     # generate flask secret key
-    SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
+    INDIALLSKY_FLASK_SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 
     TMP_FLASK_SKEY=$(mktemp --suffix=.json)
-    jq --arg secret_key "$SECRET_KEY" '.SECRET_KEY = $secret_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_SKEY"
+    jq --arg secret_key "$INDIALLSKY_FLASK_SECRET_KEY" '.SECRET_KEY = $secret_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_SKEY"
     cp -f "$TMP_FLASK_SKEY" "${ALLSKY_ETC}/flask.json"
     [[ -f "$TMP_FLASK_SKEY" ]] && rm -f "$TMP_FLASK_SKEY"
 fi
 
 
-PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$PASSWORD_KEY" ]; then
+INDIALLSKY_FLASK_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$INDIALLSKY_FLASK_PASSWORD_KEY" ]; then
     # generate password key for encryption
-    PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+    INDIALLSKY_FLASK_PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
     TMP_FLASK_PKEY=$(mktemp --suffix=.json)
-    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_PKEY"
+    jq --arg password_key "$INDIALLSKY_FLASK_PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_PKEY"
     cp -f "$TMP_FLASK_PKEY" "${ALLSKY_ETC}/flask.json"
     [[ -f "$TMP_FLASK_PKEY" ]] && rm -f "$TMP_FLASK_PKEY"
 fi
@@ -1759,7 +1759,7 @@ sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 # create a backup of the key
 if [ ! -f "${ALLSKY_ETC}/password_key_backup.json" ]; then
-    jq -n --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
+    jq -n --arg password_key "$INDIALLSKY_PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
 fi
 
 chmod 400 "${ALLSKY_ETC}/password_key_backup.json"

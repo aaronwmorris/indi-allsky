@@ -38,14 +38,26 @@ jq \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
  '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
+ 
 
-cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
+TMP_FLASK_KEYS=$(mktemp --suffix=.json)
+jq \
+ --arg secret_key "$INDIALLSKY_FLASK_SECRET_KEY" \
+ --arg password_key "$INDIALLSKY_FLASK_PASSWORD_KEY" \
+ '.SECRET_KEY = $secret_key | .PASSWORD_KEY = $password_key' \
+ "${TMP_FLASK}" > "$TMP_FLASK_KEYS"
+
+
+cp -f "$TMP_FLASK_KEYS" "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_KEYS" ]] && rm -f "$TMP_FLASK_KEYS"
 
 
 json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 
+
+cd "$ALLSKY_DIRECTORY"
 
 # Setup migration folder
 if [[ ! -d "$MIGRATION_FOLDER" ]]; then
@@ -56,9 +68,6 @@ fi
 
 flask db revision --autogenerate
 flask db upgrade head
-
-
-cd "$ALLSKY_DIRECTORY"
 
 
 # bootstrap initial config

@@ -24,9 +24,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - config:/etc/indi-allsky
       - database:/var/lib/indi-allsky
-      - /var/www/html/allsky
+      - images:/var/www/html/allsky
 
   indi_allsky:
     build:
@@ -36,7 +35,6 @@ services:
       - indiserver
     env_file: .env
     volumes:
-      - config:/etc/indi-allsky
       - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
 
@@ -55,7 +53,6 @@ services:
 
 
 volumes:
-  config:
   database:
   images:
 

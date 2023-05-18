@@ -58,6 +58,8 @@ RUN apt-get -y install \
 
 RUN rm -f /etc/sudoers.d/allsky
 
+RUN mkdir -m 750 /etc/indi-allsky
+RUN chown -R allsky:allsky /etc/indi-allsky
 
 RUN mkdir /home/allsky/indi-allsky
 
@@ -85,9 +87,6 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 RUN apt-get update
 RUN apt-get -y upgrade
-
-
-RUN chown -R allsky:allsky /etc/indi-allsky
 
 
 COPY docker/start_gunicorn.sh /home/allsky

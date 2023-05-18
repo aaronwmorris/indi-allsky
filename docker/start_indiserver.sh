@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#set -x  # command tracing
+set -o errexit
+set -o nounset
+
 PATH=/usr/bin:/bin
 export PATH
 
