@@ -1,5 +1,5 @@
 
-FROM docker_indi_base
+FROM docker_indi_base as indiserver_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -31,6 +31,15 @@ RUN apt-get -y install \
     indi-gpsd \
     indi-gpsnmea
 
+
+# Final
+FROM indiserver_pre
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
 
 
 #RUN rm -f /etc/sudoers.d/allsky
