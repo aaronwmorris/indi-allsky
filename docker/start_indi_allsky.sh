@@ -83,8 +83,19 @@ cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 
 
 # replace indiserver host
-TMP_INDI_SERVER=$(mktemp --suffix=.json)
-jq --arg indi_server "indiserver" '.INDI_SERVER = $indi_server' "$TMP_CONFIG_DUMP" > "$TMP_INDI_SERVER"
+INDI_SERVER=$(jq -r '.INDI_SERVER' "$TMP_CONFIG_DUMP")
+
+
+# fix indi server hostname for docker
+if [ "$INDI_SERVER" == "localhost" ]; then
+    TMP_INDI_SERVER=$(mktemp --suffix=.json)
+    jq \
+     --arg indi_server "indiserver" \
+     '.INDI_SERVER = $indi_server' \
+     "$TMP_CONFIG_DUMP" > "$TMP_INDI_SERVER"
+else
+     TMP_INDI_SERVER="$TMP_CONFIG_DUMP"
+fi
 
 
 # load all changes

@@ -15,5 +15,20 @@ else
 fi
 
 
-"$INDISERVER" -v -p 7624 indi_simulator_telescope "$INDIALLSKY_CCD_DRIVER"
+if [ -n "${INDIALLSKY_INDI_GPS_DRIVER:-}" ]; then
+    "$INDISERVER" \
+        -v \
+        -p 7624 \
+        indi_simulator_telescope \
+        "$INDIALLSKY_INDI_CCD_DRIVER" \
+        "$INDIALLSKY_INDI_GPS_DRIVER"
+
+else
+    echo "No GPS driver configured"
+    "$INDISERVER" \
+        -v \
+        -p 7624 \
+        indi_simulator_telescope \
+        "$INDIALLSKY_INDI_CCD_DRIVER"
+fi
 
