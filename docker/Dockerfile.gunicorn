@@ -76,6 +76,28 @@ RUN /home/allsky/venv/bin/pip3 install -r /home/allsky/indi-allsky/requirements/
 RUN /home/allsky/venv/bin/pip3 install "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 
 
+# Final
+#
+FROM indi_allsky_pre as gunicorn_indi_allsky
 
-CMD ["/home/allsky/indi-allsky/docker/start_gunicorn.sh"]
+ENV DEBIAN_FRONTEND noninteractive
 
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+
+
+RUN chown -R allsky:allsky /etc/indi-allsky
+
+
+COPY docker/start_gunicorn.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_gunicorn.sh
+RUN chmod 755 /home/allsky/start_gunicorn.sh
+
+
+
+USER allsky
+WORKDIR /home/allsky
+
+
+ENTRYPOINT ["./start_gunicorn.sh"]

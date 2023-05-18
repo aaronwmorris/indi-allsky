@@ -51,7 +51,6 @@ services:
       - "8080:80"
       #- "8443:443"
     volumes:
-      - config:/etc/indi-allsky
       - images:/var/www/html/allsky
 
 

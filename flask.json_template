@@ -22,7 +22,7 @@
 
     "INDI_ALLSKY_DOCROOT" : "/var/www/html/allsky",
     "INDI_ALLSKY_IMAGE_FOLDER" : "/var/www/html/allsky/images",
-    "INDI_ALLSKY_AUTH_ALL_VIEWS" : False,
+    "INDI_ALLSKY_AUTH_ALL_VIEWS" : false,
     "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
 
