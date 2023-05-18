@@ -108,6 +108,5 @@ fi
 # start the program
 ./allsky.py \
     --log stderr \
-    --pid /home/allsky/indi-allsky.pid \
     run
 

@@ -8,6 +8,10 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
+RUN mkdir -m 750 /var/lib/indi-allsky
+RUN chown -R allsky:allsky /var/lib/indi-allsky
+
+
 COPY docker/start_indi_allsky.sh /home/allsky
 RUN chown allsky:allsky /home/allsky/start_indi_allsky.sh
 RUN chmod 755 /home/allsky/start_indi_allsky.sh
