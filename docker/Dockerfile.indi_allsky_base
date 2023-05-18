@@ -16,15 +16,10 @@ RUN apt-get -y install \
     virtualenv \
     cmake \
     gfortran \
-    whiptail \
-    rsyslog \
-    cron \
     git \
     cpio \
     tzdata \
     ca-certificates \
-    avahi-daemon \
-    apache2 \
     libgnutls28-dev \
     swig \
     libatlas-base-dev \
@@ -51,8 +46,7 @@ RUN apt-get -y install \
     gifsicle \
     jq \
     sqlite3 \
-    policykit-1 \
-    dbus-user-session
+    policykit-1
 
 
 #RUN rm -f /etc/sudoers.d/allsky

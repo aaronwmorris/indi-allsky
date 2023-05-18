@@ -13,6 +13,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.mariadb
     env_file: .env
+    volumes:
+      - database:/var/lib/mysql
 
 
   indiserver:
@@ -32,7 +34,7 @@ services:
     env_file: .env
     volumes:
       - images:/var/www/html/allsky
-      #- database:/var/lib/indi-allsky
+      #- migrations:/var/lib/indi-allsky
 
 
   gunicorn_indi_allsky:
@@ -44,7 +46,7 @@ services:
       - mariadb_indi_allsky
     volumes:
       - images:/var/www/html/allsky
-      - database:/var/lib/indi-allsky
+      - migrations:/var/lib/indi-allsky
     #ports:
     #  - "8000:8000"
 
@@ -58,7 +60,7 @@ services:
       - mariadb_indi_allsky
     volumes:
       - images:/var/www/html/allsky
-      #- database:/var/lib/indi-allsky
+      #- migrations:/var/lib/indi-allsky
 
 
   nginx_indi_allsky:
@@ -76,6 +78,7 @@ services:
 
 
 volumes:
-  images:
   database:
+  migrations:
+  images:
 
