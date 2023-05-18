@@ -42,8 +42,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nginx
-    depends_on:
-      - indi_allsky
+    #depends_on:
+    #  - gunicorn_indi_allsky
     env_file: .env
     ports:
       - "8080:80"
