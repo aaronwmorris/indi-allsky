@@ -13,8 +13,8 @@ services:
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     privileged: true
-    ports:
-      - "17624:7624"
+    #ports:
+    #  - "17624:7624"
 
   indi_allsky_base:
     build:
@@ -30,8 +30,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
     env_file: .env
-    ports:
-      - "8000:8000"
+    #ports:
+    #  - "8000:8000"
     volumes:
       - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
