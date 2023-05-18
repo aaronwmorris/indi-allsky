@@ -22,6 +22,9 @@ if [ ! -f "${DOCKER_DIRECTORY}/.env" ]; then
     INDIALLSKY_FLASK_PASSWORD_KEY=$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
 
+    MARIADB_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+
+
     while [ -z "${WEB_USER:-}" ]; do
         # shellcheck disable=SC2068
         WEB_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username to login" 0 0 3>&1 1>&2 2>&3)
@@ -66,6 +69,7 @@ if [ ! -f "${DOCKER_DIRECTORY}/.env" ]; then
      -e "s|%WEB_PASS%|$WEB_PASS|g" \
      -e "s|%WEB_NAME%|$WEB_NAME|g" \
      -e "s|%WEB_EMAIL%|$WEB_EMAIL|g" \
+     -e "s|%MARIADB_PASSWORD%|$MARIADB_PASSWORD|g" \
      "${DOCKER_DIRECTORY}/env_template" > "${DOCKER_DIRECTORY}/.env"
 
 else

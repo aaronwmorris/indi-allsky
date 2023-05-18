@@ -19,7 +19,7 @@ RUN apt-get -y install \
 
 # Base image
 
-FROM indi_base_pre as indi_base
+FROM indi_base_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 

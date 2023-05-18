@@ -7,6 +7,14 @@ services:
       dockerfile: docker/Dockerfile.indi_base_ubuntu
     env_file: .env
 
+
+  mariadb_indi_allsky:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mariadb
+    env_file: .env
+
+
   indiserver:
     build:
       context: ..
@@ -16,50 +24,58 @@ services:
     #ports:
     #  - "17624:7624"
 
+
   indi_allsky_base:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky_base
     env_file: .env
     volumes:
-      - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
+      #- database:/var/lib/indi-allsky
+
 
   gunicorn_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
     env_file: .env
+    depends_on:
+      - mariadb_indi_allsky
+    volumes:
+      - images:/var/www/html/allsky
+      - database:/var/lib/indi-allsky
     #ports:
     #  - "8000:8000"
-    volumes:
-      - database:/var/lib/indi-allsky
-      - images:/var/www/html/allsky
+
 
   indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky
     env_file: .env
+    depends_on:
+      - mariadb_indi_allsky
     volumes:
-      - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
+      #- database:/var/lib/indi-allsky
+
 
   nginx_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nginx
+    env_file: .env
     depends_on:
       - gunicorn_indi_allsky
-    env_file: .env
+    volumes:
+      - images:/var/www/html/allsky
     ports:
       - "8080:80"
       - "8443:443"
-    volumes:
-      - images:/var/www/html/allsky
 
 
 volumes:
-  database:
   images:
+  database:
 

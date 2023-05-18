@@ -12,7 +12,7 @@ RUN apt-get -y install \
 
 # Final
 
-FROM nginx_indi_allsky_pre as nginx_indi_allsky
+FROM nginx_indi_allsky_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 

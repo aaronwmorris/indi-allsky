@@ -8,6 +8,12 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
+# for migrations
+RUN mkdir -m 750 /var/lib/indi-allsky
+RUN chown -R allsky:allsky /var/lib/indi-allsky
+VOLUME /var/lib/indi-allsky
+
+
 COPY docker/start_gunicorn.sh /home/allsky
 RUN chown allsky:allsky /home/allsky/start_gunicorn.sh
 RUN chmod 755 /home/allsky/start_gunicorn.sh
