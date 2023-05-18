@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
 
     ia = indi_allsky.IndiAllSky()
-    ia.pidfile = args.pid
+    ia.pid_file = args.pid
 
     action_func = getattr(ia, args.action)
     action_func(*args_list, **kwargs_dict)

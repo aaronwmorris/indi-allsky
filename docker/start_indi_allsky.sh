@@ -59,8 +59,8 @@ json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 
 
 # wait for 
-echo "Waiting on migrations to complete (30s)"
-sleep 30
+echo "Waiting on migrations to complete (60s)"
+sleep 60
 
 
 cd "$ALLSKY_DIRECTORY"
@@ -108,5 +108,6 @@ fi
 # start the program
 ./allsky.py \
     --log stderr \
+    --pid /home/allsky/indi-allsky.pid \
     run
 

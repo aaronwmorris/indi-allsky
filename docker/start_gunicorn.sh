@@ -60,6 +60,11 @@ json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 
 cd "$ALLSKY_DIRECTORY"
 
+
+echo "Waiting on database (30s)"
+sleep 30
+
+
 # Setup migration folder
 if [[ ! -d "$MIGRATION_FOLDER" ]]; then
     # Folder defined in flask config
