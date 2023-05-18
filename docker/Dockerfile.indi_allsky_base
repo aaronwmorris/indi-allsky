@@ -67,6 +67,10 @@ RUN chown -R allsky:allsky /var/www/html/allsky
 VOLUME /var/www/html/indi-allsky
 
 
+# cleanup
+RUN apt-get clean
+
+
 USER allsky
 WORKDIR /home/allsky
 
@@ -80,8 +84,10 @@ COPY requirements/requirements_debian11.txt /home/allsky
 RUN python3 -m venv /home/allsky/venv
 
 ENV VIRTUAL_ENV=/home/allsky/venv
-RUN /home/allsky/venv/bin/pip3 install --upgrade pip setuptools wheel
-RUN /home/allsky/venv/bin/pip3 install -r requirements_debian11.txt
-RUN /home/allsky/venv/bin/pip3 install "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
+RUN /home/allsky/venv/bin/pip3 install --no-cache-dir --upgrade pip setuptools wheel
+RUN /home/allsky/venv/bin/pip3 install --no-cache-dir -r requirements_debian11.txt
+RUN /home/allsky/venv/bin/pip3 install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 
+# cleanup
+RUN rm -Rf /home/allsky/.cache/pip
 

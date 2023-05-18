@@ -8,6 +8,10 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
+# cleanup
+RUN apt-get clean
+
+
 # Final
 
 FROM mariadb_indi_allsky_pre

@@ -17,6 +17,10 @@ RUN apt-get -y install \
     git
 
 
+# cleanup
+RUN apt-get clean
+
+
 # Base image
 
 FROM indi_base_pre

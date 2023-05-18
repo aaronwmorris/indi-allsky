@@ -26,6 +26,10 @@ RUN apt-get -y install \
     libindi-dev
 
 
+# cleanup
+RUN apt-get clean
+
+
 # Base image
 
 FROM indi_base_pre

@@ -32,6 +32,10 @@ RUN apt-get -y install \
     indi-gpsnmea
 
 
+# cleanup
+RUN apt-get clean
+
+
 # Final
 FROM indiserver_pre
 

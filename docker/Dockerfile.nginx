@@ -10,6 +10,9 @@ RUN apt-get -y install \
     ca-certificates
 
 
+# cleanup
+RUN apt-get clean
+
 # Final
 
 FROM nginx_indi_allsky_pre
