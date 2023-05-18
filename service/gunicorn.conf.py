@@ -4,6 +4,7 @@ timeout            = 180
 syslog             = True
 syslog_addr        = 'unix:///dev/log'
 syslog_facility    = 'local7'
+loglevel           = 'info'
 reload             = True
 reload_engine      = 'inotify'
 umask              = 0o0022
