@@ -54,7 +54,7 @@ services:
     env_file: .env
     ports:
       - "8080:80"
-      #- "8443:443"
+      - "8443:443"
     volumes:
       - images:/var/www/html/allsky
 

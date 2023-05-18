@@ -23,6 +23,6 @@ RUN apt-get -y upgrade
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY docker/nginx.local.conf /etc/nginx/conf.d/default.conf
-COPY docker/ssl.crt /etc/ssl/certs
-COPY docker/ssl.key /etc/ssl/private
+COPY docker/ssl.crt /etc/ssl/certs/nginx.crt
+COPY docker/ssl.key /etc/ssl/private/nginx.key
 
