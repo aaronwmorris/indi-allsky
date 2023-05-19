@@ -267,6 +267,12 @@ GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html
 
 FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
 
+## Docker Containerization
+
+indi-allsky has full support for running in a container environment.  Check out the `docker/` folder for the Docker assets.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Docker#updating-indi-allsky
+
 ## Performance
 
 indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C based which makes indi-allsky extremely fast.  A 1920 x 1080 image can be dark frame calibrated, debayered, histogram processed, text applied, and compressed to a JPG in less than 0.5 seconds on Raspberry Pi 3 class hardware.  PNG processing is a little more taxing, but usually only takes a few seconds.
