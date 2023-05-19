@@ -13,13 +13,19 @@ ALLSKY_ETC="/etc/indi-allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 #DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 #SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
-SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@docker_mariadb_indi_allsky_1/${MARIADB_DATABASE}"
 MIGRATION_FOLDER="$DB_FOLDER/migrations"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+
+
+if [ "$INDI_ALLSKY_MARIADB_SSL" == "true" ]; then
+    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
+else
+    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}"
+fi
 
 
 # shellcheck disable=SC1091
