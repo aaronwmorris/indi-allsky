@@ -60,6 +60,7 @@ services:
     env_file: .env
     depends_on:
       - mariadb_indi_allsky
+      - indiserver
     volumes:
       - images:/var/www/html/allsky
       #- migrations:/var/lib/indi-allsky
