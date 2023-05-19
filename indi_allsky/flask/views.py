@@ -1992,7 +1992,12 @@ class SystemInfoView(TemplateView):
 
 
     def getSystemdUnitStatus(self, unit):
-        session_bus = dbus.SessionBus()
+        try:
+            session_bus = dbus.SessionBus()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return 'D-Bus Unavailable'
+
         systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
@@ -2008,7 +2013,21 @@ class SystemInfoView(TemplateView):
 
 
     def getSystemdTimeDate(self):
-        session_bus = dbus.SystemBus()
+        try:
+            session_bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            timedate1_dict = {
+                'Timezone' : 'Unknown',
+                'CanNTP'   : False,
+                'NTP'      : False,
+                'NTPSynchronized' : False,
+                'LocalRTC' : False,
+                'TimeUSec' : 1,
+            }
+            return timedate1_dict
+
+
         timedate1 = session_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
         manager = dbus.Interface(timedate1, 'org.freedesktop.DBus.Properties')
 

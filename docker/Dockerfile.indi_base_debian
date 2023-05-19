@@ -4,22 +4,32 @@ FROM debian:bullseye-slim as indi_base_pre
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
 RUN apt-get -y install \
     build-essential \
     lsb-release \
+    locales \
+    vim-tiny \
+    nano \
+    netcat \
     sudo \
     git
 
 
+# cleanup
+RUN apt-get clean
+
+
 # Base image
 
-FROM indi_base_pre as indi_base
+FROM indi_base_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
 
 
 ENV TZ=$INDIALLSKY_TIMEZONE

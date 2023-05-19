@@ -1,13 +1,52 @@
 
-FROM docker_indi_base
+FROM docker_indi_base as indiserver_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
+
+RUN apt-get -y install \
+    gsc \
+    indi-full \
+    libindi-dev \
+    indi-webcam \
+    indi-asi \
+    libasi \
+    indi-qhy \
+    libqhy \
+    indi-playerone \
+    libplayerone \
+    indi-svbony \
+    libsvbony \
+    libaltaircam \
+    libmallincam \
+    libmicam \
+    libnncam \
+    indi-toupbase \
+    libtoupcam \
+    indi-gphoto \
+    indi-sx \
+    indi-gpsd \
+    indi-gpsnmea
 
 
-RUN rm -f /etc/sudoers.d/allsky
+# cleanup
+RUN apt-get clean
+
+
+# Final
+FROM indiserver_pre
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+
+
+#RUN rm -f /etc/sudoers.d/allsky
 
 
 COPY docker/start_indiserver.sh /home/allsky

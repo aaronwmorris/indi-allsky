@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#set -x  # command tracing
 set -o errexit
 set -o nounset
 

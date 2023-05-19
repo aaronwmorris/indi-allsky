@@ -7,58 +7,80 @@ services:
       dockerfile: docker/Dockerfile.indi_base_ubuntu
     env_file: .env
 
+
+  mariadb_indi_allsky:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mariadb
+    env_file: .env
+    volumes:
+      - database:/var/lib/mysql
+    #ports:
+    #  - "13306:3306"
+
+
   indiserver:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     privileged: true
-    ports:
-      - "17624:7624"
+    #ports:
+    #  - "17624:7624"
 
-  indi_allsky:
+
+  indi_allsky_base:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_allsky
-    depends_on:
-      - indiserver
+      dockerfile: docker/Dockerfile.indi_allsky_base
     env_file: .env
     volumes:
-      - config:/etc/indi-allsky
-      - database:/var/lib/indi-allsky
       - images:/var/www/html/allsky
+      #- migrations:/var/lib/indi-allsky
+
 
   gunicorn_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
-    depends_on:
-      - indi_allsky
     env_file: .env
-    ports:
-      - "8000:8000"
+    depends_on:
+      - mariadb_indi_allsky
     volumes:
-      - config:/etc/indi-allsky
-      - database:/var/lib/indi-allsky
-      - /var/www/html/allsky
+      - images:/var/www/html/allsky
+      - migrations:/var/lib/indi-allsky
+    #ports:
+    #  - "8000:8000"
+
+
+  indi_allsky:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.indi_allsky
+    env_file: .env
+    depends_on:
+      - mariadb_indi_allsky
+    volumes:
+      - images:/var/www/html/allsky
+      #- migrations:/var/lib/indi-allsky
+
 
   nginx_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nginx
-    depends_on:
-      - indi_allsky
     env_file: .env
+    depends_on:
+      - gunicorn_indi_allsky
+    volumes:
+      - images:/var/www/html/allsky
     ports:
       - "8080:80"
-      #- "8443:443"
-    volumes:
-      - config:/etc/indi-allsky
-      - images:/var/www/html/allsky
+      - "8443:443"
 
 
 volumes:
-  config:
   database:
+  migrations:
   images:
 

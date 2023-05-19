@@ -1,0 +1,8 @@
+**/*.py[oc]
+**/__pycache__
+**/.git
+**/.env
+virtualenv
+#virtualenv/**/*
+log
+#log/**/*

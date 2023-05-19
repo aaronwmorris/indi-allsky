@@ -916,11 +916,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
@@ -1075,11 +1075,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
@@ -1246,11 +1246,11 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            sudo add-apt-repository ppa:mutlaqja/ppa
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
         INSTALL_INDI="false"
@@ -1696,19 +1696,19 @@ done
 TMP_FLASK=$(mktemp --suffix=.json)
 TMP_FLASK_MERGE=$(mktemp --suffix=.json)
 
-sed \
- -e "s|%SQLALCHEMY_DATABASE_URI%|$SQLALCHEMY_DATABASE_URI|g" \
- -e "s|%MIGRATION_FOLDER%|$MIGRATION_FOLDER|g" \
- -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
- -e "s|%HTDOCS_FOLDER%|$HTDOCS_FOLDER|g" \
- -e "s|%INDISERVER_SERVICE_NAME%|$INDISERVER_SERVICE_NAME|g" \
- -e "s|%ALLSKY_SERVICE_NAME%|$ALLSKY_SERVICE_NAME|g" \
- -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
- -e "s|%FLASK_AUTH_ALL_VIEWS%|$FLASK_AUTH_ALL_VIEWS|g" \
- "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
-# syntax check
-json_pp < "$TMP_FLASK" >/dev/null
+jq \
+ --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" \
+ --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
+ --argjson indi_allsky_auth_all_views "$FLASK_AUTH_ALL_VIEWS" \
+ --arg migration_folder "$MIGRATION_FOLDER" \
+ --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
+ --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
+ --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
+ --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
+ --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 
 if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
@@ -1725,25 +1725,25 @@ else
 fi
 
 
-SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$SECRET_KEY" ]; then
+INDIALLSKY_FLASK_SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$INDIALLSKY_FLASK_SECRET_KEY" ]; then
     # generate flask secret key
-    SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
+    INDIALLSKY_FLASK_SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 
     TMP_FLASK_SKEY=$(mktemp --suffix=.json)
-    jq --arg secret_key "$SECRET_KEY" '.SECRET_KEY = $secret_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_SKEY"
+    jq --arg secret_key "$INDIALLSKY_FLASK_SECRET_KEY" '.SECRET_KEY = $secret_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_SKEY"
     cp -f "$TMP_FLASK_SKEY" "${ALLSKY_ETC}/flask.json"
     [[ -f "$TMP_FLASK_SKEY" ]] && rm -f "$TMP_FLASK_SKEY"
 fi
 
 
-PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$PASSWORD_KEY" ]; then
+INDIALLSKY_FLASK_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
+if [ -z "$INDIALLSKY_FLASK_PASSWORD_KEY" ]; then
     # generate password key for encryption
-    PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+    INDIALLSKY_FLASK_PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
     TMP_FLASK_PKEY=$(mktemp --suffix=.json)
-    jq --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_PKEY"
+    jq --arg password_key "$INDIALLSKY_FLASK_PASSWORD_KEY" '.PASSWORD_KEY = $password_key' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_PKEY"
     cp -f "$TMP_FLASK_PKEY" "${ALLSKY_ETC}/flask.json"
     [[ -f "$TMP_FLASK_PKEY" ]] && rm -f "$TMP_FLASK_PKEY"
 fi
@@ -1759,7 +1759,7 @@ sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
 # create a backup of the key
 if [ ! -f "${ALLSKY_ETC}/password_key_backup.json" ]; then
-    jq -n --arg password_key "$PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
+    jq -n --arg password_key "$INDIALLSKY_PASSWORD_KEY" '.PASSWORD_KEY_BACKUP = $password_key' '{}' > "${ALLSKY_ETC}/password_key_backup.json"
 fi
 
 chmod 400 "${ALLSKY_ETC}/password_key_backup.json"

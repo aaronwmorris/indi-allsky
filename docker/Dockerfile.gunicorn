@@ -1,16 +1,32 @@
-### INCOMPLETE ###
 
-FROM docker_indi_allsky
+FROM docker_indi_allsky_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
+
+
+# for migrations
+RUN mkdir -m 750 /var/lib/indi-allsky
+RUN chown -R allsky:allsky /var/lib/indi-allsky
+VOLUME /var/lib/indi-allsky
+
+
+COPY docker/start_gunicorn.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_gunicorn.sh
+RUN chmod 755 /home/allsky/start_gunicorn.sh
+
+
+# installs latest code
+RUN mkdir /home/allsky/indi-allsky
+COPY . /home/allsky/indi-allsky
+RUN chown -R allsky:allsky /home/allsky/indi-allsky
 
 
 USER allsky
-WORKDIR /home/allsky/indi-allsky
+WORKDIR /home/allsky
 
 
-CMD ["/home/allsky/indi-allsky/docker/start_gunicorn.sh"]
-
+ENTRYPOINT ["./start_gunicorn.sh"]
