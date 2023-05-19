@@ -217,8 +217,21 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
+
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)
+
+
+    @property
+    def remote_url(self):
+        # virtual property
+        return None
+
+
+    @property
+    def s3_key(self):
+        # virtual property
+        return None
 
 
 class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
@@ -236,8 +249,21 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
 
+
     def __repr__(self):
         return '<BadPixelMap {0:s}>'.format(self.filename)
+
+
+    @property
+    def remote_url(self):
+        # virtual property
+        return None
+
+
+    @property
+    def s3_key(self):
+        # virtual property
+        return None
 
 
 class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):

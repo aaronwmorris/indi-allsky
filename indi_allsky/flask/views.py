@@ -268,8 +268,46 @@ class DarkFramesView(TemplateView):
             )
 
 
-        context['darkframe_list'] = darkframe_list
-        context['bpm_list'] = bpm_list
+        d_info_list = list()
+        for d in darkframe_list:
+            d_info = {
+                'id' : d.id,
+                'camera_name'  : d.camera.name,
+                'createDate'   : d.createDate,
+                'bitdepth'     : d.bitdepth,
+                'gain'         : d.gain,
+                'exposure'     : d.exposure,
+                'binmode'      : d.binmode,
+                'temp'         : d.temp,
+                'adu'          : d.adu,
+                'filename'     : d.filename,
+                'url'          : d.getUrl(),
+            }
+
+            d_info_list.append(d_info)
+
+
+        b_info_list = list()
+        for b in bpm_list:
+            b_info = {
+                'id' : b.id,
+                'camera_name'  : b.camera.name,
+                'createDate'   : b.createDate,
+                'bitdepth'     : b.bitdepth,
+                'gain'         : b.gain,
+                'exposure'     : b.exposure,
+                'binmode'      : b.binmode,
+                'temp'         : b.temp,
+                'adu'          : b.adu,
+                'filename'     : b.filename,
+                'url'          : b.getUrl(),
+            }
+
+            b_info_list.append(b_info)
+
+
+        context['darkframe_list'] = d_info_list
+        context['bpm_list'] = b_info_list
 
         return context
 
