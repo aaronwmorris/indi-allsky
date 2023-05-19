@@ -521,7 +521,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1,
             'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
@@ -543,7 +543,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1,
             'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
@@ -564,7 +564,7 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
             'pixel'         : 1.12,
             'min_gain'      : 1,
             'max_gain'      : 16,
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
@@ -586,7 +586,7 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'pixel'         : 1.22,
             'min_gain'      : 1,
             'max_gain'      : 16,
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
@@ -607,7 +607,7 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'pixel'         : 0.8,
             'min_gain'      : 1,
             'max_gain'      : 16,  # unverified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
@@ -628,7 +628,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'pixel'         : 1.4,
             'min_gain'      : 1,
             'max_gain'      : 16,  # unverified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.00003,
             'max_exposure'  : 112.0,
             'cfa'           : 'BGGR',  # untested
             'bit_depth'     : 16,
@@ -649,7 +649,7 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'pixel'         : 2.9,
             'min_gain'      : 1,
             'max_gain'      : 16,  # unverified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'GRGB',
             'bit_depth'     : 16,
@@ -670,7 +670,7 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'pixel'         : 2.9,
             'min_gain'      : 1,
             'max_gain'      : 16,  # unverified
-            'min_exposure'  : 0.001,
+            'min_exposure'  : 0.00003,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
