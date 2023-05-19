@@ -1,5 +1,10 @@
 # Indi Allsky Docker support
 
+More detailed information can be found in the wiki.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Docker
+
+
 ## docker-compose
 
 ### Setup
@@ -24,23 +29,4 @@ docker-compose up --detach
 ```
 docker-compose down
 ```
-
-
-## Info
-
-The docker compose setup sets up a single container per process.
-
-### Containers
-
-* indiserver (privileged)
-* indi-allsky capture process
-* gunicorn python application server
-* nginx reverse proxy
-* MariaDB database
-
-### Volumes
-
-* images
-* migrations (flask)
-* database (MariaDB)
 

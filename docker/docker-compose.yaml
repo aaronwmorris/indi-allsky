@@ -25,8 +25,8 @@ services:
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     privileged: true
-    #ports:
-    #  - "17624:7624"
+    ports:
+      - "17624:7624"
 
 
   indi_allsky_base:
@@ -60,6 +60,7 @@ services:
     env_file: .env
     depends_on:
       - mariadb_indi_allsky
+      - indiserver
     volumes:
       - images:/var/www/html/allsky
       #- migrations:/var/lib/indi-allsky
