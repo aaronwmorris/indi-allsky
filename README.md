@@ -5,6 +5,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## Features
+* NEW: Docker containerization support
+* NEW: Image stretching
+* Multi-image stacking
 * Multiple camera vendor support
     * ZWO
     * Svbony
@@ -25,9 +28,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * More to come
 * Dark frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
-* Multi-image stacking
 * Timelapse video generation
-* Image histogram stretch support
 * GPS support
 * Images tagged with EXIF data (JPEG only)
 * TrueType font support for image labels
