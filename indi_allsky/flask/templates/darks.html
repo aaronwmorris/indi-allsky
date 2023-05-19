@@ -29,7 +29,7 @@ table, th, td {
 {% for dark in darkframe_list %}
 <tr>
     <td>{{ dark.id }}</td>
-    <td>{{ dark.camera.name }}</td>
+    <td>{{ dark.camera_name }}</td>
     <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ dark.bitdepth }}</td>
     <td>{{ dark.gain }}</td>
@@ -37,7 +37,7 @@ table, th, td {
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
     <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
-    <td>{{ dark.filename|basename }}</td>
+    <td><a href="{{ dark.url }}">{{ dark.filename|basename }}</a></td>
 </tr>
 {% endfor %}
 </table>
@@ -61,7 +61,7 @@ table, th, td {
 {% for bpm in bpm_list %}
 <tr>
     <td>{{ bpm.id }}</td>
-    <td>{{ bpm.camera.name }}</td>
+    <td>{{ bpm.camera_name }}</td>
     <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ bpm.bitdepth }}</td>
     <td>{{ bpm.gain }}</td>
@@ -69,7 +69,7 @@ table, th, td {
     <td>{{ bpm.binmode }}</td>
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
     <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
-    <td>{{ bpm.filename|basename }}</td>
+    <td><a href="{{ bpm.url }}">{{ bpm.filename|basename }}</a></td>
 </tr>
 {% endfor %}
 </table>
