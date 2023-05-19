@@ -22,7 +22,7 @@ docker-compose build
 
 ### Run containers
 ```
-docker-compose up --detach
+docker-compose up
 ```
 
 ### Stop containers

@@ -5,6 +5,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## Features
+* NEW: Docker containerization support
+* NEW: Image stretching
+* Multi-image stacking
 * Multiple camera vendor support
     * ZWO
     * Svbony
@@ -25,9 +28,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * More to come
 * Dark frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
-* Multi-image stacking
 * Timelapse video generation
-* Image histogram stretch support
 * GPS support
 * Images tagged with EXIF data (JPEG only)
 * TrueType font support for image labels
@@ -265,6 +266,12 @@ Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 reques
 GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html) and GPSd integration.  Any GPS hardware supported by GPSd will work.
 
 FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
+
+## Docker Containerization
+
+indi-allsky has full support for running in a container environment.  Check out the `docker/` folder for the Docker assets.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Docker#updating-indi-allsky
 
 ## Performance
 
