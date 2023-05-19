@@ -25,8 +25,8 @@ services:
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     privileged: true
-    #ports:
-    #  - "17624:7624"
+    ports:
+      - "17624:7624"
 
 
   indi_allsky_base:
