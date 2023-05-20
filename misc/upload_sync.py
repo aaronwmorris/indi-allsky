@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+### THIS SCRIPT IS NOT COMPLETE ###
+
 import sys
 import argparse
 import time
