@@ -64,9 +64,11 @@ cp -f "$TMP_FLASK_KEYS" "${ALLSKY_ETC}/flask.json"
 json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 
 
-# wait for 
-echo "Waiting on migrations to complete (60s)"
-sleep 60
+# wait for database and migrations
+for X in $(seq 12); do
+    echo "Waiting on migrations to complete ($((65-(5*X)))s)"
+    sleep 5
+done
 
 
 cd "$ALLSKY_DIRECTORY"

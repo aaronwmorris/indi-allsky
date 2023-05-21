@@ -67,8 +67,11 @@ json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 cd "$ALLSKY_DIRECTORY"
 
 
-echo "Waiting on database (30s)"
-sleep 30
+# wait on database
+for X in $(seq 6); do
+    echo "Waiting on database ($((35-(5*X)))s)"
+    sleep 5
+done
 
 
 # Setup migration folder
@@ -116,7 +119,7 @@ fi
 
 if [ "${INDIALLSKY_WEB_GENERATE_APIKEY:-false}" == "true" ]; then
     "$ALLSKY_DIRECTORY/misc/usertool.py" genapikey -u "$INDIALLSKY_WEB_USER"
-    echo "REMEMBER TO SET INDIALLSKY_WEB_GENERATE_APIKEY BACK TO \"false\""
+    echo "!!!! REMEMBER TO SET INDIALLSKY_WEB_GENERATE_APIKEY BACK TO \"false\" !!!!"
     sleep 10
 fi
 
