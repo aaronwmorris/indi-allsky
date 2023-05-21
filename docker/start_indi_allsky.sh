@@ -21,7 +21,7 @@ ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
-if [ "$INDI_ALLSKY_MARIADB_SSL" == "true" ]; then
+if [ "${INDI_ALLSKY_MARIADB_SSL:-false}" == "true" ]; then
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
 else
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}"

@@ -21,7 +21,7 @@ ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
-if [ "$INDI_ALLSKY_MARIADB_SSL" == "true" ]; then
+if [ "${INDI_ALLSKY_MARIADB_SSL:-false}" == "true" ]; then
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
 else
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}"
@@ -111,6 +111,13 @@ USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
 if [ "$USER_COUNT" -le 1 ]; then
     "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$INDIALLSKY_WEB_USER" -p "$INDIALLSKY_WEB_PASS" -f "$INDIALLSKY_WEB_NAME" -e "$INDIALLSKY_WEB_EMAIL"
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$INDIALLSKY_WEB_USER"
+fi
+
+
+if [ "${INDIALLSKY_WEB_GENERATE_APIKEY:-false}" == "true" ]; then
+    "$ALLSKY_DIRECTORY/misc/usertool.py" genapikey -u "$INDIALLSKY_WEB_USER"
+    echo "REMEMBER TO SET INDIALLSKY_WEB_GENERATE_APIKEY BACK TO \"false\""
+    sleep 10
 fi
 
 
