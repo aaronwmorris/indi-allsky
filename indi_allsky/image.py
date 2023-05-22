@@ -2762,25 +2762,89 @@ class ImageProcessor(object):
         obs.lat = math.radians(self.latitude_v.value)
 
 
-        sun = ephem.Sun()
         obs.date = utcnow
+
+        self.astrometric_data['sidereal_time'] = str(obs.sidereal_time())
+
+
+        sun = ephem.Sun()
         sun.compute(obs)
         self.astrometric_data['sun_alt'] = math.degrees(sun.alt)
 
 
-
         moon = ephem.Moon()
-        #obs.date = utcnow
         moon.compute(obs)
-        self.astrometric_data['moon_alt'] = math.degrees(moon.alt)
+        moon_alt = math.degrees(moon.alt)
+        self.astrometric_data['moon_alt'] = moon_alt
         self.astrometric_data['moon_phase'] = moon.moon_phase * 100.0
+
+        if moon_alt >= 0:
+            self.astrometric_data['moon_up'] = 'Yes'
+        else:
+            self.astrometric_data['moon_up'] = 'No'
+
+
+        mercury = ephem.Mercury()
+        mercury.compute(obs)
+        mercury_alt = math.degrees(mercury.alt)
+        self.astrometric_data['mercury_alt'] = mercury_alt
+
+        if mercury_alt >= 0:
+            self.astrometric_data['mercury_up'] = 'Yes'
+        else:
+            self.astrometric_data['mercury_up'] = 'No'
+
+
+        venus = ephem.Venus()
+        venus.compute(obs)
+        venus_alt = math.degrees(venus.alt)
+        self.astrometric_data['venus_alt'] = venus_alt
+        self.astrometric_data['venus_phase'] = venus.phase
+
+        if venus_alt >= 0:
+            self.astrometric_data['venus_up'] = 'Yes'
+        else:
+            self.astrometric_data['venus_up'] = 'No'
+
+
+        mars = ephem.Mars()
+        mars.compute(obs)
+        mars_alt = math.degrees(mars.alt)
+        self.astrometric_data['mars_alt'] = mars_alt
+
+        if mars_alt >= 0:
+            self.astrometric_data['mars_up'] = 'Yes'
+        else:
+            self.astrometric_data['mars_up'] = 'No'
+
+
+        jupiter = ephem.Jupiter()
+        jupiter.compute(obs)
+        jupiter_alt = math.degrees(jupiter.alt)
+        self.astrometric_data['jupiter_alt'] = jupiter_alt
+
+        if jupiter_alt >= 0:
+            self.astrometric_data['jupiter_up'] = 'Yes'
+        else:
+            self.astrometric_data['jupiter_up'] = 'No'
+
+
+        saturn = ephem.Saturn()
+        saturn.compute(obs)
+        saturn_alt = math.degrees(saturn.alt)
+        self.astrometric_data['saturn_alt'] = saturn_alt
+
+        if saturn_alt >= 0:
+            self.astrometric_data['saturn_up'] = 'Yes'
+        else:
+            self.astrometric_data['saturn_up'] = 'No'
 
 
         # separation of 1-3 degrees means a possible eclipse
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
-        self.astrometric_data['sidereal_time'] = str(obs.sidereal_time())
+        moon = ephem.Moon()
 
 
         ### ORBS
@@ -2871,7 +2935,19 @@ class ImageProcessor(object):
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
+            'moon_up'      : self.astrometric_data['moon_up'],
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
+            'mercury_alt'  : self.astrometric_data['mercury_alt'],
+            'mercury_up'   : self.astrometric_data['mercury_up'],
+            'venus_alt'    : self.astrometric_data['venus_alt'],
+            'venus_phase'  : self.astrometric_data['venus_phase'],
+            'venus_up'     : self.astrometric_data['venus_up'],
+            'mars_alt'     : self.astrometric_data['mars_alt'],
+            'mars_up'      : self.astrometric_data['mars_up'],
+            'jupiter_alt'  : self.astrometric_data['jupiter_alt'],
+            'jupiter_up'   : self.astrometric_data['jupiter_up'],
+            'saturn_alt'   : self.astrometric_data['saturn_alt'],
+            'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
@@ -3097,7 +3173,19 @@ class ImageProcessor(object):
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
+            'moon_up'      : self.astrometric_data['moon_up'],
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
+            'mercury_alt'  : self.astrometric_data['mercury_alt'],
+            'mercury_up'   : self.astrometric_data['mercury_up'],
+            'venus_alt'    : self.astrometric_data['venus_alt'],
+            'venus_phase'  : self.astrometric_data['venus_phase'],
+            'venus_up'     : self.astrometric_data['venus_up'],
+            'mars_alt'     : self.astrometric_data['mars_alt'],
+            'mars_up'      : self.astrometric_data['mars_up'],
+            'jupiter_alt'  : self.astrometric_data['jupiter_alt'],
+            'jupiter_up'   : self.astrometric_data['jupiter_up'],
+            'saturn_alt'   : self.astrometric_data['saturn_alt'],
+            'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
