@@ -305,6 +305,22 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__AWB_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__AWB_ENABLE(class='form-check-input') }}
+                <div id="LIBCAMERA__AWB_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable libcamera AWB</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This can cause long gaps between exposures at night</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -976,7 +992,12 @@
             {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
             <div id="FFMPEG_BITRATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">ffmpeg bitrate</div>
+        <div class="col-sm-8">
+            <div>Default: 2500k</div>
+            <div>High quality timelapses with dynamic content (eg auroras) should have a much higher rate</div>
+            <div>15000k-20000k for a 1920x1080 resolution.</div>
+            <div>30000k-40000k for 4K video</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -987,7 +1008,7 @@
             {{ form_config.FFMPEG_VFSCALE(class='form-control bg-secondary') }}
             <div id="FFMPEG_VFSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">ffmpeg scaling (only necessary on buster)</div>
+        <div class="col-sm-8">ffmpeg scaling</div>
     </div>
 
     <div class="form-group row">
@@ -2897,6 +2918,7 @@ const checkbox_field_names = [
     'SYNCAPI__CERT_BYPASS',
     'SYNCAPI__POST_S3',
     'SYNCAPI__UPLOAD_VIDEO',
+    'LIBCAMERA__AWB_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'RELOAD_ON_SAVE',
 ];

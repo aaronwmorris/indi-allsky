@@ -271,7 +271,7 @@ FITs Images exported [optional] by indi-allsky will be properly tagged with Geog
 
 indi-allsky has full support for running in a container environment.  Check out the `docker/` folder for the Docker assets.
 
-https://github.com/aaronwmorris/indi-allsky/wiki/Docker#updating-indi-allsky
+https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 
 ## Performance
 
