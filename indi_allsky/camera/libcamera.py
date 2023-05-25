@@ -145,7 +145,6 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                '--awbgains', '1,1',  # AWB causes long exposure times at night
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -159,8 +158,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                #'--denoise', 'off',
-                #'--awbgains', '1,1',  # enable awb in jpg mode
+                '--denoise', 'off',
                 '--gain', '{0:d}'.format(self._ccd_gain),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
@@ -168,6 +166,12 @@ class IndiClientLibCameraGeneric(IndiClient):
             ]
         else:
             raise Exception('Invalid image type')
+
+
+        # Auto white balance, AWB causes long exposure times at night
+        if not self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+            # awb enabled by default, the following disables
+            cmd.extend(['--awbgains', '1,1'])
 
 
         # Add extra config options

@@ -962,6 +962,7 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_IMAGE'          : self.indi_allsky_config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1),
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
+            'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', False),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
@@ -1396,6 +1397,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FITSHEADERS'][4][0]                    = str(request.json['FITSHEADERS__4__KEY'])
         self.indi_allsky_config['FITSHEADERS'][4][1]                    = str(request.json['FITSHEADERS__4__VAL'])
         self.indi_allsky_config['LIBCAMERA']['IMAGE_FILE_TYPE']         = str(request.json['LIBCAMERA__IMAGE_FILE_TYPE'])
+        self.indi_allsky_config['LIBCAMERA']['AWB_ENABLE']              = bool(request.json['LIBCAMERA__AWB_ENABLE'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))

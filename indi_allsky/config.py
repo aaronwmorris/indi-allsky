@@ -269,6 +269,7 @@ class IndiAllSkyConfigBase(object):
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
+            "AWB_ENABLE"             : False,
             "EXTRA_OPTIONS"          : "",
         },
     })
