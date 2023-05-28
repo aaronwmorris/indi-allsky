@@ -171,12 +171,12 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         if self.night_v.value:
             #  night
-            awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
-            cmd.extend(['--awb', awb])
-
 
             # Auto white balance, AWB causes long exposure times at night
-            if not self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+                awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
+                cmd.extend(['--awb', awb])
+            else:
                 # awb enabled by default, the following disables
                 cmd.extend(['--awbgains', '1,1'])
 
@@ -185,14 +185,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
             if extra_options:
                 cmd.extend(extra_options.split(' '))
+
         else:
             # daytime
-            awb = self.config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto')
-            cmd.extend(['--awb', awb])
-
 
             # Auto white balance, AWB causes long exposure times at night
-            if not self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+                awb = self.config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto')
+                cmd.extend(['--awb', awb])
+            else:
                 # awb enabled by default, the following disables
                 cmd.extend(['--awbgains', '1,1'])
 
