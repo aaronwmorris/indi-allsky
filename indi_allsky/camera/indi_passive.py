@@ -47,6 +47,7 @@ class IndiClientPassive(IndiClient):
         dec_v,
         gain_v,
         bin_v,
+        night_v,
     ):
         super(IndiClient, self).__init__()
 
@@ -61,6 +62,8 @@ class IndiClientPassive(IndiClient):
 
         self.gain_v = gain_v
         self.bin_v = bin_v
+
+        self.night_v = night_v
 
         self._camera_id = None
 

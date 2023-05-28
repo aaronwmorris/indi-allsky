@@ -1599,6 +1599,11 @@ def LIBCAMERA__IMAGE_FILE_TYPE_validator(form, field):
         raise ValidationError('Please select a valid file type')
 
 
+def LIBCAMERA__AWB_validator(form, field):
+    if field.data not in list(zip(*form.LIBCAMERA__AWB_choices))[0]:
+        raise ValidationError('Please select a valid AWB')
+
+
 def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
     if not field.data:
         return
@@ -1835,6 +1840,17 @@ class IndiAllskyConfigForm(FlaskForm):
         ('png', 'PNG'),
     )
 
+    LIBCAMERA__AWB_choices = (
+        ('auto', 'Auto'),
+        ('incandescent', 'Incandescent'),
+        ('tungsten', 'Tungsten'),
+        ('fluorescent', 'Fluorescent'),
+        ('indoor', 'Indoor'),
+        ('daylight', 'Daylight'),
+        ('cloudy', 'Cloudy'),
+        ('custom', 'Custom'),
+    )
+
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
@@ -2047,8 +2063,12 @@ class IndiAllskyConfigForm(FlaskForm):
     FITSHEADERS__4__KEY              = StringField('FITS Header 5', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__4__VAL              = StringField('FITS Header 5 Value', validators=[])
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
-    LIBCAMERA__AWB_ENABLE            = BooleanField('Enable AWB')
-    LIBCAMERA__EXTRA_OPTIONS         = StringField('libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
+    LIBCAMERA__AWB                   = SelectField('Night AWB', choices=LIBCAMERA__AWB_choices, validators=[DataRequired(), LIBCAMERA__AWB_validator])
+    LIBCAMERA__AWB_DAY               = SelectField('Day AWB', choices=LIBCAMERA__AWB_choices, validators=[DataRequired(), LIBCAMERA__AWB_validator])
+    LIBCAMERA__AWB_ENABLE            = BooleanField('Night Enable AWB')
+    LIBCAMERA__AWB_ENABLE_DAY        = BooleanField('Day Enable AWB')
+    LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
+    LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')

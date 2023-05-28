@@ -34,13 +34,13 @@ class ImageBench(object):
         #self.f_tmp_name = Path('/dev/shm/image_bench.webp')
 
         # random
-        random_rgb = numpy.random.randint(255, size=(self.width, self.height, 3), dtype=numpy.uint8)
+        random_rgb = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
 
         # grey
-        #random_rgb = numpy.full([self.width, self.height, 3], 127, dtype=numpy.uint8)
+        #random_rgb = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
 
         # black
-        #random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
+        #random_rgb = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
 
         cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 95])
         #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 7])

@@ -45,7 +45,7 @@ class ImageWorker(Process):
         bits = 16
 
         # random colors (16bit -> 8bit)
-        random_rgb_full = numpy.random.randint(((2 ** bits) - 1), size=(self.width, self.height, 3), dtype=numpy.uint16)
+        random_rgb_full = numpy.random.randint(((2 ** bits) - 1), size=(self.height, self.width, 3), dtype=numpy.uint16)
 
         #div_factor = int((2 ** 16) / 255)
         #self.random_rgb = (random_rgb_full / div_factor).astype('uint8')
@@ -55,10 +55,10 @@ class ImageWorker(Process):
         self.random_rgb = numpy.right_shift(random_rgb_full, shift_factor).astype(numpy.uint8)
 
         # grey
-        #self.random_rgb = numpy.full([self.width, self.height, 3], 127, dtype=numpy.uint8)
+        #self.random_rgb = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
 
         # black
-        #self.random_rgb = numpy.zeros([self.width, self.height, 3], dtype=numpy.uint8)
+        #self.random_rgb = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
 
         # load raw numpy data
         #with io.open('/tmp/indi_allsky_numpy.npy', 'r+b') as f_numpy:
@@ -82,7 +82,7 @@ class ImageWorker(Process):
 
                 write_img_start = time.time()
 
-                cv2.imwrite(str(png_tmp_file_p), self.random_rgb, [cv2.IMWRITE_JPEG_QUALITY, png_factor])
+                cv2.imwrite(str(png_tmp_file_p), self.random_rgb, [cv2.IMWRITE_PNG_COMPRESSION, png_factor])
 
                 write_img_elapsed_s = time.time() - write_img_start
                 logger.info('Pass %d - compressed in %0.4f s', x, write_img_elapsed_s)
