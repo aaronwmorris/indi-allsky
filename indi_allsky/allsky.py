@@ -436,6 +436,7 @@ class IndiAllSky(object):
             self.dec_v,
             self.gain_v,
             self.bin_v,
+            self.night_v,
         )
 
         # set indi server localhost and port
@@ -1481,6 +1482,7 @@ class IndiAllSky(object):
             self.dec_v,
             self.gain_v,
             self.bin_v,
+            self.night_v,
         )
 
         # set indi server localhost and port
