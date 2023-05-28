@@ -305,30 +305,6 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__AWB-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_DAY(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__AWB_ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -345,6 +321,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__AWB.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__AWB(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__AWB-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__AWB_ENABLE_DAY.label }}
         </div>
         <div class="col-sm-2">
@@ -352,6 +340,18 @@
                 {{ form_config.LIBCAMERA__AWB_ENABLE_DAY(class='form-check-input') }}
                 <div id="LIBCAMERA__AWB_ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__AWB_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__AWB_DAY(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
         </div>
