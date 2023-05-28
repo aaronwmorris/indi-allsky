@@ -168,7 +168,13 @@ class IndiClientLibCameraGeneric(IndiClient):
             raise Exception('Invalid image type')
 
 
+
         if self.night_v.value:
+            #  night
+            awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
+            cmd.extend(['--awb', awb])
+
+
             # Auto white balance, AWB causes long exposure times at night
             if not self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
                 # awb enabled by default, the following disables
@@ -180,6 +186,11 @@ class IndiClientLibCameraGeneric(IndiClient):
             if extra_options:
                 cmd.extend(extra_options.split(' '))
         else:
+            # daytime
+            awb = self.config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto')
+            cmd.extend(['--awb', awb])
+
+
             # Auto white balance, AWB causes long exposure times at night
             if not self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
                 # awb enabled by default, the following disables
@@ -190,6 +201,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY')
             if extra_options:
                 cmd.extend(extra_options.split(' '))
+
 
 
         # Finally add output file
