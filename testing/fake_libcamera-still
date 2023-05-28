@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+
+### python script to simulate libcamera-still
+### does not generate DNG files
+
+import io
+import json
+import argparse
+import time
+from pathlib import Path
+import imageio
+import numpy
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging
+
+
+
+class FakeLibCameraStill(object):
+    bits = 16
+
+    ### 1k
+    width  = 1920
+    height = 1080
+
+    ### 4k
+    #width  = 3840
+    #height = 2160
+
+
+    metadata_data = {
+        'SensorTemperature' : -0.5,
+        'SensorBlackLevels' : [4096, 4096, 4096, 4096],
+        'ColourGains' : [2.1, 1.5],
+    }
+
+
+    def __init__(self):
+        self._output = Path('foo.jpg')
+        self._shutter = 1000000
+        self._metadata = Path('foo.json')
+
+
+    def main(self):
+        # write blank metadata
+        logger.info('Generating fake json data: %s', self.metadata)
+        with io.open(str(self.metadata), 'w') as f_metadata:
+            f_metadata.write(json.dumps(self.metadata_data))
+
+
+        logger.info('Generating random %d x %d image ***', self.width, self.height)
+
+
+        img_start = time.time()
+
+        # random colors
+        random_rgb_full = numpy.random.randint(((2 ** self.bits) - 1), size=(self.height, self.width, 3), dtype=numpy.uint16)
+
+
+        if self.output.suffix in ('.jpg', '.jpeg', '.png'):
+            logger.info('Converting to 8-bit data')
+
+            # shifting is 5x faster than division
+            shift_factor = self.bits - 8
+            random_rgb_full = numpy.right_shift(random_rgb_full, shift_factor).astype(numpy.uint8)
+
+
+        imageio.imwrite(str(self.output), random_rgb_full)
+
+        img_elapsed_s = time.time() - img_start
+        logger.info('Image in %0.4f s', img_elapsed_s)
+
+
+        # simulate the exposure time
+        time.sleep(self.shutter / 1000000)
+
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, new_output):
+        self._output = Path(str(new_output))
+
+
+    @property
+    def shutter(self):
+        return self._shutter
+
+    @shutter.setter
+    def shutter(self, new_shutter):
+        self._shutter = int(new_shutter)
+
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, new_metadata):
+        self._metadata = Path(str(new_metadata))
+
+
+
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--immediate',
+        help='immediate',
+        action='store_true',
+    )
+    argparser.add_argument(
+        '--nopreview',
+        help='nopreview',
+        action='store_true',
+    )
+    argparser.add_argument(
+        '--raw',
+        help='raw',
+        action='store_true',
+    )
+    argparser.add_argument(
+        '--denoise',
+        help='denoise',
+        type=str,
+    )
+    argparser.add_argument(
+        '--tuning-file',
+        help='tuning-file',
+        type=str,
+    )
+    argparser.add_argument(
+        '--encoding',
+        help='encoding',
+        type=str,
+    )
+    argparser.add_argument(
+        '--quality',
+        help='quality',
+        type=int,
+    )
+    argparser.add_argument(
+        '--gain',
+        help='gain',
+        type=int,
+        required=True,
+    )
+    argparser.add_argument(
+        '--shutter',
+        help='shutter',
+        type=int,
+        required=True,
+    )
+    argparser.add_argument(
+        '--metadata',
+        help='metadata',
+        type=str,
+        required=True,
+    )
+    argparser.add_argument(
+        '--metadata-format',
+        help='metadata-format',
+        type=str,
+    )
+    argparser.add_argument(
+        '--awb',
+        help='awb',
+        type=str,
+    )
+    argparser.add_argument(
+        '--awbgains',
+        help='awbgains',
+        type=str,
+    )
+    argparser.add_argument(
+        '--output',
+        help='output',
+        type=str,
+        required=True,
+    )
+
+
+    args = argparser.parse_args()
+
+    f = FakeLibCameraStill()
+    f.output = args.output
+    f.shutter = args.shutter
+    f.metadata = args.metadata
+
+    f.main()
+
