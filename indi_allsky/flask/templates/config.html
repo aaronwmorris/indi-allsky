@@ -573,7 +573,7 @@
             <div>SCNR algorithm to apply to reduce green bias in image</div>
             <div>
               <ul>
-                <li>Average Neutral - Good colors, but can cause a magenta bias (especially during the day)</li>
+                <li>Average Neutral - Good colors <span class="badge rounded-pill bg-warning text-dark">Warning</span> Can cause a magenta bias (especially during the day)</li>
                 <li>Maximum Neutral - Use this if you enable day time caputures</li>
               </ul>
             </div>
@@ -3048,6 +3048,82 @@ $('#form_config').on('submit', function() {
         },
     });
 
+});
+
+
+// Focus mode
+$('#FOCUS_MODE').on('change', function() {
+    if ($('#FOCUS_MODE').prop('checked')) {
+        $('#FOCUS_DELAY').removeAttr('readonly');
+        $('#FOCUS_DELAY').removeAttr('disabled');
+    } else {
+        $('#FOCUS_DELAY').attr('readonly', true);
+        $('#FOCUS_DELAY').attr('disabled', true);
+    }
+});
+
+// CCD_COOLING
+$('#CCD_COOLING').on('change', function() {
+    if ($('#CCD_COOLING').prop('checked')) {
+        $('#CCD_TEMP').removeAttr('readonly');
+        $('#CCD_TEMP').removeAttr('disabled');
+    } else {
+        $('#CCD_TEMP').attr('readonly', true);
+        $('#CCD_TEMP').attr('disabled', true);
+    }
+});
+
+// libcamera AWB
+$('#LIBCAMERA__AWB_ENABLE').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__AWB').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB').attr('disabled', true);
+    }
+});
+
+// libcamera AWB DAY
+$('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
+});
+
+
+$( document ).ready(function() {
+    // FOCUS_MODE
+    if ($('#FOCUS_MODE').prop('checked')) {
+        $('#FOCUS_DELAY').removeAttr('readonly');
+        $('#FOCUS_DELAY').removeAttr('disabled');
+    } else {
+        $('#FOCUS_DELAY').attr('readonly', true);
+        $('#FOCUS_DELAY').attr('disabled', true);
+    }
+
+    // CCD_COOLING
+    if ($('#CCD_COOLING').prop('checked')) {
+        $('#CCD_TEMP').removeAttr('readonly');
+        $('#CCD_TEMP').removeAttr('disabled');
+    } else {
+        $('#CCD_TEMP').attr('readonly', true);
+        $('#CCD_TEMP').attr('disabled', true);
+    }
+
+    // libcamera AWB
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__AWB').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB').attr('disabled', true);
+    }
+
+    // libcamera AWB DAY
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
 });
 
 </script>
