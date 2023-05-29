@@ -339,6 +339,10 @@ class IndiClientLibCameraGeneric(IndiClient):
                 #    logger.error('Invalid CCM values')
                 #    self._ccm = None
 
+            else:
+                self._awb_gains = None
+                #self._ccm = None
+
         else:
             # day
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
@@ -367,6 +371,10 @@ class IndiClientLibCameraGeneric(IndiClient):
                 #except IndexError:
                 #    logger.error('Invalid CCM values')
                 #    self._ccm = None
+
+            else:
+                self._awb_gains = None
+                #self._ccm = None
 
 
         ### Black Level
