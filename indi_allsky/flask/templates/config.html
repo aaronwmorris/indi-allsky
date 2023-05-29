@@ -3050,6 +3050,62 @@ $('#form_config').on('submit', function() {
 
 });
 
+
+// CCD_COOLING
+$('#CCD_COOLING').on('change', function() {
+    if ($('#CCD_COOLING').prop('checked')) {
+        $('#CCD_TEMP').removeAttr('readonly');
+        $('#CCD_TEMP').removeAttr('disabled');
+    } else {
+        $('#CCD_TEMP').attr('readonly', true);
+        $('#CCD_TEMP').attr('disabled', true);
+    }
+});
+
+// libcamera AWB
+$('#LIBCAMERA__AWB_ENABLE').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__AWB').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB').attr('disabled', true);
+    }
+});
+
+// libcamera AWB DAY
+$('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
+});
+
+
+$( document ).ready(function() {
+    // CCD_COOLING
+    if ($('#CCD_COOLING').prop('checked')) {
+        $('#CCD_TEMP').removeAttr('readonly');
+        $('#CCD_TEMP').removeAttr('disabled');
+    } else {
+        $('#CCD_TEMP').attr('readonly', true);
+        $('#CCD_TEMP').attr('disabled', true);
+    }
+
+    // libcamera AWB
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__AWB').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB').attr('disabled', true);
+    }
+
+    // libcamera AWB DAY
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
+    } else {
+        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
+});
+
 </script>
 
 {% endblock %}
