@@ -3051,6 +3051,17 @@ $('#form_config').on('submit', function() {
 });
 
 
+// Focus mode
+$('#FOCUS_MODE').on('change', function() {
+    if ($('#FOCUS_MODE').prop('checked')) {
+        $('#FOCUS_DELAY').removeAttr('readonly');
+        $('#FOCUS_DELAY').removeAttr('disabled');
+    } else {
+        $('#FOCUS_DELAY').attr('readonly', true);
+        $('#FOCUS_DELAY').attr('disabled', true);
+    }
+});
+
 // CCD_COOLING
 $('#CCD_COOLING').on('change', function() {
     if ($('#CCD_COOLING').prop('checked')) {
@@ -3082,6 +3093,15 @@ $('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
 
 
 $( document ).ready(function() {
+    // FOCUS_MODE
+    if ($('#FOCUS_MODE').prop('checked')) {
+        $('#FOCUS_DELAY').removeAttr('readonly');
+        $('#FOCUS_DELAY').removeAttr('disabled');
+    } else {
+        $('#FOCUS_DELAY').attr('readonly', true);
+        $('#FOCUS_DELAY').attr('disabled', true);
+    }
+
     // CCD_COOLING
     if ($('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').removeAttr('readonly');
