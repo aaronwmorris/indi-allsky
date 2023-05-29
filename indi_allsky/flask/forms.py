@@ -2084,6 +2084,29 @@ class IndiAllskyConfigForm(FlaskForm):
     def validate(self):
         result = super(IndiAllskyConfigForm, self).validate()
 
+        # exposure checking
+        if self.CCD_EXPOSURE_MAX.data > self.EXPOSURE_PERIOD.data:
+            self.CCD_EXPOSURE_MAX.errors.append('Exposure cannot be greater than night period')
+            self.EXPOSURE_PERIOD.errors.append('Period is less than maximuum exposure')
+            result = False
+
+        if self.CCD_EXPOSURE_MAX.data > self.EXPOSURE_PERIOD_DAY.data:
+            self.CCD_EXPOSURE_MAX.errors.append('Exposure cannot be greater than day period')
+            self.EXPOSURE_PERIOD.errors.append('Period is less than maximuum exposure')
+            result = False
+
+
+        if self.CCD_EXPOSURE_DEF.data > self.CCD_EXPOSURE_MAX.data:
+            self.CCD_EXPOSURE_DEF.errors.append('Default exposure cannot be greater than max exposure')
+            self.CCD_EXPOSURE_MAX.errors.append('Max exposure is less than default exposure')
+            result = False
+
+        if self.CCD_EXPOSURE_MIN.data > self.CCD_EXPOSURE_MAX.data:
+            self.CCD_EXPOSURE_DEF.errors.append('Minimum exposure cannot be greater than max exposure')
+            self.CCD_EXPOSURE_MAX.errors.append('Max exposure is less than minimum exposure')
+            result = False
+
+
         # require custom font to be defined
         if self.TEXT_PROPERTIES__PIL_FONT_FILE.data == 'custom':
             if not self.TEXT_PROPERTIES__PIL_FONT_CUSTOM.data:
