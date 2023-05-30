@@ -196,6 +196,10 @@ class IndiClient(PyIndi.BaseClient):
         self._filename_t = new_filename_t
 
 
+    def updateConfig(self, new_config):
+        self.config = new_config
+
+
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
 

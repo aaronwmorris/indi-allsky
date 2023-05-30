@@ -1264,6 +1264,7 @@ class ImageWorker(Process):
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
         else:
+            tmpfile_name.unlink()
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
         write_img_elapsed_s = time.time() - write_img_start
@@ -1286,6 +1287,7 @@ class ImageWorker(Process):
         ### disable timelapse images in focus mode
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
+            tmpfile_name.unlink()
             return None, None
 
 

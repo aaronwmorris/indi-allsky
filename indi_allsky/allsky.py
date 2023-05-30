@@ -215,6 +215,10 @@ class IndiAllSky(object):
         self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 
+        # send new config to camera object
+        self.indiclient.updateConfig(self.config)
+
+
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])

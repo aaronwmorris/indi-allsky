@@ -3084,6 +3084,8 @@ class JsonFocusView(JsonView):
 
     def dispatch_request(self):
         zoom = int(request.args.get('zoom', 2))
+        x_offset = int(request.args.get('x_offset', 0))
+        y_offset = int(request.args.get('y_offset', 0))
 
         json_data = dict()
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
@@ -3102,10 +3104,10 @@ class JsonFocusView(JsonView):
         image_height, image_width = image_data.shape[:2]
 
         ### get ROI based on zoom
-        x1 = int((image_width / 2) - (image_width / zoom))
-        y1 = int((image_height / 2) - (image_height / zoom))
-        x2 = int((image_width / 2) + (image_width / zoom))
-        y2 = int((image_height / 2) + (image_height / zoom))
+        x1 = int((image_width / 2) - (image_width / zoom) + x_offset)
+        y1 = int((image_height / 2) - (image_height / zoom) - y_offset)
+        x2 = int((image_width / 2) + (image_width / zoom) + x_offset)
+        y2 = int((image_height / 2) + (image_height / zoom) - y_offset)
 
         image_roi = image_data[
             y1:y2,

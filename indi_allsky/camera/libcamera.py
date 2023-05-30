@@ -308,28 +308,73 @@ class IndiClientLibCameraGeneric(IndiClient):
             logger.error('Unable to parse libcamera sensor temperature')
 
 
-        ### Color correction matrix
-        #try:
-        #    ccm = metadata_dict[self._ccm_metadata_key]
-        #    self._ccm = [
-        #        [ccm[8], ccm[7], ccm[6]],
-        #        [ccm[5], ccm[4], ccm[3]],
-        #        [ccm[2], ccm[1], ccm[0]],
-        #    ]
-        #except KeyError:
-        #    logger.error('libcamera CCM key not found')
-        #except IndexError:
-        #    logger.error('Invalid CCM values')
-
-
         ### Auto white balance
-        #try:
-        #    awb_gains = metadata_dict[self._awb_gains_metadata_key]
-        #    self._awb_gains = [awb_gains[0], awb_gains[1]]
-        #except KeyError:
-        #    logger.error('libcamera sensor AWB key not found')
-        #except IndexError:
-        #    logger.error('Invalid color gain values')
+        # Only return these values when libcamera AWB is enabled
+        if self.night_v.value:
+            # night
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+                try:
+                    awb_gains = metadata_dict[self._awb_gains_metadata_key]
+                    self._awb_gains = [awb_gains[0], awb_gains[1]]
+                except KeyError:
+                    logger.error('libcamera sensor AWB key not found')
+                    self._awb_gains = None
+                except IndexError:
+                    logger.error('Invalid color gain values')
+                    self._awb_gains = None
+
+
+                ### Color correction matrix
+                #try:
+                #    ccm = metadata_dict[self._ccm_metadata_key]
+                #    self._ccm = [
+                #        [ccm[8], ccm[7], ccm[6]],
+                #        [ccm[5], ccm[4], ccm[3]],
+                #        [ccm[2], ccm[1], ccm[0]],
+                #    ]
+                #except KeyError:
+                #    logger.error('libcamera CCM key not found')
+                #    self._ccm = None
+                #except IndexError:
+                #    logger.error('Invalid CCM values')
+                #    self._ccm = None
+
+            else:
+                self._awb_gains = None
+                #self._ccm = None
+
+        else:
+            # day
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+                try:
+                    awb_gains = metadata_dict[self._awb_gains_metadata_key]
+                    self._awb_gains = [awb_gains[0], awb_gains[1]]
+                except KeyError:
+                    logger.error('libcamera sensor AWB key not found')
+                    self._awb_gains = None
+                except IndexError:
+                    logger.error('Invalid color gain values')
+                    self._awb_gains = None
+
+
+                ### Color correction matrix
+                #try:
+                #    ccm = metadata_dict[self._ccm_metadata_key]
+                #    self._ccm = [
+                #        [ccm[8], ccm[7], ccm[6]],
+                #        [ccm[5], ccm[4], ccm[3]],
+                #        [ccm[2], ccm[1], ccm[0]],
+                #    ]
+                #except KeyError:
+                #    logger.error('libcamera CCM key not found')
+                #    self._ccm = None
+                #except IndexError:
+                #    logger.error('Invalid CCM values')
+                #    self._ccm = None
+
+            else:
+                self._awb_gains = None
+                #self._ccm = None
 
 
         ### Black Level
@@ -338,8 +383,10 @@ class IndiClientLibCameraGeneric(IndiClient):
             self._black_level = black_level[0]  # Only going to use the first key for now
         except KeyError:
             logger.error('libcamera sensor black level key not found')
+            self._black_level = None
         except IndexError:
             logger.error('Invalid black level values')
+            self._black_level = None
 
 
 
@@ -385,7 +432,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
             'libcamera_black_level' : self._black_level,
-            #'libcamera_awb_gains'   : self._awb_gains,  # This has side effects
+            'libcamera_awb_gains'   : self._awb_gains,
             #'libcamera_ccm'         : self._ccm,
         }
 
