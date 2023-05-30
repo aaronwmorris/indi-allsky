@@ -44,6 +44,7 @@ function init() {
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 
+        //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
                                 centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
