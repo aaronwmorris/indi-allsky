@@ -92,6 +92,8 @@ class IndiAllSkyDarks(object):
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
 
+        self.night_v = Value('i', 1)  # bogus initial value
+
         # not used, but required
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
@@ -179,6 +181,7 @@ class IndiAllSkyDarks(object):
             self.dec_v,
             self.gain_v,
             self.bin_v,
+            self.night_v,
         )
 
         # set indi server localhost and port
