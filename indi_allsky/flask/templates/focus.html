@@ -134,7 +134,12 @@ function showImage(image_b64) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", {'zoom' : zoom}, function() {});
+    var data = {
+        'zoom' : zoom,
+        'x_offset' : $('#X_OFFSET').val(),
+        'y_offset' : $('#Y_OFFSET').val(),
+    }
+    loadJS("{{ url_for('indi_allsky.js_focus_view') }}", data, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -245,18 +250,22 @@ $( document ).ready(function() {
 <form id="form_focus" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
-            {{ form_focus.REFRESH_SELECT.label(class='col-form-label') }}
+            <div>{{ form_focus.REFRESH_SELECT.label(class='col-form-label') }}</div>
+            <div>{{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}</div>
         </div>
         <div class="col-sm-2">
-            {{ form_focus.REFRESH_SELECT(class='form-control bg-secondary') }}
+            <div>{{ form_focus.REFRESH_SELECT(class='form-control bg-secondary') }}</div>
+            <div>{{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}</div>
         </div>
         <div class="col-sm-1">
-            {{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}
+            <div>{{ form_focus.X_OFFSET.label(class='col-form-label') }}</div>
+            <div>{{ form_focus.Y_OFFSET.label(class='col-form-label') }}</div>
         </div>
         <div class="col-sm-2">
-            {{ form_focus.ZOOM_SELECT(class='form-control bg-secondary') }}
+            <div>{{ form_focus.X_OFFSET(class='form-control bg-secondary') }}</div>
+            <div>{{ form_focus.Y_OFFSET(class='form-control bg-secondary') }}</div>
         </div>
-        <div class="col-sm-2 offset-2 bg-dark">
+        <div class="col-sm-3 offset-1 bg-dark">
             <canvas id="focus-chart"></canvas>
         </div>
     </div>

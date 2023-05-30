@@ -3047,6 +3047,8 @@ class IndiAllskyFocusForm(FlaskForm):
 
     ZOOM_SELECT       = SelectField('Zoom', choices=ZOOM_SELECT_choices, default=ZOOM_SELECT_choices[0][0], validators=[])
     REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[3][0], validators=[])
+    X_OFFSET          = IntegerField('X Offset', default=0)
+    Y_OFFSET          = IntegerField('Y Offset', default=0)
 
 
 class IndiAllskyLogViewerForm(FlaskForm):
