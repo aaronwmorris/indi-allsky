@@ -3030,12 +3030,13 @@ class IndiAllskySetDateTimeForm(FlaskForm):
 class IndiAllskyFocusForm(FlaskForm):
     ZOOM_SELECT_choices = (
         (2, 'Off'),
-        (3, 'Low'),
-        (5, 'Medium'),
-        (8, 'High'),
-        (12, 'Extreme'),
-        (25, 'Ludicrous'),
-        (50, 'Plaid'),
+        (5, 'Low'),
+        (10, 'Medium'),
+        (20, 'High'),
+        (40, 'Extreme'),
+        (60, 'Ridiculous'),
+        (80, 'Ludicrous'),
+        (100, 'Plaid'),
     )
     REFRESH_SELECT_choices = (
         (2, '2s'),
