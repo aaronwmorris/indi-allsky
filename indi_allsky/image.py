@@ -736,11 +736,15 @@ class ImageWorker(Process):
             self.config['IMAGE_FILE_TYPE'],
         ]
 
+        now = datetime.now()
+
         file_data_dict = {
             'timestamp'    : i_ref['exp_date'],
             'ts'           : i_ref['exp_date'],  # shortcut
             'ext'          : self.config['IMAGE_FILE_TYPE'],
             'camera_uuid'  : camera.uuid,
+            'date'         : str(now.date()),
+            'night_date'   : str((now - timedelta(hours=12)).date()),
         }
 
 

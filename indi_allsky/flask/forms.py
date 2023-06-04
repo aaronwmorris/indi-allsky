@@ -1324,6 +1324,8 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
         'timestamp'  : datetime.now(),
         'ts'         : datetime.now(),
         'ext'        : 'jpg',
+        'date'       : '2000-01-01',
+        'night_date' : '2000-01-01',
     }
 
     try:
@@ -1344,6 +1346,8 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
     test_data = {
         'timestamp'  : datetime.now(),
         'ts'         : datetime.now(),
+        'date'       : '2000-01-01',
+        'night_date' : '2000-01-01',
     }
 
     try:
@@ -1364,6 +1368,8 @@ def REMOTE_FOLDER_validator(form, field):
     test_data = {
         'timestamp'  : datetime.now(),
         'ts'         : datetime.now(),
+        'date'       : '2000-01-01',
+        'night_date' : '2000-01-01',
     }
 
     try:
