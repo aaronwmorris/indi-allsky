@@ -514,9 +514,12 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         raise ValidationError('Invalid template data')
 
 
+    now = datetime.now()
+
     test_data = {
-        'timestamp'  : datetime.now(),
-        'ts'         : datetime.now(),
+        'timestamp'  : now,
+        'ts'         : now,
+        'day_date'   : now.date(),
         'exposure'   : 1.0,
         'rational_exp' : '',
         'gain'       : 1,
@@ -1321,11 +1324,14 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    now = datetime.now()
+
     test_list = ['jpg']
     test_data = {
-        'timestamp'  : datetime.now(),
-        'ts'         : datetime.now(),
+        'timestamp'  : now,
+        'ts'         : now,
         'ext'        : 'jpg',
+        'day_date'   : now.date(),
     }
 
     try:
@@ -1343,9 +1349,12 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    now = datetime.now()
+
     test_data = {
-        'timestamp'  : datetime.now(),
-        'ts'         : datetime.now(),
+        'timestamp'  : now,
+        'ts'         : now,
+        'day_date'   : now.date(),
     }
 
     try:
@@ -1363,9 +1372,12 @@ def REMOTE_FOLDER_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    now = datetime.now()
+
     test_data = {
-        'timestamp'  : datetime.now(),
-        'ts'         : datetime.now(),
+        'timestamp'  : now,
+        'ts'         : now,
+        'day_date'   : now.date(),
     }
 
     try:

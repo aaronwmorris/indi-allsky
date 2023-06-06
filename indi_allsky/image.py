@@ -736,11 +736,13 @@ class ImageWorker(Process):
             self.config['IMAGE_FILE_TYPE'],
         ]
 
+
         file_data_dict = {
             'timestamp'    : i_ref['exp_date'],
             'ts'           : i_ref['exp_date'],  # shortcut
             'ext'          : self.config['IMAGE_FILE_TYPE'],
             'camera_uuid'  : camera.uuid,
+            'day_date'     : i_ref['day_date'],
         }
 
 
@@ -1849,8 +1851,10 @@ class ImageProcessor(object):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
+            day_date = (exp_date - timedelta(hours=12)).date()
         else:
             target_adu = self.config['TARGET_ADU_DAY']
+            day_date = exp_date.date()
 
 
         image_data = {
@@ -1859,6 +1863,7 @@ class ImageProcessor(object):
             'exposure'         : exposure,
             'exp_date'         : exp_date,
             'exp_elapsed'      : exp_elapsed,
+            'day_date'         : day_date,
             'camera_id'        : camera.id,
             'camera_name'      : camera.name,
             'camera_uuid'      : camera.uuid,
@@ -2927,6 +2932,7 @@ class ImageProcessor(object):
             'timestamp'    : i_ref['exp_date'],
             'ts'           : i_ref['exp_date'],  # shortcut
             'exposure'     : i_ref['exposure'],
+            'day_date'     : i_ref['day_date'],
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
@@ -3165,6 +3171,7 @@ class ImageProcessor(object):
             'timestamp'    : i_ref['exp_date'],
             'ts'           : i_ref['exp_date'],  # shortcut
             'exposure'     : i_ref['exposure'],
+            'day_date'     : i_ref['day_date'],
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
             'temp'         : sensortemp,  # hershey fonts do not support degree symbol
