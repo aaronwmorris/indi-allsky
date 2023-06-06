@@ -626,6 +626,27 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         }
 
 
+class IndiClientLibCameraOv5647(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraOv5647, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_ov5647'
+        self.ccd_driver_exec = 'libcamera-still'
+
+        self.camera_info = {
+            'width'         : 2592,
+            'height'        : 1944,
+            'pixel'         : 1.4,
+            'min_gain'      : 1,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 6.0,
+            'cfa'           : 'BGGR',  # unverified
+            'bit_depth'     : 16,
+        }
+
+
 class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
@@ -641,7 +662,7 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
             'min_gain'      : 1,
             'max_gain'      : 16,
             'min_exposure'  : 0.0001,
-            'max_exposure'  : 200.0,
+            'max_exposure'  : 11.76,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -707,6 +728,27 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'min_exposure'  : 0.00003,
             'max_exposure'  : 112.0,
             'cfa'           : 'BGGR',  # untested
+            'bit_depth'     : 16,
+        }
+
+
+class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx296, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx296_gs'
+        self.ccd_driver_exec = 'libcamera-still'
+
+        self.camera_info = {
+            'width'         : 1456,
+            'height'        : 1088,
+            'pixel'         : 3.45,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # unverified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 15.5,
+            'cfa'           : None,  # mono
             'bit_depth'     : 16,
         }
 
