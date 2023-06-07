@@ -164,9 +164,7 @@ class TemplateView(BaseView):
         try:
             self.camera = self.getLatestCamera()
         except NoResultFound:
-            # -1 to setup a fake camera object
-            session['camera_id'] = -1
-            return
+            self.camera = FakeCamera()
 
         session['camera_id'] = self.camera.id
 
