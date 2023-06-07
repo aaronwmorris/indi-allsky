@@ -2,15 +2,15 @@
 # https://www.piwheels.org/project/astropy/
 astropy
 # https://www.piwheels.org/project/numpy/
-numpy<=1.24.2
+numpy >= 1.22, <= 1.24.3
 # https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless<=4.6.0.66
+opencv-python-headless <= 4.6.0.66
 # https://www.piwheels.org/project/scipy/
-scipy<=1.8.1
+scipy <= 1.8.1
 # https://www.piwheels.org/project/ccdproc/
 ccdproc
 # https://www.piwheels.org/project/scikit-image/
-scikit-image<=0.19.3
+scikit-image <= 0.19.3
 astroalign
 bottleneck
 python-dateutil

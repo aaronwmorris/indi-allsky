@@ -2,23 +2,23 @@
 # https://www.piwheels.org/project/astropy/
 astropy
 # https://www.piwheels.org/project/numpy/
-numpy<=1.21.4
+numpy <= 1.21.4
 # https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless<=4.6.0.66
+opencv-python-headless <= 4.6.0.66
 # https://www.piwheels.org/project/scipy/
-scipy<=1.7.3
+scipy <= 1.7.3
 # https://www.piwheels.org/project/ccdproc/
 # 2.4.0 requires astropy 5.0, not compatible with python 3.7
-ccdproc<=2.3.1
+ccdproc <= 2.3.1
 # https://www.piwheels.org/project/scikit-image/
-scikit-image<=0.19.3
+scikit-image <= 0.19.3
 astroalign
 bottleneck
 python-dateutil
 ephem
 paramiko
 # https://www.piwheels.org/project/pycurl/
-pycurl<=7.45.1
+pycurl <= 7.45.1
 # https://www.piwheels.org/project/Pillow/
 Pillow
 piexif
@@ -36,12 +36,12 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
 # https://www.piwheels.org/project/cryptography/
-cryptography<=37.0.4
+cryptography <= 37.0.4
 dbus-python
 paho-mqtt
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
-bcrypt<=3.2.2
+bcrypt <= 3.2.2
 passlib[argon2]
 flask-login
 is-safe-url
