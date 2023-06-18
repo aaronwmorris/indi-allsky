@@ -1,5 +1,5 @@
 
-FROM ubuntu:jammy as indi_base_pre
+FROM ubuntu:jammy as indi_base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -30,17 +30,6 @@ RUN apt-get -y install \
 
 # cleanup
 RUN apt-get clean
-
-
-# Base image
-
-FROM indi_base_pre as indi_base
-
-ENV DEBIAN_FRONTEND noninteractive
-
-USER root
-RUN apt-get update
-RUN apt-get -y upgrade
 
 
 ENV TZ=$INDIALLSKY_TIMEZONE

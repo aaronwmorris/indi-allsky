@@ -1,5 +1,8 @@
 
-FROM eclipse-mosquitto:2.0 as mosquitto_indi_allsky_pre
+FROM eclipse-mosquitto:2.0
+
+ARG MOSQUITTO_USER
+ARG MOSQUITTO_PASS
 
 
 USER root
@@ -11,15 +14,6 @@ RUN apk add --no-cache \
 
 RUN update-ca-certificates
 
-
-# Final
-
-FROM mosquitto_indi_allsky_pre
-
-ARG MOSQUITTO_USER
-ARG MOSQUITTO_PASS
-
-USER root
 
 RUN apk update
 RUN apk upgrade --no-cache

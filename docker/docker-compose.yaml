@@ -24,6 +24,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
+    depends_on:
+      - indi_base
     privileged: true
     ports:
       - "17624:7624"
@@ -34,6 +36,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky_base
     env_file: .env
+    depends_on:
+      - indi_base
     volumes:
       - images:/var/www/html/allsky
       #- migrations:/var/lib/indi-allsky
@@ -46,6 +50,7 @@ services:
     env_file: .env
     depends_on:
       - mariadb_indi_allsky
+      - indi_allsky_base
     volumes:
       - images:/var/www/html/allsky
       - migrations:/var/lib/indi-allsky
@@ -61,6 +66,7 @@ services:
     depends_on:
       - mariadb_indi_allsky
       - indiserver
+      - indi_allsky_base
     volumes:
       - images:/var/www/html/allsky
       #- migrations:/var/lib/indi-allsky
