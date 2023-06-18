@@ -91,8 +91,9 @@ cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
 
-# replace indiserver host
+# replace hosts
 INDI_SERVER=$(jq -r '.INDI_SERVER' "$TMP_CONFIG_DUMP")
+MQTTPUBLISH_HOST=$(jq -r '.MQTTPUBLISH.HOST' "$TMP_CONFIG_DUMP")
 
 
 # fix indi server hostname for docker
@@ -107,10 +108,23 @@ else
 fi
 
 
+# fix mqtt server hostname for docker
+if [ "$MQTTPUBLISH_HOST" == "localhost" ]; then
+    TMP_MQTTPUBLISH_HOST=$(mktemp --suffix=.json)
+    jq \
+     --arg mqttpublish_host "mosquitto_indi_allsky" \
+     '.MQTTPUBLISH.HOST = $mqttpublish_host' \
+     "$TMP_INDI_SERVER" > "$TMP_MQTTPUBLISH_HOST"
+else
+     TMP_MQTTPUBLISH_HOST="$TMP_INDI_SERVER"
+fi
+
+
 # load all changes
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_INDI_SERVER" --force
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_MQTTPUBLISH_HOST" --force
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 [[ -f "$TMP_INDI_SERVER" ]] && rm -f "$TMP_INDI_SERVER"
+[[ -f "$TMP_MQTTPUBLISH_HOST" ]] && rm -f "$TMP_MQTTPUBLISH_HOST"
 
 
 # start the program
