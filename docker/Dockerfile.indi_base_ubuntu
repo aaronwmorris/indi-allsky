@@ -9,6 +9,8 @@ RUN apt-get -y upgrade
 
 RUN apt-get -y install \
     software-properties-common \
+    iputils-ping \
+    bind9-host \
     apt-utils \
     locales \
     vim-tiny \
