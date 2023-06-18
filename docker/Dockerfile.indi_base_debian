@@ -25,7 +25,7 @@ RUN apt-get clean
 
 # Base image
 
-FROM indi_base_pre
+FROM indi_base_pre as indi_base
 
 ENV DEBIAN_FRONTEND noninteractive
 

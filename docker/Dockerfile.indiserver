@@ -1,5 +1,5 @@
 
-FROM docker_indi_base as indiserver_pre
+FROM docker-indi_base as indiserver_pre
 
 ENV DEBIAN_FRONTEND noninteractive
 
