@@ -19,7 +19,7 @@ services:
     #  - "13306:3306"
 
 
-  indiserver:
+  indiserver_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indiserver
@@ -58,14 +58,14 @@ services:
     #  - "8000:8000"
 
 
-  indi_allsky:
+  capture_indi_allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky
     env_file: .env
     depends_on:
       - mariadb_indi_allsky
-      - indiserver
+      - indiserver_indi_allsky
       - indi_allsky_base
     volumes:
       - images:/var/www/html/allsky
