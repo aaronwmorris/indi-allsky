@@ -84,7 +84,7 @@ def INDI_SERVER_validator(form, field):
     if not field.data:
         return
 
-    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
@@ -1169,7 +1169,7 @@ def FILETRANSFER__HOST_validator(form, field):
     if not field.data:
         return
 
-    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
@@ -1189,7 +1189,7 @@ def MQTTPUBLISH__HOST_validator(form, field):
     if not field.data:
         return
 
-    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
@@ -1480,7 +1480,7 @@ def S3UPLOAD__SECRET_KEY_validator(form, field):
 
 
 def S3UPLOAD__HOST_validator(form, field):
-    host_regex = r'^[a-zA-Z0-9\.\-]+$'
+    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
