@@ -80,8 +80,24 @@ services:
       - "8443:443"
 
 
+  mosquitto_indi_allsky:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mosquitto
+      args:
+        - MOSQUITTO_USER=${INDIALLSKY_MOSQUITTO_USER}
+        - MOSQUITTO_PASS=${INDIALLSKY_MOSQUITTO_PASS}
+    env_file: .env
+    volumes:
+      - mq_data:/mosquitto/data
+    ports:
+      - "18883:8883"
+      - "18081:8081"
+
+
 volumes:
   database:
   migrations:
   images:
+  mq_data:
 
