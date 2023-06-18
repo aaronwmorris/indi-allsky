@@ -1,0 +1,34 @@
+
+FROM eclipse-mosquitto:2.0 as mosquitto_indi_allsky_pre
+
+
+USER root
+
+RUN apk update
+RUN apk upgrade --no-cache
+RUN apk add --no-cache \
+    ca-certificates
+
+RUN update-ca-certificates
+
+
+# Final
+
+FROM mosquitto_indi_allsky_pre
+
+ARG MOSQUITTO_USER
+ARG MOSQUITTO_PASS
+
+USER root
+
+RUN apk update
+RUN apk upgrade --no-cache
+
+
+COPY docker/mosquitto.conf /mosquitto/config/mosquitto.conf
+COPY docker/ssl.crt /etc/ssl/certs/mosquitto.crt
+COPY docker/ssl.key /etc/ssl/private/mosquitto.key
+
+
+RUN mosquitto_passwd -b -c /mosquitto/passwd_file $MOSQUITTO_USER $MOSQUITTO_PASS
+
