@@ -14,7 +14,7 @@ services:
       dockerfile: docker/Dockerfile.mariadb
     env_file: .env
     volumes:
-      - database:/var/lib/mysql
+      - database_indi_allsky:/var/lib/mysql
     #ports:
     #  - "13306:3306"
 
@@ -39,8 +39,7 @@ services:
     depends_on:
       - indi_base
     volumes:
-      - images:/var/www/html/allsky
-      #- migrations:/var/lib/indi-allsky
+      - images_indi_allsky:/var/www/html/allsky
 
 
   gunicorn_indi_allsky:
@@ -52,8 +51,8 @@ services:
       - mariadb_indi_allsky
       - indi_allsky_base
     volumes:
-      - images:/var/www/html/allsky
-      - migrations:/var/lib/indi-allsky
+      - images_indi_allsky:/var/www/html/allsky
+      - migrations_indi_allsky:/var/lib/indi-allsky
     #ports:
     #  - "8000:8000"
 
@@ -68,8 +67,7 @@ services:
       - indiserver_indi_allsky
       - indi_allsky_base
     volumes:
-      - images:/var/www/html/allsky
-      #- migrations:/var/lib/indi-allsky
+      - images_indi_allsky:/var/www/html/allsky
 
 
   nginx_indi_allsky:
@@ -80,7 +78,7 @@ services:
     depends_on:
       - gunicorn_indi_allsky
     volumes:
-      - images:/var/www/html/allsky
+      - images_indi_allsky:/var/www/html/allsky
     ports:
       - "8080:80"
       - "8443:443"
@@ -95,15 +93,15 @@ services:
         - MOSQUITTO_PASS=${INDIALLSKY_MOSQUITTO_PASS}
     env_file: .env
     volumes:
-      - mq_data:/mosquitto/data
+      - mosquitto_data_indi_allsky:/mosquitto/data
     ports:
       - "18883:8883"
       - "18081:8081"
 
 
 volumes:
-  database:
-  migrations:
-  images:
-  mq_data:
+  database_indi_allsky:
+  migrations_indi_allsky:
+  images_indi_allsky:
+  mosquitto_data_indi_allsky:
 

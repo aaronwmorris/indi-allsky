@@ -56,12 +56,6 @@ RUN mkdir -m 750 /etc/indi-allsky
 RUN chown -R allsky:allsky /etc/indi-allsky
 
 
-# Moved to gunicorn container
-#RUN mkdir -m 750 /var/lib/indi-allsky
-#RUN chown -R allsky:allsky /var/lib/indi-allsky
-#VOLUME /var/lib/indi-allsky
-
-
 RUN mkdir -p -m 755 /var/www/html/allsky
 RUN chown -R allsky:allsky /var/www/html/allsky
 VOLUME /var/www/html/indi-allsky
