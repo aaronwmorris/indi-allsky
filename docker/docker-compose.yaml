@@ -60,7 +60,7 @@ services:
   capture_indi_allsky:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_allsky
+      dockerfile: docker/Dockerfile.capture
     env_file: .env
     depends_on:
       - mariadb_indi_allsky
