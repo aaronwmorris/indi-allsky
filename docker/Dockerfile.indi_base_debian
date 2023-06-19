@@ -1,5 +1,5 @@
 
-FROM debian:bullseye-slim as indi_base_pre
+FROM debian:bullseye-slim as indi.base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -21,17 +21,6 @@ RUN apt-get -y install \
 
 # cleanup
 RUN apt-get clean
-
-
-# Base image
-
-FROM indi_base_pre
-
-ENV DEBIAN_FRONTEND noninteractive
-
-USER root
-RUN apt-get update
-RUN apt-get -y upgrade
 
 
 ENV TZ=$INDIALLSKY_TIMEZONE

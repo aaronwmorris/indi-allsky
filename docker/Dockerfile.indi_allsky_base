@@ -1,5 +1,5 @@
 
-FROM docker_indi_base
+FROM docker-indi.base as indi.allsky.base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -54,12 +54,6 @@ RUN apt-get -y install \
 
 RUN mkdir -m 750 /etc/indi-allsky
 RUN chown -R allsky:allsky /etc/indi-allsky
-
-
-# Moved to gunicorn container
-#RUN mkdir -m 750 /var/lib/indi-allsky
-#RUN chown -R allsky:allsky /var/lib/indi-allsky
-#VOLUME /var/lib/indi-allsky
 
 
 RUN mkdir -p -m 755 /var/www/html/allsky
