@@ -28,10 +28,10 @@ imageio-ffmpeg
 cython
 rawpy
 pygifsicle
-gunicorn[gthread]
+gunicorn[gthread] >= 20.1.0
 inotify
 psutil
-Flask
+Flask >= 2.3.2
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF

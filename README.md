@@ -65,14 +65,15 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 | --------------------- | -------------- | ---- |
 | Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
-| Raspbian 10 (Legacy)  | armhf          | Indi installed from Astroberry (see note below) |
+| Raspbian 10 (Legacy)  | armhf          | (NOT RECOMMENDED) Indi installed from Astroberry (see note below) |
 | Armbian               | aarch64/armhf  | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
-| Debian 10             | x86_64         | Compile indi with build_indi.sh |
+| Debian 10             | x86_64         | (NOT RECOMMENDED) Compile indi with build_indi.sh |
 | Ubuntu 22.04          | aarch64        | Indi installed from ppa:mutlaqja/ppa |
+| Ubuntu 22.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04<br />inc. Ubuntu Mate | aarch64 | Compile indi with build_indi.sh |
-| Astroberry Server 2.0 | armhf          | Astroberry is supported, but deprecated, since the project appears to be abandoned |
+| Astroberry Server 2.0 | armhf          | (NOT RECOMMENDED) Astroberry is supported, but deprecated, since the project appears to be abandoned |
 
 MacOS support is theoretically possible, but not tested.
 
@@ -336,13 +337,13 @@ The hardware below has at least been plugged in and tested for correct detection
 | Vendor   | Model               | Rating | Notes |
 | -------- | ------------------- | ------ | ----- |
 | ZWO      | ASI120MC-S          | B      | https://github.com/aaronwmorris/indi-allsky/wiki/ASI120MC-S-Camera-Issues |
-| ZWO      | ASI290MM            | A      |       |
-| ZWO      | ASI178MM            | A      |       |
-| ZWO      | ASI178MC            | A      |       |
+| ZWO      | ASI678MC            | A      |       |
+| ZWO      | ASI178MC/MM         | A      |       |
+| ZWO      | ASI290MC/MM         | A      |       |
 | ZWO      | ASI385MC            | A      |       |
-| ZWO      | ASI071MC Pro        | A      |       |
-| ZWO      | ASI183MM Pro        | A      |       |
-| ZWO      | ASI183MC Pro        | A      |       |
+| ZWO      | ASI183MC/MM         | A      |       |
+| ZWO      | ASI071MC            | A      |       |
+| QHY      | QHY5III485C         | A      | Needs newer [fxload](https://github.com/aaronwmorris/indi-allsky/wiki/Build-fxload-for-USB3-support) utility for firmware |
 | QHY      | QHY5LII-M           | A      |       |
 | Svbony   | SV305               | B      | ~20% of frames require double the configured exposure time to complete. Likely a firmware bug. |
 | Altair   | Hypercam 178C       | A      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config#altair-hypercam-178c) for full resolution |
@@ -421,19 +422,23 @@ Please let me know if you want to make an addition or correction.
 
 * Thomas Jacquin's Allsky
     * Free, Open source
-    * Linux, SoC
+    * Linux, SBC
     * https://github.com/thomasjacquin/allsky
 * AllSkEye
     * Free version, Commercial option
     * Windows
     * https://allskeye.com/
+* frankAllSkyCam
+    * Free, Open source
+    * Linux, SBC
+    * https://github.com/sferlix/frankAllSkyCam
 * RPi Meteor Station
     * Free, Open source
-    * Linux, SoC
+    * Linux, SBC
     * https://github.com/CroatianMeteorNetwork/RMS
 * Meteotux Pi
     * Free version, Commercial option
-    * Linux, SoC
+    * Linux, SBC
     * https://www.meteotuxpi.com/
 * UFOCapture
     * Shareware, Commercial option
