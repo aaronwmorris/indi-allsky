@@ -26,14 +26,18 @@ imageio-ffmpeg
 # https://www.piwheels.org/project/imagecodecs/
 #imagecodecs
 cython
+#rawpy  # installed later
 pygifsicle
 gunicorn[gthread] >= 20.1.0
 inotify
 psutil
 Flask >= 2.3.2
-Flask-SQLAlchemy
-Flask-Migrate
-Flask-WTF
+Flask-SQLAlchemy >= 3.0.4
+Flask-Migrate >= 4.0.4
+# needs at least 1.1.1 for flask 2.3
+Flask-WTF >= 1.1.1
+flask-login >= 0.6.2
+is-safe-url
 # https://www.piwheels.org/project/cryptography/
 cryptography
 dbus-python
@@ -42,8 +46,6 @@ setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
 bcrypt
 passlib[argon2]
-flask-login
-is-safe-url
 prettytable
 mysql-connector-python
 PyMySQL
