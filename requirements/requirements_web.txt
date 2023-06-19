@@ -24,6 +24,7 @@ Flask-Migrate >= 4.0.4
 Flask-WTF >= 1.1.1
 flask-login >= 0.6.2
 is-safe-url
+certifi >= 2023.5.7
 # https://www.wheelodex.org/projects/cryptography/
 cryptography
 dbus-python
