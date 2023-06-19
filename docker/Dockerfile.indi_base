@@ -1,5 +1,5 @@
 
-FROM ubuntu:jammy as indi_base
+FROM ubuntu:jammy as indi.base
 
 ENV DEBIAN_FRONTEND noninteractive
 

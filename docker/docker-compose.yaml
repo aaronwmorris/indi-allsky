@@ -1,14 +1,14 @@
 version: "3"
 
 services:
-  indi_base:
+  indi.base:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_base
     env_file: .env
 
 
-  mariadb_indi_allsky:
+  mariadb.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.mariadb
@@ -19,37 +19,37 @@ services:
     #  - "13306:3306"
 
 
-  indiserver_indi_allsky:
+  indiserver.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indiserver
     env_file: .env
     depends_on:
-      - indi_base
+      - indi.base
     privileged: true
     ports:
       - "17624:7624"
 
 
-  indi_allsky_base:
+  indi.allsky.base:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_allsky_base
     env_file: .env
     depends_on:
-      - indi_base
+      - indi.base
     volumes:
       - images_indi_allsky:/var/www/html/allsky
 
 
-  gunicorn_indi_allsky:
+  gunicorn.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
     env_file: .env
     depends_on:
-      - mariadb_indi_allsky
-      - indi_allsky_base
+      - mariadb.indi.allsky
+      - indi.allsky.base
     volumes:
       - images_indi_allsky:/var/www/html/allsky
       - migrations_indi_allsky:/var/lib/indi-allsky
@@ -57,26 +57,26 @@ services:
     #  - "8000:8000"
 
 
-  capture_indi_allsky:
+  capture.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.capture
     env_file: .env
     depends_on:
-      - mariadb_indi_allsky
-      - indiserver_indi_allsky
-      - indi_allsky_base
+      - mariadb.indi.allsky
+      - indiserver.indi.allsky
+      - indi.allsky.base
     volumes:
       - images_indi_allsky:/var/www/html/allsky
 
 
-  nginx_indi_allsky:
+  nginx.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nginx
     env_file: .env
     depends_on:
-      - gunicorn_indi_allsky
+      - gunicorn.indi.allsky
     volumes:
       - images_indi_allsky:/var/www/html/allsky
     ports:
@@ -84,7 +84,7 @@ services:
       - "8443:443"
 
 
-  mosquitto_indi_allsky:
+  mosquitto.indi.allsky:
     build:
       context: ..
       dockerfile: docker/Dockerfile.mosquitto

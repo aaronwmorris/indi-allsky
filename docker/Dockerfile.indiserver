@@ -1,5 +1,5 @@
 
-FROM docker-indi_base
+FROM docker-indi.base
 
 ENV DEBIAN_FRONTEND noninteractive
 

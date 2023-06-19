@@ -100,7 +100,7 @@ MQTTPUBLISH_HOST=$(jq -r '.MQTTPUBLISH.HOST' "$TMP_CONFIG_DUMP")
 if [ "$INDI_SERVER" == "localhost" ]; then
     TMP_INDI_SERVER=$(mktemp --suffix=.json)
     jq \
-     --arg indi_server "indiserver_indi_allsky" \
+     --arg indi_server "indiserver.indi.allsky" \
      '.INDI_SERVER = $indi_server' \
      "$TMP_CONFIG_DUMP" > "$TMP_INDI_SERVER"
 else
@@ -112,7 +112,7 @@ fi
 if [ "$MQTTPUBLISH_HOST" == "localhost" ]; then
     TMP_MQTTPUBLISH_HOST=$(mktemp --suffix=.json)
     jq \
-     --arg mqttpublish_host "mosquitto_indi_allsky" \
+     --arg mqttpublish_host "mosquitto.indi.allsky" \
      '.MQTTPUBLISH.HOST = $mqttpublish_host' \
      "$TMP_INDI_SERVER" > "$TMP_MQTTPUBLISH_HOST"
 else

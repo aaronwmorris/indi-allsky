@@ -1,5 +1,5 @@
 
-FROM debian:bullseye-slim as indi_base
+FROM debian:bullseye-slim as indi.base
 
 ENV DEBIAN_FRONTEND noninteractive
 
