@@ -16,7 +16,7 @@ astropy
 # https://www.piwheels.org/project/numpy/
 numpy <= 1.21.4
 # https://www.piwheels.org/project/opencv-python-headless/
-opencv-python-headless <= 4.6.0.66
+opencv-python-headless
 # https://www.piwheels.org/project/scipy/
 scipy <= 1.7.3
 # https://www.piwheels.org/project/ccdproc/
@@ -30,7 +30,7 @@ python-dateutil
 ephem
 paramiko
 # https://www.piwheels.org/project/pycurl/
-pycurl <= 7.45.1
+pycurl
 # https://www.piwheels.org/project/Pillow/
 Pillow
 piexif
@@ -40,7 +40,7 @@ imageio-ffmpeg
 #imagecodecs
 #rawpy  # not needed
 pygifsicle
-gunicorn[gthread]
+gunicorn[gthread] >= 20.1.0
 inotify
 psutil
 # Last version supporting Python 3.7
@@ -49,12 +49,12 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
 # https://www.piwheels.org/project/cryptography/
-cryptography <= 37.0.4
+cryptography <= 40.0.1
 dbus-python
 paho-mqtt
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
-bcrypt <= 3.2.2
+bcrypt
 passlib[argon2]
 flask-login
 is-safe-url

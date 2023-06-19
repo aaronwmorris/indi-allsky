@@ -14,10 +14,10 @@ ephem
 paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
-gunicorn[gthread]
+gunicorn[gthread] >= 20.1.0
 inotify
 psutil
-Flask
+Flask >= 2.3.2
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
