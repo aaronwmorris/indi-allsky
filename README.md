@@ -422,19 +422,23 @@ Please let me know if you want to make an addition or correction.
 
 * Thomas Jacquin's Allsky
     * Free, Open source
-    * Linux, SoC
+    * Linux, SBC
     * https://github.com/thomasjacquin/allsky
 * AllSkEye
     * Free version, Commercial option
     * Windows
     * https://allskeye.com/
+* frankAllSkyCam
+    * Free, Open source
+    * Linux, SBC
+    * https://github.com/sferlix/frankAllSkyCam
 * RPi Meteor Station
     * Free, Open source
-    * Linux, SoC
+    * Linux, SBC
     * https://github.com/CroatianMeteorNetwork/RMS
 * Meteotux Pi
     * Free version, Commercial option
-    * Linux, SoC
+    * Linux, SBC
     * https://www.meteotuxpi.com/
 * UFOCapture
     * Shareware, Commercial option
