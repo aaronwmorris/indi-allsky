@@ -43,7 +43,8 @@ pygifsicle
 gunicorn[gthread]
 inotify
 psutil
-Flask
+# Last version supporting Python 3.7
+Flask == 2.2.5
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
