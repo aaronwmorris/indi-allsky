@@ -25,7 +25,7 @@ class miscUpload(object):
         self.upload_q = upload_q
 
 
-    def upload_image(self, i_ref, image_entry, camera):
+    def upload_image(self, image_entry):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
@@ -51,11 +51,11 @@ class miscUpload(object):
 
 
         file_data_dict = {
-            'timestamp'    : i_ref['exp_date'],
-            'ts'           : i_ref['exp_date'],  # shortcut
+            'timestamp'    : image_entry.createDate,
+            'ts'           : image_entry.createDate,  # shortcut
             'ext'          : self.config['IMAGE_FILE_TYPE'],
-            'camera_uuid'  : camera.uuid,
-            'day_date'     : i_ref['day_date'],
+            'camera_uuid'  : image_entry.camera.uuid,
+            'day_date'     : image_entry.dayDate,
         }
 
 
@@ -87,7 +87,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_video(self, video_entry, camera):
+    def upload_video(self, video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -100,7 +100,7 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
+            'camera_uuid'  : video_entry.camera.uuid,
         }
 
 
@@ -130,7 +130,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_keogram(self, keogram_entry, camera):
+    def upload_keogram(self, keogram_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -143,7 +143,7 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
+            'camera_uuid'  : keogram_entry.camera.uuid,
         }
 
 
@@ -174,7 +174,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrail(self, startrail_entry, camera):
+    def upload_startrail(self, startrail_entry):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -186,7 +186,7 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
+            'camera_uuid'  : startrail_entry.camera.uuid,
         }
 
 
@@ -217,7 +217,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrailvideo(self, startrail_video_entry, camera):
+    def upload_startrailvideo(self, startrail_video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             logger.warning('Startrail video uploading disabled')
@@ -230,7 +230,7 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
+            'camera_uuid'  : startrail_video_entry.camera.uuid,
         }
 
 

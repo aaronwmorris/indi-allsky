@@ -701,7 +701,7 @@ class ImageWorker(Process):
             self._miscUpload.s3_upload_image(image_entry, image_metadata)
             self._miscUpload.syncapi_image(image_entry, image_metadata)
             self._miscUpload.mqtt_publish_image(upload_filename, mqtt_data)
-            self._miscUpload.upload_image(i_ref, image_entry, camera)
+            self._miscUpload.upload_image(image_entry)
 
             self.upload_metadata(i_ref, image_entry, adu, adu_average)
 

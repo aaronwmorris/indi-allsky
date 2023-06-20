@@ -91,6 +91,28 @@ class UploadSync(object):
         next_check_time = time.time()  # start immediately
 
 
+        with app.app_context():
+            status_dict = self._get_entry_status()
+            self._report(status_dict)
+
+
+            # populate individual entries
+            upload_list = list()
+            for entry_type in status_dict.keys():
+                for table, data in status_dict[entry_type].items():
+                    if not data:
+                        continue
+
+                    for entry in data[1]:
+                        upload_list.append({
+                            'entry_type' : entry_type,
+                            'table'      : table,
+                            'entry'      : entry,
+                        })
+
+            logger.info('Entries to upload: %d', len(upload_list))
+
+
         while True:
             loop_start_time = time.time()
 
@@ -99,6 +121,10 @@ class UploadSync(object):
                 logger.warning('Shutting down')
                 self._stopFileUploadWorkers(terminate=self._terminate)
                 sys.exit()
+
+
+            if self.upload_q.qsize() < 10:
+                self.addUploadEntries(upload_list)
 
 
             # do *NOT* start workers inside of a flask context
@@ -114,17 +140,34 @@ class UploadSync(object):
 
 
 
+    def addUploadEntries(self, upload_list):
+        new_uploads = upload_list[:100]
+        del upload_list[:100]
+
+        logger.info('Adding %d upload entries (%d remaining)', len(new_uploads), len(upload_list))
+
+
+        for x in new_uploads:
+            if x['entry_type'] == 'upload':
+                pass
+            elif x['entry_type'] == 's3':
+                pass
+            elif x['entry_type'] == 'syncapi':
+                pass
+            else:
+                raise Exception('Unknown type: {0:s}'.format(x['entry_type']))
+
 
     def report(self):
         with app.app_context():
-            self._report()
+            status_dict = self._get_entry_status()
+
+            self._report(status_dict)
 
 
-    def _report(self):
+    def _report(self, status_dict):
         ptable = PrettyTable()
         ptable.field_names = ['Type', 'Table', 'Uploaded', 'Missing']
-
-        status_dict = self._get_entry_status()
 
         for entry_type in status_dict.keys():
             for table, data in status_dict[entry_type].items():
