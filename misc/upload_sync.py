@@ -72,7 +72,7 @@ class UploadSync(object):
         self.upload_worker_idx = 0
 
 
-        for x in range(self.config.get('UPLOAD_WORKERS', 1)):
+        for x in range(self.threads):
             self.upload_worker_list.append({
                 'worker'  : None,
                 'error_q' : Queue(),
