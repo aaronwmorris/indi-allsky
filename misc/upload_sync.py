@@ -173,8 +173,8 @@ class UploadSync(object):
             raise NoUploadsAvailable
 
 
-        new_uploads = upload_list[:100]
-        del upload_list[:100]
+        new_uploads = upload_list[:20]
+        del upload_list[:20]
 
         logger.info('Adding %d upload entries (%d remaining)', len(new_uploads), len(upload_list))
 
