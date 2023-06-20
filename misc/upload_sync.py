@@ -21,6 +21,7 @@ from multiprocessing import Queue
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 
+from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
@@ -462,10 +463,14 @@ class UploadSync(object):
     def _get_uploaded(self, table, mod, state=True):
         if state:
             uploaded = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_true())\
                 .filter(table.id % mod == 0)
         else:
             uploaded = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_false())\
                 .filter(table.id % mod == 0)
 
@@ -475,9 +480,13 @@ class UploadSync(object):
     def _get_s3(self, table, state=True):
         if state:
             s3 = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key != sa_null())
         else:
             s3 = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key == sa_null())
 
         return s3
@@ -486,10 +495,14 @@ class UploadSync(object):
     def _get_syncapi(self, table, mod, state=True):
         if state:
             syncapi = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id != sa_null())\
                 .filter(table.id % mod == 0)
         else:
             syncapi = table.query\
+                .join(table.camera)\
+                .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id == sa_null())\
                 .filter(table.id % mod == 0)
 
