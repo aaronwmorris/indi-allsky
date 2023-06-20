@@ -87,7 +87,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_video(self, video_entry, video_file, camera):
+    def upload_video(self, video_entry, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             logger.warning('Video uploading disabled')
@@ -107,8 +107,8 @@ class miscUpload(object):
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'].format(**file_data_dict)
 
-
-        remote_file_p = Path(remote_dir).joinpath(video_file.name)
+        video_file_p = Path(video_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(video_file_p.name)
 
         # tell worker to upload file
         jobdata = {
@@ -130,7 +130,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_keogram(self, keogram_entry, keogram_file, camera):
+    def upload_keogram(self, keogram_entry, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             logger.warning('Keogram uploading disabled')
@@ -151,7 +151,8 @@ class miscUpload(object):
         remote_dir = self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'].format(**file_data_dict)
 
 
-        remote_file_p = Path(remote_dir).joinpath(keogram_file.name)
+        keogram_file_p = Path(keogram_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(keogram_file_p.name)
 
 
         # tell worker to upload file
@@ -173,7 +174,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrail(self, startrail_entry, startrail_file, camera):
+    def upload_startrail(self, startrail_entry, camera):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
             logger.warning('Star trail uploading disabled')
             return
@@ -193,7 +194,8 @@ class miscUpload(object):
         remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'].format(**file_data_dict)
 
 
-        remote_file_p = Path(remote_dir).joinpath(startrail_file.name)
+        startrail_file_p = Path(startrail_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(startrail_file_p.name)
 
 
         # tell worker to upload file
@@ -215,7 +217,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrailvideo(self, startrail_video_entry, startrail_video_file, camera):
+    def upload_startrailvideo(self, startrail_video_entry, camera):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             logger.warning('Startrail video uploading disabled')
@@ -236,7 +238,8 @@ class miscUpload(object):
         remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'].format(**file_data_dict)
 
 
-        remote_file_p = Path(remote_dir).joinpath(startrail_video_file.name)
+        startrail_video_file_p = Path(startrail_video_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(startrail_video_file_p.name)
 
         # tell worker to upload file
         jobdata = {
