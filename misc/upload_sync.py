@@ -11,7 +11,7 @@ import signal
 import logging
 
 from sqlalchemy.orm.exc import NoResultFound
-#from sqlalchemy.sql.expression import true as sa_true
+from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
 
@@ -128,54 +128,74 @@ class UploadSync(object):
         # upload
         upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
         if upload_image:
-            not_uploaded_images = self._get_not_uploaded(IndiAllSkyDbImageTable, upload_image)
-            logger.warning('Images not uploaded: %d', not_uploaded_images.count())
+            not_uploaded_images = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+            logger.warning('%s not uploaded: %d', IndiAllSkyDbImageTable.__name__, not_uploaded_images.count())
         else:
-            logger.info('Image uploading disabled')
+            logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+
+
+        upload_table_list = [
+            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
+            [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
+            [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
+        ]
+
+        for table in upload_table_list:
+            upload = self.config.get('FILETRANSFER', {}).get(table[1])
+            if upload:
+                not_uploaded = self._get_uploaded(table[0], 1, state=False)
+                logger.warning('%s not uploaded: %d', table[0].__name__, not_uploaded.count())
+            else:
+                logger.info('%s uploading disabled', table[0].__name__)
+
+
 
 
         # s3
-        if self.config.get('S3UPLOAD', {}).get('ENABLE'):
-            not_s3_images = self._get_not_s3(IndiAllSkyDbImageTable)
-            logger.warning('Images not in S3: %d', not_s3_images.count())
-        else:
-            logger.info('S3 uploading disabled')
+        s3_table_list = [
+            IndiAllSkyDbImageTable,
+            IndiAllSkyDbVideoTable,
+            IndiAllSkyDbKeogramTable,
+            IndiAllSkyDbStarTrailsTable,
+            IndiAllSkyDbStarTrailsVideoTable,
+        ]
+        for table in s3_table_list:
+            # s3
+            if self.config.get('S3UPLOAD', {}).get('ENABLE'):
+                not_s3_entries = self._get_s3(table, state=False)
+                logger.warning('%s not in S3: %d', table.__name__, not_s3_entries.count())
+            else:
+                logger.info('S3 uploading disabled (%s)', table.__name__)
+
+
 
 
         # syncapi
         if self.config.get('SYNCAPI', {}).get('ENABLE'):
             syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
             if syncapi_image:
-                not_syncapi_images = self._get_not_syncapi(IndiAllSkyDbImageTable, syncapi_image)
+                not_syncapi_images = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
                 logger.warning('Images not synced: %d', not_syncapi_images.count())
             else:
-                logger.info('Image syncing disabled')
+                logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
         else:
-            logger.info('Image syncapi disabled')
+            logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
 
 
 
-        table_list = [
+        syncapi_table_list = [
             IndiAllSkyDbVideoTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
         ]
-        for table in table_list:
-            # s3
-            if self.config.get('S3UPLOAD', {}).get('ENABLE'):
-                not_s3_entries = self._get_not_s3(table)
-                logger.warning('%s not in S3: %d', table.__name__, not_s3_entries.count())
-            else:
-                logger.info('S3 uploading disabled')
-
-
+        for table in syncapi_table_list:
             if self.config.get('SYNCAPI', {}).get('ENABLE'):
-                not_syncapi_entries = self._get_not_syncapi(table, 1)
+                not_syncapi_entries = self._get_syncapi(table, 1, state=False)
                 logger.warning('%s not synced: %d', table.__name__, not_syncapi_entries.count())
             else:
-                logger.info('syncapi disabled')
-
+                logger.info('syncapi disabled (%s)', table.__name__)
 
 
 
@@ -183,27 +203,41 @@ class UploadSync(object):
         #print(table)
 
 
-    def _get_not_uploaded(self, table, mod):
-        not_uploaded = table.query\
-            .filter(table.uploaded == sa_false())\
-            .filter(table.id % mod == 0)
+    def _get_uploaded(self, table, mod, state=True):
+        if state:
+            uploaded = table.query\
+                .filter(table.uploaded == sa_true())\
+                .filter(table.id % mod == 0)
+        else:
+            uploaded = table.query\
+                .filter(table.uploaded == sa_false())\
+                .filter(table.id % mod == 0)
 
-        return not_uploaded
-
-
-    def _get_not_s3(self, table):
-        not_s3 = table.query\
-            .filter(table.s3_key == sa_null())
-
-        return not_s3
+        return uploaded
 
 
-    def _get_not_syncapi(self, table, mod):
-        not_syncapi = table.query\
-            .filter(table.sync_id == sa_null())\
-            .filter(table.id % mod == 0)
+    def _get_s3(self, table, state=True):
+        if state:
+            s3 = table.query\
+                .filter(table.s3_key != sa_null())
+        else:
+            s3 = table.query\
+                .filter(table.s3_key == sa_null())
 
-        return not_syncapi
+        return s3
+
+
+    def _get_syncapi(self, table, mod, state=True):
+        if state:
+            syncapi = table.query\
+                .filter(table.sync_id != sa_null())\
+                .filter(table.id % mod == 0)
+        else:
+            syncapi = table.query\
+                .filter(table.sync_id == sa_null())\
+                .filter(table.id % mod == 0)
+
+        return syncapi
 
 
 
