@@ -31,6 +31,7 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask import create_app
 from indi_allsky.uploader import FileUploader
+from indi_allsky.miscUpload import miscUpload
 
 
 logger = logging.getLogger('indi_allsky')
@@ -72,6 +73,9 @@ class UploadSync(object):
                 'worker'  : None,
                 'error_q' : Queue(),
             })
+
+
+        self._miscUpload = miscUpload(self.config, self.upload_q)
 
 
         self._shutdown = False
@@ -123,7 +127,7 @@ class UploadSync(object):
                 sys.exit()
 
 
-            if self.upload_q.qsize() < 10:
+            if self.upload_q.qsize() == 0:
                 self.addUploadEntries(upload_list)
 
 
@@ -149,13 +153,49 @@ class UploadSync(object):
 
         for x in new_uploads:
             if x['entry_type'] == 'upload':
-                pass
+                if isinstance(x['table'], IndiAllSkyDbImageTable):
+                    self._uploadMisc.upload_image(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
+                    self._uploadMisc.upload_video(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
+                    self._uploadMisc.upload_keogram(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
+                    self._uploadMisc.upload_startrail(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
+                    self._uploadMisc.upload_startrailvideo(x['entry'])
+                else:
+                    logger.error('Unknown table: %s', x['table'].__name__)
+
             elif x['entry_type'] == 's3':
-                pass
+                if isinstance(x['table'], IndiAllSkyDbImageTable):
+                    self._uploadMisc.s3_upload_image(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
+                    self._uploadMisc.s3_upload_video(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
+                    self._uploadMisc.s3_upload_keogram(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
+                    self._uploadMisc.s3_upload_startrail(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
+                    self._uploadMisc.s3_upload_startrailvideo(x['entry'])
+                else:
+                    logger.error('Unknown table: %s', x['table'].__name__)
+
             elif x['entry_type'] == 'syncapi':
-                pass
+                if isinstance(x['table'], IndiAllSkyDbImageTable):
+                    self._uploadMisc.syncapi_image(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
+                    self._uploadMisc.syncapi_video(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
+                    self._uploadMisc.syncapi_keogram(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
+                    self._uploadMisc.syncapi_startrail(x['entry'])
+                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
+                    self._uploadMisc.syncapi_startrailvideo(x['entry'])
+                else:
+                    logger.error('Unknown table: %s', x['table'].__name__)
+
             else:
-                raise Exception('Unknown type: {0:s}'.format(x['entry_type']))
+                logger.error('Unknown type: %s', x['entry_type'])
 
 
     def report(self):

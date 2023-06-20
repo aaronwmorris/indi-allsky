@@ -351,6 +351,18 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
+    def s3_upload_keogram(self, *args):
+        self.s3_upload_video(*args)
+
+
+    def s3_upload_startrail(self, *args):
+        self.s3_upload_video(*args)
+
+
+    def s3_upload_startrail_video(self, *args):
+        self.s3_upload_video(*args)
+
+
     def syncapi_image(self, asset_entry, asset_metadata):
         ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
@@ -432,6 +444,14 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def syncapi_keogram(self, *args):
+        self.syncapi_video(*args)
 
 
+    def syncapi_startrail(self, *args):
+        self.syncapi_video(*args)
+
+
+    def syncapi_startrailvideo(self, *args):
+        self.syncapi_video(*args)
 

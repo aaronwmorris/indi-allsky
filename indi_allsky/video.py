@@ -577,8 +577,8 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._miscUpload.s3_upload_video(keogram_entry, keogram_metadata)
-                self._miscUpload.syncapi_video(keogram_entry, keogram_metadata)
+                self._miscUpload.s3_upload_keogram(keogram_entry, keogram_metadata)
+                self._miscUpload.syncapi_keogram(keogram_entry, keogram_metadata)
                 self._miscUpload.upload_keogram(keogram_entry)
             else:
                 keogram_entry.success = False
@@ -587,8 +587,8 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._miscUpload.s3_upload_video(startrail_entry, startrail_metadata)
-                self._miscUpload.syncapi_video(startrail_entry, startrail_metadata)
+                self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
+                self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)
                 self._miscUpload.upload_startrail(startrail_entry)
             else:
                 startrail_entry.success = False
@@ -597,8 +597,8 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._miscUpload.s3_upload_video(startrail_video_entry, startrail_video_metadata)
-                self._miscUpload.syncapi_video(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.s3_upload_startrailvideo(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.syncapi_startrailvideo(startrail_video_entry, startrail_video_metadata)
                 self._miscUpload.upload_startrailvideo(startrail_video_entry)
             else:
                 # success flag set above
