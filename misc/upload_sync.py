@@ -374,17 +374,6 @@ class UploadSync(object):
         }
 
         # upload
-        if self.upload_images:
-            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
-            if upload_image:
-                uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
-                not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
-                status_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
-            else:
-                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
-                status_dict['upload'][IndiAllSkyDbImageTable] = None
-
-
         upload_table_list = [
             [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
             [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
@@ -403,15 +392,25 @@ class UploadSync(object):
                 status_dict['upload'][table[0]] = None
 
 
+        if self.upload_images:
+            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
+            if upload_image:
+                uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
+                not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+                status_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
+            else:
+                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbImageTable] = None
+
 
 
         # s3
         s3_table_list = [
-            IndiAllSkyDbImageTable,
             IndiAllSkyDbVideoTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
+            IndiAllSkyDbImageTable,
         ]
         for table in s3_table_list:
             # s3
@@ -427,21 +426,6 @@ class UploadSync(object):
 
 
         # syncapi
-        if self.config.get('SYNCAPI', {}).get('ENABLE'):
-            syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
-            if syncapi_image:
-                syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
-                not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
-                status_dict['syncapi'][IndiAllSkyDbImageTable] = [syncapi_entries, not_syncapi_entries]
-            else:
-                logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
-                status_dict['syncapi'][IndiAllSkyDbImageTable] = None
-        else:
-            logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
-            status_dict['syncapi'][IndiAllSkyDbImageTable] = None
-
-
-
         syncapi_table_list = [
             IndiAllSkyDbVideoTable,
             IndiAllSkyDbKeogramTable,
@@ -456,6 +440,20 @@ class UploadSync(object):
             else:
                 logger.info('syncapi disabled (%s)', table.__name__)
                 status_dict['syncapi'][table] = None
+
+
+        if self.config.get('SYNCAPI', {}).get('ENABLE'):
+            syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
+            if syncapi_image:
+                syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
+                not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
+                status_dict['syncapi'][IndiAllSkyDbImageTable] = [syncapi_entries, not_syncapi_entries]
+            else:
+                logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+                status_dict['syncapi'][IndiAllSkyDbImageTable] = None
+        else:
+            logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+            status_dict['syncapi'][IndiAllSkyDbImageTable] = None
 
 
         return status_dict
