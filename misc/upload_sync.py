@@ -111,7 +111,7 @@ class UploadSync(object):
                         upload_list.append({
                             'upload_type' : upload_type,
                             'table'       : table,
-                            'entry'       : entry,
+                            'entry_id'    : entry.id,  # cannot pass entries to different session
                         })
 
             logger.info('Entries to upload: %d', len(upload_list))
@@ -161,45 +161,49 @@ class UploadSync(object):
 
 
         for x in new_uploads:
+            # cannot use entry from different session
+            entry = x['table'].query\
+                .filter(x['table'].id == x['entry_id']).one()
+
             if x['upload_type'] == 'upload':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
-                    self._miscUpload.upload_image(x['entry'])
+                    self._miscUpload.upload_image(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
-                    self._miscUpload.upload_video(x['entry'])
+                    self._miscUpload.upload_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
-                    self._miscUpload.upload_keogram(x['entry'])
+                    self._miscUpload.upload_keogram(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
-                    self._miscUpload.upload_startrail(x['entry'])
+                    self._miscUpload.upload_startrail(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
-                    self._miscUpload.upload_startrailvideo(x['entry'])
+                    self._miscUpload.upload_startrailvideo(entry)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             elif x['upload_type'] == 's3':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
-                    self._miscUpload.s3_upload_image(x['entry'])
+                    self._miscUpload.s3_upload_image(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
-                    self._miscUpload.s3_upload_video(x['entry'])
+                    self._miscUpload.s3_upload_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
-                    self._miscUpload.s3_upload_keogram(x['entry'])
+                    self._miscUpload.s3_upload_keogram(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
-                    self._miscUpload.s3_upload_startrail(x['entry'])
+                    self._miscUpload.s3_upload_startrail(entry)
                 elif x['table'].__name__ == ' IndiAllSkyDbStarTrailsVideoTable':
-                    self._miscUpload.s3_upload_startrailvideo(x['entry'])
+                    self._miscUpload.s3_upload_startrailvideo(entry)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             elif x['upload_type'] == 'syncapi':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
-                    self._miscUpload.syncapi_image(x['entry'])
+                    self._miscUpload.syncapi_image(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
-                    self._miscUpload.syncapi_video(x['entry'])
+                    self._miscUpload.syncapi_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
-                    self._miscUpload.syncapi_keogram(x['entry'])
+                    self._miscUpload.syncapi_keogram(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
-                    self._miscUpload.syncapi_startrail(x['entry'])
+                    self._miscUpload.syncapi_startrail(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
-                    self._miscUpload.syncapi_startrailvideo(x['entry'])
+                    self._miscUpload.syncapi_startrailvideo(entry)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
