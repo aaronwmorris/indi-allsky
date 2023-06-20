@@ -466,13 +466,15 @@ class UploadSync(object):
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_true())\
-                .filter(table.id % mod == 0)
+                .filter(table.id % mod == 0)\
+                .order_by(table.createDate.desc())
         else:
             uploaded = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_false())\
-                .filter(table.id % mod == 0)
+                .filter(table.id % mod == 0)\
+                .order_by(table.createDate.desc())
 
         return uploaded
 
@@ -482,12 +484,14 @@ class UploadSync(object):
             s3 = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
-                .filter(table.s3_key != sa_null())
+                .filter(table.s3_key != sa_null())\
+                .order_by(table.createDate.desc())
         else:
             s3 = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
-                .filter(table.s3_key == sa_null())
+                .filter(table.s3_key == sa_null())\
+                .order_by(table.createDate.desc())
 
         return s3
 
@@ -498,13 +502,15 @@ class UploadSync(object):
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id != sa_null())\
-                .filter(table.id % mod == 0)
+                .filter(table.id % mod == 0)\
+                .order_by(table.createDate.desc())
         else:
             syncapi = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id == sa_null())\
-                .filter(table.id % mod == 0)
+                .filter(table.id % mod == 0)\
+                .order_by(table.createDate.desc())
 
         return syncapi
 
