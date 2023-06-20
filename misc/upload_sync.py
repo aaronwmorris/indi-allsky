@@ -129,6 +129,7 @@ class UploadSync(object):
         for entry_type in status_dict.keys():
             for table, data in status_dict[entry_type].items():
                 if not data:
+                    ptable.add_row([])  # blank row
                     continue
 
                 ptable.add_row([entry_type, table.__name__, data[0].count(), data[1].count()])
