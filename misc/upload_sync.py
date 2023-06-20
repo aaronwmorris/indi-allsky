@@ -104,18 +104,14 @@ class UploadSync(object):
 
 
     def sync(self):
-        if not self.upload_images:
-            logger.warning('Image upload is disabled by default')
-
-        time.sleep(5)
-
-
         next_check_time = time.time()  # start immediately
 
 
         with app.app_context():
             status_dict = self._get_entry_status()
             self._report(status_dict)
+
+            time.sleep(5)
 
 
             # populate individual entries
@@ -378,14 +374,15 @@ class UploadSync(object):
         }
 
         # upload
-        upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
-        if upload_image:
-            uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
-            not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
-            status_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
-        else:
-            logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
-            status_dict['upload'][IndiAllSkyDbImageTable] = None
+        if self.upload_images:
+            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
+            if upload_image:
+                uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
+                not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+                status_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
+            else:
+                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbImageTable] = None
 
 
         upload_table_list = [
