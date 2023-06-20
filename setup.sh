@@ -1730,7 +1730,7 @@ fi
 
 
 INDIALLSKY_FLASK_SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$INDIALLSKY_FLASK_SECRET_KEY" ]; then
+if [[ -z "$INDIALLSKY_FLASK_SECRET_KEY" || "$INDIALLSKY_FLASK_SECRET_KEY" == "CHANGEME" ]]; then
     # generate flask secret key
     INDIALLSKY_FLASK_SECRET_KEY=$(${PYTHON_BIN} -c 'import secrets; print(secrets.token_hex())')
 
@@ -1742,7 +1742,7 @@ fi
 
 
 INDIALLSKY_FLASK_PASSWORD_KEY=$(jq -r '.PASSWORD_KEY' "${ALLSKY_ETC}/flask.json")
-if [ -z "$INDIALLSKY_FLASK_PASSWORD_KEY" ]; then
+if [[ -z "$INDIALLSKY_FLASK_PASSWORD_KEY" || "$INDIALLSKY_FLASK_PASSWORD_KEY" == "CHANGEME" ]]; then
     # generate password key for encryption
     INDIALLSKY_FLASK_PASSWORD_KEY=$(${PYTHON_BIN} -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
 
