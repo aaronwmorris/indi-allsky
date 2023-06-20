@@ -46,6 +46,7 @@ from .detectLines import IndiAllskyDetectLines
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
+from .miscUpload import miscUpload
 
 from .flask import create_app
 from .flask import db
@@ -161,6 +162,7 @@ class ImageWorker(Process):
         )
 
         self._miscDb = miscDb(self.config)
+        self._miscUpload = miscUpload(self.config, self.upload_q)
 
 
         self._libcamera_raw = False
@@ -696,10 +698,11 @@ class ImageWorker(Process):
                 upload_filename = latest_file
 
 
-            self.s3_upload(image_entry, image_metadata)
-            self.syncapi(image_entry, image_metadata)
-            self.mqtt_publish(upload_filename, mqtt_data)
-            self.upload_image(i_ref, image_entry, camera)
+            self._miscUpload.s3_upload_image(image_entry, image_metadata)
+            self._miscUpload.syncapi_image(image_entry, image_metadata)
+            self._miscUpload.mqtt_publish_image(upload_filename, mqtt_data)
+            self._miscUpload.upload_image(i_ref, image_entry, camera)
+
             self.upload_metadata(i_ref, image_entry, adu, adu_average)
 
 
@@ -710,68 +713,6 @@ class ImageWorker(Process):
         degrees, minutes = divmod(minutes, 60)
         degrees = degrees if is_positive else -degrees
         return degrees, minutes, seconds
-
-
-    def upload_image(self, i_ref, image_entry, camera):
-        ### upload images
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
-            #logger.warning('Image uploading disabled')
-            return
-
-
-        if not image_entry:
-            # image was not saved
-            return
-
-
-        image_remain = image_entry.id % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
-        if image_remain != 0:
-            next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_remain
-            logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
-            return
-
-
-        # Parameters for string formatting
-        file_data_list = [
-            self.config['IMAGE_FILE_TYPE'],
-        ]
-
-
-        file_data_dict = {
-            'timestamp'    : i_ref['exp_date'],
-            'ts'           : i_ref['exp_date'],  # shortcut
-            'ext'          : self.config['IMAGE_FILE_TYPE'],
-            'camera_uuid'  : camera.uuid,
-            'day_date'     : i_ref['day_date'],
-        }
-
-
-        # Replace parameters in names
-        remote_dir = self.config['FILETRANSFER']['REMOTE_IMAGE_FOLDER'].format(**file_data_dict)
-        remote_file = self.config['FILETRANSFER']['REMOTE_IMAGE_NAME'].format(*file_data_list, **file_data_dict)
-
-
-        remote_file_p = Path(remote_dir).joinpath(remote_file)
-
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_UPLOAD,
-            'model'       : image_entry.__class__.__name__,
-            'id'          : image_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
-            'remote_file' : str(remote_file_p),
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def upload_metadata(self, i_ref, image_entry, adu, adu_average):
@@ -857,109 +798,6 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def mqtt_publish(self, upload_filename, mq_data):
-        if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
-            #logger.warning('MQ publishing disabled')
-            return
-
-        # publish data to mq broker
-        jobdata = {
-            'action'      : constants.TRANSFER_MQTT,
-            'local_file'  : str(upload_filename),
-            'metadata'    : mq_data,
-            'asset_type'  : constants.ASSET_MISC,
-        }
-
-        mqtt_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(mqtt_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : mqtt_task.id})
-
-
-    def s3_upload(self, asset_entry, asset_metadata):
-        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
-            #logger.warning('S3 uploading disabled')
-            return
-
-
-        if not asset_entry:
-            #logger.warning('S3 uploading disabled')
-            return
-
-
-        logger.info('Uploading to S3 bucket')
-
-        # publish data to s3 bucket
-        jobdata = {
-            'action'      : constants.TRANSFER_S3,
-            'model'       : asset_entry.__class__.__name__,
-            'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
-            'metadata'    : asset_metadata,
-        }
-
-        s3_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(s3_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : s3_task.id})
-
-
-    def syncapi(self, asset_entry, asset_metadata):
-        ### sync camera
-        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
-            return
-
-
-        if self.config.get('SYNCAPI', {}).get('POST_S3'):
-            # file is uploaded after s3 upload
-            return
-
-
-        if not asset_entry:
-            # image was not saved
-            return
-
-
-        if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
-            #logger.warning('Image syncing disabled')
-            return
-
-
-        image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
-        if image_remain != 0:
-            next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
-            logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
-            return
-
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_SYNC_V1,
-            'model'       : asset_entry.__class__.__name__,
-            'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
-            'metadata'    : asset_metadata,
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def getSqmData(self, camera_id):
