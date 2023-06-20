@@ -52,6 +52,8 @@ class UploadSync(object):
     def __init__(self, threads):
         self.threads = int(threads)
 
+        self._upload_images = False
+
         with app.app_context():
             try:
                 self._config_obj = IndiAllSkyConfig()
@@ -83,6 +85,15 @@ class UploadSync(object):
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
 
+    @property
+    def upload_images(self):
+        return self._upload_images
+
+    @upload_images.setter
+    def upload_images(self, new_upload_images):
+        self._upload_images = bool(new_upload_images)
+
+
     def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
@@ -92,6 +103,12 @@ class UploadSync(object):
 
 
     def sync(self):
+        if not self.upload_images:
+            logger.warning('Image upload is disabled by default')
+
+        time.sleep(5)
+
+
         next_check_time = time.time()  # start immediately
 
 
@@ -108,6 +125,10 @@ class UploadSync(object):
                         continue
 
                     for entry in data[1]:
+                        if upload_type == 'upload' and table.__name__ == 'IndiAllSkyDbImageTable':
+                            if not self.upload_images:
+                                continue
+
                         upload_list.append({
                             'upload_type' : upload_type,
                             'table'       : table,
@@ -216,6 +237,10 @@ class UploadSync(object):
             status_dict = self._get_entry_status()
 
             self._report(status_dict)
+
+
+        if not self.upload_images:
+            logger.warning('Image upload is disabled by default')
 
 
     def _report(self, status_dict):
@@ -452,10 +477,26 @@ if __name__ == "__main__":
         default=2
     )
 
+    argparser.add_argument(
+        '--no-upload-images',
+        help='disable image uploading (default)',
+        dest='upload_images',
+        action='store_false',
+    )
+    argparser.add_argument(
+        '--upload-images',
+        help='enable image uploading',
+        dest='upload_images',
+        action='store_true',
+    )
+    argparser.set_defaults(upload_images=False)
+
+
 
     args = argparser.parse_args()
 
     us = UploadSync(args.threads)
+    us.upload_images = args.upload_images
 
     action_func = getattr(us, args.action)
     action_func()
