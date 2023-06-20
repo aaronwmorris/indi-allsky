@@ -102,16 +102,16 @@ class UploadSync(object):
 
             # populate individual entries
             upload_list = list()
-            for entry_type in status_dict.keys():
-                for table, data in status_dict[entry_type].items():
+            for upload_type in status_dict.keys():
+                for table, data in status_dict[upload_type].items():
                     if not data:
                         continue
 
                     for entry in data[1]:
                         upload_list.append({
-                            'entry_type' : entry_type,
-                            'table'      : table,
-                            'entry'      : entry,
+                            'upload_type' : upload_type,
+                            'table'       : table,
+                            'entry'       : entry,
                         })
 
             logger.info('Entries to upload: %d', len(upload_list))
@@ -128,7 +128,12 @@ class UploadSync(object):
 
 
             if self.upload_q.qsize() == 0:
-                self.addUploadEntries(upload_list)
+                with app.app_context():
+                    try:
+                        self.addUploadEntries(upload_list)
+                    except NoUploadsAvailable:
+                        logger.warning('No uploads remaining to process')
+                        self._shutdown = True
 
 
             # do *NOT* start workers inside of a flask context
@@ -145,6 +150,10 @@ class UploadSync(object):
 
 
     def addUploadEntries(self, upload_list):
+        if len(upload_list) == 0:
+            raise NoUploadsAvailable
+
+
         new_uploads = upload_list[:100]
         del upload_list[:100]
 
@@ -152,50 +161,50 @@ class UploadSync(object):
 
 
         for x in new_uploads:
-            if x['entry_type'] == 'upload':
-                if isinstance(x['table'], IndiAllSkyDbImageTable):
-                    self._uploadMisc.upload_image(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
-                    self._uploadMisc.upload_video(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
-                    self._uploadMisc.upload_keogram(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
-                    self._uploadMisc.upload_startrail(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
-                    self._uploadMisc.upload_startrailvideo(x['entry'])
+            if x['upload_type'] == 'upload':
+                if x['table'].__name__ == 'IndiAllSkyDbImageTable':
+                    self._miscUpload.upload_image(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
+                    self._miscUpload.upload_video(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
+                    self._miscUpload.upload_keogram(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
+                    self._miscUpload.upload_startrail(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
+                    self._miscUpload.upload_startrailvideo(x['entry'])
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
-            elif x['entry_type'] == 's3':
-                if isinstance(x['table'], IndiAllSkyDbImageTable):
-                    self._uploadMisc.s3_upload_image(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
-                    self._uploadMisc.s3_upload_video(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
-                    self._uploadMisc.s3_upload_keogram(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
-                    self._uploadMisc.s3_upload_startrail(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
-                    self._uploadMisc.s3_upload_startrailvideo(x['entry'])
+            elif x['upload_type'] == 's3':
+                if x['table'].__name__ == 'IndiAllSkyDbImageTable':
+                    self._miscUpload.s3_upload_image(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
+                    self._miscUpload.s3_upload_video(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
+                    self._miscUpload.s3_upload_keogram(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
+                    self._miscUpload.s3_upload_startrail(x['entry'])
+                elif x['table'].__name__ == ' IndiAllSkyDbStarTrailsVideoTable':
+                    self._miscUpload.s3_upload_startrailvideo(x['entry'])
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
-            elif x['entry_type'] == 'syncapi':
-                if isinstance(x['table'], IndiAllSkyDbImageTable):
-                    self._uploadMisc.syncapi_image(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbVideoTable):
-                    self._uploadMisc.syncapi_video(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbKeogramTable):
-                    self._uploadMisc.syncapi_keogram(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsTable):
-                    self._uploadMisc.syncapi_startrail(x['entry'])
-                elif isinstance(x['table'], IndiAllSkyDbStarTrailsVideoTable):
-                    self._uploadMisc.syncapi_startrailvideo(x['entry'])
+            elif x['upload_type'] == 'syncapi':
+                if x['table'].__name__ == 'IndiAllSkyDbImageTable':
+                    self._miscUpload.syncapi_image(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
+                    self._miscUpload.syncapi_video(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
+                    self._miscUpload.syncapi_keogram(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
+                    self._miscUpload.syncapi_startrail(x['entry'])
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
+                    self._miscUpload.syncapi_startrailvideo(x['entry'])
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             else:
-                logger.error('Unknown type: %s', x['entry_type'])
+                logger.error('Unknown upload type: %s', x['upload_type'])
 
 
     def report(self):
@@ -209,13 +218,13 @@ class UploadSync(object):
         ptable = PrettyTable()
         ptable.field_names = ['Type', 'Table', 'Uploaded', 'Missing']
 
-        for entry_type in status_dict.keys():
-            for table, data in status_dict[entry_type].items():
+        for upload_type in status_dict.keys():
+            for table, data in status_dict[upload_type].items():
                 if not data:
-                    ptable.add_row([entry_type, table.__name__, '-', '-'])
+                    ptable.add_row([upload_type, table.__name__, '-', '-'])
                     continue
 
-                ptable.add_row([entry_type, table.__name__, data[0].count(), data[1].count()])
+                ptable.add_row([upload_type, table.__name__, data[0].count(), data[1].count()])
 
 
         print(ptable)
@@ -415,6 +424,9 @@ class UploadSync(object):
         uw_dict['worker'].join()
 
 
+
+class NoUploadsAvailable(Exception):
+    pass
 
 
 if __name__ == "__main__":
