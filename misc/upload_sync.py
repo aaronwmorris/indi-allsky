@@ -598,7 +598,7 @@ if __name__ == "__main__":
         '-t',
         help='threads',
         type=int,
-        default=2
+        default=1
     )
 
     argparser.add_argument(
