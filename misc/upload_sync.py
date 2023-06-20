@@ -28,6 +28,7 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 
 
+from indi_allsky import constants
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask import create_app
 from indi_allsky.uploader import FileUploader
@@ -202,29 +203,138 @@ class UploadSync(object):
 
             elif x['upload_type'] == 's3':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
-                    self._miscUpload.s3_upload_image(entry)
+                    image_metadata = {
+                        'type'            : constants.IMAGE,
+                        'createDate'      : entry.createDate.timestamp(),
+                        'exposure'        : entry.exposure,
+                        'exp_elapsed'     : entry.exp_elapsed,
+                        'gain'            : entry.gain,
+                        'binmode'         : entry.binmode,
+                        'temp'            : entry.temp,
+                        'adu'             : entry.adu,
+                        'stable'          : entry.stable,
+                        'moonmode'        : entry.moonmode,
+                        'moonphase'       : entry.moonphase,
+                        'night'           : entry.night,
+                        'adu_roi'         : entry.adu_roi,
+                        'calibrated'      : entry.calibrated,
+                        'sqm'             : entry.sqm,
+                        'stars'           : entry.stars,
+                        'detections'      : entry.detections,
+                        'process_elapsed' : entry.process_elapsed,
+                        'camera_uuid'     : entry.camera.uuid,
+                    }
+
+                    self._miscUpload.s3_upload_image(entry, image_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
-                    self._miscUpload.s3_upload_video(entry)
+                    video_metadata = {
+                        'type'       : constants.VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.s3_upload_video(entry, video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
-                    self._miscUpload.s3_upload_keogram(entry)
+                    keogram_metadata = {
+                        'type'       : constants.KEOGRAM,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.s3_upload_keogram(entry, keogram_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
-                    self._miscUpload.s3_upload_startrail(entry)
+                    startrail_metadata = {
+                        'type'       : constants.STARTRAIL,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.s3_upload_startrail(entry, startrail_metadata)
                 elif x['table'].__name__ == ' IndiAllSkyDbStarTrailsVideoTable':
-                    self._miscUpload.s3_upload_startrailvideo(entry)
+                    startrail_video_metadata = {
+                        'type'       : constants.STARTRAIL_VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.s3_upload_startrailvideo(entry, startrail_video_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             elif x['upload_type'] == 'syncapi':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
-                    self._miscUpload.syncapi_image(entry)
+                    image_metadata = {
+                        'type'            : constants.IMAGE,
+                        'createDate'      : entry.createDate.timestamp(),
+                        'exposure'        : entry.exposure,
+                        'exp_elapsed'     : entry.exp_elapsed,
+                        'gain'            : entry.gain,
+                        'binmode'         : entry.binmode,
+                        'temp'            : entry.temp,
+                        'adu'             : entry.adu,
+                        'stable'          : entry.stable,
+                        'moonmode'        : entry.moonmode,
+                        'moonphase'       : entry.moonphase,
+                        'night'           : entry.night,
+                        'adu_roi'         : entry.adu_roi,
+                        'calibrated'      : entry.calibrated,
+                        'sqm'             : entry.sqm,
+                        'stars'           : entry.stars,
+                        'detections'      : entry.detections,
+                        'process_elapsed' : entry.process_elapsed,
+                        'camera_uuid'     : entry.camera.uuid,
+                    }
+
+
+                    self._miscUpload.syncapi_image(entry, image_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
-                    self._miscUpload.syncapi_video(entry)
+                    video_metadata = {
+                        'type'       : constants.VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.syncapi_video(entry, video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
-                    self._miscUpload.syncapi_keogram(entry)
+                    keogram_metadata = {
+                        'type'       : constants.KEOGRAM,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.syncapi_keogram(entry, keogram_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
-                    self._miscUpload.syncapi_startrail(entry)
+                    startrail_metadata = {
+                        'type'       : constants.STARTRAIL,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.syncapi_startrail(entry, startrail_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
-                    self._miscUpload.syncapi_startrailvideo(entry)
+                    startrail_video_metadata = {
+                        'type'       : constants.STARTRAIL_VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    self._miscUpload.syncapi_startrailvideo(entry, startrail_video_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
