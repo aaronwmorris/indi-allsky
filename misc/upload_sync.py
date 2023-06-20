@@ -127,11 +127,13 @@ class UploadSync(object):
                             if not self.upload_images:
                                 continue
 
+
                         upload_list.append({
                             'upload_type' : upload_type,
                             'table'       : table,
                             'entry_id'    : entry.id,  # cannot pass entries to different session
                         })
+
 
             logger.info('Entries to upload: %d', len(upload_list))
 
@@ -183,6 +185,12 @@ class UploadSync(object):
             # cannot use entry from different session
             entry = x['table'].query\
                 .filter(x['table'].id == x['entry_id']).one()
+
+
+            if not entry.validateFile():
+                logger.error('%s file missing: %s', x['table'].__name__, entry.filename)
+                continue
+
 
             if x['upload_type'] == 'upload':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
