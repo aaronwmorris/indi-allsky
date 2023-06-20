@@ -48,6 +48,10 @@ Flask == 2.2.5
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
+flask-login
+werkzeug
+is-safe-url
+certifi
 # https://www.piwheels.org/project/cryptography/
 cryptography <= 40.0.1
 dbus-python
@@ -56,8 +60,6 @@ setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
 bcrypt
 passlib[argon2]
-flask-login
-is-safe-url
 prettytable
 mysql-connector-python
 PyMySQL
