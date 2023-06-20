@@ -122,16 +122,24 @@ class UploadSync(object):
 
     def _report(self):
         table = PrettyTable()
-        table.field_names = ['Type', 'Uploaded', 'Missing']
+        table.field_names = ['Type', 'Table', 'Uploaded', 'Missing']
 
+
+        type_dict = {
+            'upload'  : dict(),
+            's3'      : dict(),
+            'syncapi' : dict(),
+        }
 
         # upload
         upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
         if upload_image:
-            not_uploaded_images = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
-            logger.warning('%s not uploaded: %d', IndiAllSkyDbImageTable.__name__, not_uploaded_images.count())
+            uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
+            not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+            type_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
         else:
             logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+            type_dict['upload'][IndiAllSkyDbImageTable] = None
 
 
         upload_table_list = [
@@ -144,10 +152,12 @@ class UploadSync(object):
         for table in upload_table_list:
             upload = self.config.get('FILETRANSFER', {}).get(table[1])
             if upload:
+                uploaded = self._get_uploaded(table[0], 1, state=True)
                 not_uploaded = self._get_uploaded(table[0], 1, state=False)
-                logger.warning('%s not uploaded: %d', table[0].__name__, not_uploaded.count())
+                type_dict['upload'][table[0]] = [uploaded, not_uploaded]
             else:
                 logger.info('%s uploading disabled', table[0].__name__)
+                type_dict['upload'][table[0]] = None
 
 
 
@@ -163,10 +173,12 @@ class UploadSync(object):
         for table in s3_table_list:
             # s3
             if self.config.get('S3UPLOAD', {}).get('ENABLE'):
+                s3_entries = self._get_s3(table, state=True)
                 not_s3_entries = self._get_s3(table, state=False)
-                logger.warning('%s not in S3: %d', table.__name__, not_s3_entries.count())
+                type_dict['s3'][table] = [s3_entries, not_s3_entries]
             else:
                 logger.info('S3 uploading disabled (%s)', table.__name__)
+                type_dict['s3'][table] = None
 
 
 
@@ -175,12 +187,15 @@ class UploadSync(object):
         if self.config.get('SYNCAPI', {}).get('ENABLE'):
             syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
             if syncapi_image:
-                not_syncapi_images = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
-                logger.warning('Images not synced: %d', not_syncapi_images.count())
+                syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
+                not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
+                type_dict['syncapi'][IndiAllSkyDbImageTable] = [syncapi_entries, not_syncapi_entries]
             else:
                 logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+                type_dict['syncapi'][IndiAllSkyDbImageTable] = None
         else:
             logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+            type_dict['syncapi'][IndiAllSkyDbImageTable] = None
 
 
 
@@ -192,11 +207,12 @@ class UploadSync(object):
         ]
         for table in syncapi_table_list:
             if self.config.get('SYNCAPI', {}).get('ENABLE'):
+                syncapi_entries = self._get_syncapi(table, 1, state=True)
                 not_syncapi_entries = self._get_syncapi(table, 1, state=False)
-                logger.warning('%s not synced: %d', table.__name__, not_syncapi_entries.count())
+                type_dict['syncapi'][table] = [syncapi_entries, not_syncapi_entries]
             else:
                 logger.info('syncapi disabled (%s)', table.__name__)
-
+                type_dict['syncapi'][table] = None
 
 
 
