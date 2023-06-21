@@ -359,7 +359,7 @@ class miscUpload(object):
         self.s3_upload_video(*args)
 
 
-    def s3_upload_startrail_video(self, *args):
+    def s3_upload_startrailvideo(self, *args):
         self.s3_upload_video(*args)
 
 
