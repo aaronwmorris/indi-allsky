@@ -58,6 +58,7 @@ class libcloud_s3(GenericFileTransfer):
         storage_class = kwargs['storage_class']
         #expire_days = kwargs['expire_days']
         acl = kwargs['acl']
+        #metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
 
@@ -72,7 +73,14 @@ class libcloud_s3(GenericFileTransfer):
 
         #if expire_days:
         #    now = datetime.now()
-        #    extra_args['Expires'] = now + timedelta(days=expire_days)
+
+        #    createDate = datetime.fromtimestamp(metadata['createDate'])
+
+        #    # the expiration should take into account when the asset was created (if uploaded in the future)
+        #    days_now_diff = (now - createDate) / timedelta(days=1)
+        #    expire_days_diff = expire_days - days_now_diff
+
+        #    extra_args['Expires'] = now + timedelta(days=expire_days + 3)  # plus 3 days
 
 
         start = time.time()

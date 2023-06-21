@@ -24,6 +24,7 @@ from . import constants
 from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
+from .miscUpload import miscUpload
 
 from .flask import create_app
 from .flask import db
@@ -82,8 +83,6 @@ class VideoWorker(Process):
 
         self.config = config
 
-        self._miscDb = miscDb(self.config)
-
         self.error_q = error_q
         self.video_q = video_q
         self.upload_q = upload_q
@@ -91,6 +90,9 @@ class VideoWorker(Process):
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
         self.bin_v = bin_v
+
+        self._miscDb = miscDb(self.config)
+        self._miscUpload = miscUpload(self.config, self.upload_q)
 
         self.f_lock = None
 
@@ -329,118 +331,9 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
-        self._s3_upload(video_entry, video_metadata)
-        self._syncapi(video_entry, video_metadata)
-        self._uploadVideo(video_entry, video_file, camera)
-
-
-    def _uploadVideo(self, video_entry, video_file, camera):
-        ### Upload video
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
-            logger.warning('Video uploading disabled')
-            return
-
-
-        now = datetime.now()
-
-        # Parameters for string formatting
-        file_data_dict = {
-            'timestamp'    : now,
-            'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
-        }
-
-
-        # Replace parameters in names
-        remote_dir = self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'].format(**file_data_dict)
-
-
-        remote_file_p = Path(remote_dir).joinpath(video_file.name)
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_UPLOAD,
-            'model'       : video_entry.__class__.__name__,
-            'id'          : video_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
-            'remote_file' : str(remote_file_p),
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
-
-
-    def _s3_upload(self, asset_entry, asset_metadata):
-        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
-            #logger.warning('S3 uploading disabled')
-            return
-
-
-        if not asset_entry:
-            #logger.warning('S3 uploading disabled')
-            return
-
-
-        logger.info('Uploading to S3 bucket')
-
-        # publish data to s3 bucket
-        jobdata = {
-            'action'      : constants.TRANSFER_S3,
-            'model'       : asset_entry.__class__.__name__,
-            'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
-            'metadata'    : asset_metadata,
-        }
-
-        s3_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(s3_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : s3_task.id})
-
-
-    def _syncapi(self, asset_entry, metadata):
-        ### sync camera
-        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
-            return
-
-        if self.config.get('SYNCAPI', {}).get('POST_S3'):
-            # file is uploaded after s3 upload
-            return
-
-        if not asset_entry:
-            #logger.warning('S3 uploading disabled')
-            return
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_SYNC_V1,
-            'model'       : asset_entry.__class__.__name__,
-            'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
-            'metadata'    : metadata,
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
+        self._miscUpload.s3_upload_video(video_entry, video_metadata)
+        self._miscUpload.syncapi_video(video_entry, video_metadata)
+        self._miscUpload.upload_video(video_entry)
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
@@ -684,9 +577,9 @@ class VideoWorker(Process):
 
         if keogram_entry:
             if keogram_file.exists():
-                self._s3_upload(keogram_entry, keogram_metadata)
-                self._syncapi(keogram_entry, keogram_metadata)
-                self._uploadKeogram(keogram_entry, keogram_file, camera)
+                self._miscUpload.s3_upload_keogram(keogram_entry, keogram_metadata)
+                self._miscUpload.syncapi_keogram(keogram_entry, keogram_metadata)
+                self._miscUpload.upload_keogram(keogram_entry)
             else:
                 keogram_entry.success = False
                 db.session.commit()
@@ -694,9 +587,9 @@ class VideoWorker(Process):
 
         if startrail_entry and night:
             if startrail_file.exists():
-                self._s3_upload(startrail_entry, startrail_metadata)
-                self._syncapi(startrail_entry, startrail_metadata)
-                self._uploadStarTrail(startrail_entry, startrail_file, camera)
+                self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
+                self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)
+                self._miscUpload.upload_startrail(startrail_entry)
             else:
                 startrail_entry.success = False
                 db.session.commit()
@@ -704,142 +597,15 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._s3_upload(startrail_video_entry, startrail_video_metadata)
-                self._syncapi(startrail_video_entry, startrail_video_metadata)
-                self._uploadStarTrailVideo(startrail_video_entry, startrail_video_file, camera)
+                self._miscUpload.s3_upload_startrailvideo(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.syncapi_startrailvideo(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.upload_startrailvideo(startrail_video_entry)
             else:
                 # success flag set above
                 pass
 
 
         task.setSuccess('Generated keogram and/or star trail')
-
-
-    def _uploadKeogram(self, keogram_entry, keogram_file, camera):
-        ### Upload video
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
-            logger.warning('Keogram uploading disabled')
-            return
-
-
-        now = datetime.now()
-
-        # Parameters for string formatting
-        file_data_dict = {
-            'timestamp'    : now,
-            'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
-        }
-
-
-        # Replace parameters in names
-        remote_dir = self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'].format(**file_data_dict)
-
-
-        remote_file_p = Path(remote_dir).joinpath(keogram_file.name)
-
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_UPLOAD,
-            'model'       : keogram_entry.__class__.__name__,
-            'id'          : keogram_entry.id,
-            'remote_file' : str(remote_file_p),
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
-
-
-    def _uploadStarTrail(self, startrail_entry, startrail_file, camera):
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
-            logger.warning('Star trail uploading disabled')
-            return
-
-
-        now = datetime.now()
-
-        # Parameters for string formatting
-        file_data_dict = {
-            'timestamp'    : now,
-            'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
-        }
-
-
-        # Replace parameters in names
-        remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'].format(**file_data_dict)
-
-
-        remote_file_p = Path(remote_dir).joinpath(startrail_file.name)
-
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_UPLOAD,
-            'model'       : startrail_entry.__class__.__name__,
-            'id'          : startrail_entry.id,
-            'remote_file' : str(remote_file_p),
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
-
-
-    def _uploadStarTrailVideo(self, startrail_video_entry, startrail_video_file, camera):
-        ### Upload video
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
-            logger.warning('Startrail video uploading disabled')
-            return
-
-
-        now = datetime.now()
-
-        # Parameters for string formatting
-        file_data_dict = {
-            'timestamp'    : now,
-            'ts'           : now,  # shortcut
-            'camera_uuid'  : camera.uuid,
-        }
-
-
-        # Replace parameters in names
-        remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'].format(**file_data_dict)
-
-
-        remote_file_p = Path(remote_dir).joinpath(startrail_video_file.name)
-
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_UPLOAD,
-            'model'       : startrail_video_entry.__class__.__name__,
-            'id'          : startrail_video_entry.id,
-            'remote_file' : str(remote_file_p),
-        }
-
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : upload_task.id})
 
 
     def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):

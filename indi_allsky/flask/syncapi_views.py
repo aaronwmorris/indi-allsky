@@ -81,7 +81,11 @@ class SyncApiBaseView(BaseView):
         metadata = self.saveMetadata()
         media_file = self.saveFile()
 
-        camera = self.getCamera(metadata)
+        try:
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            app.logger.error('Camera not found: %s', metadata['camera_uuid'])
+            return jsonify({}), 400
 
 
         try:

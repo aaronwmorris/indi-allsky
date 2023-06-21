@@ -228,7 +228,7 @@ class FileUploader(Process):
 
             if asset_type == constants.ASSET_IMAGE:
                 if self.config['S3UPLOAD']['EXPIRE_IMAGES']:
-                    expire_days = self.config['IMAGE_EXPIRE_DAYS']
+                    expire_days = int(self.config['IMAGE_EXPIRE_DAYS'])
                 else:
                     expire_days = None
             else:
@@ -256,6 +256,7 @@ class FileUploader(Process):
                 'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                 'expire_days'   : expire_days,
                 'acl'           : self.config['S3UPLOAD']['ACL'],
+                'metadata'      : metadata,
             }
 
             try:
