@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
-### THIS SCRIPT IS NOT COMPLETE ###
+#########################################################
+# This script looks for failed file transfers (uploads, #
+# S3 transfers, and syncapi transfers) and attempts     #
+# the transfers again.                                  #
+#########################################################
 
 import sys
 import argparse
