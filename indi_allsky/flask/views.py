@@ -163,6 +163,9 @@ class JsonLatestImageView(JsonView):
 
         if not night:
             if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+                if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+                    return data
+
                 # images are not stored in the DB in this condition
                 latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
 
