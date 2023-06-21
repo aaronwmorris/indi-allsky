@@ -362,7 +362,7 @@ class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
 
-        now_minus_3d = datetime.now() - timedelta(days=3)
+        now_minus_3d = datetime.now() - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
 
