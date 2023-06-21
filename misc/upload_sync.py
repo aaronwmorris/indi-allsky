@@ -54,6 +54,8 @@ class UploadSync(object):
     def __init__(self, threads):
         self.threads = int(threads)
 
+        self.batch_size  = self.threads * 5
+
         self._upload_images = False
 
         with app.app_context():
@@ -175,8 +177,8 @@ class UploadSync(object):
             raise NoUploadsAvailable
 
 
-        new_uploads = upload_list[:20]
-        del upload_list[:20]
+        new_uploads = upload_list[:self.batch_size]
+        del upload_list[:self.batch_size]
 
         logger.info('Adding %d upload entries (%d remaining)', len(new_uploads), len(upload_list))
 
