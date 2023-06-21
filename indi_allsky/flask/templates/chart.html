@@ -379,7 +379,7 @@ async function loop() {
         await sleep(100);
     }
 
-    $('#nodata').css({'display' : 'none'});
+    $('#message').css({'display' : 'none'});
 
     drawChart();
     setTimeout(loop, refreshInterval);
@@ -482,7 +482,7 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-5"></div>
     <div class="col-sm-7">
-        <div class="text-muted" id="nodata">No Timelapse Data</div>
+        <div class="text-muted" id="message">No Timelapse Data</div>
     </div>
 </div>
 

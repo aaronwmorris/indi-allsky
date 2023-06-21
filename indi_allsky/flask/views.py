@@ -138,6 +138,7 @@ class JsonLatestImageView(JsonView):
         data = {
             'latest_image' : {
                 'url' : None,
+                'message' : 'No Image for 15 minutes'
             },
         }
 
@@ -154,6 +155,7 @@ class JsonLatestImageView(JsonView):
                 if latest_image_p.stat().st_mtime > max_age.timestamp():
 
                     data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                    data['latest_image']['message'] = ''
                     return data
                 else:
                     return data
@@ -163,6 +165,8 @@ class JsonLatestImageView(JsonView):
 
         if not night:
             if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+                data['latest_image']['message'] = 'Daytime timelapse disabled'
+
                 if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
                     if not self.verify_admin_network():
                         # only show locally hosted assets if coming from admin networks
@@ -180,6 +184,7 @@ class JsonLatestImageView(JsonView):
                     if latest_image_p.stat().st_mtime > max_age.timestamp():
 
                         data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                        data['latest_image']['message'] = ''
                         return data
                     else:
                         return data

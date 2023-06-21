@@ -34,7 +34,7 @@ async function loop() {
         await sleep(100);
     }
 
-    $('#nodata').css({'display' : 'none'});
+    $('#message').css({'display' : 'none'});
 
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
@@ -230,7 +230,7 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-5"></div>
     <div class="col-sm-7">
-        <div class="text-muted" id="nodata">No Timelapse Data</div>
+        <div class="text-muted" id="message">No Timelapse Data</div>
     </div>
 </div>
 <div class="row">

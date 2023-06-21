@@ -14,7 +14,8 @@ canvas {
 <script type="text/javascript">
 var json_data = {
     'latest_image' : {
-        'url' : null
+        'url' : null,
+        'message' : ''
     }
 };
 var max_age = 900;
@@ -31,10 +32,11 @@ async function loop() {
     console.log('Starting loop');
 
     while(json_data['latest_image']['url'] == null) {
+        $('#message').html(json_data['latest_image']['message']);
         await sleep(100);
     }
 
-    $('#nodata').css({'display' : 'none'});
+    $('#message').css({'display' : 'none'});
 
     showImage(json_data['latest_image']);
 
@@ -167,7 +169,7 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-5"></div>
     <div class="col-sm-7">
-        <div class="text-muted" id="nodata">No Image for 15 minutes</div>
+        <div class="text-muted" id="message"></div>
     </div>
 </div>
 <div class="row">
