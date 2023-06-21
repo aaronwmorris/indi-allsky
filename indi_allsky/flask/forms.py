@@ -1826,6 +1826,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ('hack/Hack-Italic.ttf', 'Hack Sans Mono Italic'),
         ('hack/Hack-Bold.ttf', 'Hack Sans Mono Bold'),
         ('hack/Hack-BoldItalic.ttf', 'Hack Sans Mono Bold Italic'),
+        ('intel-one-mono/intelone-mono-font-family-regular.ttf', 'Intel One Mono Regular'),
+        ('intel-one-mono/intelone-mono-font-family-italic.ttf', 'Intel One Mono Italic'),
+        ('intel-one-mono/intelone-mono-font-family-light.ttf', 'Intel One Mono Light'),
+        ('intel-one-mono/intelone-mono-font-family-lightitalic.ttf', 'Intel One Mono Light Italic'),
+        ('intel-one-mono/intelone-mono-font-family-medium.ttf', 'Intel One Mono Medium'),
+        ('intel-one-mono/intelone-mono-font-family-mediumitalic.ttf', 'Intel One Mono Medium Italic'),
+        ('intel-one-mono/intelone-mono-font-family-bold.ttf', 'Intel One Mono Bold '),
+        ('intel-one-mono/intelone-mono-font-family-bolditalic.ttf', 'Intel One Mono Bold Italic'),
         ('custom', 'Custom (below)'),
     )
 
