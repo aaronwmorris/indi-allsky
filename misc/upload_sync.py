@@ -263,7 +263,7 @@ class UploadSync(object):
                     }
 
                     self._miscUpload.s3_upload_startrail(entry, startrail_metadata)
-                elif x['table'].__name__ == ' IndiAllSkyDbStarTrailsVideoTable':
+                elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
                     startrail_video_metadata = {
                         'type'       : constants.STARTRAIL_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
