@@ -498,6 +498,9 @@ class VideoWorker(Process):
         stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
+        stg.latitude = float(self.latitude_v.value)
+        stg.longitude = float(self.longitude_v.value)
+        stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
 
 
         # Files are presorted from the DB

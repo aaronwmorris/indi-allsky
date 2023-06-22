@@ -1,14 +1,17 @@
 import os
 import cv2
 from fractions import Fraction
+import math
 import numpy
 from datetime import datetime
+from datetime import timezone
 import PIL
 from PIL import Image
 import piexif
 import time
 from pathlib import Path
 import tempfile
+import ephem
 import logging
 
 
@@ -26,10 +29,17 @@ class StarTrailGenerator(object):
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
 
+        self._latitude = 0.0
+        self._longitude = 0.0
+        self._sun_alt_threshold = 0.0
+
         self.trail_image = None
         self.trail_count = 0
         self.pixels_cutoff = None
         self.excluded_images = 0
+
+        self.obs = ephem.Observer()
+        self.sun = ephem.Sun()
 
         self.image_processing_elapsed_s = 0
 
@@ -98,6 +108,33 @@ class StarTrailGenerator(object):
     def timelapse_frame_list(self, new_frame_list):
         return  # read only
 
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, new_latitude):
+        self._latitude = float(new_latitude)
+        self.obs.lat = math.radians(self._latitude)
+
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, new_longitude):
+        self._longitude = float(new_longitude)
+        self.obs.lon = math.radians(self._longitude)
+
+    @property
+    def sun_alt_threshold(self):
+        return self._sun_alt_threshold
+
+    @sun_alt_threshold.setter
+    def sun_alt_threshold(self, new_sun_alt_threshold):
+        self._sun_alt_threshold = float(new_sun_alt_threshold)
+
+
 
     def generate(self, outfile, file_list):
         # Exclude empty files
@@ -150,6 +187,7 @@ class StarTrailGenerator(object):
             self._generateSqmMask(image)
 
 
+
         # need grayscale image for mask generation
         if len(image.shape) == 2:
             image_gray = image.copy()
@@ -164,6 +202,18 @@ class StarTrailGenerator(object):
             # placeholder should be the image with the lowest calculated ADU
             self.placeholder_image = image
             self.placeholder_adu = m_avg
+
+
+        mtime_datetime_utc = datetime.fromtimestamp(file_p.stat().st_mtime).astimezone(tz=timezone.utc)
+        self.obs.date = mtime_datetime_utc
+
+        self.sun.compute(self.obs)
+        sun_alt = math.degrees(self.sun.alt)
+
+        if sun_alt > self.sun_alt_threshold:
+            logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
+            self.excluded_images += 1
+            return
 
 
         if m_avg > self._max_brightness:

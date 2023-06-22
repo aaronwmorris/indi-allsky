@@ -1651,6 +1651,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.STARTRAILS_SUN_ALT_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_SUN_ALT_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_SUN_ALT_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sun altitude threshold</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2814,6 +2825,7 @@ const field_names = [
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',
     'STARTRAILS_TIMELAPSE_MINFRAMES',
+    'STARTRAILS_SUN_ALT_THOLD',
     'IMAGE_FILE_TYPE',
     'IMAGE_FILE_COMPRESSION__JPG',
     'IMAGE_FILE_COMPRESSION__PNG',

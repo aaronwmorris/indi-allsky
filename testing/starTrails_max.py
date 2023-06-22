@@ -27,7 +27,7 @@ class StarTrailGenerator(object):
         self._pixel_cutoff_threshold = 1.0
         self._latitude = 0.0
         self._longitude = 0.0
-        self._sun_alt_limit = -18.0
+        self._sun_alt_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -86,12 +86,12 @@ class StarTrailGenerator(object):
         self.obs.lon = math.radians(self._longitude)
 
     @property
-    def sun_alt_limit(self):
-        return self._sun_alt_limit
+    def sun_alt_threshold(self):
+        return self._sun_alt_threshold
 
-    @sun_alt_limit.setter
-    def sun_alt_limit(self, new_sun_alt_limit):
-        self._sun_alt_limit = float(new_sun_alt_limit)
+    @sun_alt_threshold.setter
+    def sun_alt_threshold(self, new_sun_alt_threshold):
+        self._sun_alt_threshold = float(new_sun_alt_threshold)
 
 
 
@@ -132,7 +132,7 @@ class StarTrailGenerator(object):
         logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, filename_p, image):
+    def processImage(self, file_p, image):
         image_processing_start = time.time()
 
 
@@ -152,6 +152,7 @@ class StarTrailGenerator(object):
             self._generateSqmMask(image)
 
 
+
         # need grayscale image for mask generation
         if len(image.shape) == 2:
             image_gray = image.copy()
@@ -159,13 +160,13 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-        mtime_datetime_utc = datetime.fromtimestamp(filename_p.stat().st_mtime).astimezone(tz=timezone.utc)
+        mtime_datetime_utc = datetime.fromtimestamp(file_p.stat().st_mtime).astimezone(tz=timezone.utc)
         self.obs.date = mtime_datetime_utc
 
         self.sun.compute(self.obs)
         sun_alt = math.degrees(self.sun.alt)
 
-        if sun_alt > self.sun_alt_limit:
+        if sun_alt > self.sun_alt_threshold:
             logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
             self.excluded_images += 1
             return
@@ -300,8 +301,8 @@ if __name__ == "__main__":
         default=-84.0,
     )
     argparser.add_argument(
-        '--sun_alt_limit',
-        help='sun altitude limit',
+        '--sun_alt_threshold',
+        help='sun altitude threshold',
         type=float,
         default=-18.0,
     )
@@ -315,7 +316,7 @@ if __name__ == "__main__":
     sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
     sg.latitude = args.latitude
     sg.longitude = args.longitude
-    sg.sun_alt_limit = args.sun_alt_limit
+    sg.sun_alt_threshold = args.sun_alt_threshold
 
     sg.main(args.output, args.inputdir)
 
