@@ -96,6 +96,10 @@ class StarTrailGenerator(object):
 
 
     def main(self, outfile, inputdir):
+        logger.warning('Latitude configured for  %0.1f', self.latitude)
+        logger.warning('Longitude configured for %0.1f', self.longitude)
+        time.sleep(3)
+
         file_list = list()
         self.getFolderFilesByExt(inputdir, file_list)
 
@@ -292,13 +296,13 @@ if __name__ == "__main__":
         '--latitude',
         help='latitude',
         type=float,
-        default=33.0,
+        required=True,
     )
     argparser.add_argument(
         '--longitude',
         help='longitude',
         type=float,
-        default=-84.0,
+        required=True,
     )
     argparser.add_argument(
         '--sun_alt_threshold',
