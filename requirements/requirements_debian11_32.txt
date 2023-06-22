@@ -41,6 +41,7 @@ werkzeug >= 2.3.6
 is-safe-url
 certifi >= 2023.5.7
 # https://www.piwheels.org/project/cryptography/
+# 40.0.1 vulnerable https://security.snyk.io/package/pip/cryptography
 cryptography == 40.0.1
 dbus-python
 paho-mqtt
