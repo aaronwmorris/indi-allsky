@@ -1938,6 +1938,14 @@ class ImageProcessor(object):
             self._generateAduMask(self.image)
 
 
+        mask_dimensions = self._adu_mask.shape[:2]
+        image_dimensions = self.image.shape[:2]
+
+        if mask_dimensions != image_dimensions:
+            # This is a canary message.  The cv2.mean() call will fail below, as well as many other functions later.
+            logger.error('Detection mask dimensions do not match image')
+
+
         if len(self.image.shape) == 2:
             # mono
             adu = cv2.mean(src=self.image, mask=self._adu_mask)[0]
