@@ -370,7 +370,7 @@ class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
 
-        now_minus_3d = datetime.now() - timedelta(days=7)
+        now_minus_7d = datetime.now() - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
 
@@ -392,7 +392,7 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > now_minus_3d,
+                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
                         or_(
                             createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             createDate_hour <= 4,
@@ -423,7 +423,7 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > now_minus_3d,
+                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
                         or_(
                             createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             createDate_hour <= 4,
