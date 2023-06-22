@@ -124,7 +124,7 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_PIXEL_THOLD": 1.0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
-        "STARTRAILS_SUN_ALT_THOLD"       : -18.0,
+        "STARTRAILS_SUN_ALT_THOLD"       : -15.0,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,

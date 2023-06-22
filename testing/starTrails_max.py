@@ -304,7 +304,7 @@ if __name__ == "__main__":
         '--sun_alt_threshold',
         help='sun altitude threshold',
         type=float,
-        default=-18.0,
+        default=-15.0,
     )
 
 
