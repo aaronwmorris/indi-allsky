@@ -67,6 +67,7 @@ from .models import TaskQueueState
 
 from sqlalchemy import func
 from sqlalchemy import extract
+from sqlalchemy import desc
 from sqlalchemy import cast
 from sqlalchemy import and_
 from sqlalchemy import or_
@@ -369,42 +370,68 @@ class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
 
-        now_minus_3d = datetime.now() - timedelta(days=7)
+        now_minus_7d = datetime.now() - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
-            createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
+            createDate_s = func.unix_timestamp(IndiAllSkyDbImageTable.createDate)  # mysql
+
+            # this should give us average exposure, adu in 15 minute sets, during the night
+            rolling_adu_list = IndiAllSkyDbImageTable.query\
+                .add_columns(
+                    func.floor(createDate_s / 900).label('interval'),
+                    IndiAllSkyDbImageTable.createDate.label('dt'),
+                    func.count(IndiAllSkyDbImageTable.id).label('i_count'),
+                    func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
+                    func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
+                    func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                    func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
+                )\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
+                        or_(
+                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            createDate_hour <= 4,
+                        )
+                    )
+                )\
+                .group_by('interval')\
+                .order_by(desc('interval'))
+
         elif app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql'):
             createDate_s = func.to_char(IndiAllSkyDbImageTable.createDate, '%s')  # postgres
+            # fixme
         else:
             # assume sqlite
             createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
 
-
-        # this should give us average exposure, adu in 15 minute sets, during the night
-        rolling_adu_list = IndiAllSkyDbImageTable.query\
-            .add_columns(
-                IndiAllSkyDbImageTable.createDate.label('dt'),
-                func.count(IndiAllSkyDbImageTable.id).label('i_count'),
-                func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
-                func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
-                func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
-                func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
-            )\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
-            .filter(
-                and_(
-                    IndiAllSkyDbImageTable.createDate > now_minus_3d,
-                    or_(
-                        createDate_hour >= 22,  # night is normally between 10p and 4a, right?
-                        createDate_hour <= 4,
+            # this should give us average exposure, adu in 15 minute sets, during the night
+            rolling_adu_list = IndiAllSkyDbImageTable.query\
+                .add_columns(
+                    IndiAllSkyDbImageTable.createDate.label('dt'),
+                    func.count(IndiAllSkyDbImageTable.id).label('i_count'),
+                    func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
+                    func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
+                    func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                    func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
+                )\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
+                        or_(
+                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            createDate_hour <= 4,
+                        )
                     )
-                )
-            )\
-            .group_by(cast(createDate_s, Integer) / 900)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+                )\
+                .group_by(cast(createDate_s, Integer) / 900)\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
         context['rolling_adu_list'] = rolling_adu_list
