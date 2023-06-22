@@ -211,7 +211,7 @@ class StarTrailGenerator(object):
         sun_alt = math.degrees(self.sun.alt)
 
         if sun_alt > self.sun_alt_threshold:
-            logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
+            #logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
             self.excluded_images += 1
             return
 
