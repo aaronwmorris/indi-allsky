@@ -8,6 +8,10 @@ import argparse
 import logging
 import time
 from pathlib import Path
+from datetime import datetime
+from datetime import timezone
+import math
+import ephem
 #from pprint import pformat
 
 
@@ -21,6 +25,9 @@ class StarTrailGenerator(object):
         self._max_brightness = 50
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
+        self._latitude = 0.0
+        self._longitude = 0.0
+        self._sun_alt_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -30,6 +37,10 @@ class StarTrailGenerator(object):
         self.image_processing_elapsed_s = 0
 
         self._sqm_mask = None
+
+
+        self.obs = ephem.Observer()
+        self.sun = ephem.Sun()
 
 
     @property
@@ -56,8 +67,39 @@ class StarTrailGenerator(object):
     def pixel_cutoff_threshold(self, new_thold):
         self._pixel_cutoff_threshold = new_thold
 
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, new_latitude):
+        self._latitude = float(new_latitude)
+        self.obs.lat = math.radians(self._latitude)
+
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, new_longitude):
+        self._longitude = float(new_longitude)
+        self.obs.lon = math.radians(self._longitude)
+
+    @property
+    def sun_alt_threshold(self):
+        return self._sun_alt_threshold
+
+    @sun_alt_threshold.setter
+    def sun_alt_threshold(self, new_sun_alt_threshold):
+        self._sun_alt_threshold = float(new_sun_alt_threshold)
+
+
 
     def main(self, outfile, inputdir):
+        logger.warning('Latitude configured for  %0.1f', self.latitude)
+        logger.warning('Longitude configured for %0.1f', self.longitude)
+        time.sleep(3)
+
         file_list = list()
         self.getFolderFilesByExt(inputdir, file_list)
 
@@ -70,18 +112,18 @@ class StarTrailGenerator(object):
 
         processing_start = time.time()
 
-        for filename in file_list_ordered:
-            logger.info('Reading file: %s', filename)
+        for filename_p in file_list_ordered:
+            logger.info('Reading file: %s', filename_p)
 
             try:
-                with Image.open(str(filename)) as img:
+                with Image.open(str(filename_p)) as img:
                     image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', filename)
+                logger.error('Unable to read %s', filename_p)
                 continue
 
 
-            self.processImage(filename, image)
+            self.processImage(filename_p, image)
 
 
         try:
@@ -94,7 +136,7 @@ class StarTrailGenerator(object):
         logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, filename, image):
+    def processImage(self, file_p, image):
         image_processing_start = time.time()
 
 
@@ -114,11 +156,24 @@ class StarTrailGenerator(object):
             self._generateSqmMask(image)
 
 
+
         # need grayscale image for mask generation
         if len(image.shape) == 2:
             image_gray = image.copy()
         else:
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+
+        mtime_datetime_utc = datetime.fromtimestamp(file_p.stat().st_mtime).astimezone(tz=timezone.utc)
+        self.obs.date = mtime_datetime_utc
+
+        self.sun.compute(self.obs)
+        sun_alt = math.degrees(self.sun.alt)
+
+        if sun_alt > self.sun_alt_threshold:
+            logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
+            self.excluded_images += 1
+            return
 
 
         m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
@@ -237,6 +292,24 @@ if __name__ == "__main__":
         type=float,
         default=1.0,
     )
+    argparser.add_argument(
+        '--latitude',
+        help='latitude',
+        type=float,
+        required=True,
+    )
+    argparser.add_argument(
+        '--longitude',
+        help='longitude',
+        type=float,
+        required=True,
+    )
+    argparser.add_argument(
+        '--sun_alt_threshold',
+        help='sun altitude threshold',
+        type=float,
+        default=-15.0,
+    )
 
 
     args = argparser.parse_args()
@@ -245,5 +318,9 @@ if __name__ == "__main__":
     sg.max_brightness = args.max_brightness
     sg.mask_threshold = args.mask_threshold
     sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
+    sg.latitude = args.latitude
+    sg.longitude = args.longitude
+    sg.sun_alt_threshold = args.sun_alt_threshold
+
     sg.main(args.output, args.inputdir)
 
