@@ -9,6 +9,8 @@
 import sys
 import argparse
 import time
+from datetime import datetime
+from datetime import timedelta
 from prettytable import PrettyTable
 from pathlib import Path
 import signal
@@ -475,12 +477,16 @@ class UploadSync(object):
 
 
     def _get_uploaded(self, table, mod, state=True):
+        now = datetime.now()
+        now_minus_10m = now - timedelta(minutes=10)
+
         if state:
             uploaded = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_true())\
                 .filter(table.id % mod == 0)\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
         else:
             uploaded = table.query\
@@ -488,35 +494,45 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.uploaded == sa_false())\
                 .filter(table.id % mod == 0)\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
 
         return uploaded
 
 
     def _get_s3(self, table, state=True):
+        now = datetime.now()
+        now_minus_10m = now - timedelta(minutes=10)
+
         if state:
             s3 = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key != sa_null())\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
         else:
             s3 = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key == sa_null())\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
 
         return s3
 
 
     def _get_syncapi(self, table, mod, state=True):
+        now = datetime.now()
+        now_minus_10m = now - timedelta(minutes=10)
+
         if state:
             syncapi = table.query\
                 .join(table.camera)\
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id != sa_null())\
                 .filter(table.id % mod == 0)\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
         else:
             syncapi = table.query\
@@ -524,6 +540,7 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.sync_id == sa_null())\
                 .filter(table.id % mod == 0)\
+                .filter(table.createDate <= now_minus_10m)\
                 .order_by(table.createDate.desc())
 
         return syncapi
