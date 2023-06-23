@@ -106,6 +106,7 @@ class UploadSync(object):
 
     def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
+        logger.warning('The program will exit when the current file transfers complete')
 
         # set flag for program to stop processes
         self._shutdown = True
