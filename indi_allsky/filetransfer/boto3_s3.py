@@ -60,6 +60,8 @@ class boto3_s3(GenericFileTransfer):
     def close(self):
         super(boto3_s3, self).close()
 
+        self.client.close()
+
 
     def put(self, *args, **kwargs):
         super(boto3_s3, self).put(*args, **kwargs)
