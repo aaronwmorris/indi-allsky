@@ -501,8 +501,13 @@ class VideoWorker(Process):
         stg.latitude = camera.latitude
         stg.longitude = camera.longitude
         stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
-        stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
-        stg.moon_phase_threshold = self.config['STARTRAILS_MOON_PHASE_THOLD']
+
+        if self.config['STARTRAILS_MOONMODE_THOLD']:
+            stg.moonmode_alt = self.config['NIGHT_MOONMODE_ALT_DEG']
+            stg.moonmode_phase = self.config['NIGHT_MOONMODE_PHASE']
+        else:
+            stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
+            stg.moon_phase_threshold = self.config['STARTRAILS_MOON_PHASE_THOLD']
 
 
         # Files are presorted from the DB

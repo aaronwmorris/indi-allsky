@@ -885,6 +885,7 @@ class ConfigView(FormView):
             'KEOGRAM_V_SCALE'                : self.indi_allsky_config.get('KEOGRAM_V_SCALE', 33),
             'KEOGRAM_LABEL'                  : self.indi_allsky_config.get('KEOGRAM_LABEL', True),
             'STARTRAILS_SUN_ALT_THOLD'       : self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0),
+            'STARTRAILS_MOONMODE_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOONMODE_THOLD', True),
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
             'STARTRAILS_MOON_PHASE_THOLD'    : self.indi_allsky_config.get('STARTRAILS_MOON_PHASE_THOLD', 101.0),
             'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 65),
@@ -1315,6 +1316,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['KEOGRAM_V_SCALE']                      = int(request.json['KEOGRAM_V_SCALE'])
         self.indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
         self.indi_allsky_config['STARTRAILS_SUN_ALT_THOLD']             = float(request.json['STARTRAILS_SUN_ALT_THOLD'])
+        self.indi_allsky_config['STARTRAILS_MOONMODE_THOLD']            = bool(request.json['STARTRAILS_MOONMODE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']            = float(request.json['STARTRAILS_MOON_ALT_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOON_PHASE_THOLD']          = float(request.json['STARTRAILS_MOON_PHASE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])

@@ -1662,13 +1662,26 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MOONMODE_THOLD.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.STARTRAILS_MOONMODE_THOLD(class='form-check-input') }}
+                <div id="STARTRAILS_MOONMODE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Exclude images during moonmode</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_MOON_ALT_THOLD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             {{ form_config.STARTRAILS_MOON_ALT_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MOON_ALT_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Moon altitude threshold (91 is disabled)</div>
+        <div class="col-sm-8">Custom moon altitude threshold (91 is disabled)</div>
     </div>
 
     <div class="form-group row">
@@ -1679,7 +1692,7 @@
             {{ form_config.STARTRAILS_MOON_PHASE_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MOON_PHASE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Moon phase threshold (101 is disabled)</div>
+        <div class="col-sm-8">Custom moon phase threshold (101 is disabled)</div>
     </div>
 
     <div class="form-group row">
@@ -2977,6 +2990,7 @@ const checkbox_field_names = [
     'IMAGE_STRETCH__MOONMODE',
     'IMAGE_STRETCH__DAYTIME',
     'KEOGRAM_LABEL',
+    'STARTRAILS_MOONMODE_THOLD',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
@@ -3127,6 +3141,21 @@ $('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
     }
 });
 
+// startrails moonmode
+$('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+    } else {
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    }
+});
+
 
 $( document ).ready(function() {
     // FOCUS_MODE
@@ -3159,6 +3188,19 @@ $( document ).ready(function() {
         $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
     } else {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
+
+    // startrails moonmode
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+    } else {
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
     }
 });
 
