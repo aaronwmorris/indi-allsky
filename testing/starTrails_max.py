@@ -22,12 +22,13 @@ logger = logging
 class StarTrailGenerator(object):
 
     def __init__(self):
-        self._max_brightness = 50
+        self._max_adu = 65
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
         self._latitude = 0.0
         self._longitude = 0.0
         self._sun_alt_threshold = 0.0
+        self._moon_alt_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -41,15 +42,16 @@ class StarTrailGenerator(object):
 
         self.obs = ephem.Observer()
         self.sun = ephem.Sun()
+        self.moon = ephem.Moon()
 
 
     @property
-    def max_brightness(self):
-        return self._max_brightness
+    def max_adu(self):
+        return self._max_adu
 
-    @max_brightness.setter
-    def max_brightness(self, new_max):
-        self._max_brightness = new_max
+    @max_adu.setter
+    def max_adu(self, new_max):
+        self._max_adu = int(new_max)
 
     @property
     def mask_threshold(self):
@@ -57,7 +59,7 @@ class StarTrailGenerator(object):
 
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
-        self._mask_threshold = new_thold
+        self._mask_threshold = int(new_thold)
 
     @property
     def pixel_cutoff_threshold(self):
@@ -65,7 +67,7 @@ class StarTrailGenerator(object):
 
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
-        self._pixel_cutoff_threshold = new_thold
+        self._pixel_cutoff_threshold = float(new_thold)
 
     @property
     def latitude(self):
@@ -93,11 +95,24 @@ class StarTrailGenerator(object):
     def sun_alt_threshold(self, new_sun_alt_threshold):
         self._sun_alt_threshold = float(new_sun_alt_threshold)
 
+    @property
+    def moon_alt_threshold(self):
+        return self._moon_alt_threshold
+
+    @moon_alt_threshold.setter
+    def moon_alt_threshold(self, new_moon_alt_threshold):
+        self._moon_alt_threshold = float(new_moon_alt_threshold)
+
 
 
     def main(self, outfile, inputdir):
-        logger.warning('Latitude configured for  %0.1f', self.latitude)
+        logger.warning('Max ADU: %d', self.max_adu)
+        logger.warning('Mask threshold: %d', self.mask_threshold)
+        logger.warning('Mask threshold %%: %0.1f', self.pixel_cutoff_threshold)
+        logger.warning('Latitude configured for %0.1f', self.latitude)
         logger.warning('Longitude configured for %0.1f', self.longitude)
+        logger.warning('Sun altitude threshold: %0.1f', self.sun_alt_threshold)
+        logger.warning('Moon altitude threshold: %0.1f', self.moon_alt_threshold)
         time.sleep(3)
 
         file_list = list()
@@ -167,6 +182,7 @@ class StarTrailGenerator(object):
         mtime_datetime_utc = datetime.fromtimestamp(file_p.stat().st_mtime).astimezone(tz=timezone.utc)
         self.obs.date = mtime_datetime_utc
 
+
         self.sun.compute(self.obs)
         sun_alt = math.degrees(self.sun.alt)
 
@@ -176,8 +192,17 @@ class StarTrailGenerator(object):
             return
 
 
+        self.moon.compute(self.obs)
+        moon_alt = math.degrees(self.moon.alt)
+
+        if moon_alt > self.moon_alt_threshold:
+            logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
+            self.excluded_images += 1
+            return
+
+
         m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
-        if m_avg > self._max_brightness:
+        if m_avg > self.max_adu:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
             return
@@ -272,11 +297,11 @@ if __name__ == "__main__":
         required=True,
     )
     argparser.add_argument(
-        '--max_brightness',
-        '-l',
+        '--max_adu',
+        '-a',
         help='max brightness limit',
         type=int,
-        default=50,
+        default=65,
     )
     argparser.add_argument(
         '--mask_threshold',
@@ -310,17 +335,24 @@ if __name__ == "__main__":
         type=float,
         default=-15.0,
     )
+    argparser.add_argument(
+        '--moon_alt_threshold',
+        help='moon altitude threshold',
+        type=float,
+        default=0.0,
+    )
 
 
     args = argparser.parse_args()
 
     sg = StarTrailGenerator()
-    sg.max_brightness = args.max_brightness
+    sg.max_adu = args.max_adu
     sg.mask_threshold = args.mask_threshold
     sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
     sg.latitude = args.latitude
     sg.longitude = args.longitude
     sg.sun_alt_threshold = args.sun_alt_threshold
+    sg.moon_alt_threshold = args.moon_alt_threshold
 
     sg.main(args.output, args.inputdir)
 

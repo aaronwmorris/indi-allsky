@@ -119,12 +119,13 @@ class IndiAllSkyConfigBase(object):
         "KEOGRAM_H_SCALE"  : 100,
         "KEOGRAM_V_SCALE"  : 33,
         "KEOGRAM_LABEL"    : True,
-        "STARTRAILS_MAX_ADU"    : 50,
+        "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
         "STARTRAILS_SUN_ALT_THOLD"       : -15.0,
+        "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
@@ -174,7 +175,7 @@ class IndiAllSkyConfigBase(object):
             [ "OBJECT", "" ],
             [ "NOTES", "" ],
         ],
-        "IMAGE_LABEL_SYSTEM" : "opencv",
+        "IMAGE_LABEL_SYSTEM" : "pillow",
         "TEXT_PROPERTIES" : {
             "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
             "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
@@ -183,7 +184,7 @@ class IndiAllSkyConfigBase(object):
             "FONT_THICKNESS" : 1,
             "FONT_OUTLINE"   : True,
             "FONT_HEIGHT"    : 30,
-            "FONT_X"         : 15,
+            "FONT_X"         : 30,
             "FONT_Y"         : 30,
             "FONT_COLOR"     : [200, 200, 200],
             "PIL_FONT_FILE"  : "fonts-freefont-ttf/FreeSans.ttf",

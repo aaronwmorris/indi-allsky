@@ -706,6 +706,17 @@ def STARTRAILS_SUN_ALT_THOLD_validator(form, field):
         raise ValidationError('Sun altitude must be less than 90')
 
 
+def STARTRAILS_MOON_ALT_THOLD_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -90:
+        raise ValidationError('Moon altitude must be greater than -90')
+
+    if field.data > 91:
+        raise ValidationError('Sun altitude must be less than 91')
+
+
 def IMAGE_FILE_TYPE_validator(form, field):
     if field.data not in ('jpg', 'png', 'tif', 'webp'):
         raise ValidationError('Please select a valid file type')
@@ -1965,6 +1976,7 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
+    STARTRAILS_MOON_ALT_THOLD        = FloatField('Star Trails Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])

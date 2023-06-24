@@ -501,6 +501,7 @@ class VideoWorker(Process):
         stg.latitude = camera.latitude
         stg.longitude = camera.longitude
         stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
+        stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
 
 
         # Files are presorted from the DB

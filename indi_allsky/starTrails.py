@@ -32,6 +32,7 @@ class StarTrailGenerator(object):
         self._latitude = 0.0
         self._longitude = 0.0
         self._sun_alt_threshold = 0.0
+        self._moon_alt_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -40,6 +41,7 @@ class StarTrailGenerator(object):
 
         self.obs = ephem.Observer()
         self.sun = ephem.Sun()
+        self.moon = ephem.Moon()
 
         self.image_processing_elapsed_s = 0
 
@@ -134,6 +136,14 @@ class StarTrailGenerator(object):
     def sun_alt_threshold(self, new_sun_alt_threshold):
         self._sun_alt_threshold = float(new_sun_alt_threshold)
 
+    @property
+    def moon_alt_threshold(self):
+        return self._moon_alt_threshold
+
+    @moon_alt_threshold.setter
+    def moon_alt_threshold(self, new_moon_alt_threshold):
+        self._moon_alt_threshold = float(new_moon_alt_threshold)
+
 
 
     def generate(self, outfile, file_list):
@@ -212,6 +222,15 @@ class StarTrailGenerator(object):
 
         if sun_alt > self.sun_alt_threshold:
             #logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
+            self.excluded_images += 1
+            return
+
+
+        self.moon.compute(self.obs)
+        moon_alt = math.degrees(self.moon.alt)
+
+        if moon_alt > self.moon_alt_threshold:
+            #logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
             self.excluded_images += 1
             return
 
