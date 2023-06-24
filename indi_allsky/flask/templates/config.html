@@ -1673,6 +1673,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MOON_PHASE_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MOON_PHASE_THOLD(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MOON_PHASE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Moon phase threshold (101 is disabled)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_MAX_ADU.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2838,6 +2849,7 @@ const field_names = [
     'STARTRAILS_TIMELAPSE_MINFRAMES',
     'STARTRAILS_SUN_ALT_THOLD',
     'STARTRAILS_MOON_ALT_THOLD',
+    'STARTRAILS_MOON_PHASE_THOLD',
     'IMAGE_FILE_TYPE',
     'IMAGE_FILE_COMPRESSION__JPG',
     'IMAGE_FILE_COMPRESSION__PNG',

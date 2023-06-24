@@ -126,6 +126,7 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
         "STARTRAILS_SUN_ALT_THOLD"       : -15.0,
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
+        "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
