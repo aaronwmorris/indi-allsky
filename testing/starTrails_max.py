@@ -28,6 +28,7 @@ class StarTrailGenerator(object):
         self._latitude = 0.0
         self._longitude = 0.0
         self._sun_alt_threshold = 0.0
+        self._moon_alt_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -41,6 +42,7 @@ class StarTrailGenerator(object):
 
         self.obs = ephem.Observer()
         self.sun = ephem.Sun()
+        self.moon = ephem.Moon()
 
 
     @property
@@ -92,6 +94,14 @@ class StarTrailGenerator(object):
     @sun_alt_threshold.setter
     def sun_alt_threshold(self, new_sun_alt_threshold):
         self._sun_alt_threshold = float(new_sun_alt_threshold)
+
+    @property
+    def moon_alt_threshold(self):
+        return self._moon_alt_threshold
+
+    @moon_alt_threshold.setter
+    def moon_alt_threshold(self, new_moon_alt_threshold):
+        self._moon_alt_threshold = float(new_moon_alt_threshold)
 
 
 
@@ -167,11 +177,21 @@ class StarTrailGenerator(object):
         mtime_datetime_utc = datetime.fromtimestamp(file_p.stat().st_mtime).astimezone(tz=timezone.utc)
         self.obs.date = mtime_datetime_utc
 
+
         self.sun.compute(self.obs)
         sun_alt = math.degrees(self.sun.alt)
 
         if sun_alt > self.sun_alt_threshold:
             logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
+            self.excluded_images += 1
+            return
+
+
+        self.moon.compute(self.obs)
+        moon_alt = math.degrees(self.moon.alt)
+
+        if moon_alt > self.moon_alt_threshold:
+            logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
             self.excluded_images += 1
             return
 
@@ -310,6 +330,12 @@ if __name__ == "__main__":
         type=float,
         default=-15.0,
     )
+    argparser.add_argument(
+        '--moon_alt_threshold',
+        help='moon altitude threshold',
+        type=float,
+        default=0.0,
+    )
 
 
     args = argparser.parse_args()
@@ -321,6 +347,7 @@ if __name__ == "__main__":
     sg.latitude = args.latitude
     sg.longitude = args.longitude
     sg.sun_alt_threshold = args.sun_alt_threshold
+    sg.moon_alt_threshold = args.moon_alt_threshold
 
     sg.main(args.output, args.inputdir)
 
