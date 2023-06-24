@@ -3141,6 +3141,21 @@ $('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
     }
 });
 
+// startrails moonmode
+$('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+    } else {
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    }
+});
+
 
 $( document ).ready(function() {
     // FOCUS_MODE
@@ -3173,6 +3188,19 @@ $( document ).ready(function() {
         $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
     } else {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+    }
+
+    // startrails moonmode
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+    } else {
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
     }
 });
 
