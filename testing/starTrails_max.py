@@ -106,8 +106,13 @@ class StarTrailGenerator(object):
 
 
     def main(self, outfile, inputdir):
-        logger.warning('Latitude configured for  %0.1f', self.latitude)
+        logger.warning('Max ADU: %d', self.max_brightness)
+        logger.warning('Mask threshold: %d', self.mask_threshold)
+        logger.warning('Mask threshold %%: %0.1f', self.pixel_cutoff_threshold)
+        logger.warning('Latitude configured for %0.1f', self.latitude)
         logger.warning('Longitude configured for %0.1f', self.longitude)
+        logger.warning('Sun altitude threshold: %0.1f', self.sun_alt_threshold)
+        logger.warning('Moon altitude threshold: %0.1f', self.moon_alt_threshold)
         time.sleep(3)
 
         file_list = list()
