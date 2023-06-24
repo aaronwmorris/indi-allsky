@@ -22,7 +22,7 @@ logger = logging
 class StarTrailGenerator(object):
 
     def __init__(self):
-        self._max_brightness = 50
+        self._max_adu = 65
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
         self._latitude = 0.0
@@ -46,12 +46,12 @@ class StarTrailGenerator(object):
 
 
     @property
-    def max_brightness(self):
-        return self._max_brightness
+    def max_adu(self):
+        return self._max_adu
 
-    @max_brightness.setter
-    def max_brightness(self, new_max):
-        self._max_brightness = new_max
+    @max_adu.setter
+    def max_adu(self, new_max):
+        self._max_adu = int(new_max)
 
     @property
     def mask_threshold(self):
@@ -59,7 +59,7 @@ class StarTrailGenerator(object):
 
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
-        self._mask_threshold = new_thold
+        self._mask_threshold = int(new_thold)
 
     @property
     def pixel_cutoff_threshold(self):
@@ -67,7 +67,7 @@ class StarTrailGenerator(object):
 
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
-        self._pixel_cutoff_threshold = new_thold
+        self._pixel_cutoff_threshold = float(new_thold)
 
     @property
     def latitude(self):
@@ -106,7 +106,7 @@ class StarTrailGenerator(object):
 
 
     def main(self, outfile, inputdir):
-        logger.warning('Max ADU: %d', self.max_brightness)
+        logger.warning('Max ADU: %d', self.max_adu)
         logger.warning('Mask threshold: %d', self.mask_threshold)
         logger.warning('Mask threshold %%: %0.1f', self.pixel_cutoff_threshold)
         logger.warning('Latitude configured for %0.1f', self.latitude)
@@ -202,7 +202,7 @@ class StarTrailGenerator(object):
 
 
         m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
-        if m_avg > self._max_brightness:
+        if m_avg > self.max_adu:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
             return
@@ -297,11 +297,11 @@ if __name__ == "__main__":
         required=True,
     )
     argparser.add_argument(
-        '--max_brightness',
-        '-l',
+        '--max_adu',
+        '-a',
         help='max brightness limit',
         type=int,
-        default=50,
+        default=65,
     )
     argparser.add_argument(
         '--mask_threshold',
@@ -346,7 +346,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     sg = StarTrailGenerator()
-    sg.max_brightness = args.max_brightness
+    sg.max_adu = args.max_adu
     sg.mask_threshold = args.mask_threshold
     sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
     sg.latitude = args.latitude
