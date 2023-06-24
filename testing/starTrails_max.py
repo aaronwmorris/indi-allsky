@@ -206,13 +206,8 @@ class StarTrailGenerator(object):
         moon_alt = math.degrees(self.moon.alt)
         moon_phase = self.moon.moon_phase * 100.0
 
-        if moon_alt > self.moon_alt_threshold:
-            logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
-            self.excluded_images += 1
-            return
-
-        if moon_phase > self.moon_phase_threshold:
-            logger.warning(' Excluding image due to moon phase: %0.1f', moon_phase)
+        if moon_alt > self.moon_alt_threshold and moon_phase > self.moon_phase_threshold:
+            logger.warning(' Excluding image due to moon altitude/phase: %0.1f/%0.1f%%', moon_alt, moon_phase)
             self.excluded_images += 1
             return
 
@@ -361,7 +356,7 @@ if __name__ == "__main__":
         '--moon_phase_threshold',
         help='moon phase threshold',
         type=float,
-        default=50.0,
+        default=33.0,
     )
 
 
