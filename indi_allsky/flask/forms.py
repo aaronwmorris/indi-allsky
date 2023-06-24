@@ -1987,6 +1987,7 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
+    STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Star Trails Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
     STARTRAILS_MOON_PHASE_THOLD      = FloatField('Star Trails Max Moon Phase', validators=[DataRequired(), STARTRAILS_MOON_PHASE_THOLD_validator])
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])

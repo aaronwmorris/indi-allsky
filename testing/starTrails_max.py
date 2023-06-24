@@ -27,9 +27,9 @@ class StarTrailGenerator(object):
         self._pixel_cutoff_threshold = 1.0
         self._latitude = 0.0
         self._longitude = 0.0
-        self._sun_alt_threshold = 0.0
+        self._sun_alt_threshold = -15.0
         self._moon_alt_threshold = 0.0
-        self._moon_phase_threshold = 0.0
+        self._moon_phase_threshold = 33.0
 
         self.trail_image = None
         self.trail_count = 0
