@@ -29,6 +29,7 @@ class StarTrailGenerator(object):
         self._longitude = 0.0
         self._sun_alt_threshold = 0.0
         self._moon_alt_threshold = 0.0
+        self._moon_phase_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -103,6 +104,14 @@ class StarTrailGenerator(object):
     def moon_alt_threshold(self, new_moon_alt_threshold):
         self._moon_alt_threshold = float(new_moon_alt_threshold)
 
+    @property
+    def moon_phase_threshold(self):
+        return self._moon_phase_threshold
+
+    @moon_phase_threshold.setter
+    def moon_phase_threshold(self, new_moon_phase_threshold):
+        self._moon_phase_threshold = float(new_moon_phase_threshold)
+
 
 
     def main(self, outfile, inputdir):
@@ -113,6 +122,7 @@ class StarTrailGenerator(object):
         logger.warning('Longitude configured for %0.1f', self.longitude)
         logger.warning('Sun altitude threshold: %0.1f', self.sun_alt_threshold)
         logger.warning('Moon altitude threshold: %0.1f', self.moon_alt_threshold)
+        logger.warning('Moon phase threshold: %0.1f', self.moon_phase_threshold)
         time.sleep(3)
 
         file_list = list()
@@ -194,9 +204,15 @@ class StarTrailGenerator(object):
 
         self.moon.compute(self.obs)
         moon_alt = math.degrees(self.moon.alt)
+        moon_phase = self.moon.moon_phase * 100.0
 
         if moon_alt > self.moon_alt_threshold:
             logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
+            self.excluded_images += 1
+            return
+
+        if moon_phase > self.moon_phase_threshold:
+            logger.warning(' Excluding image due to moon phase: %0.1f', moon_phase)
             self.excluded_images += 1
             return
 
@@ -341,6 +357,12 @@ if __name__ == "__main__":
         type=float,
         default=0.0,
     )
+    argparser.add_argument(
+        '--moon_phase_threshold',
+        help='moon phase threshold',
+        type=float,
+        default=50.0,
+    )
 
 
     args = argparser.parse_args()
@@ -353,6 +375,7 @@ if __name__ == "__main__":
     sg.longitude = args.longitude
     sg.sun_alt_threshold = args.sun_alt_threshold
     sg.moon_alt_threshold = args.moon_alt_threshold
+    sg.moon_phase_threshold = args.moon_phase_threshold
 
     sg.main(args.output, args.inputdir)
 

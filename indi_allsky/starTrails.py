@@ -33,6 +33,7 @@ class StarTrailGenerator(object):
         self._longitude = 0.0
         self._sun_alt_threshold = 0.0
         self._moon_alt_threshold = 0.0
+        self._moon_phase_threshold = 0.0
 
         self.trail_image = None
         self.trail_count = 0
@@ -144,6 +145,14 @@ class StarTrailGenerator(object):
     def moon_alt_threshold(self, new_moon_alt_threshold):
         self._moon_alt_threshold = float(new_moon_alt_threshold)
 
+    @property
+    def moon_phase_threshold(self):
+        return self._moon_phase_threshold
+
+    @moon_phase_threshold.setter
+    def moon_phase_threshold(self, new_moon_phase_threshold):
+        self._moon_phase_threshold = float(new_moon_phase_threshold)
+
 
 
     def generate(self, outfile, file_list):
@@ -228,9 +237,15 @@ class StarTrailGenerator(object):
 
         self.moon.compute(self.obs)
         moon_alt = math.degrees(self.moon.alt)
+        moon_phase = self.moon.moon_phase * 100.0
 
         if moon_alt > self.moon_alt_threshold:
             #logger.warning(' Excluding image due to moon altitude: %0.1f', moon_alt)
+            self.excluded_images += 1
+            return
+
+        if moon_phase > self.moon_phase_threshold:
+            #logger.warning(' Excluding image due to moon phase: %0.1f', moon_phase)
             self.excluded_images += 1
             return
 
