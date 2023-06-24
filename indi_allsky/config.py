@@ -175,7 +175,7 @@ class IndiAllSkyConfigBase(object):
             [ "OBJECT", "" ],
             [ "NOTES", "" ],
         ],
-        "IMAGE_LABEL_SYSTEM" : "opencv",
+        "IMAGE_LABEL_SYSTEM" : "pillow",
         "TEXT_PROPERTIES" : {
             "DATE_FORMAT"    : "%Y%m%d %H:%M:%S",
             "FONT_FACE"      : "FONT_HERSHEY_SIMPLEX",
@@ -184,7 +184,7 @@ class IndiAllSkyConfigBase(object):
             "FONT_THICKNESS" : 1,
             "FONT_OUTLINE"   : True,
             "FONT_HEIGHT"    : 30,
-            "FONT_X"         : 15,
+            "FONT_X"         : 30,
             "FONT_Y"         : 30,
             "FONT_COLOR"     : [200, 200, 200],
             "PIL_FONT_FILE"  : "fonts-freefont-ttf/FreeSans.ttf",
