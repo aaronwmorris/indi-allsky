@@ -980,8 +980,6 @@ class ConfigView(FormView):
             'S3UPLOAD__URL_TEMPLATE'         : self.indi_allsky_config.get('S3UPLOAD', {}).get('URL_TEMPLATE', 'https://{bucket}.s3.{region}.{host}'),
             'S3UPLOAD__STORAGE_CLASS'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('STORAGE_CLASS', 'STANDARD'),
             'S3UPLOAD__ACL'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACL', 'public-read'),
-            'S3UPLOAD__EXPIRE_IMAGES'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('EXPIRE_IMAGES', True),
-            'S3UPLOAD__EXPIRE_TIMELAPSE'     : self.indi_allsky_config.get('S3UPLOAD', {}).get('EXPIRE_TIMELAPSE', True),
             'S3UPLOAD__TLS'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('TLS', True),
             'S3UPLOAD__CERT_BYPASS'          : self.indi_allsky_config.get('S3UPLOAD', {}).get('CERT_BYPASS', False),
             'MQTTPUBLISH__ENABLE'            : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('ENABLE', False),
@@ -1413,8 +1411,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE']             = str(request.json['S3UPLOAD__URL_TEMPLATE'])
         self.indi_allsky_config['S3UPLOAD']['STORAGE_CLASS']            = str(request.json['S3UPLOAD__STORAGE_CLASS'])
         self.indi_allsky_config['S3UPLOAD']['ACL']                      = str(request.json['S3UPLOAD__ACL'])
-        self.indi_allsky_config['S3UPLOAD']['EXPIRE_IMAGES']            = bool(request.json['S3UPLOAD__EXPIRE_IMAGES'])
-        self.indi_allsky_config['S3UPLOAD']['EXPIRE_TIMELAPSE']         = bool(request.json['S3UPLOAD__EXPIRE_TIMELAPSE'])
         self.indi_allsky_config['S3UPLOAD']['TLS']                      = bool(request.json['S3UPLOAD__TLS'])
         self.indi_allsky_config['S3UPLOAD']['CERT_BYPASS']              = bool(request.json['S3UPLOAD__CERT_BYPASS'])
         self.indi_allsky_config['MQTTPUBLISH']['ENABLE']                = bool(request.json['MQTTPUBLISH__ENABLE'])
@@ -1894,9 +1890,11 @@ class SystemInfoView(TemplateView):
 
         context['net_list'] = self.getNetworkIps()
 
-        context['indiserver_service'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
-        context['indi_allsky_service'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
-        context['gunicorn_indi_allsky_service'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
+        context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
+        context['indi_allsky_service_activestate'], context['indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
+        context['indi_allsky_timer_activestate'], context['indi_allsky_timer_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_TIMER_NAME'])
+        context['gunicorn_indi_allsky_service_activestate'], context['gunicorn_indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
+        context['gunicorn_indi_allsky_socket_activestate'], context['gunicorn_indi_allsky_socket_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SOCKET_NAME'])
 
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
@@ -2084,25 +2082,29 @@ class SystemInfoView(TemplateView):
         return net_list
 
 
-    def getSystemdUnitStatus(self, unit):
+    def getSystemdUnitStatus(self, unit_name):
         try:
             session_bus = dbus.SessionBus()
         except dbus.exceptions.DBusException:
             # This happens in docker
-            return 'D-Bus Unavailable'
+            return 'D-Bus Unavailable', 'D-Bus Unavailable'
 
         systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
         try:
-            service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit))
+            #service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
+
+            unit = manager.LoadUnit(unit_name)
+            service = session_bus.get_object('org.freedesktop.systemd1', str(unit))
         except dbus.exceptions.DBusException:
-            return 'UNKNOWN'
+            return 'UNKNOWN', 'UNKNOWN'
 
         interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
-        unit_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
+        unit_active_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
+        unit_file_state = interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState')
 
-        return str(unit_state)
+        return str(unit_active_state), str(unit_file_state)
 
 
     def getSystemdTimeDate(self):
@@ -2215,12 +2217,15 @@ class AjaxSystemInfoView(BaseView):
                 r = self.stopSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             elif command == 'start':
                 r = self.startSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            elif command == 'disable':
+                r = self.disableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            elif command == 'enable':
+                r = self.enableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
                 }
                 return jsonify(errors_data), 400
-
 
         elif service == app.config['ALLSKY_SERVICE_NAME']:
             if command == 'hup':
@@ -2246,6 +2251,16 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(errors_data), 400
 
+        elif service == app.config['ALLSKY_TIMER_NAME']:
+            if command == 'disable':
+                r = self.disableSystemdUnit(app.config['ALLSKY_TIMER_NAME'])
+            elif command == 'enable':
+                r = self.enableSystemdUnit(app.config['ALLSKY_TIMER_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
 
         elif service == app.config['GUNICORN_SERVICE_NAME']:
             if command == 'stop':
@@ -2350,6 +2365,28 @@ class AjaxSystemInfoView(BaseView):
         systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.ReloadUnit(unit, 'fail')
+
+        return r
+
+
+    def disableSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.DisableUnitFiles([unit], False)
+
+        manager.Reload()
+
+        return r
+
+
+    def enableSystemdUnit(self, unit):
+        session_bus = dbus.SessionBus()
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+        r = manager.EnableUnitFiles([unit], False, True)
+
+        manager.Reload()
 
         return r
 

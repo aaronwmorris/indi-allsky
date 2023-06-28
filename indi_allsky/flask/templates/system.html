@@ -458,13 +458,13 @@ $('#form_settime').on('submit', function() {
 <div class="row">
     <div class="col-sm-2"></div>
     <div class="col-sm-2">indiserver</div>
-    <div class="col-sm-2">{{indiserver_service}}</div>
+    <div class="col-sm-2">{{indiserver_service_activestate}}</div>
     <div class="col-sm-2"></div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_stop">Stop indiserver</button>
+        <button class="btn btn-primary" id="button_indiserver_service_stop">Stop indiserver</button>
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_start">Start indiserver</button>
+        <button class="btn btn-primary" id="button_indiserver_service_start">Start indiserver</button>
     </div>
 </div>
 
@@ -472,17 +472,51 @@ $('#form_settime').on('submit', function() {
 
 <div class="row">
     <div class="col-sm-2"></div>
-    <div class="col-sm-2">indi-allsky</div>
-    <div class="col-sm-2">{{indi_allsky_service}}</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">{{indiserver_service_unitstate}}</div>
 
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_hup">Reload config</button>
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_stop">Stop indi-allsky</button>
+        <button class="btn btn-primary" id="button_indiserver_service_disable">Disable indiserver</button>
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_start">Start indi-allsky</button>
+        <button class="btn btn-primary" id="button_indiserver_service_enable">Enable indiserver</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">indi-allsky service</div>
+    <div class="col-sm-2">{{indi_allsky_service_activestate}}</div>
+
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_service_hup">Reload config</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_service_stop">Stop indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_service_start">Start indi-allsky</button>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">indi-allsky timer</div>
+    <div class="col-sm-2">{{indi_allsky_timer_unitstate}}</div>
+
+    <div class="col-sm-2">
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_timer_disable">Disable indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-primary" id="button_indi_allsky_timer_enable">Enable indi-allsky</button>
     </div>
 </div>
 
@@ -491,14 +525,38 @@ $('#form_settime').on('submit', function() {
 <div class="row">
     <div class="col-sm-2"></div>
     <div class="col-sm-2">gunicorn-indi-allsky</div>
-    <div class="col-sm-2">{{gunicorn_indi_allsky_service}}</div>
+    <div class="col-sm-2">{{gunicorn_indi_allsky_service_activestate}}</div>
     <div class="col-sm-2"></div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_stop">Stop gunicorn</button>
+        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_service_stop">Stop gunicorn</button>
     </div>
     <div class="col-sm-2">
         Auto restarted
     </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">gunicorn socket</div>
+    <div class="col-sm-2">{{gunicorn_indi_allsky_socket_unitstate}}</div>
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">
+    </div>
+    <div class="col-sm-2">
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+  <div class="col-sm-12">
+    <div>
+        <span class="badge rounded-pill bg-info">Info</span>
+        <span> Services are activated at boot by their respective timer or sockets.  Disabling the timer prevents the service from starting at boot.</span>
+    </div>
+  </div>
 </div>
 
 
@@ -692,29 +750,41 @@ function button_click(service, command) {
 };
 
 
-$("#button_indiserver_stop").on("click", function() {
+$("#button_indiserver_service_stop").on("click", function() {
     button_click('indiserver.service', 'stop');
 });
-$("#button_indiserver_start").on("click", function() {
+$("#button_indiserver_service_start").on("click", function() {
     button_click('indiserver.service', 'start');
 });
+$("#button_indiserver_service_disable").on("click", function() {
+    button_click('indiserver.service', 'disable');
+});
+$("#button_indiserver_service_enable").on("click", function() {
+    button_click('indiserver.service', 'enable');
+});
 
 
-$("#button_indi_allsky_hup").on("click", function() {
+$("#button_indi_allsky_service_hup").on("click", function() {
     button_click('indi-allsky.service', 'hup');
 });
-$("#button_indi_allsky_stop").on("click", function() {
+$("#button_indi_allsky_service_stop").on("click", function() {
     button_click('indi-allsky.service', 'stop');
 });
-$("#button_indi_allsky_start").on("click", function() {
+$("#button_indi_allsky_service_start").on("click", function() {
     button_click('indi-allsky.service', 'start');
 });
+$("#button_indi_allsky_timer_disable").on("click", function() {
+    button_click('indi-allsky.timer', 'disable');
+});
+$("#button_indi_allsky_timer_enable").on("click", function() {
+    button_click('indi-allsky.timer', 'enable');
+});
 
 
-$("#button_gunicorn_indi_allsky_stop").on("click", function() {
+$("#button_gunicorn_indi_allsky_service_stop").on("click", function() {
     button_click('gunicorn-indi-allsky.service', 'stop');
 });
-$("#button_gunicorn_indi_allsky_start").on("click", function() {
+$("#button_gunicorn_indi_allsky_service_start").on("click", function() {
     button_click('gunicorn-indi-allsky.service', 'start');
 });
 

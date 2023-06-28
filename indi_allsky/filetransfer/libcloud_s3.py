@@ -56,7 +56,6 @@ class libcloud_s3(GenericFileTransfer):
         bucket = kwargs['bucket']
         key = kwargs['key']
         storage_class = kwargs['storage_class']
-        #expire_days = kwargs['expire_days']
         acl = kwargs['acl']
         #metadata = kwargs['metadata']
 
@@ -66,6 +65,10 @@ class libcloud_s3(GenericFileTransfer):
         container = self.client.get_container(container_name=bucket)
 
         extra_args = dict()
+
+
+        # cache 30 days
+        extra_args['cache_control'] = 'max-age=2592000'
 
 
         if local_file_p.suffix in ['.jpg', '.jpeg']:
@@ -85,18 +88,6 @@ class libcloud_s3(GenericFileTransfer):
 
         if acl:
             extra_args['acl'] = acl  # all assets are normally publicly readable
-
-
-        #if expire_days:
-        #    now = datetime.now()
-
-        #    createDate = datetime.fromtimestamp(metadata['createDate'])
-
-        #    # the expiration should take into account when the asset was created (if uploaded in the future)
-        #    days_now_diff = (now - createDate) / timedelta(days=1)
-        #    expire_days_diff = expire_days - days_now_diff
-
-        #    extra_args['Expires'] = now + timedelta(days=expire_days + 3)  # plus 3 days
 
 
         start = time.time()

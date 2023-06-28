@@ -4,8 +4,8 @@ from .exceptions import ConnectionFailure
 from .exceptions import TransferFailure
 
 from pathlib import Path
-from datetime import datetime
-from datetime import timedelta
+#from datetime import datetime
+#from datetime import timedelta
 import socket
 import time
 from botocore.client import Config
@@ -70,14 +70,17 @@ class boto3_s3(GenericFileTransfer):
         bucket = kwargs['bucket']
         key = kwargs['key']
         storage_class = kwargs['storage_class']
-        expire_days = kwargs['expire_days']
         acl = kwargs['acl']
-        metadata = kwargs['metadata']
+        #metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
 
 
         extra_args = dict()
+
+
+        # cache 30 days
+        extra_args['CacheControl'] = 'max-age=2592000'
 
 
         if local_file_p.suffix in ['.jpg', '.jpeg']:
@@ -101,18 +104,6 @@ class boto3_s3(GenericFileTransfer):
 
         if storage_class:
             extra_args['StorageClass'] = storage_class
-
-
-        if expire_days:
-            now = datetime.now()
-
-            createDate = datetime.fromtimestamp(metadata['createDate'])
-
-            # the expiration should take into account when the asset was created (if uploaded in the future)
-            days_now_diff = (now - createDate) / timedelta(days=1)
-            expire_days_diff = expire_days - days_now_diff
-
-            extra_args['Expires'] = now + timedelta(days=expire_days_diff + 3)  # plus 3 days
 
 
         start = time.time()
