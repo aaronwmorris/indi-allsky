@@ -67,6 +67,22 @@ class libcloud_s3(GenericFileTransfer):
 
         extra_args = dict()
 
+
+        if local_file_p.suffix in ['.jpg', '.jpeg']:
+            extra_args['content_type'] = 'image/jpeg'
+        elif local_file_p.suffix in ['.mp4']:
+            extra_args['content_type'] = 'video/mp4'
+        elif local_file_p.suffix in ['.png']:
+            extra_args['content_type'] = 'image/png'
+        elif local_file_p.suffix in ['.webm']:
+            extra_args['content_type'] = 'video/webm'
+        elif local_file_p.suffix in ['.webp']:
+            extra_args['content_type'] = 'image/webp'
+        else:
+            # default application/octet-stream
+            pass
+
+
         if acl:
             extra_args['acl'] = acl  # all assets are normally publicly readable
 
