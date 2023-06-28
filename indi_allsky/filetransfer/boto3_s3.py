@@ -79,6 +79,22 @@ class boto3_s3(GenericFileTransfer):
 
         extra_args = dict()
 
+
+        if local_file_p.suffix in ['.jpg', '.jpeg']:
+            extra_args['ContentType'] = 'image/jpeg'
+        elif local_file_p.suffix in ['.mp4']:
+            extra_args['ContentType'] = 'video/mp4'
+        elif local_file_p.suffix in ['.png']:
+            extra_args['ContentType'] = 'image/png'
+        elif local_file_p.suffix in ['.webm']:
+            extra_args['ContentType'] = 'video/webm'
+        elif local_file_p.suffix in ['.webp']:
+            extra_args['ContentType'] = 'image/webp'
+        else:
+            # default application/octet-stream
+            pass
+
+
         if acl:
             extra_args['ACL'] = acl  # all assets are normally publicly readable
 
