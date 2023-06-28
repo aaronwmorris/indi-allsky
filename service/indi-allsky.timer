@@ -3,3 +3,6 @@ Description=Timer for the indi-allsky service
 
 [Timer]
 OnBootSec=2min
+
+[Install]
+WantedBy=timers.target
