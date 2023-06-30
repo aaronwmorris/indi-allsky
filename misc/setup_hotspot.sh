@@ -9,6 +9,7 @@ PATH=/bin:/usr/bin
 export PATH
 
 
+HOTSPOT_DEV="wlan0"
 HOTSPOT_IP="10.42.0.1"
 HOTSPOT_SSID="IndiAllsky"
 HOTSPOT_PSK="indiallsky"
@@ -201,8 +202,8 @@ sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi
 
 
 if [[ -f "/etc/dhcpcd.conf" ]]; then
-    if ! grep -q -e "^denyinterfaces wlan0" /etc/dhcpcd.conf; then
-        echo "denyinterfaces wlan0" | sudo tee -a /etc/dhcpcd.conf
+    if ! grep -q -e "^denyinterfaces $HOTSPOT_DEV" /etc/dhcpcd.conf; then
+        echo "denyinterfaces $HOTSPOT_DEV" | sudo tee -a /etc/dhcpcd.conf
         sudo systemctl daemon-reload
         sudo systemctl restart dhcpcd
     fi
@@ -217,7 +218,7 @@ sudo nmcli connection del HotSpot || true
 sleep 5
 
 sudo nmcli connection add \
-    ifname wlan0 \
+    ifname "$HOTSPOT_DEV" \
     type wifi \
     con-name "HotSpot" \
     autoconnect no \
