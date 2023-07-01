@@ -506,7 +506,7 @@
             {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
             <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Black level cutoff in standard deviations</div>
+        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
     </div>
 
     <div class="form-group row">
@@ -588,7 +588,7 @@
             {{ form_config.WBR_FACTOR(class='form-control bg-secondary') }}
             <div id="WBR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">1.0 is disabled</div>
     </div>
 
     <div class="form-group row">
@@ -634,7 +634,7 @@
             {{ form_config.SATURATION_FACTOR(class='form-control bg-secondary') }}
             <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
     </div>
 
     <hr />
@@ -1714,7 +1714,7 @@
             {{ form_config.STARTRAILS_MAX_ADU(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MAX_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Max average image brightness to include in star trails</div>
+        <div class="col-sm-8">Max average image brightness to include in star trails.  This should be at least 10 ADUs less than your target ADU.</div>
     </div>
 
     <div class="form-group row">
@@ -1725,7 +1725,7 @@
             {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Mask threshold for image brightness exclusion</div>
+        <div class="col-sm-8">Mask threshold ADU</div>
     </div>
 
     <div class="form-group row">
@@ -1736,7 +1736,7 @@
             {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Pixel threshold for mask threshold</div>
+        <div class="col-sm-8">Exclude image for this percentage of pixels above the Mask Threhold ADU</div>
     </div>
 
     <div class="form-group row">
