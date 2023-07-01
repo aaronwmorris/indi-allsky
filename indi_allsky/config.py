@@ -77,6 +77,7 @@ class IndiAllSkyConfigBase(object):
         "WBG_FACTOR"       : 1.0,
         "WBB_FACTOR"       : 1.0,
         "AUTO_WB"          : False,
+        "SATURATION_FACTOR": 1.0,
         "CCD_COOLING"      : False,
         "CCD_TEMP"         : 15.0,
         "TEMP_DISPLAY"     : "c",  # c = celcius, f = fahrenheit, k = kelvin",

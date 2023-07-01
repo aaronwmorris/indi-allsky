@@ -271,8 +271,19 @@ def WB_FACTOR_validator(form, field):
     if field.data < 0.0:
         raise ValidationError('Balance factor must be 0 or greater')
 
-    if field.data > 2.0:
-        raise ValidationError('Balance factor must be less than 2.0')
+    if field.data > 4.0:
+        raise ValidationError('Balance factor must be less than 4.0')
+
+
+def SATURATION_FACTOR_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Saturation factor must be 0 or greater')
+
+    if field.data > 4.0:
+        raise ValidationError('Saturation factor must be less than 4.0')
 
 
 def SCNR_ALGORITHM_validator(form, field):
@@ -1936,10 +1947,11 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
-    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
-    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
-    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[DataRequired(), WB_FACTOR_validator])
+    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator])
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator])
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
+    SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator])
     CCD_COOLING                      = BooleanField('CCD Cooling')
     CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])

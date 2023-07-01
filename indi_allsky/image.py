@@ -530,6 +530,10 @@ class ImageWorker(Process):
             self.image_processor.white_balance_auto_bgr()
 
 
+        # saturation
+        self.image_processor.saturation_adjust()
+
+
         if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
             # Contrast enhancement during the day
             self.image_processor.contrast_clahe()
@@ -2282,28 +2286,32 @@ class ImageProcessor(object):
             return
 
 
-        if not self.config.get('WBB_FACTOR'):
-            logger.error('Missing WBB_FACTOR setting')
-            return
+        WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
+        WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
+        WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
 
-        if not self.config.get('WBG_FACTOR'):
-            logger.error('Missing WBG_FACTOR setting')
+        if WBB_FACTOR == 1.0 and WBG_FACTOR == 1.0 and WBR_FACTOR == 1.0:
+            # no action
             return
-
-        if not self.config.get('WBR_FACTOR'):
-            logger.error('Missing WBR_FACTOR setting')
-            return
-
-        WBB_FACTOR = float(self.config.get('WBB_FACTOR'))
-        WBG_FACTOR = float(self.config.get('WBG_FACTOR'))
-        WBR_FACTOR = float(self.config.get('WBR_FACTOR'))
 
         b, g, r = cv2.split(self.image)
 
         logger.info('Applying manual color balance settings')
-        wbb = cv2.multiply(b, WBB_FACTOR)
-        wbg = cv2.multiply(g, WBG_FACTOR)
-        wbr = cv2.multiply(r, WBR_FACTOR)
+        if WBB_FACTOR == 1.0:
+            wbb = b
+        else:
+            wbb = cv2.multiply(b, WBB_FACTOR)
+
+        if WBG_FACTOR == 1.0:
+            wbg = g
+        else:
+            wbg = cv2.multiply(g, WBG_FACTOR)
+
+        if WBR_FACTOR == 1.0:
+            wbr = r
+        else:
+            wbr = cv2.multiply(r, WBR_FACTOR)
+
 
         self.image = cv2.merge([wbb, wbg, wbr])
 
@@ -2385,6 +2393,32 @@ class ImageProcessor(object):
         r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
 
         self.image = cv2.merge([b, g, r])
+
+
+    def saturation_adjust(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            return
+
+
+        SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+        if SATURATION_FACTOR == 1.0:
+            # no action
+            return
+
+        image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+
+        h, s, v = cv2.split(image_hsv)
+
+        logger.info('Applying saturation settings')
+        new_s = cv2.multiply(s, SATURATION_FACTOR)
+
+        self.image = cv2.cvtColor(cv2.merge([h, new_s, v]), cv2.COLOR_HSV2BGR)
 
 
     def contrast_clahe(self):
