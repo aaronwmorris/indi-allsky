@@ -300,6 +300,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+    elif [ "$CPU_ARCH" == "armv6l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
@@ -440,142 +443,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
             libcamera-apps
     fi
 
-
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
-    RSYSLOG_USER=root
-    RSYSLOG_GROUP=adm
-
-    MYSQL_ETC="/etc/mysql"
-
-    PYTHON_BIN=python3
-
-    VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
-
-
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
-        echo
-        echo
-        echo "libcamera is not supported in this distribution"
-        exit 1
-    fi
-
-
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
-    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
-        fi
-    fi
-
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
-        python3-pip \
-        virtualenv \
-        cmake \
-        gfortran \
-        whiptail \
-        rsyslog \
-        cron \
-        git \
-        cpio \
-        tzdata \
-        ca-certificates \
-        avahi-daemon \
-        apache2 \
-        swig \
-        libatlas-base-dev \
-        libilmbase-dev \
-        libopenexr-dev \
-        libgtk-3-0 \
-        libssl-dev \
-        libxml2-dev \
-        libxslt-dev \
-        libgnutls28-dev \
-        libcurl4-gnutls-dev \
-        libcfitsio-dev \
-        libnova-dev \
-        libdbus-1-dev \
-        libglib2.0-dev \
-        libffi-dev \
-        libopencv-dev \
-        libopenblas-dev \
-        default-libmysqlclient-dev \
-        pkg-config \
-        rustc \
-        cargo \
-        ffmpeg \
-        gifsicle \
-        jq \
-        sqlite3 \
-        policykit-1 \
-        dbus-user-session
-
-
-    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
-            mariadb-server
-    fi
-
-
-    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
-        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
-            INSTALL_INDI="false"
-        fi
-    fi
-
-    if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
-            indi-full \
-            indi-rpicam \
-            libindi-dev \
-            indi-asi \
-            libasi \
-            indi-qhy \
-            libqhy \
-            indi-playerone \
-            libplayerone \
-            indi-sv305 \
-            libsv305 \
-            libaltaircam \
-            libmallincam \
-            libmicam \
-            libnncam \
-            indi-toupbase \
-            libtoupcam \
-            indi-gphoto \
-            indi-sx \
-            indi-gpsd \
-            indi-gpsnmea
-    fi
-
-    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
-            libcamera-apps
-    fi
-
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
@@ -589,6 +456,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+    elif [ "$CPU_ARCH" == "armv6l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
@@ -733,6 +603,140 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
             libcamera-apps || true
     fi
 
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3
+
+    VIRTUALENV_REQ=requirements/requirements_debian10.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+
+
+    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
+        echo
+        echo
+        echo "libcamera is not supported in this distribution"
+        exit 1
+    fi
+
+
+    # reconfigure system timezone
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
+
+
+    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        # Astroberry repository
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
+            echo "Installing INDI via Astroberry repository"
+            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
+            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
+        fi
+    fi
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        apache2 \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        default-libmysqlclient-dev \
+        pkg-config \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            indi-rpicam \
+            libindi-dev \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            libcamera-apps
+    fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     DEBIAN_DISTRO=1
@@ -891,6 +895,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+    elif [ "$CPU_ARCH" == "armv6l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
         VIRTUALENV_REQ=requirements/requirements_debian11_32.txt

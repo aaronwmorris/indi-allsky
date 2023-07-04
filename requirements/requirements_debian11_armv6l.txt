@@ -1,0 +1,57 @@
+### This file is targeted to Raspbian/Debian 11 and Python 3.9 (armv7l)
+# https://www.piwheels.org/project/astropy/
+astropy
+# https://www.piwheels.org/project/numpy/
+numpy >= 1.22, <= 1.24.3
+# https://www.piwheels.org/project/opencv-python-headless/
+opencv-python-headless <= 4.6.0.66
+# https://www.piwheels.org/project/scipy/
+scipy <= 1.8.1
+# https://www.piwheels.org/project/ccdproc/
+ccdproc
+# https://www.piwheels.org/project/scikit-image/
+scikit-image <= 0.19.3
+astroalign
+bottleneck
+python-dateutil
+ephem
+paramiko
+# https://www.piwheels.org/project/pycurl/
+pycurl
+# https://www.piwheels.org/project/Pillow/
+Pillow
+piexif
+imageio
+imageio-ffmpeg
+# https://www.piwheels.org/project/imagecodecs/
+#imagecodecs
+cython
+#rawpy  # installed later
+pygifsicle
+gunicorn[gthread] >= 20.1.0
+inotify
+psutil
+Flask >= 2.3.2
+Flask-SQLAlchemy >= 3.0.4
+Flask-Migrate >= 4.0.4
+# needs at least 1.1.1 for flask 2.3
+Flask-WTF >= 1.1.1
+flask-login >= 0.6.2
+werkzeug >= 2.3.6
+is-safe-url
+certifi >= 2023.5.7
+# https://www.piwheels.org/project/cryptography/
+# segfault in newer versions
+cryptography == 37.0.4
+dbus-python
+paho-mqtt
+setuptools-rust
+# https://www.piwheels.org/project/bcrypt/
+# segfault in newer versions
+bcrypt == 3.2.2
+passlib[argon2]
+prettytable
+mysql-connector-python
+PyMySQL
+boto3
+apache-libcloud
