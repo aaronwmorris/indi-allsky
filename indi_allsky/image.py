@@ -1438,6 +1438,7 @@ class ImageProcessor(object):
 
         self._text_color_rgb = [None, None, None]
         self._text_xy = [None, None]
+        self._text_anchor_pillow = 'la'  # Pillow: left-ascender
 
         self._libcamera_raw = False
 
@@ -1565,6 +1566,16 @@ class ImageProcessor(object):
 
         #logger.info('New XY: %d, %d', x, y)
         self._text_xy = [x, y]
+
+
+    @property
+    def text_anchor_pillow(self):
+        return self._text_anchor_pillow
+
+    @text_anchor_pillow.setter
+    def text_anchor_pillow(self, new_anchor):
+        self._text_anchor_pillow = str(new_anchor)
+
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -3066,6 +3077,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             self.text_xy = [image_width - 300, image_height - (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)]
@@ -3075,6 +3087,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             # convert back to numpy array
@@ -3197,6 +3210,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             self._text_next_line()
@@ -3210,6 +3224,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             self._text_next_line()
@@ -3224,6 +3239,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             self._text_next_line()
@@ -3236,6 +3252,7 @@ class ImageProcessor(object):
                 font,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
+                anchor=self.text_anchor_pillow,
             )
 
             self._text_next_line()
@@ -3257,6 +3274,7 @@ class ImageProcessor(object):
                     font,
                     tuple(self.text_xy),
                     tuple(self.text_color_rgb),
+                    anchor=self.text_anchor_pillow,
                 )
 
                 self._text_next_line()
@@ -3266,7 +3284,7 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
 
 
-    def drawText_pillow(self, draw, text, font, pt, color_rgb):
+    def drawText_pillow(self, draw, text, font, pt, color_rgb, anchor='la'):
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             # black outline
             stroke_width = 4
@@ -3280,6 +3298,7 @@ class ImageProcessor(object):
             font=font,
             stroke_width=stroke_width,
             stroke_fill=(0, 0, 0),
+            anchor=anchor,
         )
 
 
@@ -3347,6 +3366,11 @@ class ImageProcessor(object):
             xy_data = m_xy.groupdict()
             self.text_xy = [xy_data['x'], xy_data['y']]
 
+
+        m_anchor = re.search(r'anchor:(?P<anchor>[a-z][a-z])', line, re.IGNORECASE)
+        if m_anchor:
+            anchor_data = m_anchor.groupdict()
+            self.text_anchor_pillow = str(anchor_data['anchor']).lower()
 
 
     def stretch(self):
