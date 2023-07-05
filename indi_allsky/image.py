@@ -1436,9 +1436,9 @@ class ImageProcessor(object):
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
-        self._text_color_rgb = [None, None, None]
-        self._text_xy = [None, None]
-        self._text_anchor_pillow = 'la'  # Pillow: left-ascender
+        self._text_color_rgb = [0, 0, 0]
+        self._text_xy = [0, 0]
+        self._text_anchor_pillow = 'la'
 
         self._libcamera_raw = False
 
@@ -2687,6 +2687,7 @@ class ImageProcessor(object):
         # set initial values
         self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         self.text_xy = [self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']]
+        self.text_anchor_pillow = 'la'  # Pillow: left-ascender
 
 
         i_ref = self.getLatestImage()
