@@ -1486,7 +1486,7 @@ class ImageProcessor(object):
 
     @property
     def shape(self):
-        return self.image_list[0]['hdulist'].data.shape
+        return self.image.shape
 
     @shape.setter
     def shape(self, *args):
@@ -1542,12 +1542,29 @@ class ImageProcessor(object):
         return self._text_xy
 
     @text_xy.setter
-    def text_xy(self, x):
-        if len(x) != 2:
+    def text_xy(self, xy):
+        if len(xy) != 2:
             logger.error('Text coordinate error')
             return
 
-        self._text_xy = [int(x[0]), int(x[1])]
+
+        x = int(xy[0])
+        y = int(xy[1])
+
+
+        height, width = self.image.shape[:2]
+
+        if x < 0:
+            # negative X values would start from the right side
+            x = width + x  # x is negative
+
+        if y < 0:
+            # negative Y values would start from the bottom
+            y = height + y  # y is negative
+
+
+        #logger.info('New XY: %d, %d', x, y)
+        self._text_xy = [x, y]
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -3325,7 +3342,7 @@ class ImageProcessor(object):
             self.text_color_rgb = [color_data['red'], color_data['green'], color_data['blue']]
 
 
-        m_xy = re.search(r'xy:(?P<x>\d+),(?P<y>\d+)', line, re.IGNORECASE)
+        m_xy = re.search(r'xy:(?P<x>\-?\d+),(?P<y>\-?\d+)', line, re.IGNORECASE)
         if m_xy:
             xy_data = m_xy.groupdict()
             self.text_xy = [xy_data['x'], xy_data['y']]
