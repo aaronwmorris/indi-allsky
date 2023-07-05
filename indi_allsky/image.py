@@ -2924,6 +2924,7 @@ class ImageProcessor(object):
 
         for line in image_label.split('\n'):
             if line.startswith('#'):
+                self._processLabelComment(line)
                 continue
 
 
@@ -3165,6 +3166,7 @@ class ImageProcessor(object):
 
         for line in image_label.split('\n'):
             if line.startswith('#'):
+                self._processLabelComment(line)
                 continue
 
 
@@ -3304,6 +3306,22 @@ class ImageProcessor(object):
         self.text_xy = text_xy
 
         return text_xy
+
+
+    def _processLabelComment(self, line):
+        # text color and location can be updated here
+
+        m_color = re.search(r'color:(?P<red>\d{1,3}),(?P<green>\d{1,3}),(?P<blue>\d{1,3})', line, re.IGNORECASE)
+        if m_color:
+            color_data = m_color.groupdict()
+            self.text_color_rgb = [color_data['red'], color_data['green'], color_data['blue']]
+
+
+        m_xy = re.search(r'xy:(?P<x>\d+),(?P<y>\d+)', line, re.IGNORECASE)
+        if m_xy:
+            xy_data = m_xy.groupdict()
+            self.text_xy = [xy_data['x'], xy_data['y']]
+
 
 
     def stretch(self):
