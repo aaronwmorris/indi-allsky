@@ -2980,6 +2980,10 @@ class ImageProcessor(object):
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
             for extra_text_line in extra_text_lines:
+                if line.startswith('#'):
+                    self._processLabelComment(line)
+                    continue
+
                 self.drawText_opencv(
                     self.image,
                     extra_text_line,
@@ -3226,6 +3230,10 @@ class ImageProcessor(object):
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
             for extra_text_line in extra_text_lines:
+                if line.startswith('#'):
+                    self._processLabelComment(line)
+                    continue
+
                 self.drawText_pillow(
                     draw,
                     extra_text_line,
