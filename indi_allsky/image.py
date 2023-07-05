@@ -561,7 +561,7 @@ class ImageWorker(Process):
         # denoise
         #self.image_processor.fastDenoise()
 
-        self.image_processor.image_text()
+        self.image_processor.label_image()
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -1436,6 +1436,9 @@ class ImageProcessor(object):
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
+        self._text_color_rgb = [None, None, None]
+        self._text_xy = [None, None]
+
         self._libcamera_raw = False
 
         # contains the current stacked image
@@ -1507,6 +1510,44 @@ class ImageProcessor(object):
     def libcamera_raw(self, new_libcamera_raw):
         self._libcamera_raw = bool(new_libcamera_raw)
 
+
+    @property
+    def text_color_rgb(self):
+        return self._text_color_rgb
+
+    @text_color_rgb.setter
+    def text_color_rgb(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._text_color_rgb = [int(x[0]), int(x[1]), int(x[2])]
+
+
+    @property
+    def text_color_bgr(self):
+        return [self._text_color_rgb[2], self._text_color_rgb[1], self._text_color_rgb[0]]  # reversed
+
+    @text_color_bgr.setter
+    def text_color_bgr(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._text_color_rgb = [int(x[2]), int(x[1]), int(x[0])]  # reversed
+
+
+    @property
+    def text_xy(self):
+        return self._text_xy
+
+    @text_xy.setter
+    def text_xy(self, x):
+        if len(x) != 2:
+            logger.error('Text coordinate error')
+            return
+
+        self._text_xy = [int(x[0]), int(x[1])]
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -2609,20 +2650,26 @@ class ImageProcessor(object):
         return numpy.maximum(masked_left, masked_right)
 
 
-    def image_text(self):
+    def label_image(self):
         # this needs to be enabled during focus mode
+
+
+        # set initial values
+        self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        self.text_xy = [self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']]
+
 
         i_ref = self.getLatestImage()
 
         # Labels are enabled by default
-        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
             self._image_orb_opencv(i_ref)
-            self._image_text_opencv(i_ref)
+            self._label_image_opencv(i_ref)
         elif image_label_system == 'pillow':
             self._image_orb_opencv(i_ref)
-            self._image_text_pillow(i_ref)
+            self._label_image_pillow(i_ref)
         else:
             logger.warning('Image labels disabled')
             return
@@ -2630,9 +2677,6 @@ class ImageProcessor(object):
 
     def _image_orb_opencv(self, i_ref):
         image_height, image_width = self.image.shape[:2]
-
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
 
 
         # Disabled when focus mode is enabled
@@ -2737,11 +2781,11 @@ class ImageProcessor(object):
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
         if orb_mode == 'ha':
-            self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
         elif orb_mode == 'az':
-            self._orb.drawOrbsAzimuth_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAzimuth_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
         elif orb_mode == 'alt':
-            self._orb.drawOrbsAltitude_opencv(self.image, utcnow, color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAltitude_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
         elif orb_mode == 'off':
             # orbs disabled
             pass
@@ -2749,11 +2793,8 @@ class ImageProcessor(object):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
-    def _image_text_opencv(self, i_ref):
+    def _label_image_opencv(self, i_ref):
         image_height, image_width = self.image.shape[:2]
-
-        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        color_bgr.reverse()
 
 
         # Disabled when focus mode is enabled
@@ -2764,15 +2805,16 @@ class ImageProcessor(object):
             self.drawText_opencv(
                 self.image,
                 'Focus Mode',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
-                tuple(color_bgr),
+                tuple(self.image_xy),
+                tuple(self.text_color_bgr),
             )
 
+            self.image_xy = [image_width - 250, image_height - 10]
             self.drawText_opencv(
                 self.image,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
-                (image_width - 250, image_height - 10),
-                tuple(color_bgr),
+                tuple(self.image_xy),
+                tuple(self.text_color_bgr),
             )
 
             return
@@ -2880,16 +2922,19 @@ class ImageProcessor(object):
 
 
 
-        line_offset = 0
         for line in image_label.split('\n'):
+            if line.startswith('#'):
+                continue
+
+
             self.drawText_opencv(
                 self.image,
                 line,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
+                tuple(self.text_xy),
+                tuple(self.text_color_bgr),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # Add moon mode indicator
@@ -2897,11 +2942,11 @@ class ImageProcessor(object):
             self.drawText_opencv(
                 self.image,
                 '* Moon Mode *',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
+                tuple(self.text_xy),
+                tuple(self.text_color_bgr),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # Add eclipse indicator
@@ -2910,22 +2955,22 @@ class ImageProcessor(object):
             self.drawText_opencv(
                 self.image,
                 '* LUNAR ECLIPSE *',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
+                tuple(self.text_xy),
+                tuple(self.text_color_bgr),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
         elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
             # Solar eclipse
             self.drawText_opencv(
                 self.image,
                 '* SOLAR ECLIPSE *',
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_bgr),
+                tuple(self.text_xy),
+                tuple(self.text_color_bgr),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # add extra text to image
@@ -2937,11 +2982,11 @@ class ImageProcessor(object):
                 self.drawText_opencv(
                     self.image,
                     extra_text_line,
-                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    tuple(color_bgr),
+                    tuple(self.text_xy),
+                    tuple(self.text_color_bgr),
                 )
 
-                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+                self._text_next_line()
 
 
     def drawText_opencv(self, data, text, pt, color_bgr):
@@ -2971,7 +3016,7 @@ class ImageProcessor(object):
         )
 
 
-    def _image_text_pillow(self, i_ref):
+    def _label_image_pillow(self, i_ref):
         img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         image_width, image_height  = img_rgb.size  # backwards from opencv
 
@@ -2987,8 +3032,6 @@ class ImageProcessor(object):
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
 
-        color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])  # RGB for pillow
-
 
         # Disabled when focus mode is enabled
         if self.config.get('FOCUS_MODE', False):
@@ -2999,16 +3042,17 @@ class ImageProcessor(object):
                 draw,
                 'Focus Mode',
                 font,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
+            self.text_xy = [image_width - 300, image_height - (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)]
             self.drawText_pillow(
                 draw,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
                 font,
-                (image_width - 300, image_height - (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
             # convert back to numpy array
@@ -3119,17 +3163,20 @@ class ImageProcessor(object):
 
 
 
-        line_offset = 0
         for line in image_label.split('\n'):
+            if line.startswith('#'):
+                continue
+
+
             self.drawText_pillow(
                 draw,
                 line,
                 font,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # Add moon mode indicator
@@ -3138,11 +3185,11 @@ class ImageProcessor(object):
                 draw,
                 '* Moon Mode *',
                 font,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # Add eclipse indicator
@@ -3152,11 +3199,11 @@ class ImageProcessor(object):
                 draw,
                 '* LUNAR ECLIPSE *',
                 font,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
         elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
             # Solar eclipse
@@ -3164,11 +3211,11 @@ class ImageProcessor(object):
                 draw,
                 '* SOLAR ECLIPSE *',
                 font,
-                (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                tuple(color_rgb),
+                tuple(self.text_xy),
+                tuple(self.text_color_rgb),
             )
 
-            line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+            self._text_next_line()
 
 
         # add extra text to image
@@ -3181,11 +3228,11 @@ class ImageProcessor(object):
                     draw,
                     extra_text_line,
                     font,
-                    (self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y'] + line_offset),
-                    tuple(color_rgb),
+                    tuple(self.text_xy),
+                    tuple(self.text_color_rgb),
                 )
 
-                line_offset += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+                self._text_next_line()
 
 
         # convert back to numpy array
@@ -3247,6 +3294,16 @@ class ImageProcessor(object):
 
 
         return extra_lines
+
+
+    def _text_next_line(self):
+        text_xy = self.text_xy
+
+        text_xy[1] += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+
+        self.text_xy = text_xy
+
+        return text_xy
 
 
     def stretch(self):
