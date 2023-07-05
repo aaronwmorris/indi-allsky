@@ -519,12 +519,6 @@ def IMAGE_LABEL_SYSTEM_validator(form, field):
 
 
 def IMAGE_LABEL_TEMPLATE_validator(form, field):
-    template_regex = r'^[a-zA-Z0-9_\-,\<\.\>\`\~\!\@\#\$\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\<\/\?\ \n]+$'
-
-    if not re.search(template_regex, field.data):
-        raise ValidationError('Invalid template data')
-
-
     now = datetime.now()
 
     test_data = {
