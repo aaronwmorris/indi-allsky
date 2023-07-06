@@ -34,14 +34,14 @@ logger = logging
 
 
 
-OVATION_JSON_URL = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
-OVATION_TEMP_JSON = '/tmp/ovation_aurora_latest_8275672.json'
-
-KINDEX_JSON_URL = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
-KINDEX_TEMP_JSON = '/tmp/noaa-planetary-k-index_3418272.json'
-
-
 class AuroraTest(object):
+    ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
+    ovation_temp_json = '/tmp/ovation_aurora_latest_8275672.json'
+
+    kindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
+    kindex_temp_json = '/tmp/noaa-planetary-k-index_3418272.json'
+
+
 
     def __init__(self):
         try:
@@ -55,35 +55,35 @@ class AuroraTest(object):
 
 
     def main(self):
-        ovation_json_p = Path(OVATION_TEMP_JSON)
-        kindex_json_p = Path(KINDEX_TEMP_JSON)
+        ovation_json_p = Path(self.ovation_temp_json)
+        kindex_json_p = Path(self.kindex_temp_json)
 
 
         now = datetime.now()
         now_minus_3h = now - timedelta(hours=3)
 
         if not ovation_json_p.exists():
-            ovation_json_data = self.download_json(OVATION_JSON_URL, ovation_json_p)
+            ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
         elif ovation_json_p.stat().st_mtime < now_minus_3h.timestamp():
             logger.warning('ovation json is older than 3 hours')
-            ovation_json_data = self.download_json(OVATION_JSON_URL, ovation_json_p)
+            ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
         else:
             ovation_json_data = self.load_json(ovation_json_p)
 
 
         if not kindex_json_p.exists():
-            kindex_json_data = self.download_json(KINDEX_JSON_URL, kindex_json_p)
+            kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
         elif kindex_json_p.stat().st_mtime < now_minus_3h.timestamp():
             logger.warning('kindex json is older than 3 hours')
-            kindex_json_data = self.download_json(KINDEX_JSON_URL, kindex_json_p)
+            kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
         else:
             kindex_json_data = self.load_json(kindex_json_p)
 
 
         latitude = self.config['LOCATION_LATITUDE']
         longitude = self.config['LOCATION_LONGITUDE']
-        #latitude = 75
-        #longitude = 30
+        latitude = 75
+        longitude = 0
 
         location_data = self.getOvationLocationData(ovation_json_data, latitude, longitude)
         logger.info('Data: %s', location_data)
@@ -128,6 +128,7 @@ class AuroraTest(object):
 
 
         lat_floor = math.floor(latitude)
+        # this will not work right at the north and south poles above 85 degrees latitude
         lat_list = [
             lat_floor - 5,
             lat_floor - 4,
@@ -156,6 +157,15 @@ class AuroraTest(object):
             long_floor + 4,
             long_floor + 5,
         ]
+
+
+        # fix longitudes that cross 0/360
+        for i in long_list:
+            if i < 0:
+                i = 360 + i  # i is negative
+            elif i > 360:
+                i = i - 360
+
 
         data_list = list()
         for x in json_data['coordinates']:
