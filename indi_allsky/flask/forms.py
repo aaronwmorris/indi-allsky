@@ -519,12 +519,6 @@ def IMAGE_LABEL_SYSTEM_validator(form, field):
 
 
 def IMAGE_LABEL_TEMPLATE_validator(form, field):
-    template_regex = r'^[a-zA-Z0-9_,\%\.\-\/\\\:\{\}\ \n]+$'
-
-    if not re.search(template_regex, field.data):
-        raise ValidationError('Invalid template data')
-
-
     now = datetime.now()
 
     test_data = {
@@ -539,6 +533,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'sqm'        : 8000.0,
         'stars'      : 1,
         'detections' : 'True',
+        'owner'      : 'foobar',
         'sun_alt'    : 0.0,
         'moon_alt'   : 0.0,
         'moon_phase' : 0.0,
@@ -555,6 +550,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'jupiter_up'   : 'No',
         'saturn_alt'   : 0.0,
         'saturn_up'    : 'No',
+        'location'     : 'here',
         'latitude'   : 0.0,
         'longitude'  : 0.0,
         'stack_method' : 'foo',
