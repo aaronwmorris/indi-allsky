@@ -160,6 +160,7 @@ class IndiAllSky(object):
 
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
+        #self.periodic_tasks_time = time.time()  # testing
         self.aurora_tasks_time = time.time()  # start immediately
 
 

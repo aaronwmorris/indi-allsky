@@ -1,3 +1,4 @@
+import time
 import socket
 import ssl
 import math
@@ -6,6 +7,7 @@ import requests
 import numpy
 import logging
 
+from .flask import db
 from .flask.miscDb import miscDb
 
 
@@ -67,12 +69,21 @@ class IndiAllskyAuroraUpdate(object):
         longitude = camera.longitude
 
 
+        if camera.data:
+            camera_data = dict(camera.data)
+        else:
+            camera_data = dict()
+
+
+        update_camera = False
+
         if ovation_json_data:
             max_ovation, avg_ovation = self.processOvationLocationData(ovation_json_data, latitude, longitude)
             logger.info('Max Ovation: %d', max_ovation)
             logger.info('Avg Ovation: %0.2f', avg_ovation)
 
-            self._miscDb.setState('OVATION_MAX', max_ovation)
+            camera_data['OVATION_MAX'] = max_ovation
+            update_camera = True
 
 
         if kindex_json_data:
@@ -80,8 +91,15 @@ class IndiAllskyAuroraUpdate(object):
             logger.info('kindex: %0.2f', kindex)
             logger.info('Data: x = %0.2f, b = %0.2f', kindex_poly.coef[0], kindex_poly.coef[1])
 
-            self._miscDb.setState('KINDEX_CURRENT', round(kindex, 2))
-            self._miscDb.setState('KINDEX_COEF', round(kindex_poly.coef[0], 2))
+            camera_data['KINDEX_CURRENT'] = round(kindex, 2)
+            camera_data['KINDEX_COEF'] = round(kindex_poly.coef[0], 2)
+            update_camera = True
+
+
+        if update_camera:
+            camera_data['AURORA_DATA_TS'] = int(time.time())
+            camera.data = camera_data
+            db.session.commit()
 
 
     def download_json(self, url):
