@@ -170,9 +170,13 @@ class AuroraTest(object):
             longitude = 360 + longitude  # logitude is negative
 
 
+        # 1 degree is ~69 miles, 7 degrees should be just under 500 miles
+
         lat_floor = math.floor(latitude)
-        # this will not work right at the north and south poles above 85 degrees latitude
+        # this will not work exactly right at the north and south poles above 80 degrees latitude
         lat_list = [
+            lat_floor - 7,
+            lat_floor - 6,
             lat_floor - 5,
             lat_floor - 4,
             lat_floor - 3,
@@ -184,11 +188,15 @@ class AuroraTest(object):
             lat_floor + 3,
             lat_floor + 4,
             lat_floor + 5,
+            lat_floor + 6,
+            lat_floor + 7,
         ]
 
         long_floor = math.floor(longitude)
         long_list = [
-            long_floor - 5,  # this should cover northern and southern hemispheres
+            long_floor - 7,  # this should cover northern and southern hemispheres
+            long_floor - 6,
+            long_floor - 5,
             long_floor - 4,
             long_floor - 3,
             long_floor - 2,
@@ -199,6 +207,8 @@ class AuroraTest(object):
             long_floor + 3,
             long_floor + 4,
             long_floor + 5,
+            long_floor + 6,
+            long_floor + 7,
         ]
 
 
