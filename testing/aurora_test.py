@@ -3,6 +3,8 @@
 
 import sys
 import io
+import socket
+import ssl
 import math
 from datetime import datetime
 from datetime import timedelta
@@ -62,45 +64,86 @@ class AuroraTest(object):
         now = datetime.now()
         now_minus_3h = now - timedelta(hours=3)
 
-        if not ovation_json_p.exists():
-            ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
-        elif ovation_json_p.stat().st_mtime < now_minus_3h.timestamp():
-            logger.warning('ovation json is older than 3 hours')
-            ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
-        else:
-            ovation_json_data = self.load_json(ovation_json_p)
+        try:
+            if not ovation_json_p.exists():
+                ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
+            elif ovation_json_p.stat().st_mtime < now_minus_3h.timestamp():
+                logger.warning('ovation json is older than 3 hours')
+                ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
+            else:
+                ovation_json_data = self.load_json(ovation_json_p)
+        except json.JSONDecodeError as e:
+            logger.error('JSON parse error: %s', str(e))
+            ovation_json_data = None
+        except socket.gaierror as e:
+            logger.error('Name resolution error: %s', str(e))
+            ovation_json_data = None
+        except socket.timeout as e:
+            logger.error('Timeout error: %s', str(e))
+            ovation_json_data = None
+        except ssl.SSLCertVerificationError as e:
+            logger.error('Certificate error: %s', str(e))
+            ovation_json_data = None
+        except requests.exceptions.SSLError as e:
+            logger.error('Certificate error: %s', str(e))
+            ovation_json_data = None
 
 
-        if not kindex_json_p.exists():
-            kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
-        elif kindex_json_p.stat().st_mtime < now_minus_3h.timestamp():
-            logger.warning('kindex json is older than 3 hours')
-            kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
-        else:
-            kindex_json_data = self.load_json(kindex_json_p)
+
+        try:
+            if not kindex_json_p.exists():
+                kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
+            elif kindex_json_p.stat().st_mtime < now_minus_3h.timestamp():
+                logger.warning('kindex json is older than 3 hours')
+                kindex_json_data = self.download_json(self.kindex_json_url, kindex_json_p)
+            else:
+                kindex_json_data = self.load_json(kindex_json_p)
+        except json.JSONDecodeError as e:
+            logger.error('JSON parse error: %s', str(e))
+            kindex_json_data = None
+        except socket.gaierror as e:
+            logger.error('Name resolution error: %s', str(e))
+            kindex_json_data = None
+        except socket.timeout as e:
+            logger.error('Timeout error: %s', str(e))
+            kindex_json_data = None
+        except ssl.SSLCertVerificationError as e:
+            logger.error('Certificate error: %s', str(e))
+            kindex_json_data = None
+        except requests.exceptions.SSLError as e:
+            logger.error('Certificate error: %s', str(e))
+            kindex_json_data = None
+
 
 
         latitude = self.config['LOCATION_LATITUDE']
         longitude = self.config['LOCATION_LONGITUDE']
-        latitude = 75
-        longitude = 0
+        #latitude = 75
+        #longitude = 0
 
-        location_data = self.getOvationLocationData(ovation_json_data, latitude, longitude)
-        logger.info('Data: %s', location_data)
 
-        kindex_poly = self.getKindexPoly(kindex_json_data)
-        logger.info('Data: %s', kindex_poly)
+        if ovation_json_data:
+            max_ovation, avg_ovation = self.processOvationLocationData(ovation_json_data, latitude, longitude)
+            logger.info('Max Ovation: %d', max_ovation)
+            logger.info('Avg Ovation: %0.2f', avg_ovation)
+
+
+        if kindex_json_data:
+            kindex, kindex_poly = self.processKindexPoly(kindex_json_data)
+            logger.info('kindex: %0.2f', kindex)
+            logger.info('Data: x = %0.2f, b = %0.2f', kindex_poly.coef[0], kindex_poly.coef[1])
 
 
 
     def download_json(self, url, tmpfile):
         logger.warning('Downloading %s', url)
-        r = requests.get(url, verify=True)
+        r = requests.get(url, allow_redirects=True, verify=True)
 
-        logger.info('HTTP Error: %d', r.status_code)
+        if r.status_code >= 400:
+            logger.error('URL returned %d', r.status_code)
+            return None
 
         json_data = json.loads(r.text)
-        #logger.warning('Response: %s', json_data)
 
         with io.open(tmpfile, 'w') as f_json:
             f_json.write(json.dumps(json_data))
@@ -118,7 +161,7 @@ class AuroraTest(object):
         return json_data
 
 
-    def getOvationLocationData(self, json_data, latitude, longitude):
+    def processOvationLocationData(self, json_data, latitude, longitude):
         # this will check a 5 degree by 5 degree grid and aggregate all of the ovation scores
 
         logger.warning('Looking up data for %0.1f, %0.1f', latitude, longitude)
@@ -168,13 +211,13 @@ class AuroraTest(object):
 
 
         data_list = list()
-        for x in json_data['coordinates']:
-            #logger.info('%s', x)
+        for i in json_data['coordinates']:
+            #logger.info('%s', i)
 
             for long_val in long_list:
                 for lat_val in lat_list:
-                    if x[0] == long_val and x[1] == lat_val:
-                        data_list.append(int(x[2]))
+                    if i[0] == long_val and i[1] == lat_val:
+                        data_list.append(int(i[2]))
 
 
         #logger.info('Data: %s', data_list)
@@ -182,8 +225,8 @@ class AuroraTest(object):
         return max(data_list), sum(data_list) / len(data_list)
 
 
-    def getKindexPoly(self, json_data):
-        k_last = json_data[-1][1]
+    def processKindexPoly(self, json_data):
+        k_last = float(json_data[-1][1])
 
         json_iter = iter(json_data)
         next(json_iter)  # skip first index
