@@ -446,7 +446,7 @@ class TemplateView(BaseView):
         elif kpindex_coef <= 0.5:
             kp_dir = '&searr;'
         else:
-            kp_dir = ''
+            kp_dir = '&rarr;'
 
 
         if kpindex_current == 0:
