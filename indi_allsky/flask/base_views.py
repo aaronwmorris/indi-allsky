@@ -192,6 +192,7 @@ class TemplateView(BaseView):
         context = {
             'indi_allsky_status' : self.get_indi_allsky_status(),
             'astrometric_data'   : self.get_astrometric_info(),
+            'aurora_data'        : self.get_aurora_info(),
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
@@ -405,6 +406,66 @@ class TemplateView(BaseView):
 
 
         #app.logger.info('Astrometric data: %s', data)
+
+        return data
+
+
+    def get_aurora_info(self):
+        camera_data = self.camera.data
+
+        if not camera_data:
+            data = {
+                'kpindex' : 'No data',
+                'ovation' : 'No data',
+            }
+            return data
+
+
+        now = datetime.now()
+        now_minus_7h = now - timedelta(hours=7)
+
+        data_timestamp = camera_data.get('AURORA_DATA_TS', 0)
+        if data_timestamp < now_minus_7h.timestamp():
+            data = {
+                'kpindex' : '- (old)',
+                'ovation' : '- (old)',
+            }
+            return data
+
+
+        data = dict()
+
+        kpindex_current = int(camera_data.get('KPINDEX_CURRENT'))
+        kpindex_coef = float(camera_data.get('KPINDEX_COEF'))
+
+
+        if kpindex_coef == 0:
+            kp_dir = ''
+        elif kpindex_coef >= 2:
+            kp_dir = '&nearr;'
+        elif kpindex_coef <= 0.5:
+            kp_dir = '&searr;'
+        else:
+            kp_dir = ''
+
+
+        if kpindex_current == 0:
+            data['kpindex'] = '-'
+        elif kpindex_current < 5:
+            data['kpindex'] = '<span class="text-secondary">{0:d} - LOW</span> {1:s}'.format(kpindex_current, kp_dir)
+        elif kpindex_current in (5, ):
+            data['kpindex'] = '<span class="text-warning">{0:d} - MEDIUM</span> {1:s}'.format(kpindex_current, kp_dir)
+        elif kpindex_current in (6, 7):
+            data['kpindex'] = '<span class="text-danger">{0:d} - HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
+        elif kpindex_current in (8, 9):
+            data['kpindex'] = '<span class="text-danger">{0:d} - VERY HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
+        else:
+            # this should never happen
+            data['kpindex'] = '{0:d} out of range'.format(kpindex_current)
+
+
+        ovation_max = int(camera_data.get('OVATION_MAX'))
+        data['ovation'] = '{0:d}%'.format(ovation_max)
 
         return data
 

@@ -17,7 +17,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllskyAuroraUpdate(object):
 
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
-    kindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
+    kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
 
 
     def __init__(self, config):
@@ -47,22 +47,22 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            kindex_json_data = self.download_json(self.kindex_json_url)
+            kpindex_json_data = self.download_json(self.kpindex_json_url)
         except json.JSONDecodeError as e:
             logger.error('JSON parse error: %s', str(e))
-            kindex_json_data = None
+            kpindex_json_data = None
         except socket.gaierror as e:
             logger.error('Name resolution error: %s', str(e))
-            kindex_json_data = None
+            kpindex_json_data = None
         except socket.timeout as e:
             logger.error('Timeout error: %s', str(e))
-            kindex_json_data = None
+            kpindex_json_data = None
         except ssl.SSLCertVerificationError as e:
             logger.error('Certificate error: %s', str(e))
-            kindex_json_data = None
+            kpindex_json_data = None
         except requests.exceptions.SSLError as e:
             logger.error('Certificate error: %s', str(e))
-            kindex_json_data = None
+            kpindex_json_data = None
 
 
         latitude = camera.latitude
@@ -86,13 +86,13 @@ class IndiAllskyAuroraUpdate(object):
             update_camera = True
 
 
-        if kindex_json_data:
-            kindex, kindex_poly = self.processKindexPoly(kindex_json_data)
-            logger.info('kindex: %0.2f', kindex)
-            logger.info('Data: x = %0.2f, b = %0.2f', kindex_poly.coef[0], kindex_poly.coef[1])
+        if kpindex_json_data:
+            kpindex, kpindex_poly = self.processKpindexPoly(kpindex_json_data)
+            logger.info('kpindex: %0.2f', kpindex)
+            logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
 
-            camera_data['KINDEX_CURRENT'] = round(kindex, 2)
-            camera_data['KINDEX_COEF'] = round(kindex_poly.coef[0], 2)
+            camera_data['KPINDEX_CURRENT'] = round(kpindex, 2)
+            camera_data['KPINDEX_COEF'] = round(kpindex_poly.coef[0], 2)
             update_camera = True
 
 
@@ -181,28 +181,28 @@ class IndiAllskyAuroraUpdate(object):
         return max(data_list), sum(data_list) / len(data_list)
 
 
-    def processKindexPoly(self, json_data):
-        k_last = float(json_data[-1][1])
+    def processKpindexPoly(self, json_data):
+        kp_last = float(json_data[-1][1])
 
         json_iter = iter(json_data)
         next(json_iter)  # skip first index
 
-        k_list = list()
+        kp_list = list()
         for k in json_iter:
             try:
-                k_list.append(float(k[1]))
+                kp_list.append(float(k[1]))
             except ValueError:
                 logger.error('Invalid float: %s', str(k[1]))
                 continue
 
 
-        #logger.info('kindex data: %s', k_list)
+        #logger.info('kpindex data: %s', kp_list)
 
-        x = numpy.arange(0, len(k_list))
-        y = numpy.array(k_list)
+        x = numpy.arange(0, len(kp_list))
+        y = numpy.array(kp_list)
 
         p_fitted = numpy.polynomial.Polynomial.fit(x, y, deg=1)
 
-        return k_last, p_fitted.convert()
+        return kp_last, p_fitted.convert()
 
 
