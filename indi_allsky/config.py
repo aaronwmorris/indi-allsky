@@ -197,7 +197,7 @@ class IndiAllSkyConfigBase(object):
         "ORB_PROPERTIES" : {
             "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
             "RADIUS"      : 9,
-            "SUN_COLOR"   : [255, 255, 255],
+            "SUN_COLOR"   : [200, 200, 0],
             "MOON_COLOR"  : [128, 128, 128],
         },
         "UPLOAD_WORKERS" : 1,
