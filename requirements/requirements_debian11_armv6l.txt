@@ -6,6 +6,7 @@ numpy >= 1.22, <= 1.24.3
 # https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless <= 4.6.0.66
 # https://www.piwheels.org/project/scipy/
+# vulnerable https://www.cve.org/CVERecord?id=CVE-2023-25399
 scipy <= 1.8.1
 # https://www.piwheels.org/project/ccdproc/
 ccdproc
