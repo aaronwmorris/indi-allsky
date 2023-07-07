@@ -132,6 +132,13 @@ fi
 [[ -f "$TMP_MQTTPUBLISH_HOST" ]] && rm -f "$TMP_MQTTPUBLISH_HOST"
 
 
+# tmp folder for python
+if [ -n "${CAPTURE_TMPDIR:-}" ]; then
+    TMPDIR="$CAPTURE_TMPDIR"
+    export TMPDIR
+fi
+
+
 # start the program
 ./allsky.py \
     --log stderr \
