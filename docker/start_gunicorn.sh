@@ -93,20 +93,25 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
 
 
-# Detect IMAGE_FOLDER
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
-echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
-
-
 # replace the flask IMAGE_FOLDER
 TMP_FLASK_3=$(mktemp --suffix=.json)
-jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+jq --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
 cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
+
+# update image folder config
+TMP_IMAGE_FOLDER=$(mktemp --suffix=.json)
+jq \
+ --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" \
+ '.IMAGE_FOLDER = $image_folder' \
+ "$TMP_CONFIG_DUMP" > "$TMP_IMAGE_FOLDER"
+
+
 # load all changes
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CONFIG_DUMP" --force
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_IMAGE_FOLDER" --force
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+[[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
 
 
 USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
