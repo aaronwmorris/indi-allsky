@@ -25,44 +25,51 @@ class IndiAllskyAuroraUpdate(object):
 
         self._miscDb = miscDb(self.config)
 
+        self.ovation_json_data = None
+        self.kpindex_json_data = None
+
 
     def update(self, camera):
-        try:
-            ovation_json_data = self.download_json(self.ovation_json_url)
-        except json.JSONDecodeError as e:
-            logger.error('JSON parse error: %s', str(e))
-            ovation_json_data = None
-        except socket.gaierror as e:
-            logger.error('Name resolution error: %s', str(e))
-            ovation_json_data = None
-        except socket.timeout as e:
-            logger.error('Timeout error: %s', str(e))
-            ovation_json_data = None
-        except ssl.SSLCertVerificationError as e:
-            logger.error('Certificate error: %s', str(e))
-            ovation_json_data = None
-        except requests.exceptions.SSLError as e:
-            logger.error('Certificate error: %s', str(e))
-            ovation_json_data = None
+        # allow data to be reused
+        if not self.ovation_json_data:
+            try:
+                self.ovation_json_data = self.download_json(self.ovation_json_url)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                self.ovation_json_data = None
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                self.ovation_json_data = None
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                self.ovation_json_data = None
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.ovation_json_data = None
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.ovation_json_data = None
 
 
-        try:
-            kpindex_json_data = self.download_json(self.kpindex_json_url)
-        except json.JSONDecodeError as e:
-            logger.error('JSON parse error: %s', str(e))
-            kpindex_json_data = None
-        except socket.gaierror as e:
-            logger.error('Name resolution error: %s', str(e))
-            kpindex_json_data = None
-        except socket.timeout as e:
-            logger.error('Timeout error: %s', str(e))
-            kpindex_json_data = None
-        except ssl.SSLCertVerificationError as e:
-            logger.error('Certificate error: %s', str(e))
-            kpindex_json_data = None
-        except requests.exceptions.SSLError as e:
-            logger.error('Certificate error: %s', str(e))
-            kpindex_json_data = None
+        # allow data to be reused
+        if not self.kpindex_json_data:
+            try:
+                self.kpindex_json_data = self.download_json(self.kpindex_json_url)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                self.kpindex_json_data = None
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                self.kpindex_json_data = None
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                self.kpindex_json_data = None
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.kpindex_json_data = None
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.kpindex_json_data = None
 
 
         latitude = camera.latitude
@@ -77,8 +84,8 @@ class IndiAllskyAuroraUpdate(object):
 
         update_camera = False
 
-        if ovation_json_data:
-            max_ovation, avg_ovation = self.processOvationLocationData(ovation_json_data, latitude, longitude)
+        if self.ovation_json_data:
+            max_ovation, avg_ovation = self.processOvationLocationData(self.ovation_json_data, latitude, longitude)
             logger.info('Max Ovation: %d', max_ovation)
             logger.info('Avg Ovation: %0.2f', avg_ovation)
 
@@ -86,8 +93,8 @@ class IndiAllskyAuroraUpdate(object):
             update_camera = True
 
 
-        if kpindex_json_data:
-            kpindex, kpindex_poly = self.processKpindexPoly(kpindex_json_data)
+        if self.kpindex_json_data:
+            kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
             logger.info('kpindex: %0.2f', kpindex)
             logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
 

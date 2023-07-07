@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-import sys
 import io
 import socket
 import ssl
@@ -15,24 +14,24 @@ import numpy
 import logging
 
 
-from sqlalchemy.orm.exc import NoResultFound
-
-
-sys.path.append(str(Path(__file__).parent.absolute().parent))
-
-import indi_allsky
-from indi_allsky.config import IndiAllSkyConfig
-
-# setup flask context for db access
-app = indi_allsky.flask.create_app()
-app.app_context().push()
-
-
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+#requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
+
+
+### NYC
+#LATITUDE  = 40
+#LONGITUDE = -74
+
+### London
+#LATITUDE  = 51
+#LONGITUDE = -1
+
+### Helsinki
+LATITUDE  = 60
+LONGITUDE = 25
 
 
 
@@ -46,14 +45,8 @@ class AuroraTest(object):
 
 
     def __init__(self):
-        try:
-            self._config_obj = IndiAllSkyConfig()
-            #logger.info('Loaded config id: %d', self._config_obj.config_id)
-        except NoResultFound:
-            logger.error('No config file found, please import a config')
-            sys.exit(1)
-
-        self.config = self._config_obj.config
+        self.ovation_json_data = None
+        self.kpindex_json_data = None
 
 
     def main(self):
@@ -64,72 +57,70 @@ class AuroraTest(object):
         now = datetime.now()
         now_minus_3h = now - timedelta(hours=3)
 
-        try:
-            if not ovation_json_p.exists():
-                ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
-            elif ovation_json_p.stat().st_mtime < now_minus_3h.timestamp():
-                logger.warning('ovation json is older than 3 hours')
-                ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
-            else:
-                ovation_json_data = self.load_json(ovation_json_p)
-        except json.JSONDecodeError as e:
-            logger.error('JSON parse error: %s', str(e))
-            ovation_json_data = None
-        except socket.gaierror as e:
-            logger.error('Name resolution error: %s', str(e))
-            ovation_json_data = None
-        except socket.timeout as e:
-            logger.error('Timeout error: %s', str(e))
-            ovation_json_data = None
-        except ssl.SSLCertVerificationError as e:
-            logger.error('Certificate error: %s', str(e))
-            ovation_json_data = None
-        except requests.exceptions.SSLError as e:
-            logger.error('Certificate error: %s', str(e))
-            ovation_json_data = None
+
+        # allow data to be reused
+        if not self.ovation_json_data:
+            try:
+                if not ovation_json_p.exists():
+                    self.ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
+                elif ovation_json_p.stat().st_mtime < now_minus_3h.timestamp():
+                    logger.warning('ovation json is older than 3 hours')
+                    self.ovation_json_data = self.download_json(self.ovation_json_url, ovation_json_p)
+                else:
+                    self.ovation_json_data = self.load_json(ovation_json_p)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                self.ovation_json_data = None
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                self.ovation_json_data = None
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                self.ovation_json_data = None
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.ovation_json_data = None
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.ovation_json_data = None
+
+
+        # allow data to be reused
+        if not self.kpindex_json_data:
+            try:
+                if not kpindex_json_p.exists():
+                    self.kpindex_json_data = self.download_json(self.kpindex_json_url, kpindex_json_p)
+                elif kpindex_json_p.stat().st_mtime < now_minus_3h.timestamp():
+                    logger.warning('kpindex json is older than 3 hours')
+                    self.kpindex_json_data = self.download_json(self.kpindex_json_url, kpindex_json_p)
+                else:
+                    self.kpindex_json_data = self.load_json(kpindex_json_p)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                self.kpindex_json_data = None
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                self.kpindex_json_data = None
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                self.kpindex_json_data = None
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.kpindex_json_data = None
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.kpindex_json_data = None
 
 
 
-        try:
-            if not kpindex_json_p.exists():
-                kpindex_json_data = self.download_json(self.kpindex_json_url, kpindex_json_p)
-            elif kpindex_json_p.stat().st_mtime < now_minus_3h.timestamp():
-                logger.warning('kpindex json is older than 3 hours')
-                kpindex_json_data = self.download_json(self.kpindex_json_url, kpindex_json_p)
-            else:
-                kpindex_json_data = self.load_json(kpindex_json_p)
-        except json.JSONDecodeError as e:
-            logger.error('JSON parse error: %s', str(e))
-            kpindex_json_data = None
-        except socket.gaierror as e:
-            logger.error('Name resolution error: %s', str(e))
-            kpindex_json_data = None
-        except socket.timeout as e:
-            logger.error('Timeout error: %s', str(e))
-            kpindex_json_data = None
-        except ssl.SSLCertVerificationError as e:
-            logger.error('Certificate error: %s', str(e))
-            kpindex_json_data = None
-        except requests.exceptions.SSLError as e:
-            logger.error('Certificate error: %s', str(e))
-            kpindex_json_data = None
-
-
-
-        latitude = self.config['LOCATION_LATITUDE']
-        longitude = self.config['LOCATION_LONGITUDE']
-        #latitude = 75
-        #longitude = 0
-
-
-        if ovation_json_data:
-            max_ovation, avg_ovation = self.processOvationLocationData(ovation_json_data, latitude, longitude)
+        if self.ovation_json_data:
+            max_ovation, avg_ovation = self.processOvationLocationData(self.ovation_json_data, LATITUDE, LONGITUDE)
             logger.info('Max Ovation: %d', max_ovation)
             logger.info('Avg Ovation: %0.2f', avg_ovation)
 
 
-        if kpindex_json_data:
-            kpindex, kpindex_poly = self.processKpindexPoly(kpindex_json_data)
+        if self.kpindex_json_data:
+            kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
             logger.info('kpindex: %0.2f', kpindex)
             logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
 
