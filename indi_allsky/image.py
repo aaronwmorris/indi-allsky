@@ -624,6 +624,8 @@ class ImageWorker(Process):
                 'stars'    : len(i_ref['stars']),
                 'latitude' : round(self.latitude_v.value, 3),
                 'longitude': round(self.longitude_v.value, 3),
+                'kpindex'  : round(i_ref['kpindex'], 2),
+                'ovation_max'  : int(i_ref['ovation_max']),
                 'sidereal_time': self.astrometric_data['sidereal_time'],
             }
 
@@ -1799,6 +1801,20 @@ class ImageProcessor(object):
             'lines'            : list(),  # populated later
             'stars'            : list(),  # populated later
         }
+
+
+        # aurora data
+        camera_data = camera.data
+        if camera_data:
+            kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
+            ovation_max = int(camera_data.get('OVATION_MAX'))
+
+            image_data['kpindex'] = kpindex_current
+            image_data['ovation_max'] = ovation_max
+        else:
+            image_data['kpindex'] = 0
+            image_data['ovation_max'] = 0.0
+
 
 
         self.image_list.insert(0, image_data)  # new image is first in list
