@@ -80,6 +80,8 @@
                     <div>Sun: {{"%0.1f"|format(astrometric_data.sun_alt)}}&deg; {{ astrometric_data.sun_rising_sign|safe }}</div>
                     <div>Moon: {{"%0.1f"|format(astrometric_data.moon_alt)}}&deg; {{ astrometric_data.moon_rising_sign|safe }}</div>
                     <div data-bs-toggle="tooltip" data-bs-placement="right" title="{{"%.0f"|format(astrometric_data.moon_phase_percent)}}%">Phase: {{astrometric_data.moon_phase}} {{ astrometric_data.moon_phase_sign|safe }}</div>
+                    <div>Kp-index: {{ aurora_data.kpindex|safe }}</div>
+                    <div>Aurora: {{ aurora_data.ovation }}</div>
                     {{ web_extra_text|safe }}
                     <hr />
                     <div>{{ username_text|safe }}</div>

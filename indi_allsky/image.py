@@ -1439,6 +1439,7 @@ class ImageProcessor(object):
         self._text_color_rgb = [0, 0, 0]
         self._text_xy = [0, 0]
         self._text_anchor_pillow = 'la'
+        self._text_size_pillow = 0
 
         self._libcamera_raw = False
 
@@ -1575,6 +1576,15 @@ class ImageProcessor(object):
     @text_anchor_pillow.setter
     def text_anchor_pillow(self, new_anchor):
         self._text_anchor_pillow = str(new_anchor)
+
+
+    @property
+    def text_size_pillow(self):
+        return self._text_size_pillow
+
+    @text_size_pillow.setter
+    def text_size_pillow(self, new_size):
+        self._text_size_pillow = int(new_size)
 
 
 
@@ -2686,8 +2696,9 @@ class ImageProcessor(object):
 
         # set initial values
         self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        self.text_xy = [self.config['TEXT_PROPERTIES']['FONT_X'], self.config['TEXT_PROPERTIES']['FONT_Y']]
+        self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
         self.text_anchor_pillow = 'la'  # Pillow: left-ascender
+        self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
 
 
         i_ref = self.getLatestImage()
@@ -3065,9 +3076,6 @@ class ImageProcessor(object):
             pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
 
 
-        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
-
-        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
 
 
@@ -3079,7 +3087,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 'Focus Mode',
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3089,7 +3098,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3214,7 +3224,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 line,
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3228,7 +3239,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 '* Moon Mode *',
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3243,7 +3255,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 '* LUNAR ECLIPSE *',
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3256,7 +3269,8 @@ class ImageProcessor(object):
             self.drawText_pillow(
                 draw,
                 '* SOLAR ECLIPSE *',
-                font,
+                pillow_font_file_p,
+                self.text_size_pillow,
                 tuple(self.text_xy),
                 tuple(self.text_color_rgb),
                 anchor=self.text_anchor_pillow,
@@ -3278,7 +3292,8 @@ class ImageProcessor(object):
                 self.drawText_pillow(
                     draw,
                     extra_text_line,
-                    font,
+                    pillow_font_file_p,
+                    self.text_size_pillow,
                     tuple(self.text_xy),
                     tuple(self.text_color_rgb),
                     anchor=self.text_anchor_pillow,
@@ -3291,7 +3306,9 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
 
 
-    def drawText_pillow(self, draw, text, font, pt, color_rgb, anchor='la'):
+    def drawText_pillow(self, draw, text, font_file, font_size, pt, color_rgb, anchor='la'):
+        font = ImageFont.truetype(str(font_file), font_size)
+
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             # black outline
             stroke_width = 4
@@ -3380,6 +3397,12 @@ class ImageProcessor(object):
             self.text_anchor_pillow = str(anchor_data['anchor']).lower()
 
 
+        m_size = re.search(r'size:(?P<size>\d+)', line, re.IGNORECASE)
+        if m_size:
+            size_data = m_size.groupdict()
+            self.text_size_pillow = int(size_data['size'])
+
+
     def stretch(self):
         stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
 
@@ -3390,7 +3413,6 @@ class ImageProcessor(object):
 
 
         self.image = stretched_image
-
 
 
     def _load_logo_overlay(self, image):

@@ -5,6 +5,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## Features
+* NEW: Aurora prediction and Kp-index reporting
 * NEW: Docker containerization support
 * NEW: Image stretching
 * Multi-image stacking
@@ -166,6 +167,16 @@ Star trail images stack the stars from each frame to show their progression acro
 Video of the star trails being stacked in real-time!
 
 [YouTube](https://youtu.be/pLJbTzlyBkM)
+
+
+## Aurora & Kp-index
+indi-allsky utilizes data from [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/) to predict the possibility of Aurora in your location.  The SWPC provides data using the Ovation Aurora Model for aurora predictions.  indi-allsky uses the Ovation data to create an aggregate score within a ~500 mile radius around your location.
+
+The current Kp-index value is also polled from NOAA.  This is the measurement of the disturbance of the Earth's magnetic field, ranging from 0-9.  Values higher than 5 are good indicators of stronger solor storm activity which creates aurora.
+
+The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
+
+Data is updated every 3 hours from NOAA.
 
 
 ## Star Detection

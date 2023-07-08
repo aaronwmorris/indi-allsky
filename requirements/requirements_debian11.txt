@@ -6,11 +6,11 @@ numpy >= 1.22
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless
 # https://www.wheelodex.org/projects/scipy/
-scipy
+scipy >= 1.10.0
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image
+scikit-image >= 0.20.0
 astroalign
 bottleneck
 python-dateutil

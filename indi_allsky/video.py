@@ -25,6 +25,7 @@ from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
+from .aurora import IndiAllskyAuroraUpdate
 
 from .flask import create_app
 from .flask import db
@@ -764,6 +765,15 @@ class VideoWorker(Process):
                 'Swap memory is >90% full',
                 expire=timedelta(minutes=715),  # should run every ~12 hours
             )
+
+
+    def updateAuroraData(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
+        aurora = IndiAllskyAuroraUpdate(self.config)
+        aurora.update(camera)
+
+        task.setSuccess('Aurora data updated')
 
 
     def expireData(self, task, timespec, img_folder, night, camera):

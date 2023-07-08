@@ -79,22 +79,23 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
 
 
-# Detect IMAGE_FOLDER
-IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
-echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
-
-
 # replace the flask IMAGE_FOLDER
 TMP_FLASK_3=$(mktemp --suffix=.json)
-jq --arg image_folder "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+jq --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
 cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
 
-# replace hosts
-INDI_SERVER=$(jq -r '.INDI_SERVER' "$TMP_CONFIG_DUMP")
-MQTTPUBLISH_HOST=$(jq -r '.MQTTPUBLISH.HOST' "$TMP_CONFIG_DUMP")
+# update image folder config
+TMP_IMAGE_FOLDER=$(mktemp --suffix=.json)
+jq \
+ --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" \
+ '.IMAGE_FOLDER = $image_folder' \
+ "$TMP_CONFIG_DUMP" > "$TMP_IMAGE_FOLDER"
 
+
+# replace host
+INDI_SERVER=$(jq -r '.INDI_SERVER' "$TMP_CONFIG_DUMP")
 
 # fix indi server hostname for docker
 if [ "$INDI_SERVER" == "localhost" ]; then
@@ -102,11 +103,14 @@ if [ "$INDI_SERVER" == "localhost" ]; then
     jq \
      --arg indi_server "indiserver.indi.allsky" \
      '.INDI_SERVER = $indi_server' \
-     "$TMP_CONFIG_DUMP" > "$TMP_INDI_SERVER"
+     "$TMP_IMAGE_FOLDER" > "$TMP_INDI_SERVER"
 else
      TMP_INDI_SERVER="$TMP_CONFIG_DUMP"
 fi
 
+
+# replace host
+MQTTPUBLISH_HOST=$(jq -r '.MQTTPUBLISH.HOST' "$TMP_CONFIG_DUMP")
 
 # fix mqtt server hostname for docker
 if [ "$MQTTPUBLISH_HOST" == "localhost" ]; then
@@ -123,8 +127,16 @@ fi
 # load all changes
 "${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_MQTTPUBLISH_HOST" --force
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+[[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
 [[ -f "$TMP_INDI_SERVER" ]] && rm -f "$TMP_INDI_SERVER"
 [[ -f "$TMP_MQTTPUBLISH_HOST" ]] && rm -f "$TMP_MQTTPUBLISH_HOST"
+
+
+# tmp folder for python
+if [ -n "${CAPTURE_TMPDIR:-}" ]; then
+    TMPDIR="$CAPTURE_TMPDIR"
+    export TMPDIR
+fi
 
 
 # start the program

@@ -73,6 +73,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSky(object):
 
     periodic_tasks_offset = 180.0  # 3 minutes
+    aurora_tasks_offset = 10800  # 3 hours
 
 
     def __init__(self):
@@ -159,6 +160,8 @@ class IndiAllSky(object):
 
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
+        #self.periodic_tasks_time = time.time()  # testing
+        self.aurora_tasks_time = time.time()  # start immediately
 
 
         if self.config['IMAGE_FOLDER']:
@@ -1009,6 +1012,41 @@ class IndiAllSky(object):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
+        # aurora data update
+        if self.aurora_tasks_time < now:
+            self.aurora_tasks_time = now + self.aurora_tasks_offset
+
+            logger.info('Creating aurora update task')
+            self._updateAuroraData(self.camera_id)
+
+
+    def _updateAuroraData(self, camera_id, task_state=TaskQueueState.QUEUED):
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
+        # This will delete old images from the filesystem and DB
+        jobdata = {
+            'action'       : 'updateAuroraData',
+            'img_folder'   : str(self.image_dir),
+            'timespec'     : None,  # Not needed
+            'night'        : None,  # Not needed
+            'camera_id'    : camera.id,
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
+
+
     def connectOnly(self):
         self._initialize(connectOnly=True)
 
@@ -1229,7 +1267,7 @@ class IndiAllSky(object):
                     # reconfigure if needed
                     self.reconfigureCcd()
 
-                    # these tasks run every ~5 minutes
+                    # these tasks run every ~3 minutes
                     self.periodic_tasks()
 
 
