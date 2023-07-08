@@ -73,7 +73,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSky(object):
 
     periodic_tasks_offset = 180.0  # 3 minutes
-    aurora_tasks_offset = 10800  # 3 hours
+    aurora_tasks_offset = 3600  # 60 minutes
 
 
     def __init__(self):
