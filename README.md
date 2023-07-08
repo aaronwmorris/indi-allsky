@@ -78,6 +78,15 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 MacOS support is theoretically possible, but not tested.
 
+
+### Security
+In an effort to increase security, I am trying to do a better job of tracking security issues in indi-allsky and the associated Software Bill of Materials.  GitHub Dependabot alerts are enabled which help track things like vulnerable Python modules.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Security-considerations
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Security-Notifications
+
+
 ### libcamera support
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
