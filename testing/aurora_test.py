@@ -128,7 +128,7 @@ class AuroraTest(object):
 
     def download_json(self, url, tmpfile):
         logger.warning('Downloading %s', url)
-        r = requests.get(url, allow_redirects=True, verify=True)
+        r = requests.get(url, allow_redirects=True, verify=True, timeout=15.0)
 
         if r.status_code >= 400:
             logger.error('URL returned %d', r.status_code)
