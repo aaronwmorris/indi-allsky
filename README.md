@@ -185,7 +185,7 @@ The current Kp-index value is also polled from NOAA.  This is the measurement of
 
 The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
 
-Data is updated every 3 hours from NOAA.
+Data is updated every 60 minutes from NOAA.
 
 
 ## Star Detection
