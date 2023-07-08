@@ -759,6 +759,8 @@ class ImageWorker(Process):
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
+            'kpindex'             : i_ref['kpindex'],
+            'ovation_max'         : i_ref['ovation_max'],
         }
 
 
