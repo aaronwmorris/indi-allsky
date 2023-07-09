@@ -2,9 +2,7 @@
 FROM nginx:bullseye
 
 ARG INDI_ALLSKY_IMAGE_FOLDER
-
-
-ENV DEBIAN_FRONTEND noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 
 USER root

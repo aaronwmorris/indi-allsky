@@ -1,7 +1,8 @@
 
 FROM debian:bullseye-slim as indi.base
 
-ENV DEBIAN_FRONTEND noninteractive
+ARG TZ
+ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
 RUN apt-get update
@@ -23,8 +24,8 @@ RUN apt-get -y install \
 RUN apt-get clean
 
 
-ENV TZ=$INDIALLSKY_TIMEZONE
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
 
 
 # need the uid and gid to match in all containers
