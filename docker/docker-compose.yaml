@@ -77,7 +77,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.nginx
       args:
-        - INDI_ALLSKY_IMAGE_FOLDER=${INDI_ALLSKY_IMAGE_FOLDER}
+        - INDIALLSKY_IMAGE_FOLDER=${INDIALLSKY_IMAGE_FOLDER}
     env_file: .env
     depends_on:
       - gunicorn.indi.allsky

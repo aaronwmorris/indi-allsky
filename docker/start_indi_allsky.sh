@@ -21,10 +21,10 @@ ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
-if [ "${INDI_ALLSKY_MARIADB_SSL:-false}" == "true" ]; then
-    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
+if [ "${INDIALLSKY_MARIADB_SSL:-false}" == "true" ]; then
+    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
 else
-    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDI_ALLSKY_MARIADB_HOST}:${INDI_ALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}"
+    SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}"
 fi
 
 
@@ -81,7 +81,7 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 
 # replace the flask IMAGE_FOLDER
 TMP_FLASK_3=$(mktemp --suffix=.json)
-jq --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
+jq --arg image_folder "$INDIALLSKY_IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $image_folder' "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_3"
 cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 [[ -f "$TMP_FLASK_3" ]] && rm -f "$TMP_FLASK_3"
 
@@ -89,7 +89,7 @@ cp -f "$TMP_FLASK_3" "${ALLSKY_ETC}/flask.json"
 # update image folder config
 TMP_IMAGE_FOLDER=$(mktemp --suffix=.json)
 jq \
- --arg image_folder "$INDI_ALLSKY_IMAGE_FOLDER" \
+ --arg image_folder "$INDIALLSKY_IMAGE_FOLDER" \
  '.IMAGE_FOLDER = $image_folder' \
  "$TMP_CONFIG_DUMP" > "$TMP_IMAGE_FOLDER"
 
