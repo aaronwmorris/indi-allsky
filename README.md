@@ -4,6 +4,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ![](./content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
+
 ## Features
 * NEW: Aurora prediction and Kp-index reporting
 * NEW: Docker containerization support
@@ -48,6 +49,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * SQLite (default)
     * MySQL/MariaDB
 
+
 ## Requirements
 * A computer running a modern Linux distribution, such as a Raspberry Pi
     * Multicore is recommended
@@ -60,6 +62,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Camera
     * Most INDI supported astro/planetary cameras will work
     * libcamera/Raspberry Pi camera module
+
 
 ### Distibution support
 | Distribution          | Arch           | Note |
@@ -122,6 +125,7 @@ systemctl --user start indi-allsky
 https://raspberrypi.local/
  * Note: The web server is configured with a self-signed certificate.
 
+
 ### Manual operation
 1. Stop indi-allsky service
 ```
@@ -137,7 +141,10 @@ source virtualenv/indi-allsky/bin/activate
 ```
 
 ## Updating
+indi-allsky updates are designed to be rolling releases.  I do everything I can to prevent breaking changes.  Most changes only require pulling updates from GitHub and re-running setup.sh.
+
 https://github.com/aaronwmorris/indi-allsky/wiki/Updating-indi-allsky
+
 
 ### Logs
 * When indi-allsky is run from the command line, logs are sent to STDERR by default.
@@ -172,6 +179,7 @@ Star trail images stack the stars from each frame to show their progression acro
 
 ![](./content/startrails_example.jpg)
 
+
 ### Star Trails Timelapse
 Video of the star trails being stacked in real-time!
 
@@ -185,7 +193,7 @@ The current Kp-index value is also polled from NOAA.  This is the measurement of
 
 The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
 
-Data is updated every 60 minutes from NOAA.
+Data is updated every 60 minutes from NOAA.  Aurora data is also published with the MQTT data.
 
 
 ## Star Detection
@@ -194,11 +202,14 @@ indi-allsky utilizes OpenCV pattern matching to detect and count the number of s
 Star and meteor detection support using detection masks to customize your Region of Interest if there are obstructions in your view.
 https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks
 
+
 ## Meteor Detection
 Using OpenCV Canny edge detection and Hough Line Transform, indi-allsky is able to perform basic line detection to detect meteor and fireball trails in the view.  Airplane and satellite trails are also detected using this method.  Images are tagged with an asterisk in the image viewer if a trail has been detected.
 
+
 ## Focus Mode
 Focus mode is a special setting that generates images more often and implements a Variance of Laplacian scoring algorithm on the image to assist with focusing the camera.  Images are not saved when focus mode is enabled.
+
 
 ## Stacking
 indi-allsky supports image stacking to increase details and contrast in the image.
@@ -223,8 +234,10 @@ The indi-allsky web interface is built on the Flask MVC framework.  It is design
 
 Most views do not require authentication.  Credentials for accessing the privileged areas are defined upon the first setup of the software.
 
+
 ### Home Page
 ![](./content/webui_home.png)
+
 
 ### Charts
 Early evening, the sun was still going down, but a cloud passed by, increasing the average brightness and lowering the star count.
@@ -233,14 +246,17 @@ Early evening, the sun was still going down, but a cloud passed by, increasing t
 A large cloud passed over significantly increasing the brightness of the sky and blocking out almost all of the stars.
 ![](./content/webui_chart02.png)
 
+
 ### Image viewer
 Historical images browsing.
 ![](./content/webui_images.png)
 *Pictured: A small satellite flare.*
 
+
 ### Timelapse viewer
 Historical Star trails and Keograms.  The Keogram image is linked directly to the timelapse video for the night.
 ![](./content/webui_timelapse_mono.png)
+
 
 ### System Info
 ![](./content/webui_systeminfo.png)
@@ -288,17 +304,20 @@ GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html
 
 FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
 
+
 ## Docker Containerization
 
 indi-allsky has full support for running in a container environment.  Check out the `docker/` folder for the Docker assets.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 
+
 ## Performance
 
 indi-allsky itself is written in python, but python is just the glue between the different libraries, most of which are C based which makes indi-allsky extremely fast.  A 1920 x 1080 image can be dark frame calibrated, debayered, histogram processed, text applied, and compressed to a JPG in less than 0.5 seconds on Raspberry Pi 3 class hardware.  PNG processing is a little more taxing, but usually only takes a few seconds.
 
 ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.264 encoded video compiled from 3,000 frames requires ~20 minutes on Raspberry Pi 3 (4 core) hardware.  Encoding takes place in a separate process from image aqcuisition and image processing and is run at the lowest CPU priority so image acquision is not impacted.
+
 
 ## Software Dependencies
 
@@ -334,6 +353,8 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 |                   | flask-login   | https://flask-login.readthedocs.io/ |
 |                   | Gunicorn      | https://gunicorn.org/ |
 |                   | Apache        | https://httpd.apache.org/ |
+|                   | NGINX         | https://www.nginx.com/ |
+
 
 ## Architecture
 
@@ -341,12 +362,14 @@ indi-allsky utilizes python's multiprocessing library to enable parallelizing ta
 
 ![](./content/indi-allsky-arch.svg)
 
+
 ## Configuration
 
 All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
 You may use the config.py utility to manipulate the configuration from the command line.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Configuration-Reference
+
 
 ## Tested Hardware
 
@@ -426,6 +449,7 @@ indi-allsky supports publishing all sky data to an MQTT service for monitoring.
 
 For more info, see the wiki page: https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing
 
+
 ## Blogs, Articles, and Links
 
 Please let me know if you want to make an addition or correction.
@@ -437,6 +461,7 @@ Please let me know if you want to make an addition or correction.
 * [Giles Coochey](https://coochey.net/?cat=29)
 * [PampaSkies](http://www.pampaskies.com/gallery3/Equipment/All-Sky-Camera-with-Sky-Condition-Detection)
 * [The Suffolk Sky](http://www.suffolksky.com/all-sky-camera/)
+
 
 ## Alternatives
 
@@ -465,12 +490,14 @@ Please let me know if you want to make an addition or correction.
     * Windows
     * https://sonotaco.com/soft/e_index.html
 
+
 ## Commercial hardware
 
 * Oculus All-Sky Cameras
     * https://www.sxccd.com/cameras/oculus-all-sky-cameras/
 * Alcor System
     * https://www.alcor-system.com/new/AllSky/Alphea_camera.html
+
 
 ## Acknowledgements
 

@@ -1101,14 +1101,14 @@
             {{ form_config.IMAGE_LABEL_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='8') }}
+            {{ form_config.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='12') }}
             <div id="IMAGE_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
             <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
-            <div>Available variables: <pre>timestamp, ts, exposure, rational_exp, gain, temp, temp_unit, sqm, stars,<br />detections, sun_alt, moon_alt, moon_phase, sun_moon_sep,<br />latitude, longitude, stack_method, stack_count</pre></div>
-
+            <div>Available variables:</div>
+            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain, temp, temp_unit,<br />sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br />location, owner, latitude, longitude, kpindex, ovation_max,<br />sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br />mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br />mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up</pre></div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
         </div>
     </div>
