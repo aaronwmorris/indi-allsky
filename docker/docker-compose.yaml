@@ -5,6 +5,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_base
+      args:
+        - TZ=${TZ}
     env_file: .env
 
 

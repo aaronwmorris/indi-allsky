@@ -2,10 +2,10 @@
 
 # shellcheck disable=SC2034
 
+TZ=America/New_York
+
 INDIALLSKY_INDI_CCD_DRIVER=indi_simulator_ccd
 INDIALLSKY_INDI_GPS_DRIVER=
-
-INDIALLSKY_TIMEZONE=America/New_York
 
 # This folder needs to be shared to the capture, gunicorn, and nginx containers
 INDI_ALLSKY_IMAGE_FOLDER=/var/www/html/allsky/images

@@ -1,7 +1,7 @@
 
 FROM docker-indi.base as indi.allsky.base
 
-ENV DEBIAN_FRONTEND noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
 RUN apt-get update
