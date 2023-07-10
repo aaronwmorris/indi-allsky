@@ -471,14 +471,10 @@ class IndiAllSky(object):
 
 
         for upload_worker_dict in active_worker_list:
-            self._fileUploadWorkerStop(upload_worker_dict, terminate=terminate)
+            self._fileUploadWorkerStop(upload_worker_dict)
 
 
-    def _fileUploadWorkerStop(self, uw_dict, terminate=False):
-        if terminate:
-            logger.info('Terminating FileUploadWorker process')
-            uw_dict['worker'].terminate()
-
+    def _fileUploadWorkerStop(self, uw_dict):
         logger.info('Stopping FileUploadWorker process')
 
         uw_dict['worker'].join()
