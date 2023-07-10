@@ -411,7 +411,7 @@ class IndiAllSky(object):
         self._miscDb.setState('PID_FILE', self.pid_file)
 
 
-    def _initialize(self, connectOnly=False):
+    def _initialize(self):
         logger.info('indi-allsky release: %s', str(__version__))
         logger.info('indi-allsky config level: %s', str(__config_level__))
 
@@ -498,10 +498,6 @@ class IndiAllSky(object):
         if self.indiclient.gps_device:
             logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
             self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
-
-
-        if connectOnly:
-            return
 
 
         # add driver name to config
@@ -1047,14 +1043,6 @@ class IndiAllSky(object):
         self.video_q.put({'task_id' : task.id})
 
 
-    def connectOnly(self):
-        self._initialize(connectOnly=True)
-
-        self.indiclient.disconnectServer()
-
-        sys.exit()
-
-
     def run(self):
         with app.app_context():
             self.write_pid()
@@ -1511,74 +1499,6 @@ class IndiAllSky(object):
         self.indiclient.parkTelescope()
 
 
-    def cameraReport(self):
-        camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
-
-        # instantiate the client
-        self.indiclient = camera_interface(
-            self.config,
-            self.image_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.ra_v,
-            self.dec_v,
-            self.gain_v,
-            self.bin_v,
-            self.night_v,
-        )
-
-        # set indi server localhost and port
-        self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
-
-        # connect to indi server
-        logger.info("Connecting to indiserver")
-        if not self.indiclient.connectServer():
-            logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
-            logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
-
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'no_indiserver',
-                'WARNING: indiserver service is not active',
-                expire=timedelta(hours=2),
-            )
-
-            sys.exit(1)
-
-        # give devices a chance to register
-        time.sleep(8)
-
-        try:
-            self.indiclient.findCcd(self.config.get('INDI_CAMERA_NAME'))
-        except CameraException as e:
-            logger.error('Camera error: %s', str(e))
-
-            self._miscDb.addNotification(
-                NotificationCategory.CAMERA,
-                'no_camera',
-                'Camera was not detected.',
-                expire=timedelta(hours=2),
-            )
-
-            time.sleep(1)
-            sys.exit(1)
-
-
-        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
-        self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
-
-        # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        logger.info('Camera Properties: %s', json.dumps(ccd_properties, indent=4))
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-        logger.info('Camera Info: %s', json.dumps(ccd_info, indent=4))
-
-        self.indiclient.disconnectServer()
-
-
-
     def reconfigureCcd(self):
 
         if self.night_v.value != int(self.night):
@@ -1660,24 +1580,6 @@ class IndiAllSky(object):
         self.moonmode = False
 
 
-    def generateDayTimelapse(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
     def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
@@ -1710,24 +1612,6 @@ class IndiAllSky(object):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
-
-
-    def generateNightTimelapse(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1764,24 +1648,6 @@ class IndiAllSky(object):
         self.video_q.put({'task_id' : task.id})
 
 
-    def generateNightKeogram(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
     def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
@@ -1814,24 +1680,6 @@ class IndiAllSky(object):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
-
-
-    def generateDayKeogram(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
 
 
     def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1919,21 +1767,6 @@ class IndiAllSky(object):
         r2 = manager.SetTime(epoch_msec, False, False)
 
         return r2
-
-
-    def expireData(self, camera_id=0):
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._expireData(camera_id, TaskQueueState.MANUAL)
 
 
     def _expireData(self, camera_id, task_state=TaskQueueState.QUEUED):
