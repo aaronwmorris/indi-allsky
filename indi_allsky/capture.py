@@ -218,7 +218,7 @@ class CaptureWorker(Process):
             if c_dict.get('stop'):
                 self._shutdown = True
             elif c_dict.get('reload'):
-                os.kill(os.getpid(), signal.SIGHUP)
+                self._reload = True
 
 
             self.detectNight()
