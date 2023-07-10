@@ -19,7 +19,7 @@ import ephem
 
 from multiprocessing import Process
 #from threading import Thread
-#import queue
+import queue
 
 from . import constants
 from . import camera as camera_module
@@ -62,6 +62,7 @@ class CaptureWorker(Process):
         idx,
         config,
         error_q,
+        capture_q,
         image_q,
         video_q,
         upload_q,
@@ -84,6 +85,7 @@ class CaptureWorker(Process):
 
         self.config = config
         self.error_q = error_q
+        self.capture_q = capture_q
         self.image_q = image_q
         self.video_q = video_q
         self.upload_q = upload_q
@@ -136,188 +138,12 @@ class CaptureWorker(Process):
         self._shutdown = False
 
 
+
     def sighup_handler_worker(self, signum, frame):
         logger.warning('Caught HUP signal, reconfiguring')
 
-        self._config_obj = IndiAllSkyConfig()
-
-        # overwrite config
-        self.config = self._config_obj.config
-
-
-        if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
-
-            self._miscDb.addNotification(
-                NotificationCategory.STATE,
-                'config_version',
-                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
-                expire=timedelta(hours=2),
-            )
-
-            return
-
-
-        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
-
-
-        # send new config to camera object
-        self.indiclient.updateConfig(self.config)
-
-
-        # Update shared values
-        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
-
-        with self.latitude_v.get_lock():
-            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
-
-        with self.longitude_v.get_lock():
-            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
-
-
-        # reconfigure if needed
-        self.reconfigureCcd()
-
-        # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.camera_name)
-
-        self.camera_server = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
-
-
-        ### Telescope config
-        # park the telescope at zenith
-        if self.indiclient.telescope_device:
-            telescope_config = {
-                'SWITCHES' : {},
-                'PROPERTIES' : {
-                    'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.latitude_v.value,
-                        'LONG' : self.longitude_v.value,
-                    },
-                },
-            }
-
-            self.indiclient.configureTelescopeDevice(telescope_config)
-
-            self.reparkTelescope()
-
-
-        # configuration needs to be performed before getting CCD_INFO
-        # which queries the exposure control
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-
-
-        # Get Properties
-        #ccd_properties = self.indiclient.getCcdDeviceProperties()
-
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-
-
-        if self.config.get('CFA_PATTERN'):
-            cfa_pattern = self.config['CFA_PATTERN']
-        else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
-
-
-        # need to get camera info before adding to DB
-        camera_metadata = {
-            'name'        : self.camera_name,
-            'driver'      : self.camera_server,
-
-            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
-            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
-            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
-            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
-            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
-            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
-            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
-            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
-            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
-
-            'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.latitude_v.value,
-            'longitude'   : self.longitude_v.value,
-
-            'owner'           : self.config['OWNER'],
-            'lensName'        : self.config['LENS_NAME'],
-            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
-            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
-            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
-            'alt'             : self.config['LENS_ALTITUDE'],
-            'az'              : self.config['LENS_AZIMUTH'],
-            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
-        }
-
-        camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = camera.id
-
-        self.indiclient.camera_id = camera.id
-
-        self._miscDb.setState('DB_CAMERA_ID', camera.id)
-
-
-        self._sync_camera(camera, camera_metadata)
-
-
-        # Update focus mode
-        self.focus_mode = self.config.get('FOCUS_MODE', False)
-
-        # set minimum exposure
-        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
-
-        # Some CCD drivers will not accept their stated minimum exposure.
-        # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp = ccd_min_exp + 0.00000001
-
-        if not self.config.get('CCD_EXPOSURE_MIN'):
-            logger.warning('Setting minimum to %0.8f', ccd_min_exp)
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
-            logger.warning(
-                'Minimum exposure %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN'),
-                ccd_min_exp,
-            )
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-
-        logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
-
-
-        # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
-
-        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
-
-        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
-
-        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
-
-
         # set flag for program to restart processes
         self._reload = True
-
-
 
 
     def sigterm_handler_worker(self, signum, frame):
@@ -381,6 +207,18 @@ class CaptureWorker(Process):
 
             logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
             logger.info('Exposure state: %s', exposure_state)
+
+
+            try:
+                c_dict = self.capture_q.get(False)
+            except queue.Empty:
+                c_dict = {}
+
+
+            if c_dict.get('stop'):
+                self._shutdown = True
+            elif c_dict.get('reload'):
+                os.kill(os.getpid(), signal.SIGHUP)
 
 
             self.detectNight()
@@ -509,8 +347,8 @@ class CaptureWorker(Process):
 
                     # restart here to ensure camera is not taking images
                     if self._reload:
-                        logger.warning('Restarting processes')
                         self._reload = False
+                        self.reload_handler()
 
 
                     # reconfigure if needed
@@ -875,6 +713,185 @@ class CaptureWorker(Process):
             logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
             time.sleep(3)
+
+
+    def reload_handler(self):
+        logger.warning('Reconfiguring...')
+
+        self._config_obj = IndiAllSkyConfig()
+
+        # overwrite config
+        self.config = self._config_obj.config
+
+
+        if __config_level__ != self._config_obj.config_level:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            return
+
+
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
+
+
+        # send new config to camera object
+        self.indiclient.updateConfig(self.config)
+
+
+        # Update shared values
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
+
+        with self.latitude_v.get_lock():
+            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
+
+        with self.longitude_v.get_lock():
+            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
+
+
+        # reconfigure if needed
+        self.reconfigureCcd()
+
+        # add driver name to config
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self._miscDb.setState('CAMERA_NAME', self.camera_name)
+
+        self.camera_server = self.indiclient.ccd_device.getDriverExec()
+        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
+
+
+        ### Telescope config
+        # park the telescope at zenith
+        if self.indiclient.telescope_device:
+            telescope_config = {
+                'SWITCHES' : {},
+                'PROPERTIES' : {
+                    'GEOGRAPHIC_COORD' : {
+                        'LAT' : self.latitude_v.value,
+                        'LONG' : self.longitude_v.value,
+                    },
+                },
+            }
+
+            self.indiclient.configureTelescopeDevice(telescope_config)
+
+            self.reparkTelescope()
+
+
+        # configuration needs to be performed before getting CCD_INFO
+        # which queries the exposure control
+        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+
+
+        # Get Properties
+        #ccd_properties = self.indiclient.getCcdDeviceProperties()
+
+
+        # get CCD information
+        ccd_info = self.indiclient.getCcdInfo()
+
+
+        if self.config.get('CFA_PATTERN'):
+            cfa_pattern = self.config['CFA_PATTERN']
+        else:
+            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+
+
+        # need to get camera info before adding to DB
+        camera_metadata = {
+            'name'        : self.camera_name,
+            'driver'      : self.camera_server,
+
+            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
+            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
+            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
+            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
+            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
+            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
+            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
+
+            'location'    : self.config['LOCATION_NAME'],
+            'latitude'    : self.latitude_v.value,
+            'longitude'   : self.longitude_v.value,
+
+            'owner'           : self.config['OWNER'],
+            'lensName'        : self.config['LENS_NAME'],
+            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
+            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
+            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
+            'alt'             : self.config['LENS_ALTITUDE'],
+            'az'              : self.config['LENS_AZIMUTH'],
+            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
+        }
+
+        camera = self._miscDb.addCamera(camera_metadata)
+        self.camera_id = camera.id
+
+        self.indiclient.camera_id = camera.id
+
+        self._miscDb.setState('DB_CAMERA_ID', camera.id)
+
+
+        self._sync_camera(camera, camera_metadata)
+
+
+        # Update focus mode
+        self.focus_mode = self.config.get('FOCUS_MODE', False)
+
+        # set minimum exposure
+        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+
+        # Some CCD drivers will not accept their stated minimum exposure.
+        # There might be some python -> C floating point conversion problem causing this.
+        ccd_min_exp = ccd_min_exp + 0.00000001
+
+        if not self.config.get('CCD_EXPOSURE_MIN'):
+            logger.warning('Setting minimum to %0.8f', ccd_min_exp)
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
+            logger.warning(
+                'Minimum exposure %0.8f too low, increasing to %0.8f',
+                self.config.get('CCD_EXPOSURE_MIN'),
+                ccd_min_exp,
+            )
+            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+
+        logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
+
+
+        # Validate gain settings
+        ccd_min_gain = ccd_info['GAIN_INFO']['min']
+        ccd_max_gain = ccd_info['GAIN_INFO']['max']
+
+        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
+            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
+            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
+
+        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
+            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
+            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
+
+        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
+            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
+        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
+            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
+
 
 
     def _sync_camera(self, camera, camera_metadata):

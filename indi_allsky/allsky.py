@@ -108,7 +108,7 @@ class IndiAllSky(object):
         self.moonmode_v = Value('i', -1)  # bogus initial value
 
 
-        #self.capture_q = Queue()
+        self.capture_q = Queue()
         self.capture_error_q = Queue()
         self.capture_worker = None
         self.capture_worker_idx = 0
@@ -245,6 +245,7 @@ class IndiAllSky(object):
             self.capture_worker_idx,
             self.config,
             self.capture_error_q,
+            self.capture_q,
             self.image_q,
             self.video_q,
             self.upload_q,
@@ -261,6 +262,32 @@ class IndiAllSky(object):
         )
         self.capture_worker.start()
 
+
+    def _stopCaptureWorker(self, terminate=False):
+        if not self.capture_worker:
+            return
+
+        if not self.capture_worker.is_alive():
+            return
+
+        if terminate:
+            logger.info('Terminating CaptureWorker process')
+            self.capture_worker.terminate()
+
+        logger.info('Stopping CaptureWorker process')
+
+        self.capture_q.put({'stop' : True})
+        self.capture_worker.join()
+
+
+    def _reloadCaptureWorker(self):
+        if not self.capture_worker:
+            return
+
+        if not self.capture_worker.is_alive():
+            return
+
+        self.capture_q.put({'reload' : True})
 
 
     def _startImageWorker(self):
@@ -496,6 +523,7 @@ class IndiAllSky(object):
                 self._stopImageWorker(terminate=self._terminate)
                 self._stopVideoWorker(terminate=self._terminate)
                 self._stopFileUploadWorkers(terminate=self._terminate)
+                self._stopCaptureWorker(terminate=self._terminate)  # do this last
 
 
                 with app.app_context():
@@ -513,6 +541,7 @@ class IndiAllSky(object):
             if self._reload:
                 logger.warning('Restarting processes')
                 self._reload = False
+                self._reloadCaptureWorker()
                 self._stopImageWorker()
                 self._stopVideoWorker()
                 self._stopFileUploadWorkers()
