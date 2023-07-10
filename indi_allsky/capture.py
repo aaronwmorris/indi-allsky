@@ -63,6 +63,7 @@ class CaptureWorker(Process):
         config,
         error_q,
         image_q,
+        video_q,
         upload_q,
         latitude_v,
         longitude_v,
@@ -84,6 +85,7 @@ class CaptureWorker(Process):
         self.config = config
         self.error_q = error_q
         self.image_q = image_q
+        self.video_q = video_q
         self.upload_q = upload_q
 
         self.latitude_v = latitude_v
@@ -387,10 +389,6 @@ class CaptureWorker(Process):
 
             with app.app_context():
                 ### Change between day and night
-                if self.generate_timelapse_flag:
-                    self._expireData(self.camera_id)  # cleanup old images and folders
-
-
                 if self.night_v.value != int(self.night):
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of night
@@ -406,6 +404,7 @@ class CaptureWorker(Process):
                         timespec = today_ref.strftime('%Y%m%d')
                         self._generateDayTimelapse(timespec, self.camera_id)
                         self._generateDayKeogram(timespec, self.camera_id)
+                        self._expireData(self.camera_id)  # cleanup old images and folders
 
 
                 # this is to prevent expiring images at startup
@@ -1475,5 +1474,31 @@ class CaptureWorker(Process):
 
         self.video_q.put({'task_id' : task.id})
 
+
+    def _expireData(self, camera_id, task_state=TaskQueueState.QUEUED):
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
+        # This will delete old images from the filesystem and DB
+        jobdata = {
+            'action'       : 'expireData',
+            'img_folder'   : str(self.image_dir),
+            'timespec'     : None,  # Not needed
+            'night'        : None,  # Not needed
+            'camera_id'    : camera.id,
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 

@@ -246,6 +246,7 @@ class IndiAllSky(object):
             self.config,
             self.capture_error_q,
             self.image_q,
+            self.video_q,
             self.upload_q,
             self.latitude_v,
             self.longitude_v,
@@ -496,17 +497,14 @@ class IndiAllSky(object):
                 self._stopVideoWorker(terminate=self._terminate)
                 self._stopFileUploadWorkers(terminate=self._terminate)
 
-                self.indiclient.disableCcdCooler()  # safety
 
-                self.indiclient.disconnectServer()
-
-
-                self._miscDb.addNotification(
-                    NotificationCategory.STATE,
-                    'indi-allsky',
-                    'indi-allsky was shutdown',
-                    expire=timedelta(hours=1),
-                )
+                with app.app_context():
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shutdown',
+                        expire=timedelta(hours=1),
+                    )
 
 
                 sys.exit()
@@ -522,33 +520,6 @@ class IndiAllSky(object):
 
 
             time.sleep(15)
-
-
-    def _expireData(self, camera_id, task_state=TaskQueueState.QUEUED):
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        # This will delete old images from the filesystem and DB
-        jobdata = {
-            'action'       : 'expireData',
-            'img_folder'   : str(self.image_dir),
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
 
 
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
