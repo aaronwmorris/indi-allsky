@@ -1062,7 +1062,7 @@ class IndiAllSky(object):
                         continue
 
                     reload_received = True
-                    os.kill(os.getpid(), signal.SIGHUP)
+                    self._reload = True
 
                     task.setSuccess('Reloaded indi-allsky process')
 
