@@ -78,7 +78,7 @@ class CaptureWorker(Process):
 
         super(CaptureWorker, self).__init__()
 
-        self.name = 'Capture{0:d}'.format(idx)
+        self.name = 'Capture{0:03d}'.format(idx)
 
         self.config = config
         self.error_q = error_q
@@ -215,6 +215,8 @@ class CaptureWorker(Process):
                     self._reload = True
                 elif c_dict.get('settime'):
                     self.update_time_offset = c_dict['settime']
+                else:
+                    logger.error('Unknown action: %s', str(c_dict))
 
             except queue.Empty:
                 pass

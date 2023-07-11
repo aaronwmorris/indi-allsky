@@ -237,8 +237,8 @@ class IndiAllSky(object):
 
 
     def _startCaptureWorker(self):
-        if self.image_worker:
-            if self.image_worker.is_alive():
+        if self.capture_worker:
+            if self.capture_worker.is_alive():
                 return
 
             try:
@@ -251,7 +251,7 @@ class IndiAllSky(object):
 
         self.capture_worker_idx += 1
 
-        logger.info('Starting Capture%d worker', self.capture_worker_idx)
+        logger.info('Starting Capture%03d worker', self.capture_worker_idx)
         self.capture_worker = CaptureWorker(
             self.capture_worker_idx,
             self.config,
@@ -500,6 +500,8 @@ class IndiAllSky(object):
             self._startup()
 
 
+
+
         while True:
             if self._shutdown:
                 logger.warning('Shutting down')
@@ -524,10 +526,10 @@ class IndiAllSky(object):
             if self._reload:
                 logger.warning('Restarting processes')
                 self._reload = False
-                self._reloadCaptureWorker()
                 self._stopImageWorker()
                 self._stopVideoWorker()
                 self._stopFileUploadWorkers()
+                self._stopCaptureWorker()
                 # processes will start at the next loop
 
 
