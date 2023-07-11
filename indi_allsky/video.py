@@ -77,8 +77,7 @@ class VideoWorker(Process):
     ):
         super(VideoWorker, self).__init__()
 
-        #self.threadID = idx
-        self.name = 'VideoWorker{0:03d}'.format(idx)
+        self.name = 'Video{0:03d}'.format(idx)
 
         os.nice(19)  # lower priority
 

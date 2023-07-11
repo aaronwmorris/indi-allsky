@@ -61,6 +61,8 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSky(object):
 
     def __init__(self):
+        self.name = 'Main'
+
         with app.app_context():
             try:
                 self._config_obj = IndiAllSkyConfig()
@@ -496,13 +498,12 @@ class IndiAllSky(object):
 
 
 
-        # do *NOT* start workers inside of a flask context
-        # doing so will cause TLS/SSL problems connecting to databases
-        self._startCaptureWorker()
-
-
         while True:
+            # do *NOT* start workers inside of a flask context
+            # doing so will cause TLS/SSL problems connecting to databases
+
             # restart worker if it has failed
+            self._startCaptureWorker()
             self._startImageWorker()
             self._startVideoWorker()
             self._startFileUploadWorkers()

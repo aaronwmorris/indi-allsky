@@ -1,4 +1,3 @@
-import sys
 import os
 import time
 import io
@@ -80,8 +79,7 @@ class CaptureWorker(Process):
 
         super(CaptureWorker, self).__init__()
 
-        #self.threadID = idx
-        self.name = 'CaptureWorker{0:03d}'.format(idx)
+        self.name = 'Capture{0:d}'.format(idx)
 
         self.config = config
         self.error_q = error_q
@@ -446,7 +444,7 @@ class CaptureWorker(Process):
                 expire=timedelta(hours=2),
             )
 
-            sys.exit(1)
+            return
 
         # give devices a chance to register
         time.sleep(8)
@@ -463,8 +461,7 @@ class CaptureWorker(Process):
                 expire=timedelta(hours=2),
             )
 
-            time.sleep(1)
-            sys.exit(1)
+            return
 
 
         self.indiclient.findTelescope(telescope_name='Telescope Simulator')
