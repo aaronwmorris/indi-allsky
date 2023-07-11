@@ -60,6 +60,10 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
+    periodic_tasks_offset = 900  # 15 minutes
+    cleanup_tasks_offset = 43200  # 12 hours
+
+
     def __init__(self):
         self.name = 'Main'
 
@@ -95,6 +99,11 @@ class IndiAllSky(object):
             self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
+
+
+        self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
+        self.cleanup_tasks_time = time.time()  # run immediately
+
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
@@ -488,14 +497,7 @@ class IndiAllSky(object):
 
             self._expireOrphanedTasks()
 
-            self._systemHealthCheck()
-
             self._startup()
-
-
-        with app.app_context():
-            self._flushOldTasks()  # cleanup old tasks in DB
-
 
 
         while True:
@@ -512,6 +514,7 @@ class IndiAllSky(object):
             # Queue externally defined tasks
             with app.app_context():
                 self._queueManualTasks()
+                self._periodic_tasks()
 
 
 
@@ -1079,4 +1082,28 @@ class IndiAllSky(object):
             else:
                 logger.error('Unmanaged queue %s', task.queue.name)
                 task.setFailed()
+
+
+    def _periodic_tasks(self):
+
+        # Tasks that need to be run periodically
+        now = time.time()
+
+        if self.periodic_tasks_time > now:
+            return
+
+        # set next reconfigure time
+        self.periodic_tasks_time = now + self.periodic_tasks_offset
+
+        logger.warning('Periodic tasks triggered')
+
+
+        # cleanup data
+        if self.cleanup_tasks_time < now:
+            self.cleanup_tasks_time = now + self.cleanup_tasks_offset
+
+            self._flushOldTasks()
+            self._systemHealthCheck()
+
+
 

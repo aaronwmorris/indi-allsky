@@ -55,7 +55,6 @@ class CaptureWorker(Process):
     aurora_tasks_offset = 3600  # 60 minutes
 
 
-
     def __init__(
         self,
         idx,
@@ -355,7 +354,7 @@ class CaptureWorker(Process):
                     self.reconfigureCcd()
 
                     # these tasks run every ~3 minutes
-                    self.periodic_tasks()
+                    self._periodic_tasks()
 
 
                     # update system time from GPS offset
@@ -941,7 +940,7 @@ class CaptureWorker(Process):
             self.shoot(7.0, sync=True, timeout=20.0)
 
 
-    def periodic_tasks(self):
+    def _periodic_tasks(self):
         # Tasks that need to be run periodically
         now = time.time()
 
@@ -1005,6 +1004,7 @@ class CaptureWorker(Process):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
+
 
 
     def getSensorTemperature(self):
