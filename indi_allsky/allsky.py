@@ -1066,6 +1066,10 @@ class IndiAllSky(object):
                     self.update_time_offset = task.data['time_offset']
                     logger.info('Set time offset: %ds', int(self.update_time_offset))
 
+                    self.capture_q.put({
+                        'settime' : int(self.update_time_offset),
+                    })
+
                     task.setSuccess('Set time queued')
 
                 else:

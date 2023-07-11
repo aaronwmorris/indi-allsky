@@ -209,14 +209,16 @@ class CaptureWorker(Process):
 
             try:
                 c_dict = self.capture_q.get(False)
+
+                if c_dict.get('stop'):
+                    self._shutdown = True
+                elif c_dict.get('reload'):
+                    self._reload = True
+                elif c_dict.get('settime'):
+                    self.update_time_offset = c_dict['settime']
+
             except queue.Empty:
-                c_dict = {}
-
-
-            if c_dict.get('stop'):
-                self._shutdown = True
-            elif c_dict.get('reload'):
-                self._reload = True
+                pass
 
 
             self.detectNight()
