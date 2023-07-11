@@ -501,23 +501,6 @@ class IndiAllSky(object):
 
 
         while True:
-            # do *NOT* start workers inside of a flask context
-            # doing so will cause TLS/SSL problems connecting to databases
-
-            # restart worker if it has failed
-            self._startCaptureWorker()
-            self._startImageWorker()
-            self._startVideoWorker()
-            self._startFileUploadWorkers()
-
-
-            # Queue externally defined tasks
-            with app.app_context():
-                self._queueManualTasks()
-                self._periodic_tasks()
-
-
-
             if self._shutdown:
                 logger.warning('Shutting down')
                 self._stopImageWorker(terminate=self._terminate)
@@ -546,6 +529,22 @@ class IndiAllSky(object):
                 self._stopVideoWorker()
                 self._stopFileUploadWorkers()
                 # processes will start at the next loop
+
+
+            # do *NOT* start workers inside of a flask context
+            # doing so will cause TLS/SSL problems connecting to databases
+
+            # restart worker if it has failed
+            self._startCaptureWorker()
+            self._startImageWorker()
+            self._startVideoWorker()
+            self._startFileUploadWorkers()
+
+
+            # Queue externally defined tasks
+            with app.app_context():
+                self._queueManualTasks()
+                self._periodic_tasks()
 
 
             time.sleep(15)
