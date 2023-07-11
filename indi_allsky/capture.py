@@ -10,14 +10,14 @@ import tempfile
 import math
 import subprocess
 import dbus
-import signal
+#import signal
 import logging
 import traceback
 
 import ephem
 
-from multiprocessing import Process
-#from threading import Thread
+#from multiprocessing import Process
+from threading import Thread
 import queue
 
 from . import constants
@@ -49,7 +49,7 @@ app = create_app()
 logger = logging.getLogger('indi_allsky')
 
 
-class CaptureWorker(Process):
+class CaptureWorker(Thread):
 
     periodic_tasks_offset = 180.0  # 3 minutes
     aurora_tasks_offset = 3600  # 60 minutes
@@ -163,10 +163,10 @@ class CaptureWorker(Process):
 
     def run(self):
         # setup signal handling after detaching from the main process
-        signal.signal(signal.SIGHUP, self.sighup_handler_worker)
-        signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
-        signal.signal(signal.SIGINT, self.sigint_handler_worker)
-        signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
+        #signal.signal(signal.SIGHUP, self.sighup_handler_worker)
+        #signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
+        #signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        #signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
         ### use this as a method to log uncaught exceptions
