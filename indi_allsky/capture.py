@@ -37,7 +37,6 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 from .exceptions import CameraException
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
-from .exceptions import ConfigSaveException
 
 from .flask import create_app
 from .flask import db
@@ -1142,12 +1141,18 @@ class CaptureWorker(Process):
         self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
 
 
-        # save new config
-        try:
-            self._config_obj.save('system', '*Auto* Location updated')
-            logger.info('Wrote new config')
-        except ConfigSaveException:
-            return
+        task_setlocation = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            data={
+                'action'      : 'setlocation',
+                'latitude'    : gps_lat,
+                'longitude'   : gps_long,
+            },
+        )
+
+        db.session.add(task_setlocation)
+        db.session.commit()
 
 
     def reparkTelescope(self):

@@ -29,6 +29,7 @@ from .video import VideoWorker
 from .uploader import FileUploader
 
 from .exceptions import TimeOutException
+from .exceptions import ConfigSaveException
 
 from .flask import create_app
 from .flask import db
@@ -1083,6 +1084,14 @@ class IndiAllSky(object):
 
                     task.setSuccess('Set time queued')
 
+                elif action == 'setlocation':
+                    latitude = task.data['latitude']
+                    longitude = task.data['longitude']
+
+                    self.updateConfigLocation(latitude, longitude)
+
+                    task.setSuccess('Updated config location')
+
                 else:
                     logger.error('Unknown action: %s', action)
                     task.setFailed()
@@ -1147,5 +1156,20 @@ class IndiAllSky(object):
             db.session.commit()
 
             self.video_q.put({'task_id' : task.id})
+
+
+    def updateConfigLocation(self, latitude, longitude):
+        logger.warning('Updating indi-allsky config with new geographic location')
+
+        self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
+        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
+
+
+        # save new config
+        try:
+            self._config_obj.save('system', '*Auto* Location updated')
+            logger.info('Wrote new config')
+        except ConfigSaveException:
+            return
 
 
