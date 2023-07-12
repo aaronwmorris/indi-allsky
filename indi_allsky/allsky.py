@@ -540,6 +540,8 @@ class IndiAllSky(object):
                 self._stopCaptureWorker()
                 # processes will start at the next loop
 
+                self.reload_handler()
+
 
             # do *NOT* start workers inside of a flask context
             # doing so will cause TLS/SSL problems connecting to databases
@@ -558,6 +560,38 @@ class IndiAllSky(object):
 
 
             time.sleep(15)
+
+
+    def reload_handler(self):
+        logger.warning('Reconfiguring...')
+
+        self._config_obj = IndiAllSkyConfig()
+
+        # overwrite config
+        self.config = self._config_obj.config
+
+
+        if __config_level__ != self._config_obj.config_level:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                expire=timedelta(hours=2),
+            )
+
+            return
+
+
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
+
+
+        with self.latitude_v.get_lock():
+            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
+
+        with self.longitude_v.get_lock():
+            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
 
 
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
