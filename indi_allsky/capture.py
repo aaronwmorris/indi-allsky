@@ -1135,7 +1135,7 @@ class CaptureWorker(Process):
 
 
     def updateConfigLocation(self, gps_lat, gps_long):
-        logger.warning('Updating indi-allsky config with new geographic location')
+        logger.warning('Queuing config update with new geographic location')
 
         self.config['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
         self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
@@ -1146,8 +1146,9 @@ class CaptureWorker(Process):
             state=TaskQueueState.MANUAL,
             data={
                 'action'      : 'setlocation',
-                'latitude'    : gps_lat,
-                'longitude'   : gps_long,
+                'camera_id'   : self.camera_id,
+                'latitude'    : float(gps_lat),
+                'longitude'   : float(gps_long),
             },
         )
 

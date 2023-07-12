@@ -1119,10 +1119,11 @@ class IndiAllSky(object):
                     task.setSuccess('Set time queued')
 
                 elif action == 'setlocation':
+                    camera_id = task.data['camera_id']
                     latitude = task.data['latitude']
                     longitude = task.data['longitude']
 
-                    self.updateConfigLocation(latitude, longitude)
+                    self.updateConfigLocation(latitude, longitude, camera_id)
 
                     task.setSuccess('Updated config location')
 
@@ -1192,7 +1193,7 @@ class IndiAllSky(object):
             self.video_q.put({'task_id' : task.id})
 
 
-    def updateConfigLocation(self, latitude, longitude):
+    def updateConfigLocation(self, latitude, longitude, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
         self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
@@ -1206,4 +1207,18 @@ class IndiAllSky(object):
         except ConfigSaveException:
             return
 
+
+        #logger.info('Updating camera %d location %0.2f, %0.2f', camera_id, self.config['LOCATION_LATITUDE'], self.config['LOCATION_LONGITUDE'])
+        try:
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+
+            camera.latitude = float(self.config['LOCATION_LATITUDE'])
+            camera.longitude = float(self.config['LOCATION_LONGITUDE'])
+
+            db.session.commit()
+
+        except NoResultFound:
+            logger.error('Camera ID %d not found', camera_id)
 
