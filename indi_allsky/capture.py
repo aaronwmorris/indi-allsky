@@ -65,6 +65,8 @@ class CaptureWorker(Process):
         ra_v,
         dec_v,
         exposure_v,
+        exposure_min_v,
+        exposure_max_v,
         gain_v,
         bin_v,
         sensortemp_v,
@@ -90,6 +92,8 @@ class CaptureWorker(Process):
         self.dec_v = dec_v
 
         self.exposure_v = exposure_v
+        self.exposure_min_v = exposure_min_v
+        self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensortemp_v = sensortemp_v
@@ -644,23 +648,46 @@ class CaptureWorker(Process):
 
 
         # set minimum exposure
-        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
         ccd_min_exp = ccd_min_exp + 0.00000001
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+            with self.exposure_min_v.get_lock():
+                self.exposure_min_v.value = ccd_min_exp
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
                 'Minimum exposure %0.8f too low, increasing to %0.8f',
                 self.config.get('CCD_EXPOSURE_MIN'),
                 ccd_min_exp,
             )
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+            with self.exposure_min_v.get_lock():
+                self.exposure_min_v.value = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
+        logger.info('Minimum CCD exposure: %0.8f', self.exposure_min_v.value)
+
+
+        # set maximum exposure
+        ccd_max_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
+        maximum_exposure = self.config.get('CCD_EXPOSURE_MAX')
+
+        if self.config.get('CCD_EXPOSURE_MAX') > ccd_max_exp:
+            logger.warning(
+                'Maximum exposure %0.8f too high, decreasing to %0.8f',
+                self.config.get('CCD_EXPOSURE_MAX'),
+                ccd_max_exp,
+            )
+
+            maximum_exposure = ccd_max_exp
+
+
+        with self.exposure_max_v.get_lock():
+            self.exposure_max_v.value = maximum_exposure
+
+
+        logger.info('Maximum CCD exposure: %0.8f', self.exposure_max_v.value)
 
 
         # set default exposure
@@ -669,13 +696,19 @@ class CaptureWorker(Process):
         #        during the day weird things can happen when the image sensor is completely oversaturated.
         #        Instead of an all white image, you can get intermediate pixel values which confuses the
         #        exposure detection algorithm
-        if not self.config.get('CCD_EXPOSURE_DEF'):
-            self.config['CCD_EXPOSURE_DEF'] = self.config['CCD_EXPOSURE_MIN']
+        if self.config.get('CCD_EXPOSURE_DEF'):
+            ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
+        else:
+            ccd_exposure_default = self.exposure_min_v.value
 
-        with self.exposure_v.get_lock():
-            self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
 
-        logger.info('Default CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_DEF']))
+        if self.exposure_v.value == -1.0:
+            # only set this on first start
+            with self.exposure_v.get_lock():
+                self.exposure_v.value = ccd_exposure_default
+
+
+        logger.info('Default CCD exposure: {0:0.8f}'.format(ccd_exposure_default))
 
 
         # Validate gain settings

@@ -97,6 +97,8 @@ class ImageWorker(Process):
         ra_v,
         dec_v,
         exposure_v,
+        exposure_min_v,
+        exposure_max_v,
         gain_v,
         bin_v,
         sensortemp_v,
@@ -119,6 +121,8 @@ class ImageWorker(Process):
         self.dec_v = dec_v
 
         self.exposure_v = exposure_v
+        self.exposure_min_v = exposure_min_v
+        self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensortemp_v = sensortemp_v
@@ -1323,15 +1327,14 @@ class ImageWorker(Process):
             new_exposure = exposure
 
 
-
         # Do not exceed the limits
-        if new_exposure < self.config['CCD_EXPOSURE_MIN']:
-            new_exposure = self.config['CCD_EXPOSURE_MIN']
-        elif new_exposure > self.config['CCD_EXPOSURE_MAX']:
-            new_exposure = self.config['CCD_EXPOSURE_MAX']
+        if new_exposure < self.exposure_min_v.value:
+            new_exposure = float(self.exposure_min_v.value)
+        elif new_exposure > self.exposure_max_v.value:
+            new_exposure = float(self.exposure_max_v.value)
 
 
-        logger.warning('New calculated exposure: %0.6f', new_exposure)
+        logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_v.get_lock():
             self.exposure_v.value = new_exposure
 
