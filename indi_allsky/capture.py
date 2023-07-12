@@ -23,8 +23,6 @@ import queue
 from . import constants
 from . import camera as camera_module
 
-from .version import __config_level__
-
 from .config import IndiAllSkyConfig
 
 from .flask.models import TaskQueueQueue
@@ -713,28 +711,14 @@ class CaptureWorker(Process):
 
 
     def reload_handler(self):
+        ### method is no longer used and will be removed later
+
         logger.warning('Reconfiguring...')
 
         self._config_obj = IndiAllSkyConfig()
 
         # overwrite config
         self.config = self._config_obj.config
-
-
-        if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
-
-            self._miscDb.addNotification(
-                NotificationCategory.STATE,
-                'config_version',
-                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
-                expire=timedelta(hours=2),
-            )
-
-            return
-
-
-        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 
         # send new config to camera object
@@ -744,12 +728,6 @@ class CaptureWorker(Process):
         # Update shared values
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
         self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
-
-        with self.latitude_v.get_lock():
-            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
-
-        with self.longitude_v.get_lock():
-            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
 
 
         # reconfigure if needed
