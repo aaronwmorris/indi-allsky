@@ -143,6 +143,8 @@ class ImageWorker(Process):
 
         self.sqm_value = 0
 
+        self.metadata_count = 0
+
         self._detection_mask = self._load_detection_mask()
 
         self.image_processor = ImageProcessor(
@@ -709,7 +711,7 @@ class ImageWorker(Process):
             self._miscUpload.mqtt_publish_image(upload_filename, mqtt_data)
             self._miscUpload.upload_image(image_entry)
 
-            self.upload_metadata(i_ref, image_entry, adu, adu_average)
+            self.upload_metadata(i_ref, adu, adu_average)
 
 
     def decdeg2dms(self, dd):
@@ -721,7 +723,7 @@ class ImageWorker(Process):
         return degrees, minutes, seconds
 
 
-    def upload_metadata(self, i_ref, image_entry, adu, adu_average):
+    def upload_metadata(self, i_ref, adu, adu_average):
         ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
@@ -732,11 +734,12 @@ class ImageWorker(Process):
             return
 
 
-        ### Only uploading metadata if image uploading is enabled
-        image_remain = image_entry.id % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
-        if image_remain != 0:
-            #next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_remain
-            #logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+        self.metadata_count += 1
+
+        metadata_remain = self.metadata_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
+        if metadata_remain != 0:
+            #next_metadata = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_metadata
+            #logger.info('Next metadata upload in %d images (%d s)', next_metadata, int(self.config['EXPOSURE_PERIOD'] * next_metadata))
             return
 
 
