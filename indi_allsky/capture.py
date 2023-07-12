@@ -212,7 +212,7 @@ class CaptureWorker(Process):
                 elif c_dict.get('reload'):
                     self._reload = True
                 elif c_dict.get('settime'):
-                    self.update_time_offset = c_dict['settime']
+                    self.update_time_offset = int(c_dict['settime'])
                 else:
                     logger.error('Unknown action: %s', str(c_dict))
 
@@ -363,12 +363,12 @@ class CaptureWorker(Process):
 
                         gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
 
+                        self.update_time_offset = None  # reset
+
                         try:
                             self.setTimeSystemd(gps_utc)
                         except dbus.exceptions.DBusException as e:
                             logger.error('DBus Error: %s', str(e))
-
-                        self.update_time_offset = None
 
                         # time change, need to update next frame time
                         if self.night:
