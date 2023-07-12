@@ -251,7 +251,7 @@ class IndiAllSky(object):
 
         self.capture_worker_idx += 1
 
-        logger.info('Starting Capture%03d worker', self.capture_worker_idx)
+        logger.info('Starting Capture-%d worker', self.capture_worker_idx)
         self.capture_worker = CaptureWorker(
             self.capture_worker_idx,
             self.config,
@@ -316,7 +316,7 @@ class IndiAllSky(object):
 
         self.image_worker_idx += 1
 
-        logger.info('Starting Image%03d worker', self.image_worker_idx)
+        logger.info('Starting Image-%d worker', self.image_worker_idx)
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
@@ -381,7 +381,7 @@ class IndiAllSky(object):
 
         self.video_worker_idx += 1
 
-        logger.info('Starting Video%03d worker', self.video_worker_idx)
+        logger.info('Starting Video-%d worker', self.video_worker_idx)
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
@@ -444,7 +444,7 @@ class IndiAllSky(object):
 
         self.upload_worker_idx += 1
 
-        logger.info('Starting Upload%03d worker', self.upload_worker_idx)
+        logger.info('Starting Upload-%d worker', self.upload_worker_idx)
         uw_dict['worker'] = FileUploader(
             self.upload_worker_idx,
             self.config,

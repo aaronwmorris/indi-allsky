@@ -78,7 +78,7 @@ class CaptureWorker(Process):
 
         super(CaptureWorker, self).__init__()
 
-        self.name = 'Capture{0:03d}'.format(idx)
+        self.name = 'Capture-{0:d}'.format(idx)
 
         self.config = config
         self.error_q = error_q

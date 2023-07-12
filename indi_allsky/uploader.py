@@ -40,7 +40,7 @@ class FileUploader(Thread):
     ):
         super(FileUploader, self).__init__()
 
-        self.name = 'Upload{0:03d}'.format(idx)
+        self.name = 'Upload-{0:d}'.format(idx)
 
         self.config = config
 

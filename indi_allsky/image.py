@@ -105,7 +105,7 @@ class ImageWorker(Process):
     ):
         super(ImageWorker, self).__init__()
 
-        self.name = 'Image{0:03d}'.format(idx)
+        self.name = 'Image-{0:d}'.format(idx)
 
         self.config = config
         self.error_q = error_q
