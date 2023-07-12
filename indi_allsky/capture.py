@@ -52,7 +52,6 @@ logger = logging.getLogger('indi_allsky')
 class CaptureWorker(Process):
 
     periodic_tasks_offset = 180.0  # 3 minutes
-    aurora_tasks_offset = 3600  # 60 minutes
 
 
     def __init__(
@@ -120,7 +119,6 @@ class CaptureWorker(Process):
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         #self.periodic_tasks_time = time.time()  # testing
-        self.aurora_tasks_time = time.time()  # start immediately
 
 
         if self.config['IMAGE_FOLDER']:
@@ -971,42 +969,6 @@ class CaptureWorker(Process):
         elif self.camera_server in ['indi_asi_single_ccd']:
             if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-
-
-        # aurora data update
-        if self.aurora_tasks_time < now:
-            self.aurora_tasks_time = now + self.aurora_tasks_offset
-
-            logger.info('Creating aurora update task')
-            self._updateAuroraData(self.camera_id)
-
-
-    def _updateAuroraData(self, camera_id, task_state=TaskQueueState.QUEUED):
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        # This will delete old images from the filesystem and DB
-        jobdata = {
-            'action'       : 'updateAuroraData',
-            'img_folder'   : str(self.image_dir),
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
 
 
     def getSensorTemperature(self):

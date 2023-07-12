@@ -51,6 +51,7 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.expression import false as sa_false
 
 
 app = create_app()
@@ -60,8 +61,9 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    periodic_tasks_offset = 900  # 15 minutes
-    cleanup_tasks_offset = 43200  # 12 hours
+    periodic_tasks_offset = 300    # 5 minutes
+    cleanup_tasks_offset = 43200   # 12 hours
+    aurora_tasks_offset = 3600     # 60 minutes
 
 
     def __init__(self):
@@ -102,7 +104,8 @@ class IndiAllSky(object):
 
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
-        self.cleanup_tasks_time = time.time()  # run immediately
+        self.cleanup_tasks_time = time.time()  # run asap
+        self.aurora_tasks_time = time.time()  # run asap
 
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
@@ -1110,5 +1113,39 @@ class IndiAllSky(object):
             self._flushOldTasks()
             self._systemHealthCheck()
 
+
+        # aurora data update
+        if self.aurora_tasks_time < now:
+            self.aurora_tasks_time = now + self.aurora_tasks_offset
+
+            logger.info('Creating aurora update task')
+            self._updateAuroraData()
+
+
+    def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
+
+        active_cameras = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.id.desc())
+
+
+        for camera in active_cameras:
+            jobdata = {
+                'action'       : 'updateAuroraData',
+                'img_folder'   : str(self.image_dir),
+                'timespec'     : None,  # Not needed
+                'night'        : None,  # Not needed
+                'camera_id'    : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : task.id})
 
 
