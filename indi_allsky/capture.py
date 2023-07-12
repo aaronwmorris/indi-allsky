@@ -136,29 +136,29 @@ class CaptureWorker(Thread):
 
 
 
-    def sighup_handler_worker(self, signum, frame):
-        logger.warning('Caught HUP signal, reconfiguring')
+    #def sighup_handler_worker(self, signum, frame):
+    #    logger.warning('Caught HUP signal, reconfiguring')
 
-        # set flag for program to restart processes
-        self._reload = True
-
-
-    def sigterm_handler_worker(self, signum, frame):
-        logger.warning('Caught TERM signal')
-
-        # set flag for program to stop processes
-        self._shutdown = True
+    #    # set flag for program to restart processes
+    #    self._reload = True
 
 
-    def sigint_handler_worker(self, signum, frame):
-        logger.warning('Caught INT signal')
+    #def sigterm_handler_worker(self, signum, frame):
+    #    logger.warning('Caught TERM signal')
 
-        # set flag for program to stop processes
-        self._shutdown = True
+    #    # set flag for program to stop processes
+    #    self._shutdown = True
 
 
-    def sigalarm_handler_worker(self, signum, frame):
-        raise TimeOutException()
+    #def sigint_handler_worker(self, signum, frame):
+    #    logger.warning('Caught INT signal')
+
+    #    # set flag for program to stop processes
+    #    self._shutdown = True
+
+
+    #def sigalarm_handler_worker(self, signum, frame):
+    #    raise TimeOutException()
 
 
     def run(self):

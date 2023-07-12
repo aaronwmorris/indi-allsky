@@ -274,16 +274,16 @@ class IndiAllSky(object):
         self.capture_worker.start()
 
 
-    def _stopCaptureWorker(self, terminate=False):
+    def _stopCaptureWorker(self):
         if not self.capture_worker:
             return
 
         if not self.capture_worker.is_alive():
             return
 
-        if terminate:
-            logger.info('Terminating Capture worker')
-            self.capture_worker.terminate()
+        #if self._terminate:
+        #    logger.info('Terminating Capture worker')
+        #    self.capture_worker.terminate()
 
         logger.info('Stopping Capture worker')
 
@@ -348,16 +348,16 @@ class IndiAllSky(object):
                 )
 
 
-    def _stopImageWorker(self, terminate=False):
+    def _stopImageWorker(self):
         if not self.image_worker:
             return
 
         if not self.image_worker.is_alive():
             return
 
-        if terminate:
-            logger.info('Terminating Image worker')
-            self.image_worker.terminate()
+        #if self._terminate:
+        #    logger.info('Terminating Image worker')
+        #    self.image_worker.terminate()
 
         logger.info('Stopping Image worker')
 
@@ -406,16 +406,16 @@ class IndiAllSky(object):
                 )
 
 
-    def _stopVideoWorker(self, terminate=False):
+    def _stopVideoWorker(self):
         if not self.video_worker:
             return
 
         if not self.video_worker.is_alive():
             return
 
-        if terminate:
-            logger.info('Terminating Video worker')
-            self.video_worker.terminate()
+        #if self._terminate:
+        #    logger.info('Terminating Video worker')
+        #    self.video_worker.terminate()
 
         logger.info('Stopping Video worker')
 
@@ -466,7 +466,7 @@ class IndiAllSky(object):
                 )
 
 
-    def _stopFileUploadWorkers(self, terminate=False):
+    def _stopFileUploadWorkers(self):
         active_worker_list = list()
         for upload_worker_dict in self.upload_worker_list:
             if not upload_worker_dict['worker']:
@@ -474,6 +474,10 @@ class IndiAllSky(object):
 
             if not upload_worker_dict['worker'].is_alive():
                 continue
+
+            #if self._terminate:
+            #    logger.info('Terminating Upload worker')
+            #    upload_worker_dict['worker'].terminate()
 
             active_worker_list.append(upload_worker_dict)
 
@@ -505,10 +509,10 @@ class IndiAllSky(object):
         while True:
             if self._shutdown:
                 logger.warning('Shutting down')
-                self._stopImageWorker(terminate=self._terminate)
-                self._stopVideoWorker(terminate=self._terminate)
-                self._stopFileUploadWorkers(terminate=self._terminate)
-                self._stopCaptureWorker(terminate=self._terminate)  # do this last
+                self._stopImageWorker()
+                self._stopVideoWorker()
+                self._stopFileUploadWorkers()
+                self._stopCaptureWorker()  # do this last
 
 
                 with app.app_context():
