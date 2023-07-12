@@ -1110,6 +1110,8 @@ class IndiAllSky(object):
                         task.setExpired()
                         continue
 
+                    logger.info('Reload initiated')
+
                     reload_received = True
                     self._reload = True
 
@@ -1126,6 +1128,8 @@ class IndiAllSky(object):
                     task.setSuccess('Set time queued')
 
                 elif action == 'setlocation':
+                    logger.info('Set location initiated')
+
                     camera_id = task.data['camera_id']
                     latitude = task.data['latitude']
                     longitude = task.data['longitude']
