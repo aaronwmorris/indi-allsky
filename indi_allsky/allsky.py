@@ -281,9 +281,9 @@ class IndiAllSky(object):
         if not self.capture_worker.is_alive():
             return
 
-        #if self._terminate:
-        #    logger.info('Terminating Capture worker')
-        #    self.capture_worker.terminate()
+        if self._terminate:
+            logger.info('Terminating Capture worker')
+            self.capture_worker.terminate()
 
         logger.info('Stopping Capture worker')
 
@@ -355,9 +355,9 @@ class IndiAllSky(object):
         if not self.image_worker.is_alive():
             return
 
-        #if self._terminate:
-        #    logger.info('Terminating Image worker')
-        #    self.image_worker.terminate()
+        if self._terminate:
+            logger.info('Terminating Image worker')
+            self.image_worker.terminate()
 
         logger.info('Stopping Image worker')
 
@@ -413,9 +413,9 @@ class IndiAllSky(object):
         if not self.video_worker.is_alive():
             return
 
-        #if self._terminate:
-        #    logger.info('Terminating Video worker')
-        #    self.video_worker.terminate()
+        if self._terminate:
+            logger.info('Terminating Video worker')
+            self.video_worker.terminate()
 
         logger.info('Stopping Video worker')
 
