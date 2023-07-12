@@ -540,7 +540,8 @@ class IndiAllSky(object):
                 self._stopCaptureWorker()
                 # processes will start at the next loop
 
-                self.reload_handler()
+                with app.app_context():
+                    self.reload_handler()
 
 
             # do *NOT* start workers inside of a flask context
