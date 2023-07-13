@@ -269,6 +269,7 @@ class CaptureWorker(Process):
 
                         self.indiclient.disconnectServer()
 
+                        logger.warning('Goodbye')
                         return
 
 
@@ -342,6 +343,7 @@ class CaptureWorker(Process):
                             expire=timedelta(hours=1),
                         )
 
+                        logger.warning('Goodbye')
                         return
 
 
