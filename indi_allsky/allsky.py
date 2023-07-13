@@ -519,10 +519,10 @@ class IndiAllSky(object):
         while True:
             if self._shutdown:
                 logger.warning('Shutting down')
+                self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
                 self._stopFileUploadWorkers()
-                self._stopCaptureWorker()  # do this last
 
 
                 with app.app_context():
@@ -540,10 +540,10 @@ class IndiAllSky(object):
             if self._reload:
                 logger.warning('Restarting processes')
                 self._reload = False
+                self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
                 self._stopFileUploadWorkers()
-                self._stopCaptureWorker()
                 # processes will start at the next loop
 
                 with app.app_context():
