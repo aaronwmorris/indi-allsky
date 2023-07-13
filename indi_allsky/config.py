@@ -525,7 +525,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         try:
             self._getConfigEntry()
 
-            logger.error('Configuration already initialized')
+            logger.warning('Configuration already initialized')
 
             sys.exit(1)
         except NoResultFound:
