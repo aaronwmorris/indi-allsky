@@ -1110,7 +1110,7 @@ class IndiAllSky(object):
                         task.setExpired()
                         continue
 
-                    logger.info('Reload initiated')
+                    logger.warning('Reload initiated')
 
                     reload_received = True
                     self._reload = True
