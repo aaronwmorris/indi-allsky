@@ -566,7 +566,7 @@ class IndiAllSky(object):
                 self._periodic_tasks()
 
 
-            time.sleep(15)
+            time.sleep(13)
 
 
     def reload_handler(self):
