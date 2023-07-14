@@ -16,11 +16,11 @@ logger = logging.getLogger('indi_allsky')
 logger.setLevel(logging.INFO)
 
 
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s/%(threadName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
-LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s/%(threadName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
 LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 
@@ -52,21 +52,8 @@ if __name__ == "__main__":
         help='action',
         choices=(
             'run',
-            'connectOnly',
-            'cameraReport',
-            'generateNightTimelapse',
-            'generateDayTimelapse',
-            'generateNightKeogram',
-            'generateDayKeogram',
-            'expireData',
             'dbImportImages',
         ),
-    )
-    argparser.add_argument(
-        '--timespec',
-        '-t',
-        help='time spec',
-        type=str,
     )
     argparser.add_argument(
         '--cameraId',
@@ -104,9 +91,6 @@ if __name__ == "__main__":
 
     args_list = list()
     kwargs_dict = dict()
-
-    if args.timespec:
-        kwargs_dict['timespec'] = (args.timespec)
 
     if args.cameraId:
         kwargs_dict['camera_id'] = args.cameraId
