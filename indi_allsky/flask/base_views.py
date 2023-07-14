@@ -546,4 +546,5 @@ class FakeCamera(object):
     latitude = 0.0
     longitude = 0.0
     nightSunAlt = 0.0
+    data = {}
 
