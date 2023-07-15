@@ -639,6 +639,9 @@ class IndiAllSkyDarks(object):
 
 
         ### take darks
+        remaining_configs = len(night_darks_odict.keys()) + 1  # include daytime
+        overhead_per_exposure = 30.0  # seconds, initial estimate
+        completed_exposures = 0
 
 
         # take day darks with cooling disabled
@@ -651,17 +654,47 @@ class IndiAllSkyDarks(object):
             ### DAY DARKS ###
             day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
             if day_params not in night_darks_odict.keys():
+                total_exposures = len(dark_exposures) * remaining_configs
+                estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
+                logger.info(f"Processing {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
+
+
                 self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
                 # day will rarely exceed 1 second (with good cameras and proper conditions)
-                for exposure in dark_exposures:
+                for index, exposure in enumerate(dark_exposures):
+                    # Create a temporary list of remaining exposures
+                    remaining_exposures = dark_exposures[index + 1:]
+
+                    start = time.time()
                     self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                    elapsed_s = time.time()
+                    exposure_time = elapsed_s - start
+
+                    completed_exposures += 1
+
+                    # Calculate the overhead for this exposure
+                    overhead_per_exposure = exposure_time - exposure * float(self.count)
+                    estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
+                    logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
+
+                remaining_configs -= 1
+
+            else:
+                remaining_configs -= 1  # daytime parameters included in night configs
 
         else:
             logger.warning('Daytime dark processing is disabled')
+
+            remaining_configs -= 1  # skip daytime
+
             time.sleep(8.0)
 
+
+        total_exposures = len(dark_exposures) * remaining_configs
+        estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
+        logger.info(f"Processing {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
 
         # take night darks with cooling enabled
@@ -671,14 +704,7 @@ class IndiAllSkyDarks(object):
             logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
             self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
 
-        remaining_configs = len(night_darks_odict.keys())
-        total_exposures = len(dark_exposures) * remaining_configs
-        overhead_per_exposure = 30.0  # seconds, initial estimate
-        completed_exposures = 0
 
-        estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
-
-        logger.info(f"Beginning {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
         ### NIGHT DARKS ###
         for gain, binmode in night_darks_odict.keys():
@@ -692,14 +718,13 @@ class IndiAllSkyDarks(object):
                 start = time.time()
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
                 elapsed_s = time.time()
-                completed_exposures += 1
                 exposure_time = elapsed_s - start
+
+                completed_exposures += 1
 
                 # Calculate the overhead for this exposure
                 overhead_per_exposure = exposure_time - exposure * float(self.count)
-
                 estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
-
                 logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
             remaining_configs -= 1
@@ -721,9 +746,9 @@ class IndiAllSkyDarks(object):
         image_bitpix = None
 
         i = 1
-        while i <= self._count:
+        while i <= self.count:
             # sometimes image data is bad, take images until we reach the desired number
-            logger.info(f"Starting image {i}/{self._count}.")
+            logger.info(f"Starting image {i}/{self.count}.")
             start = time.time()
 
             self._pre_shoot_reconfigure()
