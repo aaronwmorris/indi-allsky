@@ -200,7 +200,7 @@ class IndiAllSkyConfigBase(object):
             "SUN_COLOR"   : [200, 200, 0],
             "MOON_COLOR"  : [128, 128, 128],
         },
-        "UPLOAD_WORKERS" : 1,
+        "UPLOAD_WORKERS" : 2,
         "FILETRANSFER" : {
             "CLASSNAME"              : "pycurl_sftp",  # pycurl_sftp, pycurl_ftps, pycurl_ftpes, paramiko_sftp, python_ftp, python_ftpes
             "HOST"                   : "",
