@@ -569,6 +569,26 @@ class IndiAllSkyDarks(object):
                 self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
 
 
+    @staticmethod
+    def _format_time(seconds):
+        """Take an integer number of seconds and return a string in the format HH:MM:SS."""
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
+    
+    def _estimate_runtime(self, remaining_exposures, remaining_configs, overhead_per_exposure):
+        """Estimate the remaining runtime in seconds of the _run function."""
+
+        # Initialize time to zero
+        total_time = 0
+
+        # Add the time for each exposure plus overhead.
+        total_exposure_time =  sum(remaining_exposures)*self.count + len(remaining_exposures) * overhead_per_exposure
+        total_time += total_exposure_time * remaining_configs
+
+        return total_time
+
+
     def _run(self, stacking_class):
 
         ccd_bits = int(self.ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
@@ -633,9 +653,8 @@ class IndiAllSkyDarks(object):
                 self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
-                # day will rarely exceed 1 second
-                for exposure in dark_exposures:
-                    self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                # day will rarely exceed 1 second, so just take one exposure
+                self._take_exposures(1, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
         else:
             logger.warning('Daytime dark processing is disabled')
             time.sleep(8.0)
@@ -649,16 +668,38 @@ class IndiAllSkyDarks(object):
             logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
             self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
 
+        remaining_configs = len(night_darks_odict.keys())
+        total_exposures = len(dark_exposures) * remaining_configs
+        overhead_per_exposure = 30.0  # seconds, initial estimate
+        completed_exposures = 0
+
+        estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
+
+        logger.info(f"Beginning {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
         ### NIGHT DARKS ###
         for gain, binmode in night_darks_odict.keys():
             self.indiclient.setCcdGain(gain)
             self.indiclient.setCcdBinning(binmode)
 
-            for exposure in dark_exposures:
+            for index, exposure in enumerate(dark_exposures):
+                # Create a temporary list of remaining exposures
+                remaining_exposures = dark_exposures[index+1:]
+
+                start = time.time()
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                elapsed_s = time.time()
+                completed_exposures += 1
+                exposure_time = elapsed_s - start
 
+                # Calculate the overhead for this exposure
+                overhead_per_exposure = exposure_time - exposure*float(self.count)
 
+                estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
+
+                logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
+
+            remaining_configs -= 1
 
         # shutdown
         self.indiclient.disableCcdCooler()
@@ -679,6 +720,7 @@ class IndiAllSkyDarks(object):
         i = 1
         while i <= self._count:
             # sometimes image data is bad, take images until we reach the desired number
+            logger.info(f"Starting image {i}/{self._count}.")
             start = time.time()
 
             self._pre_shoot_reconfigure()
