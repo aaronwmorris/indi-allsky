@@ -575,7 +575,8 @@ class IndiAllSkyDarks(object):
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
-    
+
+
     def _estimate_runtime(self, remaining_exposures, remaining_configs, overhead_per_exposure):
         """Estimate the remaining runtime in seconds of the _run function."""
 
@@ -583,7 +584,7 @@ class IndiAllSkyDarks(object):
         total_time = 0
 
         # Add the time for each exposure plus overhead.
-        total_exposure_time =  sum(remaining_exposures)*self.count + len(remaining_exposures) * overhead_per_exposure
+        total_exposure_time = sum(remaining_exposures) * self.count + len(remaining_exposures) * overhead_per_exposure
         total_time += total_exposure_time * remaining_configs
 
         return total_time
@@ -686,7 +687,7 @@ class IndiAllSkyDarks(object):
 
             for index, exposure in enumerate(dark_exposures):
                 # Create a temporary list of remaining exposures
-                remaining_exposures = dark_exposures[index+1:]
+                remaining_exposures = dark_exposures[index + 1:]
 
                 start = time.time()
                 self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
@@ -695,7 +696,7 @@ class IndiAllSkyDarks(object):
                 exposure_time = elapsed_s - start
 
                 # Calculate the overhead for this exposure
-                overhead_per_exposure = exposure_time - exposure*float(self.count)
+                overhead_per_exposure = exposure_time - exposure * float(self.count)
 
                 estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
 
