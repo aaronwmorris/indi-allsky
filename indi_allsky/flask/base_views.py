@@ -249,7 +249,7 @@ class TemplateView(BaseView):
 
         now = time.time()
 
-        if now > (watchdog_time + 240):
+        if now > (watchdog_time + 600):
             return '<span class="text-danger">DOWN</span>'
 
 
@@ -277,9 +277,9 @@ class TemplateView(BaseView):
             return '<span class="text-warning">FOCUS MODE</span>'
 
 
-        if now > (watchdog_time + 300):
+        if now > (watchdog_time + 600):
             # this notification is only supposed to fire if the program is
-            # running normally and the watchdog timestamp is older than 5 minutes
+            # running normally and the watchdog timestamp is older than 10 minutes
             self._miscDb.addNotification(
                 NotificationCategory.GENERAL,
                 'watchdog',

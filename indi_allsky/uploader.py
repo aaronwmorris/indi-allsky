@@ -1,12 +1,12 @@
 import time
 from datetime import timedelta
 from pathlib import Path
-import signal
+#import signal
 import traceback
 import logging
 
-from multiprocessing import Process
-#from threading import Thread
+#from multiprocessing import Process
+from threading import Thread
 import queue
 
 from . import constants
@@ -21,7 +21,7 @@ from . import filetransfer
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from .exceptions import TimeOutException
+#from .exceptions import TimeOutException
 
 
 app = create_app()
@@ -30,7 +30,7 @@ logger = logging.getLogger('indi_allsky')
 
 
 
-class FileUploader(Process):
+class FileUploader(Thread):
     def __init__(
         self,
         idx,
@@ -40,8 +40,7 @@ class FileUploader(Process):
     ):
         super(FileUploader, self).__init__()
 
-        #self.threadID = idx
-        self.name = 'FileUploader{0:03d}'.format(idx)
+        self.name = 'Upload-{0:d}'.format(idx)
 
         self.config = config
 
@@ -61,38 +60,38 @@ class FileUploader(Process):
 
 
 
-    def sighup_handler_worker(self, signum, frame):
-        logger.warning('Caught HUP signal')
+    #def sighup_handler_worker(self, signum, frame):
+    #    logger.warning('Caught HUP signal')
 
-        # set flag for program to stop processes
-        self._shutdown = True
-
-
-    def sigterm_handler_worker(self, signum, frame):
-        logger.warning('Caught TERM signal')
-
-        # set flag for program to stop processes
-        self._shutdown = True
+    #    # set flag for program to stop processes
+    #    self._shutdown = True
 
 
-    def sigint_handler_worker(self, signum, frame):
-        logger.warning('Caught INT signal')
+    #def sigterm_handler_worker(self, signum, frame):
+    #    logger.warning('Caught TERM signal')
 
-        # set flag for program to stop processes
-        self._shutdown = True
+    #    # set flag for program to stop processes
+    #    self._shutdown = True
 
 
-    def sigalarm_handler_worker(self, signum, frame):
-        raise TimeOutException()
+    #def sigint_handler_worker(self, signum, frame):
+    #    logger.warning('Caught INT signal')
+
+    #    # set flag for program to stop processes
+    #    self._shutdown = True
+
+
+    #def sigalarm_handler_worker(self, signum, frame):
+    #    raise TimeOutException()
 
 
 
     def run(self):
         # setup signal handling after detaching from the main process
-        signal.signal(signal.SIGHUP, self.sighup_handler_worker)
-        signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
-        signal.signal(signal.SIGINT, self.sigint_handler_worker)
-        signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
+        #signal.signal(signal.SIGHUP, self.sighup_handler_worker)
+        #signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
+        #signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        #signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
         ### use this as a method to log uncaught exceptions

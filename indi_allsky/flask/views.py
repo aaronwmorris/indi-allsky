@@ -944,7 +944,7 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
-            'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 1),
+            'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 2),
             'FILETRANSFER__CLASSNAME'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
             'FILETRANSFER__HOST'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
             'FILETRANSFER__PORT'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('PORT', 0),
@@ -1582,61 +1582,29 @@ class AjaxSetTimeView(BaseView):
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
 
-        try:
-            self.setTimeSystemd(new_datetime_utc)
-        except dbus.exceptions.DBusException as e:
-            # manually build this error
-            form_errors = {
-                'form_settime_global' : [str(e)],
-            }
-            return jsonify(form_errors), 400
+        systemtime_utc = datetime.utcnow()
+
+        time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
+        app.logger.info('Time offset: %ds', int(time_offset))
+
+        task_settime = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            data={
+                'action'      : 'settime',
+                'time_offset' : time_offset,
+            },
+        )
+
+        db.session.add(task_settime)
+        db.session.commit()
 
         # form passed validation
         message = {
-            'success-message' : 'System time updated',
+            'success-message' : 'System time update queued.',
         }
 
-
-        #systemtime_utc = datetime.utcnow()
-
-        #time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
-        #app.logger.info('Time offset: %ds', int(time_offset))
-
-        #task_settime = IndiAllSkyDbTaskQueueTable(
-        #    queue=TaskQueueQueue.MAIN,
-        #    state=TaskQueueState.MANUAL,
-        #    data={
-        #        'action'      : 'settime',
-        #        'time_offset' : time_offset,
-        #    },
-        #)
-
-        #db.session.add(task_settime)
-        #db.session.commit()
-
-        ## form passed validation
-        #message = {
-        #    'success-message' : 'System time update queued.',
-        #}
-
         return jsonify(message)
-
-
-    def setTimeSystemd(self, new_datetime_utc):
-        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
-        epoch_msec = epoch * 1000000
-
-        system_bus = dbus.SystemBus()
-        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
-        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
-
-        app.logger.warning('Disabling NTP time sync')
-        manager.SetNTP(False, False)  # disable time sync
-        time.sleep(5.0)  # give enough time for time sync to diable
-
-        r2 = manager.SetTime(epoch_msec, False, False)
-
-        return r2
 
 
 class ImageViewerView(FormView):

@@ -3,22 +3,14 @@ import sys
 import os
 import time
 import io
-import json
 import re
 import psutil
-import tempfile
-import subprocess
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 #from pprint import pformat
-import math
-import dbus
 import signal
 import logging
-
-import ephem
 
 import queue
 from multiprocessing import Queue
@@ -29,17 +21,14 @@ from .version import __config_level__
 
 from .config import IndiAllSkyConfig
 
-from . import camera as camera_module
+#from . import constants
 
-from . import constants
-
+from .capture import CaptureWorker
 from .image import ImageWorker
 from .video import VideoWorker
 from .uploader import FileUploader
 
 from .exceptions import TimeOutException
-from .exceptions import TemperatureException
-from .exceptions import CameraException
 from .exceptions import ConfigSaveException
 
 from .flask import create_app
@@ -63,6 +52,7 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.expression import false as sa_false
 
 
 app = create_app()
@@ -72,11 +62,14 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    periodic_tasks_offset = 180.0  # 3 minutes
-    aurora_tasks_offset = 3600  # 60 minutes
+    periodic_tasks_offset = 300    # 5 minutes
+    cleanup_tasks_offset = 43200   # 12 hours
+    aurora_tasks_offset = 3600     # 60 minutes
 
 
     def __init__(self):
+        self.name = 'Main'
+
         with app.app_context():
             try:
                 self._config_obj = IndiAllSkyConfig()
@@ -110,7 +103,11 @@ class IndiAllSky(object):
 
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
-        self.indiclient = None
+
+        self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
+        self.cleanup_tasks_time = time.time()  # run asap
+        self.aurora_tasks_time = time.time()  # run asap
+
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
@@ -118,25 +115,20 @@ class IndiAllSky(object):
         self.ra_v = Value('f', 0.0)
         self.dec_v = Value('f', 0.0)
 
-        self.exposure_v = Value('f', -1.0)
+        self.exposure_v = Value('f', -1.0)  # this must be -1.0 to indicate unset
+        self.exposure_min_v = Value('f', -1.0)
+        self.exposure_max_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
-        self.night = None
         self.moonmode_v = Value('i', -1)  # bogus initial value
-        self.moonmode = None
 
-        self.camera_id = None
-        self.camera_name = None
-        self.camera_server = None
 
-        self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
-
-        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
-
-        self.update_time_offset = None  # when time needs to be updated, this will be the offset
+        self.capture_q = Queue()
+        self.capture_error_q = Queue()
+        self.capture_worker = None
+        self.capture_worker_idx = 0
 
         self.image_q = Queue()
         self.image_error_q = Queue()
@@ -157,11 +149,6 @@ class IndiAllSky(object):
                 'worker'  : None,
                 'error_q' : Queue(),
             })
-
-
-        self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
-        #self.periodic_tasks_time = time.time()  # testing
-        self.aurora_tasks_time = time.time()  # start immediately
 
 
         if self.config['IMAGE_FOLDER']:
@@ -194,184 +181,8 @@ class IndiAllSky(object):
 
 
     def sighup_handler_main(self, signum, frame):
-        logger.warning('Caught HUP signal, reconfiguring')
+        logger.warning('Caught HUP signal')
 
-        self._config_obj = IndiAllSkyConfig()
-
-        # overwrite config
-        self.config = self._config_obj.config
-
-
-        if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
-
-            self._miscDb.addNotification(
-                NotificationCategory.STATE,
-                'config_version',
-                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
-                expire=timedelta(hours=2),
-            )
-
-            return
-
-
-        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
-
-
-        # send new config to camera object
-        self.indiclient.updateConfig(self.config)
-
-
-        # Update shared values
-        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
-
-        with self.latitude_v.get_lock():
-            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
-
-        with self.longitude_v.get_lock():
-            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
-
-
-        # reconfigure if needed
-        self.reconfigureCcd()
-
-        # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.camera_name)
-
-        self.camera_server = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
-
-
-        ### Telescope config
-        # park the telescope at zenith
-        if self.indiclient.telescope_device:
-            telescope_config = {
-                'SWITCHES' : {},
-                'PROPERTIES' : {
-                    'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.latitude_v.value,
-                        'LONG' : self.longitude_v.value,
-                    },
-                },
-            }
-
-            self.indiclient.configureTelescopeDevice(telescope_config)
-
-            self.reparkTelescope()
-
-
-        # configuration needs to be performed before getting CCD_INFO
-        # which queries the exposure control
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-
-
-        # Get Properties
-        #ccd_properties = self.indiclient.getCcdDeviceProperties()
-
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-
-
-        if self.config.get('CFA_PATTERN'):
-            cfa_pattern = self.config['CFA_PATTERN']
-        else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
-
-
-        # need to get camera info before adding to DB
-        camera_metadata = {
-            'name'        : self.camera_name,
-            'driver'      : self.camera_server,
-
-            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
-            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
-            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
-            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
-            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
-            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
-            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
-            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
-            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
-
-            'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.latitude_v.value,
-            'longitude'   : self.longitude_v.value,
-
-            'owner'           : self.config['OWNER'],
-            'lensName'        : self.config['LENS_NAME'],
-            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
-            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
-            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
-            'alt'             : self.config['LENS_ALTITUDE'],
-            'az'              : self.config['LENS_AZIMUTH'],
-            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
-        }
-
-        camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = camera.id
-
-        self.indiclient.camera_id = camera.id
-
-        self._miscDb.setState('DB_CAMERA_ID', camera.id)
-
-
-        self._sync_camera(camera, camera_metadata)
-
-
-        # Update focus mode
-        self.focus_mode = self.config.get('FOCUS_MODE', False)
-
-        # set minimum exposure
-        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
-
-        # Some CCD drivers will not accept their stated minimum exposure.
-        # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp = ccd_min_exp + 0.00000001
-
-        if not self.config.get('CCD_EXPOSURE_MIN'):
-            logger.warning('Setting minimum to %0.8f', ccd_min_exp)
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
-            logger.warning(
-                'Minimum exposure %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN'),
-                ccd_min_exp,
-            )
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-
-        logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
-
-
-        # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
-
-        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
-
-        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
-
-        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
-        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
-
-
-        # set flag for program to restart processes
         self._reload = True
 
 
@@ -411,7 +222,7 @@ class IndiAllSky(object):
         self._miscDb.setState('PID_FILE', self.pid_file)
 
 
-    def _initialize(self, connectOnly=False):
+    def _startup(self):
         logger.info('indi-allsky release: %s', str(__version__))
         logger.info('indi-allsky config level: %s', str(__config_level__))
 
@@ -431,338 +242,71 @@ class IndiAllSky(object):
         #logger.info('Temp dir: %s', tempfile.gettempdir())
 
 
-        camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
+    def _startCaptureWorker(self):
+        if self.capture_worker:
+            if self.capture_worker.is_alive():
+                return
 
-        # instantiate the client
-        self.indiclient = camera_interface(
+            try:
+                capture_error, capture_traceback = self.capture_error_q.get_nowait()
+                for line in capture_traceback.split('\n'):
+                    logger.error('Capture worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
+        self.capture_worker_idx += 1
+
+        logger.info('Starting Capture-%d worker', self.capture_worker_idx)
+        self.capture_worker = CaptureWorker(
+            self.capture_worker_idx,
             self.config,
+            self.capture_error_q,
+            self.capture_q,
             self.image_q,
+            self.video_q,
+            self.upload_q,
             self.latitude_v,
             self.longitude_v,
             self.ra_v,
             self.dec_v,
+            self.exposure_v,
+            self.exposure_min_v,
+            self.exposure_max_v,
             self.gain_v,
             self.bin_v,
+            self.sensortemp_v,
             self.night_v,
+            self.moonmode_v,
         )
-
-        # set indi server localhost and port
-        self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
-
-        # connect to indi server
-        logger.info("Connecting to indiserver")
-        if not self.indiclient.connectServer():
-            host = self.indiclient.getHost()
-            port = self.indiclient.getPort()
-
-            logger.error("No indiserver available at %s:%d", host, port)
-
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'no_indiserver',
-                'Unable to connect to indiserver at {0:s}:{1:d}'.format(host, port),
-                expire=timedelta(hours=2),
-            )
-
-            sys.exit(1)
-
-        # give devices a chance to register
-        time.sleep(8)
-
-        try:
-            self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
-        except CameraException as e:
-            logger.error('Camera error: %s', str(e))
-
-            self._miscDb.addNotification(
-                NotificationCategory.CAMERA,
-                'no_camera',
-                'Camera was not detected.',
-                expire=timedelta(hours=2),
-            )
-
-            time.sleep(1)
-            sys.exit(1)
+        self.capture_worker.start()
 
 
-        self.indiclient.findTelescope(telescope_name='Telescope Simulator')
-        self.indiclient.findGps()
-
-        logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
-        self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
-
-        if self.indiclient.telescope_device:
-            logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
-            self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
-
-        if self.indiclient.gps_device:
-            logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
-            self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
-
-
-        if connectOnly:
+    def _stopCaptureWorker(self):
+        if not self.capture_worker:
             return
 
-
-        # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
-        self._miscDb.setState('CAMERA_NAME', self.camera_name)
-
-        self.camera_server = self.indiclient.ccd_device.getDriverExec()
-        self._miscDb.setState('CAMERA_SERVER', self.camera_server)
-
-
-        ### GPS config
-        if self.indiclient.gps_device:
-            gps_config = {
-                'PROPERTIES' : {
-                    'GPS_REFRESH_PERIOD' : {
-                        'PERIOD' : 293,  # prime number
-                    },
-                },
-            }
-
-            self.indiclient.configureGpsDevice(gps_config)
-            self.indiclient.refreshGps()
-
-
-            # GPSD simulation
-            #sim_gps_config = {
-            #    'SWITCHES' : {
-            #        'SIMULATION' : {
-            #            'on'  : ['ENABLE'],
-            #            'off' : ['DISABLE'],
-            #        },
-            #    },
-            #    'PROPERTIES' : {
-            #        'SIM_GEOGRAPHIC_COORD' : {  # rio
-            #            'SIM_LAT'  : -22,  # requires integers
-            #            'SIM_LONG' : 317,
-            #            'SIM_ELEV' : 7,
-            #        },
-            #    },
-            #}
-
-            #self.indiclient.configureGpsDevice(sim_gps_config)
-
-
-
-        ### Telescope config
-        # park the telescope at zenith and stop tracking
-        if self.indiclient.telescope_device:
-            telescope_config = {
-                'SWITCHES' : {
-                    'TELESCOPE_SLEW_RATE' : {
-                        'on' : ['4x'],  # zoom zoom
-                    },
-                    'TELESCOPE_TRACK_STATE' : {
-                        'on'  : ['TRACK_OFF'],
-                        'off' : ['TRACK_ON'],
-                    },
-                },
-                'PROPERTIES' : {
-                    'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.latitude_v.value,
-                        'LONG' : self.longitude_v.value,
-                    },
-                    'TELESCOPE_INFO' : {
-                        'TELESCOPE_APERTURE' : 10,
-                        'TELESCOPE_FOCAL_LENGTH' : 10,
-                    },
-                },
-                'TEXT' : {
-                    'SCOPE_CONFIG_NAME' : {
-                        'SCOPE_CONFIG_NAME' : 'indi-allsky',
-                    },
-                },
-            }
-
-            self.indiclient.configureTelescopeDevice(telescope_config)
-
-            self.reparkTelescope()
-
-
-
-        if self.indiclient.telescope_device and self.indiclient.gps_device:
-            # Set Telescope GPS
-            self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
-
-
-        # configuration needs to be performed before getting CCD_INFO
-        # which queries the exposure control
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-
-
-        # Get Properties
-        #ccd_properties = self.indiclient.getCcdDeviceProperties()
-
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-
-
-        if self.config.get('CFA_PATTERN'):
-            cfa_pattern = self.config['CFA_PATTERN']
-        else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
-
-
-        # need to get camera info before adding to DB
-        camera_metadata = {
-            'name'        : self.camera_name,
-            'driver'      : self.camera_server,
-
-            'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
-            'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
-            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
-            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
-            'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
-            'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
-            'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
-            'pixelSize'   : float(ccd_info.get('CCD_INFO', {}).get('CCD_PIXEL_SIZE', {}).get('current')),
-            'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
-
-            'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.latitude_v.value,
-            'longitude'   : self.longitude_v.value,
-
-            'owner'           : self.config['OWNER'],
-            'lensName'        : self.config['LENS_NAME'],
-            'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
-            'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
-            'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
-            'alt'             : self.config['LENS_ALTITUDE'],
-            'az'              : self.config['LENS_AZIMUTH'],
-            'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
-        }
-
-        camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = camera.id
-
-        self.indiclient.camera_id = camera.id
-
-        self._miscDb.setState('DB_CAMERA_ID', camera.id)
-
-
-        self._sync_camera(camera, camera_metadata)
-
-
-        try:
-            # Disable debugging
-            self.indiclient.disableDebugCcd()
-        except TimeOutException:
-            logger.warning('Camera does not support debug')
-
-
-        # set BLOB mode to BLOB_ALSO
-        self.indiclient.updateCcdBlobMode()
-
-
-        try:
-            self.indiclient.setCcdFrameType('FRAME_LIGHT')  # default frame type is light
-        except TimeOutException:
-            # this is an optional step
-            # occasionally the CCD_FRAME_TYPE property is not available during initialization
-            logger.warning('Unable to set CCD_FRAME_TYPE to Light')
-
-
-        # save config to defaults (disabled)
-        #self.indiclient.saveCcdConfig()
-
-
-        # set minimum exposure
-        ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
-
-        # Some CCD drivers will not accept their stated minimum exposure.
-        # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp = ccd_min_exp + 0.00000001
-
-        if not self.config.get('CCD_EXPOSURE_MIN'):
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
-            logger.warning(
-                'Minimum exposure %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN'),
-                ccd_min_exp,
-            )
-            self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
-
-        logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
-
-
-        # set default exposure
-        #
-        # Note:  I have tried setting a default exposure of 1.0s which works fine for night time, but
-        #        during the day weird things can happen when the image sensor is completely oversaturated.
-        #        Instead of an all white image, you can get intermediate pixel values which confuses the
-        #        exposure detection algorithm
-        if not self.config.get('CCD_EXPOSURE_DEF'):
-            self.config['CCD_EXPOSURE_DEF'] = self.config['CCD_EXPOSURE_MIN']
-
-        with self.exposure_v.get_lock():
-            self.exposure_v.value = self.config['CCD_EXPOSURE_DEF']
-
-        logger.info('Default CCD exposure: {0:0.8f}'.format(self.config['CCD_EXPOSURE_DEF']))
-
-
-        # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
-
-        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
-            time.sleep(3)
-        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
-            time.sleep(3)
-
-        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
-            time.sleep(3)
-        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
-            time.sleep(3)
-
-        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
-            time.sleep(3)
-        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
-            time.sleep(3)
-
-
-    def _sync_camera(self, camera, camera_metadata):
-        ### sync camera
-        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+        if not self.capture_worker.is_alive():
             return
 
+        if self._terminate:
+            logger.info('Terminating Capture worker')
+            self.capture_worker.terminate()
 
-        camera_metadata['uuid'] = camera.uuid
-        camera_metadata['type'] = constants.CAMERA
+        logger.info('Stopping Capture worker')
 
-        # tell worker to upload file
-        jobdata = {
-            'action'      : constants.TRANSFER_SYNC_V1,
-            'model'       : camera.__class__.__name__,
-            'id'          : camera.id,
-            'metadata'    : camera_metadata,
-        }
+        self.capture_q.put({'stop' : True})
+        self.capture_worker.join()
 
-        upload_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(upload_task)
-        db.session.commit()
 
-        self.upload_q.put({'task_id' : upload_task.id})
+    def _reloadCaptureWorker(self):
+        if not self.capture_worker:
+            return
+
+        if not self.capture_worker.is_alive():
+            return
+
+        self.capture_q.put({'reload' : True})
 
 
     def _startImageWorker(self):
@@ -780,7 +324,7 @@ class IndiAllSky(object):
 
         self.image_worker_idx += 1
 
-        logger.info('Starting ImageWorker process %d', self.image_worker_idx)
+        logger.info('Starting Image-%d worker', self.image_worker_idx)
         self.image_worker = ImageWorker(
             self.image_worker_idx,
             self.config,
@@ -792,6 +336,8 @@ class IndiAllSky(object):
             self.ra_v,
             self.dec_v,
             self.exposure_v,
+            self.exposure_min_v,
+            self.exposure_max_v,
             self.gain_v,
             self.bin_v,
             self.sensortemp_v,
@@ -807,23 +353,23 @@ class IndiAllSky(object):
                 self._miscDb.addNotification(
                     NotificationCategory.WORKER,
                     'ImageWorker',
-                    'WARNING: ImageWorker was restarted more than 10 times',
+                    'WARNING: Image worker was restarted more than 10 times',
                     expire=timedelta(hours=2),
                 )
 
 
-    def _stopImageWorker(self, terminate=False):
+    def _stopImageWorker(self):
         if not self.image_worker:
             return
 
         if not self.image_worker.is_alive():
             return
 
-        if terminate:
-            logger.info('Terminating ImageWorker process')
+        if self._terminate:
+            logger.info('Terminating Image worker')
             self.image_worker.terminate()
 
-        logger.info('Stopping ImageWorker process')
+        logger.info('Stopping Image worker')
 
         self.image_q.put({'stop' : True})
         self.image_worker.join()
@@ -845,7 +391,7 @@ class IndiAllSky(object):
 
         self.video_worker_idx += 1
 
-        logger.info('Starting VideoWorker process %d', self.video_worker_idx)
+        logger.info('Starting Video-%d worker', self.video_worker_idx)
         self.video_worker = VideoWorker(
             self.video_worker_idx,
             self.config,
@@ -870,18 +416,18 @@ class IndiAllSky(object):
                 )
 
 
-    def _stopVideoWorker(self, terminate=False):
+    def _stopVideoWorker(self):
         if not self.video_worker:
             return
 
         if not self.video_worker.is_alive():
             return
 
-        if terminate:
-            logger.info('Terminating VideoWorker process')
+        if self._terminate:
+            logger.info('Terminating Video worker')
             self.video_worker.terminate()
 
-        logger.info('Stopping VideoWorker process')
+        logger.info('Stopping Video worker')
 
         self.video_q.put({'stop' : True})
         self.video_worker.join()
@@ -908,7 +454,7 @@ class IndiAllSky(object):
 
         self.upload_worker_idx += 1
 
-        logger.info('Starting FileUploader process %d', self.upload_worker_idx)
+        logger.info('Starting Upload-%d worker', self.upload_worker_idx)
         uw_dict['worker'] = FileUploader(
             self.upload_worker_idx,
             self.config,
@@ -925,12 +471,12 @@ class IndiAllSky(object):
                 self._miscDb.addNotification(
                     NotificationCategory.WORKER,
                     'FileUploader',
-                    'WARNING: FileUploader was restarted more than 10 times',
+                    'WARNING: Upload worker was restarted more than 10 times',
                     expire=timedelta(hours=2),
                 )
 
 
-    def _stopFileUploadWorkers(self, terminate=False):
+    def _stopFileUploadWorkers(self):
         active_worker_list = list()
         for upload_worker_dict in self.upload_worker_list:
             if not upload_worker_dict['worker']:
@@ -939,6 +485,10 @@ class IndiAllSky(object):
             if not upload_worker_dict['worker'].is_alive():
                 continue
 
+            #if self._terminate:
+            #    logger.info('Terminating Upload worker')
+            #    upload_worker_dict['worker'].terminate()
+
             active_worker_list.append(upload_worker_dict)
 
             # need to put the stops in the queue before waiting on workers to join
@@ -946,113 +496,13 @@ class IndiAllSky(object):
 
 
         for upload_worker_dict in active_worker_list:
-            self._fileUploadWorkerStop(upload_worker_dict, terminate=terminate)
+            self._fileUploadWorkerStop(upload_worker_dict)
 
 
-    def _fileUploadWorkerStop(self, uw_dict, terminate=False):
-        if terminate:
-            logger.info('Terminating FileUploadWorker process')
-            uw_dict['worker'].terminate()
-
-        logger.info('Stopping FileUploadWorker process')
+    def _fileUploadWorkerStop(self, uw_dict):
+        logger.info('Stopping Upload worker')
 
         uw_dict['worker'].join()
-
-
-    def _pre_run_tasks(self):
-        # Tasks that need to be run before the main program loop
-        now = time.time()
-
-        self._systemHealthCheck()
-
-
-        # Update watchdog
-        self._miscDb.setState('WATCHDOG', int(now))
-
-
-        if self.config.get('GPS_TIMESYNC'):
-            self.validateGpsTime()
-
-
-        if self.camera_server in ['indi_rpicam']:
-            # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
-            # in order to take exposures longer than 7s
-            logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True, timeout=20.0)
-
-
-    def periodic_tasks(self):
-        # Tasks that need to be run periodically
-        now = time.time()
-
-        if self.periodic_tasks_time > now:
-            return
-
-        # set next reconfigure time
-        self.periodic_tasks_time = now + self.periodic_tasks_offset
-
-        logger.warning('Periodic tasks triggered')
-
-
-        # Update watchdog
-        self._miscDb.setState('WATCHDOG', int(now))
-
-
-        if self.config.get('GPS_TIMESYNC'):
-            self.validateGpsTime()
-
-
-        if self.camera_server in ['indi_asi_ccd']:
-            # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
-            # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
-            if self.camera_name.startswith('ZWO CCD ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-        elif self.camera_server in ['indi_asi_single_ccd']:
-            if self.camera_name.startswith('ZWO ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
-
-
-        # aurora data update
-        if self.aurora_tasks_time < now:
-            self.aurora_tasks_time = now + self.aurora_tasks_offset
-
-            logger.info('Creating aurora update task')
-            self._updateAuroraData(self.camera_id)
-
-
-    def _updateAuroraData(self, camera_id, task_state=TaskQueueState.QUEUED):
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        # This will delete old images from the filesystem and DB
-        jobdata = {
-            'action'       : 'updateAuroraData',
-            'img_folder'   : str(self.image_dir),
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def connectOnly(self):
-        self._initialize(connectOnly=True)
-
-        self.indiclient.disconnectServer()
-
-        sys.exit()
 
 
     def run(self):
@@ -1061,932 +511,94 @@ class IndiAllSky(object):
 
             self._expireOrphanedTasks()
 
-            self._initialize()
-
-            self._pre_run_tasks()
+            self._startup()
 
 
-        next_frame_time = time.time()  # start immediately
-        frame_start_time = time.time()
-        waiting_for_frame = False
-
-        camera_ready_time = time.time()
-        camera_ready = False
-        last_camera_ready = False
-        exposure_state = 'unset'
-        check_exposure_state = time.time() + 300  # check in 5 minutes
 
 
-        ### main loop starts
         while True:
-            loop_start_time = time.time()
+            if self._shutdown:
+                logger.warning('Shutting down')
+                self._stopCaptureWorker()  # stop this first so image queue is cleared out
+                self._stopImageWorker()
+                self._stopVideoWorker()
+                self._stopFileUploadWorkers()
 
 
-            logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
-            logger.info('Exposure state: %s', exposure_state)
+                with app.app_context():
+                    self._miscDb.addNotification(
+                        NotificationCategory.STATE,
+                        'indi-allsky',
+                        'indi-allsky was shutdown',
+                        expire=timedelta(hours=1),
+                    )
+
+
+                sys.exit()
+
+
+            if self._reload:
+                logger.warning('Restarting processes')
+                self._reload = False
+                self._stopCaptureWorker()  # stop this first so image queue is cleared out
+                self._stopImageWorker()
+                self._stopVideoWorker()
+                self._stopFileUploadWorkers()
+                # processes will start at the next loop
+
+                with app.app_context():
+                    self.reload_handler()
 
 
             # do *NOT* start workers inside of a flask context
             # doing so will cause TLS/SSL problems connecting to databases
 
             # restart worker if it has failed
+            self._startCaptureWorker()
             self._startImageWorker()
             self._startVideoWorker()
             self._startFileUploadWorkers()
 
 
-            self.detectNight()
-            self.detectMoonMode()
-
-
+            # Queue externally defined tasks
             with app.app_context():
-                ### Change between day and night
-                if self.night_v.value != int(self.night):
-                    if self.generate_timelapse_flag:
-                        self._flushOldTasks()  # cleanup old tasks in DB
-                        self._expireData(self.camera_id)  # cleanup old images and folders
-
-                    if not self.night and self.generate_timelapse_flag:
-                        ### Generate timelapse at end of night
-                        yesterday_ref = datetime.now() - timedelta(days=1)
-                        timespec = yesterday_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.camera_id)
-                        self._generateNightKeogram(timespec, self.camera_id)
-                        self._uploadAllskyEndOfNight(self.camera_id)
-                        self._systemHealthCheck()
-
-                    elif self.night and self.generate_timelapse_flag:
-                        ### Generate timelapse at end of day
-                        today_ref = datetime.now()
-                        timespec = today_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.camera_id)
-                        self._generateDayKeogram(timespec, self.camera_id)
-                        self._systemHealthCheck()
-
-
-                # this is to prevent expiring images at startup
-                if self.night:
-                    # always indicate timelapse generation at night
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-                elif self.config['DAYTIME_CAPTURE'] and self.config['DAYTIME_TIMELAPSE']:
-                    # must be day time
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-
-
-                self.getSensorTemperature()
-                self.getTelescopeRaDec()
-                self.getGpsPosition()
-
-
-                # Queue externally defined tasks
                 self._queueManualTasks()
+                self._periodic_tasks()
 
 
-                if not self.night and not self.config['DAYTIME_CAPTURE']:
-                    logger.info('Daytime capture is disabled')
-                    self.generate_timelapse_flag = False
+            time.sleep(13)
 
-                    if self._shutdown:
-                        logger.warning('Shutting down')
-                        self._stopImageWorker(terminate=self._terminate)
-                        self._stopVideoWorker(terminate=self._terminate)
-                        self._stopFileUploadWorkers(terminate=self._terminate)
 
-                        self.indiclient.disableCcdCooler()  # safety
+    def reload_handler(self):
+        logger.warning('Reconfiguring...')
 
-                        self.indiclient.disconnectServer()
+        self._config_obj = IndiAllSkyConfig()
 
+        # overwrite config
+        self.config = self._config_obj.config
 
-                        now = datetime.now()
-                        self._miscDb.addNotification(
-                            NotificationCategory.STATE,
-                            'indi-allsky',
-                            'indi-allsky was shutdown',
-                            expire=timedelta(hours=1),
-                        )
 
-
-                        sys.exit()
-
-
-                    if self._reload:
-                        logger.warning('Restarting processes')
-                        self._reload = False
-                        self._stopImageWorker()
-                        self._stopVideoWorker()
-                        self._stopFileUploadWorkers()
-                        # processes will start at the next loop
-
-
-                    time.sleep(59)  # prime number
-                    continue
-
-
-                # check exposure state every 5 minutes
-                if check_exposure_state < loop_start_time:
-                    check_exposure_state = time.time() + 300  # next check in 5 minutes
-
-                    camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                    if camera_last_ready_s > 300:
-                        self._miscDb.addNotification(
-                            NotificationCategory.CAMERA,
-                            'last_ready',
-                            'Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
-                            expire=timedelta(minutes=60),
-                        )
-
-
-                # Loop to run for 11 seconds (prime number)
-                loop_end = time.time() + 11
-
-                while True:
-                    time.sleep(0.05)
-
-                    now = time.time()
-                    if now >= loop_end:
-                        break
-
-                    last_camera_ready = camera_ready
-                    camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
-
-                    if not camera_ready:
-                        continue
-
-                    ###########################################
-                    # Camera is ready, not taking an exposure #
-                    ###########################################
-                    if not last_camera_ready:
-                        camera_ready_time = now
-
-
-                    if waiting_for_frame:
-                        frame_elapsed = now - frame_start_time
-
-                        waiting_for_frame = False
-
-                        logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
-
-
-                    ##########################################################################
-                    # Here we know the camera is not busy and we are not waiting for a frame #
-                    ##########################################################################
-
-                    # shutdown here to ensure camera is not taking images
-                    if self._shutdown:
-                        logger.warning('Shutting down')
-                        self._stopImageWorker(terminate=self._terminate)
-                        self._stopVideoWorker(terminate=self._terminate)
-                        self._stopFileUploadWorkers(terminate=self._terminate)
-
-                        self.indiclient.disableCcdCooler()  # safety
-
-                        self.indiclient.disconnectServer()
-
-
-                        now = datetime.now()
-                        self._miscDb.addNotification(
-                            NotificationCategory.STATE,
-                            'indi-allsky',
-                            'indi-allsky was shutdown',
-                            expire=timedelta(hours=1),
-                        )
-
-                        sys.exit()
-
-
-                    # restart here to ensure camera is not taking images
-                    if self._reload:
-                        logger.warning('Restarting processes')
-                        self._reload = False
-                        self._stopImageWorker()
-                        self._stopVideoWorker()
-                        self._stopFileUploadWorkers()
-                        # processes will start at the next loop
-
-
-                    # reconfigure if needed
-                    self.reconfigureCcd()
-
-                    # these tasks run every ~3 minutes
-                    self.periodic_tasks()
-
-
-                    # update system time from GPS offset
-                    if self.update_time_offset:
-                        utcnow = datetime.utcnow()
-
-                        gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
-
-                        try:
-                            self.setTimeSystemd(gps_utc)
-                        except dbus.exceptions.DBusException as e:
-                            logger.error('DBus Error: %s', str(e))
-
-                        self.update_time_offset = None
-
-                        # time change, need to update next frame time
-                        if self.night:
-                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD']
-                        else:
-                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD_DAY']
-
-                        break  # go ahead and break the loop to update other timestamps
-
-
-
-                    if now >= next_frame_time:
-                        #######################
-                        # Start next exposure #
-                        #######################
-
-                        total_elapsed = now - frame_start_time
-
-                        frame_start_time = now
-
-                        self.shoot(self.exposure_v.value, sync=False)
-                        camera_ready = False
-                        waiting_for_frame = True
-
-                        if self.focus_mode:
-                            # Start frame immediately in focus mode
-                            logger.warning('*** FOCUS MODE ENABLED ***')
-                            next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
-                        elif self.night:
-                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
-                        else:
-                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY']
-
-                        logger.info('Total time since last exposure %0.4f s', total_elapsed)
-
-
-                loop_elapsed = now - loop_start_time
-                logger.debug('Loop completed in %0.4f s', loop_elapsed)
-
-
-    def getSensorTemperature(self):
-        temp_val = self.indiclient.getCcdTemperature()
-
-
-        # query external temperature if camera does not return temperature
-        if temp_val < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
-            try:
-                ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
-                temp_val = ext_temp_val
-            except TemperatureException as e:
-                logger.error('Exception querying external temperature: %s', str(e))
-
-
-        temp_val_f = float(temp_val)
-
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val_f
-
-
-        return temp_val_f
-
-
-    def getExternalTemperature(self, script_path):
-        temp_script_p = Path(script_path)
-
-        logger.info('Running external script for temperature: %s', temp_script_p)
-
-        # need to be extra careful running in the main thread
-        if not temp_script_p.exists():
-            raise TemperatureException('Temperature script does not exist')
-
-        if not temp_script_p.is_file():
-            raise TemperatureException('Temperature script is not a file')
-
-        if temp_script_p.stat().st_size == 0:
-            raise TemperatureException('Temperature script is empty')
-
-        if not os.access(str(temp_script_p), os.X_OK):
-            raise TemperatureException('Temperature script is not executable')
-
-
-        # generate a tempfile for the data
-        f_tmp_tempjson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
-        f_tmp_tempjson.close()
-
-        tempjson_name_p = Path(f_tmp_tempjson.name)
-
-
-        cmd = [
-            str(temp_script_p),
-        ]
-
-
-        # the file used for the json data is communicated via environment variable
-        cmd_env = {
-            'TEMP_JSON' : str(tempjson_name_p),
-        }
-
-
-        try:
-            temp_process = subprocess.Popen(
-                cmd,
-                env=cmd_env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except OSError:
-            raise TemperatureException('Temperature script failed to execute')
-
-
-        try:
-            temp_process.wait(timeout=3.0)
-        except subprocess.TimeoutExpired:
-            temp_process.kill()
-            time.sleep(1.0)
-            temp_process.poll()  # close out process
-            raise TemperatureException('Temperature script timed out')
-
-
-        if temp_process.returncode != 0:
-            raise TemperatureException('Temperature script returned exited abnormally')
-
-
-        try:
-            with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
-                temp_data = json.load(tempjson_name_f)
-
-            tempjson_name_p.unlink()  # remove temp file
-        except PermissionError as e:
-            logger.error(str(e))
-            raise TemperatureException(str(e))
-        except json.JSONDecodeError as e:
-            logger.error('Error decoding json: %s', str(e))
-            raise TemperatureException(str(e))
-        except FileNotFoundError as e:
-            raise TemperatureException(str(e))
-
-
-        try:
-            temp_float = float(temp_data['temp'])
-        except ValueError:
-            raise TemperatureException('Temperature script returned a non-numerical value')
-        except KeyError:
-            raise TemperatureException('Temperature script returned incorrect data')
-
-
-        return temp_float
-
-
-    def getGpsPosition(self):
-        if not self.indiclient.gps_device:
-            return
-
-        update_position = False
-
-        gps_lat, gps_long, gps_elev = self.indiclient.getGpsPosition()
-
-        if gps_long > 180.0:
-            # put longitude in range of -180 to 180
-            gps_long = gps_long - 360.0
-
-        #logger.info('Lat: %0.2f, Long: %0.2f', self.latitude_v.value, self.longitude_v.value)
-
-        # need 1/10 degree difference before updating location
-        if abs(gps_lat - self.latitude_v.value) > 0.1:
-            self.updateConfigLocation(gps_lat, gps_long)
-            update_position = True
-        elif abs(gps_long - self.longitude_v.value) > 0.1:
-            self.updateConfigLocation(gps_lat, gps_long)
-            update_position = True
-
-
-        if update_position:
-            # Update shared values
-            with self.latitude_v.get_lock():
-                self.latitude_v.value = gps_lat
-
-            with self.longitude_v.get_lock():
-                self.longitude_v.value = gps_long
-
-
-            self.reparkTelescope()
-
-
-        return gps_lat, gps_long, gps_elev
-
-
-    def getTelescopeRaDec(self):
-        if not self.indiclient.telescope_device:
-            return
-
-        ra, dec = self.indiclient.getTelescopeRaDec()
-
-        # Update shared values
-        with self.ra_v.get_lock():
-            self.ra_v.value = ra
-
-        with self.dec_v.get_lock():
-            self.dec_v.value = dec
-
-
-        return ra, dec
-
-
-    def updateConfigLocation(self, gps_lat, gps_long):
-        logger.warning('Updating indi-allsky config with new geographic location')
-
-        self.config['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
-        self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
-
-
-        # save new config
-        try:
-            self._config_obj.save('system', '*Auto* Location updated')
-            logger.info('Wrote new config')
-        except ConfigSaveException:
-            return
-
-
-    def reparkTelescope(self):
-        if not self.indiclient.telescope_device:
-            return
-
-        self.indiclient.unparkTelescope()
-        self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
-        self.indiclient.parkTelescope()
-
-
-    def cameraReport(self):
-        camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
-
-        # instantiate the client
-        self.indiclient = camera_interface(
-            self.config,
-            self.image_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.ra_v,
-            self.dec_v,
-            self.gain_v,
-            self.bin_v,
-            self.night_v,
-        )
-
-        # set indi server localhost and port
-        self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
-
-        # connect to indi server
-        logger.info("Connecting to indiserver")
-        if not self.indiclient.connectServer():
-            logger.error("No indiserver running on %s:%d - Try to run", self.indiclient.getHost(), self.indiclient.getPort())
-            logger.error("  indiserver indi_simulator_telescope indi_simulator_ccd")
+        if __config_level__ != self._config_obj.config_level:
+            logger.error('indi-allsky version does not match config, please rerun setup.sh')
 
             self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'no_indiserver',
-                'WARNING: indiserver service is not active',
+                NotificationCategory.STATE,
+                'config_version',
+                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
                 expire=timedelta(hours=2),
             )
 
-            sys.exit(1)
-
-        # give devices a chance to register
-        time.sleep(8)
-
-        try:
-            self.indiclient.findCcd(self.config.get('INDI_CAMERA_NAME'))
-        except CameraException as e:
-            logger.error('Camera error: %s', str(e))
-
-            self._miscDb.addNotification(
-                NotificationCategory.CAMERA,
-                'no_camera',
-                'Camera was not detected.',
-                expire=timedelta(hours=2),
-            )
-
-            time.sleep(1)
-            sys.exit(1)
-
-
-        logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
-        self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
-
-        # Get Properties
-        ccd_properties = self.indiclient.getCcdDeviceProperties()
-        logger.info('Camera Properties: %s', json.dumps(ccd_properties, indent=4))
-
-        # get CCD information
-        ccd_info = self.indiclient.getCcdInfo()
-        logger.info('Camera Info: %s', json.dumps(ccd_info, indent=4))
-
-        self.indiclient.disconnectServer()
-
-
-
-    def reconfigureCcd(self):
-
-        if self.night_v.value != int(self.night):
-            pass
-        elif self.night and bool(self.moonmode_v.value) != bool(self.moonmode):
-            pass
-        else:
-            # No need to reconfigure
             return
 
 
-        if self.night:
-            # cooling
-            if self.config.get('CCD_COOLING'):
-                ccd_temp = self.config.get('CCD_TEMP', 15.0)
-                self.indiclient.enableCcdCooler()
-                self.indiclient.setCcdTemperature(ccd_temp)
+        self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 
-            if self.moonmode:
-                logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
-            else:
-                logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
-        else:
-            logger.warning('Change to day')
-            self.indiclient.disableCcdCooler()
-            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
-            self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+        with self.latitude_v.get_lock():
+            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
 
-
-
-        # Update shared values
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
-
-
-
-    def detectNight(self):
-        obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
-
-        sun = ephem.Sun()
-        sun.compute(obs)
-
-        logger.info('Sun altitude: %s', sun.alt)
-
-        self.night = sun.alt < self.night_sun_radians  # boolean
-
-
-    def detectMoonMode(self):
-        # detectNight() should be run first
-        obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
-
-        moon = ephem.Moon()
-        moon.compute(obs)
-
-        moon_phase = moon.moon_phase * 100.0
-
-        logger.info('Moon altitude: %s, phase %0.1f%%', moon.alt, moon_phase)
-        if self.night:
-            if moon.alt >= self.night_moonmode_radians:
-                if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
-                    logger.info('Moon Mode conditions detected')
-                    self.moonmode = True
-                    return
-
-        self.moonmode = False
-
-
-    def generateDayTimelapse(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateDayTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
-        if not self.config.get('TIMELAPSE_ENABLE', True):
-            logger.warning('Timelapse creation disabled')
-            return
-
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'day')
-
-        logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
-
-        jobdata = {
-            'action'      : 'generateVideo',
-            'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
-            'night'       : False,
-            'camera_id'   : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def generateNightTimelapse(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateNightTimelapse(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
-        if not self.config.get('TIMELAPSE_ENABLE', True):
-            logger.warning('Timelapse creation disabled')
-            return
-
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'night')
-
-        logger.warning('Generating night time timelapse for %s camera %d', timespec, camera.id)
-
-        jobdata = {
-            'action'      : 'generateVideo',
-            'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
-            'night'       : True,
-            'camera_id'   : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def generateNightKeogram(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateNightKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
-        if not self.config.get('TIMELAPSE_ENABLE', True):
-            logger.warning('Timelapse creation disabled')
-            return
-
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'night')
-
-        logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
-
-        jobdata = {
-            'action'      : 'generateKeogramStarTrails',
-            'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
-            'night'       : True,
-            'camera_id'   : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def generateDayKeogram(self, timespec='', camera_id=0):
-        # run from command line
-        self.config['TIMELAPSE_ENABLE'] = True
-
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._generateDayKeogram(timespec, camera_id, task_state=TaskQueueState.MANUAL)
-
-
-    def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
-        if not self.config.get('TIMELAPSE_ENABLE', True):
-            logger.warning('Timelapse creation disabled')
-            return
-
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'day')
-
-        logger.warning('Generating day time keogram for %s camera %d', timespec, camera.id)
-
-        jobdata = {
-            'action'      : 'generateKeogramStarTrails',
-            'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
-            'night'       : False,
-            'camera_id'   : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
-
-        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
-
-
-    def validateGpsTime(self):
-        if not self.indiclient.gps_device:
-            logger.error('No GPS device for time sync')
-            return
-
-
-        self.indiclient.refreshGps()
-        gps_utc, gps_offset = self.indiclient.getGpsTime()
-
-
-        if not gps_utc:
-            logger.error('GPS did not return time data')
-            return
-
-
-        systemtime_utc = datetime.utcnow()
-        logger.info('System time: %s', systemtime_utc)
-
-        time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
-        logger.info('GPS time offset: %ds', int(time_offset))
-
-
-        # if there is a delta of more than 60 seconds, update system time
-        if abs(time_offset) > 60:
-            # time will be updated next time the camera is not taking an exposure
-            self.update_time_offset = time_offset
-
-
-    def setTimeSystemd(self, new_datetime_utc):
-        logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
-
-        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
-        epoch_msec = epoch * 1000000
-
-        system_bus = dbus.SystemBus()
-        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
-        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
-
-        logger.warning('Disabling NTP time sync')
-        manager.SetNTP(False, False)  # disable time sync
-        time.sleep(5.0)  # give enough time for time sync to diable
-
-        r2 = manager.SetTime(epoch_msec, False, False)
-
-        return r2
-
-
-    def expireData(self, camera_id=0):
-        with app.app_context():
-            if camera_id == 0:
-                try:
-                    camera_id = self._miscDb.getCurrentCameraId()
-                except NoResultFound:
-                    logger.error('No camera found')
-                    sys.exit(1)
-            else:
-                camera_id = int(camera_id)
-
-
-            self._expireData(camera_id, TaskQueueState.MANUAL)
-
-
-    def _expireData(self, camera_id, task_state=TaskQueueState.QUEUED):
-
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        # This will delete old images from the filesystem and DB
-        jobdata = {
-            'action'       : 'expireData',
-            'img_folder'   : str(self.image_dir),
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
-
-
-    def _uploadAllskyEndOfNight(self, camera_id, task_state=TaskQueueState.QUEUED):
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .one()
-
-
-        # This will delete old images from the filesystem and DB
-        jobdata = {
-            'action'       : 'uploadAllskyEndOfNight',
-            'img_folder'   : str(self.image_dir),  # not needed
-            'timespec'     : None,  # Not needed
-            'night'        : True,
-            'camera_id'    : camera.id,
-        }
-
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=task_state,
-            data=jobdata,
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        self.video_q.put({'task_id' : task.id})
+        with self.longitude_v.get_lock():
+            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
 
 
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
@@ -2498,8 +1110,10 @@ class IndiAllSky(object):
                         task.setExpired()
                         continue
 
+                    logger.warning('Reload initiated')
+
                     reload_received = True
-                    os.kill(os.getpid(), signal.SIGHUP)
+                    self._reload = True
 
                     task.setSuccess('Reloaded indi-allsky process')
 
@@ -2507,7 +1121,22 @@ class IndiAllSky(object):
                     self.update_time_offset = task.data['time_offset']
                     logger.info('Set time offset: %ds', int(self.update_time_offset))
 
+                    self.capture_q.put({
+                        'settime' : int(self.update_time_offset),
+                    })
+
                     task.setSuccess('Set time queued')
+
+                elif action == 'setlocation':
+                    logger.info('Set location initiated')
+
+                    camera_id = task.data['camera_id']
+                    latitude = task.data['latitude']
+                    longitude = task.data['longitude']
+
+                    self.updateConfigLocation(latitude, longitude, camera_id)
+
+                    task.setSuccess('Updated config location')
 
                 else:
                     logger.error('Unknown action: %s', action)
@@ -2516,4 +1145,91 @@ class IndiAllSky(object):
             else:
                 logger.error('Unmanaged queue %s', task.queue.name)
                 task.setFailed()
+
+
+    def _periodic_tasks(self):
+
+        # Tasks that need to be run periodically
+        now = time.time()
+
+        if self.periodic_tasks_time > now:
+            return
+
+        # set next reconfigure time
+        self.periodic_tasks_time = now + self.periodic_tasks_offset
+
+        logger.warning('Periodic tasks triggered')
+
+
+        # cleanup data
+        if self.cleanup_tasks_time < now:
+            self.cleanup_tasks_time = now + self.cleanup_tasks_offset
+
+            self._flushOldTasks()
+            self._systemHealthCheck()
+
+
+        # aurora data update
+        if self.aurora_tasks_time < now:
+            self.aurora_tasks_time = now + self.aurora_tasks_offset
+
+            logger.info('Creating aurora update task')
+            self._updateAuroraData()
+
+
+    def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
+
+        active_cameras = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.id.desc())
+
+
+        for camera in active_cameras:
+            jobdata = {
+                'action'       : 'updateAuroraData',
+                'img_folder'   : str(self.image_dir),
+                'timespec'     : None,  # Not needed
+                'night'        : None,  # Not needed
+                'camera_id'    : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : task.id})
+
+
+    def updateConfigLocation(self, latitude, longitude, camera_id):
+        logger.warning('Updating indi-allsky config with new geographic location')
+
+        self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
+        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
+
+
+        # save new config
+        try:
+            self._config_obj.save('system', '*Auto* Location updated')
+            logger.info('Wrote new config')
+        except ConfigSaveException:
+            return
+
+
+        #logger.info('Updating camera %d location %0.2f, %0.2f', camera_id, self.config['LOCATION_LATITUDE'], self.config['LOCATION_LONGITUDE'])
+        try:
+            camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .one()
+
+            camera.latitude = float(self.config['LOCATION_LATITUDE'])
+            camera.longitude = float(self.config['LOCATION_LONGITUDE'])
+
+            db.session.commit()
+
+        except NoResultFound:
+            logger.error('Camera ID %d not found', camera_id)
 
