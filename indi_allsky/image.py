@@ -1449,6 +1449,7 @@ class ImageProcessor(object):
         self._text_xy = [0, 0]
         self._text_anchor_pillow = 'la'
         self._text_size_pillow = 0
+        self._text_font_height = 0
 
         self._libcamera_raw = False
 
@@ -1594,6 +1595,15 @@ class ImageProcessor(object):
     @text_size_pillow.setter
     def text_size_pillow(self, new_size):
         self._text_size_pillow = int(new_size)
+
+
+    @property
+    def text_font_height(self):
+        return self._text_font_height
+
+    @text_font_height.setter
+    def text_font_height(self, new_height):
+        self._text_font_height = int(new_height)
 
 
 
@@ -2722,6 +2732,7 @@ class ImageProcessor(object):
         self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
         self.text_anchor_pillow = 'la'  # Pillow: left-ascender
         self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
+        self.text_font_height = int(self.config['TEXT_PROPERTIES']['FONT_HEIGHT'])
 
 
         i_ref = self.getLatestImage()
@@ -3119,7 +3130,7 @@ class ImageProcessor(object):
                 anchor=self.text_anchor_pillow,
             )
 
-            self.text_xy = [image_width - 300, image_height - (self.config['TEXT_PROPERTIES']['FONT_HEIGHT'] * 2)]
+            self.text_xy = [image_width - 300, image_height - (self.text_font_height * 2)]
             self.drawText_pillow(
                 draw,
                 i_ref['exp_date'].strftime('%H:%M:%S'),
@@ -3396,7 +3407,7 @@ class ImageProcessor(object):
     def _text_next_line(self):
         text_xy = self.text_xy
 
-        text_xy[1] += self.config['TEXT_PROPERTIES']['FONT_HEIGHT']
+        text_xy[1] += self.text_font_height
 
         self.text_xy = text_xy
 
@@ -3428,6 +3439,7 @@ class ImageProcessor(object):
         if m_size:
             size_data = m_size.groupdict()
             self.text_size_pillow = int(size_data['size'])
+            self.text_font_height = int(size_data['size'])  # increase spacing
 
 
     def stretch(self):
