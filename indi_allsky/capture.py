@@ -334,15 +334,6 @@ class CaptureWorker(Process):
 
                         self.indiclient.disconnectServer()
 
-
-                        now = datetime.now()
-                        self._miscDb.addNotification(
-                            NotificationCategory.STATE,
-                            'indi-allsky',
-                            'indi-allsky was shutdown',
-                            expire=timedelta(hours=1),
-                        )
-
                         logger.warning('Goodbye')
                         return
 
