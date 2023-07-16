@@ -3227,6 +3227,13 @@ class JsonLogView(JsonView):
 
         log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
 
+
+        if not log_file_p.exists():
+            # this can happen in docker
+            json_data['log'] = 'ERROR: Log file missing'
+            return jsonify(json_data)
+
+
         log_file_size = log_file_p.stat().st_size
         if log_file_size < read_bytes:
             # just read the whole file
