@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-###########################################
-# This script updates the aurora data     #
-# for all active cameras in the database  #
-# This can be used in remote indi-allsky  #
-# installations                           #
-###########################################
+#########################################################
+# This script updates the aurora and                    #
+# smoke data for all active cameras in                  #
+# the database.  This can be used in remote             #
+# indi-allsky installations                             #
+#########################################################
 
 
 # Example:  7 minutes past every hour
@@ -25,6 +25,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 import indi_allsky
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.aurora import IndiAllskyAuroraUpdate
+from indi_allsky.smoke import IndiAllskySmokeUpdate
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 
 # setup flask context for db access
@@ -57,11 +58,13 @@ class AuroraDataUpdater(object):
 
 
         aurora = IndiAllskyAuroraUpdate(self.config)
+        smoke = IndiAllskySmokeUpdate(self.config)
 
 
         for camera in active_cameras:
             logger.warning('Updating camera: %s', camera.name)
             aurora.update(camera)
+            smoke.update(camera)
 
 
 
