@@ -428,11 +428,11 @@ class TemplateView(BaseView):
 
 
         now = datetime.now()
-        now_minus_7h = now - timedelta(hours=7)
+        now_minus_6h = now - timedelta(hours=6)
 
         data_timestamp = int(camera_data.get('AURORA_DATA_TS', 0))
         if data_timestamp:
-            if data_timestamp < now_minus_7h.timestamp():
+            if data_timestamp < now_minus_6h.timestamp():
                 data = {
                     'kpindex' : '{0:0.2f} [old]'.format(kpindex_current),
                     'ovation' : '{0:d}% [old]'.format(ovation_max),
@@ -486,11 +486,11 @@ class TemplateView(BaseView):
 
 
         now = datetime.now()
-        now_minus_10h = now - timedelta(hours=10)
+        now_minus_12h = now - timedelta(hours=12)
 
         data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
         if data_timestamp:
-            if data_timestamp < now_minus_10h.timestamp():
+            if data_timestamp < now_minus_12h.timestamp():
                 smoke_rating = '{0:s} [old]'.format(smoke_rating)
 
 
