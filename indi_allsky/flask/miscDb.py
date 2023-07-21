@@ -447,8 +447,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            height=metadata['height'],
-            width=metadata['width'],
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -499,8 +499,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            height=metadata['height'],
-            width=metadata['width'],
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )

@@ -287,6 +287,8 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='videos')
 
@@ -359,6 +361,8 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailvideos')
 
