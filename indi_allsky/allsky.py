@@ -65,7 +65,7 @@ class IndiAllSky(object):
     periodic_tasks_offset = 300    # 5 minutes
     cleanup_tasks_offset = 43200   # 12 hours
     aurora_tasks_offset = 3600     # 60 minutes
-    smoke_tasks_offset = 14400     # 4 hours
+    smoke_tasks_offset = 10800     # 3 hours
 
 
     def __init__(self):
