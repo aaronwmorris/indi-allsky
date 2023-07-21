@@ -1,5 +1,4 @@
 
-import io
 import time
 from datetime import datetime
 from collections import OrderedDict
@@ -51,7 +50,7 @@ class IndiAllskySmokeUpdate(object):
             camera_data = dict()
 
 
-        if latitude > 0 and longitude > 0:
+        if latitude > 0 and longitude < 0:
             # HMS data is only good for north western hemisphere
             smoke_rating = self.update_na_hms(camera)
 
@@ -103,6 +102,16 @@ class IndiAllskySmokeUpdate(object):
 
 
         if self.kml_data:
+            try:
+                xml_root = etree.fromstring(self.kml_data)
+            except etree.XMLSyntaxError as e:
+                logger.error('Unable to parse XML: %s', str(e))
+                return ''
+            except ValueError as e:
+                logger.error('Unable to parse XML: %s', str(e))
+                return ''
+
+
             #location_pt = shapely.Point((float(LONGITUDE), float(LATITUDE)))
 
             # look for a 1 square degree area (smoke within ~35 miles)
@@ -120,7 +129,6 @@ class IndiAllskySmokeUpdate(object):
                 "kml" : "http://www.opengis.net/kml/2.2",
             }
 
-            xml_root = etree.fromstring(self.kml_data)
             for folder, rating in self.kml_folders.items():
                 p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
                 #logger.info('Folder: %s', p)
@@ -160,11 +168,11 @@ class IndiAllskySmokeUpdate(object):
                 return str(smoke_rating)
 
 
-        # No data
+        logger.error('No data from KML')
         return ''
 
 
-    def download_kml(self, url, tmpfile):
+    def download_kml(self, url):
         logger.warning('Downloading %s', url)
         r = requests.get(url, allow_redirects=True, verify=True, timeout=15.0)
 
@@ -172,11 +180,5 @@ class IndiAllskySmokeUpdate(object):
             logger.error('URL returned %d', r.status_code)
             return None
 
-        with io.open(tmpfile, 'w') as f_kml:
-            f_kml.write(r.text)
-
-
         return r.text.encode()
-
-
 

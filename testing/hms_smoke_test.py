@@ -108,6 +108,15 @@ class HmsSmokeTest(object):
 
 
         if self.kml_data:
+            try:
+                xml_root = etree.fromstring(self.kml_data)
+            except etree.XMLSyntaxError as e:
+                logger.error('Unable to parse XML: %s', str(e))
+                raise
+            except ValueError as e:
+                logger.error('Unable to parse XML: %s', str(e))
+                raise
+
             #location_pt = shapely.Point((float(LONGITUDE), float(LATITUDE)))
 
             # look for a 1 square degree area (smoke within ~35 miles)
@@ -125,7 +134,6 @@ class HmsSmokeTest(object):
                 "kml" : "http://www.opengis.net/kml/2.2",
             }
 
-            xml_root = etree.fromstring(self.kml_data)
             for folder, rating in self.kml_folders.items():
                 p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
                 #logger.info('Folder: %s', p)
