@@ -51,7 +51,7 @@ LONGITUDE = -97.1
 
 class HmsSmokeTest(object):
     # folder name, rating
-    kml_folders = OrderedDict({
+    hms_kml_folders = OrderedDict({
         # check from light to heavy, in order
         'Smoke (Light)'  : 'Light',
         'Smoke (Medium)' : 'Medium',
@@ -65,7 +65,7 @@ class HmsSmokeTest(object):
 
 
     def __init__(self):
-        self.kml_data = None
+        self.hms_kml_data = None
 
 
     def main(self):
@@ -83,33 +83,33 @@ class HmsSmokeTest(object):
 
 
         # allow data to be reused
-        if not self.kml_data:
+        if not self.hms_kml_data:
             try:
                 if not kml_temp_file_p.exists():
-                    self.kml_data = self.download_kml(hms_kml_url, kml_temp_file_p)
+                    self.hms_kml_data = self.download_kml(hms_kml_url, kml_temp_file_p)
                 elif kml_temp_file_p.stat().st_mtime < now_minus_3h.timestamp():
                     logger.warning('KML is older than 3 hours')
-                    self.kml_data = self.download_json(hms_kml_url, kml_temp_file_p)
+                    self.hms_kml_data = self.download_kml(hms_kml_url, kml_temp_file_p)
                 else:
-                    self.kml_data = self.load_kml(kml_temp_file_p)
+                    self.hms_kml_data = self.load_kml(kml_temp_file_p)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
 
 
 
-        if self.kml_data:
+        if self.hms_kml_data:
             try:
-                xml_root = etree.fromstring(self.kml_data)
+                xml_root = etree.fromstring(self.hms_kml_data)
             except etree.XMLSyntaxError as e:
                 logger.error('Unable to parse XML: %s', str(e))
                 raise
@@ -127,14 +127,16 @@ class HmsSmokeTest(object):
                 (float(LONGITUDE) - 0.5, float(LATITUDE) + 0.5),
             ))
 
-            smoke_rating = 'Clear'  # no matches should mean clear
-
 
             NS = {
                 "kml" : "http://www.opengis.net/kml/2.2",
             }
 
-            for folder, rating in self.kml_folders.items():
+
+            smoke_rating = 'Clear'  # no matches should mean clear
+
+            found_kml_folders = False
+            for folder, rating in self.hms_kml_folders.items():
                 p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
                 #logger.info('Folder: %s', p)
                 e_folder = xml_root.xpath(p, namespaces=NS)
@@ -143,6 +145,8 @@ class HmsSmokeTest(object):
                 if not e_folder:
                     logger.error('Folder not found: %s', folder)
                     continue
+
+                found_kml_folders = True
 
 
                 for e_placemark in e_folder[0].xpath('.//kml:Placemark', namespaces=NS):
@@ -166,11 +170,15 @@ class HmsSmokeTest(object):
                         #if polygon.contains(location_pt):
                         if location_area.intersects(smoke_polygon):
                             smoke_rating = rating
-                        else:
-                            pass
 
 
-            logger.warning('Smoke rating for %0.1f, %0.1f: %s', LATITUDE, LONGITUDE, smoke_rating)
+            if not found_kml_folders:
+                # without folders, there was no data to match
+                logger.error('No folders in KML')
+                smoke_rating = 'No data'
+
+
+        logger.warning('Smoke rating for %0.1f, %0.1f: %s', LATITUDE, LONGITUDE, smoke_rating)
 
 
     def download_kml(self, url, tmpfile):

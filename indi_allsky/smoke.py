@@ -23,7 +23,7 @@ class IndiAllskySmokeUpdate(object):
 
 
     # folder name, rating
-    kml_folders = OrderedDict({
+    hms_kml_folders = OrderedDict({
         # check from light to heavy, in order
         'Smoke (Light)'  : 'Light',
         'Smoke (Medium)' : 'Medium',
@@ -36,7 +36,7 @@ class IndiAllskySmokeUpdate(object):
 
         self._miscDb = miscDb(self.config)
 
-        self.kml_data = None
+        self.hms_kml_data = None
 
 
     def update(self, camera):
@@ -80,30 +80,30 @@ class IndiAllskySmokeUpdate(object):
 
 
         # allow data to be reused
-        if not self.kml_data:
+        if not self.hms_kml_data:
             try:
-                self.kml_data = self.download_kml(hms_kml_url)
+                self.hms_kml_data = self.download_kml(hms_kml_url)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.kml_data = None
+                self.hms_kml_data = None
 
 
         latitude = camera.latitude
         longitude = camera.longitude
 
 
-        if self.kml_data:
+        if self.hms_kml_data:
             try:
-                xml_root = etree.fromstring(self.kml_data)
+                xml_root = etree.fromstring(self.hms_kml_data)
             except etree.XMLSyntaxError as e:
                 logger.error('Unable to parse XML: %s', str(e))
                 return ''
@@ -120,14 +120,17 @@ class IndiAllskySmokeUpdate(object):
                 (float(longitude) - 0.5, float(latitude) + 0.5),
             ))
 
-            smoke_rating = 'Clear'  # no matches should mean clear
 
 
             NS = {
                 "kml" : "http://www.opengis.net/kml/2.2",
             }
 
-            for folder, rating in self.kml_folders.items():
+
+            smoke_rating = 'Clear'  # no matches should mean clear
+
+            found_kml_folders = False
+            for folder, rating in self.hms_kml_folders.items():
                 p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
                 #logger.info('Folder: %s', p)
                 e_folder = xml_root.xpath(p, namespaces=NS)
@@ -136,6 +139,8 @@ class IndiAllskySmokeUpdate(object):
                 if not e_folder:
                     logger.error('Folder not found: %s', folder)
                     continue
+
+                found_kml_folders = True
 
 
                 for e_placemark in e_folder[0].xpath('.//kml:Placemark', namespaces=NS):
@@ -158,14 +163,18 @@ class IndiAllskySmokeUpdate(object):
 
                         if location_area.intersects(smoke_polygon):
                             smoke_rating = rating
-                        else:
-                            pass
 
 
-                return str(smoke_rating)
+            if not found_kml_folders:
+                # without folders, there was no data to match
+                logger.error('No folders in KML')
+                return ''
 
 
-        logger.error('No data from KML')
+            return smoke_rating
+
+
+        logger.error('No KML data')
         return ''
 
 
