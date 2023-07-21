@@ -161,10 +161,10 @@ class HmsSmokeTest(object):
                             p_long, p_lat, p_z = line.split(',')
                             coord_list.append((float(p_long), float(p_lat)))
 
-                        polygon = shapely.Polygon(coord_list)
+                        smoke_polygon = shapely.Polygon(coord_list)
 
                         #if polygon.contains(location_pt):
-                        if location_area.intersects(polygon):
+                        if location_area.intersects(smoke_polygon):
                             smoke_rating = rating
                         else:
                             pass
