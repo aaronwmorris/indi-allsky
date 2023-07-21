@@ -161,6 +161,8 @@ class miscDb(object):
         #    'stars'
         #    'detections'
         #    'process_elapsed'
+        #    'width'
+        #    'height'
         #}
 
         if not filename:
@@ -224,6 +226,8 @@ class miscDb(object):
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
+            height=metadata['height'],
+            width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -245,6 +249,8 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'width'
+        #    'height'
         #}
 
 
@@ -284,6 +290,8 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata['adu'],
+            height=metadata['height'],
+            width=metadata['width'],
         )
 
         db.session.add(dark)
@@ -303,6 +311,8 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'width'
+        #    'height'
         #}
 
 
@@ -341,6 +351,8 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata['adu'],
+            height=metadata['height'],
+            width=metadata['width'],
         )
 
         db.session.add(bpm)
@@ -403,6 +415,8 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'width'
+        #    'height'
         #}
 
         if not filename:
@@ -433,6 +447,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata['height'],
+            width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -450,6 +466,8 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'width'
+        #    'height'
         #}
 
 
@@ -481,6 +499,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata['height'],
+            width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -548,6 +568,8 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'width'
+        #    'height'
         #}
 
         if not filename:
@@ -581,6 +603,8 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata['height'],
+            width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -600,6 +624,8 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'width'
+        #    'height'
         #}
 
         if not filename:
@@ -633,6 +659,8 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata['height'],
+            width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )

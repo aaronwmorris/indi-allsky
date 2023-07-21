@@ -769,6 +769,7 @@ class IndiAllSkyDarks(object):
 
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
+            image_height, image_width = hdulist[0].data.shape[:2]
             image_bitpix = hdulist[0].header['BITPIX']
 
             f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
@@ -829,6 +830,8 @@ class IndiAllSkyDarks(object):
             'binmode'    : self.bin_v.value,
             'temp'       : self.sensortemp_v.value,
             'adu'        : bpm_adu_avg,
+            'height'     : image_height,
+            'width'      : image_width,
         }
 
         dark_metadata = {
@@ -840,6 +843,8 @@ class IndiAllSkyDarks(object):
             'binmode'    : self.bin_v.value,
             'temp'       : self.sensortemp_v.value,
             'adu'        : dark_adu_avg,
+            'height'     : image_height,
+            'width'      : image_width,
         }
 
         self._miscDb.addBadPixelMap(

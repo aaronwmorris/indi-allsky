@@ -599,6 +599,8 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
+                'height'          : image_height,
+                'width'           : image_width,
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
 
@@ -865,6 +867,9 @@ class ImageWorker(Process):
 
 
     def write_fit(self, i_ref, camera):
+        data = i_ref['hdulist'][0].data
+        image_height, image_width = data.shape[:2]
+
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
@@ -890,6 +895,8 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
         }
 
@@ -941,6 +948,7 @@ class ImageWorker(Process):
 
 
         data = self.image_processor.non_stacked_image
+        image_height, image_width = data.shape[:2]
         max_bit_depth = self.image_processor.max_bit_depth
 
         if i_ref['image_bitpix'] == 8:
@@ -1065,6 +1073,8 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
         }
 
