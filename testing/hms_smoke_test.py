@@ -60,7 +60,7 @@ class HmsSmokeTest(object):
 
 
     # https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/2023/07/hms_smoke20230701.kml
-    kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
+    hms_kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
     kml_temp_file = '/tmp/hms_28727542.kml'
 
 
@@ -79,17 +79,17 @@ class HmsSmokeTest(object):
         now_minus_3h = now - timedelta(hours=3)
 
 
-        kml_url = self.kml_base_url.format(**{'now' : now})
+        hms_kml_url = self.hms_kml_base_url.format(**{'now' : now})
 
 
         # allow data to be reused
         if not self.kml_data:
             try:
                 if not kml_temp_file_p.exists():
-                    self.kml_data = self.download_kml(kml_url, kml_temp_file_p)
+                    self.kml_data = self.download_kml(hms_kml_url, kml_temp_file_p)
                 elif kml_temp_file_p.stat().st_mtime < now_minus_3h.timestamp():
                     logger.warning('KML is older than 3 hours')
-                    self.kml_data = self.download_json(kml_url, kml_temp_file_p)
+                    self.kml_data = self.download_json(hms_kml_url, kml_temp_file_p)
                 else:
                     self.kml_data = self.load_kml(kml_temp_file_p)
             except socket.gaierror as e:

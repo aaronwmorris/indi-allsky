@@ -20,8 +20,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskySmokeUpdate(object):
 
-    kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
-    kml_temp_file = '/tmp/hms_28727542.kml'
+    hms_kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
 
 
     # folder name, rating
@@ -78,13 +77,13 @@ class IndiAllskySmokeUpdate(object):
 
         now = datetime.now()
 
-        kml_url = self.kml_base_url.format(**{'now' : now})
+        hms_kml_url = self.hms_kml_base_url.format(**{'now' : now})
 
 
         # allow data to be reused
         if not self.kml_data:
             try:
-                self.kml_data = self.download_kml(kml_url)
+                self.kml_data = self.download_kml(hms_kml_url)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
                 self.kml_data = None
