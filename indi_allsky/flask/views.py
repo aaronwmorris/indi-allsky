@@ -1840,6 +1840,8 @@ class SystemInfoView(TemplateView):
 
         context['uptime_str'] = self.getUptime()
 
+        context['system_type'] = self.getSystemType()
+
         context['cpu_count'] = self.getCpuCount()
         context['cpu_usage'] = self.getCpuUsage()
 
@@ -1910,6 +1912,31 @@ class SystemInfoView(TemplateView):
         uptime_str = '{0:d} days, {1:d} hours, {2:d} minutes, {3:d} seconds'.format(days, hours, minutes, seconds)
 
         return uptime_str
+
+
+    def getSystemType(self):
+        # This is available for SBCs and systems using device trees
+        model_p = Path('/proc/device-tree/model')
+
+        try:
+            if model_p.exists():
+                with io.open(str(model_p), 'r') as f:
+                    system_type = f.readline()  # only first line
+            else:
+                return 'Generic PC'
+        except PermissionError as e:
+            app.logger.error('Permission error: %s', str(e))
+            return 'Unknown'
+
+
+        system_type = system_type.strip()
+
+
+        if not system_type:
+            return 'Unknown'
+
+
+        return str(system_type)
 
 
     def getCpuCount(self):

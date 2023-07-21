@@ -573,6 +573,10 @@ class ImageWorker(Process):
         logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
+        # need this after resizing and scaling
+        final_height, final_width = self.image_processor.image.shape[:2]
+
+
         #task.setSuccess('Image processed')
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
@@ -599,6 +603,8 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
+                'height'          : final_height,
+                'width'           : final_width,
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
 
@@ -631,6 +637,7 @@ class ImageWorker(Process):
                 'longitude': round(self.longitude_v.value, 3),
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
+                'smoke_rating' : i_ref['smoke_rating'],
                 'sidereal_time': self.astrometric_data['sidereal_time'],
             }
 
@@ -767,6 +774,7 @@ class ImageWorker(Process):
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
+            'smoke_rating'        : i_ref['smoke_rating'],
         }
 
 
@@ -863,6 +871,9 @@ class ImageWorker(Process):
 
 
     def write_fit(self, i_ref, camera):
+        data = i_ref['hdulist'][0].data
+        image_height, image_width = data.shape[:2]
+
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
@@ -888,6 +899,8 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
         }
 
@@ -939,6 +952,7 @@ class ImageWorker(Process):
 
 
         data = self.image_processor.non_stacked_image
+        image_height, image_width = data.shape[:2]
         max_bit_depth = self.image_processor.max_bit_depth
 
         if i_ref['image_bitpix'] == 8:
@@ -1063,6 +1077,8 @@ class ImageWorker(Process):
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
         }
 
@@ -1820,17 +1836,20 @@ class ImageProcessor(object):
         }
 
 
-        # aurora data
+        # aurora and smoke data
         camera_data = camera.data
         if camera_data:
             kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
             ovation_max = int(camera_data.get('OVATION_MAX'))
+            smoke_rating = str(camera_data.get('SMOKE_RATING', 'No data'))
 
             image_data['kpindex'] = kpindex_current
             image_data['ovation_max'] = ovation_max
+            image_data['smoke_rating'] = smoke_rating
         else:
             image_data['kpindex'] = 0
             image_data['ovation_max'] = 0.0
+            image_data['smoke_rating'] = 'No data'
 
 
 
@@ -2942,6 +2961,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
+            'smoke_rating' : i_ref['smoke_rating'],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
@@ -3193,6 +3213,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
+            'smoke_rating' : i_ref['smoke_rating'],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],

@@ -6,6 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## Features
+* NEW: Wildfire smoke reporting *(North America only)*
 * NEW: Aurora prediction and Kp-index reporting
 * NEW: Docker containerization support
 * NEW: Image stretching
@@ -95,7 +96,7 @@ libcamera is a new camera interface designed to replace the legacy camera interf
 
 Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4.
 
-Note: Genererating and processing raw (dng) files on a system with less than 1GB of memory and libcamera will cause out-of-memory conditions.  There is an option to generate JPEG or PNG files with libcamera which solves this issue.
+*Note: Genererating and processing raw (dng) files on a system with less than 1GB of memory and libcamera will cause out-of-memory conditions.  There is an option to generate JPEG or PNG files with libcamera which solves this issue.*
 
 
 ## Installation
@@ -115,7 +116,7 @@ cd indi-allsky/
 ```
 ./setup.sh
 ```
- * Note:  You may be prompted for a password for sudo
+ * *Note:  You may be prompted for a password for sudo*
 5. Start the software
 ```
 systemctl --user start indiserver
@@ -123,7 +124,7 @@ systemctl --user start indi-allsky
 ```
 6. Login to the indi-allsky web application
 https://raspberrypi.local/
- * Note: The web server is configured with a self-signed certificate.
+ * *Note: The web server is configured with a self-signed certificate.*
 
 
 ### Manual operation
@@ -171,7 +172,7 @@ Below you can see perodic clouds passed over between 8-9pm and again between 4-5
 
 ![](./content/keogram_example.jpg)
 
-Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.
+*Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.*
 
 
 ## Star Trails
@@ -186,6 +187,14 @@ Video of the star trails being stacked in real-time!
 [YouTube](https://youtu.be/pLJbTzlyBkM)
 
 
+## Smoke reporting
+indi-allsky polls data from [NOAA Office of Satellite And Product Operations](https://www.ospo.noaa.gov/) to report the level of smoke coverage in your location.  The OSPO provides KML map data for their [Hazard Mapping System Fire and Smoke Product](https://www.ospo.noaa.gov/Products/land/hms.html) [HMS].  indi-allsky processes the smoke polygons in the KML map data and checks if your location (~35 mile radius) is contained within the smoke areas.
+
+Smoke data is updated every 3 hours from NOAA.  Smoke data is also published with the MQTT data.
+
+*Note: Data is only available for **North America**.*
+
+
 ## Aurora & Kp-index
 indi-allsky utilizes data from [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/) to predict the possibility of Aurora in your location.  The SWPC provides data using the Ovation Aurora Model for aurora predictions.  indi-allsky uses the Ovation data to create an aggregate score within a ~500 mile radius around your location.
 
@@ -193,7 +202,7 @@ The current Kp-index value is also polled from NOAA.  This is the measurement of
 
 The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
 
-Data is updated every 60 minutes from NOAA.  Aurora data is also published with the MQTT data.
+Aurora data is updated every 60 minutes from NOAA.  Aurora data is also published with the MQTT data.
 
 
 ## Star Detection
@@ -295,7 +304,7 @@ Currently, only Amazon Web Services is supported, but other providers could be e
 
 Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
 
-Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.
+*Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.*
 
 
 ## GPS

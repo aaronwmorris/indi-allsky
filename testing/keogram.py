@@ -43,6 +43,7 @@ class KeogramGenerator(object):
 
         # We do not know the array dimensions until the first image is rotated
         self.keogram_data = None
+        self.keogram_final = None  # will contain final resized keogram
 
         self.timestamps_list = list()
         self.image_processing_elapsed_s = 0
@@ -149,17 +150,17 @@ class KeogramGenerator(object):
         trimmed_height, trimmed_width = trimmed_keogram.shape[:2]
         new_width = trimmed_width
         new_height = int(trimmed_height * self._h_scale_factor / 100)
-        keogram_resized = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        self.keogram_final = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         # apply time labels
-        self.applyLabels(keogram_resized)
+        self.applyLabels(self.keogram_final)
 
 
         logger.warning('Creating labeled_trim_resize_%s', outfile)
 
-        keogram_resized_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
-        keogram_resized_rgb.save(str(outfile), quality=90)
+        keogram_final_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
+        keogram_final_rgb.save(str(outfile), quality=90)
 
 
     def rotate(self, image):

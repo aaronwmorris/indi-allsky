@@ -26,6 +26,7 @@ from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
 from .aurora import IndiAllskyAuroraUpdate
+from .smoke import IndiAllskySmokeUpdate
 
 from .flask import create_app
 from .flask import db
@@ -454,6 +455,8 @@ class VideoWorker(Process):
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
+            #'height'  # added later
+            #'width'   # added later
         }
 
         startrail_metadata = {
@@ -462,6 +465,8 @@ class VideoWorker(Process):
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
+            #'height'  # added later
+            #'width'   # added later
         }
 
         startrail_video_metadata = {
@@ -550,8 +555,24 @@ class VideoWorker(Process):
 
         kg.finalize(keogram_file, camera)
 
+
+        # add height and width
+        keogram_height, keogram_width = kg.shape[:2]
+        keogram_entry.height = keogram_height
+        keogram_entry.width = keogram_width
+        db.session.commit()
+
+
         if night:
             stg.finalize(startrail_file, camera)
+
+
+            # add height and width
+            st_height, st_width = stg.shape[:2]
+            startrail_entry.height = st_height
+            startrail_entry.width = st_width
+            db.session.commit()
+
 
             st_frame_count = stg.timelapse_frame_count
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
@@ -773,6 +794,15 @@ class VideoWorker(Process):
         aurora.update(camera)
 
         task.setSuccess('Aurora data updated')
+
+
+    def updateSmokeData(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
+        smoke = IndiAllskySmokeUpdate(self.config)
+        smoke.update(camera)
+
+        task.setSuccess('Smoke data updated')
 
 
     def expireData(self, task, timespec, img_folder, night, camera):

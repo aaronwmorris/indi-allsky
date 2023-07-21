@@ -38,6 +38,7 @@ class KeogramGenerator(object):
         self.rotated_height = None
 
         self.keogram_data = None
+        self.keogram_final = None  # will contain final resized keogram
 
         self.timestamps_list = list()
         self.image_processing_elapsed_s = 0
@@ -71,6 +72,15 @@ class KeogramGenerator(object):
     @h_scale_factor.setter
     def h_scale_factor(self, new_factor):
         self._h_scale_factor = int(new_factor)
+
+
+    @property
+    def shape(self):
+        return self.keogram_final.shape
+
+    @shape.setter
+    def shape(self, *args):
+        pass  # read only
 
 
     def generate(self, outfile, file_list):
@@ -149,7 +159,7 @@ class KeogramGenerator(object):
         trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
         new_width = int(trimmed_width * self._h_scale_factor / 100)
         new_height = int(trimmed_height * self._v_scale_factor / 100)
-        keogram_resized = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        self.keogram_final = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         # apply time labels
@@ -158,10 +168,10 @@ class KeogramGenerator(object):
             image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
 
             if image_label_system == 'pillow':
-                keogram_resized = self.applyLabels_pillow(keogram_resized)
+                self.keogram_final = self.applyLabels_pillow(self.keogram_final)
             else:
                 # opencv is default
-                keogram_resized = self.applyLabels_opencv(keogram_resized)
+                self.keogram_final = self.applyLabels_opencv(self.keogram_final)
         else:
             logger.warning('Keogram labels disabled')
 
@@ -224,19 +234,19 @@ class KeogramGenerator(object):
 
         logger.warning('Creating keogram: %s', outfile_p)
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
-            #img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            #img_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
             #img_rgb.save(str(outfile_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
 
             # opencv is faster than Pillow with PNG
-            cv2.imwrite(str(outfile_p), keogram_resized, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            cv2.imwrite(str(outfile_p), self.keogram_final, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
-            img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), quality=90, lossless=False, exif=jpeg_exif)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            img_rgb = Image.fromarray(cv2.cvtColor(keogram_resized, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])

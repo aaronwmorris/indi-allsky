@@ -187,6 +187,8 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     calibrated = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     detections = db.Column(db.Integer, server_default='0', nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
@@ -216,6 +218,8 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
     adu = db.Column(db.Float, nullable=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
@@ -248,6 +252,8 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
     adu = db.Column(db.Float, nullable=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
 
@@ -281,6 +287,8 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='videos')
 
@@ -309,6 +317,8 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
 
@@ -329,6 +339,8 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
 
@@ -349,6 +361,8 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailvideos')
 
@@ -371,6 +385,8 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='fitsimages')
 
@@ -393,6 +409,8 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='rawimages')
 

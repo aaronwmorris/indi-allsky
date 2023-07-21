@@ -65,6 +65,7 @@ class IndiAllSky(object):
     periodic_tasks_offset = 300    # 5 minutes
     cleanup_tasks_offset = 43200   # 12 hours
     aurora_tasks_offset = 3600     # 60 minutes
+    smoke_tasks_offset = 10800     # 3 hours
 
 
     def __init__(self):
@@ -105,8 +106,10 @@ class IndiAllSky(object):
 
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
+        #self.periodic_tasks_time = time.time()  # testing
         self.cleanup_tasks_time = time.time()  # run asap
         self.aurora_tasks_time = time.time()  # run asap
+        self.smoke_tasks_time = time.time()  # run asap
 
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
@@ -228,6 +231,7 @@ class IndiAllSky(object):
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
+        logger.info('System Type: %s', self._getSystemType())
 
         logger.info('System CPUs: %d', psutil.cpu_count())
 
@@ -240,6 +244,31 @@ class IndiAllSky(object):
         logger.info('System uptime: %ds', uptime_s)
 
         #logger.info('Temp dir: %s', tempfile.gettempdir())
+
+
+    def _getSystemType(self):
+        # This is available for SBCs and systems using device trees
+        model_p = Path('/proc/device-tree/model')
+
+        try:
+            if model_p.exists():
+                with io.open(str(model_p), 'r') as f:
+                    system_type = f.readline()  # only first line
+            else:
+                return 'Generic PC'
+        except PermissionError as e:
+            app.logger.error('Permission error: %s', str(e))
+            return 'Unknown'
+
+
+        system_type = system_type.strip()
+
+
+        if not system_type:
+            return 'Unknown'
+
+
+        return str(system_type)
 
 
     def _startCaptureWorker(self):
@@ -1177,6 +1206,14 @@ class IndiAllSky(object):
             self._updateAuroraData()
 
 
+        # smoke data update
+        if self.smoke_tasks_time < now:
+            self.smoke_tasks_time = now + self.smoke_tasks_offset
+
+            logger.info('Creating smoke update task')
+            self._updateSmokeData()
+
+
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
 
         active_cameras = IndiAllSkyDbCameraTable.query\
@@ -1187,6 +1224,33 @@ class IndiAllSky(object):
         for camera in active_cameras:
             jobdata = {
                 'action'       : 'updateAuroraData',
+                'img_folder'   : str(self.image_dir),
+                'timespec'     : None,  # Not needed
+                'night'        : None,  # Not needed
+                'camera_id'    : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : task.id})
+
+
+    def _updateSmokeData(self, task_state=TaskQueueState.QUEUED):
+
+        active_cameras = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.id.desc())
+
+
+        for camera in active_cameras:
+            jobdata = {
+                'action'       : 'updateSmokeData',
                 'img_folder'   : str(self.image_dir),
                 'timespec'     : None,  # Not needed
                 'night'        : None,  # Not needed

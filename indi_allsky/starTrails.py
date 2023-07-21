@@ -175,6 +175,14 @@ class StarTrailGenerator(object):
     def moonmode_phase(self, new_moonmode_phase):
         self._moonmode_phase = float(new_moonmode_phase)
 
+    @property
+    def shape(self):
+        return self.trail_image.shape
+
+    @shape.setter
+    def shape(self, *args):
+        pass  # read only
+
 
 
     def generate(self, outfile, file_list):
