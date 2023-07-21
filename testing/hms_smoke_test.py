@@ -75,7 +75,7 @@ class HmsSmokeTest(object):
         kml_temp_file_p = Path(self.kml_temp_file)
 
         now = datetime.now()
-        #now = datetime.now() - timedelta(days=3650)
+        #now = datetime.now() - timedelta(days=1)  # testing
         now_minus_3h = now - timedelta(hours=3)
 
 

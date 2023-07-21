@@ -1,6 +1,7 @@
 
 import time
 from datetime import datetime
+from datetime import timedelta  # noqa: F401
 from collections import OrderedDict
 import socket
 import ssl
@@ -75,6 +76,7 @@ class IndiAllskySmokeUpdate(object):
         # https://www.ospo.noaa.gov/Products/land/hms.html
 
         now = datetime.now()
+        #now = datetime.now() - timedelta(days=1)  # testing
 
         hms_kml_url = self.hms_kml_base_url.format(**{'now' : now})
 
