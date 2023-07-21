@@ -482,7 +482,7 @@ class TemplateView(BaseView):
             return data
 
 
-        smoke_rating = camera_data.get('SMOKE_RATING', 'No Data')
+        smoke_rating = str(camera_data.get('SMOKE_RATING', 'No Data'))
 
 
         now = datetime.now()
