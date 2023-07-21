@@ -62,3 +62,5 @@ mysql-connector-python
 PyMySQL
 boto3
 apache-libcloud
+lxml
+shapely
