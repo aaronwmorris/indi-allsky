@@ -573,6 +573,10 @@ class ImageWorker(Process):
         logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
 
+        # need this after resizing and scaling
+        final_height, final_width = self.image_processor.image.shape[:2]
+
+
         #task.setSuccess('Image processed')
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
@@ -599,8 +603,8 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
-                'height'          : image_height,
-                'width'           : image_width,
+                'height'          : final_height,
+                'width'           : final_width,
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
 
