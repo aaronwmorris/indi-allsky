@@ -1936,7 +1936,7 @@ class SystemInfoView(TemplateView):
             return 'Unknown'
 
 
-        return system_type
+        return str(system_type)
 
 
     def getCpuCount(self):

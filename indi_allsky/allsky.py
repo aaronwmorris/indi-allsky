@@ -228,6 +228,7 @@ class IndiAllSky(object):
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
+        logger.info('System Type: %s', self._getSystemType())
 
         logger.info('System CPUs: %d', psutil.cpu_count())
 
@@ -240,6 +241,31 @@ class IndiAllSky(object):
         logger.info('System uptime: %ds', uptime_s)
 
         #logger.info('Temp dir: %s', tempfile.gettempdir())
+
+
+    def _getSystemType(self):
+        # This is available for SBCs and systems using device trees
+        model_p = Path('/proc/device-tree/model')
+
+        try:
+            if model_p.exists():
+                with io.open(str(model_p), 'r') as f:
+                    system_type = f.readline()  # only first line
+            else:
+                return 'Generic PC'
+        except PermissionError as e:
+            app.logger.error('Permission error: %s', str(e))
+            return 'Unknown'
+
+
+        system_type = system_type.strip()
+
+
+        if not system_type:
+            return 'Unknown'
+
+
+        return str(system_type)
 
 
     def _startCaptureWorker(self):
