@@ -193,6 +193,7 @@ class TemplateView(BaseView):
             'indi_allsky_status' : self.get_indi_allsky_status(),
             'astrometric_data'   : self.get_astrometric_info(),
             'aurora_data'        : self.get_aurora_info(),
+            'smoke_data'         : self.get_smoke_info(),
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
@@ -421,23 +422,25 @@ class TemplateView(BaseView):
             return data
 
 
+        kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
+        kpindex_coef = float(camera_data.get('KPINDEX_COEF'))
+        ovation_max = int(camera_data.get('OVATION_MAX'))
+
+
         now = datetime.now()
         now_minus_7h = now - timedelta(hours=7)
 
-        data_timestamp = camera_data.get('AURORA_DATA_TS', 0)
-        if data_timestamp < now_minus_7h.timestamp():
-            data = {
-                'kpindex' : '- (old)',
-                'ovation' : '- (old)',
-            }
-            return data
+        data_timestamp = int(camera_data.get('AURORA_DATA_TS', 0))
+        if data_timestamp:
+            if data_timestamp < now_minus_7h.timestamp():
+                data = {
+                    'kpindex' : '{0:0.2f} [old]'.format(kpindex_current),
+                    'ovation' : '{0:d}% [old]'.format(ovation_max),
+                }
+                return data
 
 
         data = dict()
-
-        kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
-        kpindex_coef = float(camera_data.get('KPINDEX_COEF'))
-
 
         if kpindex_coef == 0:
             kp_dir = ''
@@ -464,8 +467,36 @@ class TemplateView(BaseView):
             data['kpindex'] = '{0:0.2f} out of range'.format(kpindex_current)
 
 
-        ovation_max = int(camera_data.get('OVATION_MAX'))
         data['ovation'] = '{0:d}%'.format(ovation_max)
+
+        return data
+
+
+    def get_smoke_info(self):
+        camera_data = self.camera.data
+
+        if not camera_data:
+            data = {
+                'smoke_rating' : 'No data',
+            }
+            return data
+
+
+        smoke_rating = camera_data.get('SMOKE_RATING', 'No Data')
+
+
+        now = datetime.now()
+        now_minus_10h = now - timedelta(hours=10)
+
+        data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
+        if data_timestamp:
+            if data_timestamp < now_minus_10h.timestamp():
+                smoke_rating = '{0:s} [old]'.format(smoke_rating)
+
+
+        data = {
+            'smoke_rating' : smoke_rating,
+        }
 
         return data
 

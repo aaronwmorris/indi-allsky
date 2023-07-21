@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
 
-#import sys
 import io
+import time
 from datetime import datetime
-from datetime import timedelta
-from pathlib import Path
 from collections import OrderedDict
 import socket
 import ssl
@@ -12,44 +9,21 @@ import requests
 from lxml import etree
 import shapely
 import logging
-from pprint import pformat  # noqa: F401
-
-logging.basicConfig(level=logging.INFO)
-logger = logging
 
 
-
-### ATL
-#LATITUDE   = 33.7
-#LONGITUDE  = -84.4
-
-### San Francisco
-#LATITUDE  = 37.6
-#LONGITUDE = -122.4
-
-### NYC
-#LATITUDE  = 40.7
-#LONGITUDE = -74.0
-
-### Milwaukee
-#LATITUDE  = 43.0
-#LONGITUDE = -87.9
-
-### Prince Albert
-#LATITUDE  = 53.2
-#LONGITUDE = -105.8
-
-### WINNIPEG
-LATITUDE  = 49.9
-LONGITUDE = -97.1
-
-### CALGARY
-#LATITUDE  = 51.0
-#LONGITUDE = -114.1
+from .flask import db
+from .flask.miscDb import miscDb
 
 
+logger = logging.getLogger('indi_allsky')
 
-class HmsSmokeTest(object):
+
+class IndiAllskySmokeUpdate(object):
+
+    kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
+    kml_temp_file = '/tmp/hms_28727542.kml'
+
+
     # folder name, rating
     kml_folders = OrderedDict({
         # check from light to heavy, in order
@@ -59,25 +33,50 @@ class HmsSmokeTest(object):
     })
 
 
-    # https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/2023/07/hms_smoke20230701.kml
-    kml_base_url = 'https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/KML/{now:%Y}/{now:%m}/hms_smoke{now:%Y}{now:%m}{now:%d}.kml'
-    kml_temp_file = '/tmp/hms_28727542.kml'
+    def __init__(self, config):
+        self.config = config
 
+        self._miscDb = miscDb(self.config)
 
-    def __init__(self):
         self.kml_data = None
 
 
-    def main(self):
-        # this polls data from NOAA Hazard Mapping System
+    def update(self, camera):
+        latitude = camera.latitude
+        longitude = camera.longitude
+
+
+        if camera.data:
+            camera_data = dict(camera.data)
+        else:
+            camera_data = dict()
+
+
+        if latitude > 0 and longitude > 0:
+            # HMS data is only good for north western hemisphere
+            smoke_rating = self.update_na_hms(camera)
+
+        else:
+            # all other regions report no data
+            smoke_rating = 'No data'
+
+
+        if smoke_rating:
+            logger.info('Smoke rating: %s', smoke_rating)
+
+            camera_data['SMOKE_RATING'] = smoke_rating
+            camera_data['SMOKE_DATA_TS'] = int(time.time())
+            camera.data = camera_data
+            db.session.commit()
+        else:
+            logger.warning('Smoke data not updated')
+
+
+    def update_na_hms(self, camera):
+        # this pulls data from NOAA Hazard Mapping System
         # https://www.ospo.noaa.gov/Products/land/hms.html
 
-        kml_temp_file_p = Path(self.kml_temp_file)
-
         now = datetime.now()
-        #now = datetime.now() - timedelta(days=3650)
-        now_minus_3h = now - timedelta(hours=3)
-
 
         kml_url = self.kml_base_url.format(**{'now' : now})
 
@@ -85,13 +84,7 @@ class HmsSmokeTest(object):
         # allow data to be reused
         if not self.kml_data:
             try:
-                if not kml_temp_file_p.exists():
-                    self.kml_data = self.download_kml(kml_url, kml_temp_file_p)
-                elif kml_temp_file_p.stat().st_mtime < now_minus_3h.timestamp():
-                    logger.warning('KML is older than 3 hours')
-                    self.kml_data = self.download_json(kml_url, kml_temp_file_p)
-                else:
-                    self.kml_data = self.load_kml(kml_temp_file_p)
+                self.kml_data = self.download_kml(kml_url)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
                 self.kml_data = None
@@ -106,16 +99,19 @@ class HmsSmokeTest(object):
                 self.kml_data = None
 
 
+        latitude = camera.latitude
+        longitude = camera.longitude
+
 
         if self.kml_data:
             #location_pt = shapely.Point((float(LONGITUDE), float(LATITUDE)))
 
             # look for a 1 square degree area (smoke within ~35 miles)
             location_area = shapely.Polygon((
-                (float(LONGITUDE) - 0.5, float(LATITUDE) - 0.5),
-                (float(LONGITUDE) + 0.5, float(LATITUDE) - 0.5),
-                (float(LONGITUDE) + 0.5, float(LATITUDE) + 0.5),
-                (float(LONGITUDE) - 0.5, float(LATITUDE) + 0.5),
+                (float(longitude) - 0.5, float(latitude) - 0.5),
+                (float(longitude) + 0.5, float(latitude) - 0.5),
+                (float(longitude) + 0.5, float(latitude) + 0.5),
+                (float(longitude) - 0.5, float(latitude) + 0.5),
             ))
 
             smoke_rating = 'Clear'  # no matches should mean clear
@@ -162,7 +158,11 @@ class HmsSmokeTest(object):
                             pass
 
 
-            logger.warning('Smoke rating for %0.1f, %0.1f: %s', LATITUDE, LONGITUDE, smoke_rating)
+                return str(smoke_rating)
+
+
+        # No data
+        return ''
 
 
     def download_kml(self, url, tmpfile):
@@ -179,18 +179,5 @@ class HmsSmokeTest(object):
 
         return r.text.encode()
 
-
-    def load_kml(self, tmpfile):
-        logger.warning('Loading kml data: %s', tmpfile)
-        with io.open(tmpfile, 'rb') as f_kml:
-            kml_data = f_kml.read()
-
-
-        return kml_data
-
-
-if __name__ == "__main__":
-    a = HmsSmokeTest()
-    a.main()
 
 

@@ -65,6 +65,7 @@ class IndiAllSky(object):
     periodic_tasks_offset = 300    # 5 minutes
     cleanup_tasks_offset = 43200   # 12 hours
     aurora_tasks_offset = 3600     # 60 minutes
+    smoke_tasks_offset = 14400     # 4 hours
 
 
     def __init__(self):
@@ -107,6 +108,7 @@ class IndiAllSky(object):
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         self.cleanup_tasks_time = time.time()  # run asap
         self.aurora_tasks_time = time.time()  # run asap
+        self.smoke_tasks_time = time.time()  # run asap
 
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
@@ -1203,6 +1205,14 @@ class IndiAllSky(object):
             self._updateAuroraData()
 
 
+        # smoke data update
+        if self.smoke_tasks_time < now:
+            self.smoke_tasks_time = now + self.smoke_tasks_offset
+
+            logger.info('Creating smoke update task')
+            self._updateSmokeData()
+
+
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
 
         active_cameras = IndiAllSkyDbCameraTable.query\
@@ -1213,6 +1223,33 @@ class IndiAllSky(object):
         for camera in active_cameras:
             jobdata = {
                 'action'       : 'updateAuroraData',
+                'img_folder'   : str(self.image_dir),
+                'timespec'     : None,  # Not needed
+                'night'        : None,  # Not needed
+                'camera_id'    : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : task.id})
+
+
+    def _updateSmokeData(self, task_state=TaskQueueState.QUEUED):
+
+        active_cameras = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.id.desc())
+
+
+        for camera in active_cameras:
+            jobdata = {
+                'action'       : 'updateSmokeData',
                 'img_folder'   : str(self.image_dir),
                 'timespec'     : None,  # Not needed
                 'night'        : None,  # Not needed

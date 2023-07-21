@@ -26,6 +26,7 @@ from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
 from .aurora import IndiAllskyAuroraUpdate
+from .smoke import IndiAllskySmokeUpdate
 
 from .flask import create_app
 from .flask import db
@@ -773,6 +774,15 @@ class VideoWorker(Process):
         aurora.update(camera)
 
         task.setSuccess('Aurora data updated')
+
+
+    def updateSmokeData(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
+        smoke = IndiAllskySmokeUpdate(self.config)
+        smoke.update(camera)
+
+        task.setSuccess('Smoke data updated')
 
 
     def expireData(self, task, timespec, img_folder, night, camera):
