@@ -184,6 +184,8 @@ class CaptureWorker(Process):
         with app.app_context():
             self._initialize()
 
+            self._pre_run_tasks()
+
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
