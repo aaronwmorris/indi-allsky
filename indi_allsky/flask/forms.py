@@ -553,6 +553,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'location'     : 'here',
         'kpindex'      : 0.0,
         'ovation_max'  : 0,
+        'smoke_rating' : 'foobar',
         'latitude'     : 0.0,
         'longitude'    : 0.0,
         'stack_method' : 'foo',
