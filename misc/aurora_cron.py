@@ -8,7 +8,7 @@
 
 
 # Example:  7 minutes past every hour
-# 7 * * * * /home/pi/indi-allsky/misc/aurora_cron.py >/dev/null 2>&1
+# 7 * * * * /home/pi/indi-allsky/virtualenv/indi-allsky/bin/python3 /home/pi/indi-allsky/misc/aurora_cron.py >/dev/null 2>&1
 
 
 import sys
