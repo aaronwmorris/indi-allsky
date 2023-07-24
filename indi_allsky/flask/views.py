@@ -764,10 +764,10 @@ class JsonChartView(JsonView):
         #mask = numpy.zeros(image_data.shape[:2], numpy.uint8)
         numpy_mask = numpy.full(image_data.shape[:2], True, numpy.bool_)
 
-        x1 = int((image_width / 2) - (image_width / 3))
-        y1 = int((image_height / 2) - (image_height / 3))
-        x2 = int((image_width / 2) + (image_width / 3))
-        y2 = int((image_height / 2) + (image_height / 3))
+        x1 = int((image_width / 2) - (image_width / 4))
+        y1 = int((image_height / 2) - (image_height / 4))
+        x2 = int((image_width / 2) + (image_width / 4))
+        y2 = int((image_height / 2) + (image_height / 4))
 
         #mask[y1:y2, x1:x2] = 255
         numpy_mask[y1:y2, x1:x2] = False

@@ -486,11 +486,11 @@ class TemplateView(BaseView):
 
 
         now = datetime.now()
-        now_minus_12h = now - timedelta(hours=12)
+        now_minus_24h = now - timedelta(hours=24)
 
         data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
         if data_timestamp:
-            if data_timestamp < now_minus_12h.timestamp():
+            if data_timestamp < now_minus_24h.timestamp():
                 smoke_rating = '{0:s} [old]'.format(smoke_rating)
 
 
