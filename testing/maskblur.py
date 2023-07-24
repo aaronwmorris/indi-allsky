@@ -43,10 +43,10 @@ class MaskBlur(object):
 
         #mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
-        #x1 = int((image_width / 2) - (image_width / 3))
-        #y1 = int((image_height / 2) - (image_height / 3))
-        #x2 = int((image_width / 2) + (image_width / 3))
-        #y2 = int((image_height / 2) + (image_height / 3))
+        #x1 = int((image_width / 2) - (image_width / 4))
+        #y1 = int((image_height / 2) - (image_height / 4))
+        #x2 = int((image_width / 2) + (image_width / 4))
+        #y2 = int((image_height / 2) + (image_height / 4))
 
         #cv2.rectangle(
         #    img=mask,
