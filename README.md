@@ -51,6 +51,11 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * MySQL/MariaDB
 
 
+## Frequently Asked Questions
+
+https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
+
+
 ## Requirements
 * A computer running a modern Linux distribution, such as a Raspberry Pi
     * Multicore is recommended
