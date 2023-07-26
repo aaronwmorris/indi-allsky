@@ -3135,6 +3135,31 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        elif action == 'upload_endofnight':
+            app.logger.warning('Uploading end of night data for camera %d', camera.id)
+
+            jobdata = {
+                'action'      : 'uploadAllskyEndOfNight',
+                'timespec'    : None,  # not needed
+                'img_folder'  : '',  # not needed
+                'night'       : True,
+                'camera_id'   : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
+
         else:
             # this should never happen
             message = {
