@@ -170,6 +170,7 @@ function populate_videos(video_list) {
                 var st_a = $('<a />', {
                     'href'   : item['startrail'],
                     'target' : "_blank",
+                    'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
                 }).appendTo(datetime_div);
 
@@ -192,6 +193,7 @@ function populate_videos(video_list) {
         var kl_a = $('<a />', {
             'href'   : item['keogram'],
             'target' : "_blank",
+            'rel'    : "noopener noreferrer",
             'class'  : "text-decoration-none link-warning",
         }).appendTo(datetime_div);
         $('<div />', {}).html(
@@ -215,6 +217,7 @@ function populate_videos(video_list) {
                     var st_tl_a = $('<a />', {
                         'href'   : item['startrail_timelapse'],
                         'target' : "_blank",
+                        'rel'    : "noopener noreferrer",
                     }).appendTo(startrail_div);
 
                     $('<img />', {
@@ -243,6 +246,7 @@ function populate_videos(video_list) {
         var k_a = $('<a />', {
             'href'   : item['url'],
             'target' : "_blank",
+            'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);
 
 
