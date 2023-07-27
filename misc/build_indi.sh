@@ -173,7 +173,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
         #libnutclient-dev \
 
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
@@ -221,7 +221,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
 
         #libnutclient-dev \
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
