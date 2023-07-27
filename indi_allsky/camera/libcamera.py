@@ -30,9 +30,6 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self._camera_id = None
 
-        self._ccd_gain = -1
-        self._ccd_bin = 1
-
         self._temp_val = -273.15  # absolute zero  :-)
         self._sensor_temp_metadata_key = 'SensorTemperature'
 
@@ -79,12 +76,10 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdGain(self):
-        return self._ccd_gain
+        return self.gain_v.value
 
 
     def setCcdGain(self, new_gain_value):
-        self._ccd_gain = int(new_gain_value)
-
         # Update shared gain value
         with self.gain_v.get_lock():
             self.gain_v.value = int(new_gain_value)
@@ -99,8 +94,6 @@ class IndiClientLibCameraGeneric(IndiClient):
             # Assume default
             return
 
-
-        self._ccd_bin = int(new_bin_value[0])
 
         # Update shared gain value
         with self.bin_v.get_lock():
@@ -145,7 +138,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:d}'.format(self._ccd_gain),
+                '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -159,7 +152,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
                 '--denoise', 'off',
-                '--gain', '{0:d}'.format(self._ccd_gain),
+                '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
