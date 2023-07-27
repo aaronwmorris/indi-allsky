@@ -389,6 +389,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
@@ -547,6 +548,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
@@ -684,6 +686,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
@@ -832,6 +835,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
@@ -994,6 +998,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
@@ -1153,6 +1158,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libffi-dev \
         libopencv-dev \
         libopenblas-dev \
+        libraw-dev \
         default-libmysqlclient-dev \
         pkg-config \
         rustc \
