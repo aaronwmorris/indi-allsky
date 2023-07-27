@@ -52,6 +52,7 @@ function init() {
             $('<a />', {
                 'href'   : this.src,
                 'target' : '_blank',
+                'rel'    : 'noopener noreferrer',
             }).html(
                 $('<span />', {
                     'text'  : 'Image',
@@ -78,6 +79,7 @@ function init() {
                     $('<a />', {
                         'href'   : $("#FITS_SELECT")[0].options[image_index].value,
                         'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
                     }).html(
                         $('<span />', {
@@ -96,6 +98,7 @@ function init() {
                     $('<a />', {
                         'href'   : $("#RAW_SELECT")[0].options[image_index].value,
                         'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
                     }).html(
                         $('<span />', {
