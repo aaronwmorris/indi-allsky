@@ -13,7 +13,6 @@ import shutil
 from flask import request
 from flask import Blueprint
 from flask import jsonify
-from flask import abort
 from flask import current_app as app
 
 #from flask_login import login_required
@@ -65,7 +64,12 @@ class SyncApiBaseView(BaseView):
 
 
     def dispatch_request(self):
-        self.authorize(request.files['metadata'].read())  # authenticate the request
+        try:
+            self.authorize(request.files['metadata'].read())  # authenticate the request
+        except AuthenticationFailure as e:
+            app.logger.error('Authentication failure: %s', str(e))
+            return jsonify({'error' : 'authentication failed'}), 400
+
 
         if request.method == 'POST':
             return self.post()
@@ -295,21 +299,18 @@ class SyncApiBaseView(BaseView):
     def authorize(self, data):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
-            app.logger.error('Missing Authoriation header')
-            return abort(400)
+            raise AuthenticationFailure('Missing Authoriation header')
 
         try:
             bearer, user_hmac_hash = auth_header.split(' ')
         except ValueError:
-            app.logger.error('Malformed API key')
-            return abort(400)
+            raise AuthenticationFailure('Malformed API key')
 
 
         try:
             username, received_hmac = user_hmac_hash.split(':')
         except ValueError:
-            app.logger.error('Malformed API key')
-            return abort(400)
+            raise AuthenticationFailure('Malformed API key')
 
 
         user = IndiAllSkyDbUserTable.query\
@@ -318,8 +319,7 @@ class SyncApiBaseView(BaseView):
 
 
         if not user:
-            app.logger.error('Unknown user')
-            return abort(400)
+            raise AuthenticationFailure('Unknown user')
 
 
         apikey = user.getApiKey(app.config['PASSWORD_KEY'])
@@ -342,8 +342,7 @@ class SyncApiBaseView(BaseView):
             if hmac.compare_digest(message_hmac, received_hmac):
                 break
         else:
-            app.logger.error('Unable to authenticate API key')
-            return abort(400)
+            raise AuthenticationFailure('Unable to authenticate API key')
 
 
     def getCamera(self, metadata):
@@ -565,6 +564,10 @@ class EntryExists(Exception):
 
 
 class EntryMissing(Exception):
+    pass
+
+
+class AuthenticationFailure(Exception):
     pass
 
 
