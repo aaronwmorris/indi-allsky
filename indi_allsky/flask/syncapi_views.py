@@ -110,10 +110,16 @@ class SyncApiBaseView(BaseView):
     def delete(self):
         metadata = self.saveMetadata()
         # no media
-        # no camera
 
         try:
-            self.deleteFile(metadata['id'])
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            app.logger.error('Camera not found: %s', metadata['camera_uuid'])
+            return jsonify({}), 400
+
+
+        try:
+            self.deleteFile(metadata['id'], camera.id)
         except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -121,10 +127,18 @@ class SyncApiBaseView(BaseView):
 
 
     def get(self):
-        get_id = request.args.get('id')
+        metadata = self.saveMetadata()
+        # no media
 
         try:
-            file_entry = self.getEntry(get_id)
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            app.logger.error('Camera not found: %s', metadata['camera_uuid'])
+            return jsonify({}), 400
+
+
+        try:
+            file_entry = self.getEntry(metadata['id'], camera.id)
         except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -207,10 +221,12 @@ class SyncApiBaseView(BaseView):
         return new_entry
 
 
-    def deleteFile(self, entry_id):
+    def deleteFile(self, entry_id, camera_id):
         # we do not want to call deleteAsset() here
         try:
             entry = self.model.query\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
                 .filter(self.model.id == entry_id)\
                 .one()
 
@@ -224,9 +240,11 @@ class SyncApiBaseView(BaseView):
             raise EntryMissing()
 
 
-    def getEntry(self, entry_id):
+    def getEntry(self, entry_id, camera_id):
         try:
             entry = self.model.query\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
                 .filter(self.model.id == entry_id)\
                 .one()
 
