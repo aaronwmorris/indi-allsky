@@ -4,6 +4,8 @@ import sys
 import io
 from datetime import datetime
 import time
+import math
+import hmac
 import hashlib
 import requests
 import json
@@ -45,16 +47,6 @@ class FormUploader(object):
             verify = False
         else:
             verify = True
-
-        time_floor = int(time.time() / 300) * 300
-
-        apikey_hash = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
-        #logger.info('Hash: %s', apikey_hash)
-
-
-        self.headers = {
-            'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, apikey_hash),
-        }
 
 
         now = datetime.now()
@@ -100,16 +92,38 @@ class FormUploader(object):
         }
 
 
+
         local_image_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
         #local_video_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
+        json_metadata = json.dumps(image_metadata)
+
+
         files = [  # noqa: F841
-            ('metadata', ('metadata.json', io.StringIO(json.dumps(image_metadata)), 'application/json')),
+            ('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
             ('media', (local_image_file_p.name, io.open(str(local_image_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
-            #('metadata', ('metadata.json', io.StringIO(json.dumps(video_metadata)), 'application/json')),
+            #('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
             #('media', (local_video_file_p.name, io.open(str(local_video_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
+
+
+
+        time_floor = math.floor(time.time() / 300)
+
+        message_hmac = hmac.new(
+            apikey.encode(),
+            msg=(str(time_floor) + json_metadata).encode(),
+            digestmod=hashlib.sha3_512,
+        ).hexdigest()
+
+
+        self.headers = {
+            'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, message_hmac),
+        }
+
+
+        logger.info('Headers: %s', self.headers)
 
         start = time.time()
 
