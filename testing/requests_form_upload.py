@@ -87,11 +87,13 @@ class FormUploader(object):
 
 
         get_params = {  # noqa: F841
-            'id' : 2,
+            'id'           : 2,
+            'camera_uuid'  : camera_uuid,
         }
 
         delete_metadata = {  # noqa: F841
-            'id' : 1,
+            'id'           : 1,
+            'camera_uuid'  : camera_uuid,
         }
 
 
@@ -101,6 +103,9 @@ class FormUploader(object):
 
 
         json_metadata = json.dumps(image_metadata)
+        #json_metadata = json.dumps(video_metadata)
+        #json_metadata = json.dumps(get_params)
+        #json_metadata = json.dumps(delete_metadata)
 
 
         files = [  # noqa: F841
@@ -127,6 +132,7 @@ class FormUploader(object):
 
         self.headers = {
             'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, message_hmac),
+            'Connection'    : 'close',  # no need for keep alives
         }
 
 
@@ -134,10 +140,10 @@ class FormUploader(object):
 
         start = time.time()
 
-        #r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
+        #r = requests.get(endpoint_url, params=get_params, files=files, headers=self.headers, verify=verify)
         r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
-        #r = requests.delete(endpoint_url, files=delete_metadata, headers=self.headers, verify=verify)
+        #r = requests.delete(endpoint_url, files=files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_image_file_p.stat().st_size
