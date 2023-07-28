@@ -1,8 +1,10 @@
 import time
+import math
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 import hashlib
+import hmac
 import json
 import tempfile
 import shutil
@@ -50,6 +52,8 @@ class SyncApiBaseView(BaseView):
     filename_t = None
     add_function = None
 
+    time_skew = 300  # number of seconds the client is allowed to deviate from server
+
 
     def __init__(self, **kwargs):
         super(SyncApiBaseView, self).__init__(**kwargs)
@@ -61,9 +65,7 @@ class SyncApiBaseView(BaseView):
 
 
     def dispatch_request(self):
-        self.authorize()
-
-        # we are now authenticated
+        self.authorize(request.files['metadata'].read())  # authenticate the request
 
         if request.method == 'POST':
             return self.post()
@@ -79,6 +81,7 @@ class SyncApiBaseView(BaseView):
 
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
+
         media_file = self.saveFile()
 
         try:
@@ -236,6 +239,8 @@ class SyncApiBaseView(BaseView):
 
     def saveMetadata(self):
         metadata_file = request.files['metadata']
+
+        metadata_file.seek(0)  # rewind file
         metadata_json = json.load(metadata_file)
 
         #app.logger.info('Json: %s', metadata_json)
@@ -269,21 +274,21 @@ class SyncApiBaseView(BaseView):
     #    pass
 
 
-    def authorize(self):
+    def authorize(self, data):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             app.logger.error('Missing Authoriation header')
             return abort(400)
 
         try:
-            bearer, user_apikey_hash = auth_header.split(' ')
+            bearer, user_hmac_hash = auth_header.split(' ')
         except ValueError:
             app.logger.error('Malformed API key')
             return abort(400)
 
 
         try:
-            username, apikey_hash = user_apikey_hash.split(':')
+            username, received_hmac = user_hmac_hash.split(':')
         except ValueError:
             app.logger.error('Malformed API key')
             return abort(400)
@@ -302,13 +307,21 @@ class SyncApiBaseView(BaseView):
         apikey = user.getApiKey(app.config['PASSWORD_KEY'])
 
 
-        time_floor = int(time.time() / 300) * 300
+        time_floor = math.floor(time.time() / self.time_skew)
 
         # the time on the remote system needs to be plus/minus the time_floor period
         time_floor_list = [time_floor, time_floor - 1, time_floor + 1]
         for t in time_floor_list:
-            api_hash = hashlib.sha256('{0:d}{1:s}'.format(t, apikey).encode()).hexdigest()
-            if apikey_hash == api_hash:
+            hmac_message = str(time_floor).encode() + data
+            #app.logger.info('Data: %s', hmac_message)
+
+            message_hmac = hmac.new(
+                apikey.encode(),
+                msg=hmac_message,
+                digestmod=hashlib.sha3_512,
+            ).hexdigest()
+
+            if hmac.compare_digest(message_hmac, received_hmac):
                 break
         else:
             app.logger.error('Unable to authenticate API key')

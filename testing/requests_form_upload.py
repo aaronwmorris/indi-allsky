@@ -39,8 +39,9 @@ class FormUploader(object):
     def main(self):
         endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
         #endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
-        username = 'foobar'
-        apikey = 'd8389bda9ac722e4619ca6d1dbe41cc8422d8fc26a111784b00617a87fe7889c'
+        username = 'foobar33'
+        apikey = '0000000000000000000000000000000000000000000000000000000000000000'
+        camera_uuid = '00000000-0000-0000-0000-000000000000'
         cert_bypass = True
 
         if cert_bypass:
@@ -69,8 +70,10 @@ class FormUploader(object):
             'calibrated'   : True,
             'stars'        : 0,
             'detections'   : 0,
+            'width'        : 1920,
+            'height'       : 1080,
             'process_elapsed' : 1.2,
-            'camera_uuid'  : '05415368-2ff1-4098-a1a6-5ff75e2b1330',
+            'camera_uuid'  : camera_uuid,
         }
 
 
@@ -79,7 +82,7 @@ class FormUploader(object):
             'createDate' : now.timestamp(),
             'dayDate'    : now.strftime('%Y%m%d'),
             'night'      : True,
-            'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
+            'camera_uuid': camera_uuid,
         }
 
 
@@ -111,9 +114,13 @@ class FormUploader(object):
 
         time_floor = math.floor(time.time() / 300)
 
+        # data is received as bytes
+        hmac_message = str(time_floor).encode() + json_metadata.encode()
+        #logger.info('Data: %s', str(hmac_message))
+
         message_hmac = hmac.new(
             apikey.encode(),
-            msg=(str(time_floor) + json_metadata).encode(),
+            msg=hmac_message,
             digestmod=hashlib.sha3_512,
         ).hexdigest()
 
