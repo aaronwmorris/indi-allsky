@@ -391,6 +391,19 @@ class SyncApiCameraView(SyncApiBaseView):
         return self.post(overwrite=overwrite)
 
 
+    def getEntry(self, entry_id):
+        try:
+            entry = self.model.query\
+                .filter(self.model.id == entry_id)\
+                .one()
+
+        except NoResultFound:
+            raise EntryMissing()
+
+
+        return entry
+
+
     def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
         addFunction_method = getattr(self._miscDb, self.add_function)
         entry = addFunction_method(
