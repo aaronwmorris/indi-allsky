@@ -1,8 +1,10 @@
 import time
+import math
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 import hashlib
+import hmac
 import json
 import tempfile
 import shutil
@@ -11,7 +13,6 @@ import shutil
 from flask import request
 from flask import Blueprint
 from flask import jsonify
-from flask import abort
 from flask import current_app as app
 
 #from flask_login import login_required
@@ -50,6 +51,8 @@ class SyncApiBaseView(BaseView):
     filename_t = None
     add_function = None
 
+    time_skew = 300  # number of seconds the client is allowed to deviate from server
+
 
     def __init__(self, **kwargs):
         super(SyncApiBaseView, self).__init__(**kwargs)
@@ -61,9 +64,12 @@ class SyncApiBaseView(BaseView):
 
 
     def dispatch_request(self):
-        self.authorize()
+        try:
+            self.authorize(request.files['metadata'].read())  # authenticate the request
+        except AuthenticationFailure as e:
+            app.logger.error('Authentication failure: %s', str(e))
+            return jsonify({'error' : 'authentication failed'}), 400
 
-        # we are now authenticated
 
         if request.method == 'POST':
             return self.post()
@@ -79,13 +85,14 @@ class SyncApiBaseView(BaseView):
 
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
+
         media_file = self.saveFile()
 
         try:
             camera = self.getCamera(metadata)
         except NoResultFound:
             app.logger.error('Camera not found: %s', metadata['camera_uuid'])
-            return jsonify({}), 400
+            return jsonify({'error' : 'camera not found'}), 400
 
 
         try:
@@ -107,10 +114,16 @@ class SyncApiBaseView(BaseView):
     def delete(self):
         metadata = self.saveMetadata()
         # no media
-        # no camera
 
         try:
-            self.deleteFile(metadata['id'])
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            app.logger.error('Camera not found: %s', metadata['camera_uuid'])
+            return jsonify({'error' : 'camera not found'}), 400
+
+
+        try:
+            self.deleteFile(metadata['id'], camera.id)
         except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -118,10 +131,18 @@ class SyncApiBaseView(BaseView):
 
 
     def get(self):
-        get_id = request.args.get('id')
+        metadata = self.saveMetadata()
+        # no media
 
         try:
-            file_entry = self.getEntry(get_id)
+            camera = self.getCamera(metadata)
+        except NoResultFound:
+            app.logger.error('Camera not found: %s', metadata['camera_uuid'])
+            return jsonify({'error' : 'camera not found'}), 400
+
+
+        try:
+            file_entry = self.getEntry(metadata, camera)
         except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -204,10 +225,12 @@ class SyncApiBaseView(BaseView):
         return new_entry
 
 
-    def deleteFile(self, entry_id):
+    def deleteFile(self, entry_id, camera_id):
         # we do not want to call deleteAsset() here
         try:
             entry = self.model.query\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
                 .filter(self.model.id == entry_id)\
                 .one()
 
@@ -221,10 +244,12 @@ class SyncApiBaseView(BaseView):
             raise EntryMissing()
 
 
-    def getEntry(self, entry_id):
+    def getEntry(self, metadata, camera):
         try:
             entry = self.model.query\
-                .filter(self.model.id == entry_id)\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+                .filter(self.model.id == metadata['id'])\
                 .one()
 
         except NoResultFound:
@@ -236,6 +261,8 @@ class SyncApiBaseView(BaseView):
 
     def saveMetadata(self):
         metadata_file = request.files['metadata']
+
+        metadata_file.seek(0)  # rewind file
         metadata_json = json.load(metadata_file)
 
         #app.logger.info('Json: %s', metadata_json)
@@ -269,24 +296,21 @@ class SyncApiBaseView(BaseView):
     #    pass
 
 
-    def authorize(self):
+    def authorize(self, data):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
-            app.logger.error('Missing Authoriation header')
-            return abort(400)
+            raise AuthenticationFailure('Missing Authoriation header')
 
         try:
-            bearer, user_apikey_hash = auth_header.split(' ')
+            bearer, user_hmac_hash = auth_header.split(' ')
         except ValueError:
-            app.logger.error('Malformed API key')
-            return abort(400)
+            raise AuthenticationFailure('Malformed API key')
 
 
         try:
-            username, apikey_hash = user_apikey_hash.split(':')
+            username, received_hmac = user_hmac_hash.split(':')
         except ValueError:
-            app.logger.error('Malformed API key')
-            return abort(400)
+            raise AuthenticationFailure('Malformed API key')
 
 
         user = IndiAllSkyDbUserTable.query\
@@ -295,24 +319,30 @@ class SyncApiBaseView(BaseView):
 
 
         if not user:
-            app.logger.error('Unknown user')
-            return abort(400)
+            raise AuthenticationFailure('Unknown user')
 
 
         apikey = user.getApiKey(app.config['PASSWORD_KEY'])
 
 
-        time_floor = int(time.time() / 300) * 300
+        time_floor = math.floor(time.time() / self.time_skew)
 
         # the time on the remote system needs to be plus/minus the time_floor period
         time_floor_list = [time_floor, time_floor - 1, time_floor + 1]
         for t in time_floor_list:
-            api_hash = hashlib.sha256('{0:d}{1:s}'.format(t, apikey).encode()).hexdigest()
-            if apikey_hash == api_hash:
+            hmac_message = str(time_floor).encode() + data
+            #app.logger.info('Data: %s', hmac_message)
+
+            message_hmac = hmac.new(
+                apikey.encode(),
+                msg=hmac_message,
+                digestmod=hashlib.sha3_512,
+            ).hexdigest()
+
+            if hmac.compare_digest(message_hmac, received_hmac):
                 break
         else:
-            app.logger.error('Unable to authenticate API key')
-            return abort(400)
+            raise AuthenticationFailure('Unable to authenticate API key')
 
 
     def getCamera(self, metadata):
@@ -333,10 +363,10 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def get(self):
-        get_id = request.args.get('id')
+        metadata = self.saveMetadata()
 
         try:
-            file_entry = self.getEntry(get_id)
+            file_entry = self.getEntry(metadata)
         except EntryMissing:
             return jsonify({'error' : 'camera_missing'}), 400
 
@@ -358,6 +388,20 @@ class SyncApiCameraView(SyncApiBaseView):
 
     def put(self, overwrite=True):
         return self.post(overwrite=overwrite)
+
+
+    def getEntry(self, metadata):
+        try:
+            entry = self.model.query\
+                .filter(self.model.id == metadata['id'])\
+                .filter(self.model.uuid == metadata['camera_uuid'])\
+                .one()
+
+        except NoResultFound:
+            raise EntryMissing()
+
+
+        return entry
 
 
     def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
@@ -520,6 +564,10 @@ class EntryExists(Exception):
 
 
 class EntryMissing(Exception):
+    pass
+
+
+class AuthenticationFailure(Exception):
     pass
 
 

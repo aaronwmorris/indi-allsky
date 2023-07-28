@@ -9,10 +9,12 @@ from pathlib import Path
 import requests
 import io
 import time
+import math
 import socket
 import ssl
 import json
 import hashlib
+import hmac
 import logging
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -23,12 +25,16 @@ logger = logging.getLogger('indi_allsky')
 
 class requests_syncapi_v1(GenericFileTransfer):
 
+    time_skew = 300  # number of seconds the client is allowed to deviate from server
+
+
     def __init__(self, *args, **kwargs):
         super(requests_syncapi_v1, self).__init__(*args, **kwargs)
 
         self.client = None
         self._port = 443
         self.url = None
+        self.apikey = None
 
 
     def connect(self, *args, **kwargs):
@@ -37,8 +43,8 @@ class requests_syncapi_v1(GenericFileTransfer):
         ### The full connect and transfer happens under the put() function
 
         endpoint_url = kwargs['hostname']
-        username = kwargs['username']
-        apikey = kwargs['apikey']
+        self.username = kwargs['username']
+        self.apikey = kwargs['apikey']
         cert_bypass = kwargs.get('cert_bypass')
 
 
@@ -50,16 +56,8 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         self.url = endpoint_url
 
-        time_floor = int(time.time() / 300) * 300
-        apikey_hash = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
-
 
         self.client = requests
-
-        self.headers = {
-            'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, apikey_hash),
-            'Connection'    : 'close',  # no need for keep alives
-        }
 
 
         if cert_bypass:
@@ -78,13 +76,34 @@ class requests_syncapi_v1(GenericFileTransfer):
         local_file = kwargs['local_file']
 
 
-        #logger.info('requests URL: %s', url)
+        #logger.info('requests URL: %s', self.url)
+
+
+        json_metadata = json.dumps(metadata)
+
+
+        time_floor = math.floor(time.time() / self.time_skew)
+
+        # data is received as bytes
+        hmac_message = str(time_floor).encode() + json_metadata.encode()
+
+        message_hmac = hmac.new(
+            self.apikey.encode(),
+            msg=hmac_message,
+            digestmod=hashlib.sha3_512,
+        ).hexdigest()
+
+
+        headers = {
+            'Authorization' : 'Bearer {0:s}:{1:s}'.format(self.username, message_hmac),
+            'Connection'    : 'close',  # no need for keep alives
+        }
 
 
         files = [(
             'metadata', (
                 'metadata.json',
-                io.StringIO(json.dumps(metadata)),
+                io.StringIO(json_metadata),
                 'application/json',
             )
         )]
@@ -110,7 +129,7 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         try:
             # put allows overwrites
-            r = self.client.put(self.url, files=files, headers=self.headers, verify=self.verify)
+            r = self.client.put(self.url, files=files, headers=headers, verify=self.verify)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

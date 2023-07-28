@@ -4,6 +4,8 @@ import sys
 import io
 from datetime import datetime
 import time
+import math
+import hmac
 import hashlib
 import requests
 import json
@@ -37,24 +39,15 @@ class FormUploader(object):
     def main(self):
         endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
         #endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
-        username = 'foobar'
-        apikey = 'd8389bda9ac722e4619ca6d1dbe41cc8422d8fc26a111784b00617a87fe7889c'
+        username = 'foobar33'
+        apikey = '0000000000000000000000000000000000000000000000000000000000000000'
+        camera_uuid = '00000000-0000-0000-0000-000000000000'
         cert_bypass = True
 
         if cert_bypass:
             verify = False
         else:
             verify = True
-
-        time_floor = int(time.time() / 300) * 300
-
-        apikey_hash = hashlib.sha256('{0:d}{1:s}'.format(time_floor, apikey).encode()).hexdigest()
-        #logger.info('Hash: %s', apikey_hash)
-
-
-        self.headers = {
-            'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, apikey_hash),
-        }
 
 
         now = datetime.now()
@@ -77,8 +70,10 @@ class FormUploader(object):
             'calibrated'   : True,
             'stars'        : 0,
             'detections'   : 0,
+            'width'        : 1920,
+            'height'       : 1080,
             'process_elapsed' : 1.2,
-            'camera_uuid'  : '05415368-2ff1-4098-a1a6-5ff75e2b1330',
+            'camera_uuid'  : camera_uuid,
         }
 
 
@@ -87,36 +82,68 @@ class FormUploader(object):
             'createDate' : now.timestamp(),
             'dayDate'    : now.strftime('%Y%m%d'),
             'night'      : True,
-            'camera_uuid': '05415368-2ff1-4098-a1a6-5ff75e2b1330',
+            'camera_uuid': camera_uuid,
         }
 
 
         get_params = {  # noqa: F841
-            'id' : 2,
+            'id'           : 2,
+            'camera_uuid'  : camera_uuid,
         }
 
         delete_metadata = {  # noqa: F841
-            'id' : 1,
+            'id'           : 1,
+            'camera_uuid'  : camera_uuid,
         }
+
 
 
         local_image_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
         #local_video_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
+        json_metadata = json.dumps(image_metadata)
+        #json_metadata = json.dumps(video_metadata)
+        #json_metadata = json.dumps(get_params)
+        #json_metadata = json.dumps(delete_metadata)
+
+
         files = [  # noqa: F841
-            ('metadata', ('metadata.json', io.StringIO(json.dumps(image_metadata)), 'application/json')),
+            ('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
             ('media', (local_image_file_p.name, io.open(str(local_image_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
-            #('metadata', ('metadata.json', io.StringIO(json.dumps(video_metadata)), 'application/json')),
+            #('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
             #('media', (local_video_file_p.name, io.open(str(local_video_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
         ]
 
+
+
+        time_floor = math.floor(time.time() / 300)
+
+        # data is received as bytes
+        hmac_message = str(time_floor).encode() + json_metadata.encode()
+        #logger.info('Data: %s', str(hmac_message))
+
+        message_hmac = hmac.new(
+            apikey.encode(),
+            msg=hmac_message,
+            digestmod=hashlib.sha3_512,
+        ).hexdigest()
+
+
+        self.headers = {
+            'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, message_hmac),
+            'Connection'    : 'close',  # no need for keep alives
+        }
+
+
+        logger.info('Headers: %s', self.headers)
+
         start = time.time()
 
-        #r = requests.get(endpoint_url, params=get_params, headers=self.headers, verify=verify)
+        #r = requests.get(endpoint_url, params=get_params, files=files, headers=self.headers, verify=verify)
         r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify)
         #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify)
-        #r = requests.delete(endpoint_url, files=delete_metadata, headers=self.headers, verify=verify)
+        #r = requests.delete(endpoint_url, files=files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_image_file_p.stat().st_size

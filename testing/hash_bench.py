@@ -80,6 +80,20 @@ pw = b'abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789'
 pbkdf2_sha512.hash(pw)
 '''
 
+        setup_6 = '''
+import hashlib
+import hmac
+pw = b'abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789'
+'''
+
+        s6 = '''
+message_hmac = hmac.new(
+    pw,
+    msg=pw,
+    digestmod=hashlib.sha3_512,
+)
+'''
+
 
 
         t_1 = timeit.timeit(stmt=s1, setup=setup_1, number=self.rounds)
@@ -99,6 +113,9 @@ pbkdf2_sha512.hash(pw)
 
         t_5 = timeit.timeit(stmt=s5, setup=setup_5, number=self.rounds)
         logger.info('pbdf2_sha512: %0.3fms', t_5 * 1000 / self.rounds)
+
+        t_6 = timeit.timeit(stmt=s6, setup=setup_6, number=self.rounds)
+        logger.info('hmac hash: %0.3fms', t_6 * 1000 / self.rounds)
 
 
 if __name__ == "__main__":
