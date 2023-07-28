@@ -92,7 +92,7 @@ class SyncApiBaseView(BaseView):
             camera = self.getCamera(metadata)
         except NoResultFound:
             app.logger.error('Camera not found: %s', metadata['camera_uuid'])
-            return jsonify({}), 400
+            return jsonify({'error' : 'camera not found'}), 400
 
 
         try:
@@ -119,7 +119,7 @@ class SyncApiBaseView(BaseView):
             camera = self.getCamera(metadata)
         except NoResultFound:
             app.logger.error('Camera not found: %s', metadata['camera_uuid'])
-            return jsonify({}), 400
+            return jsonify({'error' : 'camera not found'}), 400
 
 
         try:
@@ -138,7 +138,7 @@ class SyncApiBaseView(BaseView):
             camera = self.getCamera(metadata)
         except NoResultFound:
             app.logger.error('Camera not found: %s', metadata['camera_uuid'])
-            return jsonify({}), 400
+            return jsonify({'error' : 'camera not found'}), 400
 
 
         try:
