@@ -138,7 +138,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.getEntry(metadata['id'], camera.id)
+            file_entry = self.getEntry(metadata, camera)
         except EntryMissing:
             return jsonify({'error' : 'file_missing'}), 400
 
@@ -240,12 +240,12 @@ class SyncApiBaseView(BaseView):
             raise EntryMissing()
 
 
-    def getEntry(self, entry_id, camera_id):
+    def getEntry(self, metadata, camera):
         try:
             entry = self.model.query\
                 .join(IndiAllSkyDbCameraTable)\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .filter(self.model.id == entry_id)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+                .filter(self.model.id == metadata['id'])\
                 .one()
 
         except NoResultFound:
@@ -364,10 +364,10 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def get(self):
-        get_id = request.args.get('id')
+        metadata = self.saveMetadata()
 
         try:
-            file_entry = self.getEntry(get_id)
+            file_entry = self.getEntry(metadata)
         except EntryMissing:
             return jsonify({'error' : 'camera_missing'}), 400
 
@@ -391,10 +391,11 @@ class SyncApiCameraView(SyncApiBaseView):
         return self.post(overwrite=overwrite)
 
 
-    def getEntry(self, entry_id):
+    def getEntry(self, metadata):
         try:
             entry = self.model.query\
-                .filter(self.model.id == entry_id)\
+                .filter(self.model.id == metadata['id'])\
+                .filter(self.model.uuid == metadata['camera_uuid'])\
                 .one()
 
         except NoResultFound:
