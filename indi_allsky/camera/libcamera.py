@@ -717,10 +717,10 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'height'        : 2592,
             'pixel'         : 1.4,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 16,  # verified
             'min_exposure'  : 0.00003,
             'max_exposure'  : 112.0,
-            'cfa'           : 'BGGR',  # untested
+            'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
 
