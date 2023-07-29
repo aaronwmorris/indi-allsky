@@ -856,6 +856,8 @@ class ConfigView(FormView):
             'TARGET_ADU_DAY'                 : self.indi_allsky_config.get('TARGET_ADU_DAY', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
             'TARGET_ADU_DEV_DAY'             : self.indi_allsky_config.get('TARGET_ADU_DEV_DAY', 20),
+            'ADU_FOV_DIV'                    : str(self.indi_allsky_config.get('ADU_FOV_DIV', 4)),  # string in form, int in config
+            'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
             'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
             'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
             'DETECT_METEORS'                 : self.indi_allsky_config.get('DETECT_METEORS', False),
@@ -1286,6 +1288,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TARGET_ADU_DAY']                       = int(request.json['TARGET_ADU_DAY'])
         self.indi_allsky_config['TARGET_ADU_DEV']                       = int(request.json['TARGET_ADU_DEV'])
         self.indi_allsky_config['TARGET_ADU_DEV_DAY']                   = int(request.json['TARGET_ADU_DEV_DAY'])
+        self.indi_allsky_config['ADU_FOV_DIV']                          = int(request.json['ADU_FOV_DIV'])
+        self.indi_allsky_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
         self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
         self.indi_allsky_config['DETECT_STARS_THOLD']                   = float(request.json['DETECT_STARS_THOLD'])
         self.indi_allsky_config['DETECT_METEORS']                       = bool(request.json['DETECT_METEORS'])
