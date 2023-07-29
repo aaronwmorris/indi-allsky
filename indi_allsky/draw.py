@@ -33,10 +33,11 @@ class IndiAllSkyDraw(object):
                 adu_x2 = int(adu_roi[2] / self.bin_v.value)
                 adu_y2 = int(adu_roi[3] / self.bin_v.value)
             except IndexError:
-                adu_x1 = int((image_width / 2) - (image_width / 4))
-                adu_y1 = int((image_height / 2) - (image_height / 4))
-                adu_x2 = int((image_width / 2) + (image_width / 4))
-                adu_y2 = int((image_height / 2) + (image_height / 4))
+                adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
+                adu_x1 = int((image_width / 2) - (image_width / adu_fov_div))
+                adu_y1 = int((image_height / 2) - (image_height / adu_fov_div))
+                adu_x2 = int((image_width / 2) + (image_width / adu_fov_div))
+                adu_y2 = int((image_height / 2) + (image_height / adu_fov_div))
 
 
             logger.info('Draw box around ADU_ROI')
