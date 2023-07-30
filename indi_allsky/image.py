@@ -3546,10 +3546,11 @@ class ImageProcessor(object):
             y2 = int(adu_roi[3] / self.bin_v.value)
         except IndexError:
             logger.warning('Using central ROI for ADU calculations')
-            x1 = int((image_width / 2) - (image_width / 4))
-            y1 = int((image_height / 2) - (image_height / 4))
-            x2 = int((image_width / 2) + (image_width / 4))
-            y2 = int((image_height / 2) + (image_height / 4))
+            adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
+            x1 = int((image_width / 2) - (image_width / adu_fov_div))
+            y1 = int((image_height / 2) - (image_height / adu_fov_div))
+            x2 = int((image_width / 2) + (image_width / adu_fov_div))
+            y2 = int((image_height / 2) + (image_height / adu_fov_div))
 
         # The white area is what we keep
         cv2.rectangle(

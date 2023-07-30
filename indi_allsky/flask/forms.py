@@ -433,6 +433,16 @@ def SQM_ROI_validator(form, field):
         raise ValidationError('SQM Region of Interest must be 0 or greater')
 
 
+def ADU_FOV_DIV_validator(form, field):
+    if int(field.data) not in (2, 3, 4, 6):
+        raise ValidationError('ADU FoV divisor must be 2, 3, 4, 5, or 6')
+
+
+def SQM_FOV_DIV_validator(form, field):
+    if int(field.data) not in (2, 3, 4, 6):
+        raise ValidationError('SQM FoV divisor must be 2, 3, 4, 5, or 6')
+
+
 def DETECT_STARS_THOLD_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1780,6 +1790,20 @@ class IndiAllskyConfigForm(FlaskForm):
         ('jpg', 'JPEG'),
     )
 
+    ADU_FOV_DIV_choices = (
+        ('2', '100%'),
+        ('3', '66%'),
+        ('4', '50%'),
+        ('6', '33%'),
+    )
+
+    SQM_FOV_DIV_choices = (
+        ('2', '100%'),
+        ('3', '66%'),
+        ('4', '50%'),
+        ('6', '33%'),
+    )
+
     IMAGE_STACK_METHOD_choices = (
         ('maximum', 'Maximum'),
         ('average', 'Average'),
@@ -1964,6 +1988,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ADU_ROI_Y1                       = IntegerField('ADU ROI y1', validators=[ADU_ROI_validator])
     ADU_ROI_X2                       = IntegerField('ADU ROI x2', validators=[ADU_ROI_validator])
     ADU_ROI_Y2                       = IntegerField('ADU ROI y2', validators=[ADU_ROI_validator])
+    ADU_FOV_DIV                      = SelectField('ADU FoV', choices=ADU_FOV_DIV_choices, validators=[ADU_FOV_DIV_validator])
     DETECT_STARS                     = BooleanField('Star Detection')
     DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DataRequired(), DETECT_STARS_THOLD_validator])
     DETECT_METEORS                   = BooleanField('Meteor Detection')
@@ -1974,6 +1999,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
     SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
+    SQM_FOV_DIV                      = SelectField('SQM FoV', choices=SQM_FOV_DIV_choices, validators=[SQM_FOV_DIV_validator])
     LOCATION_NAME                    = StringField('Location', validators=[LOCATION_NAME_validator])
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
