@@ -28,6 +28,7 @@ canvas {
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
+var newest_image_default = true;  // load last image by default
 
 function init() {
     var canvas = document.getElementById("canvas");
@@ -128,9 +129,11 @@ function init() {
 
         switch (e.which) {
             case arrow.left:
+                newest_image_default = true;  // load newest image by default
+
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == $("#IMG_SELECT")[0].options.length - 1) {
-                        console.log('At latest image');
+                        console.log('At oldest image');
                     } else if (element.value == img_select_val) {
                         console.log('Previous image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
@@ -140,9 +143,11 @@ function init() {
 
                 break;
             case arrow.right:
+                newest_image_default = false;  // load oldest image by default
+
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == 0) {
-                        console.log('At oldest image');
+                        console.log('At newest image');
                     } else if (element.value == img_select_val) {
                         console.log('Next image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
@@ -152,6 +157,8 @@ function init() {
 
                 break;
             case arrow.up:
+                newest_image_default = false;  // load oldest image by default
+
                 $('#HOUR_SELECT option').each(function(index, element) {
                     if (index == 0) {
                         console.log('At latest hour');
@@ -164,6 +171,8 @@ function init() {
 
                 break;
             case arrow.down:
+                newest_image_default = true;  // load newest image by default
+
                 $('#HOUR_SELECT option').each(function(index, element) {
                     if (index == $("#HOUR_SELECT")[0].options.length - 1) {
                         console.log('At oldest hour');
@@ -448,7 +457,18 @@ $("#HOUR_SELECT").on("change", function() {
                 $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
+
+            if (newest_image_default) {
+                // newest image is first index
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+            } else {
+                // oldst image is last index
+                hour_options_count = $('#IMG_SELECT option').length
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[hour_options_count - 1].value).change();
+            }
+
             img.src = fields['IMG_SELECT'].input.val();
+
 
             $("#loader_filter").css({'display' : 'none'});
         },
