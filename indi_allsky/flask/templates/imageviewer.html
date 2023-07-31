@@ -435,17 +435,17 @@ $("#HOUR_SELECT").on("change", function() {
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -489,22 +489,22 @@ $("#DAY_SELECT").on("change", function() {
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -546,27 +546,27 @@ $("#MONTH_SELECT").on("change", function() {
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -606,32 +606,32 @@ $("#YEAR_SELECT").on("change", function() {
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -669,37 +669,37 @@ $("#FILTER_DETECTIONS").on("change", function() {
         success: function(data){
             $("#YEAR_SELECT").empty()
             data['YEAR_SELECT'].forEach(item => {
-                $("#YEAR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();

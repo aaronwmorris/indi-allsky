@@ -373,7 +373,7 @@ $("#YEAR_SELECT").on("change", function() {
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             populate_videos(data['video_list']);
