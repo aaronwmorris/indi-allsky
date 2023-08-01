@@ -28,6 +28,7 @@ canvas {
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
+var newest_image_default = true;  // load last image by default
 
 function init() {
     var canvas = document.getElementById("canvas");
@@ -128,9 +129,12 @@ function init() {
 
         switch (e.which) {
             case arrow.left:
+                // load older image
+                newest_image_default = true;  // load newest image when changing hours
+
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == $("#IMG_SELECT")[0].options.length - 1) {
-                        console.log('At latest image');
+                        console.log('At oldest image');
                     } else if (element.value == img_select_val) {
                         console.log('Previous image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
@@ -140,9 +144,12 @@ function init() {
 
                 break;
             case arrow.right:
+                // load newer image
+                newest_image_default = false;  // load oldest image when changing hours
+
                 $('#IMG_SELECT option').each(function(index, element) {
                     if (index == 0) {
-                        console.log('At oldest image');
+                        console.log('At newest image');
                     } else if (element.value == img_select_val) {
                         console.log('Next image');
                         $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
@@ -152,6 +159,9 @@ function init() {
 
                 break;
             case arrow.up:
+                // next hour
+                newest_image_default = false;  // load oldest image when changing hours
+
                 $('#HOUR_SELECT option').each(function(index, element) {
                     if (index == 0) {
                         console.log('At latest hour');
@@ -164,6 +174,9 @@ function init() {
 
                 break;
             case arrow.down:
+                // previous hour
+                newest_image_default = true;  // load newest image when changing hours
+
                 $('#HOUR_SELECT option').each(function(index, element) {
                     if (index == $("#HOUR_SELECT")[0].options.length - 1) {
                         console.log('At oldest hour');
@@ -435,20 +448,31 @@ $("#HOUR_SELECT").on("change", function() {
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
+
+            if (newest_image_default) {
+                // newest image is first index
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+            } else {
+                // oldst image is last index
+                img_options_count = $('#IMG_SELECT option').length
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            }
+
             img.src = fields['IMG_SELECT'].input.val();
+
 
             $("#loader_filter").css({'display' : 'none'});
         },
@@ -489,22 +513,22 @@ $("#DAY_SELECT").on("change", function() {
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -546,27 +570,27 @@ $("#MONTH_SELECT").on("change", function() {
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -606,32 +630,32 @@ $("#YEAR_SELECT").on("change", function() {
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -669,37 +693,37 @@ $("#FILTER_DETECTIONS").on("change", function() {
         success: function(data){
             $("#YEAR_SELECT").empty()
             data['YEAR_SELECT'].forEach(item => {
-                $("#YEAR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
             data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#FITS_SELECT").empty()
             data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#RAW_SELECT").empty()
             data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append('<option value="' + item[0] + '">' + item[1] + '</option>');
+                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
