@@ -75,15 +75,16 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | --------------------- | -------------- | ---- |
 | Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
-| Raspbian 10 (Legacy)  | armhf          | (NOT RECOMMENDED) Indi installed from Astroberry (see note below) |
+| Raspbian 10 (Legacy)  | armhf          | (NOT RECOMMENDED) Compile indi with build_indi.sh |
 | Armbian               | aarch64/armhf  | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | (NOT RECOMMENDED) Compile indi with build_indi.sh |
 | Ubuntu 22.04          | aarch64        | Indi installed from ppa:mutlaqja/ppa |
+| Ubuntu 22.04          | armhf          | Compile indi with build_indi.sh |
 | Ubuntu 22.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04<br />inc. Ubuntu Mate | aarch64 | Compile indi with build_indi.sh |
-| Astroberry Server 2.0 | armhf          | (NOT RECOMMENDED) Astroberry is supported, but deprecated, since the project appears to be abandoned |
+| ~~Astroberry Server 2.0~~ | armhf      | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
 MacOS support is theoretically possible, but not tested.
 

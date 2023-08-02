@@ -154,24 +154,26 @@ if [[ -f "/etc/astroberry.version" ]]; then
 
     echo "Astroberry is no longer supported.  Please use Raspbian or Ubuntu."
     echo
+
+    # comment this line out to continue
     exit 1
 
-    #ASTROBERRY="true"
+    ASTROBERRY="true"
 
     # Astroberry already has services on 80/443
-    #if [ "$HTTP_PORT" -eq 80 ]; then
-    #    HTTP_PORT="81"
-    #    echo "Changing HTTP_PORT to 81"
-    #fi
+    if [ "$HTTP_PORT" -eq 80 ]; then
+        HTTP_PORT="81"
+        echo "Changing HTTP_PORT to 81"
+    fi
 
-    #if [ "$HTTPS_PORT" -eq 443 ]; then
-    #    HTTPS_PORT="444"
-    #    echo "Changing HTTPS_PORT to 444"
-    #fi
+    if [ "$HTTPS_PORT" -eq 443 ]; then
+        HTTPS_PORT="444"
+        echo "Changing HTTPS_PORT to 444"
+    fi
 
-    #echo
-    #echo
-    #sleep 3
+    echo
+    echo
+    sleep 3
 fi
 
 
