@@ -9,7 +9,7 @@ export PATH
 
 
 ### Non-interactive options example ###
-#export INDIALLSKY_INDI_VERSION=1.9.9
+#export INDIALLSKY_INDI_VERSION=2.0.3
 ###
 
 
@@ -83,6 +83,7 @@ sleep 10
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.0.3"
     "2.0.2"
     "2.0.1"
     "2.0.0"
@@ -131,7 +132,10 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "2.0.2" ]; then
+if [ "$INDI_VERSION" == "2.0.3" ]; then
+    pip3 uninstall -y pyindi-client
+    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
+elif [ "$INDI_VERSION" == "2.0.2" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then

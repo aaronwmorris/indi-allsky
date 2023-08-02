@@ -1426,6 +1426,7 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.0.3"
     "2.0.2"
     "2.0.1"
     "2.0.0"
@@ -1468,7 +1469,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.0.2" ]; then
+if [ "$INDI_VERSION" == "2.0.3" ]; then
+    pip3 install "$PYINDI_2_0_0"
+elif [ "$INDI_VERSION" == "2.0.2" ]; then
     pip3 install "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then
     pip3 install "$PYINDI_2_0_0"
