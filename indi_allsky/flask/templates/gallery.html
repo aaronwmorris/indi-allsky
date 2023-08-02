@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Gallery{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8"/>
+<style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+</style>
+<link rel="stylesheet" href="static/photoswipe/dist/photoswipe.css">
+<script type="text/javascript">
+var newest_image_default = true;  // load last image by default
+
+function init() {
+}
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+<script type="module">
+import PhotoSwipeLightbox from './static/photoswipe/dist/photoswipe-lightbox.esm.js';
+const lightbox = new PhotoSwipeLightbox({
+  gallery: '#my-gallery',
+  children: 'a',
+  pswpModule: () => import('static/photoswipe/dist/photoswipe.esm.js')
+});
+lightbox.init();
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_viewer" onSubmit="return false;">
+    {{ form_viewer.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.DAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.DAY_SELECT(class='form-control bg-secondary') }}
+            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_viewer.HOUR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_viewer.HOUR_SELECT(class='form-control bg-secondary') }}
+            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div style="display: none;">
+            {{ form_viewer.FITS_SELECT(class='form-control bg-secondary', hidden='hidden') }}
+            {{ form_viewer.RAW_SELECT(class='form-control bg-secondary', hidden='hidden') }}
+        </div>
+
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-9"></div>
+        <div class="col-sm-1">
+            {{ form_viewer.FILTER_DETECTIONS.label }}
+        </div>
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
+                <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_filter"></div>
+        </div>
+    </div>
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+</form>
+
+<hr />
+
+
+<script>
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+const field_names = [
+    'csrf_token',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+    'DAY_SELECT',
+    'HOUR_SELECT',
+    'IMG_SELECT',
+    'FITS_SELECT',
+    'RAW_SELECT',
+];
+
+const checkbox_field_names = [
+    'FILTER_DETECTIONS',
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$("#HOUR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+});
+
+
+
+$("#DAY_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+});
+
+
+$("#MONTH_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+});
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+});
+
+$("#FILTER_DETECTIONS").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#YEAR_SELECT").empty()
+            data['YEAR_SELECT'].forEach(item => {
+                $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+});
+
+
+$( document ).ready(function() {
+    // Uncheck checkboxes
+    $("#FILTER_DETECTIONS").prop('checked', false);
+});
+
+</script>
+
+{% endblock %}
