@@ -71,6 +71,8 @@ WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
+
+ASTROBERRY="false"
 #### end config ####
 
 
@@ -145,28 +147,31 @@ fi
 
 
 if [[ -f "/etc/astroberry.version" ]]; then
-    ASTROBERRY="true"
     echo
     echo
     echo "Detected Astroberry server"
     echo
 
+    echo "Astroberry is no longer supported.  Please use Raspbian or Ubuntu."
+    echo
+    exit 1
+
+    #ASTROBERRY="true"
+
     # Astroberry already has services on 80/443
-    if [ "$HTTP_PORT" -eq 80 ]; then
-        HTTP_PORT="81"
-        echo "Changing HTTP_PORT to 81"
-    fi
+    #if [ "$HTTP_PORT" -eq 80 ]; then
+    #    HTTP_PORT="81"
+    #    echo "Changing HTTP_PORT to 81"
+    #fi
 
-    if [ "$HTTPS_PORT" -eq 443 ]; then
-        HTTPS_PORT="444"
-        echo "Changing HTTPS_PORT to 444"
-    fi
+    #if [ "$HTTPS_PORT" -eq 443 ]; then
+    #    HTTPS_PORT="444"
+    #    echo "Changing HTTPS_PORT to 444"
+    #fi
 
-    echo
-    echo
-    sleep 3
-else
-    ASTROBERRY="false"
+    #echo
+    #echo
+    #sleep 3
 fi
 
 
@@ -330,25 +335,16 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            echo "deb https://www.astroberry.io/repo/ bullseye main" | sudo tee /etc/apt/sources.list.d/astroberry.list
-        fi
-    else
-        INSTALL_INDI="false"
+    INSTALL_INDI="false"
 
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            echo
-            echo
-            echo "There are not prebuilt indi packages for this distribution"
-            echo "Please run ./misc/build_indi.sh before running setup.sh"
-            echo
-            echo
-            exit 1
-        fi
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
     fi
 
 
@@ -488,26 +484,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-    # Sometimes raspbian can be detected as debian
-    if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            echo "deb https://www.astroberry.io/repo/ bullseye main" | sudo tee /etc/apt/sources.list.d/astroberry.list
-        fi
-    else
-        INSTALL_INDI="false"
+    INSTALL_INDI="false"
 
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            echo
-            echo
-            echo "There are not prebuilt indi packages for this distribution"
-            echo "Please run ./misc/build_indi.sh before running setup.sh"
-            echo
-            echo
-            exit 1
-        fi
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
     fi
 
 
@@ -640,13 +626,16 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     fi
 
 
-    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
-        fi
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
     fi
 
 
@@ -764,26 +753,16 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     fi
 
 
-    # Sometimes raspbian can be detected as debian
-    if [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-        # Astroberry repository
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" && ! -f "/etc/apt/sources.list.d/astroberry.list" ]]; then
-            echo "Installing INDI via Astroberry repository"
-            wget -O - https://www.astroberry.io/repo/key | sudo apt-key add -
-            echo "deb https://www.astroberry.io/repo/ buster main" | sudo tee /etc/apt/sources.list.d/astroberry.list
-        fi
-    else
-        INSTALL_INDI="false"
+    INSTALL_INDI="false"
 
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            echo
-            echo
-            echo "There are not prebuilt indi packages for this distribution"
-            echo "Please run ./misc/build_indi.sh before running setup.sh"
-            echo
-            echo
-            exit 1
-        fi
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
     fi
 
 
