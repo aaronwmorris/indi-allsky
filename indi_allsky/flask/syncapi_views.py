@@ -86,7 +86,7 @@ class SyncApiBaseView(BaseView):
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
 
-        media_file = self.saveFile()
+        media_file_p = self.saveFile()
 
         try:
             camera = self.getCamera(metadata)
@@ -96,7 +96,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file, overwrite=overwrite)
+            file_entry = self.processPost(camera, metadata, media_file_p, overwrite=overwrite)
         except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -152,7 +152,7 @@ class SyncApiBaseView(BaseView):
         })
 
 
-    def processPost(self, camera, metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, metadata, tmp_file_p, overwrite=False):
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
@@ -165,7 +165,7 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
+        filename = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))
 
         if not filename.exists():
             try:
@@ -215,10 +215,15 @@ class SyncApiBaseView(BaseView):
             metadata,
         )
 
-        shutil.copy2(str(tmp_file), str(filename))
-        filename.chmod(0o644)
 
-        tmp_file.unlink()
+        if tmp_file_p.stat().st_size != 0:
+            # only copy file if it is not empty
+            # if the empty file option is selected, this can be expected
+            shutil.copy2(str(tmp_file_p), str(filename))
+            filename.chmod(0o644)
+
+
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded file: %s', filename)
 
