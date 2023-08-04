@@ -441,12 +441,12 @@ class SyncApiImageView(SyncApiBaseView):
     add_function = 'addImage'
 
 
-    def processPost(self, camera, image_metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
+        image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
 
 
         if not image_file.exists():
@@ -489,10 +489,15 @@ class SyncApiImageView(SyncApiBaseView):
             image_metadata,
         )
 
-        shutil.copy2(str(tmp_file), str(image_file))
-        image_file.chmod(0o644)
 
-        tmp_file.unlink()
+        if tmp_file_p.stat().st_size != 0:
+            # only copy file if it is not empty
+            # if the empty file option is selected, this can be expected
+            shutil.copy2(str(tmp_file_p), str(image_file))
+            image_file.chmod(0o644)
+
+
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded image: %s', image_file)
 
