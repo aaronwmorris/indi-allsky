@@ -95,6 +95,7 @@ class SyncApiBaseView(BaseView):
 
 
         if media_file_p.stat().st_size != metadata.get('file_size', -1):
+            media_file_p.unlink()
             raise AuthenticationFailure('Media file size does not match')
 
 
