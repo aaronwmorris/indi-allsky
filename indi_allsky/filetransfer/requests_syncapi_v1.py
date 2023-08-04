@@ -91,7 +91,7 @@ class requests_syncapi_v1(GenericFileTransfer):
 
             if not empty_file:
                 local_file_size = local_file_p.stat().st_size
-                metadata['file_size'] = local_file_size
+                metadata['file_size'] = local_file_size  # needed to validate
                 f_media = io.open(str(local_file_p), 'rb')
             else:
                 local_file_size = 1024  # fake
