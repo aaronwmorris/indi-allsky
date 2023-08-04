@@ -74,6 +74,7 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         metadata = kwargs['metadata']
         local_file = kwargs['local_file']
+        empty_file = kwargs['empty_file']
 
 
         #logger.info('requests URL: %s', self.url)
@@ -100,29 +101,38 @@ class requests_syncapi_v1(GenericFileTransfer):
         }
 
 
+        f_metadata = io.StringIO(json_metadata)
         files = [(
             'metadata', (
                 'metadata.json',
-                io.StringIO(json_metadata),
+                f_metadata,
                 'application/json',
             )
         )]
 
 
         # cameras do not have files
-        if str(local_file) != 'camera':
+        if str(local_file) == 'camera':
+            local_file_size = 1024  # fake
+            f_media = io.BytesIO(b'')  # no data
+        else:
+            # all other entry types
             local_file_p = Path(local_file)
-            local_file_size = local_file_p.stat().st_size
+
+            if not empty_file:
+                local_file_size = local_file_p.stat().st_size
+                f_media = io.open(str(local_file_p), 'rb')
+            else:
+                local_file_size = 1024  # fake
+                f_media = io.BytesIO(b'')  # no data
 
             files.append((
                 'media', (
                     local_file_p.name,  # need file extension from original file
-                    io.open(str(local_file_p), 'rb'),
+                    f_media,
                     'application/octet-stream',
                 )
             ))
-        else:
-            local_file_size = 1024  # fake
 
 
         start = time.time()
@@ -138,6 +148,9 @@ class requests_syncapi_v1(GenericFileTransfer):
             raise CertificateValidationFailure(str(e)) from e
         except requests.exceptions.SSLError as e:
             raise CertificateValidationFailure(str(e)) from e
+        finally:
+            f_metadata.close()
+            f_media.close()
 
 
         if r.status_code >= 400:
