@@ -71,22 +71,32 @@ class SyncApiBaseView(BaseView):
             return jsonify({'error' : 'authentication failed'}), 400
 
 
-        if request.method == 'POST':
-            return self.post()
-        elif request.method == 'PUT':
-            return self.put()
-        elif request.method == 'DELETE':
-            return self.delete()
-        elif request.method == 'GET':
-            return self.get()
-        else:
-            return jsonify({}), 400
+        try:
+            if request.method == 'POST':
+                return self.post()
+            elif request.method == 'PUT':
+                return self.put()
+            elif request.method == 'DELETE':
+                return self.delete()
+            elif request.method == 'GET':
+                return self.get()
+            else:
+                return jsonify({}), 400
+
+        except AuthenticationFailure as e:
+            app.logger.error('Authentication failure: %s', str(e))
+            return jsonify({'error' : 'authentication failed'}), 400
 
 
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
 
         media_file_p = self.saveFile()
+
+
+        if media_file_p.stat().st_size != metadata.get('file_size', -1):
+            raise AuthenticationFailure('Media file size does not match')
+
 
         try:
             camera = self.getCamera(metadata)
