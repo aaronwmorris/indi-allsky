@@ -81,6 +81,7 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         # cameras do not have files
         if str(local_file) == 'camera':
+            local_file_p = Path('bogus.ext')
             local_file_size = 1024  # fake
             f_media = io.BytesIO(b'')  # no data
             metadata['file_size'] = 0
