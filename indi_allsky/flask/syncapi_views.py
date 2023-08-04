@@ -274,6 +274,7 @@ class SyncApiBaseView(BaseView):
         media_file = request.files['media']
 
         media_file_p = Path(media_file.filename)  # need this for the extension
+        #app.logger.info('File: %s', media_file_p)
 
         f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix=media_file_p.suffix)
         while True:
@@ -285,10 +286,7 @@ class SyncApiBaseView(BaseView):
 
         f_tmp_media.close()
 
-        #app.logger.info('File: %s', media_file_p)
-
         return Path(f_tmp_media.name)
-
 
 
     #def put(self):

@@ -302,6 +302,7 @@ class FileUploader(Thread):
             put_kwargs = {
                 'metadata'      : metadata,
                 'local_file'    : local_file_p,
+                'empty_file'    : self.config.get('SYNCAPI', {}).get('EMPTY_FILE'),
             }
 
             try:

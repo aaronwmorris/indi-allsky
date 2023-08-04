@@ -2756,6 +2756,19 @@
         <div class="col-sm-8">Sync after S3 upload</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SYNCAPI__EMPTY_FILE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SYNCAPI__EMPTY_FILE(class='form-check-input') }}
+                <div id="SYNCAPI__EMPTY_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable this if you only want to upload to S3 and not via SyncAPI</div>
+    </div>
+
 </div><!-- end syncapi tab -->
 </div>
 
@@ -3028,6 +3041,7 @@ const checkbox_field_names = [
     'SYNCAPI__ENABLE',
     'SYNCAPI__CERT_BYPASS',
     'SYNCAPI__POST_S3',
+    'SYNCAPI__EMPTY_FILE',
     'SYNCAPI__UPLOAD_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',

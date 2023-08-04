@@ -2146,6 +2146,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     SYNCAPI__POST_S3                 = BooleanField('Sync after S3 Upload')
+    SYNCAPI__EMPTY_FILE              = BooleanField('Sync empty file')
     SYNCAPI__UPLOAD_IMAGE            = IntegerField('Transfer images', validators=[SYNCAPI__UPLOAD_IMAGE_validator])
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
