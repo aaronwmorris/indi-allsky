@@ -79,8 +79,28 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         #logger.info('requests URL: %s', self.url)
 
+        # cameras do not have files
+        if str(local_file) == 'camera':
+            local_file_p = Path('bogus.ext')
+            local_file_size = 1024  # fake
+            f_media = io.BytesIO(b'')  # no data
+            metadata['file_size'] = 0
+        else:
+            # all other entry types
+            local_file_p = Path(local_file)
+
+            if not empty_file:
+                local_file_size = local_file_p.stat().st_size
+                metadata['file_size'] = local_file_size  # needed to validate
+                f_media = io.open(str(local_file_p), 'rb')
+            else:
+                local_file_size = 1024  # fake
+                f_media = io.BytesIO(b'')  # no data
+                metadata['file_size'] = 0
+
 
         json_metadata = json.dumps(metadata)
+        f_metadata = io.StringIO(json_metadata)
 
 
         time_floor = math.floor(time.time() / self.time_skew)
@@ -101,38 +121,23 @@ class requests_syncapi_v1(GenericFileTransfer):
         }
 
 
-        f_metadata = io.StringIO(json_metadata)
-        files = [(
-            'metadata', (
-                'metadata.json',
-                f_metadata,
-                'application/json',
-            )
-        )]
-
-
-        # cameras do not have files
-        if str(local_file) == 'camera':
-            local_file_size = 1024  # fake
-            f_media = io.BytesIO(b'')  # no data
-        else:
-            # all other entry types
-            local_file_p = Path(local_file)
-
-            if not empty_file:
-                local_file_size = local_file_p.stat().st_size
-                f_media = io.open(str(local_file_p), 'rb')
-            else:
-                local_file_size = 1024  # fake
-                f_media = io.BytesIO(b'')  # no data
-
-            files.append((
+        files = [
+            (
+                'metadata',
+                (
+                    'metadata.json',
+                    f_metadata,
+                    'application/json',
+                )
+            ),
+            (
                 'media', (
                     local_file_p.name,  # need file extension from original file
                     f_media,
                     'application/octet-stream',
                 )
-            ))
+            ),
+        ]
 
 
         start = time.time()

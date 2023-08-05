@@ -64,6 +64,7 @@ class miscDb(object):
             'filename',
             's3_key',
             'remote_url',
+            'file_size',
             #'sync_id',
             #'friendlyName',
         ]
@@ -123,6 +124,7 @@ class miscDb(object):
             's3_key',
             'remote_url',
             'hidden',
+            'file_size',
         ]
 
         # populate camera info

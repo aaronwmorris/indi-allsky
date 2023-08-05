@@ -97,24 +97,16 @@ class FormUploader(object):
         }
 
 
-
-        local_image_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
-        #local_video_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
-
-
-        json_metadata = json.dumps(image_metadata)
-        #json_metadata = json.dumps(video_metadata)
-        #json_metadata = json.dumps(get_params)
-        #json_metadata = json.dumps(delete_metadata)
+        local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
+        #local_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
-        files = [  # noqa: F841
-            ('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
-            ('media', (local_image_file_p.name, io.open(str(local_image_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
-            #('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
-            #('media', (local_video_file_p.name, io.open(str(local_video_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
-        ]
+        metadata = image_metadata
+        #metadata = video_metadata
 
+        metadata['file_size'] = local_file_p.stat().st_size  # needed to validate
+
+        json_metadata = json.dumps(metadata)
 
 
         time_floor = math.floor(time.time() / 300)
@@ -136,6 +128,12 @@ class FormUploader(object):
         }
 
 
+        files = [  # noqa: F841
+            ('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
+            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
+        ]
+
+
         logger.info('Headers: %s', self.headers)
 
         start = time.time()
@@ -146,8 +144,7 @@ class FormUploader(object):
         #r = requests.delete(endpoint_url, files=files, headers=self.headers, verify=verify)
 
         upload_elapsed_s = time.time() - start
-        local_file_size = local_image_file_p.stat().st_size
-        #local_file_size = local_video_file_p.stat().st_size
+        local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
         logger.warning('Error: %d', r.status_code)

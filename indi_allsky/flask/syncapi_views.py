@@ -71,22 +71,33 @@ class SyncApiBaseView(BaseView):
             return jsonify({'error' : 'authentication failed'}), 400
 
 
-        if request.method == 'POST':
-            return self.post()
-        elif request.method == 'PUT':
-            return self.put()
-        elif request.method == 'DELETE':
-            return self.delete()
-        elif request.method == 'GET':
-            return self.get()
-        else:
-            return jsonify({}), 400
+        try:
+            if request.method == 'POST':
+                return self.post()
+            elif request.method == 'PUT':
+                return self.put()
+            elif request.method == 'DELETE':
+                return self.delete()
+            elif request.method == 'GET':
+                return self.get()
+            else:
+                return jsonify({}), 400
+
+        except AuthenticationFailure as e:
+            app.logger.error('Authentication failure: %s', str(e))
+            return jsonify({'error' : 'authentication failed'}), 400
 
 
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
 
-        media_file = self.saveFile()
+        media_file_p = self.saveFile()
+
+
+        if media_file_p.stat().st_size != metadata.get('file_size', -1):
+            media_file_p.unlink()
+            raise AuthenticationFailure('Media file size does not match')
+
 
         try:
             camera = self.getCamera(metadata)
@@ -96,7 +107,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file, overwrite=overwrite)
+            file_entry = self.processPost(camera, metadata, media_file_p, overwrite=overwrite)
         except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -152,7 +163,7 @@ class SyncApiBaseView(BaseView):
         })
 
 
-    def processPost(self, camera, metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, metadata, tmp_file_p, overwrite=False):
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
@@ -165,7 +176,7 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file.suffix))
+        filename = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))
 
         if not filename.exists():
             try:
@@ -215,10 +226,15 @@ class SyncApiBaseView(BaseView):
             metadata,
         )
 
-        shutil.copy2(str(tmp_file), str(filename))
-        filename.chmod(0o644)
 
-        tmp_file.unlink()
+        if tmp_file_p.stat().st_size != 0:
+            # only copy file if it is not empty
+            # if the empty file option is selected, this can be expected
+            shutil.copy2(str(tmp_file_p), str(filename))
+            filename.chmod(0o644)
+
+
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded file: %s', filename)
 
@@ -425,12 +441,12 @@ class SyncApiImageView(SyncApiBaseView):
     add_function = 'addImage'
 
 
-    def processPost(self, camera, image_metadata, tmp_file, overwrite=False):
+    def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file.suffix))  # suffix includes dot
+        image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
 
 
         if not image_file.exists():
@@ -473,10 +489,15 @@ class SyncApiImageView(SyncApiBaseView):
             image_metadata,
         )
 
-        shutil.copy2(str(tmp_file), str(image_file))
-        image_file.chmod(0o644)
 
-        tmp_file.unlink()
+        if tmp_file_p.stat().st_size != 0:
+            # only copy file if it is not empty
+            # if the empty file option is selected, this can be expected
+            shutil.copy2(str(tmp_file_p), str(image_file))
+            image_file.chmod(0o644)
+
+
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded image: %s', image_file)
 
