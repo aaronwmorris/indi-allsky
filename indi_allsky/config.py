@@ -270,6 +270,7 @@ class IndiAllSkyConfigBase(object):
             "APIKEY_E"               : "",
             "CERT_BYPASS"            : False,
             "POST_S3"                : False,
+            "EMPTY_FILE"             : False,
             "UPLOAD_IMAGE"           : 1,
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
         },
