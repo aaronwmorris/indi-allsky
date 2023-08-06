@@ -16,17 +16,16 @@
  Boston, MA 02110-1301, USA.
 */
 
-@font-face {font-family: 'Roboto Light';font-style: normal;src: local('?'), url('Roboto-Light.ttf') format('truetype');}
-
+/*
 body {
 	float: left;
 	background: rgb(110, 132, 163);
-	font-family: 'Roboto Light', Arial, Helvetica;
 	font-size:16px;
 	font-weight: normal;
 	color: #fff;
 	padding: 0;
 }
+*/
 
 h1 {
 	background-image: url("../img/astropanel.svg");
@@ -35,7 +34,6 @@ h1 {
 	border-radius: 5px;
 	margin-top: 0px;
 	padding: 0px 5px 15px 35px;
-	font-family: 'Roboto Light', Arial, Helvetica;
 	font-size: 20px;
 	color: white;
 	height: 1.2em;
@@ -57,7 +55,8 @@ a:hover {
 
 button {
 	margin-top: 5px;
-	width: 117px;
+	width: 200px;
+	height: 50px;
 }
 
 .warning {
@@ -65,7 +64,7 @@ button {
 }
 
 .panel_container {
-	width: 480px;
+	width: 100%;
 	margin-left: 0px;
 }
 
@@ -75,13 +74,11 @@ button {
 
 table, th, td {
 	border: none;
-	font-family: 'Roboto Light', Arial, Helvetica;
 	font-size: 0.90em;
 }
 
 #legend {
 	text-align: center;
-	font-family: 'Roboto Light', Arial, Helvetica;
 	font-size: 0.80em;
 }
 
