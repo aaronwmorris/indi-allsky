@@ -80,7 +80,6 @@ function loadJS(url, data, onDone, onError) {
 
 
 function populateData() {
-    console.log('showing data');
     $("#polaris_next_transit").html(json_data.polaris_next_transit);
     $("#polaris_alt").html(json_data.polaris_alt);
     $("#moon_phase").html(json_data.moon_phase + " (" + json_data.moon_light + "%)");
