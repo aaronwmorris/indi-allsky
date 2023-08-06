@@ -3693,23 +3693,24 @@ class AjaxAstroPanelView(BaseView):
         obs = ephem.Observer()
 
         # set geo position
-        obs.lat = math.radians(camera.longitude)
+        obs.lat = math.radians(camera.latitude)
         obs.lon = math.radians(camera.longitude)
         obs.elevation = 0
 
         # update time
-        t = datetime.utcnow()
-        obs.date = t
+        utcnow = datetime.utcnow()
 
-        sun = ephem.Sun(obs)
-        mercury = ephem.Mercury(obs)
-        venus = ephem.Venus(obs)
-        moon = ephem.Moon(obs)
-        mars = ephem.Mars(obs)
-        jupiter = ephem.Jupiter(obs)
-        saturn = ephem.Saturn(obs)
-        uranus = ephem.Uranus(obs)
-        neptune = ephem.Neptune(obs)
+        obs.date = utcnow
+
+        sun = ephem.Sun()
+        mercury = ephem.Mercury()
+        venus = ephem.Venus()
+        moon = ephem.Moon()
+        mars = ephem.Mars()
+        jupiter = ephem.Jupiter()
+        saturn = ephem.Saturn()
+        uranus = ephem.Uranus()
+        neptune = ephem.Neptune()
 
         polaris_data = self.astropanel_get_polaris_data(obs)
 
@@ -3725,24 +3726,36 @@ class AjaxAstroPanelView(BaseView):
         neptune_position = self.astropanel_get_body_positions(obs, neptune)
 
 
+        obs.date = utcnow
+        sun.compute(obs)
+        mercury.compute(obs)
+        venus.compute(obs)
+        moon.compute(obs)
+        mars.compute(obs)
+        jupiter.compute(obs)
+        saturn.compute(obs)
+        uranus.compute(obs)
+        neptune.compute(obs)
+
+
         data = {
             'latitude'              : "%s" % obs.lat,
             'longitude'             : "%s" % obs.lon,
             'elevation'             : "%.2f" % obs.elevation,
             'polaris_hour_angle'    : polaris_data[0],
             'polaris_next_transit'  : "%s" % polaris_data[1],
-            'polaris_alt'           : "%.2f°" % numpy.degrees(polaris_data[2]),
+            'polaris_alt'           : "%.2f°" % math.degrees(polaris_data[2]),
             'moon_phase'            : "%s" % self.astropanel_get_moon_phase(obs),
             'moon_light'            : "%d" % ephem.Moon(obs).phase,
             'moon_rise'             : "%s" % moon_position[0],
             'moon_transit'          : "%s" % moon_position[1],
             'moon_set'              : "%s" % moon_position[2],
-            'moon_az'               : "%.2f°" % numpy.degrees(moon.az),
-            'moon_alt'              : "%.2f°" % numpy.degrees(moon.alt),
+            'moon_az'               : "%.2f°" % math.degrees(moon.az),
+            'moon_alt'              : "%.2f°" % math.degrees(moon.alt),
             'moon_ra'               : "%s" % moon.ra,
             'moon_dec'              : "%s" % moon.dec,
-            'moon_new'              : "%s" % ephem.localtime(ephem.next_new_moon(t)).strftime("%Y-%m-%d %H:%M:%S"),
-            'moon_full'             : "%s" % ephem.localtime(ephem.next_full_moon(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'moon_new'              : "%s" % ephem.localtime(ephem.next_new_moon(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
+            'moon_full'             : "%s" % ephem.localtime(ephem.next_full_moon(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
             'sun_at_start'          : sun_twilights[2][0],
             'sun_ct_start'          : sun_twilights[0][0],
             'sun_rise'              : "%s" % sun_position[0],
@@ -3750,47 +3763,47 @@ class AjaxAstroPanelView(BaseView):
             'sun_set'               : "%s" % sun_position[2],
             'sun_ct_end'            : sun_twilights[0][1],
             'sun_at_end'            : sun_twilights[2][1],
-            'sun_az'                : "%.2f°" % numpy.degrees(sun.az),
-            'sun_alt'               : "%.2f°" % numpy.degrees(sun.alt),
+            'sun_az'                : "%.2f°" % math.degrees(sun.az),
+            'sun_alt'               : "%.2f°" % math.degrees(sun.alt),
             'sun_ra'                : "%s" % sun.ra,
             'sun_dec'               : "%s" % sun.dec,
-            'sun_equinox'           : "%s" % ephem.localtime(ephem.next_equinox(t)).strftime("%Y-%m-%d %H:%M:%S"),
-            'sun_solstice'          : "%s" % ephem.localtime(ephem.next_solstice(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'sun_equinox'           : "%s" % ephem.localtime(ephem.next_equinox(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
+            'sun_solstice'          : "%s" % ephem.localtime(ephem.next_solstice(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
             'mercury_rise'          : "%s" % mercury_position[0],
             'mercury_transit'       : "%s" % mercury_position[1],
             'mercury_set'           : "%s" % mercury_position[2],
-            'mercury_az'            : "%.2f°" % numpy.degrees(mercury.az),
-            'mercury_alt'           : "%.2f°" % numpy.degrees(mercury.alt),
+            'mercury_az'            : "%.2f°" % math.degrees(mercury.az),
+            'mercury_alt'           : "%.2f°" % math.degrees(mercury.alt),
             'venus_rise'            : "%s" % venus_position[0],
             'venus_transit'         : "%s" % venus_position[1],
             'venus_set'             : "%s" % venus_position[2],
-            'venus_az'              : "%.2f°" % numpy.degrees(venus.az),
-            'venus_alt'             : "%.2f°" % numpy.degrees(venus.alt),
+            'venus_az'              : "%.2f°" % math.degrees(venus.az),
+            'venus_alt'             : "%.2f°" % math.degrees(venus.alt),
             'mars_rise'             : "%s" % mars_position[0],
             'mars_transit'          : "%s" % mars_position[1],
             'mars_set'              : "%s" % mars_position[2],
-            'mars_az'               : "%.2f°" % numpy.degrees(mars.az),
-            'mars_alt'              : "%.2f°" % numpy.degrees(mars.alt),
+            'mars_az'               : "%.2f°" % math.degrees(mars.az),
+            'mars_alt'              : "%.2f°" % math.degrees(mars.alt),
             'jupiter_rise'          : "%s" % jupiter_position[0],
             'jupiter_transit'       : "%s" % jupiter_position[1],
             'jupiter_set'           : "%s" % jupiter_position[2],
-            'jupiter_az'            : "%.2f°" % numpy.degrees(jupiter.az),
-            'jupiter_alt'           : "%.2f°" % numpy.degrees(jupiter.alt),
+            'jupiter_az'            : "%.2f°" % math.degrees(jupiter.az),
+            'jupiter_alt'           : "%.2f°" % math.degrees(jupiter.alt),
             'saturn_rise'           : "%s" % saturn_position[0],
             'saturn_transit'        : "%s" % saturn_position[1],
             'saturn_set'            : "%s" % saturn_position[2],
-            'saturn_az'             : "%.2f°" % numpy.degrees(saturn.az),
-            'saturn_alt'            : "%.2f°" % numpy.degrees(saturn.alt),
+            'saturn_az'             : "%.2f°" % math.degrees(saturn.az),
+            'saturn_alt'            : "%.2f°" % math.degrees(saturn.alt),
             'uranus_rise'           : "%s" % uranus_position[0],
             'uranus_transit'        : "%s" % uranus_position[1],
             'uranus_set'            : "%s" % uranus_position[2],
-            'uranus_az'             : "%.2f°" % numpy.degrees(uranus.az),
-            'uranus_alt'            : "%.2f°" % numpy.degrees(uranus.alt),
+            'uranus_az'             : "%.2f°" % math.degrees(uranus.az),
+            'uranus_alt'            : "%.2f°" % math.degrees(uranus.alt),
             'neptune_rise'          : "%s" % neptune_position[0],
             'neptune_transit'       : "%s" % neptune_position[1],
             'neptune_set'           : "%s" % neptune_position[2],
-            'neptune_az'            : "%.2f°" % numpy.degrees(neptune.az),
-            'neptune_alt'           : "%.2f°" % numpy.degrees(neptune.alt),
+            'neptune_az'            : "%.2f°" % math.degrees(neptune.az),
+            'neptune_alt'           : "%.2f°" % math.degrees(neptune.alt),
         }
 
         return jsonify(data)
@@ -3827,6 +3840,12 @@ class AjaxAstroPanelView(BaseView):
 
 
     def astropanel_get_body_positions(self, obs, body):
+        utcnow = datetime.utcnow()
+
+        obs.date = utcnow
+        body.compute(obs)
+
+
         positions = []
 
         # test for always below horizon or always above horizon
@@ -3935,17 +3954,18 @@ class AjaxAstroPanelView(BaseView):
         j2000 = ephem.Date('2000/01/01 12:00:00')
         d = obs.date - j2000
 
-        lon = numpy.rad2deg(float(repr(obs.lon)))
+        lon = math.degrees(obs.lon)
 
-        utstr = obs.date.datetime().strftime("%H:%M:%S")
-        ut = float(utstr.split(":")[0]) + float(utstr.split(":")[1]) / 60 + float(utstr.split(":")[2]) / 3600
+        ut_hms = obs.date.datetime().strftime("%H:%M:%S").split(':')
+        ut = float(ut_hms[0]) + (float(ut_hms[1]) / 60) + (float(ut_hms[2]) / 3600)
+
 
         lst = 100.46 + 0.985647 * d + lon + 15 * ut
         lst = lst - int(lst / 360) * 360
 
         polaris = ephem.readdb("Polaris,f|M|F7,2:31:48.704,89:15:50.72,2.02,2000")
         polaris.compute()
-        polaris_ra_deg = numpy.rad2deg(float(repr(polaris.ra)))
+        polaris_ra_deg = math.degrees(polaris.ra)
 
         # Polaris Hour Angle = LST - RA Polaris [expressed in degrees or 15*(h+m/60+s/3600)]
         pha = lst - polaris_ra_deg
