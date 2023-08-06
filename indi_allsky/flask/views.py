@@ -3656,6 +3656,322 @@ class CameraLensView(TemplateView):
 
 
 
+class AstroPanelView(TemplateView):
+    def get_context(self):
+        context = super(AstroPanelView, self).get_context()
+        return context
+
+
+class AjaxAstroPanelView(BaseView):
+    methods = ['GET', 'POST']
+
+
+    def __init__(self, **kwargs):
+        super(AjaxAstroPanelView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if request.method == 'GET':
+            return self.get()
+        elif request.method == 'POST':
+            return self.post()
+        else:
+            return jsonify({}), 400
+
+
+    def get(self):
+        return self.post()
+
+
+    def post(self):
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .one()
+
+
+        # init observer
+        obs = ephem.Observer()
+
+        # set geo position
+        obs.lat = math.radians(camera.longitude)
+        obs.lon = math.radians(camera.longitude)
+        obs.elevation = 0
+
+        # update time
+        t = datetime.utcnow()
+        obs.date = t
+
+        sun = ephem.Sun(obs)
+        mercury = ephem.Mercury(obs)
+        venus = ephem.Venus(obs)
+        moon = ephem.Moon(obs)
+        mars = ephem.Mars(obs)
+        jupiter = ephem.Jupiter(obs)
+        saturn = ephem.Saturn(obs)
+        uranus = ephem.Uranus(obs)
+        neptune = ephem.Neptune(obs)
+
+        polaris_data = self.astropanel_get_polaris_data(obs)
+
+        sun_position = self.astropanel_get_body_positions(obs, sun)
+        sun_twilights = self.astropanel_get_sun_twilights(obs, sun)
+        mercury_position = self.astropanel_get_body_positions(obs, mercury)
+        venus_position = self.astropanel_get_body_positions(obs, venus)
+        moon_position = self.astropanel_get_body_positions(obs, moon)
+        mars_position = self.astropanel_get_body_positions(obs, mars)
+        jupiter_position = self.astropanel_get_body_positions(obs, jupiter)
+        saturn_position = self.astropanel_get_body_positions(obs, saturn)
+        uranus_position = self.astropanel_get_body_positions(obs, uranus)
+        neptune_position = self.astropanel_get_body_positions(obs, neptune)
+
+
+        data = {
+            'latitude'              : "%s" % obs.lat,
+            'longitude'             : "%s" % obs.lon,
+            'elevation'             : "%.2f" % obs.elevation,
+            'polaris_hour_angle'    : polaris_data[0],
+            'polaris_next_transit'  : "%s" % polaris_data[1],
+            'polaris_alt'           : "%.2f°" % numpy.degrees(polaris_data[2]),
+            'moon_phase'            : "%s" % self.astropanel_get_moon_phase(obs),
+            'moon_light'            : "%d" % ephem.Moon(obs).phase,
+            'moon_rise'             : "%s" % moon_position[0],
+            'moon_transit'          : "%s" % moon_position[1],
+            'moon_set'              : "%s" % moon_position[2],
+            'moon_az'               : "%.2f°" % numpy.degrees(moon.az),
+            'moon_alt'              : "%.2f°" % numpy.degrees(moon.alt),
+            'moon_ra'               : "%s" % moon.ra,
+            'moon_dec'              : "%s" % moon.dec,
+            'moon_new'              : "%s" % ephem.localtime(ephem.next_new_moon(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'moon_full'             : "%s" % ephem.localtime(ephem.next_full_moon(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'sun_at_start'          : sun_twilights[2][0],
+            'sun_ct_start'          : sun_twilights[0][0],
+            'sun_rise'              : "%s" % sun_position[0],
+            'sun_transit'           : "%s" % sun_position[1],
+            'sun_set'               : "%s" % sun_position[2],
+            'sun_ct_end'            : sun_twilights[0][1],
+            'sun_at_end'            : sun_twilights[2][1],
+            'sun_az'                : "%.2f°" % numpy.degrees(sun.az),
+            'sun_alt'               : "%.2f°" % numpy.degrees(sun.alt),
+            'sun_ra'                : "%s" % sun.ra,
+            'sun_dec'               : "%s" % sun.dec,
+            'sun_equinox'           : "%s" % ephem.localtime(ephem.next_equinox(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'sun_solstice'          : "%s" % ephem.localtime(ephem.next_solstice(t)).strftime("%Y-%m-%d %H:%M:%S"),
+            'mercury_rise'          : "%s" % mercury_position[0],
+            'mercury_transit'       : "%s" % mercury_position[1],
+            'mercury_set'           : "%s" % mercury_position[2],
+            'mercury_az'            : "%.2f°" % numpy.degrees(mercury.az),
+            'mercury_alt'           : "%.2f°" % numpy.degrees(mercury.alt),
+            'venus_rise'            : "%s" % venus_position[0],
+            'venus_transit'         : "%s" % venus_position[1],
+            'venus_set'             : "%s" % venus_position[2],
+            'venus_az'              : "%.2f°" % numpy.degrees(venus.az),
+            'venus_alt'             : "%.2f°" % numpy.degrees(venus.alt),
+            'mars_rise'             : "%s" % mars_position[0],
+            'mars_transit'          : "%s" % mars_position[1],
+            'mars_set'              : "%s" % mars_position[2],
+            'mars_az'               : "%.2f°" % numpy.degrees(mars.az),
+            'mars_alt'              : "%.2f°" % numpy.degrees(mars.alt),
+            'jupiter_rise'          : "%s" % jupiter_position[0],
+            'jupiter_transit'       : "%s" % jupiter_position[1],
+            'jupiter_set'           : "%s" % jupiter_position[2],
+            'jupiter_az'            : "%.2f°" % numpy.degrees(jupiter.az),
+            'jupiter_alt'           : "%.2f°" % numpy.degrees(jupiter.alt),
+            'saturn_rise'           : "%s" % saturn_position[0],
+            'saturn_transit'        : "%s" % saturn_position[1],
+            'saturn_set'            : "%s" % saturn_position[2],
+            'saturn_az'             : "%.2f°" % numpy.degrees(saturn.az),
+            'saturn_alt'            : "%.2f°" % numpy.degrees(saturn.alt),
+            'uranus_rise'           : "%s" % uranus_position[0],
+            'uranus_transit'        : "%s" % uranus_position[1],
+            'uranus_set'            : "%s" % uranus_position[2],
+            'uranus_az'             : "%.2f°" % numpy.degrees(uranus.az),
+            'uranus_alt'            : "%.2f°" % numpy.degrees(uranus.alt),
+            'neptune_rise'          : "%s" % neptune_position[0],
+            'neptune_transit'       : "%s" % neptune_position[1],
+            'neptune_set'           : "%s" % neptune_position[2],
+            'neptune_az'            : "%.2f°" % numpy.degrees(neptune.az),
+            'neptune_alt'           : "%.2f°" % numpy.degrees(neptune.alt),
+        }
+
+        return jsonify(data)
+
+
+    def astropanel_get_moon_phase(self, obs):
+        target_date_utc = obs.date
+        target_date_local = ephem.localtime(target_date_utc).date()
+        next_full = ephem.localtime(ephem.next_full_moon(target_date_utc)).date()
+        next_new = ephem.localtime(ephem.next_new_moon(target_date_utc)).date()
+        next_last_quarter = ephem.localtime(ephem.next_last_quarter_moon(target_date_utc)).date()
+        next_first_quarter = ephem.localtime(ephem.next_first_quarter_moon(target_date_utc)).date()
+        previous_full = ephem.localtime(ephem.previous_full_moon(target_date_utc)).date()
+        previous_new = ephem.localtime(ephem.previous_new_moon(target_date_utc)).date()
+        previous_last_quarter = ephem.localtime(ephem.previous_last_quarter_moon(target_date_utc)).date()
+        previous_first_quarter = ephem.localtime(ephem.previous_first_quarter_moon(target_date_utc)).date()
+
+        if target_date_local in (next_full, previous_full):
+            return 'Full'
+        elif target_date_local in (next_new, previous_new):
+            return 'New'
+        elif target_date_local in (next_first_quarter, previous_first_quarter):
+            return 'First Quarter'
+        elif target_date_local in (next_last_quarter, previous_last_quarter):
+            return 'Last Quarter'
+        elif previous_new < next_first_quarter < next_full < next_last_quarter < next_new:
+            return 'Waxing Crescent'
+        elif previous_first_quarter < next_full < next_last_quarter < next_new < next_first_quarter:
+            return 'Waxing Gibbous'
+        elif previous_full < next_last_quarter < next_new < next_first_quarter < next_full:
+            return 'Waning Gibbous'
+        elif previous_last_quarter < next_new < next_first_quarter < next_full < next_last_quarter:
+            return 'Waning Crescent'
+
+
+    def astropanel_get_body_positions(self, obs, body):
+        positions = []
+
+        # test for always below horizon or always above horizon
+        try:
+            if ephem.localtime(obs.previous_rising(body)).date() == ephem.localtime(obs.date).date() and obs.previous_rising(body) < obs.previous_transit(body) < obs.previous_setting(body) < obs.date:
+                positions.append(obs.previous_rising(body))
+                positions.append(obs.previous_transit(body))
+                positions.append(obs.previous_setting(body))
+            elif ephem.localtime(obs.previous_rising(body)).date() == ephem.localtime(obs.date).date() and obs.previous_rising(body) < obs.previous_transit(body) < obs.date < obs.next_setting(body):
+                positions.append(obs.previous_rising(body))
+                positions.append(obs.previous_transit(body))
+                positions.append(obs.next_setting(body))
+            elif ephem.localtime(obs.previous_rising(body)).date() == ephem.localtime(obs.date).date() and obs.previous_rising(body) < obs.date < obs.next_transit(body) < obs.next_setting(body):
+                positions.append(obs.previous_rising(body))
+                positions.append(obs.next_transit(body))
+                positions.append(obs.next_setting(body))
+            elif ephem.localtime(obs.previous_rising(body)).date() == ephem.localtime(obs.date).date() and obs.date < obs.next_rising(body) < obs.next_transit(body) < obs.next_setting(body):
+                positions.append(obs.next_rising(body))
+                positions.append(obs.next_transit(body))
+                positions.append(obs.next_setting(body))
+            else:
+                positions.append(obs.next_rising(body))
+                positions.append(obs.next_transit(body))
+                positions.append(obs.next_setting(body))
+        except (ephem.NeverUpError, ephem.AlwaysUpError):
+            try:
+                if ephem.localtime(obs.previous_transit(body)).date() == ephem.localtime(obs.date).date() and obs.previous_transit(body) < obs.date:
+                    positions.append('-')
+                    positions.append(obs.previous_transit(body))
+                    positions.append('-')
+                elif ephem.localtime(obs.previous_transit(body)).date() == ephem.localtime(obs.date).date() and obs.next_transit(body) > obs.date:
+                    positions.append('-')
+                    positions.append(obs.next_transit(body))
+                    positions.append('-')
+                else:
+                    positions.append('-')
+                    positions.append('-')
+                    positions.append('-')
+            except (ephem.NeverUpError, ephem.AlwaysUpError):
+                positions.append('-')
+                positions.append('-')
+                positions.append('-')
+
+        if positions[0] != '-':
+            positions[0] = ephem.localtime(positions[0]).strftime("%H:%M:%S")
+        if positions[1] != '-':
+            positions[1] = ephem.localtime(positions[1]).strftime("%H:%M:%S")
+        if positions[2] != '-':
+            positions[2] = ephem.localtime(positions[2]).strftime("%H:%M:%S")
+
+        return positions
+
+
+    def astropanel_get_sun_twilights(self, obs, sun):
+        results = []
+
+        """
+        An observer at the North Pole would see the Sun circle the sky at 23.5° above the horizon all day.
+        An observer at 90° – 23.5° = 66.5° would see the Sun spend the whole day on the horizon, making a circle along its circumference.
+        An observer would have to be at 90° – 23.5° – 18° = 48.5° latitude or even further south in order for the Sun to dip low enough for them to observe the level of darkness defined as astronomical twilight.
+
+        civil twilight = -6
+        nautical twilight = -12
+        astronomical twilight = -18
+
+        get_sun_twilights(home)[0][0]    -	civil twilight end
+        get_sun_twilights(home)[0][1]    -	civil twilight start
+
+        get_sun_twilights(home)[1][0]    -	nautical twilight end
+        get_sun_twilights(home)[1][1]    -	nautical twilight start
+
+        get_sun_twilights(home)[2][0]    -	astronomical twilight end
+        get_sun_twilights(home)[2][1]    -	astronomical twilight start
+        """
+
+        # remember entry observer horizon
+        obs_horizon = obs.horizon
+
+        # Twilights, their horizons and whether to use the centre of the Sun or not
+        twilights = [('-6', True), ('-12', True), ('-18', True)]
+
+        for twi in twilights:
+            obs.horizon = twi[0]
+            try:
+                rising_setting = self.astropanel_get_body_positions(obs, sun)
+                results.append((rising_setting[0], rising_setting[2]))
+            except ephem.AlwaysUpError:
+                results.append(('n/a', 'n/a'))
+
+        # reset observer horizon to entry
+        obs.horizon = obs_horizon
+
+        return results
+
+
+    def astropanel_get_polaris_data(self, obs):
+        polaris_data = []
+
+        """
+        lst = 100.46 + 0.985647 * d + lon + 15 * ut [based on http://www.stargazing.net/kepler/altaz.html]
+        d - the days from J2000 (1200 hrs UT on Jan 1st 2000 AD), including the fraction of a day
+        lon - your longitude in decimal degrees, East positive
+        ut - the universal time in decimal hours
+        """
+
+        j2000 = ephem.Date('2000/01/01 12:00:00')
+        d = obs.date - j2000
+
+        lon = numpy.rad2deg(float(repr(obs.lon)))
+
+        utstr = obs.date.datetime().strftime("%H:%M:%S")
+        ut = float(utstr.split(":")[0]) + float(utstr.split(":")[1]) / 60 + float(utstr.split(":")[2]) / 3600
+
+        lst = 100.46 + 0.985647 * d + lon + 15 * ut
+        lst = lst - int(lst / 360) * 360
+
+        polaris = ephem.readdb("Polaris,f|M|F7,2:31:48.704,89:15:50.72,2.02,2000")
+        polaris.compute()
+        polaris_ra_deg = numpy.rad2deg(float(repr(polaris.ra)))
+
+        # Polaris Hour Angle = LST - RA Polaris [expressed in degrees or 15*(h+m/60+s/3600)]
+        pha = lst - polaris_ra_deg
+
+        # normalize
+        if pha < 0:
+            pha += 360
+        elif pha > 360:
+            pha -= 360
+
+        # append polaris hour angle
+        polaris_data.append(pha)
+
+        # append polaris next transit
+        try:
+            polaris_data.append(ephem.localtime(obs.next_transit(polaris)).strftime("%H:%M:%S"))
+        except (ephem.NeverUpError, ephem.AlwaysUpError):
+            polaris_data.append('-')
+
+        # append polaris alt
+        polaris_data.append(polaris.alt)
+
+        return polaris_data
+
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -3684,6 +4000,7 @@ bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
 bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
 bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))
 bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_view', template_name='cameraLens.html'))
+bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropanel_view', template_name='astropanel.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
@@ -3695,6 +4012,7 @@ bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_
 bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
+bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
