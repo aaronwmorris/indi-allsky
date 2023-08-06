@@ -70,7 +70,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
     * libcamera/Raspberry Pi camera module
 
 
-### Distibution support
+## Distibution support
 | Distribution          | Arch           | Note |
 | --------------------- | -------------- | ---- |
 | Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
@@ -86,7 +86,28 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Ubuntu 20.04<br />inc. Ubuntu Mate | aarch64 | Compile indi with build_indi.sh |
 | ~~Astroberry Server 2.0~~ | armhf      | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
-MacOS support is theoretically possible, but not tested.
+
+# Installation
+The process for installing indi-allsky is documented in the wiki.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
+
+
+### Docker Containerization
+indi-allsky has full support for running in a containerized environment.  Check out the `docker/` folder for the Docker assets.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Docker
+
+
+### Logs
+* When indi-allsky is run from the command line, logs are sent to STDERR by default.
+* When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in `/var/log/indi-allsky/indi-allsky.log` and rotated daily.
+
+
+## Updating
+indi-allsky updates are designed to be rolling releases.  I do everything I can to prevent breaking changes.  Most changes only require pulling updates from GitHub and re-running setup.sh.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Updating-indi-allsky
 
 
 ### Security
@@ -103,59 +124,6 @@ libcamera is a new camera interface designed to replace the legacy camera interf
 Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4.
 
 *Note: Genererating and processing raw (dng) files on a system with less than 1GB of memory and libcamera will cause out-of-memory conditions.  There is an option to generate JPEG or PNG files with libcamera which solves this issue.*
-
-
-## Installation
-1. Install git
-```
-apt-get install git
-```
-2. Clone the indi-allsky git repository
-```
-git clone https://github.com/aaronwmorris/indi-allsky.git
-```
-3. Navigate to the indi-allky sub-directory
-```
-cd indi-allsky/
-```
-4. Run setup.sh to install the relevant software
-```
-./setup.sh
-```
- * *Note:  You may be prompted for a password for sudo*
-5. Start the software
-```
-systemctl --user start indiserver
-systemctl --user start indi-allsky
-```
-6. Login to the indi-allsky web application
-https://raspberrypi.local/
- * *Note: The web server is configured with a self-signed certificate.*
-
-
-### Manual operation
-1. Stop indi-allsky service
-```
-systemctl --user stop indi-allsky
-```
-2. Activate the indi-allsky python virtual environment
-```
-source virtualenv/indi-allsky/bin/activate
-```
-3. Start indi-allsky
-```
-./allsky.py run
-```
-
-## Updating
-indi-allsky updates are designed to be rolling releases.  I do everything I can to prevent breaking changes.  Most changes only require pulling updates from GitHub and re-running setup.sh.
-
-https://github.com/aaronwmorris/indi-allsky/wiki/Updating-indi-allsky
-
-
-### Logs
-* When indi-allsky is run from the command line, logs are sent to STDERR by default.
-* When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in /var/log/indi-allsky/indi-allsky.log and rotated daily.
 
 
 ### Dark frames
@@ -318,13 +286,6 @@ Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of
 GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html) and GPSd integration.  Any GPS hardware supported by GPSd will work.
 
 FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
-
-
-## Docker Containerization
-
-indi-allsky has full support for running in a container environment.  Check out the `docker/` folder for the Docker assets.
-
-https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 
 
 ## Performance
