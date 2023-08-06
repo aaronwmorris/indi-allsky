@@ -1,0 +1,183 @@
+/*
+  Copyright(c) 2017 Radek Kaczorek  <rkaczorek AT gmail DOT com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License version 2 as published by the Free Software Foundation.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public License
+ along with this library; see the file COPYING.LIB.  If not, write to
+ the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ Boston, MA 02110-1301, USA.
+*/
+
+@font-face {font-family: 'Roboto Light';font-style: normal;src: local('?'), url('Roboto-Light.ttf') format('truetype');}
+
+body {
+	float: left;
+	background: rgb(110, 132, 163);
+	font-family: 'Roboto Light', Arial, Helvetica;
+	font-size:16px;
+	font-weight: normal;
+	color: #fff;
+	padding: 0;
+}
+
+h1 {
+	background-image: url("../img/astropanel.svg");
+	background-repeat: no-repeat;
+	background-color: rgb(110, 132, 163);
+	border-radius: 5px;
+	margin-top: 0px;
+	padding: 0px 5px 15px 35px;
+	font-family: 'Roboto Light', Arial, Helvetica;
+	font-size: 20px;
+	color: white;
+	height: 1.2em;
+	font-weight: bold;
+}
+
+h2 {
+	font-size: 1.2em;
+}
+
+a {
+	color: black;
+	text-decoration: none;
+}
+
+a:hover {
+        color: red;
+}
+
+button {
+	margin-top: 5px;
+	width: 117px;
+}
+
+.warning {
+    color: #FF0000;
+}
+
+.panel_container {
+	width: 480px;
+	margin-left: 0px;
+}
+
+#displayctl {
+	margin-top: 5px;
+}
+
+table, th, td {
+	border: none;
+	font-family: 'Roboto Light', Arial, Helvetica;
+	font-size: 0.90em;
+}
+
+#legend {
+	text-align: center;
+	font-family: 'Roboto Light', Arial, Helvetica;
+	font-size: 0.80em;
+}
+
+#polaris, #moon, #sun, #planets {
+	width: 480px;
+	margin-top: 10px;
+}
+
+#reticle {
+	width: 280px;
+	background-image:url('../img/reticle.png');
+	background-repeat: no-repeat;
+	background-size: 280px;
+	display:block;
+	overflow:hidden;
+	float: left;
+	margin-right: 10px;
+	margin-left: 10px;
+}
+
+#polaris_marker {
+	width: 280px;
+}
+
+.polarishdr {
+	width: 120px;
+}
+
+.polarisdata {
+	text-align: right;
+}
+
+#moon {
+	display:none;
+}
+
+#moon img {
+	width: 150px;
+	margin: 50px 20px 0px 0px;
+	float: left;
+}
+
+.moonhdr {
+	width: 180px;
+}
+
+.moondata {
+	text-align: right;
+}
+
+#sun {
+        display:none;
+}
+
+#sun img {
+	width: 150px;
+	margin: 50px 20px 0px 0px;
+	float: left;
+}
+
+.sunhdr {
+	width: 180px;
+}
+
+.sundata {
+	text-align: right;
+}
+
+#planets {
+        display:none;
+}
+
+#planets img {
+	margin-top: 30px;
+}
+
+.planetshdr {
+	width: 80px;
+}
+
+.planetshdrdata {
+	width: 75px;
+	text-align: right;
+	font-weight: bold;
+}
+
+.planetsdata {
+	text-align: right;
+}
+
+.blink {
+  animation: blinker 1s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}

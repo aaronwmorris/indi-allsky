@@ -24,9 +24,10 @@
 <meta charset="UTF-8"/>
 <style>
 </style>
+<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='astropanel/css/style.css') }}">
 
 <script type="text/javascript">
-var refreshInterval = 5000;
+var refreshInterval = 60000;
 var json_data = {
     'moon_phase' : 'Unknown',
 };
@@ -266,6 +267,7 @@ $( document ).ready(function() {
 		</div>
 		<div id="polaris">
 			<div id="reticle">
+				<img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" />
 				<p id="legend" >View as in polar finder scope</p>
 			</div>
 			<h2>Polaris</h2>
@@ -279,6 +281,7 @@ $( document ).ready(function() {
 			</table>
 		</div>
 		<div id="moon">
+			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}"/>
 			<h2>Moon</h2>
 			<p><span id="moon_phase">&nbsp;</span></p>
 			<table>
@@ -295,6 +298,7 @@ $( document ).ready(function() {
 			</table>
 		</div>
 		<div id="sun">
+			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}"/>
 			<h2>Sun</h2>
 			<table>
 				<tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></td></tr>
@@ -313,20 +317,23 @@ $( document ).ready(function() {
 				<tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></td></tr>
 			</table>
 		</div>
-                <div id="planets">
-                        <h2>Solar System</h2>
-                        <table>
-				<tr><td class="planetshdr">&nbsp;</td><td class="planetshdrdata">Rise</td><td class="planetshdrdata">Transit</td><td class="planetshdrdata">Set</td><td class="planetshdrdata">Azimuth</td><td class="planetshdrdata">Altitude</td></tr>
-				<tr id="mercury"><td class="planetshdr">Mercury</td><td class="planetsdata"><span id="mercury_rise"></td><td class="planetsdata"><span id="mercury_transit"></td><td class="planetsdata"><span id="mercury_set"></td><td class="planetsdata"><span id="mercury_az"></td><td class="planetsdata"><span id="mercury_alt"></td></tr>
-				<tr id="venus"><td class="planetshdr">Venus</td><td class="planetsdata"><span id="venus_rise"></td><td class="planetsdata"><span id="venus_transit"></td><td class="planetsdata"><span id="venus_set"></td><td class="planetsdata"><span id="venus_az"></td><td class="planetsdata"><span id="venus_alt"></td></tr>
-				<tr id="mars"><td class="planetshdr">Mars</td><td class="planetsdata"><span id="mars_rise"></td><td class="planetsdata"><span id="mars_transit"></td><td class="planetsdata"><span id="mars_set"></td><td class="planetsdata"><span id="mars_az"></td><td class="planetsdata"><span id="mars_alt"></td></tr>
-				<tr id="jupiter"><td class="planetshdr">Jupiter</td><td class="planetsdata"><span id="jupiter_rise"></td><td class="planetsdata"><span id="jupiter_transit"></td><td class="planetsdata"><span id="jupiter_set"></td><td class="planetsdata"><span id="jupiter_az"></td><td class="planetsdata"><span id="jupiter_alt"></td></tr>
-				<tr id="saturn"><td class="planetshdr">Saturn</td><td class="planetsdata"><span id="saturn_rise"></td><td class="planetsdata"><span id="saturn_transit"></td><td class="planetsdata"><span id="saturn_set"></td><td class="planetsdata"><span id="saturn_az"></td><td class="planetsdata"><span id="saturn_alt"></td></tr>
-				<tr id="uranus"><td class="planetshdr">Uranus</td><td class="planetsdata"><span id="uranus_rise"></td><td class="planetsdata"><span id="uranus_transit"></td><td class="planetsdata"><span id="uranus_set"></td><td class="planetsdata"><span id="uranus_az"></td><td class="planetsdata"><span id="uranus_alt"></td></tr>
-				<tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></td><td class="planetsdata"><span id="neptune_transit"></td><td class="planetsdata"><span id="neptune_set"></td><td class="planetsdata"><span id="neptune_az"></td><td class="planetsdata"><span id="neptune_alt"></td></tr>
-                        </table>
-                </div>
-	</div>
+    <div id="planets">
+        <h2>Solar System</h2>
+        <table>
+            <tr><td class="planetshdr">&nbsp;</td><td class="planetshdrdata">Rise</td><td class="planetshdrdata">Transit</td><td class="planetshdrdata">Set</td><td class="planetshdrdata">Azimuth</td><td class="planetshdrdata">Altitude</td></tr>
+            <tr id="mercury"><td class="planetshdr">Mercury</td><td class="planetsdata"><span id="mercury_rise"></td><td class="planetsdata"><span id="mercury_transit"></td><td class="planetsdata"><span id="mercury_set"></td><td class="planetsdata"><span id="mercury_az"></td><td class="planetsdata"><span id="mercury_alt"></td></tr>
+            <tr id="venus"><td class="planetshdr">Venus</td><td class="planetsdata"><span id="venus_rise"></td><td class="planetsdata"><span id="venus_transit"></td><td class="planetsdata"><span id="venus_set"></td><td class="planetsdata"><span id="venus_az"></td><td class="planetsdata"><span id="venus_alt"></td></tr>
+            <tr id="mars"><td class="planetshdr">Mars</td><td class="planetsdata"><span id="mars_rise"></td><td class="planetsdata"><span id="mars_transit"></td><td class="planetsdata"><span id="mars_set"></td><td class="planetsdata"><span id="mars_az"></td><td class="planetsdata"><span id="mars_alt"></td></tr>
+            <tr id="jupiter"><td class="planetshdr">Jupiter</td><td class="planetsdata"><span id="jupiter_rise"></td><td class="planetsdata"><span id="jupiter_transit"></td><td class="planetsdata"><span id="jupiter_set"></td><td class="planetsdata"><span id="jupiter_az"></td><td class="planetsdata"><span id="jupiter_alt"></td></tr>
+            <tr id="saturn"><td class="planetshdr">Saturn</td><td class="planetsdata"><span id="saturn_rise"></td><td class="planetsdata"><span id="saturn_transit"></td><td class="planetsdata"><span id="saturn_set"></td><td class="planetsdata"><span id="saturn_az"></td><td class="planetsdata"><span id="saturn_alt"></td></tr>
+            <tr id="uranus"><td class="planetshdr">Uranus</td><td class="planetsdata"><span id="uranus_rise"></td><td class="planetsdata"><span id="uranus_transit"></td><td class="planetsdata"><span id="uranus_set"></td><td class="planetsdata"><span id="uranus_az"></td><td class="planetsdata"><span id="uranus_alt"></td></tr>
+            <tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></td><td class="planetsdata"><span id="neptune_transit"></td><td class="planetsdata"><span id="neptune_set"></td><td class="planetsdata"><span id="neptune_az"></td><td class="planetsdata"><span id="neptune_alt"></td></tr>
+        </table>
+        <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}"/>
+    </div>
+</div>
+
+
 	<script type="text/javascript">
 	function togglepolaris() {
 			document.getElementById("polaris").style.display="block";
