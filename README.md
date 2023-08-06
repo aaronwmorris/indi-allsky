@@ -285,7 +285,7 @@ Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of
 
 GPS support is provided through [indi_gpsd](https://www.indilib.org/aux/gps.html) and GPSd integration.  Any GPS hardware supported by GPSd will work.
 
-FITs Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.
+JPEG and FITS Images exported [optional] by indi-allsky will be properly tagged with Geographic (latitude/longitude) and Astrometric (RA/dec) information in the headers.  Tags include geographic location regardless of GPS support, but the information will be much more precise with the GPS module.
 
 
 ## Performance
