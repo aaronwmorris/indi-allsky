@@ -46,15 +46,6 @@ h2 {
 	font-size: 1.2em;
 }
 
-a {
-	color: black;
-	text-decoration: none;
-}
-
-a:hover {
-        color: red;
-}
-
 button {
 	margin-top: 5px;
 	width: 200px;
