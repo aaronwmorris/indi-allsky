@@ -3663,6 +3663,12 @@ class AstroPanelView(TemplateView):
 
 
 class AjaxAstroPanelView(BaseView):
+    """
+    Copyright(c) 2019 Radek Kaczorek  <rkaczorek AT gmail DOT com>
+
+    Ported from https://github.com/rkaczorek/astropanel.git
+    """
+
     methods = ['GET', 'POST']
 
 
