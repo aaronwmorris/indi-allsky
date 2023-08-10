@@ -43,6 +43,12 @@ class IndiAllskyAuroraUpdate(object):
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
                 self.ovation_json_data = None
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                self.ovation_json_data = None
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                self.ovation_json_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 self.ovation_json_data = None
@@ -63,6 +69,12 @@ class IndiAllskyAuroraUpdate(object):
                 self.kpindex_json_data = None
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
+                self.kpindex_json_data = None
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                self.kpindex_json_data = None
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
                 self.kpindex_json_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
