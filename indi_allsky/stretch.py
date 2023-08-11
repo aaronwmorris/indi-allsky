@@ -116,16 +116,12 @@ class IndiAllSkyStretch(object):
 
         range_array = numpy.arange(0, data_max, dtype=numpy.float32)
 
-        #range_array[range_array <= lowIndex] = 0
-        #range_array[range_array > data_max] = data_max
-
         lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
 
         lut[lut < 0] = 0  # clip low end
         lut[lut > data_max] = data_max  # clip high end
 
-
-        lut = lut.astype(numpy_dtype)
+        lut = lut.astype(numpy_dtype)  # this must come after clipping
 
 
         # apply lookup table
