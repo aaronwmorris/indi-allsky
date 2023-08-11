@@ -1916,6 +1916,7 @@ class ImageProcessor(object):
 
             if self.libcamera_raw:
                 if libcamera_black_level:
+                    logger.info('Black level: %d', int(libcamera_black_level))
                     black_level_scaled = int(libcamera_black_level) >> (16 - self._max_bit_depth)
 
                     # use opencv to prevent underruns
