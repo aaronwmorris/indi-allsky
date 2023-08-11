@@ -66,14 +66,16 @@ class IndiAllSkyStretch(object):
 
         gamma_start = time.time()
 
+
         if image_bit_depth == 8:
-            data_max = 256
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint8)
+            numpy_dtype = numpy.uint8
         else:
-            data_max = 2 ** image_bit_depth
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-            lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy.uint16)
+            numpy_dtype = numpy.uint16
+
+
+        data_max = 2 ** image_bit_depth
+        range_array = numpy.arange(0, data_max, dtype=numpy.float32)
+        lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy_dtype)
 
 
         # apply lookup table
@@ -94,6 +96,13 @@ class IndiAllSkyStretch(object):
 
         levels_start = time.time()
 
+
+        if image_bit_depth == 8:
+            numpy_dtype = numpy.uint8
+        else:
+            numpy_dtype = numpy.uint16
+
+
         data_max = 2 ** image_bit_depth
 
         low = int(mean - (stddevs * stddev))
@@ -105,30 +114,18 @@ class IndiAllSkyStretch(object):
         highIndex = int((highPercent / 100) * data_max)
 
 
-        if image_bit_depth == 8:
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
+        range_array = numpy.arange(0, data_max, dtype=numpy.float32)
 
-            #range_array[range_array <= lowIndex] = 0
-            #range_array[range_array > data_max] = data_max
+        #range_array[range_array <= lowIndex] = 0
+        #range_array[range_array > data_max] = data_max
 
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
+        lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
 
-            lut[lut < 0] = 0  # clip low end
-            lut[lut > data_max] = data_max  # clip high end
+        lut[lut < 0] = 0  # clip low end
+        lut[lut > data_max] = data_max  # clip high end
 
-            lut = lut.astype(numpy.uint8)
-        else:
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
 
-            #range_array[range_array <= lowIndex] = 0
-            #range_array[range_array > highIndex] = data_max
-
-            lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
-
-            lut[lut < 0] = 0  # clip low end
-            lut[lut > data_max] = data_max  # clip high end
-
-            lut = lut.astype(numpy.uint16)
+        lut = lut.astype(numpy_dtype)
 
 
         # apply lookup table
