@@ -38,6 +38,8 @@ RUN apt-get -y install \
     libffi-dev \
     libopencv-dev \
     libopenblas-dev \
+    libraw-dev \
+    libgeos-dev \
     default-libmysqlclient-dev \
     pkg-config \
     rustc \
