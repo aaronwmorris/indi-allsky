@@ -318,10 +318,21 @@ class CaptureWorker(Process):
 
                     if waiting_for_frame:
                         frame_elapsed = now - frame_start_time
+                        frame_delta = frame_elapsed - self.exposure_v.value
 
                         waiting_for_frame = False
 
-                        logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_elapsed - self.exposure_v.value)
+                        logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_delta)
+
+
+                        if frame_delta < -1:
+                            self._miscDb.addNotification(
+                                NotificationCategory.CAMERA,
+                                'exposure_delta',
+                                '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_v.value, frame_elapsed),
+                                expire=timedelta(minutes=60),
+                            )
+
 
 
                     ##########################################################################
