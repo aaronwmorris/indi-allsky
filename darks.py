@@ -60,6 +60,22 @@ if __name__ == "__main__":
     )
 
 
+    reverse_parser = argparser.add_mutually_exclusive_group(required=False)
+    reverse_parser.add_argument(
+        '--reverse',
+        help='take dark frames from highest to lowest exposure (default)',
+        dest='reverse',
+        action='store_true',
+    )
+    reverse_parser.add_argument(
+        '--no-reverse',
+        help='take dark frames from lowest to highest exposure',
+        dest='reverse',
+        action='store_false',
+    )
+    reverse_parser.set_defaults(reverse=True)
+
+
     daytime_parser = argparser.add_mutually_exclusive_group(required=False)
     daytime_parser.add_argument(
         '--daytime',
@@ -85,6 +101,7 @@ if __name__ == "__main__":
     iad.time_delta = args.Time_delta
     iad.bitmax = args.bitmax
     iad.daytime = args.daytime
+    iad.reverse = args.reverse
 
     action_func = getattr(iad, args.action)
     action_func()
