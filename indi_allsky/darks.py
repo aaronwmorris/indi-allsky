@@ -75,6 +75,8 @@ class IndiAllSkyDarks(object):
 
         self._hotpixel_adu_percent = 90
 
+        self._reverse = True  # default high to low exposures
+
         # this is used to set a max value of data returned by the camera
         self._bitmax = 0
 
@@ -166,6 +168,14 @@ class IndiAllSkyDarks(object):
     def daytime(self, new_daytime):
         self._daytime = bool(new_daytime)
 
+
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, new_reverse):
+        self._reverse = bool(new_reverse)
 
 
     def _initialize(self):
@@ -607,7 +617,9 @@ class IndiAllSkyDarks(object):
             )
         )
         dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
-        dark_exposures.reverse()  # take longer exposures first
+
+        if self.reverse:
+            dark_exposures.reverse()  # take longer exposures first
 
 
         bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
