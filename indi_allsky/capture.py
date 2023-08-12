@@ -326,6 +326,7 @@ class CaptureWorker(Process):
 
 
                         if frame_delta < -1:
+                            logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_v.value, frame_elapsed)
                             self._miscDb.addNotification(
                                 NotificationCategory.CAMERA,
                                 'exposure_delta',
