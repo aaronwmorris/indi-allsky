@@ -11,9 +11,10 @@ logger = logging
 
 
 class FfmpegBuilder(object):
-    def __init__(self, fps=25, roi=[]):
+    def __init__(self, fps=25, roi=[], quality=5):
         self.fps = fps
         self.roi = roi
+        self.quality = quality
 
         try:
             assert len(self.roi) == 4 or len(self.roi) == 0
@@ -28,6 +29,7 @@ class FfmpegBuilder(object):
             outfile,
             format='FFMPEG',
             mode='I',
+            quality=self.quality,
             fps=self.fps,
             codec='libx264',
             pixelformat='yuv420p',
@@ -67,7 +69,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--fps',
         '-f',
-        help='fps',
+        help='fps [25]',
         type=int,
         default=25,
         required=False,
@@ -75,15 +77,23 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--roi',
         '-r',
-        help='roi',
+        help='roi [x1 y1 x2 y2]',
         type=int,
         default=[],
         nargs='*',
         required=False,
     )
+    argparser.add_argument(
+        '--quality',
+        '-q',
+        help='quality [0-10]',
+        type=int,
+        default=5,
+    )
+
 
     args = argparser.parse_args()
 
-    fb = FfmpegBuilder(fps=args.fps, roi=args.roi)
+    fb = FfmpegBuilder(fps=args.fps, roi=args.roi, quality=args.quality)
     fb.main(args.output, args.inputfiles)
 
