@@ -7,10 +7,24 @@
 #################################
 
 ### Apache config ###
-# ScriptAlias "/indi-allsky" "/home/pi/cgi_indi-allsky.py"
+#    <Directory /home/pi>
+#        Require all granted
+#        Options -Indexes
+#    </Directory>
+#
+#    <Directory /var/www/html/allsky/images>
+#        Require all granted
+#        Options -Indexes
+#    </Directory>
+#
+#    # Aliases must come before ScriptAlias
+#    Alias /ia/indi-allsky/images /var/www/html/allsky/images
+#    Alias /ia/indi-allsky/static /home/aaron/git/indi-allsky/indi_allsky/flask/static
+#
+#    ScriptAlias "/ia" "/home/pi/cgi_indi-allsky.py"
 #####################
 
-### URL will be something like https://hostname/indi-allsky/indi-allsky/  (doubled URI)
+### URL will be something like https://hostname/ia/indi-allsky/
 
 import os  # noqa: F401
 import sys
