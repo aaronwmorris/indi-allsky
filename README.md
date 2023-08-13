@@ -22,8 +22,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Raspberry Pi Camera Modules
         * HQ Camera (IMX477)
         * IMX378
-        * IMX219
-        * Camera Module 3
+        * Camera Module v3 (imx708)
         * 64mp HawkEye
         * other libcamera supported modules
     * Canon DSLRs
@@ -67,7 +66,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
     * (Optional) Internet connectivity for image uploading
 * Camera
     * Most INDI supported astro/planetary cameras will work
-    * libcamera/Raspberry Pi camera module
+    * [libcamera](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) - Raspberry Pi camera module
 
 
 ## Distibution support
@@ -122,6 +121,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Security-Notifications
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
 Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement
 
 *Note: Genererating and processing raw (dng) files on a system with less than 1GB of memory and libcamera will cause out-of-memory conditions.  There is an option to generate JPEG or PNG files with libcamera which solves this issue.*
 
@@ -375,10 +376,11 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One        | Neptune-C                     | A | |
 | Starlight Xpress  | Superstar                     | A | |
 | Datyson           | T7C                           | A | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
-| Raspberry Pi      | CM3 (libcamera)               | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
-| Raspberry Pi      | HQ Camera (libcamera)         | A | |
+| Raspberry Pi      | CM3 imx708 (libcamera)        | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
+| Raspberry Pi      | HQ Camera imx477 (libcamera)  | A | |
 | Raspberry Pi      | HQ Camera (indi_pylibcamera)  | A | https://github.com/scriptorron/indi_pylibcamera |
-| Raspberry Pi      | HQ Camera (indi_rpicam)       | C | https://github.com/aaronwmorris/indi-allsky/wiki/Raspberry-PI-HQ-Camera |
+| Waveshare         | imx378 (libcamera)            | A | |
+| Waveshare         | imx462 (libcamera)            | C | Long exposures do not work with AWB disabled |
 | Waveshare         | imx378 (libcamera)            | A | Select libcamera_imx477 interface |
 | ArduCam           | 64MP HawkEye                  | A | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
