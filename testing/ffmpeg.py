@@ -34,7 +34,7 @@ class FfmpegBuilder(object):
         ) as writer:
             for filename in inputfiles:
                 logger.info(' Reading %s', filename)
-                image = imageio.imread(filename)
+                image = imageio.v3.imread(filename)
 
                 if len(self.roi):
                     logger.info('  *** Extracting ROI ***')
