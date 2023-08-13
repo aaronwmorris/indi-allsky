@@ -6,10 +6,20 @@
 # WARNING:  very slow           #
 #################################
 
+### Setup ###
+# cp service/cgi_indi-allsky.py /var/www/html/cgi-bin
+# chmod 755 /var/www/html/cgi-bin/cgi_indi-allsky.py
+#####################
+
 ### Apache config ###
-#    <Directory /home/pi>
+#    <Directory /home/pi/indi-allsky>
 #        Require all granted
 #        Options -Indexes
+#    </Directory>
+#
+#    <Directory /var/www/html/cgi-bin>
+#        Require all granted
+#        Options +ExecCGI
 #    </Directory>
 #
 #    <Directory /var/www/html/allsky/images>
@@ -17,11 +27,13 @@
 #        Options -Indexes
 #    </Directory>
 #
-#    # Aliases must come before ScriptAlias
 #    Alias /ia/indi-allsky/images /var/www/html/allsky/images
 #    Alias /ia/indi-allsky/static /home/aaron/git/indi-allsky/indi_allsky/flask/static
 #
-#    ScriptAlias "/ia" "/home/pi/cgi_indi-allsky.py"
+#    RewriteCond %{REQUEST_FILENAME} !-f
+#    RewriteRule ^/ia(.*)$ /cgi-bin/cgi_indi-allsky.py/$1 [L]
+#
+#    AddHandler cgi-script .py
 #####################
 
 ### URL will be something like https://hostname/ia/indi-allsky/
