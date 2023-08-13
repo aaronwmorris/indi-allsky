@@ -24,13 +24,14 @@ class FfmpegBuilder(object):
 
     def main(self, outfile, inputfiles, optimize=False):
         logger.warning('Creating %s', outfile)
-        with imageio.get_writer(outfile, 
-                                format='FFMPEG',
-                                mode='I',
-                                fps=self.fps,
-                                codec='libx264',
-                                pixelformat='yuv420p',
-                                ) as writer:
+        with imageio.get_writer(
+            outfile,
+            format='FFMPEG',
+            mode='I',
+            fps=self.fps,
+            codec='libx264',
+            pixelformat='yuv420p',
+        ) as writer:
             for filename in inputfiles:
                 logger.info(' Reading %s', filename)
                 image = imageio.imread(filename)
@@ -38,8 +39,8 @@ class FfmpegBuilder(object):
                 if len(self.roi):
                     logger.info('  *** Extracting ROI ***')
                     data = image[
-                        self.roi[1]:(self.roi[1] + self.roi[3]),
-                        self.roi[0]:(self.roi[0] + self.roi[2]),
+                        self.roi[1]:self.roi[3],
+                        self.roi[0]:self.roi[2],
                     ]
                 else:
                     data = image
