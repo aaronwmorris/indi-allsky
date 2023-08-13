@@ -1,3 +1,4 @@
+import os
 import json
 from pathlib import Path
 from logging.config import dictConfig
@@ -83,8 +84,8 @@ def create_app():
         instance_relative_config=False,
     )
 
-    p_flask_config = Path('/etc/indi-allsky/flask.json')
-    app.config.from_file(p_flask_config, load=json.load)
+    flask_config = os.environ.get('INDI_ALLSKY_FLASK_CONFIG', '/etc/indi-allsky/flask.json')
+    app.config.from_file(flask_config, load=json.load)
 
     csrf.init_app(app)
 
