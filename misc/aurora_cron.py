@@ -22,14 +22,14 @@ from sqlalchemy.sql.expression import false as sa_false
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
-import indi_allsky
+from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.aurora import IndiAllskyAuroraUpdate
 from indi_allsky.smoke import IndiAllskySmokeUpdate
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 
 # setup flask context for db access
-app = indi_allsky.flask.create_app()
+app = create_app()
 app.app_context().push()
 
 
