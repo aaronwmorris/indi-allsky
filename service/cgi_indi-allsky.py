@@ -30,7 +30,11 @@
 #    Alias /ia/indi-allsky/images /var/www/html/allsky/images
 #    Alias /ia/indi-allsky/static /home/aaron/git/indi-allsky/indi_allsky/flask/static
 #
-#    RewriteCond %{REQUEST_FILENAME} !-f
+#    RewriteCond %{REQUEST_URI} ^/ia/.*/images/ [OR]
+#    RewriteCond %{REQUEST_URI} ^/ia/.*/static/
+#    RewriteRule .* - [L]
+#
+#    RewriteCond %{REQUEST_URI} ^/ia
 #    RewriteRule ^/ia(.*)$ /cgi-bin/cgi_indi-allsky.py/$1 [L]
 #
 #    AddHandler cgi-script .py
