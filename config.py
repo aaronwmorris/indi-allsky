@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from indi_allsky import IndiAllSkyConfigUtil
+from indi_allsky.config import IndiAllSkyConfigUtil
 
 
 logger = logging.getLogger('indi_allsky')

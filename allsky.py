@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import indi_allsky
 import sys
 import logging
 import logging.handlers
 import traceback
 import argparse
+
+from indi_allsky.allsky import IndiAllSky
 
 
 # the flask context cannot created globally
@@ -96,7 +97,7 @@ if __name__ == "__main__":
         kwargs_dict['camera_id'] = args.cameraId
 
 
-    ia = indi_allsky.IndiAllSky()
+    ia = IndiAllSky()
     ia.pid_file = args.pid
 
     action_func = getattr(ia, args.action)
