@@ -7,11 +7,7 @@ import time
 from datetime import datetime
 import tempfile
 import subprocess
-import cv2
-import numpy
 import pycurl
-
-from PIL import ImageFont
 
 from passlib.hash import argon2
 
@@ -628,6 +624,8 @@ def IMAGE_STRETCH__MODE1_STDDEVS_validator(form, field):
 
 
 def IMAGE_ROTATE_validator(form, field):
+    import cv2
+
     if not field.data:
         return
 
@@ -851,6 +849,9 @@ def IMAGE_EXTRA_TEXT_validator(form, field):
 
 
 def DETECT_MASK_validator(form, field):
+    import numpy
+    import cv2
+
     if not field.data:
         return
 
@@ -886,6 +887,8 @@ def DETECT_MASK_validator(form, field):
 
 
 def LOGO_OVERLAY_validator(form, field):
+    import cv2
+
     if not field.data:
         return
 
@@ -1122,6 +1125,8 @@ def TEXT_PROPERTIES__PIL_FONT_FILE_validator(form, field):
 
 
 def TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator(form, field):
+    from PIL import ImageFont
+
     if not field.data:
         return
 

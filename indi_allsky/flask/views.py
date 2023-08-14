@@ -15,11 +15,6 @@ import ephem
 
 from passlib.hash import argon2
 
-import numpy
-import cv2
-import PIL
-from PIL import Image
-
 from ..version import __version__
 from .. import constants
 
@@ -619,6 +614,11 @@ class JsonChartView(JsonView):
 
 
     def getChartData(self, history_seconds):
+        import numpy
+        import cv2
+        import PIL
+        from PIL import Image
+
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
@@ -1838,6 +1838,8 @@ class SystemInfoView(TemplateView):
         import ccdproc
         import astropy
         import flask
+        import numpy
+        import cv2
 
         try:
             import PyIndi
@@ -3201,6 +3203,11 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
+        import numpy
+        import cv2
+        import PIL
+        from PIL import Image
+
         zoom = int(request.args.get('zoom', 2))
         x_offset = int(request.args.get('x_offset', 0))
         y_offset = int(request.args.get('y_offset', 0))
