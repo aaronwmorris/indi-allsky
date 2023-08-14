@@ -6,8 +6,6 @@ from pathlib import Path
 import logging
 #from pprint import pformat
 
-from astropy.io import fits
-
 import PyIndi
 
 from .indi import IndiClient
@@ -223,6 +221,8 @@ class IndiClientPassive(IndiClient):
 
 
     def processBlob(self, blob):
+        from astropy.io import fits
+
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
         #start = time.time()
