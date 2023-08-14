@@ -4,6 +4,12 @@
 
 {% block head %}
 <style>
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+}
 </style>
 {% endblock %}
 
@@ -12,14 +18,14 @@
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-info active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
-    <button class="nav-link link-info" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
-    <button class="nav-link link-info" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
-    <button class="nav-link link-info" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
-    <button class="nav-link link-info" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
-    <button class="nav-link link-info" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
-    <button class="nav-link link-info" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">S3 Object Storage</button>
-    <button class="nav-link link-info" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+    <button class="nav-link link-danger bg-dark active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
+    <button class="nav-link link-light bg-dark" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
+    <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
+    <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
+    <button class="nav-link link-warning bg-dark" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
+    <button class="nav-link link-primary bg-dark" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
+    <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
+    <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
   </div>
 </nav>
 

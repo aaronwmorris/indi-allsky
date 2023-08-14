@@ -48,6 +48,7 @@ h2 {
 
 button {
 	margin-top: 5px;
+	margin-right: 5px;
 	width: 235px;
 	height: 50px;
 }
@@ -104,10 +105,6 @@ table, th, td {
 	text-align: right;
 }
 
-#moon {
-	display:none;
-}
-
 #moon img {
 	width: 150px;
 	margin: 50px 20px 0px 0px;
@@ -122,10 +119,6 @@ table, th, td {
 	text-align: right;
 }
 
-#sun {
-        display:none;
-}
-
 #sun img {
 	width: 150px;
 	margin: 50px 20px 0px 0px;
@@ -138,10 +131,6 @@ table, th, td {
 
 .sundata {
 	text-align: right;
-}
-
-#planets {
-        display:none;
 }
 
 #planets img {
