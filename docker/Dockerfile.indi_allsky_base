@@ -7,6 +7,8 @@ USER root
 RUN apt-get update
 RUN apt-get -y upgrade
 
+
+# minimum viable product packages
 RUN apt-get -y install \
     build-essential \
     python3 \
@@ -15,13 +17,28 @@ RUN apt-get -y install \
     python3-pip \
     virtualenv \
     cmake \
-    gfortran \
     git \
     cpio \
     tzdata \
     ca-certificates \
     libgnutls28-dev \
     swig \
+    libcurl4-gnutls-dev \
+    libcfitsio-dev \
+    libnova-dev \
+    libdbus-1-dev \
+    libglib2.0-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
+    ffmpeg \
+    gifsicle \
+    jq \
+    sqlite3
+
+
+# optional packages in case python modules need to be compiled
+RUN apt-get -y install \
+    gfortran \
     libatlas-base-dev \
     libilmbase-dev \
     libopenexr-dev \
@@ -29,12 +46,6 @@ RUN apt-get -y install \
     libssl-dev \
     libxml2-dev \
     libxslt-dev \
-    libgnutls28-dev \
-    libcurl4-gnutls-dev \
-    libcfitsio-dev \
-    libnova-dev \
-    libdbus-1-dev \
-    libglib2.0-dev \
     libffi-dev \
     libopencv-dev \
     libopenblas-dev \
@@ -53,15 +64,8 @@ RUN apt-get -y install \
     libharfbuzz-dev \
     libfribidi-dev \
     libxcb1-dev \
-    default-libmysqlclient-dev \
-    pkg-config \
     rustc \
-    cargo \
-    ffmpeg \
-    gifsicle \
-    jq \
-    sqlite3 \
-    policykit-1
+    cargo
 
 
 #RUN rm -f /etc/sudoers.d/allsky
