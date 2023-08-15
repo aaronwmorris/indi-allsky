@@ -2105,6 +2105,7 @@ else
         sudo a2enmod proxy
         sudo a2enmod proxy_http
         #sudo a2enmod proxy_http2
+        sudo a2enmod expires
 
         sudo a2dissite 000-default
         sudo a2dissite default-ssl
