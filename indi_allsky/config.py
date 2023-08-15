@@ -17,7 +17,6 @@ from .flask.models import IndiAllSkyDbUserTable
 
 from .flask import create_app
 from .flask import db
-from flask import current_app
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -375,7 +374,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config = self._config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
-            f_key = Fernet(current_app.config['PASSWORD_KEY'].encode())
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
             filetransfer__password_e = config.get('FILETRANSFER', {}).get('PASSWORD_E', '')
             if filetransfer__password_e:
@@ -448,7 +447,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         if config['ENCRYPT_PASSWORDS']:
             encrypted = True
 
-            f_key = Fernet(current_app.config['PASSWORD_KEY'].encode())
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
             filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
             if filetransfer__password:

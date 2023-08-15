@@ -369,7 +369,6 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libgnutls28-dev \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -532,7 +531,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libgnutls28-dev \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1004,7 +1002,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libgnutls28-dev \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1178,7 +1175,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         ca-certificates \
         avahi-daemon \
         apache2 \
-        libgnutls28-dev \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1365,7 +1361,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
         libcfitsio-dev \
         libnova-dev \
         zlib1g-dev \
-        libgnutls28-dev \
         libdbus-1-dev \
         libglib2.0-dev \
         libffi-dev \

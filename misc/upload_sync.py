@@ -38,7 +38,6 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 from indi_allsky import constants
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask import create_app
-from indi_allsky.uploader import FileUploader
 from indi_allsky.miscUpload import miscUpload
 
 
@@ -554,6 +553,8 @@ class UploadSync(object):
 
 
     def _fileUploadWorkerStart(self, uw_dict):
+        from indi_allsky.uploader import FileUploader
+
         if uw_dict['worker']:
             if uw_dict['worker'].is_alive():
                 return

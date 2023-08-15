@@ -23,11 +23,6 @@ from .config import IndiAllSkyConfig
 
 #from . import constants
 
-from .capture import CaptureWorker
-from .image import ImageWorker
-from .video import VideoWorker
-from .uploader import FileUploader
-
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
 
@@ -272,6 +267,8 @@ class IndiAllSky(object):
 
 
     def _startCaptureWorker(self):
+        from .capture import CaptureWorker
+
         if self.capture_worker:
             if self.capture_worker.is_alive():
                 return
@@ -339,6 +336,8 @@ class IndiAllSky(object):
 
 
     def _startImageWorker(self):
+        from .image import ImageWorker
+
         if self.image_worker:
             if self.image_worker.is_alive():
                 return
@@ -405,6 +404,8 @@ class IndiAllSky(object):
 
 
     def _startVideoWorker(self):
+        from .video import VideoWorker
+
         if self.video_worker:
             if self.video_worker.is_alive():
                 return
@@ -468,6 +469,8 @@ class IndiAllSky(object):
 
 
     def _fileUploadWorkerStart(self, uw_dict):
+        from .uploader import FileUploader
+
         if uw_dict['worker']:
             if uw_dict['worker'].is_alive():
                 return

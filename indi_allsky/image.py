@@ -23,8 +23,6 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
-from astropy.io import fits
-
 import cv2
 import numpy
 
@@ -1624,6 +1622,8 @@ class ImageProcessor(object):
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
+        from astropy.io import fits
+
         filename_p = Path(filename)
 
 
@@ -1926,6 +1926,8 @@ class ImageProcessor(object):
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
+        from astropy.io import fits
+
         # pick a bad pixel map that is closest to the exposure and temperature
         logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         bpm_entry = IndiAllSkyDbBadPixelMapTable.query\

@@ -1,4 +1,3 @@
-import platform
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -12,26 +11,13 @@ import socket
 import re
 import psutil
 import dbus
-import pycurl
-import paramiko
-import paho.mqtt
-import ccdproc
-
 import ephem
 
 from passlib.hash import argon2
 
-# for version reporting
-import PyIndi
-import cv2
-import numpy
-import PIL
-from PIL import Image
-import astropy
-import flask
-
 from ..version import __version__
 from .. import constants
+
 
 from flask import request
 from flask import session
@@ -628,6 +614,11 @@ class JsonChartView(JsonView):
 
 
     def getChartData(self, history_seconds):
+        import numpy
+        import cv2
+        import PIL
+        from PIL import Image
+
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
@@ -1840,6 +1831,21 @@ class SystemInfoView(TemplateView):
     decorators = [login_required]
 
     def get_context(self):
+        import platform
+        import pycurl
+        import paramiko
+        import paho.mqtt
+        import ccdproc
+        import astropy
+        import flask
+        import numpy
+        import cv2
+
+        try:
+            import PyIndi
+        except ImportError:
+            PyIndi = None
+
         context = super(SystemInfoView, self).get_context()
 
         context['release'] = str(__version__)
@@ -1887,11 +1893,15 @@ class SystemInfoView(TemplateView):
         context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
         context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
         context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
-        context['pyindi_version'] = '.'.join((
-            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-        ))
+
+        if PyIndi:
+            context['pyindi_version'] = '.'.join((
+                str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+                str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+                str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
+            ))
+        else:
+            context['pyindi_version'] = 'Not installed'
 
 
         context['now'] = datetime.now()
@@ -3193,6 +3203,11 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
+        import numpy
+        import cv2
+        import PIL
+        from PIL import Image
+
         zoom = int(request.args.get('zoom', 2))
         x_offset = int(request.args.get('x_offset', 0))
         y_offset = int(request.args.get('y_offset', 0))

@@ -14,13 +14,13 @@ from sqlalchemy.orm.exc import NoResultFound
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
-import indi_allsky
+from indi_allsky.flask import create_app
 from indi_allsky import constants
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask.miscDb import miscDb
 
 # setup flask context for db access
-app = indi_allsky.flask.create_app()
+app = create_app()
 app.app_context().push()
 
 #from indi_allsky.flask import db
