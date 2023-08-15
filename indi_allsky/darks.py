@@ -12,10 +12,6 @@ from pathlib import Path
 import logging
 
 import numpy
-from astropy.io import fits
-
-import ccdproc
-from astropy.stats import mad_std
 
 from multiprocessing import Queue
 from multiprocessing import Value
@@ -336,6 +332,8 @@ class IndiAllSkyDarks(object):
 
 
     def _wait_for_image(self, exposure):
+        from astropy.io import fits
+
         i_dict = self.image_q.get(timeout=10)
 
         ### Not using DB task queue for image processing to reduce database I/O
@@ -1055,6 +1053,8 @@ class IndiAllSkyDarksProcessor(object):
 
 
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        from astropy.io import fits
+
         logger.info('Building bad pixel map for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
@@ -1110,6 +1110,8 @@ class IndiAllSkyDarksProcessor(object):
 
 class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        from astropy.io import fits
+
         logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
@@ -1150,6 +1152,9 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
 class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        from astropy.stats import mad_std
+        import ccdproc
+
         logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
