@@ -18,12 +18,25 @@ server {
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
         autoindex off;
+
+        location ~* \.(jpe?g|png|tiff?|bmp|gif|fits?|webp|jp2|mp4|webm)$ {
+            expires 90d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
     }
 
     location /indi-allsky/static {
         alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
         autoindex off;
+
+        location ~* \.(js|css|svg)$ {
+            expires 1d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
     }
+
 
     location /indi-allsky {
         try_files $uri @proxy_to_indi_allsky;
@@ -64,12 +77,25 @@ server {
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
         autoindex off;
+
+        location ~* \.(jpe?g|png|tiff?|bmp|gif|fits?|webp|jp2|mp4|webm)$ {
+            expires 90d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
     }
 
     location /indi-allsky/static {
         alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
         autoindex off;
+
+        location ~* \.(js|css|svg)$ {
+            expires 1d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
     }
+
 
     location /indi-allsky {
         try_files $uri @proxy_to_indi_allsky;
