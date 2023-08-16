@@ -65,6 +65,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'bit_depth'     : 16,
         }
 
+
+        # bin modes need to be true binning with no cropping
         self._binmode_options = {
             1 : '',
         }
@@ -633,7 +635,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
         self._binmode_options = {
             1 : '',  # --mode 4056:3040:12
             2 : '--mode 2028:1520:12',
-            4 : '--mode 1332:990:10',
+            #4 : '--mode 1332:990:10',  # cropped
         }
 
 
@@ -661,7 +663,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         self._binmode_options = {
             1 : '',  # --mode 4056:3040:12
             2 : '--mode 2028:1520:12',
-            4 : '--mode 1332:990:10',
+            #4 : '--mode 1332:990:10',  # cropped
         }
 
 
@@ -739,6 +741,7 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
 
         self._binmode_options = {
             1 : '',
+            #2 : '--mode 2323:1748',  # unverified
         }
 
 
@@ -790,7 +793,8 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',
+            1 : '',  # --mode 4608:2592:12
+            2 : '--mode 2304:1296:12',
         }
 
 
@@ -866,6 +870,6 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
 
         self._binmode_options = {
             1 : '',  # --mode 1920:1080:12
-            2 : '--mode 1280:720:12',
+            #2 : '--mode 1280:720:12',  # cropped
         }
 
