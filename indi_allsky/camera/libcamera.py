@@ -632,7 +632,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 4056:3040:12
+            1 : '--mode 4056:3040:12',
             2 : '--mode 2028:1520:12',
             4 : '--mode 1332:990:10',  # cropped
         }
@@ -660,7 +660,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 4056:3040:12
+            1 : '--mode 4056:3040:12',
             2 : '--mode 2028:1520:12',
             4 : '--mode 1332:990:10',  # cropped
         }
@@ -712,7 +712,7 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 3280:2464
+            1 : '--mode 3280:2464:10',
             2 : '--mode 1640:1232:10',
         }
 
@@ -740,7 +740,8 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
 
         self._binmode_options = {
             1 : '',
-            #2 : '--mode 2323:1748',  # unverified
+            #1 : '--mode 4656:3496',  # unverified
+            #2 : '--mode 2323:1748',
         }
 
 
@@ -765,9 +766,10 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 9152:6944
-            2 : '--mode 4624:3472',
-            4 : '--mode 2312:1736',
+            1 : '',
+            #1 : '--mode 9152:6944',  # unverified
+            #2 : '--mode 4624:3472',
+            #4 : '--mode 2312:1736',
         }
 
 
@@ -792,7 +794,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 4608:2592:10
+            1 : '--mode 4608:2592:10',
             2 : '--mode 2304:1296:10',
             4 : '--mode 1536:864:10',  # cropped
         }
@@ -869,7 +871,7 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
-            1 : '',  # --mode 1920:1080:12
+            1 : '--mode 1920:1080:12',
             2 : '--mode 1280:720:12',  # cropped
         }
 
