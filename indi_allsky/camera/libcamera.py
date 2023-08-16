@@ -123,6 +123,13 @@ class IndiClientLibCameraGeneric(IndiClient):
             return
 
 
+        try:
+            binmode_option = self._ccdDevice.getBinModeOptions(self.bin_v.value)
+        except KeyError:
+            logger.error('Invalid binning mode for camera: %d', self.bin_v.value)
+            binmode_option = ''
+
+
         self.current_exposure_file_p = image_tmp_p
         self.current_metadata_file_p = metadata_tmp_p
 
@@ -174,11 +181,6 @@ class IndiClientLibCameraGeneric(IndiClient):
                 cmd.extend(['--awbgains', '1,1'])
 
 
-            # Add extra config options
-            extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
-            if extra_options:
-                cmd.extend(extra_options.split(' '))
-
         else:
             # daytime
 
@@ -191,11 +193,26 @@ class IndiClientLibCameraGeneric(IndiClient):
                 cmd.extend(['--awbgains', '1,1'])
 
 
+        # add --mode flags for binning
+        if binmode_option:
+            cmd.extend(binmode_option.split(' '))
+
+
+        # extra options get added last
+        if self.night_v.value:
+            #  night
+            # Add extra config options
+            extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
+            if extra_options:
+                cmd.extend(extra_options.split(' '))
+
+        else:
+            # daytime
+
             # Add extra config options
             extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY')
             if extra_options:
                 cmd.extend(extra_options.split(' '))
-
 
 
         # Finally add output file
@@ -596,6 +613,12 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',  # --mode 4056:3040:12
+            2 : '--mode 2028:1520:12',
+            4 : '--mode 1332:990:10',
+        }
+
 
 class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
     # this model is almost identical to the imx477
@@ -616,6 +639,12 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',  # --mode 4056:3040:12
+            2 : '--mode 2028:1520:12',
+            4 : '--mode 1332:990:10',
         }
 
 
@@ -639,6 +668,10 @@ class IndiClientLibCameraOv5647(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',
+        }
+
 
 class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
 
@@ -658,6 +691,11 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
             'max_exposure'  : 11.76,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',  # --mode 3280:2464
+            2 : '--mode 1640:1232:10',
         }
 
 
@@ -682,6 +720,10 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',
+        }
+
 
 class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
 
@@ -701,6 +743,12 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',  # --mode 9152:6944
+            2 : '--mode 4624:3472',
+            4 : '--mode 2312:1736',
         }
 
 
@@ -724,6 +772,10 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',
+        }
+
 
 class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
 
@@ -743,6 +795,10 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
             'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
         }
 
 
@@ -766,6 +822,10 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',
+        }
+
 
 class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
 
@@ -787,5 +847,8 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'bit_depth'     : 16,
         }
 
-
+        self._binmode_options = {
+            1 : '',  # --mode 1920:1080:12
+            2 : '--mode 1280:720:12',
+        }
 
