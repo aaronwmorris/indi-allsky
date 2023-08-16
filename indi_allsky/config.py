@@ -104,6 +104,8 @@ class IndiAllSkyConfigBase(object):
         "DAYTIME_TIMELAPSE"        : True,
         "DAYTIME_CONTRAST_ENHANCE" : False,
         "NIGHT_CONTRAST_ENHANCE"   : False,
+        "CLAHE_CLIPLIMIT"          : 3.0,
+        "CLAHE_GRIDSIZE"           : 8,
         "NIGHT_SUN_ALT_DEG"        : -6.0,
         "NIGHT_MOONMODE_ALT_DEG"   : 0,
         "NIGHT_MOONMODE_PHASE"     : 33,

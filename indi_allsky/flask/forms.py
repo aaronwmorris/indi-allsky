@@ -482,6 +482,28 @@ def LOCATION_LONGITUDE_validator(form, field):
         raise ValidationError('Longitude must be less than 180')
 
 
+def CLAHE_CLIPLIMIT_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Clip limit must be greater than 0')
+
+    if field.data > 60:
+        raise ValidationError('Clip limit must be less than 60')
+
+
+def CLAHE_GRIDSIZE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 4:
+        raise ValidationError('Grid size must be 4 or greater')
+
+    if field.data > 64:
+        raise ValidationError('Clip limit must be 64 or less')
+
+
 def NIGHT_SUN_ALT_DEG_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -2013,6 +2035,8 @@ class IndiAllskyConfigForm(FlaskForm):
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
     DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Night time Contrast Enhance')
+    CLAHE_CLIPLIMIT                  = FloatField('CLAHE Clip Limit', validators=[CLAHE_CLIPLIMIT_validator])
+    CLAHE_GRIDSIZE                   = IntegerField('CLAHE Grid Size', validators=[CLAHE_GRIDSIZE_validator])
     NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
     NIGHT_MOONMODE_ALT_DEG           = FloatField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])

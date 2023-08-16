@@ -2562,8 +2562,11 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
+        clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
+        grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
+
         ### ohhhh, contrasty
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(grid_size, grid_size))
 
         if len(self.image.shape) == 2:
             # mono
