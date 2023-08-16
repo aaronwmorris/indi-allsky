@@ -104,7 +104,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.bin_v.value = int(new_bin_value[0])
 
 
-    def getBinModeOptions(self, bin_value):
+    def _getBinModeOptions(self, bin_value):
         try:
             option = self._binmode_options[int(bin_value)]
         except KeyError:
