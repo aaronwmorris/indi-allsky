@@ -65,6 +65,10 @@ class IndiClientLibCameraGeneric(IndiClient):
             'bit_depth'     : 16,
         }
 
+        self._binmode_options = {
+            1 : '',
+        }
+
 
     @property
     def camera_id(self):
@@ -100,6 +104,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.bin_v.value = int(new_bin_value[0])
 
 
+    def getBinModeOptions(self, bin_value):
+        try:
+            option = self._binmode_options[int(bin_value)]
+        except KeyError:
+            raise BinModeException('Invalid bin mode for camera: {0:d}'.format(int(bin_value)))
+
+        return option
+
+
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         if self.active_exposure:
             return
@@ -124,9 +137,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            binmode_option = self._ccd_device.getBinModeOptions(self.bin_v.value)
-        except KeyError:
-            logger.error('Invalid binning mode for camera: %d', self.bin_v.value)
+            binmode_option = self._getBinModeOptions(self.bin_v.value)
+        except BinModeException as e:
+            logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
 
 
@@ -591,6 +604,10 @@ class IndiClientLibCameraGeneric(IndiClient):
     def setCcdTemperature(self, new_temp):
         # not supported
         pass
+
+
+class BinModeException(Exception):
+    pass
 
 
 class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):

@@ -454,10 +454,6 @@ class FakeIndiCcd(FakeIndiDevice):
         self._cfa = None
         self._bit_depth = None
 
-        self._binmode_options = {
-            1 : '',
-        }
-
 
     @property
     def width(self):
@@ -555,10 +551,6 @@ class FakeIndiCcd(FakeIndiDevice):
     @bit_depth.setter
     def bit_depth(self, new_bit_depth):
         self._bit_depth = int(new_bit_depth)
-
-
-    def getBinModeOptions(self, bin_value):
-        return self._binmode_options[int(bin_value)]
 
 
 class FakeIndiTelescope(FakeIndiDevice):
