@@ -478,6 +478,30 @@
         <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CLAHE_CLIPLIMIT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CLAHE_CLIPLIMIT(class='form-control bg-secondary') }}
+            <div id="CLAHE_CLIPLIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CLAHE_GRIDSIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CLAHE_GRIDSIZE(class='form-control bg-secondary') }}
+            <div id="CLAHE_GRIDSIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -2880,6 +2904,8 @@ const field_names = [
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
     'WEB_EXTRA_TEXT',
+    'CLAHE_CLIPLIMIT',
+    'CLAHE_GRIDSIZE',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
     'KEOGRAM_ANGLE',
