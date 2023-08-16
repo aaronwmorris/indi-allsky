@@ -124,7 +124,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            binmode_option = self._ccdDevice.getBinModeOptions(self.bin_v.value)
+            binmode_option = self._ccd_device.getBinModeOptions(self.bin_v.value)
         except KeyError:
             logger.error('Invalid binning mode for camera: %d', self.bin_v.value)
             binmode_option = ''
