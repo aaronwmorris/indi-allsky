@@ -3511,6 +3511,10 @@ class ImageProcessor(object):
 
 
     def stretch(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
 
 
