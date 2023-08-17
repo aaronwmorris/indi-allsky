@@ -8,8 +8,10 @@ from pathlib import Path
 #from datetime import timedelta
 import socket
 import time
+import urllib3.exceptions
 from botocore.client import Config
 import boto3
+import botocore.exceptions
 import boto3.exceptions
 import logging
 
@@ -120,6 +122,10 @@ class boto3_s3(GenericFileTransfer):
         except socket.timeout as e:
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.ReadTimeoutError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
