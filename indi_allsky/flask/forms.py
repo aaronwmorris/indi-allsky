@@ -2035,6 +2035,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
     DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Night time Contrast Enhance')
+    CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
     CLAHE_CLIPLIMIT                  = FloatField('CLAHE Clip Limit', validators=[CLAHE_CLIPLIMIT_validator])
     CLAHE_GRIDSIZE                   = IntegerField('CLAHE Grid Size', validators=[CLAHE_GRIDSIZE_validator])
     NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])

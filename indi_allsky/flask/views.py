@@ -863,6 +863,7 @@ class ConfigView(FormView):
             'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', True),
             'DAYTIME_CONTRAST_ENHANCE'       : self.indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
+            'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
             'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
             'CLAHE_GRIDSIZE'                 : self.indi_allsky_config.get('CLAHE_GRIDSIZE', 8),
             'NIGHT_SUN_ALT_DEG'              : self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),

@@ -503,6 +503,19 @@
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CONTRAST_ENHANCE_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CONTRAST_ENHANCE_16BIT(class='form-check-input') }}
+                <div id="CONTRAST_ENHANCE_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Perform CLAHE in 16-bit mode (early in order of operations)</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -3041,6 +3054,7 @@ const checkbox_field_names = [
     'DAYTIME_TIMELAPSE',
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
+    'CONTRAST_ENHANCE_16BIT',
     'IMAGE_STRETCH__MODE1_ENABLE',
     'IMAGE_STRETCH__SPLIT',
     'IMAGE_STRETCH__MOONMODE',
