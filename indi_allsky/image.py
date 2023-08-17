@@ -967,36 +967,9 @@ class ImageWorker(Process):
             # nothing to scale
             scaled_data = data
         elif i_ref['image_bitpix'] == 16:
-            if max_bit_depth == 8:
-                logger.info('Upscaling data from 8 to 16 bit')
-                scaled_data = numpy.left_shift(data, 8)
-            elif max_bit_depth == 9:
-                logger.info('Upscaling data from 9 to 16 bit')
-                scaled_data = numpy.left_shift(data, 7)
-            elif max_bit_depth == 10:
-                logger.info('Upscaling data from 10 to 16 bit')
-                scaled_data = numpy.left_shift(data, 6)
-            elif max_bit_depth == 11:
-                logger.info('Upscaling data from 11 to 16 bit')
-                scaled_data = numpy.left_shift(data, 5)
-            elif max_bit_depth == 12:
-                logger.info('Upscaling data from 12 to 16 bit')
-                scaled_data = numpy.left_shift(data, 4)
-            elif max_bit_depth == 13:
-                logger.info('Upscaling data from 13 to 16 bit')
-                scaled_data = numpy.left_shift(data, 3)
-            elif max_bit_depth == 14:
-                logger.info('Upscaling data from 14 to 16 bit')
-                scaled_data = numpy.left_shift(data, 2)
-            elif max_bit_depth == 15:
-                logger.info('Upscaling data from 15 to 16 bit')
-                scaled_data = numpy.left_shift(data, 1)
-            elif max_bit_depth == 16:
-                # nothing to scale
-                scaled_data = data
-            else:
-                # assume 16 bit
-                scaled_data = data
+            logger.info('Upscaling data from %d to 16 bit', max_bit_depth)
+            shift_factor = 16 - max_bit_depth
+            scaled_data = numpy.left_shift(data, shift_factor)
         else:
             raise Exception('Unsupported bit depth')
 
