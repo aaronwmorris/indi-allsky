@@ -465,6 +465,7 @@ class ImageWorker(Process):
 
         self.image_processor.stretch()
 
+        #self.image_processor.contrast_clahe_16bit()
 
         self.image_processor.convert_16bit_to_8bit()
 
@@ -2583,6 +2584,46 @@ class ImageProcessor(object):
         new_lab = cv2.merge((cl, a, b))
 
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    def contrast_clahe_16bit(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+        clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
+        grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
+
+
+        ### ohhhh, contrasty
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(grid_size, grid_size))
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            self.image = clahe.apply(self.image)
+            return
+
+
+        max_value = 2 ** self._max_bit_depth
+
+        # float32 normalized values
+        norm_image = (self.image / max_value).astype(numpy.float32)
+
+
+        # color, apply to luminance
+        # cvtColor() only accepts uint8 and normalized float32
+        lab = cv2.cvtColor(norm_image, cv2.COLOR_BGR2LAB)
+
+        l, a, b = cv2.split(lab)
+
+        # clahe only accepts uint8 and uint16
+        cl_16 = clahe.apply((l * max_value).astype(numpy.uint16))
+
+        new_lab = cv2.merge(((cl_16 / max_value).astype(numpy.float32), a, b))
+
+        # convert back to uint16
+        self.image = (cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy.uint16)
 
 
     def colorize(self):
