@@ -465,7 +465,15 @@ class ImageWorker(Process):
 
         self.image_processor.stretch()
 
-        #self.image_processor.contrast_clahe_16bit()
+
+        if self.config.get('CONTRAST_ENHANCE_16BIT'):
+            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                self.image_processor.contrast_clahe_16bit()
+            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+                # Contrast enhancement during night
+                self.image_processor.contrast_clahe_16bit()
+
 
         self.image_processor.convert_16bit_to_8bit()
 
@@ -538,12 +546,13 @@ class ImageWorker(Process):
         self.image_processor.saturation_adjust()
 
 
-        if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
-            # Contrast enhancement during the day
-            self.image_processor.contrast_clahe()
-        elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
-            # Contrast enhancement during night
-            self.image_processor.contrast_clahe()
+        if not self.config.get('CONTRAST_ENHANCE_16BIT'):
+            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                self.image_processor.contrast_clahe()
+            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+                # Contrast enhancement during night
+                self.image_processor.contrast_clahe()
 
 
         self.image_processor.colorize()
