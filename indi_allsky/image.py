@@ -2572,6 +2572,8 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
+        logger.info('Performing CLAHE contrast enhance')
+
         clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
         grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
 
@@ -2599,6 +2601,8 @@ class ImageProcessor(object):
         if self.focus_mode:
             # disable processing in focus mode
             return
+
+        logger.info('Performing 16-bit CLAHE contrast enhance')
 
         clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
         grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
