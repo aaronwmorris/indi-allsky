@@ -2605,6 +2605,12 @@ class ImageProcessor(object):
             return
 
 
+        if self._max_bit_depth == 8:
+            numpy_dtype = numpy.uint8
+        else:
+            numpy_dtype = numpy.uint16
+
+
         max_value = 2 ** self._max_bit_depth
 
         # float32 normalized values
@@ -2618,12 +2624,12 @@ class ImageProcessor(object):
         l, a, b = cv2.split(lab)
 
         # clahe only accepts uint8 and uint16
-        cl_16 = clahe.apply((l * max_value).astype(numpy.uint16))
+        cl_16 = clahe.apply((l * max_value).astype(numpy_dtype))
 
         new_lab = cv2.merge(((cl_16 / max_value).astype(numpy.float32), a, b))
 
-        # convert back to uint16
-        self.image = (cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy.uint16)
+        # convert back to uint8 or uint16
+        self.image = (cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
 
 
     def colorize(self):
