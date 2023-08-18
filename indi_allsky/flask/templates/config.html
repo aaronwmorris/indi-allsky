@@ -452,6 +452,8 @@
         <div class="col-sm-8">Enable daytime timelapse generation</div>
     </div>
 
+    <hr />
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
@@ -487,7 +489,7 @@
             <div id="CLAHE_CLIPLIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <a href="https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html" target="_blank">OpenCV CLAHE Tutorial</a>
+            <div>Increase value for more contrast</div>
         </div>
     </div>
 
@@ -500,6 +502,23 @@
             <div id="CLAHE_GRIDSIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
+            <div><a href="https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html" target="_blank">OpenCV CLAHE Tutorial</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CONTRAST_ENHANCE_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CONTRAST_ENHANCE_16BIT(class='form-check-input') }}
+                <div id="CONTRAST_ENHANCE_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Perform CLAHE in 16-bit mode (early in order of operations)</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Requires minimum 2GB of RAM (for 16-bit mode)</div>
         </div>
     </div>
 
@@ -3041,6 +3060,7 @@ const checkbox_field_names = [
     'DAYTIME_TIMELAPSE',
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
+    'CONTRAST_ENHANCE_16BIT',
     'IMAGE_STRETCH__MODE1_ENABLE',
     'IMAGE_STRETCH__SPLIT',
     'IMAGE_STRETCH__MOONMODE',

@@ -466,6 +466,15 @@ class ImageWorker(Process):
         self.image_processor.stretch()
 
 
+        if self.config.get('CONTRAST_ENHANCE_16BIT'):
+            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                self.image_processor.contrast_clahe_16bit()
+            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+                # Contrast enhancement during night
+                self.image_processor.contrast_clahe_16bit()
+
+
         self.image_processor.convert_16bit_to_8bit()
 
 
@@ -537,12 +546,13 @@ class ImageWorker(Process):
         self.image_processor.saturation_adjust()
 
 
-        if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
-            # Contrast enhancement during the day
-            self.image_processor.contrast_clahe()
-        elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
-            # Contrast enhancement during night
-            self.image_processor.contrast_clahe()
+        if not self.config.get('CONTRAST_ENHANCE_16BIT'):
+            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                self.image_processor.contrast_clahe()
+            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+                # Contrast enhancement during night
+                self.image_processor.contrast_clahe()
 
 
         self.image_processor.colorize()
@@ -957,36 +967,9 @@ class ImageWorker(Process):
             # nothing to scale
             scaled_data = data
         elif i_ref['image_bitpix'] == 16:
-            if max_bit_depth == 8:
-                logger.info('Upscaling data from 8 to 16 bit')
-                scaled_data = numpy.left_shift(data, 8)
-            elif max_bit_depth == 9:
-                logger.info('Upscaling data from 9 to 16 bit')
-                scaled_data = numpy.left_shift(data, 7)
-            elif max_bit_depth == 10:
-                logger.info('Upscaling data from 10 to 16 bit')
-                scaled_data = numpy.left_shift(data, 6)
-            elif max_bit_depth == 11:
-                logger.info('Upscaling data from 11 to 16 bit')
-                scaled_data = numpy.left_shift(data, 5)
-            elif max_bit_depth == 12:
-                logger.info('Upscaling data from 12 to 16 bit')
-                scaled_data = numpy.left_shift(data, 4)
-            elif max_bit_depth == 13:
-                logger.info('Upscaling data from 13 to 16 bit')
-                scaled_data = numpy.left_shift(data, 3)
-            elif max_bit_depth == 14:
-                logger.info('Upscaling data from 14 to 16 bit')
-                scaled_data = numpy.left_shift(data, 2)
-            elif max_bit_depth == 15:
-                logger.info('Upscaling data from 15 to 16 bit')
-                scaled_data = numpy.left_shift(data, 1)
-            elif max_bit_depth == 16:
-                # nothing to scale
-                scaled_data = data
-            else:
-                # assume 16 bit
-                scaled_data = data
+            logger.info('Upscaling data from %d to 16 bit', max_bit_depth)
+            shift_factor = 16 - max_bit_depth
+            scaled_data = numpy.left_shift(data, shift_factor)
         else:
             raise Exception('Unsupported bit depth')
 
@@ -2562,6 +2545,8 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
+        logger.info('Performing CLAHE contrast enhance')
+
         clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
         grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
 
@@ -2583,6 +2568,54 @@ class ImageProcessor(object):
         new_lab = cv2.merge((cl, a, b))
 
         self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+
+
+    def contrast_clahe_16bit(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+        logger.info('Performing 16-bit CLAHE contrast enhance')
+
+        clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
+        grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
+
+
+        ### ohhhh, contrasty
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(grid_size, grid_size))
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            self.image = clahe.apply(self.image)
+            return
+
+
+        if self._max_bit_depth == 8:
+            numpy_dtype = numpy.uint8
+        else:
+            numpy_dtype = numpy.uint16
+
+
+        max_value = 2 ** self._max_bit_depth
+
+        # float32 normalized values
+        norm_image = (self.image / max_value).astype(numpy.float32)
+
+
+        # color, apply to luminance
+        # cvtColor() only accepts uint8 and normalized float32
+        lab = cv2.cvtColor(norm_image, cv2.COLOR_BGR2LAB)
+
+        # clahe only accepts uint8 and uint16
+        # luminance is a float between 0-100, which needs to be remapped ot a 16bit int
+        cl_u16 = clahe.apply((lab[:, :, 0] * 650).astype(numpy_dtype))  # a little less than 65535 / 100
+
+        # map luminance back to 0-100
+        lab[:, :, 0] = (cl_u16 / 656).astype(numpy.float32)  # trying to prevent artifiacts
+
+        # convert back to uint8 or uint16
+        self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
 
 
     def colorize(self):
@@ -3470,6 +3503,10 @@ class ImageProcessor(object):
 
 
     def stretch(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
         stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
 
 
