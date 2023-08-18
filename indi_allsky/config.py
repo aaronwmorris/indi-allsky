@@ -110,8 +110,9 @@ class IndiAllSkyConfigBase(object):
         "NIGHT_SUN_ALT_DEG"        : -6.0,
         "NIGHT_MOONMODE_ALT_DEG"   : 0,
         "NIGHT_MOONMODE_PHASE"     : 33,
-        "WEB_EXTRA_TEXT" : "",
-        "WEB_NONLOCAL_IMAGES" : False,
+        "WEB_EXTRA_TEXT"           : "",
+        "WEB_NONLOCAL_IMAGES"      : False,
+        "WEB_LOCAL_IMAGES_ADMIN"   : False,
         "IMAGE_STRETCH" : {
             "MODE1_ENABLE"   : False,
             "MODE1_GAMMA"    : 3.0,

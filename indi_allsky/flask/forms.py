@@ -2043,6 +2043,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
+    WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
     IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
     IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
     IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])

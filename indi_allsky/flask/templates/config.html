@@ -2061,6 +2061,19 @@
         <div class="col-sm-8">Enable serving images/videos exclusively from non-local sources (S3, etc)</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_LOCAL_IMAGES_ADMIN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.WEB_LOCAL_IMAGES_ADMIN(class='form-check-input') }}
+                <div id="WEB_LOCAL_IMAGES_ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Serve images/videos locally when coming from an admin network</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -3099,6 +3112,7 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',
+    'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
 ];
 
