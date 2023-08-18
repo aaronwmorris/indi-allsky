@@ -2609,10 +2609,10 @@ class ImageProcessor(object):
 
         # clahe only accepts uint8 and uint16
         # luminance is a float between 0-100, which needs to be remapped ot a 16bit int
-        cl_u16 = clahe.apply((lab[:, :, 0] * 655).astype(numpy_dtype))
+        cl_u16 = clahe.apply((lab[:, :, 0] * 650).astype(numpy_dtype))  # a little less than 65535 / 100
 
         # map luminance back to 0-100
-        lab[:, :, 0] = (cl_u16 / 657).astype(numpy.float32)
+        lab[:, :, 0] = (cl_u16 / 656).astype(numpy.float32)  # trying to prevent artifiacts
 
         # convert back to uint8 or uint16
         self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
