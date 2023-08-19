@@ -3245,6 +3245,16 @@ $('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
     }
 });
 
+// nonlocal assets
+$('#WEB_NONLOCAL_IMAGES').on('change', function() {
+    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
+        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
+    } else {
+        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+    }
+});
+
 
 $( document ).ready(function() {
     // FOCUS_MODE
@@ -3290,6 +3300,14 @@ $( document ).ready(function() {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    }
+
+    // nonlocal assets
+    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
+        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
+    } else {
+        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
     }
 });
 
