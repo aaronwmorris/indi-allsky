@@ -2263,7 +2263,7 @@ class IndiAllskyImageViewer(FlaskForm):
         self.detections_count = kwargs.get('detections_count', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.non_local = kwargs.get('non_local')
+        self.local = kwargs.get('local', True)
 
 
     def getYears(self):
@@ -2281,7 +2281,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             years_query = years_query\
                 .filter(
@@ -2324,7 +2324,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )\
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             months_query = months_query\
                 .filter(
@@ -2372,7 +2372,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             days_query = days_query\
                 .filter(
@@ -2421,7 +2421,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             hours_query = hours_query\
                 .filter(
@@ -2466,7 +2466,7 @@ class IndiAllskyImageViewer(FlaskForm):
             )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             images_query = images_query\
                 .filter(
@@ -2601,7 +2601,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.non_local = kwargs.get('non_local')
+        self.local = kwargs.get('local', True)
 
 
     def getYears(self):
@@ -2614,7 +2614,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             years_query = years_query\
                 .filter(
@@ -2656,7 +2656,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             months_query = months_query\
                 .filter(
@@ -2708,7 +2708,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             pass
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             videos_query = videos_query\
                 .filter(
@@ -2760,7 +2760,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 keogram_entry_q = keogram_entry_q\
                     .filter(
@@ -2798,7 +2798,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 startrail_entry_q = startrail_entry_q\
                     .filter(
@@ -2836,7 +2836,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 startrail_video_entry_q = startrail_video_entry_q\
                     .filter(
