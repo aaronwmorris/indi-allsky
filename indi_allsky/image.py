@@ -2532,12 +2532,12 @@ class ImageProcessor(object):
 
         image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
-        h, s, v = cv2.split(image_hsv)
+        sat = image_hsv[:, :, 1]
 
         logger.info('Applying saturation settings')
-        new_s = cv2.multiply(s, SATURATION_FACTOR)
+        image_hsv[:, :, 1] = cv2.multiply(sat, SATURATION_FACTOR)
 
-        self.image = cv2.cvtColor(cv2.merge([h, new_s, v]), cv2.COLOR_HSV2BGR)
+        self.image = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
 
 
     def contrast_clahe(self):
@@ -2561,13 +2561,11 @@ class ImageProcessor(object):
         # color, apply to luminance
         lab = cv2.cvtColor(self.image, cv2.COLOR_BGR2LAB)
 
-        l, a, b = cv2.split(lab)
+        lum = lab[:, :, 0]
 
-        cl = clahe.apply(l)
+        lab[:, :, 0] = clahe.apply(lum)
 
-        new_lab = cv2.merge((cl, a, b))
-
-        self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+        self.image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
 
     def contrast_clahe_16bit(self):
