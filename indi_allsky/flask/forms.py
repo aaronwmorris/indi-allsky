@@ -2486,7 +2486,7 @@ class IndiAllskyImageViewer(FlaskForm):
         raw_choices = list()
         for i, img in enumerate(images_query):
             try:
-                url = img.getUrl(s3_prefix=self.s3_prefix)
+                url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -2729,7 +2729,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             try:
-                url = v.getUrl(s3_prefix=self.s3_prefix)
+                url = v.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -2778,7 +2778,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if keogram_entry:
                 try:
-                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix)
+                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -2816,7 +2816,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_entry:
                 try:
-                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix)
+                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -2854,7 +2854,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_video_entry:
                 try:
-                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix)
+                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
