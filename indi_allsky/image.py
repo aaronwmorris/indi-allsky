@@ -2610,7 +2610,10 @@ class ImageProcessor(object):
         cl_u16 = clahe.apply((lab[:, :, 0] * 655).astype(numpy_dtype))  # a little less than 65535 / 100
 
         # map luminance back to 0-100
-        lab[:, :, 0] = (cl_u16 / 690).astype(numpy.float32)  # 690 to prevent artifiacts in bright areas
+        lab[:, :, 0] = (cl_u16 / 690).astype(numpy.float32)  # trying to prevent artifiacts in bright areas
+
+        #logger.info('L min: %0.4f', numpy.min(lab[:, :, 0]))
+        #logger.info('L max: %0.4f', numpy.max(lab[:, :, 0]))
 
         # convert back to uint8 or uint16
         self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
