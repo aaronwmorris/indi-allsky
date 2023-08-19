@@ -2263,7 +2263,7 @@ class IndiAllskyImageViewer(FlaskForm):
         self.detections_count = kwargs.get('detections_count', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.local = kwargs.get('local', True)
+        self.local = kwargs.get('local')
 
 
     def getYears(self):
@@ -2601,7 +2601,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.local = kwargs.get('local', True)
+        self.local = kwargs.get('local')
 
 
     def getYears(self):
