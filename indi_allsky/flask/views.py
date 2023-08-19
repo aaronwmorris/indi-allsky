@@ -200,6 +200,8 @@ class JsonLatestImageView(JsonView):
 
         if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
                 # Do not serve local assets
                 latest_image_q = latest_image_q\
                     .filter(
@@ -490,6 +492,8 @@ class JsonImageLoopView(JsonView):
 
         if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
                 # Do not serve local assets
                 latest_images_q = latest_images_q\
                     .filter(
@@ -1628,10 +1632,11 @@ class ImageViewerView(FormView):
 
 
         if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            non_local = True
+
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
                 non_local = False
-            else:
-                non_local = True
+
         else:
             non_local = False
 
@@ -1662,10 +1667,11 @@ class AjaxImageViewerView(BaseView):
 
 
         if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            non_local = True
+
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
                 non_local = False
-            else:
-                non_local = True
+
         else:
             non_local = False
 
@@ -1805,10 +1811,10 @@ class VideoViewerView(FormView):
 
 
         if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            non_local = True
+
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
                 non_local = False
-            else:
-                non_local = True
         else:
             non_local = False
 
@@ -1832,10 +1838,10 @@ class AjaxVideoViewerView(BaseView):
 
     def dispatch_request(self):
         if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            non_local = True
+
             if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
                 non_local = False
-            else:
-                non_local = True
         else:
             non_local = False
 
