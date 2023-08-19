@@ -2043,6 +2043,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
+    WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
     IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
     IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
     IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
@@ -2262,7 +2263,7 @@ class IndiAllskyImageViewer(FlaskForm):
         self.detections_count = kwargs.get('detections_count', 0)
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.non_local = kwargs.get('non_local')
+        self.local = kwargs.get('local')
 
 
     def getYears(self):
@@ -2280,7 +2281,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             years_query = years_query\
                 .filter(
@@ -2323,7 +2324,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )\
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             months_query = months_query\
                 .filter(
@@ -2371,7 +2372,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             days_query = days_query\
                 .filter(
@@ -2420,7 +2421,7 @@ class IndiAllskyImageViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             hours_query = hours_query\
                 .filter(
@@ -2465,7 +2466,7 @@ class IndiAllskyImageViewer(FlaskForm):
             )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             images_query = images_query\
                 .filter(
@@ -2485,7 +2486,7 @@ class IndiAllskyImageViewer(FlaskForm):
         raw_choices = list()
         for i, img in enumerate(images_query):
             try:
-                url = img.getUrl(s3_prefix=self.s3_prefix)
+                url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -2600,7 +2601,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.non_local = kwargs.get('non_local')
+        self.local = kwargs.get('local')
 
 
     def getYears(self):
@@ -2613,7 +2614,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             years_query = years_query\
                 .filter(
@@ -2655,7 +2656,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         )
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             months_query = months_query\
                 .filter(
@@ -2707,7 +2708,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             pass
 
 
-        if self.non_local:
+        if not self.local:
             # Do not serve local assets
             videos_query = videos_query\
                 .filter(
@@ -2728,7 +2729,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         videos_data = []
         for v in videos_query:
             try:
-                url = v.getUrl(s3_prefix=self.s3_prefix)
+                url = v.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -2759,7 +2760,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 keogram_entry_q = keogram_entry_q\
                     .filter(
@@ -2777,7 +2778,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if keogram_entry:
                 try:
-                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix)
+                    keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
@@ -2797,7 +2798,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 startrail_entry_q = startrail_entry_q\
                     .filter(
@@ -2815,7 +2816,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_entry:
                 try:
-                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix)
+                    startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
@@ -2835,7 +2836,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 )
 
 
-            if self.non_local:
+            if not self.local:
                 # Do not serve local assets
                 startrail_video_entry_q = startrail_video_entry_q\
                     .filter(
@@ -2853,7 +2854,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             if startrail_video_entry:
                 try:
-                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix)
+                    startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None

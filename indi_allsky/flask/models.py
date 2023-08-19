@@ -111,7 +111,7 @@ class IndiAllSkyDbFileBase(db.Model):
         return rel_filename_p
 
 
-    def getUrl(self, s3_prefix='', local=False):
+    def getUrl(self, s3_prefix='', local=True):
         if not local:
             if self.remote_url:
                 return self.remote_url

@@ -2061,6 +2061,19 @@
         <div class="col-sm-8">Enable serving images/videos exclusively from non-local sources (S3, etc)</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_LOCAL_IMAGES_ADMIN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.WEB_LOCAL_IMAGES_ADMIN(class='form-check-input') }}
+                <div id="WEB_LOCAL_IMAGES_ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Serve images/videos locally when coming from an admin network</div>
+    </div>
+
     <hr />
 
     <div class="form-group row">
@@ -3099,6 +3112,7 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',
+    'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
 ];
 
@@ -3231,6 +3245,16 @@ $('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
     }
 });
 
+// nonlocal assets
+$('#WEB_NONLOCAL_IMAGES').on('change', function() {
+    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
+        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
+    } else {
+        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+    }
+});
+
 
 $( document ).ready(function() {
     // FOCUS_MODE
@@ -3276,6 +3300,14 @@ $( document ).ready(function() {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    }
+
+    // nonlocal assets
+    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
+        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
+    } else {
+        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
     }
 });
 

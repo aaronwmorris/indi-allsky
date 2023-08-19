@@ -198,15 +198,21 @@ class JsonLatestImageView(JsonView):
             )
 
 
+        local = True  # default to local assets
         if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
-            # Do not serve local assets
-            latest_image_q = latest_image_q\
-                .filter(
-                    or_(
-                        IndiAllSkyDbImageTable.remote_url != sa_null(),
-                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                latest_image_q = latest_image_q\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbImageTable.remote_url != sa_null(),
+                            IndiAllSkyDbImageTable.s3_key != sa_null(),
+                        )
                     )
-                )
 
 
         latest_image = latest_image_q\
@@ -219,7 +225,7 @@ class JsonLatestImageView(JsonView):
 
 
         try:
-            url = latest_image.getUrl(s3_prefix=self.s3_prefix)
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
         except ValueError as e:
             app.logger.error('Error determining relative file name: %s', str(e))
             return None
@@ -487,15 +493,21 @@ class JsonImageLoopView(JsonView):
             )
 
 
+        local = True  # default to local assets
         if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
-            # Do not serve local assets
-            latest_images_q = latest_images_q\
-                .filter(
-                    or_(
-                        IndiAllSkyDbImageTable.remote_url != sa_null(),
-                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                latest_images_q = latest_images_q\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbImageTable.remote_url != sa_null(),
+                            IndiAllSkyDbImageTable.s3_key != sa_null(),
+                        )
                     )
-                )
 
 
         latest_images = latest_images_q\
@@ -506,7 +518,7 @@ class JsonImageLoopView(JsonView):
         image_list = list()
         for i in latest_images:
             try:
-                url = i.getUrl(s3_prefix=self.s3_prefix)
+                url = i.getUrl(s3_prefix=self.s3_prefix, local=local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
@@ -871,6 +883,7 @@ class ConfigView(FormView):
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
+            'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
             'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
@@ -1307,6 +1320,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
+        self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
@@ -1622,15 +1636,23 @@ class ImageViewerView(FormView):
             'FILTER_DETECTIONS' : None,
         }
 
+
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         context['form_viewer'] = IndiAllskyImageViewerPreload(
             data=form_data,
             camera_id=session['camera_id'],
             s3_prefix=self.s3_prefix,
-            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+            local=local,
         )
 
         return context
-
 
 
 class AjaxImageViewerView(BaseView):
@@ -1647,6 +1669,15 @@ class AjaxImageViewerView(BaseView):
         form_hour  = request.json.get('HOUR_SELECT')
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
+
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         if form_filter_detections:
             # filter images that have a detection
             form_viewer = IndiAllskyImageViewer(
@@ -1654,7 +1685,7 @@ class AjaxImageViewerView(BaseView):
                 camera_id=session['camera_id'],
                 detections_count=1,
                 s3_prefix=self.s3_prefix,
-                non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+                local=local,
             )
         else:
             form_viewer = IndiAllskyImageViewer(
@@ -1662,7 +1693,7 @@ class AjaxImageViewerView(BaseView):
                 camera_id=session['camera_id'],
                 detections_count=0,
                 s3_prefix=self.s3_prefix,
-                non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+                local=local,
             )
 
 
@@ -1780,11 +1811,20 @@ class VideoViewerView(FormView):
             'MONTH_SELECT' : None,
         }
 
+
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         context['form_video_viewer'] = IndiAllskyVideoViewerPreload(
             data=form_data,
             camera_id=session['camera_id'],
             s3_prefix=self.s3_prefix,
-            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+            local=local,
         )
 
         return context
@@ -1798,11 +1838,19 @@ class AjaxVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         form_video_viewer = IndiAllskyVideoViewer(
             data=request.json,
             camera_id=session['camera_id'],
             s3_prefix=self.s3_prefix,
-            non_local=self.indi_allsky_config['WEB_NONLOCAL_IMAGES'],
+            local=local,
         )
 
 
