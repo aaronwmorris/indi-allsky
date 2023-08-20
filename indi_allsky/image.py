@@ -2532,12 +2532,12 @@ class ImageProcessor(object):
 
         image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
-        h, s, v = cv2.split(image_hsv)
+        sat = image_hsv[:, :, 1]
 
         logger.info('Applying saturation settings')
-        new_s = cv2.multiply(s, SATURATION_FACTOR)
+        image_hsv[:, :, 1] = cv2.multiply(sat, SATURATION_FACTOR)
 
-        self.image = cv2.cvtColor(cv2.merge([h, new_s, v]), cv2.COLOR_HSV2BGR)
+        self.image = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
 
 
     def contrast_clahe(self):
@@ -2561,13 +2561,11 @@ class ImageProcessor(object):
         # color, apply to luminance
         lab = cv2.cvtColor(self.image, cv2.COLOR_BGR2LAB)
 
-        l, a, b = cv2.split(lab)
+        lum = lab[:, :, 0]
 
-        cl = clahe.apply(l)
+        lab[:, :, 0] = clahe.apply(lum)
 
-        new_lab = cv2.merge((cl, a, b))
-
-        self.image = cv2.cvtColor(new_lab, cv2.COLOR_LAB2BGR)
+        self.image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
 
     def contrast_clahe_16bit(self):
@@ -2609,10 +2607,13 @@ class ImageProcessor(object):
 
         # clahe only accepts uint8 and uint16
         # luminance is a float between 0-100, which needs to be remapped ot a 16bit int
-        cl_u16 = clahe.apply((lab[:, :, 0] * 650).astype(numpy_dtype))  # a little less than 65535 / 100
+        cl_u16 = clahe.apply((lab[:, :, 0] * 655).astype(numpy_dtype))  # a little less than 65535 / 100
 
         # map luminance back to 0-100
-        lab[:, :, 0] = (cl_u16 / 656).astype(numpy.float32)  # trying to prevent artifiacts
+        lab[:, :, 0] = (cl_u16 / 690).astype(numpy.float32)  # trying to prevent artifiacts in bright areas
+
+        #logger.info('L min: %0.4f', numpy.min(lab[:, :, 0]))
+        #logger.info('L max: %0.4f', numpy.max(lab[:, :, 0]))
 
         # convert back to uint8 or uint16
         self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
