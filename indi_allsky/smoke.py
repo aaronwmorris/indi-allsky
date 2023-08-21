@@ -64,7 +64,7 @@ class IndiAllskySmokeUpdate(object):
         if smoke_rating:
             logger.info('Smoke rating: %s', str(smoke_rating))
 
-            camera_data['SMOKE_RATING'] = constants.SMOKE_STR_MAP[smoke_rating]
+            camera_data['SMOKE_RATING'] = constants.SMOKE_RATING_STR_MAP[smoke_rating]
             camera_data['SMOKE_DATA_TS'] = int(time.time())
             camera.data = camera_data
             db.session.commit()
