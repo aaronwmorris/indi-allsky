@@ -163,6 +163,7 @@ class miscDb(object):
         #    'stars'
         #    'detections'
         #    'process_elapsed'
+        #    'data'
         #    'width'
         #    'height'
         #}
@@ -229,6 +230,9 @@ class miscDb(object):
             process_elapsed=metadata['process_elapsed'],
             height=metadata['height'],
             width=metadata['width'],
+            kpindex=metadata.get('kpindex'),
+            ovation_max=metadata.get('ovation_max'),
+            smoke_rating=metadata.get('smoke_rating'),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
             data=metadata.get('data', {}),
@@ -370,6 +374,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'data'
         #}
 
 
@@ -400,6 +405,10 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            kpindex=metadata.get('kpindex'),
+            ovation_max=metadata.get('ovation_max'),
+            smoke_rating=metadata.get('smoke_rating'),
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
