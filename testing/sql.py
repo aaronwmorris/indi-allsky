@@ -20,7 +20,9 @@ from indi_allsky.flask.models import IndiAllSkyDbImageTable
 #from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 
 from sqlalchemy import func
+from sqlalchemy import cast
 from sqlalchemy.types import DateTime
+from sqlalchemy.types import Boolean
 #from sqlalchemy.types import Integer
 
 from indi_allsky.flask import db
@@ -39,7 +41,7 @@ class SqlTester(object):
 
     def main(self):
         camera_id = 1
-        timespec = '20220201'
+        timespec = '20230821'
 
         d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
         night = True
@@ -58,11 +60,16 @@ class SqlTester(object):
         #    .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
         timelapse_files_entries = IndiAllSkyDbImageTable.query\
-            .add_columns(createDate_local)\
+            .add_columns(
+                createDate_local,
+                IndiAllSkyDbImageTable.id,
+                IndiAllSkyDbImageTable.kpindex,
+                IndiAllSkyDbImageTable.filename,
+            )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
-            .filter(IndiAllSkyDbImageTable.data['night'] == night)\
+            .filter(cast(IndiAllSkyDbImageTable.data['night'], Boolean) == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
         #    .filter(IndiAllSkyDbImageTable.night == night)\
@@ -92,6 +99,10 @@ class SqlTester(object):
         sql = timelapse_files_entries.statement.compile(db.engine, compile_kwargs={ "literal_binds" : True })
         #logger.info('SQL: %s', timelapse_files_entries)
         logger.info('SQL: %s', sql)
+
+        for i in timelapse_files_entries:
+            #logger.info('attrs: %s', i.keys())
+            logger.info('id: %d, kpindex: %s, image: %s', i.id, str(i.kpindex), i.filename)
 
 
 if __name__ == "__main__":
