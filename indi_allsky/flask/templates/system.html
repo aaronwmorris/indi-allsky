@@ -587,10 +587,13 @@ $('#form_settime').on('submit', function() {
     <div class="col-sm-2"></div>
     <div class="col-sm-2">Reboot</div>
     <div class="col-sm-2">
-        <input class="form-check-input" id="REBOOT_CONFIRM" name="REBOOT_CONFIRM" type="checkbox" value="y"> Confirm
+        <input class="form-check-input" id="REBOOT_CONFIRM1" name="REBOOT_CONFIRM1" type="checkbox" value="y"> Confirm 1
     </div>
     <div class="col-sm-2">
         <button class="btn btn-warning" id="button_system_reboot">Reboot system</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="REBOOT_CONFIRM2" name="REBOOT_CONFIRM2" type="checkbox" value="y"> Confirm 2
     </div>
 </div>
 
@@ -822,7 +825,12 @@ $("#button_gunicorn_indi_allsky_service_start").on("click", function() {
 
 
 $("#button_system_reboot").on("click", function() {
-    if (! $("#REBOOT_CONFIRM").prop('checked')) {
+    if (! $("#REBOOT_CONFIRM1").prop('checked')) {
+        console.log('Reboot checkbox not checked');
+        return;
+    }
+
+    if (! $("#REBOOT_CONFIRM2").prop('checked')) {
         console.log('Reboot checkbox not checked');
         return;
     }
@@ -831,7 +839,8 @@ $("#button_system_reboot").on("click", function() {
     $("#button_system_reboot").prop('disabled', true);
     $("#button_system_shutdown").prop('disabled', true);
 
-    $("#REBOOT_CONFIRM").prop('checked', false);
+    $("#REBOOT_CONFIRM1").prop('checked', false);
+    $("#REBOOT_CONFIRM2").prop('checked', false);
 
     button_click('system', 'reboot');
 });
