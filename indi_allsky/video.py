@@ -332,12 +332,12 @@ class VideoWorker(Process):
         }
 
         video_metadata['data'] = {
-            'kpindex'       : max_kpindex,
-            'ovation_max'   : max_ovation_max,
-            'smoke_rating'  : max_smoke_rating,
-            'moonphase'     : max_moonphase,
-            'stars'         : avg_stars,
-            'sqm'           : avg_sqm,
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'max_moonphase'     : max_moonphase,
+            'avg_stars'         : avg_stars,
+            'avg_sqm'           : avg_sqm,
         }
 
         # Create DB entry before creating file
@@ -524,12 +524,12 @@ class VideoWorker(Process):
         }
 
         keogram_metadata['data'] = {
-            'kpindex'       : max_kpindex,
-            'ovation_max'   : max_ovation_max,
-            'smoke_rating'  : max_smoke_rating,
-            'moonphase'     : max_moonphase,
-            'stars'         : avg_stars,
-            'sqm'           : avg_sqm,
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'max_moonphase'     : max_moonphase,
+            'avg_stars'         : avg_stars,
+            'avg_sqm'           : avg_sqm,
         }
 
 
@@ -544,12 +544,12 @@ class VideoWorker(Process):
         }
 
         startrail_metadata['data'] = {
-            'kpindex'       : max_kpindex,
-            'ovation_max'   : max_ovation_max,
-            'smoke_rating'  : max_smoke_rating,
-            'moonphase'     : max_moonphase,
-            'stars'         : avg_stars,
-            'sqm'           : avg_sqm,
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'max_moonphase'     : max_moonphase,
+            'avg_stars'         : avg_stars,
+            'avg_sqm'           : avg_sqm,
         }
 
 
@@ -562,12 +562,12 @@ class VideoWorker(Process):
         }
 
         startrail_video_metadata['data'] = {
-            'kpindex'       : max_kpindex,
-            'ovation_max'   : max_ovation_max,
-            'smoke_rating'  : max_smoke_rating,
-            'moonphase'     : max_moonphase,
-            'stars'         : avg_stars,
-            'sqm'           : avg_sqm,
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'max_moonphase'     : max_moonphase,
+            'max_stars'         : avg_stars,
+            'max_sqm'           : avg_sqm,
         }
 
 

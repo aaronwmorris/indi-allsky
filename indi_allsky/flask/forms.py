@@ -11,6 +11,8 @@ import pycurl
 
 from passlib.hash import argon2
 
+from .. import constants
+
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
 from wtforms import FloatField
@@ -2735,9 +2737,13 @@ class IndiAllskyVideoViewer(FlaskForm):
                 continue
 
             entry = {
-                'url'        : str(url),
-                'dayDate'    : v.dayDate.strftime('%B %d, %Y'),
-                'night'      : v.night,
+                'url'               : str(url),
+                'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
+                'night'             : v.night,
+                'avg_stars'         : int(v.data.get('stars', 0)),
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[v.data.get('max_smoke_rating')],
+                'max_kpindex'       : v.data.get('max_kpindex', 0.0),
+                'max_ovation_max'   : v.data.get('max_ovation_max', 0),
             }
             videos_data.append(entry)
 

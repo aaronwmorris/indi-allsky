@@ -204,6 +204,25 @@ function populate_videos(video_list) {
         ).appendTo(kl_a);
 
 
+        $('<hr/>').appendTo(datetime_div);
+
+        $('<div />', {
+            'text' : 'Stars: ' + item['avg_stars'],
+        }).appendTo(datetime_div);
+
+        $('<div />', {
+            'text' : 'Kpindex: ' + item['max_kpindex'],
+        }).appendTo(datetime_div);
+
+        $('<div />', {
+            'text' : 'Aurora: ' + item['max_ovation_max'] + '%',
+        }).appendTo(datetime_div);
+
+        $('<div />', {
+            'text' : 'Smoke: ' + item['max_smoke_rating'],
+        }).appendTo(datetime_div);
+
+
         // star trail
         var startrail_div = $('<div />', {
             'class' : "col-sm-2",
