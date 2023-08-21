@@ -156,13 +156,10 @@ function populate_videos(video_list) {
             'class' : "col-sm-2",
         }).appendTo(row_div);
 
-        $('<div />', {
-            'text'  : item['dayDate'],
-        }).appendTo(datetime_div);
-
         if (item['night']) {
             $('<div />', {
-                'text'  : "Night",
+                'text'  : item['dayDate'] + " (Night)",
+                'style' : "font-weight:bold"
             }).appendTo(datetime_div);
 
             // Link to star trail image
@@ -184,7 +181,8 @@ function populate_videos(video_list) {
             }
         } else {
             $('<div />', {
-                'text'  : "Day",
+                'text'  : item['dayDate'] + " (Day)",
+                'style' : "font-weight:bold"
             }).appendTo(datetime_div);
         }
 
@@ -207,7 +205,7 @@ function populate_videos(video_list) {
         $('<hr/>').appendTo(datetime_div);
 
         $('<div />', {
-            'text' : 'Stars: ' + item['avg_stars'],
+            'text' : 'Avg Stars: ' + item['avg_stars'],
         }).appendTo(datetime_div);
 
         $('<div />', {
