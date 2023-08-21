@@ -2386,6 +2386,21 @@ class AjaxSystemInfoView(BaseView):
                     'success-message' : '{0:d} Files Deleted'.format(file_count),
                 }
                 return jsonify(json_data)
+            elif command == 'flush_daytime':
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
+
+
+                file_count = self.flushDaytime(session['camera_id'])
+
+                json_data = {
+                    'success-message' : '{0:d} Files Deleted'.format(file_count),
+                }
+                return jsonify(json_data)
+
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -2579,6 +2594,92 @@ class AjaxSystemInfoView(BaseView):
             db.session.delete(sv)
 
         db.session.commit()
+
+
+        return file_count
+
+
+    def flushDaytime(self, camera_id):
+        file_count = 0
+
+        ### Images
+        image_query = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.night == sa_false())
+
+        file_count += image_query.count()
+
+        for i in image_query:
+            i.deleteAsset()
+            db.session.delete(i)
+
+        db.session.commit()
+
+
+        ### FITS Images
+        fits_image_query = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbFitsImageTable.night == sa_false())
+
+        file_count += fits_image_query.count()
+
+        for i in fits_image_query:
+            i.deleteAsset()
+            db.session.delete(i)
+
+        db.session.commit()
+
+
+        ### RAW Images
+        raw_image_query = IndiAllSkyDbRawImageTable.query\
+            .join(IndiAllSkyDbRawImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbRawImageTable.night == sa_false())
+
+        file_count += raw_image_query.count()
+
+        for i in raw_image_query:
+            i.deleteAsset()
+            db.session.delete(i)
+
+        db.session.commit()
+
+
+        ### Timelapses
+        video_query = IndiAllSkyDbVideoTable.query\
+            .join(IndiAllSkyDbVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbVideoTable.night == sa_false())
+
+
+        file_count += video_query.count()
+
+        for v in video_query:
+            v.deleteAsset()
+            db.session.delete(v)
+
+        db.session.commit()
+
+
+        ### Keograms
+        keogram_query = IndiAllSkyDbKeogramTable.query\
+            .join(IndiAllSkyDbKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbKeogramTable.night == sa_false())
+
+        file_count += keogram_query.count()
+
+
+        for k in keogram_query:
+            k.deleteAsset()
+            db.session.delete(k)
+
+        db.session.commit()
+
+        ## no startrails
+        ## no startrail videos
 
 
         return file_count
