@@ -329,7 +329,6 @@ class VideoWorker(Process):
         }
 
         video_metadata['data'] = {
-            'night'         : night,
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
@@ -512,7 +511,6 @@ class VideoWorker(Process):
         }
 
         keogram_metadata['data'] = {
-            'night'         : night,
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
@@ -530,7 +528,6 @@ class VideoWorker(Process):
         }
 
         startrail_metadata['data'] = {
-            'night'         : night,
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
@@ -546,7 +543,6 @@ class VideoWorker(Process):
         }
 
         startrail_video_metadata['data'] = {
-            'night'         : night,
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
@@ -636,8 +632,8 @@ class VideoWorker(Process):
         keogram_height, keogram_width = kg.shape[:2]
         keogram_entry.height = keogram_height
         keogram_entry.width = keogram_width
-        keogram_entry['data']['height'] = keogram_height
-        keogram_entry['data']['width'] = keogram_width
+        #keogram_entry['data']['height'] = keogram_height
+        #keogram_entry['data']['width'] = keogram_width
         db.session.commit()
 
 
@@ -649,8 +645,8 @@ class VideoWorker(Process):
             st_height, st_width = stg.shape[:2]
             startrail_entry.height = st_height
             startrail_entry.width = st_width
-            startrail_entry['data']['height'] = st_height
-            startrail_entry['data']['width'] = st_width
+            #startrail_entry['data']['height'] = st_height
+            #startrail_entry['data']['width'] = st_width
             db.session.commit()
 
 

@@ -620,8 +620,6 @@ class ImageWorker(Process):
             }
 
             image_metadata['data'] = {
-                'night'           : bool(self.night_v.value),
-                'adu'             : adu,
                 'moonmode'        : bool(self.moonmode_v.value),
                 'moonphase'       : self.astrometric_data['moon_phase'],
                 'sqm'             : i_ref['sqm_value'],
@@ -630,8 +628,6 @@ class ImageWorker(Process):
                 'kpindex'         : i_ref['kpindex'],
                 'ovation_max'     : i_ref['ovation_max'],
                 'smoke_rating'    : i_ref['smoke_rating'],
-                'height'          : final_height,
-                'width'           : final_width,
             }
 
             image_entry = self._miscDb.addImage(
@@ -931,9 +927,14 @@ class ImageWorker(Process):
         }
 
         fits_metadata['data'] = {
-            'night'      : bool(self.night_v.value),
-            'height'     : image_height,
-            'width'      : image_width,
+            'moonmode'        : bool(self.moonmode_v.value),
+            'moonphase'       : self.astrometric_data['moon_phase'],
+            'sqm'             : i_ref['sqm_value'],
+            'stars'           : len(i_ref['stars']),
+            'detections'      : len(i_ref['lines']),
+            'kpindex'         : i_ref['kpindex'],
+            'ovation_max'     : i_ref['ovation_max'],
+            'smoke_rating'    : i_ref['smoke_rating'],
         }
 
         self._miscDb.addFitsImage(
@@ -1088,9 +1089,14 @@ class ImageWorker(Process):
         }
 
         raw_metadata = {
-            'night'      : bool(self.night_v.value),
-            'height'     : image_height,
-            'width'      : image_width,
+            'moonmode'        : bool(self.moonmode_v.value),
+            'moonphase'       : self.astrometric_data['moon_phase'],
+            'sqm'             : i_ref['sqm_value'],
+            'stars'           : len(i_ref['stars']),
+            'detections'      : len(i_ref['lines']),
+            'kpindex'         : i_ref['kpindex'],
+            'ovation_max'     : i_ref['ovation_max'],
+            'smoke_rating'    : i_ref['smoke_rating'],
         }
 
         self._miscDb.addRawImage(

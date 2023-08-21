@@ -848,6 +848,18 @@ class IndiAllSkyDarks(object):
             'width'      : image_width,
         }
 
+        bpm_metadata['data'] = {
+            'bitdepth'   : image_bitpix,
+            'exposure'   : exposure_f,
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'temp'       : self.sensortemp_v.value,
+            'adu'        : bpm_adu_avg,
+            'height'     : image_height,
+            'width'      : image_width,
+        }
+
+
         dark_metadata = {
             'type'       : constants.DARK_FRAME,
             'createDate' : exp_date.timestamp(),
@@ -860,6 +872,18 @@ class IndiAllSkyDarks(object):
             'height'     : image_height,
             'width'      : image_width,
         }
+
+        dark_metadata['data'] = {
+            'bitdepth'   : image_bitpix,
+            'exposure'   : exposure_f,
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'temp'       : self.sensortemp_v.value,
+            'adu'        : dark_adu_avg,
+            'height'     : image_height,
+            'width'      : image_width,
+        }
+
 
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,
