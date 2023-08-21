@@ -630,6 +630,8 @@ class ImageWorker(Process):
                 'kpindex'         : i_ref['kpindex'],
                 'ovation_max'     : i_ref['ovation_max'],
                 'smoke_rating'    : i_ref['smoke_rating'],
+                'height'          : final_height,
+                'width'           : final_width,
             }
 
             image_entry = self._miscDb.addImage(
@@ -928,6 +930,12 @@ class ImageWorker(Process):
             'camera_uuid': i_ref['camera_uuid'],
         }
 
+        fits_metadata['data'] = {
+            'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
+        }
+
         self._miscDb.addFitsImage(
             filename,
             i_ref['camera_id'],
@@ -1077,6 +1085,12 @@ class ImageWorker(Process):
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
+        }
+
+        raw_metadata = {
+            'night'      : bool(self.night_v.value),
+            'height'     : image_height,
+            'width'      : image_width,
         }
 
         self._miscDb.addRawImage(

@@ -471,6 +471,26 @@ class VideoWorker(Process):
         logger.info('Found %d images for keogram/star trails', image_count)
 
 
+        image_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .first()
+
+
+        max_kpindex = image_data.image_max_kpindex
+        max_ovation_max = image_data.image_max_ovation_max
+        max_smoke_rating = image_data.image_max_smoke_rating
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
         processing_start = time.time()
 
         kg = KeogramGenerator(
@@ -491,6 +511,14 @@ class VideoWorker(Process):
             #'width'   # added later
         }
 
+        keogram_metadata['data'] = {
+            'night'         : night,
+            'kpindex'       : max_kpindex,
+            'ovation_max'   : max_ovation_max,
+            'smoke_rating'  : max_smoke_rating,
+        }
+
+
         startrail_metadata = {
             'type'       : constants.STARTRAIL,
             'createDate' : now.timestamp(),
@@ -501,6 +529,14 @@ class VideoWorker(Process):
             #'width'   # added later
         }
 
+        startrail_metadata['data'] = {
+            'night'         : night,
+            'kpindex'       : max_kpindex,
+            'ovation_max'   : max_ovation_max,
+            'smoke_rating'  : max_smoke_rating,
+        }
+
+
         startrail_video_metadata = {
             'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
@@ -508,6 +544,14 @@ class VideoWorker(Process):
             'night'      : night,
             'camera_uuid': camera.uuid,
         }
+
+        startrail_video_metadata['data'] = {
+            'night'         : night,
+            'kpindex'       : max_kpindex,
+            'ovation_max'   : max_ovation_max,
+            'smoke_rating'  : max_smoke_rating,
+        }
+
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
@@ -592,6 +636,8 @@ class VideoWorker(Process):
         keogram_height, keogram_width = kg.shape[:2]
         keogram_entry.height = keogram_height
         keogram_entry.width = keogram_width
+        keogram_entry['data']['height'] = keogram_height
+        keogram_entry['data']['width'] = keogram_width
         db.session.commit()
 
 
@@ -603,6 +649,8 @@ class VideoWorker(Process):
             st_height, st_width = stg.shape[:2]
             startrail_entry.height = st_height
             startrail_entry.width = st_width
+            startrail_entry['data']['height'] = st_height
+            startrail_entry['data']['width'] = st_width
             db.session.commit()
 
 
