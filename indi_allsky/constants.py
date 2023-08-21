@@ -61,3 +61,31 @@ CFA_MAP_STR = {
     None     : 'None',
 }
 
+
+# Leaving gaps for addtional classifications
+SMOKE_CLEAR = 1
+SMOKE_LIGHT = 30
+SMOKE_MEDIUM = 60
+SMOKE_HEAVY = 90
+
+SMOKE_MAP_STR = {
+    SMOKE_CLEAR   : 'Clear',
+    SMOKE_LIGHT   : 'Light',
+    SMOKE_MEDIUM  : 'Medium',
+    SMOKE_HEAVY   : 'Heavy',
+    None          : 'No Data',
+    'Clear'       : 'Clear',    # legacy
+    'Light'       : 'Light',    # legacy
+    'Medium'      : 'Medium',   # legacy
+    'Heavy'       : 'Heavy',    # legacy
+    'No Data'     : 'No Data',  # legacy
+
+}
+
+SMOKE_STR_MAP = {
+    'clear'       : SMOKE_CLEAR,
+    'light'       : SMOKE_LIGHT,
+    'medium'      : SMOKE_MEDIUM,
+    'heavy'       : SMOKE_HEAVY,
+    'no data'     : None,
+}

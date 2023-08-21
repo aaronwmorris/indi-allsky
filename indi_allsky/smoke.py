@@ -10,6 +10,7 @@ from lxml import etree
 import shapely
 import logging
 
+from .. import constants
 
 from .flask import db
 from .flask.miscDb import miscDb
@@ -26,9 +27,9 @@ class IndiAllskySmokeUpdate(object):
     # folder name, rating
     hms_kml_folders = OrderedDict({
         # check from light to heavy, in order
-        'Smoke (Light)'  : 'Light',
-        'Smoke (Medium)' : 'Medium',
-        'Smoke (Heavy)'  : 'Heavy',
+        'Smoke (Light)'  : 'light',
+        'Smoke (Medium)' : 'medium',
+        'Smoke (Heavy)'  : 'heavy',
     })
 
 
@@ -57,13 +58,13 @@ class IndiAllskySmokeUpdate(object):
 
         else:
             # all other regions report no data
-            smoke_rating = 'No data'
+            smoke_rating = 'no data'
 
 
         if smoke_rating:
-            logger.info('Smoke rating: %s', smoke_rating)
+            logger.info('Smoke rating: %s', str(smoke_rating))
 
-            camera_data['SMOKE_RATING'] = smoke_rating
+            camera_data['SMOKE_RATING'] = constants.SMOKE_STR_MAP[smoke_rating]
             camera_data['SMOKE_DATA_TS'] = int(time.time())
             camera.data = camera_data
             db.session.commit()
