@@ -325,6 +325,9 @@ class ImageWorker(Process):
         processing_start = time.time()
 
 
+        self.image_processor.get_astrometric_data()
+
+
         try:
             image_data = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         except BadImage as e:
@@ -2819,44 +2822,7 @@ class ImageProcessor(object):
         return numpy.maximum(masked_left, masked_right)
 
 
-    def label_image(self):
-        # this needs to be enabled during focus mode
-
-
-        # set initial values
-        self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
-        self.text_anchor_pillow = 'la'  # Pillow: left-ascender
-        self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
-        self.text_font_height = int(self.config['TEXT_PROPERTIES']['FONT_HEIGHT'])
-
-
-        i_ref = self.getLatestImage()
-
-        # Labels are enabled by default
-        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
-
-        if image_label_system == 'opencv':
-            self._image_orb_opencv(i_ref)
-            self._label_image_opencv(i_ref)
-        elif image_label_system == 'pillow':
-            self._image_orb_opencv(i_ref)
-            self._label_image_pillow(i_ref)
-        else:
-            logger.warning('Image labels disabled')
-            return
-
-
-    def _image_orb_opencv(self, i_ref):
-        image_height, image_width = self.image.shape[:2]
-
-
-        # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
-            logger.warning('Focus mode enabled, orbs disabled')
-            return
-
-
+    def get_astrometric_data(self):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
@@ -2947,7 +2913,60 @@ class ImageProcessor(object):
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
+    def label_image(self):
+        # this needs to be enabled during focus mode
+
+
+        # set initial values
+        self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
+        self.text_anchor_pillow = 'la'  # Pillow: left-ascender
+        self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
+        self.text_font_height = int(self.config['TEXT_PROPERTIES']['FONT_HEIGHT'])
+
+
+        i_ref = self.getLatestImage()
+
+        # Labels are enabled by default
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+        if image_label_system == 'opencv':
+            self._image_orb_opencv(i_ref)
+            self._label_image_opencv(i_ref)
+        elif image_label_system == 'pillow':
+            self._image_orb_opencv(i_ref)
+            self._label_image_pillow(i_ref)
+        else:
+            logger.warning('Image labels disabled')
+            return
+
+
+    def _image_orb_opencv(self, i_ref):
+        image_height, image_width = self.image.shape[:2]
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, orbs disabled')
+            return
+
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
+
+
+        obs.date = utcnow
+
+        sun = ephem.Sun()
+        sun.compute(obs)
+
+
         moon = ephem.Moon()
+        moon.compute(obs)
 
 
         ### ORBS
