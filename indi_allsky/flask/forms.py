@@ -2736,14 +2736,20 @@ class IndiAllskyVideoViewer(FlaskForm):
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
+
+            if v.data:
+                data = v.data
+            else:
+                data = {}
+
             entry = {
                 'url'               : str(url),
                 'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
                 'night'             : v.night,
-                'avg_stars'         : int(v.data.get('avg_stars', 0)),
-                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[v.data.get('max_smoke_rating')],
-                'max_kpindex'       : v.data.get('max_kpindex', 0.0),
-                'max_ovation_max'   : v.data.get('max_ovation_max', 0),
+                'avg_stars'         : data.get('avg_stars', 0),
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating')],
+                'max_kpindex'       : data.get('max_kpindex', 0.0),
+                'max_ovation_max'   : data.get('max_ovation_max', 0),
             }
             videos_data.append(entry)
 
