@@ -293,9 +293,9 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
-    kpindex = db.Column(db.Float, nullable=True, index=True)
-    ovation_max = db.Column(db.Integer, nullable=True, index=True)
-    smoke_rating = db.Column(db.Integer, nullable=True, index=True)
+    #kpindex = db.Column(db.Float, nullable=True, index=True)
+    #ovation_max = db.Column(db.Integer, nullable=True, index=True)
+    #smoke_rating = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated

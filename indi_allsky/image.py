@@ -622,16 +622,7 @@ class ImageWorker(Process):
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
 
-            image_metadata['data'] = {
-                'moonmode'        : bool(self.moonmode_v.value),
-                'moonphase'       : self.astrometric_data['moon_phase'],
-                'sqm'             : i_ref['sqm_value'],
-                'stars'           : len(i_ref['stars']),
-                'detections'      : len(i_ref['lines']),
-                'kpindex'         : i_ref['kpindex'],
-                'ovation_max'     : i_ref['ovation_max'],
-                'smoke_rating'    : i_ref['smoke_rating'],
-            }
+            image_metadata['data'] = {}
 
             image_entry = self._miscDb.addImage(
                 new_filename,

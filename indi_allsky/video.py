@@ -288,6 +288,9 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
@@ -299,6 +302,9 @@ class VideoWorker(Process):
         max_kpindex = timelapse_data.image_max_kpindex
         max_ovation_max = timelapse_data.image_max_ovation_max
         max_smoke_rating = timelapse_data.image_max_smoke_rating
+        max_moonphase = timelapse_data.image_max_moonphase
+        avg_stars = timelapse_data.image_avg_stars
+        avg_sqm = timelapse_data.image_avg_sqm
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
 
@@ -322,9 +328,6 @@ class VideoWorker(Process):
             'createDate'    : now.timestamp(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
-            'kpindex'       : max_kpindex,
-            'ovation_max'   : max_ovation_max,
-            'smoke_rating'  : max_smoke_rating,
             'camera_uuid'   : camera.uuid,
         }
 
@@ -332,6 +335,9 @@ class VideoWorker(Process):
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
+            'moonphase'     : max_moonphase,
+            'stars'         : avg_stars,
+            'sqm'           : avg_sqm,
         }
 
         # Create DB entry before creating file
@@ -475,6 +481,9 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
             )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
@@ -486,6 +495,10 @@ class VideoWorker(Process):
         max_kpindex = image_data.image_max_kpindex
         max_ovation_max = image_data.image_max_ovation_max
         max_smoke_rating = image_data.image_max_smoke_rating
+        max_moonphase = image_data.image_max_moonphase
+        avg_stars = image_data.image_avg_stars
+        avg_sqm = image_data.image_avg_sqm
+
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
 
@@ -514,6 +527,9 @@ class VideoWorker(Process):
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
+            'moonphase'     : max_moonphase,
+            'stars'         : avg_stars,
+            'sqm'           : avg_sqm,
         }
 
 
@@ -531,6 +547,9 @@ class VideoWorker(Process):
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
+            'moonphase'     : max_moonphase,
+            'stars'         : avg_stars,
+            'sqm'           : avg_sqm,
         }
 
 
@@ -546,6 +565,9 @@ class VideoWorker(Process):
             'kpindex'       : max_kpindex,
             'ovation_max'   : max_ovation_max,
             'smoke_rating'  : max_smoke_rating,
+            'moonphase'     : max_moonphase,
+            'stars'         : avg_stars,
+            'sqm'           : avg_sqm,
         }
 
 

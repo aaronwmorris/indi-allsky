@@ -407,9 +407,6 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            kpindex=metadata.get('kpindex'),
-            ovation_max=metadata.get('ovation_max'),
-            smoke_rating=metadata.get('smoke_rating'),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),
