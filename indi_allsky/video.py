@@ -46,6 +46,7 @@ from .flask.models import IndiAllSkyDbFitsImageTable
 from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
@@ -281,6 +282,27 @@ class VideoWorker(Process):
 
         logger.info('Found %d images for timelapse', timelapse_files_entries.count())
 
+
+        timelapse_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .first()
+
+
+        max_kpindex = timelapse_data.image_max_kpindex
+        max_ovation_max = timelapse_data.image_max_ovation_max
+        max_smoke_rating = timelapse_data.image_max_smoke_rating
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
         timelapse_files = list()
         for entry in timelapse_files_entries:
             p_entry = Path(entry.getFilesystemPath())
@@ -296,11 +318,21 @@ class VideoWorker(Process):
 
 
         video_metadata = {
-            'type'       : constants.VIDEO,
-            'createDate' : now.timestamp(),
-            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'night'      : night,
-            'camera_uuid': camera.uuid,
+            'type'          : constants.VIDEO,
+            'createDate'    : now.timestamp(),
+            'dayDate'       : d_dayDate.strftime('%Y%m%d'),
+            'night'         : night,
+            'kpindex'       : max_kpindex,
+            'ovation_max'   : max_ovation_max,
+            'smoke_rating'  : max_smoke_rating,
+            'camera_uuid'   : camera.uuid,
+        }
+
+        video_metadata['data'] = {
+            'night'         : night,
+            'kpindex'       : max_kpindex,
+            'ovation_max'   : max_ovation_max,
+            'smoke_rating'  : max_smoke_rating,
         }
 
         # Create DB entry before creating file
