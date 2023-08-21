@@ -10,7 +10,7 @@ from lxml import etree
 import shapely
 import logging
 
-from .. import constants
+from . import constants
 
 from .flask import db
 from .flask.miscDb import miscDb

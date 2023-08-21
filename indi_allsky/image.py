@@ -645,7 +645,7 @@ class ImageWorker(Process):
                 'longitude': round(self.longitude_v.value, 3),
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
-                'smoke_rating' : i_ref['smoke_rating'],
+                'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
                 'sidereal_time': self.astrometric_data['sidereal_time'],
             }
 
@@ -782,7 +782,7 @@ class ImageWorker(Process):
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
-            'smoke_rating'        : i_ref['smoke_rating'],
+            'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
         }
 
 
@@ -1822,17 +1822,18 @@ class ImageProcessor(object):
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
-            ovation_max = int(camera_data.get('OVATION_MAX'))
-            smoke_rating = str(camera_data.get('SMOKE_RATING', 'No data'))
+            image_data['kpindex'] = float(camera_data.get('KPINDEX_CURRENT'))
+            image_data['ovation_max'] = int(camera_data.get('OVATION_MAX'))
 
-            image_data['kpindex'] = kpindex_current
-            image_data['ovation_max'] = ovation_max
-            image_data['smoke_rating'] = smoke_rating
+            try:
+                image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING'))
+            except ValueError:
+                # fix legacy values (str) until updated
+                image_data['smoke_rating'] = None
         else:
             image_data['kpindex'] = 0
             image_data['ovation_max'] = 0.0
-            image_data['smoke_rating'] = 'No data'
+            image_data['smoke_rating'] = None
 
 
 
@@ -3001,7 +3002,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : i_ref['smoke_rating'],
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
@@ -3253,7 +3254,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : i_ref['smoke_rating'],
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
