@@ -1088,7 +1088,7 @@ class ImageWorker(Process):
             'camera_uuid': i_ref['camera_uuid'],
         }
 
-        raw_metadata = {
+        raw_metadata['data'] = {
             'moonmode'        : bool(self.moonmode_v.value),
             'moonphase'       : self.astrometric_data['moon_phase'],
             'sqm'             : i_ref['sqm_value'],
