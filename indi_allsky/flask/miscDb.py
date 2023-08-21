@@ -206,7 +206,6 @@ class miscDb(object):
         night_val = bool(metadata['night'])  # integer to boolean
         adu_roi_val = bool(metadata['adu_roi'])
 
-
         image = IndiAllSkyDbImageTable(
             camera_id=camera_id,
             filename=str(filename_p),
@@ -232,6 +231,7 @@ class miscDb(object):
             width=metadata['width'],
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            data=metadata.get('data', {}),
         )
 
         db.session.add(image)

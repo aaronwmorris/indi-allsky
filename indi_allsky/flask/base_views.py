@@ -477,7 +477,7 @@ class TemplateView(BaseView):
     def get_smoke_info(self):
         camera_data = self.camera.data
 
-        app.logger.info('Smoke data: %s', camera_data)
+        #app.logger.info('Smoke data: %s', camera_data)
 
         smoke_rating = constants.SMOKE_RATING_MAP_STR.get(camera_data.get('SMOKE_RATING'), 'No Data')
 

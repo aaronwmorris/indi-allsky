@@ -4,7 +4,7 @@ import sys
 import time
 from pathlib import Path
 from datetime import datetime
-from datetime import timedelta
+#from datetime import timedelta
 import logging
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
@@ -21,7 +21,7 @@ from indi_allsky.flask.models import IndiAllSkyDbImageTable
 
 from sqlalchemy import func
 from sqlalchemy.types import DateTime
-from sqlalchemy.types import Integer
+#from sqlalchemy.types import Integer
 
 from indi_allsky.flask import db
 
@@ -62,33 +62,34 @@ class SqlTester(object):
             .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
-            .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.data['night'] == night)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
+        #    .filter(IndiAllSkyDbImageTable.night == night)\
 
-        now_minus_3h = datetime.now() - timedelta(hours=3)
+        #now_minus_3h = datetime.now() - timedelta(hours=3)
 
-        createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
-        image_lag_list = IndiAllSkyDbImageTable.query\
-            .add_columns(
-                IndiAllSkyDbImageTable.id,
-                (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
-            )\
-            .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .limit(50)
+        #createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate, type_=Integer)
+        #image_lag_list = IndiAllSkyDbImageTable.query\
+        #    .add_columns(
+        #        IndiAllSkyDbImageTable.id,
+        #        (createDate_s - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
+        #    )\
+        #    .filter(IndiAllSkyDbImageTable.createDate > now_minus_3h)\
+        #    .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+        #    .limit(50)
 
 
         start = time.time()
 
-        #logger.warning('Entries: %d', timelapse_files_entries.count())
-        logger.warning('Entries: %d', image_lag_list.count())
+        logger.warning('Entries: %d', timelapse_files_entries.count())
+        #logger.warning('Entries: %d', image_lag_list.count())
 
         elapsed_s = time.time() - start
         logger.info('SQL executed in %0.4f s', elapsed_s)
 
 
-        sql = image_lag_list.statement.compile(db.engine, compile_kwargs={ "literal_binds" : True })
+        sql = timelapse_files_entries.statement.compile(db.engine, compile_kwargs={ "literal_binds" : True })
         #logger.info('SQL: %s', timelapse_files_entries)
         logger.info('SQL: %s', sql)
 
