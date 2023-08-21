@@ -159,7 +159,7 @@ function populate_videos(video_list) {
         if (item['night']) {
             $('<div />', {
                 'text'  : item['dayDate'] + " (Night)",
-                'style' : "font-weight:bold"
+                'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
             // Link to star trail image
@@ -182,7 +182,7 @@ function populate_videos(video_list) {
         } else {
             $('<div />', {
                 'text'  : item['dayDate'] + " (Day)",
-                'style' : "font-weight:bold"
+                'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
         }
 
@@ -202,22 +202,24 @@ function populate_videos(video_list) {
         ).appendTo(kl_a);
 
 
-        $('<hr/>').appendTo(datetime_div);
-
         $('<div />', {
             'text' : 'Avg Stars: ' + item['avg_stars'],
+            'style' : "font-size:12px",
         }).appendTo(datetime_div);
 
         $('<div />', {
             'text' : 'Kpindex: ' + item['max_kpindex'],
+            'style' : "font-size:12px",
         }).appendTo(datetime_div);
 
         $('<div />', {
             'text' : 'Aurora: ' + item['max_ovation_max'] + '%',
+            'style' : "font-size:12px",
         }).appendTo(datetime_div);
 
         $('<div />', {
             'text' : 'Smoke: ' + item['max_smoke_rating'],
+            'style' : "font-size:12px",
         }).appendTo(datetime_div);
 
 
