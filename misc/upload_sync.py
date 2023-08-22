@@ -62,6 +62,7 @@ class UploadSync(object):
         self.batch_size  = self.threads * 7
 
         self._upload_images = False
+        self._syncapi_images = True
 
         with app.app_context():
             try:
@@ -103,6 +104,15 @@ class UploadSync(object):
         self._upload_images = bool(new_upload_images)
 
 
+    @property
+    def syncapi_images(self):
+        return self._syncapi_images
+
+    @syncapi_images.setter
+    def syncapi_images(self, new_syncapi_images):
+        self._syncapi_images = bool(new_syncapi_images)
+
+
     def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
         logger.warning('The program will exit when the current file transfers complete')
@@ -133,6 +143,10 @@ class UploadSync(object):
                     for entry in data[1]:
                         if upload_type == 'upload' and table.__name__ == 'IndiAllSkyDbImageTable':
                             if not self.upload_images:
+                                continue
+
+                        if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbImageTable':
+                            if not self.syncapi_images:
                                 continue
 
 
@@ -723,12 +737,26 @@ if __name__ == "__main__":
     )
     argparser.set_defaults(upload_images=False)
 
+    argparser.add_argument(
+        '--no-syncapi-images',
+        help='disable syncapi for images',
+        dest='syncapi_images',
+        action='store_false',
+    )
+    argparser.add_argument(
+        '--syncapi-images',
+        help='enable syncapi for images (default)',
+        dest='syncapi_images',
+        action='store_true',
+    )
+    argparser.set_defaults(syncapi_images=True)
 
 
     args = argparser.parse_args()
 
     us = UploadSync(args.threads)
     us.upload_images = args.upload_images
+    us.syncapi_images = args.syncapi_images
 
     action_func = getattr(us, args.action)
     action_func()
