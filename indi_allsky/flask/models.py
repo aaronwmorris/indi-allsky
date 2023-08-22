@@ -64,7 +64,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     lensFocalRatio = db.Column(db.Float, nullable=True)
     lensImageCircle = db.Column(db.Integer, nullable=True)  # pixels
 
-    data = db.Column(db.JSON)  # this is only for local data, will not be synced
+    data = db.Column(db.JSON, index=True)
 
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
@@ -187,6 +187,10 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     calibrated = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     detections = db.Column(db.Integer, server_default='0', nullable=False, index=True)
+    kpindex = db.Column(db.Float, nullable=True, index=True)
+    ovation_max = db.Column(db.Integer, nullable=True, index=True)
+    smoke_rating = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -220,6 +224,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     adu = db.Column(db.Float, nullable=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
@@ -254,6 +259,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     adu = db.Column(db.Float, nullable=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
 
@@ -287,6 +293,10 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    #kpindex = db.Column(db.Float, nullable=True, index=True)
+    #ovation_max = db.Column(db.Integer, nullable=True, index=True)
+    #smoke_rating = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -319,6 +329,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='keograms')
 
@@ -341,6 +352,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrails')
 
@@ -363,6 +375,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='startrailvideos')
 
@@ -387,6 +400,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='fitsimages')
 
@@ -411,6 +425,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='rawimages')
 
@@ -511,7 +526,7 @@ class IndiAllSkyDbConfigTable(db.Model):
     level = db.Column(db.String(length=12), nullable=False)
     encrypted = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     note = db.Column(db.String(length=255), nullable=False)
-    data = db.Column(db.JSON)
+    data = db.Column(db.JSON, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # users can be deleted
     user = db.relationship('IndiAllSkyDbUserTable', back_populates='configs')
 
@@ -541,6 +556,7 @@ class IndiAllSkyDbUserTable(db.Model):
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    data = db.Column(db.JSON, index=True)
     configs = db.relationship('IndiAllSkyDbConfigTable', back_populates='user')
 
 

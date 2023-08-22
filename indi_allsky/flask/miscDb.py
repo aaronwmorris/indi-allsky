@@ -163,6 +163,7 @@ class miscDb(object):
         #    'stars'
         #    'detections'
         #    'process_elapsed'
+        #    'data'
         #    'width'
         #    'height'
         #}
@@ -195,17 +196,10 @@ class miscDb(object):
             temp_val = None
 
 
-        # if moonmode is 0, moonphase is Null
-        if metadata['moonmode']:
-            moonphase_val = float(metadata['moonmode'])
-        else:
-            moonphase_val = None
-
         moonmode_val = bool(metadata['moonmode'])
 
         night_val = bool(metadata['night'])  # integer to boolean
         adu_roi_val = bool(metadata['adu_roi'])
-
 
         image = IndiAllSkyDbImageTable(
             camera_id=camera_id,
@@ -223,15 +217,19 @@ class miscDb(object):
             adu_roi=adu_roi_val,
             stable=metadata['stable'],
             moonmode=moonmode_val,
-            moonphase=moonphase_val,
+            moonphase=metadata['moonphase'],
             sqm=metadata['sqm'],
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
             height=metadata['height'],
             width=metadata['width'],
+            kpindex=metadata.get('kpindex'),
+            ovation_max=metadata.get('ovation_max'),
+            smoke_rating=metadata.get('smoke_rating'),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            data=metadata.get('data', {}),
         )
 
         db.session.add(image)
@@ -294,6 +292,7 @@ class miscDb(object):
             adu=metadata['adu'],
             height=metadata['height'],
             width=metadata['width'],
+            data=metadata.get('data', {}),
         )
 
         db.session.add(dark)
@@ -355,6 +354,7 @@ class miscDb(object):
             adu=metadata['adu'],
             height=metadata['height'],
             width=metadata['width'],
+            data=metadata.get('data', {}),
         )
 
         db.session.add(bpm)
@@ -370,6 +370,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'data'
         #}
 
 
@@ -400,6 +401,9 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -451,6 +455,7 @@ class miscDb(object):
             night=metadata['night'],
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -503,6 +508,7 @@ class miscDb(object):
             night=metadata['night'],
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -551,6 +557,9 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -607,6 +616,7 @@ class miscDb(object):
             night=metadata['night'],
             height=metadata['height'],
             width=metadata['width'],
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )
@@ -663,6 +673,7 @@ class miscDb(object):
             night=metadata['night'],
             height=metadata['height'],
             width=metadata['width'],
+            data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
         )

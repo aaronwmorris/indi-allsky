@@ -848,6 +848,9 @@ class IndiAllSkyDarks(object):
             'width'      : image_width,
         }
 
+        bpm_metadata['data'] = {}
+
+
         dark_metadata = {
             'type'       : constants.DARK_FRAME,
             'createDate' : exp_date.timestamp(),
@@ -860,6 +863,9 @@ class IndiAllSkyDarks(object):
             'height'     : image_height,
             'width'      : image_width,
         }
+
+        dark_metadata['data'] = {}
+
 
         self._miscDb.addBadPixelMap(
             full_bpm_filename_p,

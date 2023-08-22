@@ -156,13 +156,10 @@ function populate_videos(video_list) {
             'class' : "col-sm-2",
         }).appendTo(row_div);
 
-        $('<div />', {
-            'text'  : item['dayDate'],
-        }).appendTo(datetime_div);
-
         if (item['night']) {
             $('<div />', {
-                'text'  : "Night",
+                'text'  : item['dayDate'] + " (Night)",
+                'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
             // Link to star trail image
@@ -182,26 +179,70 @@ function populate_videos(video_list) {
                 ).appendTo(st_a);
 
             }
+
+
+            // Link to keogram image
+            var kl_a = $('<a />', {
+                'href'   : item['keogram'],
+                'target' : "_blank",
+                'rel'    : "noopener noreferrer",
+                'class'  : "text-decoration-none link-warning",
+            }).appendTo(datetime_div);
+            $('<div />', {}).html(
+                $('<span />', {
+                    'text'  : "Keogram",
+                    'class' : "badge pill bg-warning text-dark",
+                })
+            ).appendTo(kl_a);
+
+
+            $('<div />', {
+                'text' : 'Avg Stars: ' + item['avg_stars'],
+                'style' : "font-size:12px",
+            }).appendTo(datetime_div);
+
+            $('<div />', {
+                'text' : 'Kpindex: ' + item['max_kpindex'],
+                'style' : "font-size:12px",
+            }).appendTo(datetime_div);
+
+            $('<div />', {
+                'text' : 'Aurora: ' + item['max_ovation_max'] + '%',
+                'style' : "font-size:12px",
+            }).appendTo(datetime_div);
+
+            $('<div />', {
+                'text' : 'Smoke: ' + item['max_smoke_rating'],
+                'style' : "font-size:12px",
+            }).appendTo(datetime_div);
+
         } else {
             $('<div />', {
-                'text'  : "Day",
+                'text'  : item['dayDate'] + " (Day)",
+                'style' : "font-size:12px;font-weight:bold",
+            }).appendTo(datetime_div);
+
+
+            // Link to keogram image
+            var kl_a = $('<a />', {
+                'href'   : item['keogram'],
+                'target' : "_blank",
+                'rel'    : "noopener noreferrer",
+                'class'  : "text-decoration-none link-warning",
+            }).appendTo(datetime_div);
+            $('<div />', {}).html(
+                $('<span />', {
+                    'text'  : "Keogram",
+                    'class' : "badge pill bg-warning text-dark",
+                })
+            ).appendTo(kl_a);
+
+
+            $('<div />', {
+                'text' : 'Smoke: ' + item['max_smoke_rating'],
+                'style' : "font-size:12px",
             }).appendTo(datetime_div);
         }
-
-
-        // Link to keogram image
-        var kl_a = $('<a />', {
-            'href'   : item['keogram'],
-            'target' : "_blank",
-            'rel'    : "noopener noreferrer",
-            'class'  : "text-decoration-none link-warning",
-        }).appendTo(datetime_div);
-        $('<div />', {}).html(
-            $('<span />', {
-                'text'  : "Keogram",
-                'class' : "badge pill bg-warning text-dark",
-            })
-        ).appendTo(kl_a);
 
 
         // star trail

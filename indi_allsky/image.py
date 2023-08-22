@@ -325,6 +325,9 @@ class ImageWorker(Process):
         processing_start = time.time()
 
 
+        self.image_processor.get_astrometric_data()
+
+
         try:
             image_data = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         except BadImage as e:
@@ -611,10 +614,15 @@ class ImageWorker(Process):
                 'stars'           : len(i_ref['stars']),
                 'detections'      : len(i_ref['lines']),
                 'process_elapsed' : processing_elapsed_s,
+                'kpindex'         : i_ref['kpindex'],
+                'ovation_max'     : i_ref['ovation_max'],
+                'smoke_rating'    : i_ref['smoke_rating'],
                 'height'          : final_height,
                 'width'           : final_width,
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
+
+            image_metadata['data'] = {}
 
             image_entry = self._miscDb.addImage(
                 new_filename,
@@ -645,7 +653,7 @@ class ImageWorker(Process):
                 'longitude': round(self.longitude_v.value, 3),
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
-                'smoke_rating' : i_ref['smoke_rating'],
+                'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
                 'sidereal_time': self.astrometric_data['sidereal_time'],
             }
 
@@ -782,7 +790,7 @@ class ImageWorker(Process):
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
-            'smoke_rating'        : i_ref['smoke_rating'],
+            'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
         }
 
 
@@ -910,6 +918,17 @@ class ImageWorker(Process):
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
+        }
+
+        fits_metadata['data'] = {
+            'moonmode'        : bool(self.moonmode_v.value),
+            'moonphase'       : self.astrometric_data['moon_phase'],
+            'sqm'             : i_ref['sqm_value'],
+            'stars'           : len(i_ref['stars']),
+            'detections'      : len(i_ref['lines']),
+            'kpindex'         : i_ref['kpindex'],
+            'ovation_max'     : i_ref['ovation_max'],
+            'smoke_rating'    : i_ref['smoke_rating'],
         }
 
         self._miscDb.addFitsImage(
@@ -1061,6 +1080,17 @@ class ImageWorker(Process):
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref['camera_uuid'],
+        }
+
+        raw_metadata['data'] = {
+            'moonmode'        : bool(self.moonmode_v.value),
+            'moonphase'       : self.astrometric_data['moon_phase'],
+            'sqm'             : i_ref['sqm_value'],
+            'stars'           : len(i_ref['stars']),
+            'detections'      : len(i_ref['lines']),
+            'kpindex'         : i_ref['kpindex'],
+            'ovation_max'     : i_ref['ovation_max'],
+            'smoke_rating'    : i_ref['smoke_rating'],
         }
 
         self._miscDb.addRawImage(
@@ -1822,17 +1852,18 @@ class ImageProcessor(object):
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
-            ovation_max = int(camera_data.get('OVATION_MAX'))
-            smoke_rating = str(camera_data.get('SMOKE_RATING', 'No data'))
+            image_data['kpindex'] = float(camera_data.get('KPINDEX_CURRENT'))
+            image_data['ovation_max'] = int(camera_data.get('OVATION_MAX'))
 
-            image_data['kpindex'] = kpindex_current
-            image_data['ovation_max'] = ovation_max
-            image_data['smoke_rating'] = smoke_rating
+            try:
+                image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING'))
+            except ValueError:
+                # fix legacy values (str) until updated
+                image_data['smoke_rating'] = None
         else:
             image_data['kpindex'] = 0
             image_data['ovation_max'] = 0.0
-            image_data['smoke_rating'] = 'No data'
+            image_data['smoke_rating'] = None
 
 
 
@@ -2782,44 +2813,7 @@ class ImageProcessor(object):
         return numpy.maximum(masked_left, masked_right)
 
 
-    def label_image(self):
-        # this needs to be enabled during focus mode
-
-
-        # set initial values
-        self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
-        self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
-        self.text_anchor_pillow = 'la'  # Pillow: left-ascender
-        self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
-        self.text_font_height = int(self.config['TEXT_PROPERTIES']['FONT_HEIGHT'])
-
-
-        i_ref = self.getLatestImage()
-
-        # Labels are enabled by default
-        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
-
-        if image_label_system == 'opencv':
-            self._image_orb_opencv(i_ref)
-            self._label_image_opencv(i_ref)
-        elif image_label_system == 'pillow':
-            self._image_orb_opencv(i_ref)
-            self._label_image_pillow(i_ref)
-        else:
-            logger.warning('Image labels disabled')
-            return
-
-
-    def _image_orb_opencv(self, i_ref):
-        image_height, image_width = self.image.shape[:2]
-
-
-        # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
-            logger.warning('Focus mode enabled, orbs disabled')
-            return
-
-
+    def get_astrometric_data(self):
         utcnow = datetime.utcnow()  # ephem expects UTC dates
         #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
 
@@ -2910,7 +2904,60 @@ class ImageProcessor(object):
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
+    def label_image(self):
+        # this needs to be enabled during focus mode
+
+
+        # set initial values
+        self.text_color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        self.text_xy = [int(self.config['TEXT_PROPERTIES']['FONT_X']), int(self.config['TEXT_PROPERTIES']['FONT_Y'])]
+        self.text_anchor_pillow = 'la'  # Pillow: left-ascender
+        self.text_size_pillow = int(self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE'])
+        self.text_font_height = int(self.config['TEXT_PROPERTIES']['FONT_HEIGHT'])
+
+
+        i_ref = self.getLatestImage()
+
+        # Labels are enabled by default
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+        if image_label_system == 'opencv':
+            self._image_orb_opencv(i_ref)
+            self._label_image_opencv(i_ref)
+        elif image_label_system == 'pillow':
+            self._image_orb_opencv(i_ref)
+            self._label_image_pillow(i_ref)
+        else:
+            logger.warning('Image labels disabled')
+            return
+
+
+    def _image_orb_opencv(self, i_ref):
+        image_height, image_width = self.image.shape[:2]
+
+
+        # Disabled when focus mode is enabled
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, orbs disabled')
+            return
+
+
+        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.longitude_v.value)
+        obs.lat = math.radians(self.latitude_v.value)
+
+
+        obs.date = utcnow
+
+        sun = ephem.Sun()
+        sun.compute(obs)
+
+
         moon = ephem.Moon()
+        moon.compute(obs)
 
 
         ### ORBS
@@ -3001,7 +3048,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : i_ref['smoke_rating'],
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
@@ -3253,7 +3300,7 @@ class ImageProcessor(object):
             'location'     : i_ref['location'],
             'kpindex'      : i_ref['kpindex'],
             'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : i_ref['smoke_rating'],
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],

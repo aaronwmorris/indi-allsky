@@ -46,6 +46,7 @@ from .flask.models import IndiAllSkyDbFitsImageTable
 from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
@@ -281,6 +282,47 @@ class VideoWorker(Process):
 
         logger.info('Found %d images for timelapse', timelapse_files_entries.count())
 
+
+        timelapse_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .first()
+
+
+        # some of these values might be NULL which might cause other problems
+        try:
+            max_kpindex = float(timelapse_data.image_max_kpindex)
+            max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            avg_stars = float(timelapse_data.image_avg_stars)
+            max_moonphase = float(timelapse_data.image_max_moonphase)
+            avg_sqm = float(timelapse_data.image_avg_sqm)
+        except TypeError:
+            max_kpindex = 0.0
+            max_ovation_max = 0
+            avg_stars = 0
+            max_moonphase = -1.0
+            avg_sqm = 0.0
+
+
+        if timelapse_data.image_max_smoke_rating:
+            max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
+        else:
+            max_smoke_rating = None
+
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
         timelapse_files = list()
         for entry in timelapse_files_entries:
             p_entry = Path(entry.getFilesystemPath())
@@ -296,11 +338,20 @@ class VideoWorker(Process):
 
 
         video_metadata = {
-            'type'       : constants.VIDEO,
-            'createDate' : now.timestamp(),
-            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
-            'night'      : night,
-            'camera_uuid': camera.uuid,
+            'type'          : constants.VIDEO,
+            'createDate'    : now.timestamp(),
+            'dayDate'       : d_dayDate.strftime('%Y%m%d'),
+            'night'         : night,
+            'camera_uuid'   : camera.uuid,
+        }
+
+        video_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'avg_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'avg_sqm'           : avg_sqm,
         }
 
         # Create DB entry before creating file
@@ -439,6 +490,47 @@ class VideoWorker(Process):
         logger.info('Found %d images for keogram/star trails', image_count)
 
 
+        # some of these values might be NULL which might cause other problems
+        image_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .first()
+
+
+        # some of these values might be NULL which might cause other problems
+        try:
+            max_kpindex = float(image_data.image_max_kpindex)
+            max_ovation_max = int(image_data.image_max_ovation_max)
+            avg_stars = float(image_data.image_avg_stars)
+            max_moonphase = float(image_data.image_max_moonphase)
+            avg_sqm = float(image_data.image_avg_sqm)
+        except TypeError:
+            max_kpindex = 0.0
+            max_ovation_max = 0
+            avg_stars = 0
+            max_moonphase = -1.0
+            avg_sqm = 0.0
+
+
+        if image_data.image_max_smoke_rating:
+            max_smoke_rating = int(image_data.image_max_smoke_rating)
+        else:
+            max_smoke_rating = None
+
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
         processing_start = time.time()
 
         kg = KeogramGenerator(
@@ -459,6 +551,16 @@ class VideoWorker(Process):
             #'width'   # added later
         }
 
+        keogram_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'avg_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'avg_sqm'           : avg_sqm,
+        }
+
+
         startrail_metadata = {
             'type'       : constants.STARTRAIL,
             'createDate' : now.timestamp(),
@@ -469,6 +571,16 @@ class VideoWorker(Process):
             #'width'   # added later
         }
 
+        startrail_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'avg_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'avg_sqm'           : avg_sqm,
+        }
+
+
         startrail_video_metadata = {
             'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
@@ -476,6 +588,16 @@ class VideoWorker(Process):
             'night'      : night,
             'camera_uuid': camera.uuid,
         }
+
+        startrail_video_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'max_sqm'           : avg_sqm,
+        }
+
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
@@ -560,6 +682,8 @@ class VideoWorker(Process):
         keogram_height, keogram_width = kg.shape[:2]
         keogram_entry.height = keogram_height
         keogram_entry.width = keogram_width
+        #keogram_entry['data']['height'] = keogram_height
+        #keogram_entry['data']['width'] = keogram_width
         db.session.commit()
 
 
@@ -571,6 +695,8 @@ class VideoWorker(Process):
             st_height, st_width = stg.shape[:2]
             startrail_entry.height = st_height
             startrail_entry.width = st_width
+            #startrail_entry['data']['height'] = st_height
+            #startrail_entry['data']['width'] = st_width
             db.session.commit()
 
 

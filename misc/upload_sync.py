@@ -62,6 +62,7 @@ class UploadSync(object):
         self.batch_size  = self.threads * 7
 
         self._upload_images = False
+        self._syncapi_images = True
 
         with app.app_context():
             try:
@@ -103,6 +104,15 @@ class UploadSync(object):
         self._upload_images = bool(new_upload_images)
 
 
+    @property
+    def syncapi_images(self):
+        return self._syncapi_images
+
+    @syncapi_images.setter
+    def syncapi_images(self, new_syncapi_images):
+        self._syncapi_images = bool(new_syncapi_images)
+
+
     def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
         logger.warning('The program will exit when the current file transfers complete')
@@ -133,6 +143,10 @@ class UploadSync(object):
                     for entry in data[1]:
                         if upload_type == 'upload' and table.__name__ == 'IndiAllSkyDbImageTable':
                             if not self.upload_images:
+                                continue
+
+                        if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbImageTable':
+                            if not self.syncapi_images:
                                 continue
 
 
@@ -234,19 +248,36 @@ class UploadSync(object):
                         'sqm'             : entry.sqm,
                         'stars'           : entry.stars,
                         'detections'      : entry.detections,
+                        'kpindex'         : entry.kpindex,
+                        'ovation_max'     : entry.ovation_max,
+                        'smoke_rating'    : entry.smoke_rating,
+                        'width'           : entry.width,
+                        'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
+                    if entry.data:
+                        image_metadata['data'] = dict(entry.data)
+                    else:
+                        image_metadata['data'] = dict()
+
                     self._miscUpload.s3_upload_image(entry, image_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     video_metadata = {
-                        'type'       : constants.VIDEO,
-                        'createDate' : entry.createDate.timestamp(),
-                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
-                        'night'      : entry.night,
-                        'camera_uuid': entry.camera.uuid,
+                        'type'          : constants.VIDEO,
+                        'createDate'    : entry.createDate.timestamp(),
+                        'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'night'         : entry.night,
+                        'width'         : entry.width,
+                        'height'        : entry.height,
+                        'camera_uuid'   : entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        video_metadata['data'] = dict(entry.data)
+                    else:
+                        video_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_video(entry, video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
@@ -255,8 +286,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        keogram_metadata['data'] = dict(entry.data)
+                    else:
+                        keogram_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_keogram(entry, keogram_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
@@ -265,8 +303,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        startrail_metadata['data'] = dict(entry.data)
+                    else:
+                        startrail_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_startrail(entry, startrail_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
@@ -275,8 +320,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        startrail_video_metadata['data'] = dict(entry.data)
+                    else:
+                        startrail_video_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_startrailvideo(entry, startrail_video_metadata)
                 else:
@@ -302,20 +354,36 @@ class UploadSync(object):
                         'sqm'             : entry.sqm,
                         'stars'           : entry.stars,
                         'detections'      : entry.detections,
+                        'kpindex'         : entry.kpindex,
+                        'ovation_max'     : entry.ovation_max,
+                        'smoke_rating'    : entry.smoke_rating,
+                        'width'           : entry.width,
+                        'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
+                    if entry.data:
+                        image_metadata['data'] = dict(entry.data)
+                    else:
+                        image_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_image(entry, image_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     video_metadata = {
-                        'type'       : constants.VIDEO,
-                        'createDate' : entry.createDate.timestamp(),
-                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
-                        'night'      : entry.night,
-                        'camera_uuid': entry.camera.uuid,
+                        'type'          : constants.VIDEO,
+                        'createDate'    : entry.createDate.timestamp(),
+                        'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'night'         : entry.night,
+                        'width'         : entry.width,
+                        'height'        : entry.height,
+                        'camera_uuid'   : entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        video_metadata['data'] = dict(entry.data)
+                    else:
+                        video_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_video(entry, video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
@@ -324,8 +392,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        keogram_metadata['data'] = dict(entry.data)
+                    else:
+                        keogram_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_keogram(entry, keogram_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
@@ -334,8 +409,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        startrail_metadata['data'] = dict(entry.data)
+                    else:
+                        startrail_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_startrail(entry, startrail_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
@@ -344,8 +426,15 @@ class UploadSync(object):
                         'createDate' : entry.createDate.timestamp(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
                         'camera_uuid': entry.camera.uuid,
                     }
+
+                    if entry.data:
+                        startrail_video_metadata['data'] = dict(entry.data)
+                    else:
+                        startrail_video_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_startrailvideo(entry, startrail_video_metadata)
                 else:
@@ -648,12 +737,26 @@ if __name__ == "__main__":
     )
     argparser.set_defaults(upload_images=False)
 
+    argparser.add_argument(
+        '--no-syncapi-images',
+        help='disable syncapi for images',
+        dest='syncapi_images',
+        action='store_false',
+    )
+    argparser.add_argument(
+        '--syncapi-images',
+        help='enable syncapi for images (default)',
+        dest='syncapi_images',
+        action='store_true',
+    )
+    argparser.set_defaults(syncapi_images=True)
 
 
     args = argparser.parse_args()
 
     us = UploadSync(args.threads)
     us.upload_images = args.upload_images
+    us.syncapi_images = args.syncapi_images
 
     action_func = getattr(us, args.action)
     action_func()

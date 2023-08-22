@@ -7,6 +7,8 @@ from datetime import timedelta
 from pathlib import Path
 import ephem
 
+from .. import constants
+
 from flask import request
 from flask import session
 from flask import render_template
@@ -482,7 +484,9 @@ class TemplateView(BaseView):
             return data
 
 
-        smoke_rating = str(camera_data.get('SMOKE_RATING', 'No Data'))
+        #app.logger.info('Smoke data: %s', camera_data)
+
+        smoke_rating = constants.SMOKE_RATING_MAP_STR.get(camera_data.get('SMOKE_RATING'), 'No Data')
 
 
         now = datetime.now()

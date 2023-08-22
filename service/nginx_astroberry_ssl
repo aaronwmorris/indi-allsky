@@ -14,6 +14,7 @@ server {
 
     rewrite ^/$ /indi-allsky;
 
+    client_max_body_size 1024M;
 
     location /indi-allsky/images {
         alias %IMAGE_FOLDER%;
@@ -71,7 +72,9 @@ server {
     # 1 week HSTS header
     add_header Strict-Transport-Security "max-age=604800; includeSubDomains" always;
 
-    rewrite ^/$ /indi-allsky;
+    rewrite ^/$ https://$host/indi-allsky;
+
+    client_max_body_size 1024M;
 
 
     location /indi-allsky/images {
