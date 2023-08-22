@@ -2746,10 +2746,12 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'url'               : str(url),
                 'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
                 'night'             : v.night,
-                'avg_stars'         : data.get('avg_stars', 0),
                 'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating')],
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
+                'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
+                'avg_stars'         : int(data.get('avg_stars', 0)),
+                'avg_sqm'           : int(data.get('avg_sqm', 0)),
             }
             videos_data.append(entry)
 
