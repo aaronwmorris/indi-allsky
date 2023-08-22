@@ -299,12 +299,12 @@ class VideoWorker(Process):
             .first()
 
 
-        max_kpindex = timelapse_data.image_max_kpindex
-        max_ovation_max = timelapse_data.image_max_ovation_max
-        max_smoke_rating = timelapse_data.image_max_smoke_rating
-        max_moonphase = timelapse_data.image_max_moonphase
-        avg_stars = timelapse_data.image_avg_stars
-        avg_sqm = timelapse_data.image_avg_sqm
+        max_kpindex = float(timelapse_data.image_max_kpindex)
+        max_ovation_max = int(timelapse_data.image_max_ovation_max)
+        max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
+        max_moonphase = float(timelapse_data.image_max_moonphase)
+        avg_stars = float(timelapse_data.image_avg_stars)
+        avg_sqm = float(timelapse_data.image_avg_sqm)
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
 
@@ -492,12 +492,12 @@ class VideoWorker(Process):
             .first()
 
 
-        max_kpindex = image_data.image_max_kpindex
-        max_ovation_max = image_data.image_max_ovation_max
-        max_smoke_rating = image_data.image_max_smoke_rating
-        max_moonphase = image_data.image_max_moonphase
-        avg_stars = image_data.image_avg_stars
-        avg_sqm = image_data.image_avg_sqm
+        max_kpindex = float(image_data.image_max_kpindex)
+        max_ovation_max = int(image_data.image_max_ovation_max)
+        max_smoke_rating = int(image_data.image_max_smoke_rating)
+        max_moonphase = float(image_data.image_max_moonphase)
+        avg_stars = float(image_data.image_avg_stars)
+        avg_sqm = float(image_data.image_avg_sqm)
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
