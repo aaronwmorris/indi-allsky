@@ -71,7 +71,7 @@ server {
     # 1 week HSTS header
     add_header Strict-Transport-Security "max-age=604800; includeSubDomains" always;
 
-    rewrite ^/$ /indi-allsky;
+    rewrite ^/$ https://$host/indi-allsky;
 
 
     location /indi-allsky/images {
