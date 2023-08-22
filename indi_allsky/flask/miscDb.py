@@ -196,12 +196,6 @@ class miscDb(object):
             temp_val = None
 
 
-        # if moonmode is 0, moonphase is Null
-        if metadata['moonmode']:
-            moonphase_val = float(metadata['moonmode'])
-        else:
-            moonphase_val = None
-
         moonmode_val = bool(metadata['moonmode'])
 
         night_val = bool(metadata['night'])  # integer to boolean
@@ -223,7 +217,7 @@ class miscDb(object):
             adu_roi=adu_roi_val,
             stable=metadata['stable'],
             moonmode=moonmode_val,
-            moonphase=moonphase_val,
+            moonphase=metadata['moonphase'],
             sqm=metadata['sqm'],
             stars=metadata['stars'],
             detections=metadata['detections'],
