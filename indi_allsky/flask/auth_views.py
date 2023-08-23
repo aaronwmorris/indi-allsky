@@ -5,6 +5,7 @@ from datetime import datetime
 from passlib.hash import argon2
 
 from flask import request
+from flask import session
 from flask import Blueprint
 from flask import redirect
 from flask import url_for
@@ -109,6 +110,7 @@ class LoginView(TemplateView):
 
         app.logger.info('User successfully authenticated: %s', user.username)
 
+        session.permanent = True
         login_user(user, remember=True)
 
 
