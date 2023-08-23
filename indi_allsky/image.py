@@ -2314,7 +2314,6 @@ class ImageProcessor(object):
     def rotate_90(self):
         try:
             rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
-            self.image_processor.rotate_90(rotate_enum)
         except AttributeError:
             logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
             return
