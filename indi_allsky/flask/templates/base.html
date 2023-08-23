@@ -67,7 +67,7 @@
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Camera</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
                             </li>
 
                             {% if current_user.is_authenticated or login_disabled %}
