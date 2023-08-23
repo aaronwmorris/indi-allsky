@@ -31,7 +31,7 @@ server {
         alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
         autoindex off;
 
-        location ~* \.(js|css|svg)$ {
+        location ~* \.(js|css|svg|jpe?g|png)$ {
             expires 1d;
             add_header Pragma public;
             add_header Cache-Control "public";
