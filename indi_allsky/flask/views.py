@@ -1931,6 +1931,7 @@ class SystemInfoView(TemplateView):
         context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
         context['indi_allsky_service_activestate'], context['indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['indi_allsky_timer_activestate'], context['indi_allsky_timer_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_TIMER_NAME'])
+        context['indi_allsky_next_trigger'] = self.getSystemdTimerTrigger(app.config['ALLSKY_TIMER_NAME'])
         context['gunicorn_indi_allsky_service_activestate'], context['gunicorn_indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
         context['gunicorn_indi_allsky_socket_activestate'], context['gunicorn_indi_allsky_socket_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SOCKET_NAME'])
 
@@ -2172,6 +2173,44 @@ class SystemInfoView(TemplateView):
         unit_file_state = interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState')
 
         return str(unit_active_state), str(unit_file_state)
+
+
+    def getSystemdTimerTrigger(self, unit_name):
+        try:
+            session_bus = dbus.SessionBus()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return -1
+
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            #service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
+
+            unit = manager.LoadUnit(unit_name)
+            service = session_bus.get_object('org.freedesktop.systemd1', str(unit))
+        except dbus.exceptions.DBusException:
+            return -1
+
+
+        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
+        #timer_info = interface.Get('org.freedesktop.systemd1.Timer', 'TimersMonotonic')
+        #result = interface.Get('org.freedesktop.systemd1.Timer', 'Result')
+        next_usec = interface.Get('org.freedesktop.systemd1.Timer', 'NextElapseUSecMonotonic')
+
+
+        if next_usec == 18446744073709551615:
+            # already triggered
+            return -1
+
+
+        uptime_s = time.time() - psutil.boot_time()
+        next_trigger_s = int((next_usec / 1000000) - uptime_s)
+
+        app.logger.info('%s next trigger: %ss', unit_name, next_trigger_s)
+
+        return next_trigger_s
 
 
     def getSystemdTimeDate(self):

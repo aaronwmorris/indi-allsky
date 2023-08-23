@@ -504,7 +504,7 @@ $('#form_settime').on('submit', function() {
 <div class="row">
     <div class="col-sm-2"></div>
     <div class="col-sm-2">indi-allsky service</div>
-    <div class="col-sm-2">{{indi_allsky_service_activestate}}</div>
+    <div class="col-sm-2">{{indi_allsky_service_activestate}}{% if indi_allsky_next_trigger > 0 %} [T-minus {{indi_allsky_next_trigger}}s]{% endif %}</div>
 
     <div class="col-sm-2">
         <button class="btn btn-primary" id="button_indi_allsky_service_hup">Reload config</button>
