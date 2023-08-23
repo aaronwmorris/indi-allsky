@@ -491,25 +491,21 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_ROTATE'):
-            try:
-                rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
-                self.image_processor.rotate_90(rotate_enum)
-            except AttributeError:
-                logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+            self.image_processor.rotate_90()
 
 
         # rotation
         if self.config.get('IMAGE_ROTATE_ANGLE'):
-            self.image_processor.rotate_angle(self.config['IMAGE_ROTATE_ANGLE'])
+            self.image_processor.rotate_angle()
 
 
         # verticle flip
         if self.config.get('IMAGE_FLIP_V'):
-            self.image_processor.flip(0)
+            self.image_processor.flip_v()
 
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
-            self.image_processor.flip(1)
+            self.image_processor.flip_h()
 
 
         # line detection
@@ -533,9 +529,8 @@ class ImageWorker(Process):
 
 
         # green removal
-        scnr_algo = self.config.get('SCNR_ALGORITHM')
-        if scnr_algo:
-            self.image_processor.scnr(scnr_algo)
+        if self.config.get('SCNR_ALGORITHM'):
+            self.image_processor.scnr()
 
 
         # white balance
@@ -2316,13 +2311,18 @@ class ImageProcessor(object):
         self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
-    def rotate_90(self, rotate_enum):
+    def rotate_90(self):
+        try:
+            rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
+        except AttributeError:
+            logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
+            return
+
         self.image = cv2.rotate(self.image, rotate_enum)
 
 
-    def rotate_angle(self, angle):
-        if not angle:
-            return
+    def rotate_angle(self):
+        angle = self.config.get('IMAGE_ROTATE_ANGLE')
 
         rotate_start = time.time()
 
@@ -2364,6 +2364,14 @@ class ImageProcessor(object):
 
     def flip(self, cv2_axis):
         self.image = cv2.flip(self.image, cv2_axis)
+
+
+    def flip_v(self):
+        self.flip(0)
+
+
+    def flip_h(self):
+        self.flip(1)
 
 
     def detectLines(self):
@@ -2413,10 +2421,13 @@ class ImageProcessor(object):
         logger.info('New cropped size: %d x %d', new_width, new_height)
 
 
-    def scnr(self, algo):
+    def scnr(self):
         if self.focus_mode:
             # disable processing in focus mode
             return
+
+
+        algo = self.config.get('SCNR_ALGORITHM')
 
         try:
             scnr_function = getattr(self._scnr, algo)
