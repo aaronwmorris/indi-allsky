@@ -27,9 +27,9 @@ class IndiAllskySmokeUpdate(object):
     # folder name, rating
     hms_kml_folders = OrderedDict({
         # check from light to heavy, in order
-        'Smoke (Light)'  : 'light',
-        'Smoke (Medium)' : 'medium',
-        'Smoke (Heavy)'  : 'heavy',
+        'Smoke (Light)'  : constants.SMOKE_RATING_LIGHT,
+        'Smoke (Medium)' : constants.SMOKE_RATING_MEDIUM,
+        'Smoke (Heavy)'  : constants.SMOKE_RATING_HEAVY,
     })
 
 
@@ -58,13 +58,13 @@ class IndiAllskySmokeUpdate(object):
 
         else:
             # all other regions report no data
-            smoke_rating = 'no data'
+            smoke_rating = constants.SMOKE_RATING_NODATA
 
 
         if smoke_rating:
-            logger.info('Smoke rating: %s', str(smoke_rating))
+            logger.info('Smoke rating: %s', constants.SMOKE_RATING_MAP_STR[smoke_rating])
 
-            camera_data['SMOKE_RATING'] = constants.SMOKE_RATING_STR_MAP[smoke_rating]
+            camera_data['SMOKE_RATING'] = smoke_rating
             camera_data['SMOKE_DATA_TS'] = int(time.time())
             camera.data = camera_data
             db.session.commit()
@@ -115,10 +115,10 @@ class IndiAllskySmokeUpdate(object):
                 xml_root = etree.fromstring(self.hms_kml_data)
             except etree.XMLSyntaxError as e:
                 logger.error('Unable to parse XML: %s', str(e))
-                return ''
+                return constants.SMOKE_RATING_NODATA
             except ValueError as e:
                 logger.error('Unable to parse XML: %s', str(e))
-                return ''
+                return constants.SMOKE_RATING_NODATA
 
 
             # look for a 1 square degree area (smoke within ~35 miles)
@@ -136,7 +136,7 @@ class IndiAllskySmokeUpdate(object):
             }
 
 
-            smoke_rating = 'Clear'  # no matches should mean clear
+            smoke_rating = constants.SMOKE_RATING_CLEAR  # no matches should mean clear
 
             found_kml_folders = False
             for folder, rating in self.hms_kml_folders.items():
@@ -177,14 +177,14 @@ class IndiAllskySmokeUpdate(object):
             if not found_kml_folders:
                 # without folders, there was no data to match
                 logger.error('No folders in KML')
-                return ''
+                return constants.SMOKE_RATING_NODATA
 
 
             return smoke_rating
 
 
         logger.error('No KML data')
-        return ''
+        return constants.SMOKE_RATING_NODATA
 
 
     def download_kml(self, url):

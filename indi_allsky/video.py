@@ -314,10 +314,12 @@ class VideoWorker(Process):
             avg_sqm = 0.0
 
 
-        if timelapse_data.image_max_smoke_rating:
+        try:
             max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
-        else:
-            max_smoke_rating = None
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
@@ -522,10 +524,12 @@ class VideoWorker(Process):
             avg_sqm = 0.0
 
 
-        if image_data.image_max_smoke_rating:
+        try:
             max_smoke_rating = int(image_data.image_max_smoke_rating)
-        else:
-            max_smoke_rating = None
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])

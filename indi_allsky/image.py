@@ -1822,14 +1822,17 @@ class ImageProcessor(object):
             image_data['ovation_max'] = int(camera_data.get('OVATION_MAX'))
 
             try:
-                image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING'))
+                image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
             except ValueError:
                 # fix legacy values (str) until updated
-                image_data['smoke_rating'] = None
+                image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
+            except TypeError:
+                # fix legacy values (str) until updated
+                image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
         else:
             image_data['kpindex'] = 0
             image_data['ovation_max'] = 0.0
-            image_data['smoke_rating'] = None
+            image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
 
 
 
