@@ -191,6 +191,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     ovation_max = db.Column(db.Integer, nullable=True, index=True)
     smoke_rating = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
+    exclude = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)

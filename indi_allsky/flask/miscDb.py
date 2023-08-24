@@ -227,6 +227,7 @@ class miscDb(object):
             kpindex=metadata.get('kpindex'),
             ovation_max=metadata.get('ovation_max'),
             smoke_rating=metadata.get('smoke_rating'),
+            exclude=metadata.get('exclude', False),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
             data=metadata.get('data', {}),

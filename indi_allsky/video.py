@@ -47,6 +47,7 @@ from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
+from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
@@ -277,6 +278,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -296,6 +298,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .first()
 
 
@@ -314,10 +317,12 @@ class VideoWorker(Process):
             avg_sqm = 0.0
 
 
-        if timelapse_data.image_max_smoke_rating:
+        try:
             max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
-        else:
-            max_smoke_rating = None
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
@@ -483,6 +488,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -504,6 +510,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .first()
 
 
@@ -522,10 +529,12 @@ class VideoWorker(Process):
             avg_sqm = 0.0
 
 
-        if image_data.image_max_smoke_rating:
+        try:
             max_smoke_rating = int(image_data.image_max_smoke_rating)
-        else:
-            max_smoke_rating = None
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])

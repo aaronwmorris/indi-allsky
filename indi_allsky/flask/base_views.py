@@ -486,7 +486,7 @@ class TemplateView(BaseView):
 
         #app.logger.info('Smoke data: %s', camera_data)
 
-        smoke_rating = constants.SMOKE_RATING_MAP_STR.get(camera_data.get('SMOKE_RATING'), 'No Data')
+        smoke_rating = constants.SMOKE_RATING_MAP_STR[camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
 
 
         now = datetime.now()
