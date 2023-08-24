@@ -69,11 +69,13 @@ json_pp < "$ALLSKY_ETC/flask.json" >/dev/null
 cd "$ALLSKY_DIRECTORY"
 
 
-# wait on database
-for X in $(seq 12); do
-    echo "Waiting on database ($((65-(5*X)))s)"
-    sleep 5
-done
+if [ -z "${INDIALLSKY_GUNICORN_NO_WAIT:-}" ]; then
+    # wait on database
+    for X in $(seq 12); do
+        echo "Waiting on database ($((65-(5*X)))s)"
+        sleep 5
+    done
+fi
 
 
 # Setup migration folder
