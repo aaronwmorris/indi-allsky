@@ -134,6 +134,18 @@ class ImageWorker(Process):
             'moon_phase'    : 0.0,
             'sun_moon_sep'  : 90.0,
             'sidereal_time' : 'unset',
+            'moon_up'       : '',
+            'mercury_alt'   : 0.0,
+            'mercury_up'    : '',
+            'venus_alt'     : 0.0,
+            'venus_up'      : '',
+            'venus_phase'   : 0.0,
+            'mars_alt'      : 0.0,
+            'mars_up'       : '',
+            'jupiter_alt'   : 0.0,
+            'jupiter_up'    : '',
+            'saturn_alt'    : 0.0,
+            'saturn_up'     : '',
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
@@ -145,8 +157,6 @@ class ImageWorker(Process):
         self.sqm_value = 0
 
         self.metadata_count = 0
-
-        self._detection_mask = self._load_detection_mask()
 
         self.image_processor = ImageProcessor(
             self.config,
@@ -161,7 +171,6 @@ class ImageWorker(Process):
             night_v,
             moonmode_v,
             self.astrometric_data,
-            mask=self._detection_mask,
         )
 
         self._miscDb = miscDb(self.config)
@@ -1361,43 +1370,6 @@ class ImageWorker(Process):
             self.exposure_v.value = new_exposure
 
 
-    def _load_detection_mask(self):
-        detect_mask = self.config.get('DETECT_MASK', '')
-
-        if not detect_mask:
-            logger.warning('No detection mask defined')
-            return
-
-
-        detect_mask_p = Path(detect_mask)
-
-        try:
-            if not detect_mask_p.exists():
-                logger.error('%s does not exist', detect_mask_p)
-                return
-
-
-            if not detect_mask_p.is_file():
-                logger.error('%s is not a file', detect_mask_p)
-                return
-
-        except PermissionError as e:
-            logger.error(str(e))
-            return
-
-        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
-        if isinstance(mask_data, type(None)):
-            logger.error('%s is not a valid image', detect_mask_p)
-            return
-
-
-        ### any compression artifacts will be set to black
-        #mask_data[mask_data < 255] = 0  # did not quite work
-
-
-        return mask_data
-
-
 class ImageProcessor(object):
 
     dark_temperature_range = 5.0  # dark must be within this range
@@ -1433,7 +1405,6 @@ class ImageProcessor(object):
         night_v,
         moonmode_v,
         astrometric_data,
-        mask=None,
     ):
         self.config = config
 
@@ -1454,7 +1425,7 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._detection_mask = mask
+        self._detection_mask = self._load_detection_mask()
         self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
         self._image_circle_alpha_mask = None
@@ -3575,6 +3546,43 @@ class ImageProcessor(object):
 
 
         self.image = stretched_image
+
+
+    def _load_detection_mask(self):
+        detect_mask = self.config.get('DETECT_MASK', '')
+
+        if not detect_mask:
+            logger.warning('No detection mask defined')
+            return
+
+
+        detect_mask_p = Path(detect_mask)
+
+        try:
+            if not detect_mask_p.exists():
+                logger.error('%s does not exist', detect_mask_p)
+                return
+
+
+            if not detect_mask_p.is_file():
+                logger.error('%s is not a file', detect_mask_p)
+                return
+
+        except PermissionError as e:
+            logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
+        if isinstance(mask_data, type(None)):
+            logger.error('%s is not a valid image', detect_mask_p)
+            return
+
+
+        ### any compression artifacts will be set to black
+        #mask_data[mask_data < 255] = 0  # did not quite work
+
+
+        return mask_data
 
 
     def _load_logo_overlay(self, image):
