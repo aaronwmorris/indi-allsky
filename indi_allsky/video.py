@@ -47,6 +47,7 @@ from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
+from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.orm.exc import NoResultFound
 
 from multiprocessing import Process
@@ -277,6 +278,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -296,6 +298,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .first()
 
 
@@ -485,6 +488,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
@@ -506,6 +510,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
             .first()
 
 
