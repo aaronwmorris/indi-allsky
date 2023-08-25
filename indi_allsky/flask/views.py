@@ -76,6 +76,7 @@ from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
+from .forms import IndiAllskyImageExcludeForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -1650,6 +1651,10 @@ class ImageViewerView(FormView):
             camera_id=session['camera_id'],
             s3_prefix=self.s3_prefix,
             local=local,
+        )
+
+        context['form_image_exclude'] = IndiAllskyImageExcludeForm(
+            camera_id=session['camera_id'],
         )
 
         return context
@@ -3865,6 +3870,49 @@ class CameraLensView(TemplateView):
 
 
 
+class AjaxImageExcludeView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxImageExcludeView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        form_image_exclude = IndiAllskyImageExcludeForm(data=request.json, camera_id=session['camera_id'])
+
+        if not form_image_exclude.validate():
+            form_errors = form_image_exclude.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        camera_id = int(request.json['camera_id'])
+        image_id = int(request.json['image_id'])
+        exclude = bool(request.json['exclude'])
+
+
+        try:
+            image = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbImageTable.id == image_id,
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                    )
+                )\
+                .one()
+        except NoResultFound:
+            app.logger.error('Image not found')
+            return jsonify({}), 400
+
+
+        image.exclude = exclude
+        db.session.commit()
+
+        return jsonify({}), 400
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -4251,6 +4299,7 @@ bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.a
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
+bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
