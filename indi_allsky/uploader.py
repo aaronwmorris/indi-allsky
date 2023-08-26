@@ -492,7 +492,7 @@ class FileUploader(Thread):
 
 
 
-        if metadata['asset_type'] == constants.ASSET_IMAGE:
+        if metadata['type'] == constants.ASSET_IMAGE:
             if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
                 #logger.warning('Image syncing disabled')
                 return
