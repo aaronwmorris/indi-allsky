@@ -3299,3 +3299,15 @@ class IndiAllskyUserInfoForm(FlaskForm):
 
         return result
 
+
+class IndiAllskyImageExcludeForm(FlaskForm):
+    CAMERA_ID         = HiddenField('Camera ID', validators=[DataRequired()])
+    IMAGE_ID          = HiddenField('Image ID', validators=[DataRequired()])
+    EXCLUDE           = BooleanField('Exclude')
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyImageExcludeForm, self).__init__(*args, **kwargs)
+
+        self.CAMERA_ID.data = kwargs.get('camera_id')
+
