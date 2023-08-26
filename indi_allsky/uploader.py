@@ -156,8 +156,6 @@ class FileUploader(Thread):
         remote_file = task.data.get('remote_file')
         remove_local = task.data.get('remove_local')
 
-        #asset_type = task.data.get('asset_type')
-
         metadata = task.data.get('metadata')
 
 
@@ -492,7 +490,7 @@ class FileUploader(Thread):
 
 
 
-        if metadata['type'] == constants.ASSET_IMAGE:
+        if metadata['type'] == constants.IMAGE:
             if not self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'):
                 #logger.warning('Image syncing disabled')
                 return
