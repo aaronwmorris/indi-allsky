@@ -918,7 +918,6 @@ class CaptureWorker(Process):
 
 
         camera_metadata['uuid'] = camera.uuid
-        camera_metadata['type'] = constants.CAMERA
 
         # tell worker to upload file
         jobdata = {
