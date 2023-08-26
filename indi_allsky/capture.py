@@ -29,6 +29,7 @@ from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
 
 from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import NotificationCategory
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
@@ -707,7 +708,29 @@ class CaptureWorker(Process):
         if self.config.get('CCD_EXPOSURE_DEF'):
             ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
         else:
-            ccd_exposure_default = self.exposure_min_v.value
+            # use last exposure value within 10 minutes
+            now_minus_10min = datetime.now() - timedelta(minutes=10)
+
+            last_image = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+                .filter(IndiAllSkyDbImageTable.createDate > now_minus_10min)\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .first()
+
+
+            if last_image:
+                ccd_exposure_default = float(last_image.exposure)
+                logger.warning('Reusing last stable exposure: %0.6f', ccd_exposure_default)
+            else:
+                ccd_exposure_default = self.exposure_min_v.value
+
+
+        # sanity check
+        if ccd_exposure_default > maximum_exposure:
+            ccd_exposure_default = maximum_exposure
+        if ccd_exposure_default < ccd_min_exp:
+            ccd_exposure_default = ccd_min_exp
 
 
         if self.exposure_v.value == -1.0:
