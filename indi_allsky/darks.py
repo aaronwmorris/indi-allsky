@@ -243,6 +243,7 @@ class IndiAllSkyDarks(object):
 
         # need to get camera info before adding to DB
         camera_metadata = {
+            'type'        : constants.CAMERA,
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
 

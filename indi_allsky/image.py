@@ -774,6 +774,7 @@ class ImageWorker(Process):
 
 
         metadata = {
+            'type'                : constants.METADATA,
             'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
             'temp'                : self.sensortemp_v.value,
@@ -826,7 +827,6 @@ class ImageWorker(Process):
             'local_file'   : str(tmp_metadata_name_p),
             'remote_file'  : str(remote_file_p),
             'remove_local' : True,
-            'asset_type'   : constants.ASSET_MISC,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(

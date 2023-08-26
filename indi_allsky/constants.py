@@ -1,10 +1,4 @@
 
-# S3 assets
-ASSET_IMAGE     = 1
-ASSET_TIMELAPSE = 2
-ASSET_MISC      = 3
-
-
 # Types
 CAMERA          = 1
 IMAGE           = 2
@@ -17,6 +11,7 @@ FITS_IMAGE      = 8
 USER            = 9
 DARK_FRAME      = 10
 BPM_FRAME       = 11
+METADATA        = 12
 
 
 ENDPOINT_V1 = {

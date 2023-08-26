@@ -72,7 +72,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_UPLOAD,
             'model'       : image_entry.__class__.__name__,
             'id'          : image_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
             'remote_file' : str(remote_file_p),
         }
 
@@ -115,7 +114,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_UPLOAD,
             'model'       : video_entry.__class__.__name__,
             'id'          : video_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'remote_file' : str(remote_file_p),
         }
 
@@ -271,7 +269,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
             'metadata'    : mq_data,
-            'asset_type'  : constants.ASSET_MISC,
         }
 
         mqtt_task = IndiAllSkyDbTaskQueueTable(
@@ -303,7 +300,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_S3,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
             'metadata'    : asset_metadata,
         }
 
@@ -336,7 +332,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_S3,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'metadata'    : asset_metadata,
         }
 
@@ -396,7 +391,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_SYNC_V1,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_IMAGE,
             'metadata'    : asset_metadata,
         }
 
@@ -429,7 +423,6 @@ class miscUpload(object):
             'action'      : constants.TRANSFER_SYNC_V1,
             'model'       : asset_entry.__class__.__name__,
             'id'          : asset_entry.id,
-            'asset_type'  : constants.ASSET_TIMELAPSE,  # this is generic
             'metadata'    : metadata,
         }
 

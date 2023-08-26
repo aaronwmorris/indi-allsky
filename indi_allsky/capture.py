@@ -593,6 +593,7 @@ class CaptureWorker(Process):
 
         # need to get camera info before adding to DB
         camera_metadata = {
+            'type'        : constants.CAMERA,
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
 
@@ -820,6 +821,7 @@ class CaptureWorker(Process):
 
         # need to get camera info before adding to DB
         camera_metadata = {
+            'type'        : constants.CAMERA,
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
 
@@ -916,7 +918,6 @@ class CaptureWorker(Process):
 
 
         camera_metadata['uuid'] = camera.uuid
-        camera_metadata['type'] = constants.CAMERA
 
         # tell worker to upload file
         jobdata = {
