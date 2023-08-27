@@ -275,7 +275,7 @@ $( document ).ready(function() {
     <div class="tab-pane fade show active" id="nav-polaris" role="tabpanel" aria-labelledby="nav-polaris-tab">
         <div id="polaris">
 			<div id="reticle">
-				<img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" />
+				<img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder"/>
 				<p id="legend" >View as in polar finder scope</p>
 			</div>
 			<h2>Polaris</h2>
@@ -291,7 +291,7 @@ $( document ).ready(function() {
     </div>
     <div class="tab-pane fade" id="nav-moon" role="tabpanel" aria-labelledby="nav-moon-tab">
         <div id="moon">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}"/>
+			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon"/>
 			<h2>Moon</h2>
 			<p><span id="moon_phase">&nbsp;</span></p>
 			<table>
@@ -310,7 +310,7 @@ $( document ).ready(function() {
     </div>
     <div class="tab-pane fade" id="nav-sun" role="tabpanel" aria-labelledby="nav-sun-tab">
         <div id="sun">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}"/>
+			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun"/>
 			<h2>Sun</h2>
 			<table>
 				<tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
@@ -343,7 +343,7 @@ $( document ).ready(function() {
                 <tr id="uranus"><td class="planetshdr">Uranus</td><td class="planetsdata"><span id="uranus_rise"></span></td><td class="planetsdata"><span id="uranus_transit"></span></td><td class="planetsdata"><span id="uranus_set"></span></td><td class="planetsdata"><span id="uranus_az"></span></td><td class="planetsdata"><span id="uranus_alt"></span></td></tr>
                 <tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></span></td><td class="planetsdata"><span id="neptune_transit"></span></td><td class="planetsdata"><span id="neptune_set"></span></td><td class="planetsdata"><span id="neptune_az"></span></td><td class="planetsdata"><span id="neptune_alt"></span></td></tr>
             </table>
-        <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}"/>
+        <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System"/>
         </div>
     </div>
 </div>
