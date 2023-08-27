@@ -26,10 +26,10 @@ class IndiAllskySmokeUpdate(object):
 
     # folder name, rating
     hms_kml_folders = OrderedDict({
-        # check from light to heavy, in order
-        'Smoke (Light)'  : constants.SMOKE_RATING_LIGHT,
-        'Smoke (Medium)' : constants.SMOKE_RATING_MEDIUM,
+        # check from heavy to light, in order
         'Smoke (Heavy)'  : constants.SMOKE_RATING_HEAVY,
+        'Smoke (Medium)' : constants.SMOKE_RATING_MEDIUM,
+        'Smoke (Light)'  : constants.SMOKE_RATING_LIGHT,
     })
 
 
@@ -144,8 +144,6 @@ class IndiAllskySmokeUpdate(object):
         }
 
 
-        smoke_rating = constants.SMOKE_RATING_CLEAR  # no matches should mean clear
-
         found_kml_folders = False
         for folder, rating in self.hms_kml_folders.items():
             p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
@@ -179,7 +177,8 @@ class IndiAllskySmokeUpdate(object):
                     smoke_polygon = shapely.Polygon(coord_list)
 
                     if location_area.intersects(smoke_polygon):
-                        smoke_rating = rating
+                        # first match wins
+                        return rating
 
 
         if not found_kml_folders:
@@ -187,7 +186,8 @@ class IndiAllskySmokeUpdate(object):
             raise NoSmokeData('No folders in KML')
 
 
-        return smoke_rating
+        return constants.SMOKE_RATING_CLEAR  # no matches should mean clear
+
 
 
     def download_kml(self, url):
