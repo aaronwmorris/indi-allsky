@@ -723,7 +723,8 @@ class CaptureWorker(Process):
                 ccd_exposure_default = float(last_image.exposure)
                 logger.warning('Reusing last stable exposure: %0.6f', ccd_exposure_default)
             else:
-                ccd_exposure_default = self.exposure_min_v.value
+                #ccd_exposure_default = self.exposure_min_v.value
+                ccd_exposure_default = 0.001  # this should give better results for many cameras
 
 
         # sanity check
