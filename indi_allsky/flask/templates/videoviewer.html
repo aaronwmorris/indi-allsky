@@ -264,12 +264,14 @@ function populate_videos(video_list) {
                     $('<img />', {
                         'src'   : item['startrail'],
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                        'alt'   : "Startrail",
                     }).appendTo(st_tl_a);
                 } else {
                     // No link
                     $('<img />', {
                         'src'   : item['startrail'],
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                        'alt'   : "Startrail",
                     }).appendTo(startrail_div);
                 }
             } else {
@@ -295,6 +297,7 @@ function populate_videos(video_list) {
             $('<img />', {
                 'src'   : item['keogram'],
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                'alt'   : "Keogram",
             }).appendTo(k_a);
         } else {
             keogram_div.append('None');
