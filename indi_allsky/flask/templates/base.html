@@ -108,7 +108,7 @@
                             </div>
                         </form>
                     </div>
-                    <hr />
+                    <hr>
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
                     <div>Sidereal: {{astrometric_data.sidereal_time}}</div>
@@ -120,7 +120,7 @@
                     <div>Kp-index: {{ aurora_data.kpindex|safe }}</div>
                     <div>Aurora: {{ aurora_data.ovation }}</div>
                     {{ web_extra_text|safe }}
-                    <hr />
+                    <hr>
                     <div>{{ username_text|safe }}</div>
                 </div>
             </div>
@@ -148,7 +148,7 @@
       </div>
       <div class="modal-body">
         <div id="notification_date"></div>
-        <br />
+        <br>
         <div id="notification_body"></div>
       </div>
       <div class="modal-footer">
