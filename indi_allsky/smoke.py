@@ -54,7 +54,12 @@ class IndiAllskySmokeUpdate(object):
 
         if latitude > 0 and longitude < 0:
             # HMS data is only good for north western hemisphere
-            smoke_rating = self.update_na_hms(camera)
+            try:
+                smoke_rating = self.update_na_hms(camera)
+            except NoSmokeData as e:
+                # Leave previous values in place
+                logger.error('No smoke data: %s', str(e))
+                return
 
         else:
             # all other regions report no data
@@ -106,85 +111,83 @@ class IndiAllskySmokeUpdate(object):
                 self.hms_kml_data = None
 
 
+        if not self.hms_kml_data:
+            raise NoSmokeData('No KML data')
+
+
         latitude = camera.latitude
         longitude = camera.longitude
 
 
-        if self.hms_kml_data:
-            try:
-                xml_root = etree.fromstring(self.hms_kml_data)
-            except etree.XMLSyntaxError as e:
-                logger.error('Unable to parse XML: %s', str(e))
-                return constants.SMOKE_RATING_NODATA
-            except ValueError as e:
-                logger.error('Unable to parse XML: %s', str(e))
-                return constants.SMOKE_RATING_NODATA
+        try:
+            xml_root = etree.fromstring(self.hms_kml_data)
+        except etree.XMLSyntaxError as e:
+            self.hms_kml_data = None  # force redownload
+            raise NoSmokeData('Unable to parse XML: {0:s}'.format(str(e)))
+        except ValueError as e:
+            self.hms_kml_data = None  # force redownload
+            raise NoSmokeData('Unable to parse XML: {0:s}'.format(str(e)))
 
 
-            # look for a 1 square degree area (smoke within ~35 miles)
-            location_area = shapely.Polygon((
-                (float(longitude) - 0.5, float(latitude) - 0.5),
-                (float(longitude) + 0.5, float(latitude) - 0.5),
-                (float(longitude) + 0.5, float(latitude) + 0.5),
-                (float(longitude) - 0.5, float(latitude) + 0.5),
-            ))
+        # look for a 1 square degree area (smoke within ~35 miles)
+        location_area = shapely.Polygon((
+            (float(longitude) - 0.5, float(latitude) - 0.5),
+            (float(longitude) + 0.5, float(latitude) - 0.5),
+            (float(longitude) + 0.5, float(latitude) + 0.5),
+            (float(longitude) - 0.5, float(latitude) + 0.5),
+        ))
 
 
 
-            NS = {
-                "kml" : "http://www.opengis.net/kml/2.2",
-            }
+        NS = {
+            "kml" : "http://www.opengis.net/kml/2.2",
+        }
 
 
-            smoke_rating = constants.SMOKE_RATING_CLEAR  # no matches should mean clear
+        smoke_rating = constants.SMOKE_RATING_CLEAR  # no matches should mean clear
 
-            found_kml_folders = False
-            for folder, rating in self.hms_kml_folders.items():
-                p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
-                #logger.info('Folder: %s', p)
-                e_folder = xml_root.xpath(p, namespaces=NS)
-
-
-                if not e_folder:
-                    logger.error('Folder not found: %s', folder)
-                    continue
-
-                found_kml_folders = True
+        found_kml_folders = False
+        for folder, rating in self.hms_kml_folders.items():
+            p = ".//kml:Folder[contains(., '{0:s}')]".format(folder)
+            #logger.info('Folder: %s', p)
+            e_folder = xml_root.xpath(p, namespaces=NS)
 
 
-                for e_placemark in e_folder[0].xpath('.//kml:Placemark', namespaces=NS):
-                    for e_polygon in e_placemark.xpath('.//kml:Polygon', namespaces=NS):
-                        e_coord = e_polygon.find(".//kml:coordinates", namespaces=NS)
-                        #logger.info('   %s', pformat(e_coord.text))
+            if not e_folder:
+                logger.error('Folder not found: %s', folder)
+                continue
 
-                        coord_list = list()
-                        for line in e_coord.text.splitlines():
-                            line = line.strip()
-
-                            if not line:
-                                continue
-
-                            #logger.info('line: %s', pformat(line))
-                            p_long, p_lat, p_z = line.split(',')
-                            coord_list.append((float(p_long), float(p_lat)))
-
-                        smoke_polygon = shapely.Polygon(coord_list)
-
-                        if location_area.intersects(smoke_polygon):
-                            smoke_rating = rating
+            found_kml_folders = True
 
 
-            if not found_kml_folders:
-                # without folders, there was no data to match
-                logger.error('No folders in KML')
-                return constants.SMOKE_RATING_NODATA
+            for e_placemark in e_folder[0].xpath('.//kml:Placemark', namespaces=NS):
+                for e_polygon in e_placemark.xpath('.//kml:Polygon', namespaces=NS):
+                    e_coord = e_polygon.find(".//kml:coordinates", namespaces=NS)
+                    #logger.info('   %s', pformat(e_coord.text))
+
+                    coord_list = list()
+                    for line in e_coord.text.splitlines():
+                        line = line.strip()
+
+                        if not line:
+                            continue
+
+                        #logger.info('line: %s', pformat(line))
+                        p_long, p_lat, p_z = line.split(',')
+                        coord_list.append((float(p_long), float(p_lat)))
+
+                    smoke_polygon = shapely.Polygon(coord_list)
+
+                    if location_area.intersects(smoke_polygon):
+                        smoke_rating = rating
 
 
-            return smoke_rating
+        if not found_kml_folders:
+            # without folders, there was no data to match
+            raise NoSmokeData('No folders in KML')
 
 
-        logger.error('No KML data')
-        return constants.SMOKE_RATING_NODATA
+        return smoke_rating
 
 
     def download_kml(self, url):
@@ -196,4 +199,8 @@ class IndiAllskySmokeUpdate(object):
             return None
 
         return r.text.encode()
+
+
+class NoSmokeData(Exception):
+    pass
 
