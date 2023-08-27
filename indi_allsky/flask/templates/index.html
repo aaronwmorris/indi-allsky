@@ -3,12 +3,12 @@
 {% block title %}indi-allsky: Latest{% endblock %}
 
 {% block head %}
-<meta charset="UTF-8"/>
+<meta charset="UTF-8">
 <style>
 canvas {
     width: 100%;
     height: auto;
-};
+}
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
@@ -174,7 +174,7 @@ $( document ).ready(function() {
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <canvas id="canvas"/>
+        <canvas id="canvas"></canvas>
     </div>
 </div>
 {% endblock %}

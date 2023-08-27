@@ -3,7 +3,7 @@
 {% block title %}indi-allsky: Timelapse viewer{% endblock %}
 
 {% block head %}
-<meta charset="UTF-8"/>
+<meta charset="UTF-8">
 <style>
 </style>
 <script type="text/javascript">
@@ -61,7 +61,7 @@ $( document ).ready(function() {
 
 </form>
 
-<hr />
+<hr>
 
 <div id="videos_div">
 </div>
@@ -142,7 +142,7 @@ function populate_videos(video_list) {
 
 
     h_row_div.appendTo($("#videos_div"));
-    $('<hr />').appendTo($("#videos_div"));
+    $('<hr>').appendTo($("#videos_div"));
 
 
     video_list.forEach(item => {
@@ -264,12 +264,14 @@ function populate_videos(video_list) {
                     $('<img />', {
                         'src'   : item['startrail'],
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                        'alt'   : "Startrail",
                     }).appendTo(st_tl_a);
                 } else {
                     // No link
                     $('<img />', {
                         'src'   : item['startrail'],
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                        'alt'   : "Startrail",
                     }).appendTo(startrail_div);
                 }
             } else {
@@ -295,6 +297,7 @@ function populate_videos(video_list) {
             $('<img />', {
                 'src'   : item['keogram'],
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
+                'alt'   : "Keogram",
             }).appendTo(k_a);
         } else {
             keogram_div.append('None');
@@ -302,7 +305,7 @@ function populate_videos(video_list) {
         
         row_div.appendTo($("#videos_div"));
 
-        $('<hr />').appendTo($("#videos_div"));
+        $('<hr>').appendTo($("#videos_div"));
     });
 
 

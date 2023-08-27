@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
-<title>{% block title %}{% endblock %}</title>
   <head>
+<title>{% block title %}{% endblock %}</title>
 <link href="{{ url_for('indi_allsky.static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.6.3.min.js') }}"></script>
@@ -19,66 +19,66 @@
                 <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
                     <li class="nav-item">
                         <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Latest</span>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16" alt="Latest"><span class="ms-1 d-none d-sm-inline">Latest</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16" alt="Loop"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.sqm_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16" alt="SQM"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.chart_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Charts</span> </a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16" alt="Charts"><span class="ms-1 d-none d-sm-inline">Charts</span> </a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Images</span> </a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Images</span> </a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16" alt="Timelapse Viewer"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
                     </li>
 
                     <li class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/tools.svg') }}" width="16" height="16">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/tools.svg') }}" width="16" height="16" alt="Tools">
                             <span class="ms-1 d-none d-sm-inline">Tools</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
                             <li>
                                 <a href="{{ url_for('indi_allsky.astropanel_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/newspaper.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Astropanel</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/newspaper.svg') }}" width="16" height="16" alt="Astropanel"><span class="ms-1 d-none d-sm-inline">Astropanel</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
                             </li>
 
                             {% if current_user.is_authenticated or login_disabled %}
                             <li>
                                 <a href="{{ url_for('indi_allsky.darks_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/subtract.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Dark Library</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/subtract.svg') }}" width="16" height="16" alt="Dark Library"><span class="ms-1 d-none d-sm-inline">Dark Library</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.rolling_adu_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-square-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">ADU History</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-square-fill.svg') }}" width="16" height="16" alt="ADU History"><span class="ms-1 d-none d-sm-inline">ADU History</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.image_lag_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/journal-medical.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Image Lag</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/journal-medical.svg') }}" width="16" height="16" alt="Image Lag"><span class="ms-1 d-none d-sm-inline">Image Lag</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.focus_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/stars.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Focus</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/stars.svg') }}" width="16" height="16" alt="Focus"><span class="ms-1 d-none d-sm-inline">Focus</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.log_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/terminal-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Log</span> </a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/terminal-fill.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Log</span> </a>
                             </li>
                             {% endif %}
 
@@ -89,15 +89,14 @@
                     {% if current_user.is_authenticated or login_disabled %}
                     <li>
                         <a href="{{ url_for('indi_allsky.config_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/toggles.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/toggles.svg') }}" width="16" height="16" alt="Config"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.system_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/gear-fill.svg') }}" width="16" height="16"><span class="ms-1 d-none d-sm-inline">System</span> </a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/gear-fill.svg') }}" width="16" height="16" alt="System"><span class="ms-1 d-none d-sm-inline">System</span> </a>
                     </li>
                     {% endif %}
 
-                </ul>
                 </ul>
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
                     <div>
@@ -109,7 +108,7 @@
                             </div>
                         </form>
                     </div>
-                    <hr />
+                    <hr>
                     <div>Status: {{ indi_allsky_status|safe }}</div>
                     <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
                     <div>Sidereal: {{astrometric_data.sidereal_time}}</div>
@@ -121,7 +120,7 @@
                     <div>Kp-index: {{ aurora_data.kpindex|safe }}</div>
                     <div>Aurora: {{ aurora_data.ovation }}</div>
                     {{ web_extra_text|safe }}
-                    <hr />
+                    <hr>
                     <div>{{ username_text|safe }}</div>
                 </div>
             </div>
@@ -139,7 +138,6 @@
             -->
         </div>
     </div>
-</div>
 
 <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -150,7 +148,7 @@
       </div>
       <div class="modal-body">
         <div id="notification_date"></div>
-        <br />
+        <br>
         <div id="notification_body"></div>
       </div>
       <div class="modal-footer">
@@ -160,6 +158,7 @@
   </div>
 </div>
 
+</div>
 
 <script>
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))

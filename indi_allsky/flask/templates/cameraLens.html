@@ -9,7 +9,7 @@
 
 {% block content %}
 
-    <hr />
+    <hr>
 
     <div class="row">
         <div class="col-2">Name</div>
@@ -61,7 +61,7 @@
         <div class="col-4">{{ "%0.6f"|format(camera.minExposure | float) }}-{{ camera.maxExposure | int }}s</div>
     </div>
 
-    <hr />
+    <hr>
 
     <div class="row">
         <div class="col-2">Owner</div>
@@ -88,7 +88,7 @@
         <div class="col-4">&#402;/{{ "%0.2f"|format(camera.lensFocalRatio | float) }}</div>
     </div>
 
-    <hr />
+    <hr>
 
     <div class="row">
         <div class="col-2">Image circle</div>
@@ -116,7 +116,7 @@
         <div class="col-4">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg; ({{ "%0.1f"|format(deg_fov_diagonal | float) }}&deg; diag)</div>
     </div>
 
-    <hr />
+    <hr>
 
     <div class="row">
         <div><span class="badge rounded-pill bg-info">Note</span> The indi-allsky service will need to be reloaded if any changes are made to these parameters.  The camera database entry must be updated.</div>

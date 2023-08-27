@@ -44,28 +44,28 @@
   <div class="tab-pane fade show active" id="nav-info" role="tabpanel" aria-labelledby="nav-info-tab">
 
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Release</h4></div>
     <div class="col-sm-6">{{release}}</div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Uptime</h4></div>
     <div class="col-sm-6">{{uptime_str}}</div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>System</h4></div>
     <div class="col-sm-6">{{system_type}}</div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>CPUs</h4></div>
@@ -95,7 +95,7 @@
         <span class="badge bg-warning text-dark">I/O Wait</span>
     </div>
 </div>
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Load Average</h4></div>
@@ -116,7 +116,7 @@
     <div class="col-sm-1">{{"%.2f"|format(cpu_load15)}}</div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Memory</h4></div>
@@ -153,7 +153,7 @@
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Filesystems</h4></div>
@@ -172,7 +172,7 @@
     </div>
 {% endfor %}
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-3"><h4>Network</h4></div>
@@ -183,19 +183,19 @@
         <div class="col-sm-2"></div>
         <div class="col-sm-1">{{net.name}}</div>
         <div class="col-sm-3">
-            {{ net.inet4 | join('<br />') | safe }}
+            {{ net.inet4 | join('<br>') | safe }}
         </div>
         <div class="col-sm-6">
-            {{ net.inet6 | join('<br />') | safe }}
+            {{ net.inet6 | join('<br>') | safe }}
         </div>
     </div>
     <div class="row">
         <div class="col-sm-2"></div>
-	<div class="col-sm-10"><hr /></div>
+	<div class="col-sm-10"><hr></div>
     </div>
 {% endfor %}
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Environment</h4></div>
@@ -207,7 +207,7 @@
     </div>
 {% endfor %}
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>System</h4></div>
@@ -288,7 +288,7 @@
 </div><!-- end tab -->
 <div class="tab-pane fade" id="nav-time" role="tabpanel" aria-labelledby="nav-time-tab">
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2">NTP Available</div>
@@ -315,7 +315,7 @@
     <div class="col-sm-4">{{ timedate1_dict.Timezone }}</div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2">System time</div>
@@ -348,7 +348,7 @@
     </div>
 </form>
 
-<hr />
+<hr>
 
 
 <div class="row">
@@ -464,7 +464,7 @@ $('#form_settime').on('submit', function() {
 </div><!-- end tab -->
 <div class="tab-pane fade" id="nav-services" role="tabpanel" aria-labelledby="nav-services-tab">
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Services</h4></div>
@@ -482,7 +482,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -499,7 +499,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -517,7 +517,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -534,7 +534,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -549,7 +549,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -562,7 +562,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
   <div class="col-sm-12">
@@ -578,7 +578,7 @@ $('#form_settime').on('submit', function() {
 <div class="tab-pane fade" id="nav-powercontrol" role="tabpanel" aria-labelledby="nav-powercontrol-tab">
 
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>System</h4></div>
@@ -597,7 +597,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -613,7 +613,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>Validation</h4></div>
@@ -630,7 +630,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"><h4>DANGER</h4></div>
@@ -641,7 +641,7 @@ $('#form_settime').on('submit', function() {
     <div class="col-sm-1 loader" id="loader_shutdown"></div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -657,7 +657,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -673,7 +673,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 <div class="row">
     <div class="col-sm-2"></div>
@@ -689,7 +689,7 @@ $('#form_settime').on('submit', function() {
     </div>
 </div>
 
-<hr />
+<hr>
 
 
 </div><!-- end tab -->
