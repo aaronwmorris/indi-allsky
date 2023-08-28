@@ -305,22 +305,22 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
@@ -467,22 +467,22 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
@@ -920,22 +920,22 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
@@ -1096,19 +1096,19 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     PYTHON_BIN=python3.9
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
@@ -1268,19 +1268,19 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     PYTHON_BIN=python3.8
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_debian11_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_debian11_32_post.txt
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     fi
 
