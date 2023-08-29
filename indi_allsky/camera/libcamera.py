@@ -172,7 +172,6 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--denoise', 'off',
                 '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
