@@ -1503,8 +1503,8 @@ class ImageProcessor(object):
         return self._max_bit_depth
 
     @max_bit_depth.setter
-    def max_bit_depth(self, *args):
-        pass  # read only
+    def max_bit_depth(self, new_max_bit_depth):
+        self._max_bit_depth = int(new_max_bit_depth)
 
 
     @property
@@ -1843,6 +1843,7 @@ class ImageProcessor(object):
 
     def _detectBitDepth(self, hdulist):
         ### This will need some rework if cameras return signed int data
+
         max_val = numpy.amax(hdulist[0].data)
         logger.info('Image max value: %d', int(max_val))
 
@@ -1871,9 +1872,20 @@ class ImageProcessor(object):
 
         #logger.info('Detected bit depth: %d', detected_bit_depth)
 
-        if detected_bit_depth > self._max_bit_depth:
+
+        config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
+        if config_ccd_bit_depth:
+            if detected_bit_depth != config_ccd_bit_depth:
+                logger.warning('*** DETECTED BIT DEPTH (%d) IS DIFFERENT FROM CONFIGURED BIT DEPTH (%d) ***', detected_bit_depth, config_ccd_bit_depth)
+
+            logger.info('Overriding bit depth to %d bits', config_ccd_bit_depth)
+            self.max_bit_depth = config_ccd_bit_depth
+            return config_ccd_bit_depth
+
+
+        if detected_bit_depth > self.max_bit_depth:
             logger.warning('Updated default bit depth: %d', detected_bit_depth)
-            self._max_bit_depth = detected_bit_depth
+            self.max_bit_depth = detected_bit_depth
 
         return detected_bit_depth
 
@@ -1900,7 +1912,7 @@ class ImageProcessor(object):
             if self.libcamera_raw:
                 if libcamera_black_level:
                     logger.info('Black level: %d', int(libcamera_black_level))
-                    black_level_scaled = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+                    black_level_scaled = int(libcamera_black_level) >> (16 - self.max_bit_depth)
 
                     # use opencv to prevent underruns
                     i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
@@ -2081,7 +2093,7 @@ class ImageProcessor(object):
             # nothing to scale
             adu_8 = int(adu)
         elif i_ref['image_bitpix'] == 16:
-            shift_factor = self._max_bit_depth - 8
+            shift_factor = self.max_bit_depth - 8
             adu_8 = int(adu) >> shift_factor
         else:
             raise Exception('Unsupported bit depth')
@@ -2239,7 +2251,7 @@ class ImageProcessor(object):
     #        return
 
     #    # for some reason the black levels are in a 16bit space even though the cameras only return 12 bit data
-    #    black_level_depth = int(libcamera_black_level) >> (16 - self._max_bit_depth)
+    #    black_level_depth = int(libcamera_black_level) >> (16 - self.max_bit_depth)
 
     #    self.image -= (black_level_depth - 10)  # offset slightly
 
@@ -2277,11 +2289,11 @@ class ImageProcessor(object):
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
-        #div_factor = int((2 ** self._max_bit_depth) / 255)
+        #div_factor = int((2 ** self.max_bit_depth) / 255)
         #self.image = (self.image / div_factor).astype(numpy.uint8)
 
         # shifting is 5x faster than division
-        shift_factor = self._max_bit_depth - 8
+        shift_factor = self.max_bit_depth - 8
         self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
@@ -2605,13 +2617,13 @@ class ImageProcessor(object):
             return
 
 
-        if self._max_bit_depth == 8:
+        if self.max_bit_depth == 8:
             numpy_dtype = numpy.uint8
         else:
             numpy_dtype = numpy.uint16
 
 
-        max_value = 2 ** self._max_bit_depth
+        max_value = 2 ** self.max_bit_depth
 
         # float32 normalized values
         norm_image = (self.image / max_value).astype(numpy.float32)
