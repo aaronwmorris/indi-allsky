@@ -4,7 +4,7 @@
 set -o errexit
 set -o nounset
 
-PATH=/usr/bin:/bin
+PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
 
 
@@ -16,10 +16,8 @@ CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 
-if [ -f "/usr/local/bin/indiserver" ]; then
-    INDISERVER="/usr/local/bin/indiserver"
-elif [ -f "/usr/bin/indiserver" ]; then
-    INDISERVER="/usr/bin/indiserver"
+if which indiserver >/dev/null 2>&1; then
+    INDISERVER=$(which indiserver)
 else
     INDISERVER="not found"
 fi
