@@ -87,6 +87,7 @@ echo
 
 echo "libcamera cameras"
 if which libcamera-hello >/dev/null 2>&1; then
+    echo "libcamera-hello: $(which libcamera-hello)"
     libcamera-hello --list-cameras || true
     echo
 else
