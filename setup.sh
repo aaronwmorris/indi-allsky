@@ -122,6 +122,8 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
+CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 # get primary group
 PGRP=$(id -ng)
@@ -192,6 +194,9 @@ echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
+echo
+echo "CPUs: $CPU_TOTAL"
+echo "Memory: $MEM_TOTAL kB"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
@@ -2263,7 +2268,6 @@ fi
 
 
 # Disable raw frames with libcamera when running less than 1GB of memory
-MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "768000" ]; then
     TMP_LIBCAM_TYPE=$(mktemp --suffix=.json)
     jq --arg libcamera_file_type "jpg" '.LIBCAMERA.IMAGE_FILE_TYPE = $libcamera_file_type' "$TMP_CONFIG_DUMP" > "$TMP_LIBCAM_TYPE"
