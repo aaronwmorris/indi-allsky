@@ -155,6 +155,23 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CCD_BIT_DEPTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_BIT_DEPTH(class='form-control bg-secondary') }}
+            <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div class="col-sm-8">Bit depth of data returned by the camera</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Switching your camera to JPEG/8-bit mode can affect this setting</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this incorrectly will cause problems</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MAX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2902,6 +2919,7 @@ const field_names = [
     'CCD_EXPOSURE_MAX',
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
+    'CCD_BIT_DEPTH',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
     'FOCUS_DELAY',

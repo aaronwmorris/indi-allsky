@@ -237,6 +237,11 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def CCD_BIT_DEPTH_validator(form, field):
+    if int(field.data) not in (0, 8, 10, 12, 14, 16):
+        raise ValidationError('Bits must be 0, 8, 10, 12, 14, or 16 ')
+
+
 def CCD_TEMP_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -1783,6 +1788,15 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libcamera_imx462', 'libcamera IMX462'),
     )
 
+    CCD_BIT_DEPTH_choices = (
+        ('0', 'Auto Detect'),
+        ('8', '8'),
+        ('10', '10'),
+        ('12', '12'),
+        ('14', '14'),
+        ('16', '16'),
+    )
+
     TEMP_DISPLAY_choices = (
         ('c', 'Celcius'),
         ('f', 'Fahrenheit'),
@@ -1993,6 +2007,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure', validators=[CCD_EXPOSURE_MIN_validator])
+    CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')

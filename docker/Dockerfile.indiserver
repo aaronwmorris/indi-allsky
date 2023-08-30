@@ -1,4 +1,5 @@
 
+# docker- prefix due to files in docker/ folder
 FROM docker-indi.base
 
 ARG DEBIAN_FRONTEND=noninteractive
