@@ -446,6 +446,8 @@ class ImageLoopView(TemplateView):
     def get_context(self):
         context = super(ImageLoopView, self).get_context()
 
+        context['ts'] = int(request.args.get('ts', time.time()))  # timestamp
+
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
@@ -601,6 +603,8 @@ class JsonImageLoopView(JsonView):
 class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
+
+        context['ts'] = int(request.args.get('ts', time.time()))  # timestamp
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms

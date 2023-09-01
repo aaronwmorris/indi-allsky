@@ -13,6 +13,7 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
 var refreshInterval = {{ refreshInterval | int }};
+var timestamp = {{ ts | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
 var page_settings;  // set later
@@ -96,7 +97,7 @@ function showImage(entry, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit_s' : history_seconds}, function() {
+    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit_s' : history_seconds, 'ts' : timestamp}, function() {
         //while (json_data['image_list'].length > maxFrames) {
         //    json_data['image_list'].splice(0, 1);  // remove first image
         //};
