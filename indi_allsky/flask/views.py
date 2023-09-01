@@ -461,35 +461,39 @@ class JsonImageLoopView(JsonView):
         self.history_seconds = 900
         self.sqm_history_minutes = 30
         self.stars_history_minutes = 30
-        self.limit = 1000  # sanity check
+        self._limit = 1000  # sanity check
 
 
     def get_objects(self):
+        ts = int(request.args.get('ts', time.time()))  # timestamp
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
-        self.limit = int(request.args.get('limit', self.limit))
+        self.limit = int(request.args.get('limit', self._limit))
 
         # sanity check
         if history_seconds > 86400:
             history_seconds = 86400
 
+        ts_dt = datetime.fromtimestamp(ts)
+
         data = {
-            'image_list' : self.getLatestImages(session['camera_id'], history_seconds),
-            'sqm_data'   : self.getSqmData(session['camera_id']),
-            'stars_data' : self.getStarsData(session['camera_id']),
+            'image_list' : self.getLoopImages(session['camera_id'], ts_dt, history_seconds),
+            'sqm_data'   : self.getSqmData(session['camera_id'], ts_dt),
+            'stars_data' : self.getStarsData(session['camera_id'], ts_dt),
         }
 
         return data
 
 
-    def getLatestImages(self, camera_id, history_seconds):
-        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+    def getLoopImages(self, camera_id, loop_dt, history_seconds):
+        ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
 
         latest_images_q = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > now_minus_seconds,
+                    IndiAllSkyDbImageTable.createDate > ts_minus_seconds,
+                    IndiAllSkyDbImageTable.createDate < loop_dt,
                 )
             )
 
@@ -536,8 +540,8 @@ class JsonImageLoopView(JsonView):
         return image_list
 
 
-    def getSqmData(self, camera_id):
-        now_minus_minutes = datetime.now() - timedelta(minutes=self.sqm_history_minutes)
+    def getSqmData(self, camera_id, ts_dt):
+        ts_minus_minutes = ts_dt - timedelta(minutes=self.sqm_history_minutes)
 
         sqm_images = IndiAllSkyDbImageTable.query\
             .add_columns(
@@ -549,7 +553,8 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > now_minus_minutes,
+                    IndiAllSkyDbImageTable.createDate > ts_minus_minutes,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
             )\
             .first()
@@ -564,8 +569,8 @@ class JsonImageLoopView(JsonView):
         return sqm_data
 
 
-    def getStarsData(self, camera_id):
-        now_minus_minutes = datetime.now() - timedelta(minutes=self.stars_history_minutes)
+    def getStarsData(self, camera_id, ts_dt):
+        ts_minus_minutes = ts_dt - timedelta(minutes=self.stars_history_minutes)
 
         stars_images = IndiAllSkyDbImageTable.query\
             .add_columns(
@@ -577,7 +582,8 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > now_minus_minutes,
+                    IndiAllSkyDbImageTable.createDate > ts_minus_minutes,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
             )\
             .first()
