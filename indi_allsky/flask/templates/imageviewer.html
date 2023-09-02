@@ -29,6 +29,7 @@ canvas {
 var img;
 var fullscreen = false;  //initial state
 var newest_image_default = true;  // load last image by default
+var image_data = [];
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
@@ -132,11 +133,6 @@ function closeFullscreen() {
             {{ form_viewer.IMG_SELECT(class='form-control bg-secondary') }}
             <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div style="display: none;">
-            {{ form_viewer.FITS_SELECT(class='form-control bg-secondary', hidden='hidden') }}
-            {{ form_viewer.RAW_SELECT(class='form-control bg-secondary', hidden='hidden') }}
-        </div>
-
     </div>
 
     <div class="form-group row">
@@ -214,8 +210,6 @@ const field_names = [
     'DAY_SELECT',
     'HOUR_SELECT',
     'IMG_SELECT',
-    'FITS_SELECT',
-    'RAW_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -277,22 +271,12 @@ function hour_change(json_data) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
 
             $("#IMG_SELECT").empty()
-            data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            data['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
-
-            $("#FITS_SELECT").empty()
-            data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#RAW_SELECT").empty()
-            data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
 
             if (newest_image_default) {
                 // newest image is first index
@@ -347,6 +331,7 @@ function day_change(json_data) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
@@ -354,18 +339,8 @@ function day_change(json_data) {
             });
 
             $("#IMG_SELECT").empty()
-            data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#FITS_SELECT").empty()
-            data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#RAW_SELECT").empty()
-            data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            data['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -410,6 +385,7 @@ function month_change(json_data) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
 
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
@@ -422,18 +398,8 @@ function month_change(json_data) {
             });
 
             $("#IMG_SELECT").empty()
-            data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#FITS_SELECT").empty()
-            data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#RAW_SELECT").empty()
-            data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            data['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -477,6 +443,7 @@ function year_change(json_data) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
@@ -494,18 +461,8 @@ function year_change(json_data) {
             });
 
             $("#IMG_SELECT").empty()
-            data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#FITS_SELECT").empty()
-            data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#RAW_SELECT").empty()
-            data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            data['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -560,6 +517,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
+
             $("#YEAR_SELECT").empty()
             data['YEAR_SELECT'].forEach(item => {
                 $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -581,18 +540,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
             });
 
             $("#IMG_SELECT").empty()
-            data['IMG_SELECT'].forEach(item => {
-                $("#IMG_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#FITS_SELECT").empty()
-            data['FITS_SELECT'].forEach(item => {
-                $("#FITS_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#RAW_SELECT").empty()
-            data['RAW_SELECT'].forEach(item => {
-                $("#RAW_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            data['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
             img.src = fields['IMG_SELECT'].input.val();
@@ -663,10 +612,10 @@ function init() {
 
         if (image_index > -1) {
             // Add FITS download link if it exists
-            if ($("#FITS_SELECT")[0].options[image_index].value != "None") {
+            if (image_data[image_index]['fits']) {
                 $('#fits_download').html(
                     $('<a />', {
-                        'href'   : $("#FITS_SELECT")[0].options[image_index].value,
+                        'href'   : image_data[image_index]['fits'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
@@ -682,10 +631,10 @@ function init() {
             };
 
             // Add RAW download link if it exists
-            if ($("#RAW_SELECT")[0].options[image_index].value != "None") {
+            if (image_data[image_index]['raw']) {
                 $('#raw_download').html(
                     $('<a />', {
-                        'href'   : $("#RAW_SELECT")[0].options[image_index].value,
+                        'href'   : image_data[image_index]['raw'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",

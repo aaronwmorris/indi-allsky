@@ -2269,8 +2269,6 @@ class IndiAllskyImageViewer(FlaskForm):
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     IMG_SELECT           = SelectField('Image', choices=[], validators=[])
-    FITS_SELECT          = SelectField('FITS', choices=[], validators=[])  # hidden
-    RAW_SELECT           = SelectField('RAW', choices=[], validators=[])  # hidden
     FILTER_DETECTIONS    = BooleanField('Detections')
 
 
@@ -2498,10 +2496,8 @@ class IndiAllskyImageViewer(FlaskForm):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        images_choices = list()
-        fits_choices = list()
-        raw_choices = list()
-        for i, img in enumerate(images_query):
+        images_data = list()
+        for img in images_query:
             try:
                 url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
@@ -2513,7 +2509,12 @@ class IndiAllskyImageViewer(FlaskForm):
             else:
                 entry_str = img.createDate.strftime('%H:%M:%S')
 
-            images_choices.append((str(url), entry_str))
+            image_dict = dict()
+            image_dict['url'] = str(url)
+            image_dict['date'] = entry_str
+            image_dict['ts'] = int(img.createDate.timestamp())
+            image_dict['width'] = img.width
+            image_dict['height'] = img.height
 
 
             # look for fits
@@ -2522,11 +2523,9 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
-                fits_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
+                image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
             except NoResultFound:
-                fits_select = ('None', str(i))
-
-            fits_choices.append(fits_select)
+                image_dict['fits'] = None
 
 
             # look for raw exports
@@ -2535,18 +2534,17 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                raw_select = (str(fits_image.getUrl(s3_prefix=self.s3_prefix)), i)
+                image_dict['raw'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
             except NoResultFound:
-                raw_select = ('None', i)
+                image_dict['raw'] = None
             except ValueError:
                 # this can happen when RAW files are exported outside of the document root
-                raw_select = ('None', i)
+                image_dict['raw'] = None
 
-            raw_choices.append(raw_select)
+            images_data.append(image_dict)
 
 
-        return images_choices, fits_choices, raw_choices
-
+        return images_data
 
 
 class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
@@ -2572,8 +2570,6 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
             self.DAY_SELECT.choices = (('', 'None'),)
             self.HOUR_SELECT.choices = (('', 'None'),)
             self.IMG_SELECT.choices = (('', 'None'),)
-            self.FITS_SELECT.choices = (('', 'None'),)
-            self.RAW_SELECT.choices = (('', 'None'),)
 
             return
 
