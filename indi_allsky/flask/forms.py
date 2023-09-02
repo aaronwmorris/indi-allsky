@@ -2581,10 +2581,10 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         dates_start = time.time()
 
         self.YEAR_SELECT.choices = self.getYears()
-        self.MONTH_SELECT.choices = (('None', 'Loading'),)
-        self.DAY_SELECT.choices = (('None', 'Loading'),)
-        self.HOUR_SELECT.choices = (('None', 'Loading'),)
-        self.IMG_SELECT.choices = (('None', 'Loading'),)
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+        self.DAY_SELECT.choices = (('', 'Loading'),)
+        self.HOUR_SELECT.choices = (('', 'Loading'),)
+        self.IMG_SELECT.choices = (('', 'Loading'),)
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
@@ -2909,13 +2909,10 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
             return
 
 
-        year = last_video.dayDate.strftime('%Y')
-
-
         dates_start = time.time()
 
         self.YEAR_SELECT.choices = self.getYears()
-        self.MONTH_SELECT.choices = self.getMonths(year)
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)

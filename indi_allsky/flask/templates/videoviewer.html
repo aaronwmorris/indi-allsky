@@ -444,11 +444,10 @@ $("#YEAR_SELECT").on("change", function() {
 function init() {
     var json_data = {
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
         'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
     };
 
-    month_change(json_data);
+    year_change(json_data);
 };
 
 
