@@ -622,27 +622,29 @@ class JsonChartView(JsonView):
 
 
     def get_objects(self):
+        ts = int(request.args.get('ts', time.time()))  # timestamp
         history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
 
         # safety, limit history to 1 day
         if history_seconds > 86400:
             history_seconds = 86400
 
+        ts_dt = datetime.fromtimestamp(ts)
 
         data = {
-            'chart_data' : self.getChartData(history_seconds),
+            'chart_data' : self.getChartData(history_seconds, ts_dt),
         }
 
         return data
 
 
-    def getChartData(self, history_seconds):
+    def getChartData(self, history_seconds, ts_dt):
         import numpy
         import cv2
         import PIL
         from PIL import Image
 
-        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+        ts_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
             .add_columns(
@@ -658,7 +660,8 @@ class JsonChartView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == session['camera_id'],
-                    IndiAllSkyDbImageTable.createDate > now_minus_seconds,
+                    IndiAllSkyDbImageTable.createDate > ts_minus_seconds,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
             )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
