@@ -2515,6 +2515,7 @@ class IndiAllskyImageViewer(FlaskForm):
             image_dict['ts'] = int(img.createDate.timestamp())
             image_dict['width'] = img.width
             image_dict['height'] = img.height
+            image_dict['exclude'] = img.exclude
 
 
             # look for fits
