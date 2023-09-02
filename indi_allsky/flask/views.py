@@ -632,13 +632,13 @@ class JsonChartView(JsonView):
         ts_dt = datetime.fromtimestamp(ts)
 
         data = {
-            'chart_data' : self.getChartData(history_seconds, ts_dt),
+            'chart_data' : self.getChartData(ts_dt, history_seconds),
         }
 
         return data
 
 
-    def getChartData(self, history_seconds, ts_dt):
+    def getChartData(self, ts_dt, history_seconds):
         import numpy
         import cv2
         import PIL
