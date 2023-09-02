@@ -5,6 +5,20 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 <script type="text/javascript">
 </script>
@@ -40,12 +54,14 @@
             {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-control bg-secondary') }}
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-1">
             <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">
                 <span class="badge pill bg-success">Generate</span>
             </a>
         </div>
-
+        <div class="col-sm-2">
+            <div class="loader" id="loader_filter"></div>
+        </div>
     </div>
 
     <div id="success-message" class="text-success" style="display: none;"></div>
@@ -351,6 +367,7 @@ function month_change(json_data) {
         data: JSON.stringify(json_data),
         success: function(data){
             populate_videos(data['video_list']);
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -370,6 +387,8 @@ $("#MONTH_SELECT").on("change", function() {
         fields[key].error.css({'display' : 'none'});
     });
 
+    $("#loader_filter").css({'display' : 'block'});
+
     var json_data = {
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
@@ -386,6 +405,8 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
@@ -410,6 +431,8 @@ function year_change(json_data) {
             });
 
             populate_videos(data['video_list']);
+
+            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -429,6 +452,8 @@ $("#YEAR_SELECT").on("change", function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+
+    $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
