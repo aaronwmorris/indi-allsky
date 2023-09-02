@@ -7,14 +7,6 @@
 <style>
 </style>
 <script type="text/javascript">
-function init() {
-     MONTH_SELECT_on_change();
-};
-
-$( document ).ready(function() {
-    init();
-});
-
 </script>
 
 {% endblock %}
@@ -351,7 +343,27 @@ function populate_videos(video_list) {
 };
 
 
-function MONTH_SELECT_on_change() {
+function month_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            populate_videos(data['video_list']);
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+}
+
+
+$("#MONTH_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -364,15 +376,40 @@ function MONTH_SELECT_on_change() {
         'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
     };
 
+    month_change(json_data);
+});
+
+
+$("#TIMEOFDAY_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    var json_data = {
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+    };
+
+    month_change(json_data);
+});
+
+
+function year_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            $("#MONTH_SELECT").empty()
+            data['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
 
             populate_videos(data['video_list']);
-
         },
         error: function(data){
             Object.keys(data).forEach((key) => {
@@ -383,17 +420,7 @@ function MONTH_SELECT_on_change() {
         },
     });
 
-};
-
-
-$("#MONTH_SELECT").on("change", function() {
-    MONTH_SELECT_on_change();
-})
-
-
-$("#TIMEOFDAY_SELECT").on("change", function() {
-    MONTH_SELECT_on_change();
-})
+}
 
 
 $("#YEAR_SELECT").on("change", function() {
@@ -408,30 +435,25 @@ $("#YEAR_SELECT").on("change", function() {
         'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
     };
 
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(json_data),
-        success: function(data){
+    year_change(json_data);
+});
 
-            $("#MONTH_SELECT").empty()
-            data['MONTH_SELECT'].forEach(item => {
-                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
 
-            populate_videos(data['video_list']);
 
-        },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
-            });
-        },
-    });
 
+function init() {
+    var json_data = {
+        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
+        'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+    };
+
+    month_change(json_data);
+};
+
+
+$( document ).ready(function() {
+    init();
 });
 
 </script>

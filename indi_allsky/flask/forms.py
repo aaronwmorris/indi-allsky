@@ -2578,23 +2578,9 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
             return
 
 
-        year = last_image.createDate.strftime('%Y')
-        month = last_image.createDate.strftime('%m')
-        day = last_image.createDate.strftime('%d')
-        hour = last_image.createDate.strftime('%H')
-
-
         dates_start = time.time()
 
         self.YEAR_SELECT.choices = self.getYears()
-        self.MONTH_SELECT.choices = self.getMonths(year)
-        self.DAY_SELECT.choices = self.getDays(year, month)
-        self.HOUR_SELECT.choices = self.getHours(year, month, day)
-
-        img_select, fits_select, raw_select = self.getImages(year, month, day, hour)
-        self.IMG_SELECT.choices = img_select
-        self.FITS_SELECT.choices = fits_select
-        self.RAW_SELECT.choices = raw_select
 
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)

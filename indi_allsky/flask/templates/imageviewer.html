@@ -30,173 +30,6 @@ var img;
 var fullscreen = false;  //initial state
 var newest_image_default = true;  // load last image by default
 
-function init() {
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
-    img = new Image();
-    img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio =  canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        $('#img_download').html(
-            $('<a />', {
-                'href'   : this.src,
-                'target' : '_blank',
-                'rel'    : 'noopener noreferrer',
-            }).html(
-                $('<span />', {
-                    'text'  : 'Image',
-                    'class' : "badge pill bg-info text-dark",
-                })
-            )
-        );
-
-
-        var image_index = -1;
-
-        $('#IMG_SELECT option').each(function(index, element) {
-            if (element.value == $("#IMG_SELECT").val()) {
-                image_index = index;
-                return false;
-            };
-        });
-
-
-        if (image_index > -1) {
-            // Add FITS download link if it exists
-            if ($("#FITS_SELECT")[0].options[image_index].value != "None") {
-                $('#fits_download').html(
-                    $('<a />', {
-                        'href'   : $("#FITS_SELECT")[0].options[image_index].value,
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'FITS',
-                            'class' : "badge pill bg-danger",
-                        })
-                    )
-                );
-            } else {
-                $('#fits_download').empty();
-            };
-
-            // Add RAW download link if it exists
-            if ($("#RAW_SELECT")[0].options[image_index].value != "None") {
-                $('#raw_download').html(
-                    $('<a />', {
-                        'href'   : $("#RAW_SELECT")[0].options[image_index].value,
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'RAW',
-                            'class' : "badge pill bg-warning text-dark",
-                        })
-                    )
-                );
-            } else {
-                $('#raw_download').empty();
-            };
-        } else {
-            // this should never happen, but just in case
-            $('#fits_download').empty();
-            $('#raw_download').empty();
-        };
-
-    };
-
-
-    img.src = $("#IMG_SELECT").val();
-
-    $(document).keydown(function(e) {
-        var arrow = { left: 37, up: 38, right: 39, down: 40 };
-        var img_select_val = $("#IMG_SELECT").val();
-        var hour_select_val = $("#HOUR_SELECT").val();
-
-        switch (e.which) {
-            case arrow.left:
-                // load older image
-                newest_image_default = true;  // load newest image when changing hours
-
-                $('#IMG_SELECT option').each(function(index, element) {
-                    if (index == $("#IMG_SELECT")[0].options.length - 1) {
-                        console.log('At oldest image');
-                    } else if (element.value == img_select_val) {
-                        console.log('Previous image');
-                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
-                        return false;
-                    };
-                });
-
-                break;
-            case arrow.right:
-                // load newer image
-                newest_image_default = false;  // load oldest image when changing hours
-
-                $('#IMG_SELECT option').each(function(index, element) {
-                    if (index == 0) {
-                        console.log('At newest image');
-                    } else if (element.value == img_select_val) {
-                        console.log('Next image');
-                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
-                        return false;
-                    };
-                });
-
-                break;
-            case arrow.up:
-                // next hour
-                newest_image_default = false;  // load oldest image when changing hours
-
-                $('#HOUR_SELECT option').each(function(index, element) {
-                    if (index == 0) {
-                        console.log('At latest hour');
-                    } else if (element.value == hour_select_val) {
-                        console.log('Next hour');
-                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
-                        return false;
-                    };
-                });
-
-                break;
-            case arrow.down:
-                // previous hour
-                newest_image_default = true;  // load newest image when changing hours
-
-                $('#HOUR_SELECT option').each(function(index, element) {
-                    if (index == $("#HOUR_SELECT")[0].options.length - 1) {
-                        console.log('At oldest hour');
-                    } else if (element.value == hour_select_val) {
-                        console.log('Previous hour');
-                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
-                        return false;
-                    };
-                });
-
-                break;
-            default:
-                return;
-        }
-
-        e.preventDefault();
-    });
-
-}
-
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
     $(window).on("resize", function() {
@@ -249,14 +82,6 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-
-$( document ).ready(function() {
-    $('#canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
-    init();
-});
 </script>
 
 
@@ -445,23 +270,7 @@ $("#IMG_SELECT").on("change", function() {
 });
 
 
-$("#HOUR_SELECT").on("change", function() {
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
-    });
-
-    $("#loader_filter").css({'display' : 'block'});
-
-    var json_data = {
-        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
-        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
-        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
-        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-    };
-
+function hour_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -507,11 +316,10 @@ $("#HOUR_SELECT").on("change", function() {
             });
         },
     });
-});
+}
 
 
-
-$("#DAY_SELECT").on("change", function() {
+$("#HOUR_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -524,9 +332,15 @@ $("#DAY_SELECT").on("change", function() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
+    hour_change(json_data);
+});
+
+
+function day_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -566,10 +380,10 @@ $("#DAY_SELECT").on("change", function() {
             });
         },
     });
-});
+}
 
 
-$("#MONTH_SELECT").on("change", function() {
+$("#DAY_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -581,9 +395,15 @@ $("#MONTH_SELECT").on("change", function() {
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
+    day_change(json_data);
+});
+
+
+function month_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -628,9 +448,10 @@ $("#MONTH_SELECT").on("change", function() {
             });
         },
     });
-});
+}
 
-$("#YEAR_SELECT").on("change", function() {
+
+$("#MONTH_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -641,9 +462,15 @@ $("#YEAR_SELECT").on("change", function() {
 
     var json_data = {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
+    month_change(json_data);
+});
+
+
+function year_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -693,7 +520,26 @@ $("#YEAR_SELECT").on("change", function() {
             });
         },
     });
+};
+
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    year_change(json_data);
 });
+
 
 $("#FILTER_DETECTIONS").on("change", function() {
     // hide all errors
@@ -764,9 +610,191 @@ $("#FILTER_DETECTIONS").on("change", function() {
 });
 
 
+function init() {
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    year_change(json_data);
+
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio =  canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        $('#img_download').html(
+            $('<a />', {
+                'href'   : this.src,
+                'target' : '_blank',
+                'rel'    : 'noopener noreferrer',
+            }).html(
+                $('<span />', {
+                    'text'  : 'Image',
+                    'class' : "badge pill bg-info text-dark",
+                })
+            )
+        );
+
+
+        var image_index = -1;
+
+        $('#IMG_SELECT option').each(function(index, element) {
+            if (element.value == $("#IMG_SELECT").val()) {
+                image_index = index;
+                return false;
+            };
+        });
+
+
+        if (image_index > -1) {
+            // Add FITS download link if it exists
+            if ($("#FITS_SELECT")[0].options[image_index].value != "None") {
+                $('#fits_download').html(
+                    $('<a />', {
+                        'href'   : $("#FITS_SELECT")[0].options[image_index].value,
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'FITS',
+                            'class' : "badge pill bg-danger",
+                        })
+                    )
+                );
+            } else {
+                $('#fits_download').empty();
+            };
+
+            // Add RAW download link if it exists
+            if ($("#RAW_SELECT")[0].options[image_index].value != "None") {
+                $('#raw_download').html(
+                    $('<a />', {
+                        'href'   : $("#RAW_SELECT")[0].options[image_index].value,
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'RAW',
+                            'class' : "badge pill bg-warning text-dark",
+                        })
+                    )
+                );
+            } else {
+                $('#raw_download').empty();
+            };
+        } else {
+            // this should never happen, but just in case
+            $('#fits_download').empty();
+            $('#raw_download').empty();
+        };
+
+    };
+
+
+    img.src = $("#IMG_SELECT").val();
+
+    $(document).keydown(function(e) {
+        var arrow = { left: 37, up: 38, right: 39, down: 40 };
+        var img_select_val = $("#IMG_SELECT").val();
+        var hour_select_val = $("#HOUR_SELECT").val();
+
+        switch (e.which) {
+            case arrow.left:
+                // load older image
+                newest_image_default = true;  // load newest image when changing hours
+
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == $("#IMG_SELECT")[0].options.length - 1) {
+                        console.log('At oldest image');
+                    } else if (element.value == img_select_val) {
+                        console.log('Previous image');
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
+            case arrow.right:
+                // load newer image
+                newest_image_default = false;  // load oldest image when changing hours
+
+                $('#IMG_SELECT option').each(function(index, element) {
+                    if (index == 0) {
+                        console.log('At newest image');
+                    } else if (element.value == img_select_val) {
+                        console.log('Next image');
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
+            case arrow.up:
+                // next hour
+                newest_image_default = false;  // load oldest image when changing hours
+
+                $('#HOUR_SELECT option').each(function(index, element) {
+                    if (index == 0) {
+                        console.log('At latest hour');
+                    } else if (element.value == hour_select_val) {
+                        console.log('Next hour');
+                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
+            case arrow.down:
+                // previous hour
+                newest_image_default = true;  // load newest image when changing hours
+
+                $('#HOUR_SELECT option').each(function(index, element) {
+                    if (index == $("#HOUR_SELECT")[0].options.length - 1) {
+                        console.log('At oldest hour');
+                    } else if (element.value == hour_select_val) {
+                        console.log('Previous hour');
+                        $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
+                        return false;
+                    };
+                });
+
+                break;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+    });
+
+}
+
+
 $( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
+
+    init();
 });
 
 </script>
