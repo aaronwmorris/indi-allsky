@@ -616,7 +616,7 @@ function init() {
             // Add Loop here link
             $('#loop_here').html(
                 $('<a />', {
-                    'href' : "{{ url_for('indi_allsky.image_loop_view') }}?ts=" + image_data[image_index]['ts'],
+                    'href' : "{{ url_for('indi_allsky.image_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
                 }).html(

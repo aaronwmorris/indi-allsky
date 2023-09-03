@@ -14,7 +14,7 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.min.js') }}"></script>
 <script type="text/javascript">
 var refreshInterval = {{ refreshInterval | int }};
-var timestamp = {{ ts | int }};
+var timestamp = {{ timestamp | int }};
 var page_settings;  // set later
 var history_seconds;  // set later
 var json_data = {
@@ -389,7 +389,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'limit_s' : history_seconds, 'ts' : timestamp});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'limit_s' : history_seconds, 'timestamp' : timestamp});
     setTimeout(loadChartData, refreshInterval);
 }
 
