@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <style>
 .loader {
-  display: none;
+  display: block;
   border: 3px solid #f3f3f3;
   border-top: 4px solid #3498db;
   border-radius: 50%;
@@ -19,29 +19,74 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
 </style>
-<link rel="stylesheet" href="static/photoswipe/dist/photoswipe.css">
-<script type="text/javascript">
-var newest_image_default = true;  // load last image by default
 
-function init() {
+<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
+<script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe.umd.min.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe-lightbox.umd.min.js') }}"></script>
+<script type="text/javascript">
+var img;
+var fullscreen = false;  //initial state
+var newest_image_default = true;  // load last image by default
+var image_data = [];
+var gallery_data = [];
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
 }
 
-$( document ).ready(function() {
-    init();
-});
+function resize_callback() {
+    //refresh();
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
 </script>
 
-<script type="module">
-import PhotoSwipeLightbox from './static/photoswipe/dist/photoswipe-lightbox.esm.js';
-const lightbox = new PhotoSwipeLightbox({
-  gallery: '#my-gallery',
-  children: 'a',
-  pswpModule: () => import('static/photoswipe/dist/photoswipe.esm.js')
-});
-lightbox.init();
-</script>
+
 {% endblock %}
 
 {% block content %}
@@ -81,12 +126,6 @@ lightbox.init();
             {{ form_viewer.HOUR_SELECT(class='form-control bg-secondary') }}
             <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-
-        <div style="display: none;">
-            {{ form_viewer.FITS_SELECT(class='form-control bg-secondary', hidden='hidden') }}
-            {{ form_viewer.RAW_SELECT(class='form-control bg-secondary', hidden='hidden') }}
-        </div>
-
     </div>
 
     <div class="form-group row">
@@ -112,6 +151,15 @@ lightbox.init();
 
 <hr>
 
+<div class="row">
+    <div class="col-12 text-center" style="font-size:10px">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+    </div>
+</div>
 
 <script>
 const successMessage = $('#success-message');
@@ -122,9 +170,6 @@ const field_names = [
     'MONTH_SELECT',
     'DAY_SELECT',
     'HOUR_SELECT',
-    'IMG_SELECT',
-    'FITS_SELECT',
-    'RAW_SELECT',
 ];
 
 const checkbox_field_names = [
@@ -154,6 +199,38 @@ fields['form_global'] = {
 };
 
 
+function hour_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            image_data = data['IMAGE_DATA']
+
+            gallery_data = [];
+            data['IMAGE_DATA'].forEach(item => {
+                gallery_data.push({
+                    'src' : item['url'],
+                    'width' : item['width'],
+                    'height' : item['height'],
+                    'alt' : item['date'],
+                });
+            });
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            Object.keys(data).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+}
+
+
 $("#HOUR_SELECT").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
@@ -171,12 +248,34 @@ $("#HOUR_SELECT").on("change", function() {
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
+    hour_change(json_data);
+});
+
+
+function day_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
+
+            $("#HOUR_SELECT").empty()
+            data['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            gallery_data = [];
+            data['IMAGE_DATA'].forEach(item => {
+                gallery_data.push({
+                    'src' : item['url'],
+                    'width' : item['width'],
+                    'height' : item['height'],
+                    'alt' : item['date'],
+                });
+            });
+
             $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
@@ -187,8 +286,7 @@ $("#HOUR_SELECT").on("change", function() {
             });
         },
     });
-});
-
+}
 
 
 $("#DAY_SELECT").on("change", function() {
@@ -207,16 +305,37 @@ $("#DAY_SELECT").on("change", function() {
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
+    day_change(json_data);
+});
+
+
+function month_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
+
+            $("#DAY_SELECT").empty()
+            data['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
 
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            gallery_data = [];
+            data['IMAGE_DATA'].forEach(item => {
+                gallery_data.push({
+                    'src' : item['url'],
+                    'width' : item['width'],
+                    'height' : item['height'],
+                    'alt' : item['date'],
+                });
             });
 
             $("#loader_filter").css({'display' : 'none'});
@@ -229,7 +348,7 @@ $("#DAY_SELECT").on("change", function() {
             });
         },
     });
-});
+}
 
 
 $("#MONTH_SELECT").on("change", function() {
@@ -247,55 +366,18 @@ $("#MONTH_SELECT").on("change", function() {
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(json_data),
-        success: function(data){
-
-            $("#DAY_SELECT").empty()
-            data['DAY_SELECT'].forEach(item => {
-                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#HOUR_SELECT").empty()
-            data['HOUR_SELECT'].forEach(item => {
-                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-            });
-
-            $("#loader_filter").css({'display' : 'none'});
-        },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
-            });
-        },
-    });
+    month_change(json_data);
 });
 
-$("#YEAR_SELECT").on("change", function() {
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
-    });
 
-    $("#loader_filter").css({'display' : 'block'});
-
-    var json_data = {
-        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
-        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-    };
-
+function year_change(json_data) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
 
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
@@ -312,6 +394,16 @@ $("#YEAR_SELECT").on("change", function() {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
+            gallery_data = [];
+            data['IMAGE_DATA'].forEach(item => {
+                gallery_data.push({
+                    'src' : item['url'],
+                    'width' : item['width'],
+                    'height' : item['height'],
+                    'alt' : item['date'],
+                });
+            });
+
             $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
@@ -322,7 +414,26 @@ $("#YEAR_SELECT").on("change", function() {
             });
         },
     });
+};
+
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    year_change(json_data);
 });
+
 
 $("#FILTER_DETECTIONS").on("change", function() {
     // hide all errors
@@ -343,6 +454,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            image_data = data['IMAGE_DATA']
+
             $("#YEAR_SELECT").empty()
             data['YEAR_SELECT'].forEach(item => {
                 $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -363,6 +476,23 @@ $("#FILTER_DETECTIONS").on("change", function() {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
+            gallery_data = [];
+            data['IMAGE_DATA'].forEach(item => {
+                gallery_data.push({
+                    'src' : item['url'],
+                    'width' : item['width'],
+                    'height' : item['height'],
+                    'alt' : item['date'],
+                });
+            });
+
+            var lightbox = new PhotoSwipeLightbox({
+                'dataSource' : gallery_data,
+                'showHideAnimationType' : 'none',
+                'pswpModule' : PhotoSwipe,
+            });
+            lightbox.init();
+
             $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
@@ -376,9 +506,25 @@ $("#FILTER_DETECTIONS").on("change", function() {
 });
 
 
+function init() {
+    var json_data = {
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+    };
+
+    year_change(json_data);
+}
+
+
 $( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
+
+    init();
 });
 
 </script>

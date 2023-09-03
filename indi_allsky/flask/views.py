@@ -446,7 +446,7 @@ class ImageLoopView(TemplateView):
     def get_context(self):
         context = super(ImageLoopView, self).get_context()
 
-        context['ts'] = int(request.args.get('ts', time.time()))  # timestamp
+        context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
@@ -467,15 +467,18 @@ class JsonImageLoopView(JsonView):
 
 
     def get_objects(self):
-        ts = int(request.args.get('ts', time.time()))  # timestamp
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
         self.limit = int(request.args.get('limit', self._limit))
+        timestamp = int(request.args.get('timestamp', 0))
+
+        if not timestamp:
+            timestamp = int(time.time())
+
+        ts_dt = datetime.fromtimestamp(timestamp)
 
         # sanity check
         if history_seconds > 86400:
             history_seconds = 86400
-
-        ts_dt = datetime.fromtimestamp(ts)
 
         data = {
             'image_list' : self.getLoopImages(session['camera_id'], ts_dt, history_seconds),
@@ -604,7 +607,7 @@ class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
 
-        context['ts'] = int(request.args.get('ts', time.time()))  # timestamp
+        context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
@@ -622,14 +625,17 @@ class JsonChartView(JsonView):
 
 
     def get_objects(self):
-        ts = int(request.args.get('ts', time.time()))  # timestamp
         history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
+        timestamp = int(request.args.get('timestamp', 0))
+
+        if not timestamp:
+            timestamp = int(time.time())
+
+        ts_dt = datetime.fromtimestamp(timestamp)
 
         # safety, limit history to 1 day
         if history_seconds > 86400:
             history_seconds = 86400
-
-        ts_dt = datetime.fromtimestamp(ts)
 
         data = {
             'chart_data' : self.getChartData(ts_dt, history_seconds),
@@ -1728,11 +1734,7 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.strftime('%d')
             hour = form_datetime.strftime('%H')
 
-            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
-            json_data['IMG_SELECT'] = img_select
-            json_data['FITS_SELECT'] = fits_select
-            json_data['RAW_SELECT'] = raw_select
-
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_day:
             form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
@@ -1744,10 +1746,7 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
-            json_data['IMG_SELECT'] = img_select
-            json_data['FITS_SELECT'] = fits_select
-            json_data['RAW_SELECT'] = raw_select
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -1761,10 +1760,7 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
-            json_data['IMG_SELECT'] = img_select
-            json_data['FITS_SELECT'] = fits_select
-            json_data['RAW_SELECT'] = raw_select
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -1780,10 +1776,7 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
-            json_data['IMG_SELECT'] = img_select
-            json_data['FITS_SELECT'] = fits_select
-            json_data['RAW_SELECT'] = raw_select
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         else:
             # this happens when filtering images on detections
@@ -1796,8 +1789,6 @@ class AjaxImageViewerView(BaseView):
                 json_data['DAY_SELECT'] = (('', None),)
                 json_data['HOUR_SELECT'] = (('', None),)
                 json_data['IMG_SELECT'] = (('', None),)
-                json_data['FITS_SELECT'] = (('', None),)
-                json_data['RAW_SELECT'] = (('', None),)
 
                 return json_data
 
@@ -1813,10 +1804,7 @@ class AjaxImageViewerView(BaseView):
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
 
-            img_select, fits_select, raw_select = form_viewer.getImages(year, month, day, hour)
-            json_data['IMG_SELECT'] = img_select
-            json_data['FITS_SELECT'] = fits_select
-            json_data['RAW_SELECT'] = raw_select
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
 
         return jsonify(json_data)
