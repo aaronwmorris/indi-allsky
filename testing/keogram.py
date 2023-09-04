@@ -337,7 +337,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--angle',
         '-a',
-        help='angle',
+        help='angle [default: 45]',
         type=int,
         default=45,
     )
