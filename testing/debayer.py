@@ -7,6 +7,7 @@ import cv2
 import numpy
 from astropy.io import fits
 import logging
+from pprint import pformat  # noqa: F401
 
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +47,8 @@ class Debayer(object):
             image_bitpix = hdulist[0].header['BITPIX']
 
             logger.warning('FITS BAYERPAT: %s', hdulist[0].header.get('BAYERPAT'))
+
+            #logger.info('HDU Header = %s', pformat(hdulist[0].header))
         else:
             # hopefully a png
             data = cv2.imread(str(inputfile_p), cv2.IMREAD_UNCHANGED)
