@@ -71,7 +71,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--fps',
         '-f',
-        help='fps [25]',
+        help='fps [default: 25]',
         type=int,
         default=25,
         required=False,
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--bitrate',
         '-b',
-        help='bitrate [2500000]',
+        help='bitrate [default: 2500000]',
         type=int,
         default=2500000,
     )

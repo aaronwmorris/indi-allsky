@@ -310,21 +310,21 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--max_adu',
         '-a',
-        help='max brightness limit',
+        help='max brightness limit [default: 65]',
         type=int,
         default=65,
     )
     argparser.add_argument(
         '--mask_threshold',
         '-m',
-        help='mask threshold',
+        help='mask threshold [default: 190]',
         type=int,
         default=190,
     )
     argparser.add_argument(
         '--pixel_cutoff_threshold',
         '-p',
-        help='pixel cutoff threshold percentage',
+        help='pixel cutoff threshold percentage [default: 1.0]',
         type=float,
         default=1.0,
     )
@@ -342,19 +342,19 @@ if __name__ == "__main__":
     )
     argparser.add_argument(
         '--sun_alt_threshold',
-        help='sun altitude threshold',
+        help='sun altitude threshold [default: -15.0]',
         type=float,
         default=-15.0,
     )
     argparser.add_argument(
         '--moon_alt_threshold',
-        help='moon altitude threshold',
+        help='moon altitude threshold [default: 0.0]',
         type=float,
         default=0.0,
     )
     argparser.add_argument(
         '--moon_phase_threshold',
-        help='moon phase threshold',
+        help='moon phase threshold [default: 33.0]',
         type=float,
         default=33.0,
     )

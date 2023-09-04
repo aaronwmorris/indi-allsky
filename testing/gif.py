@@ -33,8 +33,8 @@ class GifBuilder(object):
                 if len(self.roi):
                     logger.info('  *** Extracting ROI ***')
                     data = image[
-                        self.roi[1]:(self.roi[1] + self.roi[3]),
-                        self.roi[0]:(self.roi[0] + self.roi[2]),
+                        self.roi[1]:self.roi[3],
+                        self.roi[0]:self.roi[2],
                     ]
                 else:
                     data = image
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--duration',
         '-d',
-        help='duration',
+        help='duration [default: 0.25]',
         type=float,
         default=0.25,
         required=False,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--roi',
         '-r',
-        help='roi',
+        help='roi [x1 y1 x2 y2]',
         type=int,
         default=[],
         nargs='*',
