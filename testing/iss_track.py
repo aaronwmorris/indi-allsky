@@ -105,7 +105,7 @@ class IssTrack(object):
             while True:
                 obs.date = datetime.utcnow()
                 iss.compute(obs)
-                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg, rise %s', math.degrees(iss.alt), math.degrees(iss.az), obs.next_pass(iss)[0])
+                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg, rise %s', math.degrees(iss.alt), math.degrees(iss.az), ephem.localtime(obs.next_pass(iss)[0]))
                 time.sleep(5.0)
 
 
@@ -122,7 +122,7 @@ class IssTrack(object):
             f_tle.write(r.text)
 
 
-        return r.text.encode().splitlines()
+        return r.text.splitlines()
 
 
     def load_tle(self, tmpfile):
