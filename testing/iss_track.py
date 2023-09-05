@@ -18,10 +18,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
+ELEVATION = 300
 
 ### ATL
-#LATITUDE   = 33.7
-#LONGITUDE  = -84.4
+LATITUDE   = 33.7
+LONGITUDE  = -84.4
 
 ### San Francisco
 #LATITUDE  = 37.6
@@ -40,8 +41,8 @@ logger = logging
 #LONGITUDE = -105.8
 
 ### WINNIPEG
-LATITUDE  = 49.9
-LONGITUDE = -97.1
+#LATITUDE  = 49.9
+#LONGITUDE = -97.1
 
 ### CALGARY
 #LATITUDE  = 51.0
@@ -96,7 +97,7 @@ class IssTrack(object):
             obs = ephem.Observer()
             obs.lon = math.radians(LONGITUDE)
             obs.lat = math.radians(LATITUDE)
-            obs.elevation = 300  # meters
+            obs.elevation = ELEVATION  # meters
 
             iss = ephem.readtle(*self.iss_tle_data)
 
@@ -104,7 +105,7 @@ class IssTrack(object):
             while True:
                 obs.date = datetime.utcnow()
                 iss.compute(obs)
-                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg', math.degrees(iss.alt), math.degrees(iss.az))
+                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg, rise %s', math.degrees(iss.alt), math.degrees(iss.az), obs.next_pass(iss)[0])
                 time.sleep(5.0)
 
 
