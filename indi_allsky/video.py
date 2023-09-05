@@ -801,6 +801,7 @@ class VideoWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(camera.longitude)
         obs.lat = math.radians(camera.latitude)
+        obs.elevation = camera.elevation
 
         sun = ephem.Sun()
 

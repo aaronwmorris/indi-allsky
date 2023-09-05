@@ -96,7 +96,7 @@ class IssTrack(object):
             obs = ephem.Observer()
             obs.lon = math.radians(LONGITUDE)
             obs.lat = math.radians(LATITUDE)
-            obs.elevation = 100  # meters
+            obs.elevation = 300  # meters
 
             iss = ephem.readtle(*self.iss_tle_data)
 

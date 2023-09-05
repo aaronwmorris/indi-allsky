@@ -3963,7 +3963,7 @@ class AjaxAstroPanelView(BaseView):
         # set geo position
         obs.lat = math.radians(camera.latitude)
         obs.lon = math.radians(camera.longitude)
-        obs.elevation = 0
+        obs.elevation = camera.elevation
 
         # update time
         utcnow = datetime.utcnow()
@@ -4009,7 +4009,7 @@ class AjaxAstroPanelView(BaseView):
         data = {
             'latitude'              : "%s" % obs.lat,
             'longitude'             : "%s" % obs.lon,
-            'elevation'             : "%.2f" % obs.elevation,
+            'elevation'             : "%d" % obs.elevation,
             'polaris_hour_angle'    : polaris_data[0],
             'polaris_next_transit'  : "%s" % polaris_data[1],
             'polaris_alt'           : "%.2f°" % math.degrees(polaris_data[2]),

@@ -1264,6 +1264,7 @@ class CaptureWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1279,6 +1280,7 @@ class CaptureWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()

@@ -263,6 +263,7 @@ class TemplateView(BaseView):
         obs = ephem.Observer()
         obs.lon = math.radians(self.camera.longitude)
         obs.lat = math.radians(self.camera.latitude)
+        obs.elevation = self.camera.elevation
 
         sun = ephem.Sun()
 
@@ -312,6 +313,7 @@ class TemplateView(BaseView):
         obs = ephem.Observer()
         obs.lon = math.radians(self.camera.longitude)
         obs.lat = math.radians(self.camera.latitude)
+        obs.elevation = self.camera.elevation
 
         sun = ephem.Sun()
         moon = ephem.Moon()
@@ -580,6 +582,7 @@ class FakeCamera(object):
     local = True
     latitude = 0.0
     longitude = 0.0
+    elevation = 0
     nightSunAlt = 0.0
     data = {}
 
