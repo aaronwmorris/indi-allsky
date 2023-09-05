@@ -257,13 +257,21 @@ class TemplateView(BaseView):
 
 
         ### assuming indi-allsky process is running if we reach this point
+        longitude = self.camera.longitude
+        latitude = self.camera.latitude
+        elevation = self.camera.elevation
+
+        # this can be eventually removed
+        if isinstance(elevation, type(None)):
+            elevation = 0
+
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.camera.longitude)
-        obs.lat = math.radians(self.camera.latitude)
-        obs.elevation = self.camera.elevation
+        obs.lon = math.radians(longitude)
+        obs.lat = math.radians(latitude)
+        obs.elevation = elevation
 
         sun = ephem.Sun()
 
@@ -302,18 +310,29 @@ class TemplateView(BaseView):
         if not self.indi_allsky_config:
             return dict()
 
+
+        longitude = self.camera.longitude
+        latitude = self.camera.latitude
+        elevation = self.camera.elevation
+
+        # this can be eventually removed
+        if isinstance(elevation, type(None)):
+            elevation = 0
+
+
         data = dict()
 
-        data['latitude'] = self.camera.latitude
-        data['longitude'] = self.camera.longitude
+        data['latitude'] = latitude
+        data['longitude'] = longitude
+        data['elevation'] = elevation
 
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.camera.longitude)
-        obs.lat = math.radians(self.camera.latitude)
-        obs.elevation = self.camera.elevation
+        obs.lon = math.radians(longitude)
+        obs.lat = math.radians(latitude)
+        obs.elevation = elevation
 
         sun = ephem.Sun()
         moon = ephem.Moon()
