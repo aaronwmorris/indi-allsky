@@ -922,7 +922,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
     MYSQL_ETC="/etc/mysql"
 
-    PYTHON_BIN=python3
+    PYTHON_BIN=python3.11
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -991,9 +991,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
+        python3.11 \
+        python3.11-dev \
+        python3.11-venv \
         python3-pip \
         virtualenv \
         cmake \
