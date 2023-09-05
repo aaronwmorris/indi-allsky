@@ -76,6 +76,7 @@ class VideoWorker(Process):
         upload_q,
         latitude_v,
         longitude_v,
+        elevation_v,
         bin_v,
     ):
         super(VideoWorker, self).__init__()
@@ -92,6 +93,7 @@ class VideoWorker(Process):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
         self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)

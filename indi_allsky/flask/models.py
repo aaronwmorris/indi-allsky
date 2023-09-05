@@ -54,6 +54,8 @@ class IndiAllSkyDbCameraTable(db.Model):
     location = db.Column(db.String(length=100), nullable=True)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
+    elevation = db.Column(db.Integer, nullable=True)
+
     alt = db.Column(db.Float, nullable=True)
     az = db.Column(db.Float, nullable=True)
     nightSunAlt = db.Column(db.Float, nullable=True)

@@ -92,6 +92,7 @@ class ImageWorker(Process):
         upload_q,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         exposure_v,
@@ -114,6 +115,7 @@ class ImageWorker(Process):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v

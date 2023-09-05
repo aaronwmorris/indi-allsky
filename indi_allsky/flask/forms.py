@@ -489,7 +489,7 @@ def LOCATION_LONGITUDE_validator(form, field):
         raise ValidationError('Longitude must be less than 180')
 
 
-def LOCATION_ALTITUDE_validator(form, field):
+def LOCATION_ELEVATION_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -2052,7 +2052,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_NAME                    = StringField('Location', validators=[LOCATION_NAME_validator])
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
-    LOCATION_ALTITUDE                = FloatField('Altitude', validators=[LOCATION_ALTITUDE_validator])
+    LOCATION_ELEVATION               = FloatField('Altitude', validators=[LOCATION_ELEVATION_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')

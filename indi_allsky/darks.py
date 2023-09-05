@@ -95,6 +95,7 @@ class IndiAllSkyDarks(object):
         # not used, but required
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+        self.elevation_v = Value('f', float(self.config.get('LOCATION_ELEVATION', 300.0)))
         self.ra_v = Value('f', 0.0)
         self.dec_v = Value('f', 0.0)
 
@@ -183,6 +184,7 @@ class IndiAllSkyDarks(object):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.ra_v,
             self.dec_v,
             self.gain_v,
@@ -260,6 +262,7 @@ class IndiAllSkyDarks(object):
             'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
+            'elevation'   : self.elevation_v.value,
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
