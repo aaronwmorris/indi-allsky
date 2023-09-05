@@ -994,6 +994,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         python3.11 \
         python3.11-dev \
         python3.11-venv \
+        python3 \
+        python3-dev \
+        python3-venv \
         python3-pip \
         virtualenv \
         cmake \
@@ -1167,6 +1170,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         python3.9 \
         python3.9-dev \
         python3.9-venv \
+        python3 \
+        python3-dev \
+        python3-venv \
         python3-pip \
         virtualenv \
         cmake \
