@@ -431,6 +431,7 @@ class CaptureWorker(Process):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.ra_v,
             self.dec_v,
             self.gain_v,

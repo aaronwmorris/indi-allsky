@@ -60,6 +60,7 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
 #from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import true as sa_true
 
 from .exceptions import CalibrationNotFound
 from .exceptions import TimeOutException
@@ -1935,6 +1936,7 @@ class ImageProcessor(object):
         logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
             .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
             .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
@@ -1954,6 +1956,7 @@ class ImageProcessor(object):
             # pick a bad pixel map that matches the exposure at the hightest temperature found
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
@@ -1982,6 +1985,7 @@ class ImageProcessor(object):
         logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
@@ -2001,6 +2005,7 @@ class ImageProcessor(object):
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
