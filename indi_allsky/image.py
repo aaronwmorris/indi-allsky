@@ -164,6 +164,7 @@ class ImageWorker(Process):
             self.config,
             latitude_v,
             longitude_v,
+            elevation_v,
             ra_v,
             dec_v,
             exposure_v,
@@ -657,6 +658,7 @@ class ImageWorker(Process):
                 'stars'    : len(i_ref['stars']),
                 'latitude' : round(self.latitude_v.value, 3),
                 'longitude': round(self.longitude_v.value, 3),
+                'elevation': self.elevation_v.value,
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
                 'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
@@ -794,6 +796,7 @@ class ImageWorker(Process):
             'stars_data'          : self.getStarsData(i_ref['camera_id']),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
+            'elevation'           : self.elevation_v.value,
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
@@ -1232,6 +1235,7 @@ class ImageWorker(Process):
             'time'                : i_ref['exp_date'].strftime('%s'),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
+            'elevation'           : self.elevation_v.value,
         }
 
 
@@ -1398,6 +1402,7 @@ class ImageProcessor(object):
         config,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         exposure_v,
@@ -1412,6 +1417,7 @@ class ImageProcessor(object):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v
@@ -3068,6 +3074,7 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'elevation'    : self.elevation_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
@@ -3320,6 +3327,7 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'elevation'    : self.elevation_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
