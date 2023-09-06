@@ -64,7 +64,6 @@ class IssTrack(object):
 
 
         now = datetime.now()
-        #now = datetime.now() - timedelta(days=1)  # testing
         now_minus_3h = now - timedelta(hours=3)
 
 
@@ -104,6 +103,7 @@ class IssTrack(object):
 
             while True:
                 obs.date = datetime.utcnow()
+                #obs.date = datetime.utcnow() + timedelta(hours=6)  # testing
                 iss.compute(obs)
                 logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg, rise %s', math.degrees(iss.alt), math.degrees(iss.az), ephem.localtime(obs.next_pass(iss)[0]))
                 time.sleep(5.0)
