@@ -772,7 +772,7 @@ class IndiClient(PyIndi.BaseClient):
 
         gps_lat = float(geographic_coord[0].getValue())   # LAT
         gps_long = float(geographic_coord[1].getValue())  # LONG
-        gps_elev = int(geographic_coord[2].getValue())  # ELEV
+        gps_elev = int(geographic_coord[2].getValue())    # ELEV
 
         if not gps_lat and not gps_long:
             logger.warning('GPS fix not found')

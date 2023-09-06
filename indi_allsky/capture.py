@@ -1147,6 +1147,9 @@ class CaptureWorker(Process):
         elif abs(gps_long - self.longitude_v.value) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
+        elif abs(gps_elev - self.elevation_v.value) > 30:
+            self.updateConfigLocation(gps_lat, gps_long, gps_elev)
+            update_position = True
 
 
         if update_position:
