@@ -2280,6 +2280,8 @@ class ImageProcessor(object):
 
 
     def apply_color_correction_matrix(self, libcamera_ccm):
+        ccm_start = time.time()
+
         self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
 
         #ccm_m = numpy.array(ccm)
@@ -2288,6 +2290,9 @@ class ImageProcessor(object):
         #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
 
         #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
+
+        ccm_elapsed_s = time.time() - ccm_start
+        logger.info('CCM in %0.4f s', ccm_elapsed_s)
 
 
     def convert_16bit_to_8bit(self):
