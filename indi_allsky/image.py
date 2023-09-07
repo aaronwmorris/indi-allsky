@@ -585,6 +585,8 @@ class ImageWorker(Process):
         # denoise
         #self.image_processor.fastDenoise()
 
+        self.image_processor.orb_image()
+
         self.image_processor.label_image()
 
 
@@ -2946,24 +2948,33 @@ class ImageProcessor(object):
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
-            self._image_orb_opencv(i_ref)
             self._label_image_opencv(i_ref)
         elif image_label_system == 'pillow':
-            self._image_orb_opencv(i_ref)
             self._label_image_pillow(i_ref)
         else:
             logger.warning('Image labels disabled')
             return
 
 
-    def _image_orb_opencv(self, i_ref):
-        image_height, image_width = self.image.shape[:2]
-
-
+    def orb_image(self):
         # Disabled when focus mode is enabled
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, orbs disabled')
             return
+
+        orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+        if orb_mode == 'off':
+            # orbs disabled
+            return
+
+
+        i_ref = self.getLatestImage()
+
+        self._image_orb_opencv(i_ref)
+
+
+    def _image_orb_opencv(self, i_ref):
+        image_height, image_width = self.image.shape[:2]
 
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates

@@ -1889,7 +1889,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     ORB_PROPERTIES__MODE_choices = (
-        ('ha', 'Hour Angle'),
+        ('ha', 'Local Hour Angle'),
         ('az', 'Azimuth'),
         ('alt', 'Altitude'),
         ('off', 'Off'),
