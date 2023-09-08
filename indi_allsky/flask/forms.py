@@ -2949,13 +2949,14 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 class IndiAllskyTimelapseGeneratorForm(FlaskForm):
     ACTION_SELECT_choices = (
-        ('generate_all', 'Generate All'),
-        ('generate_video', 'Generate Timelapse'),
+        ('generate_video_k_st', 'Generate All'),
+        ('generate_video', 'Generate Timelapse Only'),
         ('generate_k_st', 'Generate Keogram/Star Trails'),
-        ('delete_all', 'Delete All'),
-        ('delete_video', 'Delete Timelapse'),
+        ('delete_video_k_st', 'Delete Timelapse/Keogram/Star Trails'),
+        ('delete_video', 'Delete Timelapse Only'),
         ('delete_k_st', 'Delete Keogram/Star Trails'),
         ('upload_endofnight', 'Upload End-of-Night Data [today]'),
+        ('delete_images', 'Delete Images *DANGER*'),
     )
 
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])

@@ -3057,7 +3057,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             .one()
 
 
-        if action == 'delete_all':
+        if action == 'delete_video_k_st':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
@@ -3215,7 +3215,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
 
-        elif action == 'generate_all':
+        elif action == 'generate_video_k_st':
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
@@ -3382,6 +3382,29 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        if action == 'delete_images':
+            image_list = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbImageTable.dayDate == day_date,
+                        IndiAllSkyDbImageTable.night == night,
+                    )
+                )
+
+            x = 0
+            for image in image_list:
+                x += 1
+                #image.deleteAsset()
+                #db.session.delete(image)
+
+            #db.session.commit()
+
+            message = {
+                'success-message' : '{0:d} images deleted (simulated)'.format(x),
+            }
+            return jsonify(message)
         else:
             # this should never happen
             message = {
