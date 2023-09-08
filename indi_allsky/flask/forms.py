@@ -2949,6 +2949,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 class IndiAllskyTimelapseGeneratorForm(FlaskForm):
     ACTION_SELECT_choices = (
+        ('none', '(Please select an action)'),
         ('generate_video_k_st', 'Generate All'),
         ('generate_video', 'Generate Timelapse Only'),
         ('generate_k_st', 'Generate Keogram/Star Trails'),
@@ -2961,6 +2962,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
     DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
+    CONFIRM1           = BooleanField('Confirm')
 
 
     def __init__(self, *args, **kwargs):
