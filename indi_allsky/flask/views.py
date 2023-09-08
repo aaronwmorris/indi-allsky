@@ -3396,13 +3396,13 @@ class AjaxTimelapseGeneratorView(BaseView):
             x = 0
             for image in image_list:
                 x += 1
-                #image.deleteAsset()
-                #db.session.delete(image)
+                image.deleteAsset()
+                db.session.delete(image)
 
-            #db.session.commit()
+            db.session.commit()
 
             message = {
-                'success-message' : '{0:d} images deleted (simulated)'.format(x),
+                'success-message' : '{0:d} images deleted'.format(x),
             }
             return jsonify(message)
         else:
