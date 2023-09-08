@@ -3008,9 +3008,13 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
             day_night_str = '{0:s} Night'.format(day_str)
             day_day_str = '{0:s} Day'.format(day_str)
 
+
+            # videos
             video_entry_night = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbVideoTable.dayDate == day_date,
                         IndiAllSkyDbVideoTable.night == true,
                     )
@@ -3027,8 +3031,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             video_entry_day = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbVideoTable.dayDate == day_date,
                         IndiAllSkyDbVideoTable.night == false,
                     )
@@ -3044,9 +3050,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
 
+            # keogram
             keogram_entry_night = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbKeogramTable.dayDate == day_date,
                         IndiAllSkyDbKeogramTable.night == true,
                     )
@@ -3063,8 +3072,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
             keogram_entry_day = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbKeogramTable.dayDate == day_date,
                         IndiAllSkyDbKeogramTable.night == false,
                     )
@@ -3080,9 +3091,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_day_str = '{0:s} [ ]'.format(day_day_str)
 
 
+            # star trail
             startrail_entry_night = IndiAllSkyDbStarTrailsTable.query\
+                .join(IndiAllSkyDbStarTrailsTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbStarTrailsTable.dayDate == day_date,
                         IndiAllSkyDbStarTrailsTable.night == true,
                     )
@@ -3098,9 +3112,12 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
 
+            # star trail video
             startrail_video_entry_night = IndiAllSkyDbStarTrailsVideoTable.query\
+                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
                         IndiAllSkyDbStarTrailsVideoTable.dayDate == day_date,
                         IndiAllSkyDbStarTrailsVideoTable.night == true,
                     )
@@ -3115,6 +3132,32 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
             else:
                 day_night_str = '{0:s} [ ]'.format(day_night_str)
 
+
+            # images
+            images_night = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                        IndiAllSkyDbImageTable.dayDate == day_date,
+                        IndiAllSkyDbImageTable.night == true,
+                    )
+                )
+
+            day_night_str = '{0:s} - {1:d} images'.format(day_night_str, images_night.count())
+
+
+            images_day = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                        IndiAllSkyDbImageTable.dayDate == day_date,
+                        IndiAllSkyDbImageTable.night == false,
+                    )
+                )
+
+            day_day_str = '{0:s} - {1:d} images'.format(day_day_str, images_day.count())
 
 
             entry_night = ('{0:s}_night'.format(day_str), day_night_str)
