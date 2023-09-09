@@ -104,8 +104,18 @@ class IssTrack(object):
             while True:
                 obs.date = datetime.utcnow()
                 #obs.date = datetime.utcnow() + timedelta(hours=6)  # testing
+
                 iss.compute(obs)
-                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg, rise %s', math.degrees(iss.alt), math.degrees(iss.az), ephem.localtime(obs.next_pass(iss)[0]))
+                iss_next_pass = obs.next_pass(iss)
+
+                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg', math.degrees(iss.alt), math.degrees(iss.az))
+                logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S}, max: {1:%Y-%m-%d %H:%M:%S}, set: {2:%Y-%m-%d %H:%M:%S} - duration {3:d}s'.format(
+                    ephem.localtime(iss_next_pass[0]),
+                    ephem.localtime(iss_next_pass[2]),
+                    ephem.localtime(iss_next_pass[4]),
+                    (ephem.localtime(iss_next_pass[4]) - ephem.localtime(iss_next_pass[0])).seconds,
+                ))
+
                 time.sleep(5.0)
 
 
