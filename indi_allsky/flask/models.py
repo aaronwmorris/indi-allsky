@@ -26,6 +26,7 @@ __all__ = (
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
     'IndiAllSkyDbUserTable',
+    'IndiAllSkyDbTleDataTable',
 )
 
 
@@ -605,4 +606,14 @@ class IndiAllSkyDbUserTable(db.Model):
         f_key = Fernet(password_key.encode())
         self.apikey = f_key.encrypt(apikey.encode()).decode()
         db.session.commit()
+
+
+class IndiAllSkyDbTleDataTable(db.Model):
+    __tablename__ = 'tle_data'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
+    title = db.Column(db.String(32), nullable=False, unique=True, index=True)
+    line1 = db.Column(db.String(80), nullable=False)
+    line2 = db.Column(db.String(80), nullable=False)
 
