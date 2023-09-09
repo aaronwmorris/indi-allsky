@@ -64,7 +64,7 @@ class IssTrack(object):
 
 
         now = datetime.now()
-        now_minus_3h = now - timedelta(hours=3)
+        now_minus_24h = now - timedelta(hours=24)
 
 
         # allow data to be reused
@@ -72,8 +72,8 @@ class IssTrack(object):
             try:
                 if not iss_temp_file_p.exists():
                     self.iss_tle_data = self.download_tle(self.iss_tle_url, iss_temp_file_p)
-                elif iss_temp_file_p.stat().st_mtime < now_minus_3h.timestamp():
-                    logger.warning('KML is older than 3 hours')
+                elif iss_temp_file_p.stat().st_mtime < now_minus_24h.timestamp():
+                    logger.warning('KML is older than 24 hours')
                     self.iss_tle_data = self.download_tle(self.iss_tle_url, iss_temp_file_p)
                 else:
                     self.iss_tle_data = self.load_tle(iss_temp_file_p)
@@ -99,6 +99,7 @@ class IssTrack(object):
             obs.elevation = ELEVATION  # meters
 
             iss = ephem.readtle(*self.iss_tle_data)
+            #logger.info('%s', dir(iss))
 
 
             while True:
