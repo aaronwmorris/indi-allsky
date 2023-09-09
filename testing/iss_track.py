@@ -18,36 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
-ELEVATION = 300
-
-### ATL
-LATITUDE   = 33.7
-LONGITUDE  = -84.4
-
-### San Francisco
-#LATITUDE  = 37.6
-#LONGITUDE = -122.4
-
-### NYC
-#LATITUDE  = 40.7
-#LONGITUDE = -74.0
-
-### Milwaukee
-#LATITUDE  = 43.0
-#LONGITUDE = -87.9
-
-### Prince Albert
-#LATITUDE  = 53.2
-#LONGITUDE = -105.8
-
-### WINNIPEG
-#LATITUDE  = 49.9
-#LONGITUDE = -97.1
-
-### CALGARY
-#LATITUDE  = 51.0
-#LONGITUDE = -114.1
-
+CITY = 'Atlanta'
 
 
 class IssTrack(object):
@@ -93,10 +64,7 @@ class IssTrack(object):
 
 
         if self.iss_tle_data:
-            obs = ephem.Observer()
-            obs.lon = math.radians(LONGITUDE)
-            obs.lat = math.radians(LATITUDE)
-            obs.elevation = ELEVATION  # meters
+            obs = ephem.city(CITY)
 
             iss = ephem.readtle(*self.iss_tle_data)
             #logger.info('%s', dir(iss))
