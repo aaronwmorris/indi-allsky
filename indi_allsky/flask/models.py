@@ -613,7 +613,7 @@ class IndiAllSkyDbTleDataTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
-    title = db.Column(db.String(32), nullable=False, unique=True, index=True)
+    title = db.Column(db.String(32), nullable=False, index=True)
     line1 = db.Column(db.String(80), nullable=False)
     line2 = db.Column(db.String(80), nullable=False)
 
