@@ -109,6 +109,7 @@ class IndiAllSky(object):
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
         self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
+        self.elevation_v = Value('i', int(self.config.get('LOCATION_ELEVATION', 300)))
 
         self.ra_v = Value('f', 0.0)
         self.dec_v = Value('f', 0.0)
@@ -294,6 +295,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.ra_v,
             self.dec_v,
             self.exposure_v,
@@ -361,6 +363,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.ra_v,
             self.dec_v,
             self.exposure_v,
@@ -430,6 +433,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.bin_v,
         )
         self.video_worker.start()
@@ -624,13 +628,6 @@ class IndiAllSky(object):
 
 
         self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
-
-
-        with self.latitude_v.get_lock():
-            self.latitude_v.value = float(self.config['LOCATION_LATITUDE'])
-
-        with self.longitude_v.get_lock():
-            self.longitude_v.value = float(self.config['LOCATION_LONGITUDE'])
 
 
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
@@ -1166,8 +1163,9 @@ class IndiAllSky(object):
                     camera_id = task.data['camera_id']
                     latitude = task.data['latitude']
                     longitude = task.data['longitude']
+                    elevation = task.data['elevation']
 
-                    self.updateConfigLocation(latitude, longitude, camera_id)
+                    self.updateConfigLocation(latitude, longitude, elevation, camera_id)
 
                     task.setSuccess('Updated config location')
 
@@ -1272,11 +1270,12 @@ class IndiAllSky(object):
             self.video_q.put({'task_id' : task.id})
 
 
-    def updateConfigLocation(self, latitude, longitude, camera_id):
+    def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
         self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
         self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
+        self.config['LOCATION_ELEVATION'] = int(elevation)
 
 
         # save new config
@@ -1295,6 +1294,7 @@ class IndiAllSky(object):
 
             camera.latitude = float(self.config['LOCATION_LATITUDE'])
             camera.longitude = float(self.config['LOCATION_LONGITUDE'])
+            camera.elevation = int(self.config['LOCATION_ELEVATION'])
 
             db.session.commit()
 

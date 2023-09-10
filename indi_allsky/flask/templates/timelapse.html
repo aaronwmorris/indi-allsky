@@ -29,11 +29,11 @@
         <div class="col-sm-2">
             {{ form_timelapsegen.DAY_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_timelapsegen.DAY_SELECT(class='form-control bg-secondary') }}
             <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-5">
             <div>T = Timelapse exists</div>
             <div>K = Keogram exists</div>
             <div>S = Star trail exists</div>
@@ -42,10 +42,21 @@
         </div>
     </div>
 
-    <div id="form_timelapsegen_success-message" class="text-success" style="display: none;"></div>
-    <div id="form_timelapsegen_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+    <div class="form-group row">
+      <div class="col-sm-12">
+        <div id="form_timelapsegen_success-message" class="text-success" style="display: none;"></div>
+        <div id="form_timelapsegen_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+      </div>
+    </div>
 
-    <button class="btn btn-primary">Execute</button>
+    <div class="form-group row">
+      <div class="col-sm-1">
+        <button class="btn btn-primary">Execute</button>
+      </div>
+      <div class="col-sm-1">
+        <input class="form-check-input" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y"> Confirm
+      </div>
+    </div>
 </form>
 
 <hr>
@@ -106,6 +117,19 @@ form_timelapsegen_fields['form_global'] = {
 
 
 $('#form_timelapsegen').on('submit', function() {
+    if (! $("#CONFIRM1").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    };
+
+    $("#CONFIRM1").prop('checked', false);
+
+
+    if ($("#ACTION_SELECT").val() == 'none') {
+        console.log('No action selected');
+        return;
+    };
+
 
     // hide all errors
     form_timelapsegen_successMessage.css({'display' : 'none'});
@@ -132,11 +156,12 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            $("#ACTION_SELECT").val('none');
             form_timelapsegen_successMessage.html(data['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
-            }, 5000);
+            }, 15000);
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -148,6 +173,15 @@ $('#form_timelapsegen').on('submit', function() {
         },
     });
 
+});
+
+
+$( document ).ready(function() {
+    // Uncheck checkboxes
+    $("#CONFIRM1").prop('checked', false);
+
+    // Reset select
+    $("#ACTION_SELECT").val('none');
 });
 
 </script>

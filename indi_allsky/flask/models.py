@@ -26,6 +26,7 @@ __all__ = (
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
     'IndiAllSkyDbUserTable',
+    'IndiAllSkyDbTleDataTable',
 )
 
 
@@ -54,6 +55,8 @@ class IndiAllSkyDbCameraTable(db.Model):
     location = db.Column(db.String(length=100), nullable=True)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
+    elevation = db.Column(db.Integer, nullable=True)
+
     alt = db.Column(db.Float, nullable=True)
     az = db.Column(db.Float, nullable=True)
     nightSunAlt = db.Column(db.Float, nullable=True)
@@ -191,6 +194,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     ovation_max = db.Column(db.Integer, nullable=True, index=True)
     smoke_rating = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
+    #tags = db.Column(db.JSON, index=True)
     exclude = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
@@ -225,6 +229,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     adu = db.Column(db.Float, nullable=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
@@ -260,6 +265,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     adu = db.Column(db.Float, nullable=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
@@ -298,6 +304,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     #ovation_max = db.Column(db.Integer, nullable=True, index=True)
     #smoke_rating = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
+    #tags = db.Column(db.JSON, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -599,4 +606,14 @@ class IndiAllSkyDbUserTable(db.Model):
         f_key = Fernet(password_key.encode())
         self.apikey = f_key.encrypt(apikey.encode()).decode()
         db.session.commit()
+
+
+class IndiAllSkyDbTleDataTable(db.Model):
+    __tablename__ = 'tle_data'
+
+    id = db.Column(db.Integer, primary_key=True)
+    createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
+    title = db.Column(db.String(32), nullable=False, unique=True, index=True)
+    line1 = db.Column(db.String(80), nullable=False)
+    line2 = db.Column(db.String(80), nullable=False)
 

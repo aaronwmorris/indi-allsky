@@ -1344,7 +1344,10 @@
             {{ form_config.ORB_PROPERTIES__MODE(class='form-control bg-secondary') }}
             <div id="ORB_PROPERTIES__MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Orb display mode</div>
+        <div class="col-sm-8">
+            <div>Orb display mode</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Orbs" class="text-decoration-none link-info" target="_blank">Orb Wiki</a></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1890,6 +1893,17 @@
             <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Min: -180, Max: 180</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_ELEVATION.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LOCATION_ELEVATION(class='form-control bg-secondary') }}
+            <div id="LOCATION_ELEVATION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Meters</div>
     </div>
 
     <hr>
@@ -2952,6 +2966,7 @@ const field_names = [
     'LOCATION_NAME',
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
+    'LOCATION_ELEVATION',
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',

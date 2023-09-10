@@ -60,6 +60,7 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
 #from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import true as sa_true
 
 from .exceptions import CalibrationNotFound
 from .exceptions import TimeOutException
@@ -92,6 +93,7 @@ class ImageWorker(Process):
         upload_q,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         exposure_v,
@@ -114,6 +116,7 @@ class ImageWorker(Process):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v
@@ -162,6 +165,7 @@ class ImageWorker(Process):
             self.config,
             latitude_v,
             longitude_v,
+            elevation_v,
             ra_v,
             dec_v,
             exposure_v,
@@ -581,6 +585,8 @@ class ImageWorker(Process):
         # denoise
         #self.image_processor.fastDenoise()
 
+        self.image_processor.orb_image()
+
         self.image_processor.label_image()
 
 
@@ -655,6 +661,7 @@ class ImageWorker(Process):
                 'stars'    : len(i_ref['stars']),
                 'latitude' : round(self.latitude_v.value, 3),
                 'longitude': round(self.longitude_v.value, 3),
+                'elevation': self.elevation_v.value,
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
                 'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
@@ -792,6 +799,7 @@ class ImageWorker(Process):
             'stars_data'          : self.getStarsData(i_ref['camera_id']),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
+            'elevation'           : self.elevation_v.value,
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
@@ -1230,6 +1238,7 @@ class ImageWorker(Process):
             'time'                : i_ref['exp_date'].strftime('%s'),
             'latitude'            : self.latitude_v.value,
             'longitude'           : self.longitude_v.value,
+            'elevation'           : self.elevation_v.value,
         }
 
 
@@ -1396,6 +1405,7 @@ class ImageProcessor(object):
         config,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         exposure_v,
@@ -1410,6 +1420,7 @@ class ImageProcessor(object):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v
@@ -1927,6 +1938,7 @@ class ImageProcessor(object):
         logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
             .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
             .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
@@ -1946,6 +1958,7 @@ class ImageProcessor(object):
             # pick a bad pixel map that matches the exposure at the hightest temperature found
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
@@ -1974,6 +1987,7 @@ class ImageProcessor(object):
         logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
@@ -1993,6 +2007,7 @@ class ImageProcessor(object):
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
@@ -2267,14 +2282,27 @@ class ImageProcessor(object):
 
 
     def apply_color_correction_matrix(self, libcamera_ccm):
-        self.image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T).astype(self.image.dtype)
+        ccm_start = time.time()
+
+        max_value = 2 ** self.max_bit_depth
+
+        ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
+        ccm_image[ccm_image > max_value] = max_value  # clip high end
+        ccm_image[ccm_image < 0] = 0  # clip low end
+
+        self.image = ccm_image.astype(self.image.dtype)
 
         #ccm_m = numpy.array(ccm)
 
         #reshaped_image = self.image.reshape((-1, 3))
         #ccm_image = numpy.matmul(reshaped_image, ccm_m.T)
+        #ccm_image[ccm_image > max_value] = max_value  # clip high end
+        #ccm_image[ccm_image < 0] = 0  # clip low end
 
         #self.image = ccm_image.reshape(self.image.shape).astype(self.image.dtype)
+
+        ccm_elapsed_s = time.time() - ccm_start
+        logger.info('CCM in %0.4f s', ccm_elapsed_s)
 
 
     def convert_16bit_to_8bit(self):
@@ -2817,6 +2845,7 @@ class ImageProcessor(object):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
 
 
         obs.date = utcnow
@@ -2919,24 +2948,33 @@ class ImageProcessor(object):
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
-            self._image_orb_opencv(i_ref)
             self._label_image_opencv(i_ref)
         elif image_label_system == 'pillow':
-            self._image_orb_opencv(i_ref)
             self._label_image_pillow(i_ref)
         else:
             logger.warning('Image labels disabled')
             return
 
 
-    def _image_orb_opencv(self, i_ref):
-        image_height, image_width = self.image.shape[:2]
-
-
+    def orb_image(self):
         # Disabled when focus mode is enabled
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, orbs disabled')
             return
+
+        orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+        if orb_mode == 'off':
+            # orbs disabled
+            return
+
+
+        i_ref = self.getLatestImage()
+
+        self._image_orb_opencv(i_ref)
+
+
+    def _image_orb_opencv(self, i_ref):
+        image_height, image_width = self.image.shape[:2]
 
 
         utcnow = datetime.utcnow()  # ephem expects UTC dates
@@ -2945,6 +2983,7 @@ class ImageProcessor(object):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
 
 
         obs.date = utcnow
@@ -3064,6 +3103,7 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'elevation'    : self.elevation_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
@@ -3316,6 +3356,7 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
+            'elevation'    : self.elevation_v.value,
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),

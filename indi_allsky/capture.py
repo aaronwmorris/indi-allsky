@@ -63,6 +63,7 @@ class CaptureWorker(Process):
         upload_q,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         exposure_v,
@@ -88,6 +89,7 @@ class CaptureWorker(Process):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v
@@ -429,6 +431,7 @@ class CaptureWorker(Process):
             self.image_q,
             self.latitude_v,
             self.longitude_v,
+            self.elevation_v,
             self.ra_v,
             self.dec_v,
             self.gain_v,
@@ -611,6 +614,7 @@ class CaptureWorker(Process):
             'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
+            'elevation'   : self.elevation_v.value,
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
@@ -862,6 +866,7 @@ class CaptureWorker(Process):
             'location'    : self.config['LOCATION_NAME'],
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
+            'elevation'   : self.elevation_v.value,
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
@@ -1134,24 +1139,29 @@ class CaptureWorker(Process):
             # put longitude in range of -180 to 180
             gps_long = gps_long - 360.0
 
-        #logger.info('Lat: %0.2f, Long: %0.2f', self.latitude_v.value, self.longitude_v.value)
 
         # need 1/10 degree difference before updating location
         if abs(gps_lat - self.latitude_v.value) > 0.1:
-            self.updateConfigLocation(gps_lat, gps_long)
+            self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
         elif abs(gps_long - self.longitude_v.value) > 0.1:
-            self.updateConfigLocation(gps_lat, gps_long)
+            self.updateConfigLocation(gps_lat, gps_long, gps_elev)
+            update_position = True
+        elif abs(gps_elev - self.elevation_v.value) > 30:
+            self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
 
 
         if update_position:
             # Update shared values
             with self.latitude_v.get_lock():
-                self.latitude_v.value = gps_lat
+                self.latitude_v.value = float(gps_lat)
 
             with self.longitude_v.get_lock():
-                self.longitude_v.value = gps_long
+                self.longitude_v.value = float(gps_long)
+
+            with self.elevation_v.get_lock():
+                self.elevation_v.value = int(gps_elev)
 
 
             self.reparkTelescope()
@@ -1177,11 +1187,12 @@ class CaptureWorker(Process):
         return ra, dec
 
 
-    def updateConfigLocation(self, gps_lat, gps_long):
+    def updateConfigLocation(self, gps_lat, gps_long, gps_elev):
         logger.warning('Queuing config update with new geographic location')
 
         self.config['LOCATION_LATITUDE'] = round(float(gps_lat), 3)
         self.config['LOCATION_LONGITUDE'] = round(float(gps_long), 3)
+        self.config['LOCATION_ELEVATION'] = int(gps_elev)
 
 
         task_setlocation = IndiAllSkyDbTaskQueueTable(
@@ -1192,6 +1203,7 @@ class CaptureWorker(Process):
                 'camera_id'   : self.camera_id,
                 'latitude'    : float(gps_lat),
                 'longitude'   : float(gps_long),
+                'elevation'   : int(gps_elev),
             },
         )
 
@@ -1256,6 +1268,7 @@ class CaptureWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1271,6 +1284,7 @@ class CaptureWorker(Process):
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
+        obs.elevation = self.elevation_v.value
         obs.date = datetime.utcnow()  # ephem expects UTC dates
 
         moon = ephem.Moon()

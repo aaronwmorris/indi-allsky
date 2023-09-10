@@ -278,6 +278,7 @@ class DarkFramesView(TemplateView):
                 'id' : d.id,
                 'camera_name'  : d.camera.name,
                 'createDate'   : d.createDate,
+                'active'       : d.active,
                 'bitdepth'     : d.bitdepth,
                 'gain'         : d.gain,
                 'exposure'     : d.exposure,
@@ -297,6 +298,7 @@ class DarkFramesView(TemplateView):
                 'id' : b.id,
                 'camera_name'  : b.camera.name,
                 'createDate'   : b.createDate,
+                'active'       : b.active,
                 'bitdepth'     : b.bitdepth,
                 'gain'         : b.gain,
                 'exposure'     : b.exposure,
@@ -857,8 +859,8 @@ class ConfigView(FormView):
             'CCD_CONFIG__DAY__GAIN'          : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0),
             'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
             'CCD_EXPOSURE_MAX'               : self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
-            'CCD_EXPOSURE_DEF'               : self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0),
-            'CCD_EXPOSURE_MIN'               : self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0),
+            'CCD_EXPOSURE_DEF'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),  # force 6 digits of precision
+            'CCD_EXPOSURE_MIN'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0)),
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
@@ -891,6 +893,7 @@ class ConfigView(FormView):
             'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
+            'LOCATION_ELEVATION'             : self.indi_allsky_config.get('LOCATION_ELEVATION', 0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
             'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', True),
@@ -1329,6 +1332,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LOCATION_NAME']                        = str(request.json['LOCATION_NAME'])
         self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
         self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
+        self.indi_allsky_config['LOCATION_ELEVATION']                   = int(request.json['LOCATION_ELEVATION'])
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
         self.indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
@@ -3053,7 +3057,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             .one()
 
 
-        if action == 'delete_all':
+        if action == 'delete_video_k_st':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
@@ -3211,7 +3215,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
 
-        elif action == 'generate_all':
+        elif action == 'generate_video_k_st':
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
@@ -3378,6 +3382,29 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        if action == 'delete_images':
+            image_list = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbImageTable.dayDate == day_date,
+                        IndiAllSkyDbImageTable.night == night,
+                    )
+                )
+
+            x = 0
+            for image in image_list:
+                x += 1
+                image.deleteAsset()
+                db.session.delete(image)
+
+            db.session.commit()
+
+            message = {
+                'success-message' : '{0:d} images deleted'.format(x),
+            }
+            return jsonify(message)
         else:
             # this should never happen
             message = {
@@ -3961,7 +3988,7 @@ class AjaxAstroPanelView(BaseView):
         # set geo position
         obs.lat = math.radians(camera.latitude)
         obs.lon = math.radians(camera.longitude)
-        obs.elevation = 0
+        obs.elevation = camera.elevation
 
         # update time
         utcnow = datetime.utcnow()
@@ -4007,7 +4034,7 @@ class AjaxAstroPanelView(BaseView):
         data = {
             'latitude'              : "%s" % obs.lat,
             'longitude'             : "%s" % obs.lon,
-            'elevation'             : "%.2f" % obs.elevation,
+            'elevation'             : "%d" % obs.elevation,
             'polaris_hour_angle'    : polaris_data[0],
             'polaris_next_transit'  : "%s" % polaris_data[1],
             'polaris_alt'           : "%.2f°" % math.degrees(polaris_data[2]),
