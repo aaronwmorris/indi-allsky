@@ -3203,14 +3203,14 @@ class ImageProcessor(object):
         if extra_text_lines:
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
-            for extra_text_line in extra_text_lines:
+            for line in extra_text_lines:
                 if line.startswith('#'):
                     self._processLabelComment(line)
                     continue
 
                 self.drawText_opencv(
                     self.image,
-                    extra_text_line,
+                    line,
                     tuple(self.text_xy),
                     tuple(self.text_color_bgr),
                 )
@@ -3468,14 +3468,14 @@ class ImageProcessor(object):
         if extra_text_lines:
             logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
 
-            for extra_text_line in extra_text_lines:
+            for line in extra_text_lines:
                 if line.startswith('#'):
                     self._processLabelComment(line)
                     continue
 
                 self.drawText_pillow(
                     draw,
-                    extra_text_line,
+                    line,
                     pillow_font_file_p,
                     self.text_size_pillow,
                     tuple(self.text_xy),
@@ -3543,9 +3543,11 @@ class ImageProcessor(object):
                 extra_lines = [x.rstrip() for x in image_extra_text_f.readlines()]
                 image_extra_text_f.close()
         except PermissionError as e:
-            logger.error(str(e))
+            logger.error('Permission Error: %s', str(e))
             return list()
 
+
+        #logger.info('Extra text: %s', extra_lines)
 
         return extra_lines
 
