@@ -26,7 +26,7 @@ from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.aurora import IndiAllskyAuroraUpdate
 from indi_allsky.smoke import IndiAllskySmokeUpdate
-#from indi_allsky.satellite_download import IndiAllskyUpdateSatelliteData
+from indi_allsky.satellite_download import IndiAllskyUpdateSatelliteData
 
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 
@@ -61,7 +61,7 @@ class AuroraDataUpdater(object):
 
         aurora = IndiAllskyAuroraUpdate(self.config)
         smoke = IndiAllskySmokeUpdate(self.config)
-        #satellite = IndiAllskyUpdateSatelliteData(self.config)
+        satellite = IndiAllskyUpdateSatelliteData(self.config)
 
 
         for camera in active_cameras:
@@ -70,8 +70,8 @@ class AuroraDataUpdater(object):
             smoke.update(camera)
 
 
-        # satellite data is not location dependent
-        #satellite.update()
+        # satellite data is not location/camera dependent
+        satellite.update()
 
 
 if __name__ == "__main__":
