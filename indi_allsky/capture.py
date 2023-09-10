@@ -1022,8 +1022,8 @@ class CaptureWorker(Process):
         temp_val = self.indiclient.getCcdTemperature()
 
 
-        # query external temperature if camera does not return temperature
-        if temp_val < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
+        # query external temperature if defined
+        if self.config.get('CCD_TEMP_SCRIPT'):
             try:
                 ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
                 temp_val = ext_temp_val
