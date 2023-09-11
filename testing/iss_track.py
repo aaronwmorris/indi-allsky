@@ -72,7 +72,7 @@ class IssTrack(object):
                 logger.error('Satellite TLE data error: %s', str(e))
                 raise
 
-            #logger.info('%s', dir(iss))
+            logger.info('%s', dir(iss))
 
 
             while True:
@@ -88,11 +88,12 @@ class IssTrack(object):
                     raise
 
                 logger.info('iss: altitude %4.1f, azimuth %5.1f', math.degrees(iss.alt), math.degrees(iss.az))
-                logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S}, max: {1:%Y-%m-%d %H:%M:%S}, set: {2:%Y-%m-%d %H:%M:%S} - duration {3:d}s'.format(
+                logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S}, max: {1:%Y-%m-%d %H:%M:%S}, set: {2:%Y-%m-%d %H:%M:%S} - duration {3:d}s - elev {4:0.1f}km'.format(
                     ephem.localtime(iss_next_pass[0]),
                     ephem.localtime(iss_next_pass[2]),
                     ephem.localtime(iss_next_pass[4]),
                     (ephem.localtime(iss_next_pass[4]) - ephem.localtime(iss_next_pass[0])).seconds,
+                    iss.elevation / 1000,
                 ))
 
                 time.sleep(5.0)

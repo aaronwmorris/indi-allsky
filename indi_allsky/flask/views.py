@@ -4060,6 +4060,7 @@ class AjaxAstroPanelView(BaseView):
                 'az'        : round(math.degrees(sat.az), 2),
                 'alt'       : round(math.degrees(sat.alt), 2),
                 'duration'  : '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
+                'elevation' : int(sat.elevation / 1000),
             }
 
             satellite_list.append(sat_data)
