@@ -13,6 +13,8 @@
 
 import sys
 from pathlib import Path
+from datetime import datetime
+from datetime import timedelta
 import logging
 
 
@@ -26,9 +28,10 @@ from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.aurora import IndiAllskyAuroraUpdate
 from indi_allsky.smoke import IndiAllskySmokeUpdate
-#from indi_allsky.satellite_download import IndiAllskyUpdateSatelliteData
+from indi_allsky.satellite_download import IndiAllskyUpdateSatelliteData
 
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
+from indi_allsky.flask.models import IndiAllSkyDbTleDataTable
 
 # setup flask context for db access
 app = create_app()
@@ -61,7 +64,7 @@ class AuroraDataUpdater(object):
 
         aurora = IndiAllskyAuroraUpdate(self.config)
         smoke = IndiAllskySmokeUpdate(self.config)
-        #satellite = IndiAllskyUpdateSatelliteData(self.config)
+        satellite = IndiAllskyUpdateSatelliteData(self.config)
 
 
         for camera in active_cameras:
@@ -70,8 +73,22 @@ class AuroraDataUpdater(object):
             smoke.update(camera)
 
 
-        # satellite data is not location dependent
-        #satellite.update()
+        # satellite data is not location/camera dependent
+        oldest_satellite = IndiAllSkyDbTleDataTable.query\
+            .order_by(IndiAllSkyDbTleDataTable.createDate.asc())\
+            .first()  # oldest first
+
+
+        if oldest_satellite:
+            now_minus_3d = datetime.now() - timedelta(days=3)
+
+            if oldest_satellite.createDate < now_minus_3d:
+                satellite.update()
+            else:
+                logger.warning('Not updating satellite data - less than 3 days old')
+        else:
+            # no satellites found
+            satellite.update()
 
 
 if __name__ == "__main__":

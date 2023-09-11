@@ -57,10 +57,11 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky(object):
 
-    periodic_tasks_offset = 300    # 5 minutes
-    cleanup_tasks_offset = 43200   # 12 hours
-    aurora_tasks_offset = 3600     # 60 minutes
-    smoke_tasks_offset = 10800     # 3 hours
+    periodic_tasks_offset = 300         # 5 minutes
+    cleanup_tasks_offset = 43200        # 12 hours
+    aurora_tasks_offset = 3600          # 60 minutes
+    smoke_tasks_offset = 10800          # 3 hours
+    sat_data_tasks_offset = 259200      # 3 days
 
 
     def __init__(self):
@@ -102,9 +103,10 @@ class IndiAllSky(object):
 
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         #self.periodic_tasks_time = time.time()  # testing
-        self.cleanup_tasks_time = time.time()  # run asap
-        self.aurora_tasks_time = time.time()  # run asap
-        self.smoke_tasks_time = time.time()  # run asap
+        self.cleanup_tasks_time = time.time()   # run asap
+        self.aurora_tasks_time = time.time()    # run asap
+        self.smoke_tasks_time = time.time()     # run asap
+        self.sat_data_tasks_time = time.time()  # run asap
 
 
         self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
@@ -1216,6 +1218,14 @@ class IndiAllSky(object):
             self._updateSmokeData()
 
 
+        # satellite tle data update
+        if self.sat_data_tasks_time < now:
+            self.sat_data_tasks_time = now + self.smoke_tasks_offset
+
+            logger.info('Creating satellite tle data update task')
+            self._updateSatelliteTleData()
+
+
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
 
         active_cameras = IndiAllSkyDbCameraTable.query\
@@ -1268,6 +1278,26 @@ class IndiAllSky(object):
             db.session.commit()
 
             self.video_q.put({'task_id' : task.id})
+
+
+    def _updateSatelliteTleData(self, task_state=TaskQueueState.QUEUED):
+        jobdata = {
+            'action'       : 'updateSatelliteTleData',
+            'img_folder'   : str(self.image_dir),
+            'timespec'     : None,  # Not needed
+            'night'        : None,  # Not needed
+            'camera_id'    : None,  # Not needed
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 
 
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):

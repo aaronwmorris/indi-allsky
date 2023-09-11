@@ -66,8 +66,13 @@ class IssTrack(object):
         if self.iss_tle_data:
             obs = ephem.city(CITY)
 
-            iss = ephem.readtle(*self.iss_tle_data)
-            #logger.info('%s', dir(iss))
+            try:
+                iss = ephem.readtle(*self.iss_tle_data)
+            except ValueError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                raise
+
+            logger.info('%s', dir(iss))
 
 
             while True:
@@ -75,14 +80,20 @@ class IssTrack(object):
                 #obs.date = datetime.utcnow() + timedelta(hours=6)  # testing
 
                 iss.compute(obs)
-                iss_next_pass = obs.next_pass(iss)
 
-                logger.info('iss: altitude %4.1f deg, azimuth %5.1f deg', math.degrees(iss.alt), math.degrees(iss.az))
-                logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S}, max: {1:%Y-%m-%d %H:%M:%S}, set: {2:%Y-%m-%d %H:%M:%S} - duration {3:d}s'.format(
+                try:
+                    iss_next_pass = obs.next_pass(iss)
+                except ValueError as e:
+                    logger.error('Next pass error: %s', str(e))
+                    raise
+
+                logger.info('iss: altitude %4.1f, azimuth %5.1f', math.degrees(iss.alt), math.degrees(iss.az))
+                logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S}, max: {1:%Y-%m-%d %H:%M:%S}, set: {2:%Y-%m-%d %H:%M:%S} - duration {3:d}s - elev {4:0.1f}km'.format(
                     ephem.localtime(iss_next_pass[0]),
                     ephem.localtime(iss_next_pass[2]),
                     ephem.localtime(iss_next_pass[4]),
                     (ephem.localtime(iss_next_pass[4]) - ephem.localtime(iss_next_pass[0])).seconds,
+                    iss.elevation / 1000,
                 ))
 
                 time.sleep(5.0)

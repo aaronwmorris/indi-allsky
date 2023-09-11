@@ -27,6 +27,7 @@ from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
 from .aurora import IndiAllskyAuroraUpdate
 from .smoke import IndiAllskySmokeUpdate
+from .satellite_download import IndiAllskyUpdateSatelliteData
 
 from .flask import create_app
 from .flask import db
@@ -941,6 +942,15 @@ class VideoWorker(Process):
         smoke.update(camera)
 
         task.setSuccess('Smoke data updated')
+
+
+    def updateSatelliteTleData(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
+        satellite = IndiAllskyUpdateSatelliteData(self.config)
+        satellite.update()
+
+        task.setSuccess('Satellite data updated')
 
 
     def expireData(self, task, timespec, img_folder, night, camera):

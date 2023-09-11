@@ -47,6 +47,7 @@ from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
 from .models import IndiAllSkyDbConfigTable
+from .models import IndiAllSkyDbTleDataTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -3982,6 +3983,10 @@ class AjaxAstroPanelView(BaseView):
             .one()
 
 
+        satellites = IndiAllSkyDbTleDataTable.query\
+            .order_by(IndiAllSkyDbTleDataTable.title)\
+
+
         # init observer
         obs = ephem.Observer()
 
@@ -4031,72 +4036,107 @@ class AjaxAstroPanelView(BaseView):
         neptune.compute(obs)
 
 
+        satellite_list = list()
+        for sat_entry in satellites:
+            try:
+                sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            except ValueError as e:
+                app.logger.error('Satellite TLE data error: %s', str(e))
+                continue
+
+            sat.compute(obs)
+
+            try:
+                next_pass = obs.next_pass(sat)
+            except ValueError as e:
+                app.logger.error('Next pass error: %s', str(e))
+                continue
+
+            sat_data = {
+                'name'      : str(sat_entry.title).upper(),
+                'rise'      : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
+                'transit'   : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
+                'set'       : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
+                'az'        : round(math.degrees(sat.az), 2),
+                'alt'       : round(math.degrees(sat.alt), 2),
+                'duration'  : '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
+                'elevation' : int(sat.elevation / 1000),
+            }
+
+            satellite_list.append(sat_data)
+
+
+        # sort by altitude
+        satellite_list = sorted(satellite_list, key=lambda x: x['alt'], reverse=True)
+
+
         data = {
-            'latitude'              : "%s" % obs.lat,
-            'longitude'             : "%s" % obs.lon,
-            'elevation'             : "%d" % obs.elevation,
-            'polaris_hour_angle'    : polaris_data[0],
-            'polaris_next_transit'  : "%s" % polaris_data[1],
-            'polaris_alt'           : "%.2f°" % math.degrees(polaris_data[2]),
-            'moon_phase'            : "%s" % self.astropanel_get_moon_phase(obs),
-            'moon_light'            : "%d" % ephem.Moon(obs).phase,
-            'moon_rise'             : "%s" % moon_position[0],
-            'moon_transit'          : "%s" % moon_position[1],
-            'moon_set'              : "%s" % moon_position[2],
-            'moon_az'               : "%.2f°" % math.degrees(moon.az),
-            'moon_alt'              : "%.2f°" % math.degrees(moon.alt),
-            'moon_ra'               : "%s" % moon.ra,
-            'moon_dec'              : "%s" % moon.dec,
-            'moon_new'              : "%s" % ephem.localtime(ephem.next_new_moon(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
-            'moon_full'             : "%s" % ephem.localtime(ephem.next_full_moon(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
+            'latitude'              : round(obs.lat, 2),
+            'longitude'             : round(obs.lon, 2),
+            'elevation'             : int(obs.elevation),
+            'polaris_hour_angle'    : round(polaris_data[0], 5),
+            'polaris_next_transit'  : '{0:s}'.format(polaris_data[1]),
+            'polaris_alt'           : round(math.degrees(polaris_data[2]), 2),
+            'moon_phase'            : self.astropanel_get_moon_phase(obs),
+            'moon_light'            : int(moon.phase),
+            'moon_rise'             : '{0:s}'.format(moon_position[0]),
+            'moon_transit'          : '{0:s}'.format(moon_position[1]),
+            'moon_set'              : '{0:s}'.format(moon_position[2]),
+            'moon_az'               : round(math.degrees(moon.az), 2),
+            'moon_alt'              : round(math.degrees(moon.alt), 2),
+            'moon_ra'               : '{0:s}'.format(str(moon.ra)),
+            'moon_dec'              : '{0:s}'.format(str(moon.dec)),
+            'moon_new'              : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(ephem.next_new_moon(utcnow))),
+            'moon_full'             : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(ephem.next_full_moon(utcnow))),
             'sun_at_start'          : sun_twilights[2][0],
             'sun_ct_start'          : sun_twilights[0][0],
-            'sun_rise'              : "%s" % sun_position[0],
-            'sun_transit'           : "%s" % sun_position[1],
-            'sun_set'               : "%s" % sun_position[2],
+            'sun_rise'              : '{0:s}'.format(sun_position[0]),
+            'sun_transit'           : '{0:s}'.format(sun_position[1]),
+            'sun_set'               : '{0:s}'.format(sun_position[2]),
             'sun_ct_end'            : sun_twilights[0][1],
             'sun_at_end'            : sun_twilights[2][1],
-            'sun_az'                : "%.2f°" % math.degrees(sun.az),
-            'sun_alt'               : "%.2f°" % math.degrees(sun.alt),
-            'sun_ra'                : "%s" % sun.ra,
-            'sun_dec'               : "%s" % sun.dec,
-            'sun_equinox'           : "%s" % ephem.localtime(ephem.next_equinox(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
-            'sun_solstice'          : "%s" % ephem.localtime(ephem.next_solstice(utcnow)).strftime("%Y-%m-%d %H:%M:%S"),
-            'mercury_rise'          : "%s" % mercury_position[0],
-            'mercury_transit'       : "%s" % mercury_position[1],
-            'mercury_set'           : "%s" % mercury_position[2],
-            'mercury_az'            : "%.2f°" % math.degrees(mercury.az),
-            'mercury_alt'           : "%.2f°" % math.degrees(mercury.alt),
-            'venus_rise'            : "%s" % venus_position[0],
-            'venus_transit'         : "%s" % venus_position[1],
-            'venus_set'             : "%s" % venus_position[2],
-            'venus_az'              : "%.2f°" % math.degrees(venus.az),
-            'venus_alt'             : "%.2f°" % math.degrees(venus.alt),
-            'mars_rise'             : "%s" % mars_position[0],
-            'mars_transit'          : "%s" % mars_position[1],
-            'mars_set'              : "%s" % mars_position[2],
-            'mars_az'               : "%.2f°" % math.degrees(mars.az),
-            'mars_alt'              : "%.2f°" % math.degrees(mars.alt),
-            'jupiter_rise'          : "%s" % jupiter_position[0],
-            'jupiter_transit'       : "%s" % jupiter_position[1],
-            'jupiter_set'           : "%s" % jupiter_position[2],
-            'jupiter_az'            : "%.2f°" % math.degrees(jupiter.az),
-            'jupiter_alt'           : "%.2f°" % math.degrees(jupiter.alt),
-            'saturn_rise'           : "%s" % saturn_position[0],
-            'saturn_transit'        : "%s" % saturn_position[1],
-            'saturn_set'            : "%s" % saturn_position[2],
-            'saturn_az'             : "%.2f°" % math.degrees(saturn.az),
-            'saturn_alt'            : "%.2f°" % math.degrees(saturn.alt),
-            'uranus_rise'           : "%s" % uranus_position[0],
-            'uranus_transit'        : "%s" % uranus_position[1],
-            'uranus_set'            : "%s" % uranus_position[2],
-            'uranus_az'             : "%.2f°" % math.degrees(uranus.az),
-            'uranus_alt'            : "%.2f°" % math.degrees(uranus.alt),
-            'neptune_rise'          : "%s" % neptune_position[0],
-            'neptune_transit'       : "%s" % neptune_position[1],
-            'neptune_set'           : "%s" % neptune_position[2],
-            'neptune_az'            : "%.2f°" % math.degrees(neptune.az),
-            'neptune_alt'           : "%.2f°" % math.degrees(neptune.alt),
+            'sun_az'                : round(math.degrees(sun.az), 2),
+            'sun_alt'               : round(math.degrees(sun.alt), 2),
+            'sun_ra'                : '{0:s}'.format(str(sun.ra)),
+            'sun_dec'               : '{0:s}'.format(str(sun.dec)),
+            'sun_equinox'           : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(ephem.next_equinox(utcnow))),
+            'sun_solstice'          : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(ephem.next_solstice(utcnow))),
+            'mercury_rise'          : '{0:s}'.format(mercury_position[0]),
+            'mercury_transit'       : '{0:s}'.format(mercury_position[1]),
+            'mercury_set'           : '{0:s}'.format(mercury_position[2]),
+            'mercury_az'            : round(math.degrees(mercury.az), 2),
+            'mercury_alt'           : round(math.degrees(mercury.alt), 2),
+            'venus_rise'            : '{0:s}'.format(venus_position[0]),
+            'venus_transit'         : '{0:s}'.format(venus_position[1]),
+            'venus_set'             : '{0:s}'.format(venus_position[2]),
+            'venus_az'              : round(math.degrees(venus.az), 2),
+            'venus_alt'             : round(math.degrees(venus.alt), 2),
+            'mars_rise'             : '{0:s}'.format(mars_position[0]),
+            'mars_transit'          : '{0:s}'.format(mars_position[1]),
+            'mars_set'              : '{0:s}'.format(mars_position[2]),
+            'mars_az'               : round(math.degrees(mars.az), 2),
+            'mars_alt'              : round(math.degrees(mars.alt), 2),
+            'jupiter_rise'          : '{0:s}'.format(jupiter_position[0]),
+            'jupiter_transit'       : '{0:s}'.format(jupiter_position[1]),
+            'jupiter_set'           : '{0:s}'.format(jupiter_position[2]),
+            'jupiter_az'            : round(math.degrees(jupiter.az), 2),
+            'jupiter_alt'           : round(math.degrees(jupiter.alt), 2),
+            'saturn_rise'           : '{0:s}'.format(saturn_position[0]),
+            'saturn_transit'        : '{0:s}'.format(saturn_position[1]),
+            'saturn_set'            : '{0:s}'.format(saturn_position[2]),
+            'saturn_az'             : round(math.degrees(saturn.az), 2),
+            'saturn_alt'            : round(math.degrees(saturn.alt), 2),
+            'uranus_rise'           : '{0:s}'.format(uranus_position[0]),
+            'uranus_transit'        : '{0:s}'.format(uranus_position[1]),
+            'uranus_set'            : '{0:s}'.format(uranus_position[2]),
+            'uranus_az'             : round(math.degrees(uranus.az), 2),
+            'uranus_alt'            : round(math.degrees(uranus.alt), 2),
+            'neptune_rise'          : '{0:s}'.format(neptune_position[0]),
+            'neptune_transit'       : '{0:s}'.format(neptune_position[1]),
+            'neptune_set'           : '{0:s}'.format(neptune_position[2]),
+            'neptune_az'            : round(math.degrees(neptune.az), 2),
+            'neptune_alt'           : round(math.degrees(neptune.alt), 2),
+            'satellite_list'        : satellite_list,
         }
 
         return jsonify(data)

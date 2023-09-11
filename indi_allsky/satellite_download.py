@@ -57,18 +57,16 @@ class IndiAllskyUpdateSatelliteData(object):
         tle_iter = iter(tle_data.splitlines())
         while True:
             try:
-                line = next(tle_iter)
+                title = next(tle_iter)
             except StopIteration:
                 break
 
 
-            if line.startswith('#'):
-                continue
-            elif line == "":
-                continue
+            #if line.startswith('#'):
+            #    continue
+            #elif line == "":
+            #    continue
 
-
-            title = line.strip()
 
             try:
                 line1 = next(tle_iter)
@@ -78,10 +76,22 @@ class IndiAllskyUpdateSatelliteData(object):
                 db.session.rollback()
                 return
 
+
+            ### https://en.wikipedia.org/wiki/Two-line_element_set
+            try:
+                assert len(title) <= 24
+                assert len(line1) == 69
+                assert len(line2) == 69
+            except AssertionError:
+                logger.error('Error parsing TLE data')
+                db.session.rollback()
+                return
+
+
             #logger.warning('Title: %s %s %s', title, line1, line2)
 
             tle_entry = IndiAllSkyDbTleDataTable(
-                title=title,
+                title=title.rstrip().upper(),
                 line1=line1,
                 line2=line2,
             )

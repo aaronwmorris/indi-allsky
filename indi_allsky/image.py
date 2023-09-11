@@ -56,6 +56,7 @@ from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbTleDataTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
@@ -83,6 +84,7 @@ class ImageWorker(Process):
 
     sqm_history_minutes = 30
     stars_history_minutes = 30
+
 
     def __init__(
         self,
@@ -137,18 +139,22 @@ class ImageWorker(Process):
             'moon_phase'    : 0.0,
             'sun_moon_sep'  : 90.0,
             'sidereal_time' : 'unset',
-            'moon_up'       : '',
+            'moon_up'       : 'unset',
             'mercury_alt'   : 0.0,
-            'mercury_up'    : '',
+            'mercury_up'    : 'unset',
             'venus_alt'     : 0.0,
-            'venus_up'      : '',
+            'venus_up'      : 'unset',
             'venus_phase'   : 0.0,
             'mars_alt'      : 0.0,
-            'mars_up'       : '',
+            'mars_up'       : 'unset',
             'jupiter_alt'   : 0.0,
-            'jupiter_up'    : '',
+            'jupiter_up'    : 'unset',
             'saturn_alt'    : 0.0,
-            'saturn_up'     : '',
+            'saturn_up'     : 'unset',
+            'iss_up'        : 'No data',
+            'iss_alt'       : 0.0,
+            'hst_up'        : 'No data',
+            'hst_alt'       : 0.0,
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
@@ -1397,6 +1403,12 @@ class ImageProcessor(object):
         'GRBG' : cv2.COLOR_BAYER_GB2GRAY,
         'BGGR' : cv2.COLOR_BAYER_RG2GRAY,
         'GBRG' : cv2.COLOR_BAYER_GR2GRAY,
+    }
+
+
+    satellite_dict = {
+        'ISS (ZARYA)' : 'iss',
+        'HST'         : 'hst',
     }
 
 
@@ -2930,6 +2942,63 @@ class ImageProcessor(object):
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
+        # satellites
+        satellite_data = self.populateSatelliteData()
+
+        iss = satellite_data.get('iss')
+        if iss:
+            iss.compute(obs)
+
+            iss_alt = math.degrees(iss.alt)
+            self.astrometric_data['iss_alt'] = iss_alt
+
+            if iss_alt >= 0:
+                self.astrometric_data['iss_up'] = 'Yes'
+            else:
+                self.astrometric_data['iss_up'] = 'No'
+
+
+        hst = satellite_data.get('hst')
+        if hst:
+            hst.compute(obs)
+
+            hst_alt = math.degrees(hst.alt)
+            self.astrometric_data['hst_alt'] = hst_alt
+
+            if hst_alt >= 0:
+                self.astrometric_data['hst_up'] = 'Yes'
+            else:
+                self.astrometric_data['hst_up'] = 'No'
+
+
+    def populateSatelliteData(self):
+        satellite_data = dict()
+
+        for sat_name in self.satellite_dict.keys():
+            # there may be multiple satellites of the same name, usually pieces of the same rocket
+            sat_entry = IndiAllSkyDbTleDataTable.query\
+                .filter(IndiAllSkyDbTleDataTable.title == sat_name)\
+                .order_by(IndiAllSkyDbTleDataTable.id.desc())\
+                .first()
+
+
+            if not sat_entry:
+                logger.warning('Satellite data not found: %s', sat_name)
+                continue
+
+            #logger.info('Found satellite data: %s', sat_name)
+
+            try:
+                sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            except ValueError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                continue
+
+            satellite_data[self.satellite_dict[sat_name]] = sat
+
+        return satellite_data
+
+
     def label_image(self):
         # this needs to be enabled during focus mode
 
@@ -3101,6 +3170,10 @@ class ImageProcessor(object):
             'jupiter_up'   : self.astrometric_data['jupiter_up'],
             'saturn_alt'   : self.astrometric_data['saturn_alt'],
             'saturn_up'    : self.astrometric_data['saturn_up'],
+            'iss_alt'      : self.astrometric_data['iss_alt'],
+            'iss_up'       : self.astrometric_data['iss_up'],
+            'hst_alt'      : self.astrometric_data['hst_alt'],
+            'hst_up'       : self.astrometric_data['hst_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,
@@ -3354,6 +3427,10 @@ class ImageProcessor(object):
             'jupiter_up'   : self.astrometric_data['jupiter_up'],
             'saturn_alt'   : self.astrometric_data['saturn_alt'],
             'saturn_up'    : self.astrometric_data['saturn_up'],
+            'iss_alt'      : self.astrometric_data['iss_alt'],
+            'iss_up'       : self.astrometric_data['iss_up'],
+            'hst_alt'      : self.astrometric_data['hst_alt'],
+            'hst_up'       : self.astrometric_data['hst_up'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,

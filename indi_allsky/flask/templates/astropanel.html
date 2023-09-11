@@ -25,6 +25,20 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='astropanel/css/style.css') }}">
 
@@ -51,6 +65,7 @@ async function loop() {
 
 function loadData() {
     console.log('Loading data');
+    //$("#loader_data").css({'display' : 'block'});
     loadJS("{{ url_for('indi_allsky.ajax_astropanel_view') }}", {});
     setTimeout(loadData, refreshInterval);
 }
@@ -70,7 +85,8 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(d){
-            json_data = d
+            json_data = d;
+            $("#loader_data").css({'display' : 'none'});
         },
         error: function(data){
             onError(data.status);
@@ -83,13 +99,13 @@ function loadJS(url, data, onDone, onError) {
 
 function populateData() {
     $("#polaris_next_transit").html(json_data.polaris_next_transit);
-    $("#polaris_alt").html(json_data.polaris_alt);
+    $("#polaris_alt").html(json_data.polaris_alt + '&deg;');
     $("#moon_phase").html(json_data.moon_phase + " (" + json_data.moon_light + "%)");
     $("#moon_rise").html(json_data.moon_rise);
     $("#moon_transit").html(json_data.moon_transit);
     $("#moon_set").html(json_data.moon_set);
-    $("#moon_az").html(json_data.moon_az);
-    $("#moon_alt").html(json_data.moon_alt);
+    $("#moon_az").html(json_data.moon_az + '&deg;');
+    $("#moon_alt").html(json_data.moon_alt + '&deg;');
     $("#moon_ra").html(json_data.moon_ra);
     $("#moon_dec").html(json_data.moon_dec);
     $(".moon_new").html(json_data.moon_new);
@@ -101,8 +117,8 @@ function populateData() {
     $("#sun_set").html(json_data.sun_set);
     $("#sun_ct_end").html(json_data.sun_ct_end);
     $("#sun_at_end").html(json_data.sun_at_end);
-    $("#sun_az").html(json_data.sun_az);
-    $("#sun_alt").html(json_data.sun_alt);
+    $("#sun_az").html(json_data.sun_az + '&deg;');
+    $("#sun_alt").html(json_data.sun_alt + '&deg;');
     $("#sun_ra").html(json_data.sun_ra);
     $("#sun_dec").html(json_data.sun_dec);
     $("#sun_equinox").html(json_data.sun_equinox);
@@ -110,38 +126,38 @@ function populateData() {
     $("#mercury_rise").html(json_data.mercury_rise);
     $("#mercury_transit").html(json_data.mercury_transit);
     $("#mercury_set").html(json_data.mercury_set);
-    $("#mercury_az").html(json_data.mercury_az);
-    $("#mercury_alt").html(json_data.mercury_alt);
+    $("#mercury_az").html(json_data.mercury_az + '&deg;');
+    $("#mercury_alt").html(json_data.mercury_alt + '&deg;');
     $("#venus_rise").html(json_data.venus_rise);
     $("#venus_transit").html(json_data.venus_transit);
     $("#venus_set").html(json_data.venus_set);
-    $("#venus_az").html(json_data.venus_az);
-    $("#venus_alt").html(json_data.venus_alt);
+    $("#venus_az").html(json_data.venus_az + '&deg;');
+    $("#venus_alt").html(json_data.venus_alt + '&deg;');
     $("#mars_rise").html(json_data.mars_rise);
     $("#mars_transit").html(json_data.mars_transit);
     $("#mars_set").html(json_data.mars_set);
-    $("#mars_az").html(json_data.mars_az);
-    $("#mars_alt").html(json_data.mars_alt);
+    $("#mars_az").html(json_data.mars_az + '&deg;');
+    $("#mars_alt").html(json_data.mars_alt + '&deg;');
     $("#jupiter_rise").html(json_data.jupiter_rise);
     $("#jupiter_transit").html(json_data.jupiter_transit);
     $("#jupiter_set").html(json_data.jupiter_set);
-    $("#jupiter_az").html(json_data.jupiter_az);
-    $("#jupiter_alt").html(json_data.jupiter_alt);
+    $("#jupiter_az").html(json_data.jupiter_az + '&deg;');
+    $("#jupiter_alt").html(json_data.jupiter_alt + '&deg;');
     $("#saturn_rise").html(json_data.saturn_rise);
     $("#saturn_transit").html(json_data.saturn_transit);
     $("#saturn_set").html(json_data.saturn_set);
-    $("#saturn_az").html(json_data.saturn_az);
-    $("#saturn_alt").html(json_data.saturn_alt);
+    $("#saturn_az").html(json_data.saturn_az + '&deg;');
+    $("#saturn_alt").html(json_data.saturn_alt + '&deg;');
     $("#uranus_rise").html(json_data.uranus_rise);
     $("#uranus_transit").html(json_data.uranus_transit);
     $("#uranus_set").html(json_data.uranus_set);
-    $("#uranus_az").html(json_data.uranus_az);
-    $("#uranus_alt").html(json_data.uranus_alt);
+    $("#uranus_az").html(json_data.uranus_az + '&deg;');
+    $("#uranus_alt").html(json_data.uranus_alt + '&deg;');
     $("#neptune_rise").html(json_data.neptune_rise);
     $("#neptune_transit").html(json_data.neptune_transit);
     $("#neptune_set").html(json_data.neptune_set);
-    $("#neptune_az").html(json_data.neptune_az);
-    $("#neptune_alt").html(json_data.neptune_alt);
+    $("#neptune_az").html(json_data.neptune_az + '&deg;');
+    $("#neptune_alt").html(json_data.neptune_alt + '&deg;');
 
     <!-- Set polaris marker -->
     var pha = json_data.polaris_hour_angle;
@@ -170,57 +186,57 @@ function populateData() {
     $("#polaris_next_9").html(p9h + ':' + pnt[1] + ':' + pnt[2]);
 
     <!-- Indicate planets above horizon -->
-    if ( parseFloat(json_data.mercury_alt) > 25 ) {
+    if ( json_data.mercury_alt > 25 ) {
         $("#mercury").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.mercury_alt) > 0 ) {
+    } else if ( json_data.mercury_alt > 0 ) {
         $("#mercury").css("color", "#ff9900");
     } else {
         $("#mercury").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.venus_alt) > 25 ) {
+    if ( json_data.venus_alt > 25 ) {
         $("#venus").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.venus_alt) > 0 ) {
+    } else if ( json_data.venus_alt > 0 ) {
         $("#venus").css("color", "#ff9900");
     } else {
         $("#venus").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.mars_alt) > 25 ) {
+    if ( json_data.mars_alt > 25 ) {
         $("#mars").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.mars_alt) > 0 ) {
+    } else if ( json_data.mars_alt > 0 ) {
         $("#mars").css("color", "#ff9900");
     } else {
         $("#mars").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.jupiter_alt) > 25 ) {
+    if ( json_data.jupiter_alt > 25 ) {
         $("#jupiter").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.jupiter_alt) > 0 ) {
+    } else if ( json_data.jupiter_alt > 0 ) {
         $("#jupiter").css("color", "#ff9900");
     } else {
         $("#jupiter").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.saturn_alt) > 25 ) {
+    if ( json_data.saturn_alt > 25 ) {
         $("#saturn").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.saturn_alt) > 0 ) {
+    } else if ( json_data.saturn_alt > 0 ) {
         $("#saturn").css("color", "#ff9900");
     } else {
         $("#saturn").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.uranus_alt) > 25 ) {
+    if ( json_data.uranus_alt > 25 ) {
         $("#uranus").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.uranus_alt) > 0 ) {
+    } else if ( json_data.uranus_alt > 0 ) {
         $("#uranus").css("color", "#ff9900");
     } else {
         $("#uranus").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.neptune_alt) > 25 ) {
+    if ( json_data.neptune_alt > 25 ) {
         $("#neptune").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.neptune_alt) > 0 ) {
+    } else if ( json_data.neptune_alt > 0 ) {
         $("#neptune").css("color", "#ff9900");
     } else {
         $("#neptune").css("color", "#fff");
@@ -247,6 +263,46 @@ function populateData() {
         $("#new_moon_first").css("display", "none");
         $("#new_moon_second").css("display", "");
     };
+
+    var table_sat = $("#satellites-table");
+    table_sat.empty()
+
+    var tr1 = $('<tr />');
+    tr1.append($('<td />', {'class' : 'satelliteshdr'}).html('&nbsp;'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Rise'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Transit'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Set'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Azimuth'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Altitude'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Duration'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Elevation'));
+    table_sat.append(tr1);
+
+    json_data['satellite_list'].forEach(sat => {
+        var tr_sat = $('<tr />');
+
+        if ( sat.name == 'ISS (ZARYA)' ) {
+            tr_sat.css({'color' : "#00cccc"});
+        } else if ( sat.name == 'HST' ) {
+            tr_sat.css({'color' : "#00cccc"});
+        } else if ( sat.alt > 25 ) {
+            tr_sat.css({'color' : "#99cc00"});
+        } else if ( sat.alt > 0 ) {
+            tr_sat.css({'color' : "#ff9900"});
+        } else {
+            tr_sat.css({'color' : "#fff"});
+        }
+
+        tr_sat.append($('<td />', {'class' : 'satelliteshdr'}).html(sat['name']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['rise']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['transit']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['set']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['az'] + "&deg;"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['alt'] + "&deg;"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['duration'] + "s"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['elevation'] + "km"));
+        table_sat.append(tr_sat);
+    });
 }
 
 
@@ -259,8 +315,8 @@ $( document ).ready(function() {
 
 {% block content %}
 
-	<div class="panel_container">
-		<h1>Astropanel</h1>
+    <div class="panel_container">
+        <h1>Astropanel</h1>
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -268,72 +324,74 @@ $( document ).ready(function() {
     <button class="nav-link link-light bg-dark" id="nav-moon-tab" data-bs-toggle="tab" data-bs-target="#nav-moon" type="button" role="tab" aria-controls="nav-moon" aria-selected="false">Moon</button>
     <button class="nav-link link-warning bg-dark" id="nav-sun-tab" data-bs-toggle="tab" data-bs-target="#nav-sun" type="button" role="tab" aria-controls="nav-sun" aria-selected="false">Sun</button>
     <button class="nav-link link-primary bg-dark" id="nav-planets-tab" data-bs-toggle="tab" data-bs-target="#nav-planets" type="button" role="tab" aria-controls="nav-planets" aria-selected="false">Solar System</button>
+    <button class="nav-link link-success bg-dark" id="nav-satellites-tab" data-bs-toggle="tab" data-bs-target="#nav-satellites" type="button" role="tab" aria-controls="nav-satellites" aria-selected="false">Satellites</button>
   </div>
 </nav>
 
 <div class="tab-content" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-polaris" role="tabpanel" aria-labelledby="nav-polaris-tab">
         <div id="polaris">
-			<div id="reticle">
-				<img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder">
-				<p id="legend" >View as in polar finder scope</p>
-			</div>
-			<h2>Polaris</h2>
-			<table>
-				<tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
-				<tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
-				<tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
-				<tr><td class="polarishdr">At 12 o'clock</td><td class="polarisdata"><span id="polaris_next_12"></span></td></tr>
-				<tr><td class="polarishdr">At 9 o'clock</td><td class="polarisdata"><span id="polaris_next_9"></span></td></tr>
-				<tr><td class="polarishdr">Altitude</td><td class="polarisdata"><span id="polaris_alt"></span></td></tr>
-			</table>
-		</div>
+            <div id="reticle">
+                <img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder">
+                <p id="legend" >View as in polar finder scope</p>
+            </div>
+            <h2>Polaris</h2>
+            <table id="polaris-table">
+                <tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
+                <tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
+                <tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
+                <tr><td class="polarishdr">At 12 o'clock</td><td class="polarisdata"><span id="polaris_next_12"></span></td></tr>
+                <tr><td class="polarishdr">At 9 o'clock</td><td class="polarisdata"><span id="polaris_next_9"></span></td></tr>
+                <tr><td class="polarishdr">Altitude</td><td class="polarisdata"><span id="polaris_alt"></span></td></tr>
+                <tr><td><span class="loader" id="loader_data"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-moon" role="tabpanel" aria-labelledby="nav-moon-tab">
         <div id="moon">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon">
-			<h2>Moon</h2>
-			<p><span id="moon_phase">&nbsp;</span></p>
-			<table>
-				<tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
-				<tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
-				<tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
-				<tr><td class="moonhdr">Azimuth</td><td class="moondata"><span id="moon_az"></span></td></tr>
-				<tr><td class="moonhdr">Altitude</td><td class="moondata"><span id="moon_alt"></span></td></tr>
-				<tr><td class="moonhdr">Right ascension</td><td class="moondata"><span id="moon_ra"></span></td></tr>
-				<tr><td class="moonhdr">Declination</td><td class="moondata"><span id="moon_dec"></span></td></tr>
-				<tr id="new_moon_first"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-				<tr><td class="moonhdr">Next full moon</td><td class="moondata"><span id="moon_full"></span></td></tr>
-				<tr id="new_moon_second" style="display:none;"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-			</table>
-		</div>
+            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon">
+            <h2>Moon</h2>
+            <p><span id="moon_phase">&nbsp;</span></p>
+            <table id="moon-table">
+                <tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
+                <tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
+                <tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
+                <tr><td class="moonhdr">Azimuth</td><td class="moondata"><span id="moon_az"></span></td></tr>
+                <tr><td class="moonhdr">Altitude</td><td class="moondata"><span id="moon_alt"></span></td></tr>
+                <tr><td class="moonhdr">Right ascension</td><td class="moondata"><span id="moon_ra"></span></td></tr>
+                <tr><td class="moonhdr">Declination</td><td class="moondata"><span id="moon_dec"></span></td></tr>
+                <tr id="new_moon_first"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
+                <tr><td class="moonhdr">Next full moon</td><td class="moondata"><span id="moon_full"></span></td></tr>
+                <tr id="new_moon_second" style="display:none;"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-sun" role="tabpanel" aria-labelledby="nav-sun-tab">
         <div id="sun">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
-			<h2>Sun</h2>
-			<table>
-				<tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
-				<tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
-				<tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
-				<tr><td class="sunhdr">Transit</td><td class="sundata"><span id="sun_transit"></span></td></tr>
-				<tr><td class="sunhdr">Sunset</td><td class="sundata"><span id="sun_set"></span></td></tr>
-				<tr><td class="sunhdr">End civil twilight</td><td class="sundata"><span id="sun_ct_end"></span></td></tr>
-				<tr><td class="sunhdr">End astronomical twilight</td><td class="sundata"><span id="sun_at_end"></span></td></tr>
-				<tr><td class="sunhdr">Azimuth</td><td class="sundata"><span id="sun_az"></span></td></tr>
-				<tr><td class="sunhdr">Altitude</td><td class="sundata"><span id="sun_alt"></span></td></tr>
-				<tr><td class="sunhdr">Right ascension</td><td class="sundata"><span id="sun_ra"></span></td></tr>
-				<tr><td class="sunhdr">Declination</td><td class="sundata"><span id="sun_dec"></span></td></tr>
-				<tr id="sun_solstice_first"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-				<tr><td class="sunhdr">Equinox</td><td class="sundata"><span id="sun_equinox"></span></td></tr>
-				<tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-			</table>
-		</div>
+            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
+            <h2>Sun</h2>
+            <table id="sun-table">
+                <tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
+                <tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
+                <tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
+                <tr><td class="sunhdr">Transit</td><td class="sundata"><span id="sun_transit"></span></td></tr>
+                <tr><td class="sunhdr">Sunset</td><td class="sundata"><span id="sun_set"></span></td></tr>
+                <tr><td class="sunhdr">End civil twilight</td><td class="sundata"><span id="sun_ct_end"></span></td></tr>
+                <tr><td class="sunhdr">End astronomical twilight</td><td class="sundata"><span id="sun_at_end"></span></td></tr>
+                <tr><td class="sunhdr">Azimuth</td><td class="sundata"><span id="sun_az"></span></td></tr>
+                <tr><td class="sunhdr">Altitude</td><td class="sundata"><span id="sun_alt"></span></td></tr>
+                <tr><td class="sunhdr">Right ascension</td><td class="sundata"><span id="sun_ra"></span></td></tr>
+                <tr><td class="sunhdr">Declination</td><td class="sundata"><span id="sun_dec"></span></td></tr>
+                <tr id="sun_solstice_first"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
+                <tr><td class="sunhdr">Equinox</td><td class="sundata"><span id="sun_equinox"></span></td></tr>
+                <tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-planets" role="tabpanel" aria-labelledby="nav-planets-tab">
         <div id="planets">
             <h2>Solar System</h2>
-            <table>
+            <table id="planets-table">
                 <tr><td class="planetshdr">&nbsp;</td><td class="planetshdrdata">Rise</td><td class="planetshdrdata">Transit</td><td class="planetshdrdata">Set</td><td class="planetshdrdata">Azimuth</td><td class="planetshdrdata">Altitude</td></tr>
                 <tr id="mercury"><td class="planetshdr">Mercury</td><td class="planetsdata"><span id="mercury_rise"></span></td><td class="planetsdata"><span id="mercury_transit"></span></td><td class="planetsdata"><span id="mercury_set"></span></td><td class="planetsdata"><span id="mercury_az"></span></td><td class="planetsdata"><span id="mercury_alt"></span></td></tr>
                 <tr id="venus"><td class="planetshdr">Venus</td><td class="planetsdata"><span id="venus_rise"></span></td><td class="planetsdata"><span id="venus_transit"></span></td><td class="planetsdata"><span id="venus_set"></span></td><td class="planetsdata"><span id="venus_az"></span></td><td class="planetsdata"><span id="venus_alt"></span></td></tr>
@@ -344,6 +402,13 @@ $( document ).ready(function() {
                 <tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></span></td><td class="planetsdata"><span id="neptune_transit"></span></td><td class="planetsdata"><span id="neptune_set"></span></td><td class="planetsdata"><span id="neptune_az"></span></td><td class="planetsdata"><span id="neptune_alt"></span></td></tr>
             </table>
         <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System">
+        </div>
+    </div>
+    <div class="tab-pane fade" id="nav-satellites" role="tabpanel" aria-labelledby="nav-satellites-tab">
+        <div id="planets">
+            <h2>Satellites</h2>
+            <table id="satellites-table">
+            </table>
         </div>
     </div>
 </div>
