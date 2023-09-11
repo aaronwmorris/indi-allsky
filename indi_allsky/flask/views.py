@@ -4053,7 +4053,7 @@ class AjaxAstroPanelView(BaseView):
                 continue
 
             sat_data = {
-                'name'      : str(sat_entry.title),
+                'name'      : str(sat_entry.title).upper(),
                 'rise'      : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
                 'transit'   : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
                 'set'       : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
