@@ -2988,7 +2988,11 @@ class ImageProcessor(object):
 
             #logger.info('Found satellite data: %s', sat_name)
 
-            sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            try:
+                sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            except ValueError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                continue
 
             satellite_data[self.satellite_dict[sat_name]] = sat
 

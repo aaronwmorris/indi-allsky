@@ -4038,7 +4038,12 @@ class AjaxAstroPanelView(BaseView):
 
         satellite_list = list()
         for sat_entry in satellites:
-            sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            try:
+                sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            except ValueError as e:
+                app.logger.error('Satellite TLE data error: %s', str(e))
+                continue
+
             sat.compute(obs)
 
             try:
