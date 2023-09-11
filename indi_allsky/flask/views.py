@@ -4048,12 +4048,16 @@ class AjaxAstroPanelView(BaseView):
                 'rise'      : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
                 'transit'   : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
                 'set'       : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
-                'az'        : '{0:.2f}'.format(math.degrees(sat.az)),
-                'alt'       : '{0:.2f}'.format(math.degrees(sat.alt)),
+                'az'        : round(math.degrees(sat.az), 2),
+                'alt'       : round(math.degrees(sat.alt), 2),
                 'duration'  : '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
             }
 
             satellite_list.append(sat_data)
+
+
+        # sort by altitude
+        satellite_list = sorted(satellite_list, key=lambda x: x['alt'], reverse=True)
 
 
         data = {

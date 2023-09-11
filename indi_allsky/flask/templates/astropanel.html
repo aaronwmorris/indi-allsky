@@ -264,9 +264,9 @@ function populateData() {
     json_data['satellite_list'].forEach(sat => {
         var tr_sat = $('<tr />');
 
-        if ( parseFloat(sat.alt) > 25 ) {
+        if ( sat.alt > 25 ) {
             tr_sat.css({'color' : "#99cc00"});
-        } else if ( parseFloat(sat.alt) > 0 ) {
+        } else if ( sat.alt > 0 ) {
             tr_sat.css({'color' : "#ff9900"});
         } else {
             if ( sat.name == 'ISS (ZARYA)' ) {
