@@ -4041,7 +4041,11 @@ class AjaxAstroPanelView(BaseView):
             sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
             sat.compute(obs)
 
-            next_pass = obs.next_pass(sat)
+            try:
+                next_pass = obs.next_pass(sat)
+            except ValueError as e:
+                app.logger.error('Next pass error: %s', str(e))
+                continue
 
             sat_data = {
                 'name'      : str(sat_entry.title),
