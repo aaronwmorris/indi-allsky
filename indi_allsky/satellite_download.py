@@ -81,9 +81,9 @@ class IndiAllskyUpdateSatelliteData(object):
             #logger.warning('Title: %s %s %s', title, line1, line2)
 
             tle_entry = IndiAllSkyDbTleDataTable(
-                title=title,
-                line1=line1,
-                line2=line2,
+                title=str(title),
+                line1=str(line1),
+                line2=str(line2),
             )
 
             db.session.add(tle_entry)
