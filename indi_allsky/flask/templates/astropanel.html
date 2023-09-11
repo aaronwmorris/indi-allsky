@@ -25,6 +25,20 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='astropanel/css/style.css') }}">
 
@@ -51,6 +65,7 @@ async function loop() {
 
 function loadData() {
     console.log('Loading data');
+    //$("#loader_data").css({'display' : 'block'});
     loadJS("{{ url_for('indi_allsky.ajax_astropanel_view') }}", {});
     setTimeout(loadData, refreshInterval);
 }
@@ -70,7 +85,8 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(d){
-            json_data = d
+            json_data = d;
+            $("#loader_data").css({'display' : 'none'});
         },
         error: function(data){
             onError(data.status);
@@ -299,8 +315,8 @@ $( document ).ready(function() {
 
 {% block content %}
 
-	<div class="panel_container">
-		<h1>Astropanel</h1>
+    <div class="panel_container">
+        <h1>Astropanel</h1>
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -315,61 +331,62 @@ $( document ).ready(function() {
 <div class="tab-content" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-polaris" role="tabpanel" aria-labelledby="nav-polaris-tab">
         <div id="polaris">
-			<div id="reticle">
-				<img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder">
-				<p id="legend" >View as in polar finder scope</p>
-			</div>
-			<h2>Polaris</h2>
-			<table id="polaris-table">
-				<tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
-				<tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
-				<tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
-				<tr><td class="polarishdr">At 12 o'clock</td><td class="polarisdata"><span id="polaris_next_12"></span></td></tr>
-				<tr><td class="polarishdr">At 9 o'clock</td><td class="polarisdata"><span id="polaris_next_9"></span></td></tr>
-				<tr><td class="polarishdr">Altitude</td><td class="polarisdata"><span id="polaris_alt"></span></td></tr>
-			</table>
-		</div>
+            <div id="reticle">
+                <img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder">
+                <p id="legend" >View as in polar finder scope</p>
+            </div>
+            <h2>Polaris</h2>
+            <table id="polaris-table">
+                <tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
+                <tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
+                <tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
+                <tr><td class="polarishdr">At 12 o'clock</td><td class="polarisdata"><span id="polaris_next_12"></span></td></tr>
+                <tr><td class="polarishdr">At 9 o'clock</td><td class="polarisdata"><span id="polaris_next_9"></span></td></tr>
+                <tr><td class="polarishdr">Altitude</td><td class="polarisdata"><span id="polaris_alt"></span></td></tr>
+                <tr><td><span class="loader" id="loader_data"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-moon" role="tabpanel" aria-labelledby="nav-moon-tab">
         <div id="moon">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon">
-			<h2>Moon</h2>
-			<p><span id="moon_phase">&nbsp;</span></p>
-			<table id="moon-table">
-				<tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
-				<tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
-				<tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
-				<tr><td class="moonhdr">Azimuth</td><td class="moondata"><span id="moon_az"></span></td></tr>
-				<tr><td class="moonhdr">Altitude</td><td class="moondata"><span id="moon_alt"></span></td></tr>
-				<tr><td class="moonhdr">Right ascension</td><td class="moondata"><span id="moon_ra"></span></td></tr>
-				<tr><td class="moonhdr">Declination</td><td class="moondata"><span id="moon_dec"></span></td></tr>
-				<tr id="new_moon_first"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-				<tr><td class="moonhdr">Next full moon</td><td class="moondata"><span id="moon_full"></span></td></tr>
-				<tr id="new_moon_second" style="display:none;"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-			</table>
-		</div>
+            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon">
+            <h2>Moon</h2>
+            <p><span id="moon_phase">&nbsp;</span></p>
+            <table id="moon-table">
+                <tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
+                <tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
+                <tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
+                <tr><td class="moonhdr">Azimuth</td><td class="moondata"><span id="moon_az"></span></td></tr>
+                <tr><td class="moonhdr">Altitude</td><td class="moondata"><span id="moon_alt"></span></td></tr>
+                <tr><td class="moonhdr">Right ascension</td><td class="moondata"><span id="moon_ra"></span></td></tr>
+                <tr><td class="moonhdr">Declination</td><td class="moondata"><span id="moon_dec"></span></td></tr>
+                <tr id="new_moon_first"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
+                <tr><td class="moonhdr">Next full moon</td><td class="moondata"><span id="moon_full"></span></td></tr>
+                <tr id="new_moon_second" style="display:none;"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-sun" role="tabpanel" aria-labelledby="nav-sun-tab">
         <div id="sun">
-			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
-			<h2>Sun</h2>
-			<table id="sun-table">
-				<tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
-				<tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
-				<tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
-				<tr><td class="sunhdr">Transit</td><td class="sundata"><span id="sun_transit"></span></td></tr>
-				<tr><td class="sunhdr">Sunset</td><td class="sundata"><span id="sun_set"></span></td></tr>
-				<tr><td class="sunhdr">End civil twilight</td><td class="sundata"><span id="sun_ct_end"></span></td></tr>
-				<tr><td class="sunhdr">End astronomical twilight</td><td class="sundata"><span id="sun_at_end"></span></td></tr>
-				<tr><td class="sunhdr">Azimuth</td><td class="sundata"><span id="sun_az"></span></td></tr>
-				<tr><td class="sunhdr">Altitude</td><td class="sundata"><span id="sun_alt"></span></td></tr>
-				<tr><td class="sunhdr">Right ascension</td><td class="sundata"><span id="sun_ra"></span></td></tr>
-				<tr><td class="sunhdr">Declination</td><td class="sundata"><span id="sun_dec"></span></td></tr>
-				<tr id="sun_solstice_first"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-				<tr><td class="sunhdr">Equinox</td><td class="sundata"><span id="sun_equinox"></span></td></tr>
-				<tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-			</table>
-		</div>
+            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
+            <h2>Sun</h2>
+            <table id="sun-table">
+                <tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
+                <tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
+                <tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
+                <tr><td class="sunhdr">Transit</td><td class="sundata"><span id="sun_transit"></span></td></tr>
+                <tr><td class="sunhdr">Sunset</td><td class="sundata"><span id="sun_set"></span></td></tr>
+                <tr><td class="sunhdr">End civil twilight</td><td class="sundata"><span id="sun_ct_end"></span></td></tr>
+                <tr><td class="sunhdr">End astronomical twilight</td><td class="sundata"><span id="sun_at_end"></span></td></tr>
+                <tr><td class="sunhdr">Azimuth</td><td class="sundata"><span id="sun_az"></span></td></tr>
+                <tr><td class="sunhdr">Altitude</td><td class="sundata"><span id="sun_alt"></span></td></tr>
+                <tr><td class="sunhdr">Right ascension</td><td class="sundata"><span id="sun_ra"></span></td></tr>
+                <tr><td class="sunhdr">Declination</td><td class="sundata"><span id="sun_dec"></span></td></tr>
+                <tr id="sun_solstice_first"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
+                <tr><td class="sunhdr">Equinox</td><td class="sundata"><span id="sun_equinox"></span></td></tr>
+                <tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
+            </table>
+        </div>
     </div>
     <div class="tab-pane fade" id="nav-planets" role="tabpanel" aria-labelledby="nav-planets-tab">
         <div id="planets">
