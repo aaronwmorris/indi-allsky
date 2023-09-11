@@ -247,6 +247,46 @@ function populateData() {
         $("#new_moon_first").css("display", "none");
         $("#new_moon_second").css("display", "");
     };
+
+    var table_sat = $("#satellites-table");
+    table_sat.empty()
+
+    var tr1 = $('<tr />');
+    tr1.append($('<td />', {'class' : 'satelliteshdr'}).html('&nbsp;'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Rise'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Transit'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Set'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Azimuth'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Altitude'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Duration'));
+    table_sat.append(tr1);
+
+    json_data['satellite_list'].forEach(sat => {
+        var tr_sat = $('<tr />');
+
+        if ( parseFloat(sat.alt) > 25 ) {
+            tr_sat.css({'color' : "#99cc00"});
+        } else if ( parseFloat(sat.alt) > 0 ) {
+            tr_sat.css({'color' : "#ff9900"});
+        } else {
+            if ( sat.name == 'ISS (ZARYA)' ) {
+                tr_sat.css({'color' : "#00cccc"});
+            } else if ( sat.name == 'HST' ) {
+                tr_sat.css({'color' : "#00cccc"});
+            } else {
+                tr_sat.css({'color' : "#fff"});
+            }
+        }
+
+        tr_sat.append($('<td />', {'class' : 'satelliteshdr'}).html(sat['name']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['rise']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['transit']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['set']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['az']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['alt']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['duration']));
+        table_sat.append(tr_sat);
+    });
 }
 
 
@@ -268,6 +308,7 @@ $( document ).ready(function() {
     <button class="nav-link link-light bg-dark" id="nav-moon-tab" data-bs-toggle="tab" data-bs-target="#nav-moon" type="button" role="tab" aria-controls="nav-moon" aria-selected="false">Moon</button>
     <button class="nav-link link-warning bg-dark" id="nav-sun-tab" data-bs-toggle="tab" data-bs-target="#nav-sun" type="button" role="tab" aria-controls="nav-sun" aria-selected="false">Sun</button>
     <button class="nav-link link-primary bg-dark" id="nav-planets-tab" data-bs-toggle="tab" data-bs-target="#nav-planets" type="button" role="tab" aria-controls="nav-planets" aria-selected="false">Solar System</button>
+    <button class="nav-link link-success bg-dark" id="nav-satellites-tab" data-bs-toggle="tab" data-bs-target="#nav-satellites" type="button" role="tab" aria-controls="nav-satellites" aria-selected="false">Satellites</button>
   </div>
 </nav>
 
@@ -279,7 +320,7 @@ $( document ).ready(function() {
 				<p id="legend" >View as in polar finder scope</p>
 			</div>
 			<h2>Polaris</h2>
-			<table>
+			<table id="polaris-table">
 				<tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
 				<tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
 				<tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
@@ -294,7 +335,7 @@ $( document ).ready(function() {
 			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon.png') }}" alt="Moon">
 			<h2>Moon</h2>
 			<p><span id="moon_phase">&nbsp;</span></p>
-			<table>
+			<table id="moon-table">
 				<tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
 				<tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
 				<tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
@@ -312,7 +353,7 @@ $( document ).ready(function() {
         <div id="sun">
 			<img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
 			<h2>Sun</h2>
-			<table>
+			<table id="sun-table">
 				<tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
 				<tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
 				<tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
@@ -333,7 +374,7 @@ $( document ).ready(function() {
     <div class="tab-pane fade" id="nav-planets" role="tabpanel" aria-labelledby="nav-planets-tab">
         <div id="planets">
             <h2>Solar System</h2>
-            <table>
+            <table id="planets-table">
                 <tr><td class="planetshdr">&nbsp;</td><td class="planetshdrdata">Rise</td><td class="planetshdrdata">Transit</td><td class="planetshdrdata">Set</td><td class="planetshdrdata">Azimuth</td><td class="planetshdrdata">Altitude</td></tr>
                 <tr id="mercury"><td class="planetshdr">Mercury</td><td class="planetsdata"><span id="mercury_rise"></span></td><td class="planetsdata"><span id="mercury_transit"></span></td><td class="planetsdata"><span id="mercury_set"></span></td><td class="planetsdata"><span id="mercury_az"></span></td><td class="planetsdata"><span id="mercury_alt"></span></td></tr>
                 <tr id="venus"><td class="planetshdr">Venus</td><td class="planetsdata"><span id="venus_rise"></span></td><td class="planetsdata"><span id="venus_transit"></span></td><td class="planetsdata"><span id="venus_set"></span></td><td class="planetsdata"><span id="venus_az"></span></td><td class="planetsdata"><span id="venus_alt"></span></td></tr>
@@ -344,6 +385,13 @@ $( document ).ready(function() {
                 <tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></span></td><td class="planetsdata"><span id="neptune_transit"></span></td><td class="planetsdata"><span id="neptune_set"></span></td><td class="planetsdata"><span id="neptune_az"></span></td><td class="planetsdata"><span id="neptune_alt"></span></td></tr>
             </table>
         <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System">
+        </div>
+    </div>
+    <div class="tab-pane fade" id="nav-satellites" role="tabpanel" aria-labelledby="nav-satellites-tab">
+        <div id="planets">
+            <h2>Satellites</h2>
+            <table id="satellites-table">
+            </table>
         </div>
     </div>
 </div>

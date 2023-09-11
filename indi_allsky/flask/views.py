@@ -47,6 +47,7 @@ from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
 from .models import IndiAllSkyDbConfigTable
+from .models import IndiAllSkyDbTleDataTable
 
 from .models import TaskQueueQueue
 from .models import TaskQueueState
@@ -3982,6 +3983,10 @@ class AjaxAstroPanelView(BaseView):
             .one()
 
 
+        satellites = IndiAllSkyDbTleDataTable.query\
+            .order_by(IndiAllSkyDbTleDataTable.title)\
+
+
         # init observer
         obs = ephem.Observer()
 
@@ -4029,6 +4034,26 @@ class AjaxAstroPanelView(BaseView):
         saturn.compute(obs)
         uranus.compute(obs)
         neptune.compute(obs)
+
+
+        satellite_list = list()
+        for sat_entry in satellites:
+            sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            sat.compute(obs)
+
+            next_pass = obs.next_pass(sat)
+
+            sat_data = {
+                'name'      : str(sat_entry.title),
+                'rise'      : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
+                'transit'   : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
+                'set'       : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
+                'az'        : '{0:.2f}'.format(math.degrees(sat.az)),
+                'alt'       : '{0:.2f}'.format(math.degrees(sat.alt)),
+                'duration'  : '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
+            }
+
+            satellite_list.append(sat_data)
 
 
         data = {
@@ -4097,6 +4122,7 @@ class AjaxAstroPanelView(BaseView):
             'neptune_set'           : "%s" % neptune_position[2],
             'neptune_az'            : "%.2f°" % math.degrees(neptune.az),
             'neptune_alt'           : "%.2f°" % math.degrees(neptune.alt),
+            'satellite_list'        : satellite_list,
         }
 
         return jsonify(data)

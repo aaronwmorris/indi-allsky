@@ -151,6 +151,20 @@ table, th, td {
 	text-align: right;
 }
 
+.satelliteshdr {
+	width: 80px;
+}
+
+.satelliteshdrdata {
+	width: 75px;
+	text-align: right;
+	font-weight: bold;
+}
+
+.satellitesdata {
+	text-align: right;
+}
+
 .blink {
   animation: blinker 1s step-start infinite;
 }
