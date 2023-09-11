@@ -6,6 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## Features
+* NEW: Satellite tracking an visibility info
 * NEW: Wildfire smoke reporting *(North America only)*
 * NEW: Aurora prediction and Kp-index reporting
 * NEW: Docker containerization support
@@ -178,6 +179,10 @@ The current Kp-index value is also polled from NOAA.  This is the measurement of
 The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
 
 Aurora data is updated every 60 minutes from NOAA.  Aurora data is also published with the MQTT data.
+
+
+## Satellite Tracking
+Satellite tracking data is used to track the visibility of specific satellites like the International Space Station and Hubble Space Telesope.  Rise, transit, and set times are available in the Astropanel view.
 
 
 ## Star Detection
