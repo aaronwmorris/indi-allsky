@@ -99,13 +99,13 @@ function loadJS(url, data, onDone, onError) {
 
 function populateData() {
     $("#polaris_next_transit").html(json_data.polaris_next_transit);
-    $("#polaris_alt").html(json_data.polaris_alt);
+    $("#polaris_alt").html(json_data.polaris_alt + '&deg;');
     $("#moon_phase").html(json_data.moon_phase + " (" + json_data.moon_light + "%)");
     $("#moon_rise").html(json_data.moon_rise);
     $("#moon_transit").html(json_data.moon_transit);
     $("#moon_set").html(json_data.moon_set);
-    $("#moon_az").html(json_data.moon_az);
-    $("#moon_alt").html(json_data.moon_alt);
+    $("#moon_az").html(json_data.moon_az + '&deg;');
+    $("#moon_alt").html(json_data.moon_alt + '&deg;');
     $("#moon_ra").html(json_data.moon_ra);
     $("#moon_dec").html(json_data.moon_dec);
     $(".moon_new").html(json_data.moon_new);
@@ -117,8 +117,8 @@ function populateData() {
     $("#sun_set").html(json_data.sun_set);
     $("#sun_ct_end").html(json_data.sun_ct_end);
     $("#sun_at_end").html(json_data.sun_at_end);
-    $("#sun_az").html(json_data.sun_az);
-    $("#sun_alt").html(json_data.sun_alt);
+    $("#sun_az").html(json_data.sun_az + '&deg;');
+    $("#sun_alt").html(json_data.sun_alt + '&deg;');
     $("#sun_ra").html(json_data.sun_ra);
     $("#sun_dec").html(json_data.sun_dec);
     $("#sun_equinox").html(json_data.sun_equinox);
@@ -126,38 +126,38 @@ function populateData() {
     $("#mercury_rise").html(json_data.mercury_rise);
     $("#mercury_transit").html(json_data.mercury_transit);
     $("#mercury_set").html(json_data.mercury_set);
-    $("#mercury_az").html(json_data.mercury_az);
-    $("#mercury_alt").html(json_data.mercury_alt);
+    $("#mercury_az").html(json_data.mercury_az + '&deg;');
+    $("#mercury_alt").html(json_data.mercury_alt + '&deg;');
     $("#venus_rise").html(json_data.venus_rise);
     $("#venus_transit").html(json_data.venus_transit);
     $("#venus_set").html(json_data.venus_set);
-    $("#venus_az").html(json_data.venus_az);
-    $("#venus_alt").html(json_data.venus_alt);
+    $("#venus_az").html(json_data.venus_az + '&deg;');
+    $("#venus_alt").html(json_data.venus_alt + '&deg;');
     $("#mars_rise").html(json_data.mars_rise);
     $("#mars_transit").html(json_data.mars_transit);
     $("#mars_set").html(json_data.mars_set);
-    $("#mars_az").html(json_data.mars_az);
-    $("#mars_alt").html(json_data.mars_alt);
+    $("#mars_az").html(json_data.mars_az + '&deg;');
+    $("#mars_alt").html(json_data.mars_alt + '&deg;');
     $("#jupiter_rise").html(json_data.jupiter_rise);
     $("#jupiter_transit").html(json_data.jupiter_transit);
     $("#jupiter_set").html(json_data.jupiter_set);
-    $("#jupiter_az").html(json_data.jupiter_az);
-    $("#jupiter_alt").html(json_data.jupiter_alt);
+    $("#jupiter_az").html(json_data.jupiter_az + '&deg;');
+    $("#jupiter_alt").html(json_data.jupiter_alt + '&deg;');
     $("#saturn_rise").html(json_data.saturn_rise);
     $("#saturn_transit").html(json_data.saturn_transit);
     $("#saturn_set").html(json_data.saturn_set);
-    $("#saturn_az").html(json_data.saturn_az);
-    $("#saturn_alt").html(json_data.saturn_alt);
+    $("#saturn_az").html(json_data.saturn_az + '&deg;');
+    $("#saturn_alt").html(json_data.saturn_alt + '&deg;');
     $("#uranus_rise").html(json_data.uranus_rise);
     $("#uranus_transit").html(json_data.uranus_transit);
     $("#uranus_set").html(json_data.uranus_set);
-    $("#uranus_az").html(json_data.uranus_az);
-    $("#uranus_alt").html(json_data.uranus_alt);
+    $("#uranus_az").html(json_data.uranus_az + '&deg;');
+    $("#uranus_alt").html(json_data.uranus_alt + '&deg;');
     $("#neptune_rise").html(json_data.neptune_rise);
     $("#neptune_transit").html(json_data.neptune_transit);
     $("#neptune_set").html(json_data.neptune_set);
-    $("#neptune_az").html(json_data.neptune_az);
-    $("#neptune_alt").html(json_data.neptune_alt);
+    $("#neptune_az").html(json_data.neptune_az + '&deg;');
+    $("#neptune_alt").html(json_data.neptune_alt + '&deg;');
 
     <!-- Set polaris marker -->
     var pha = json_data.polaris_hour_angle;
@@ -186,57 +186,57 @@ function populateData() {
     $("#polaris_next_9").html(p9h + ':' + pnt[1] + ':' + pnt[2]);
 
     <!-- Indicate planets above horizon -->
-    if ( parseFloat(json_data.mercury_alt) > 25 ) {
+    if ( json_data.mercury_alt > 25 ) {
         $("#mercury").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.mercury_alt) > 0 ) {
+    } else if ( json_data.mercury_alt > 0 ) {
         $("#mercury").css("color", "#ff9900");
     } else {
         $("#mercury").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.venus_alt) > 25 ) {
+    if ( json_data.venus_alt > 25 ) {
         $("#venus").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.venus_alt) > 0 ) {
+    } else if ( json_data.venus_alt > 0 ) {
         $("#venus").css("color", "#ff9900");
     } else {
         $("#venus").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.mars_alt) > 25 ) {
+    if ( json_data.mars_alt > 25 ) {
         $("#mars").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.mars_alt) > 0 ) {
+    } else if ( json_data.mars_alt > 0 ) {
         $("#mars").css("color", "#ff9900");
     } else {
         $("#mars").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.jupiter_alt) > 25 ) {
+    if ( json_data.jupiter_alt > 25 ) {
         $("#jupiter").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.jupiter_alt) > 0 ) {
+    } else if ( json_data.jupiter_alt > 0 ) {
         $("#jupiter").css("color", "#ff9900");
     } else {
         $("#jupiter").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.saturn_alt) > 25 ) {
+    if ( json_data.saturn_alt > 25 ) {
         $("#saturn").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.saturn_alt) > 0 ) {
+    } else if ( json_data.saturn_alt > 0 ) {
         $("#saturn").css("color", "#ff9900");
     } else {
         $("#saturn").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.uranus_alt) > 25 ) {
+    if ( json_data.uranus_alt > 25 ) {
         $("#uranus").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.uranus_alt) > 0 ) {
+    } else if ( json_data.uranus_alt > 0 ) {
         $("#uranus").css("color", "#ff9900");
     } else {
         $("#uranus").css("color", "#fff");
     }
 
-    if ( parseFloat(json_data.neptune_alt) > 25 ) {
+    if ( json_data.neptune_alt > 25 ) {
         $("#neptune").css("color", "#99cc00");
-    } else if ( parseFloat(json_data.neptune_alt) > 0 ) {
+    } else if ( json_data.neptune_alt > 0 ) {
         $("#neptune").css("color", "#ff9900");
     } else {
         $("#neptune").css("color", "#fff");
@@ -274,8 +274,8 @@ function populateData() {
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Set'));
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Azimuth'));
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Altitude'));
-    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Duration (s)'));
-    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Elevation (km)'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Duration'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Elevation'));
     table_sat.append(tr1);
 
     json_data['satellite_list'].forEach(sat => {
@@ -297,10 +297,10 @@ function populateData() {
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['rise']));
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['transit']));
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['set']));
-        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['az']));
-        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['alt']));
-        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['duration']));
-        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['elevation']));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['az'] + "&deg;"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['alt'] + "&deg;"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['duration'] + "s"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['elevation'] + "km"));
         table_sat.append(tr_sat);
     });
 }
