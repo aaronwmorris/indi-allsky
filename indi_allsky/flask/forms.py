@@ -592,8 +592,12 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'saturn_up'    : 'No',
         'iss_alt'      : 0.0,
         'iss_up'       : 'No',
+        'iss_next_h'   : 0.0,
+        'iss_next_alt' : 0.0,
         'hst_alt'      : 0.0,
         'hst_up'       : 'No',
+        'hst_next_h'   : 0.0,
+        'hst_next_alt' : 0.0,
         'location'     : 'here',
         'kpindex'      : 0.0,
         'ovation_max'  : 0,
@@ -2032,6 +2036,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
+    GPS_ENABLE                       = BooleanField('GPS Enable')
     GPS_TIMESYNC                     = BooleanField('GPS Time Sync')
     TARGET_ADU                       = IntegerField('Target ADU (night)', validators=[DataRequired(), TARGET_ADU_validator])
     TARGET_ADU_DAY                   = IntegerField('Target ADU (day)', validators=[DataRequired(), TARGET_ADU_DAY_validator])

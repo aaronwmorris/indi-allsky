@@ -6,7 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## Features
-* NEW: Satellite tracking an visibility info
+* NEW: Satellite tracking and visibility info
 * NEW: Wildfire smoke reporting *(North America only)*
 * NEW: Aurora prediction and Kp-index reporting
 * NEW: Docker containerization support
@@ -183,6 +183,8 @@ Aurora data is updated every 60 minutes from NOAA.  Aurora data is also publishe
 
 ## Satellite Tracking
 Satellite tracking data is used to track the visibility of specific satellites like the International Space Station and Hubble Space Telesope.  Rise, transit, and set times are available in the Astropanel view.
+
+Orbital data is downloaded in TLE format from [CelesTrak](https://celestrak.org/NORAD/elements/)
 
 
 ## Star Detection
@@ -487,3 +489,4 @@ Please let me know if you want to make an addition or correction.
 * [Marco Gulino](https://github.com/GuLinux) - His examples from [indi-lite-tools](https://github.com/GuLinux/indi-lite-tools) were key to understanding how to work with pyindi-client
 * [PixInsight](https://www.pixinsight.com/) - Various algorithms were used that are in the PixInsight documentation
 * [Radek Kaczorek](https://github.com/rkaczorek) - [astropanel](https://github.com/rkaczorek/astropanel/) has been integrated into indi-allsky
+* [CelesTrak](https://celestrak.org/) - Satellite orbital data

@@ -153,8 +153,12 @@ class ImageWorker(Process):
             'saturn_up'     : 'unset',
             'iss_up'        : 'No data',
             'iss_alt'       : 0.0,
+            'iss_next_h'    : 0.0,
+            'iss_next_alt'  : 0.0,
             'hst_up'        : 'No data',
             'hst_alt'       : 0.0,
+            'hst_next_h'    : 0.0,
+            'hst_next_alt'  : 0.0,
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
@@ -2957,6 +2961,15 @@ class ImageProcessor(object):
             else:
                 self.astrometric_data['iss_up'] = 'No'
 
+            try:
+                iss_next_pass = obs.next_pass(iss)
+                self.astrometric_data['iss_next_h'] = (iss_next_pass[0].datetime() - utcnow).total_seconds() / 3600
+                self.astrometric_data['iss_next_alt'] = math.degrees(iss_next_pass[3])
+            except ValueError as e:
+                logger.error('ISS next pass error: %s', str(e))
+                self.astrometric_data['iss_next_h'] = 0.0
+                self.astrometric_data['iss_next_alt'] = 0.0
+
 
         hst = satellite_data.get('hst')
         if hst:
@@ -2969,6 +2982,16 @@ class ImageProcessor(object):
                 self.astrometric_data['hst_up'] = 'Yes'
             else:
                 self.astrometric_data['hst_up'] = 'No'
+
+            try:
+                hst_next_pass = obs.next_pass(hst)
+                self.astrometric_data['hst_next_h'] = (hst_next_pass[0].datetime() - utcnow).total_seconds() / 3600
+                self.astrometric_data['hst_next_alt'] = math.degrees(hst_next_pass[3])
+            except ValueError as e:
+                logger.error('HST next pass error: %s', str(e))
+                self.astrometric_data['hst_next_h'] = 0.0
+                self.astrometric_data['hst_next_alt'] = 0.0
+
 
 
     def populateSatelliteData(self):
@@ -3172,8 +3195,12 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'iss_alt'      : self.astrometric_data['iss_alt'],
             'iss_up'       : self.astrometric_data['iss_up'],
+            'iss_next_h'   : self.astrometric_data['iss_next_h'],
+            'iss_next_alt' : self.astrometric_data['iss_next_alt'],
             'hst_alt'      : self.astrometric_data['hst_alt'],
             'hst_up'       : self.astrometric_data['hst_up'],
+            'hst_next_h'   : self.astrometric_data['hst_next_h'],
+            'hst_next_alt' : self.astrometric_data['hst_next_alt'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,
@@ -3429,8 +3456,12 @@ class ImageProcessor(object):
             'saturn_up'    : self.astrometric_data['saturn_up'],
             'iss_alt'      : self.astrometric_data['iss_alt'],
             'iss_up'       : self.astrometric_data['iss_up'],
+            'iss_next_h'   : self.astrometric_data['iss_next_h'],
+            'iss_next_alt' : self.astrometric_data['iss_next_alt'],
             'hst_alt'      : self.astrometric_data['hst_alt'],
             'hst_up'       : self.astrometric_data['hst_up'],
+            'hst_next_h'   : self.astrometric_data['hst_next_h'],
+            'hst_next_alt' : self.astrometric_data['hst_next_alt'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,
