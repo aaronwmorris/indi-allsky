@@ -66,6 +66,11 @@ class IssTrack(object):
         if self.iss_tle_data:
             obs = ephem.city(CITY)
 
+            #obs = ephem.Observer()
+            #obs.lat = math.radians(89)
+            #obs.long = math.radians(0)
+            #obs.elevation = 300
+
             try:
                 iss = ephem.readtle(*self.iss_tle_data)
             except ValueError as e:
