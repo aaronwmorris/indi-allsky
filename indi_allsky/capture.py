@@ -1128,6 +1128,9 @@ class CaptureWorker(Process):
 
 
     def getGpsPosition(self):
+        if not self.config.get('GPS_ENABLE'):
+            return
+
         if not self.indiclient.gps_device:
             return
 
@@ -1446,6 +1449,9 @@ class CaptureWorker(Process):
 
 
     def validateGpsTime(self):
+        if not self.config.get('GPS_ENABLE'):
+            return
+
         if not self.indiclient.gps_device:
             logger.error('No GPS device for time sync')
             return

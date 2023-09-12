@@ -2051,6 +2051,21 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.GPS_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.GPS_ENABLE(class='form-check-input') }}
+                <div id="GPS_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable using GPS location and time services.  Requires GPS hardware and <a href="https://github.com/aaronwmorris/indi-allsky/wiki/GPSd-NTP-Time-Sync">GPSd installation</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.GPS_TIMESYNC.label }}
         </div>
         <div class="col-sm-2">
@@ -2060,7 +2075,7 @@
             </div>
         </div>
         <div class="col-sm-8">
-            <div>Sync system time from GPS.  Requires GPS hardware and GPSd installation.</div>
+            <div>Sync system time from GPS.</div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
         </div>
     </div>
@@ -3098,6 +3113,7 @@ const checkbox_field_names = [
     'FOCUS_MODE',
     'AUTO_WB',
     'CCD_COOLING',
+    'GPS_ENABLE',
     'GPS_TIMESYNC',
     'DETECT_STARS',
     'DETECT_METEORS',
