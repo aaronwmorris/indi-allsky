@@ -477,13 +477,13 @@ class TemplateView(BaseView):
 
         if kpindex_current == 0:
             data['kpindex'] = '-'
-        elif kpindex_current < 5:
+        elif kpindex_current < 5.0:
             data['kpindex'] = '<span class="text-secondary">{0:0.2f} - LOW</span> {1:s}'.format(kpindex_current, kp_dir)
-        elif kpindex_current in (5, ):
+        elif kpindex_current >= 5.0 and kpindex_current < 6.0:
             data['kpindex'] = '<span class="text-warning">{0:0.2f} - MEDIUM</span> {1:s}'.format(kpindex_current, kp_dir)
-        elif kpindex_current in (6, 7):
+        elif kpindex_current >= 6.0 and kpindex_current < 8.0:
             data['kpindex'] = '<span class="text-danger">{0:0.2f} - HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
-        elif kpindex_current in (8, 9):
+        elif kpindex_current >= 8.0:
             data['kpindex'] = '<span class="text-danger">{0:0.2f} - VERY HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
         else:
             # this should never happen
