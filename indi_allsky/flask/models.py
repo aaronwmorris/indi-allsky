@@ -616,7 +616,7 @@ class IndiAllSkyDbTleDataTable(db.Model):
     title = db.Column(db.String(32), nullable=False, index=True)
     line1 = db.Column(db.String(80), nullable=False)
     line2 = db.Column(db.String(80), nullable=False)
-    group = db.Column(db.String(32), nullable=True, index=True)
+    group = db.Column(db.Integer, nullable=True, index=True)
     ### these values would be camera dependent
     #next_rise = db.Column(db.DateTime(), nullable=True, index=True)
     #next_rise_az = db.Column(db.Float, nullable=True, index=True)

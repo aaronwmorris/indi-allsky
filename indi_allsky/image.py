@@ -1413,11 +1413,11 @@ class ImageProcessor(object):
     satellite_dict = {
         'iss' : {
             'title' : 'ISS (ZARYA)',
-            'group' : 'visual',
+            'group' : constants.SATELLITE_VISUAL,
         },
         'hst' : {
             'title' : 'HST',
-            'group' : 'visual',
+            'group' : constants.SATELLITE_VISUAL,
         },
     }
 

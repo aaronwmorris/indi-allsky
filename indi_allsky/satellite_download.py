@@ -6,6 +6,8 @@ import ssl
 import requests
 import logging
 
+from . import constants
+
 from .flask import db
 from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbTleDataTable
@@ -17,9 +19,9 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllskyUpdateSatelliteData(object):
 
     tle_urls = {
-        'visual'    : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle',
-        'starlink'  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle',
-        'stations'  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle',
+        constants.SATELLITE_VISUAL    : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle',
+        constants.SATELLITE_STARLINK  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle',
+        constants.SATELLITE_STATIONS  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle',
     }
 
 

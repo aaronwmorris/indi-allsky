@@ -79,3 +79,9 @@ SMOKE_RATING_MAP_STR = {
     'No Data'  : 'No Data',  # legacy
 }
 
+
+# Satellites
+SATELLITE_VISUAL    = 800
+SATELLITE_STARLINK  = 801
+SATELLITE_STATIONS  = 802
+

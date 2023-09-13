@@ -3986,7 +3986,7 @@ class AjaxAstroPanelView(BaseView):
 
 
         satellites_visual = IndiAllSkyDbTleDataTable.query\
-            .filter(IndiAllSkyDbTleDataTable.group == 'visual')\
+            .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
             .order_by(IndiAllSkyDbTleDataTable.title)\
 
 
