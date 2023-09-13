@@ -1,4 +1,6 @@
 
+#from datetime import datetime
+#from datetime import timedelta
 import socket
 import ssl
 import requests
@@ -14,8 +16,11 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyUpdateSatelliteData(object):
 
-    # 100 (or so) brightest satellites
-    tle_url = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle'
+    tle_urls = {
+        'visual'    : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle',
+        'starlink'  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle',
+        'stations'  : 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle',
+    }
 
 
     def __init__(self, config):
@@ -25,34 +30,50 @@ class IndiAllskyUpdateSatelliteData(object):
 
 
     def update(self):
-        try:
-            tle_data = self.download_tle(self.tle_url)
-        except socket.gaierror as e:
-            logger.error('Name resolution error: %s', str(e))
-            return
-        except socket.timeout as e:
-            logger.error('Timeout error: %s', str(e))
-            return
-        except requests.exceptions.ConnectTimeout as e:
-            logger.error('Connection timeout: %s', str(e))
-            return
-        except requests.exceptions.ConnectionError as e:
-            logger.error('Connection error: %s', str(e))
-            return
-        except ssl.SSLCertVerificationError as e:
-            logger.error('Certificate error: %s', str(e))
-            return
-        except requests.exceptions.SSLError as e:
-            logger.error('Certificate error: %s', str(e))
-            return
+        for group, tle_url in self.tle_urls.items():
+            try:
+                tle_data = self.download_tle(tle_url)
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                continue
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                continue
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                continue
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                continue
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                continue
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                continue
 
 
-        # flush entries
-        IndiAllSkyDbTleDataTable.query.delete()
+            # flush group entries
+            IndiAllSkyDbTleDataTable.query\
+                .filter(IndiAllSkyDbTleDataTable.group == group)\
+                .delete()
+            #db.session.commit()
+
+
+            self.import_entries(group, tle_data)
+
+
+
+        # remove old entries
+        #now_minus_30d = datetime.now() - timedelta(days=30)
+        #IndiAllSkyDbTleDataTable.query\
+        #    .filter(IndiAllSkyDbTleDataTable.createDate < now_minus_30d)\
+        #    .delete()
         #db.session.commit()
 
 
-        i = 0
+    def import_entries(self, group, tle_data):
+        tle_entry_list = list()
 
         tle_iter = iter(tle_data.splitlines())
         while True:
@@ -90,18 +111,19 @@ class IndiAllskyUpdateSatelliteData(object):
 
             #logger.warning('Title: %s %s %s', title, line1, line2)
 
-            tle_entry = IndiAllSkyDbTleDataTable(
-                title=title.rstrip().upper(),
-                line1=line1,
-                line2=line2,
-            )
+            tle_entry = {
+                'title' : title.rstrip().upper(),
+                'line1' : line1,
+                'line2' : line2,
+                'group' : group,
+            }
+            tle_entry_list.append(tle_entry)
 
-            db.session.add(tle_entry)
-            i += 1
 
-
+        db.session.bulk_insert_mappings(IndiAllSkyDbTleDataTable, tle_entry_list)
         db.session.commit()
-        logger.warning('Updated %d satellites', i)
+
+        logger.warning('Updated %d satellites', len(tle_entry_list))
 
 
     def download_tle(self, url):
