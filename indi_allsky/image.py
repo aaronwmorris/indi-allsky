@@ -1411,8 +1411,14 @@ class ImageProcessor(object):
 
 
     satellite_dict = {
-        'ISS (ZARYA)' : 'iss',
-        'HST'         : 'hst',
+        'iss' : {
+            'title' : 'ISS (ZARYA)',
+            'group' : 'visual',
+        },
+        'hst' : {
+            'title' : 'HST',
+            'group' : 'visual',
+        },
     }
 
 
@@ -2997,16 +3003,17 @@ class ImageProcessor(object):
     def populateSatelliteData(self):
         satellite_data = dict()
 
-        for sat_name in self.satellite_dict.keys():
+        for sat_key, sat_data in self.satellite_dict.items():
             # there may be multiple satellites of the same name, usually pieces of the same rocket
             sat_entry = IndiAllSkyDbTleDataTable.query\
-                .filter(IndiAllSkyDbTleDataTable.title == sat_name)\
+                .filter(IndiAllSkyDbTleDataTable.group == sat_data['group'])\
+                .filter(IndiAllSkyDbTleDataTable.title == sat_data['title'])\
                 .order_by(IndiAllSkyDbTleDataTable.id.desc())\
                 .first()
 
 
             if not sat_entry:
-                logger.warning('Satellite data not found: %s', sat_name)
+                logger.warning('Satellite data not found: %s', sat_data['title'])
                 continue
 
             #logger.info('Found satellite data: %s', sat_name)
@@ -3017,7 +3024,7 @@ class ImageProcessor(object):
                 logger.error('Satellite TLE data error: %s', str(e))
                 continue
 
-            satellite_data[self.satellite_dict[sat_name]] = sat
+            satellite_data[sat_key] = sat
 
         return satellite_data
 
