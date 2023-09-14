@@ -22,7 +22,7 @@ CITY = 'Atlanta'
 
 
 class IssTrack(object):
-    iss_tle_url = 'https://live.ariss.org/iss.txt'
+    iss_tle_url = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
     iss_temp_file = '/tmp/iss_27272897.txt'
 
 

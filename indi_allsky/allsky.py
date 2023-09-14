@@ -21,7 +21,7 @@ from .version import __config_level__
 
 from .config import IndiAllSkyConfig
 
-#from . import constants
+from . import constants
 
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
@@ -36,8 +36,6 @@ from .flask.models import NotificationCategory
 
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
-from .flask.models import IndiAllSkyDbDarkFrameTable
-from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
@@ -668,131 +666,24 @@ class IndiAllSky(object):
             sys.exit(1)
 
         except NoResultFound:
-            camera = self._miscDb.addCamera('Import camera', None)
-            camera_id = camera.id
-
-
-        file_list_darks = list()
-        self._getFolderFilesByExt(self.image_dir.joinpath('darks'), file_list_darks, extension_list=['fit', 'fits'])
-
-
-        ### Dark frames
-        file_list_darkframes = filter(lambda p: 'dark' in p.name, file_list_darks)
-
-        #/var/www/html/allsky/images/darks/dark_ccd1_8bit_6s_gain250_bin1_10c_20210826_020202.fit
-        re_darkframe = re.compile(r'\/dark_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)_(?P<ccdtemp_str>\-?\d+)c_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
-
-        darkframe_entries = list()
-        for f in file_list_darkframes:
-            #logger.info('Raw frame: %s', f)
-
-            m = re.search(re_darkframe, str(f))
-            if not m:
-                logger.error('Regex did not match file: %s', f)
-                continue
-
-
-            #logger.info('CCD ID string: %s', m.group('ccd_id_str'))
-            #logger.info('Exposure string: %s', m.group('exposure_str'))
-            #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
-            #logger.info('Gain string: %s', m.group('gain_str'))
-            #logger.info('Binmode string: %s', m.group('binmode_str'))
-            #logger.info('Ccd temp string: %s', m.group('ccdtemp_str'))
-
-            ccd_id = int(m.group('ccd_id_str'))
-            exposure = int(m.group('exposure_str'))
-            bitdepth = int(m.group('bitdepth_str'))
-            gain = int(m.group('gain_str'))
-            binmode = int(m.group('binmode_str'))
-            ccdtemp = float(m.group('ccdtemp_str'))
-
-
-            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
-
-            darkframe_dict = {
-                'filename'   : str(f),
-                'createDate' : d_createDate,
-                'bitdepth'   : bitdepth,
-                'exposure'   : exposure,
-                'gain'       : gain,
-                'binmode'    : binmode,
-                'camera_id'  : ccd_id,
-                'temp'       : ccdtemp,
+            # need to get camera info before adding to DB
+            print('')
+            print('')
+            camera_name = input('Please enter the camera name: ')
+            camera_metadata = {
+                'type'        : constants.CAMERA,
+                'name'        : camera_name.rstrip(),
+                'driver'      : 'import',
+                'latitude'    : 0.0,
+                'longitude'   : 0.0,
+                'elevation'   : 0,
             }
-
-            darkframe_entries.append(darkframe_dict)
-
-
-        try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbDarkFrameTable, darkframe_entries)
-            db.session.commit()
-
-            logger.warning('*** Dark frames inserted: %d ***', len(darkframe_entries))
-        except IntegrityError as e:
-            logger.warning('Integrity error: %s', str(e))
-            db.session.rollback()
+            camera = self._miscDb.addCamera(camera_metadata)
+            camera_id = camera.id
 
 
         file_list_videos = list()
         self._getFolderFilesByExt(self.image_dir, file_list_videos, extension_list=['mp4', 'webm'])
-
-
-        ### Bad pixel maps
-        file_list_bpm = filter(lambda p: 'bpm' in p.name, file_list_darks)
-
-        #/var/www/html/allsky/images/darks/bpm_ccd1_8bit_6s_gain250_bin1_10c_20210826_020202.fit
-        re_bpm = re.compile(r'\/bpm_ccd(?P<ccd_id_str>\d+)_(?P<bitdepth_str>\d+)bit_(?P<exposure_str>\d+)s_gain(?P<gain_str>\d+)_bin(?P<binmode_str>\d+)_(?P<ccdtemp_str>\-?\d+)c_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
-
-        bpm_entries = list()
-        for f in file_list_bpm:
-            #logger.info('Raw frame: %s', f)
-
-            m = re.search(re_bpm, str(f))
-            if not m:
-                logger.error('Regex did not match file: %s', f)
-                continue
-
-
-            #logger.info('CCD ID string: %s', m.group('ccd_id_str'))
-            #logger.info('Exposure string: %s', m.group('exposure_str'))
-            #logger.info('Bitdepth string: %s', m.group('bitdepth_str'))
-            #logger.info('Gain string: %s', m.group('gain_str'))
-            #logger.info('Binmode string: %s', m.group('binmode_str'))
-            #logger.info('Ccd temp string: %s', m.group('ccdtemp_str'))
-
-            ccd_id = int(m.group('ccd_id_str'))
-            exposure = int(m.group('exposure_str'))
-            bitdepth = int(m.group('bitdepth_str'))
-            gain = int(m.group('gain_str'))
-            binmode = int(m.group('binmode_str'))
-            ccdtemp = float(m.group('ccdtemp_str'))
-
-
-            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
-
-            bpm_dict = {
-                'filename'   : str(f),
-                'createDate' : d_createDate,
-                'bitdepth'   : bitdepth,
-                'exposure'   : exposure,
-                'gain'       : gain,
-                'binmode'    : binmode,
-                'camera_id'  : ccd_id,
-                'temp'       : ccdtemp,
-            }
-
-            bpm_entries.append(bpm_dict)
-
-
-        try:
-            db.session.bulk_insert_mappings(IndiAllSkyDbBadPixelMapTable, bpm_entries)
-            db.session.commit()
-
-            logger.warning('*** Bad pixel maps inserted: %d ***', len(bpm_entries))
-        except IntegrityError as e:
-            logger.warning('Integrity error: %s', str(e))
-            db.session.rollback()
-
 
 
         ### Timelapse
@@ -1079,7 +970,7 @@ class IndiAllSky(object):
             if item.is_file() and item.suffix in dot_extension_list:
                 file_list.append(item)
             elif item.is_dir():
-                self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
+                self._getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
     def _expireOrphanedTasks(self):
