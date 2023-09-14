@@ -2965,8 +2965,8 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         ('delete_video_k_st', 'Delete Timelapse/Keogram/Star Trails'),
         ('delete_video', 'Delete Timelapse Only'),
         ('delete_k_st', 'Delete Keogram/Star Trails'),
-        ('upload_endofnight', 'Upload End-of-Night Data [today]'),
-        ('delete_images', 'Delete Images *DANGER*'),
+        ('upload_endofnight', 'Upload End-of-Night Data [today only]'),
+        ('delete_images', 'Delete Images for date *DANGER*'),
     )
 
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
