@@ -667,10 +667,16 @@ class IndiAllSky(object):
 
         except NoResultFound:
             # need to get camera info before adding to DB
+            print('')
+            print('')
+            camera_name = input('Please enter the camera name: ')
             camera_metadata = {
                 'type'        : constants.CAMERA,
-                'name'        : 'Import camera',
+                'name'        : camera_name.rstrip(),
                 'driver'      : 'import',
+                'latitude'    : 0.0,
+                'longitude'   : 0.0,
+                'elevation'   : 0,
             }
             camera = self._miscDb.addCamera(camera_metadata)
             camera_id = camera.id
