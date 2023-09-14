@@ -8,6 +8,7 @@ import math
 import base64
 from pathlib import Path
 import socket
+import ipaddress
 import re
 import psutil
 import dbus
@@ -2154,10 +2155,11 @@ class SystemInfoView(TemplateView):
 
             for addr in addr_info:
                 if addr.family == socket.AF_INET:
-                    dev_info['inet4'].append(addr.address)
+                    cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
+                    dev_info['inet4'].append('{0:s}/{1:d}'.format(addr.address, cidr))
 
                 elif addr.family == socket.AF_INET6:
-                    dev_info['inet6'].append(addr.address)
+                    dev_info['inet6'].append('{0:s}'.format(addr.address))
 
             net_list.append(dev_info)
 
