@@ -91,6 +91,7 @@ class LoginView(TemplateView):
         if not user:
             form_errors = form_login.errors  # this must be a property
             form_errors['form_global'] = ['Invalid username or password']
+            app.logger.error('User not found: %s', request.json['USERNAME'])
             return jsonify(form_errors), 400
 
 
