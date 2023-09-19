@@ -121,6 +121,9 @@ class ImportDarkFrames(object):
                 continue
 
 
+            image_height, image_width = hdulist[0].data.shape[:2]
+
+
             try:
                 imagetyp = hdulist[0].header['IMAGETYP']
                 logger.info('Detected frame type: %s', imagetyp)
@@ -238,6 +241,7 @@ class ImportDarkFrames(object):
 
 
             print('\n')
+            print('Size:        {0:d} x {1:d}'.format(image_width, image_height))
             print('Exposure:    {0:0.1f}'.format(exptime))
             print('Gain:        {0:d}'.format(gain))
             print('Bin mode:    {0:d}'.format(binning))
@@ -261,6 +265,8 @@ class ImportDarkFrames(object):
                 'gain'       : gain,
                 'binmode'    : binning,
                 'temp'       : ccd_temp,
+                'width'      : image_width,
+                'height'     : image_height,
             }
 
             bpm_metadata = {
@@ -271,6 +277,8 @@ class ImportDarkFrames(object):
                 'gain'       : gain,
                 'binmode'    : binning,
                 'temp'       : ccd_temp,
+                'width'      : image_width,
+                'height'     : image_height,
             }
 
 
