@@ -144,7 +144,7 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         try:
             # put allows overwrites
-            r = self.client.put(self.url, files=files, headers=headers, verify=self.verify, timeout=5.0)
+            r = self.client.put(self.url, files=files, headers=headers, verify=self.verify, timeout=self._timeout)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

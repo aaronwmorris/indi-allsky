@@ -1038,6 +1038,7 @@ class ConfigView(FormView):
             'SYNCAPI__EMPTY_FILE'            : self.indi_allsky_config.get('SYNCAPI', {}).get('EMPTY_FILE', False),
             'SYNCAPI__UPLOAD_IMAGE'          : self.indi_allsky_config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1),
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
+            'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 5.0),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
@@ -1480,6 +1481,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SYNCAPI']['EMPTY_FILE']                = bool(request.json['SYNCAPI__EMPTY_FILE'])
         self.indi_allsky_config['SYNCAPI']['UPLOAD_IMAGE']              = int(request.json['SYNCAPI__UPLOAD_IMAGE'])
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
+        self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])

@@ -279,6 +279,7 @@ class IndiAllSkyConfigBase(object):
             "EMPTY_FILE"             : False,
             "UPLOAD_IMAGE"           : 1,
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
+            "TIMEOUT"                : 5.0,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import logging
 
+import numpy
 from astropy.io import fits
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -121,6 +122,9 @@ class ImportDarkFrames(object):
                 continue
 
 
+            image_height, image_width = hdulist[0].data.shape[:2]
+            m_avg = numpy.mean(hdulist[0].data, axis=0)[0]
+
             try:
                 imagetyp = hdulist[0].header['IMAGETYP']
                 logger.info('Detected frame type: %s', imagetyp)
@@ -229,6 +233,13 @@ class ImportDarkFrames(object):
             if isinstance(ccd_temp, type(None)):
                 ccd_temp = self.select_int('What is the temperature?')
                 #logger.info('Selected: %d', ccd_temp)
+            else:
+                if ccd_temp <= 0.0:
+                    print()
+                    temp_over = input('Would you like to override the temperature? ')
+
+                    if temp_over.lower() == 'y':
+                        ccd_temp = float(self.select_int('What is the temperature?'))
 
 
             if isinstance(bitpix, type(None)):
@@ -238,11 +249,13 @@ class ImportDarkFrames(object):
 
 
             print('\n')
+            print('Size:        {0:d} x {1:d}'.format(image_width, image_height))
             print('Exposure:    {0:0.1f}'.format(exptime))
             print('Gain:        {0:d}'.format(gain))
             print('Bin mode:    {0:d}'.format(binning))
             print('Temperature: {0:0.1f}'.format(ccd_temp))
             print('Bit depth:   {0:d}'.format(bitpix))
+            print('Avg ADU:     {0:0.2f}'.format(m_avg))
 
             answer_options = [
                 [False, 'No'],
@@ -261,6 +274,9 @@ class ImportDarkFrames(object):
                 'gain'       : gain,
                 'binmode'    : binning,
                 'temp'       : ccd_temp,
+                'width'      : image_width,
+                'height'     : image_height,
+                'adu'        : m_avg,
             }
 
             bpm_metadata = {
@@ -271,6 +287,9 @@ class ImportDarkFrames(object):
                 'gain'       : gain,
                 'binmode'    : binning,
                 'temp'       : ccd_temp,
+                'width'      : image_width,
+                'height'     : image_height,
+                'adu'        : m_avg,
             }
 
 
