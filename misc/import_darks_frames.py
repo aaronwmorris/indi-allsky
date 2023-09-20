@@ -86,6 +86,7 @@ class ImportDarkFrames(object):
 
 
         for frame in dark_file_list_ordered:
+            print('##########################################')
             logger.info('Found fits: %s', frame)
 
 
@@ -121,82 +122,86 @@ class ImportDarkFrames(object):
                 logger.error('Error decoding fits data: %s', frame)
                 continue
 
+            data = dict()
 
             image_height, image_width = hdulist[0].data.shape[:2]
-            m_avg = numpy.mean(hdulist[0].data, axis=0)[0]
+            data['image_height'] = image_height
+            data['image_width'] = image_width
+
+            data['m_avg'] = numpy.mean(hdulist[0].data, axis=0)[0]
 
             try:
-                imagetyp = hdulist[0].header['IMAGETYP']
-                logger.info('Detected frame type: %s', imagetyp)
+                data['imagetyp'] = hdulist[0].header['IMAGETYP']
+                logger.info('Detected frame type: %s', data['imagetyp'])
             except KeyError:
                 logger.warning('Frame type not marked')
 
 
             try:
-                instrume = hdulist[0].header['INSTRUME']
-                logger.info('Detected camera: %s', instrume)
+                data['instrume'] = hdulist[0].header['INSTRUME']
+                logger.info('Detected camera: %s', data['instrume'])
             except KeyError:
                 logger.warning('Camera name not logged')
 
 
             try:
-                exptime = float(hdulist[0].header['EXPTIME'])
-                logger.info('Detected exposure: %0.1f', exptime)
+                data['exptime'] = float(hdulist[0].header['EXPTIME'])
+                logger.info('Detected exposure: %0.1f', data['exptime'])
             except KeyError:
                 logger.warning('Exposure not logged')
-                exptime = None
+                data['exptime'] = None
 
 
             try:
-                gain = int(hdulist[0].header['GAIN'])
-                logger.info('Detected gain: %d', gain)
+                data['gain'] = int(hdulist[0].header['GAIN'])
+                logger.info('Detected gain: %d', data['gain'])
             except KeyError:
                 logger.warning('Gain not logged')
-                gain = None
+                data['gain'] = None
 
 
             try:
-                binning = int(hdulist[0].header['XBINNING'])
-                logger.info('Detected bin mode: %d', binning)
+                data['binning'] = int(hdulist[0].header['XBINNING'])
+                logger.info('Detected bin mode: %d', data['binning'])
             except KeyError:
                 logger.warning('Bin mode not logged')
-                binning = None
+                data['binning'] = None
 
 
             try:
-                ccd_temp = float(hdulist[0].header['CCD-TEMP'])
-                logger.info('Detected temperature: %0.1f', ccd_temp)
+                data['ccd_temp'] = float(hdulist[0].header['CCD-TEMP'])
+                logger.info('Detected temperature: %0.1f', data['ccd_temp'])
             except KeyError:
                 logger.warning('Temperature not logged')
-                ccd_temp = None
+                data['ccd_temp'] = None
 
 
             try:
-                bitpix = int(hdulist[0].header['BITPIX'])
-                logger.info('Detected bit depth: %d', bitpix)
+                data['bitpix'] = int(hdulist[0].header['BITPIX'])
+                logger.info('Detected bit depth: %d', data['bitpix'])
             except KeyError:
                 logger.warning('Bit depth not logged')
-                bitpix = None
+                data['bitpix'] = None
 
 
             try:
-                bayerpat = hdulist[0].header['BAYERPAT']
-                logger.info('Detected bayer pattern: %s', bayerpat)
+                data['bayerpat'] = hdulist[0].header['BAYERPAT']
+                logger.info('Detected bayer pattern: %s', data['bayerpat'])
             except KeyError:
                 logger.warning('Bayer pattern not logged')
-                bayerpat = None
+                data['bayerpat'] = None
 
 
             try:
                 date_obs_s = hdulist[0].header['DATE-OBS']
-                date_obs = datetime.fromisoformat(date_obs_s)
-                logger.info('Detected date: %s', date_obs)
+                data['date_obs'] = datetime.fromisoformat(date_obs_s)
+                logger.info('Detected date: %s', data['date_obs'])
             except KeyError:
                 logger.warning('Date not logged')
-                date_obs = datetime.fromtimestamp(frame.stat().st_mtime)
+                data['date_obs'] = datetime.fromtimestamp(frame.stat().st_mtime)
             except ValueError:
                 logger.warning('Date cannot be parsed')
-                date_obs = datetime.fromtimestamp(frame.stat().st_mtime)
+                data['date_obs'] = datetime.fromtimestamp(frame.stat().st_mtime)
 
 
             print('##########################################')
@@ -215,47 +220,47 @@ class ImportDarkFrames(object):
                 continue
 
 
-            if isinstance(exptime, type(None)):
-                exptime = self.select_int('What is the exposure?')
-                #logger.info('Selected: %d', exptime)
+            if isinstance(data.get('exptime'), type(None)):
+                data['exptime'] = self.select_int('What is the exposure?')
+                #logger.info('Selected: %d', data['exptime'])
 
 
-            if isinstance(gain, type(None)):
-                gain = self.select_int('What is the gain?')
-                #logger.info('Selected: %d', gain)
+            if isinstance(data.get('gain'), type(None)):
+                data['gain'] = self.select_int('What is the gain?')
+                #logger.info('Selected: %d', data['gain'])
 
 
-            if isinstance(binning, type(None)):
-                binning = self.select_int('What is the bin mode?')
-                #logger.info('Selected: %d', binning)
+            if isinstance(data.get('binning'), type(None)):
+                data['binning'] = self.select_int('What is the bin mode?')
+                #logger.info('Selected: %d', data['binning'])
 
 
-            if isinstance(ccd_temp, type(None)):
-                ccd_temp = self.select_int('What is the temperature?')
-                #logger.info('Selected: %d', ccd_temp)
+            if isinstance(data.get('ccd_temp'), type(None)):
+                data['ccd_temp'] = self.select_int('What is the temperature?')
+                #logger.info('Selected: %d', data['ccd_temp'])
             else:
-                if ccd_temp <= 0.0:
+                if data['ccd_temp'] <= 0.0:
                     print()
-                    temp_over = input('Would you like to override the temperature? ')
+                    temp_over = input('Would you like to override the temperature? [y/n] ')
 
                     if temp_over.lower() == 'y':
-                        ccd_temp = float(self.select_int('What is the temperature?'))
+                        data['ccd_temp'] = float(self.select_int('What is the temperature?'))
 
 
-            if isinstance(bitpix, type(None)):
-                bitpix = self.select_int('What is the bit depth?')
-                #logger.info('Selected: %d', bitpix)
+            if isinstance(data.get('bitpix'), type(None)):
+                data['bitpix'] = self.select_int('What is the bit depth?')
+                #logger.info('Selected: %d', data['bitpix'])
 
 
 
             print('\n')
-            print('Size:        {0:d} x {1:d}'.format(image_width, image_height))
-            print('Exposure:    {0:0.1f}'.format(exptime))
-            print('Gain:        {0:d}'.format(gain))
-            print('Bin mode:    {0:d}'.format(binning))
-            print('Temperature: {0:0.1f}'.format(ccd_temp))
-            print('Bit depth:   {0:d}'.format(bitpix))
-            print('Avg ADU:     {0:0.2f}'.format(m_avg))
+            print('Size:        {0:d} x {1:d}'.format(data['image_width'], data['image_height']))
+            print('Exposure:    {0:0.1f}'.format(data['exptime']))
+            print('Gain:        {0:d}'.format(data['gain']))
+            print('Bin mode:    {0:d}'.format(data['binning']))
+            print('Temperature: {0:0.1f}'.format(data['ccd_temp']))
+            print('Bit depth:   {0:d}'.format(data['bitpix']))
+            print('Avg ADU:     {0:0.2f}'.format(data['m_avg']))
 
             answer_options = [
                 [False, 'No'],
@@ -268,28 +273,28 @@ class ImportDarkFrames(object):
 
             dark_metadata = {
                 'type'       : constants.DARK_FRAME,
-                'createDate' : date_obs.timestamp(),
-                'bitdepth'   : bitpix,
-                'exposure'   : exptime,
-                'gain'       : gain,
-                'binmode'    : binning,
-                'temp'       : ccd_temp,
-                'width'      : image_width,
-                'height'     : image_height,
-                'adu'        : m_avg,
+                'createDate' : data['date_obs'].timestamp(),
+                'bitdepth'   : data['bitpix'],
+                'exposure'   : data['exptime'],
+                'gain'       : data['gain'],
+                'binmode'    : data['binning'],
+                'temp'       : data['ccd_temp'],
+                'width'      : data['image_width'],
+                'height'     : data['image_height'],
+                'adu'        : data['m_avg'],
             }
 
             bpm_metadata = {
                 'type'       : constants.BPM_FRAME,
-                'createDate' : date_obs.timestamp(),
-                'bitdepth'   : bitpix,
-                'exposure'   : exptime,
-                'gain'       : gain,
-                'binmode'    : binning,
-                'temp'       : ccd_temp,
-                'width'      : image_width,
-                'height'     : image_height,
-                'adu'        : m_avg,
+                'createDate' : data['date_obs'].timestamp(),
+                'bitdepth'   : data['bitpix'],
+                'exposure'   : data['exptime'],
+                'gain'       : data['gain'],
+                'binmode'    : data['binning'],
+                'temp'       : data['ccd_temp'],
+                'width'      : data['image_width'],
+                'height'     : data['image_height'],
+                'adu'        : data['m_avg'],
             }
 
 
@@ -317,7 +322,7 @@ class ImportDarkFrames(object):
     def select_int(self, question):
         #print('\n{0:s}\n'.format(question))
 
-        i = input('\n{0:s} '.format(question))
+        i = input('\n{0:s} [int] '.format(question))
 
         try:
             return int(i)
@@ -334,7 +339,7 @@ class ImportDarkFrames(object):
         for x, option in enumerate(option_list):
             print('{0:d} - {1:s}'.format(x, option[1]))
 
-        i = input('? ')
+        i = input('? [#] ')
 
         try:
             i_int = int(i)
