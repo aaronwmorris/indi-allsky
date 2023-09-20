@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import logging
 
+import numpy
 from astropy.io import fits
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -122,7 +123,7 @@ class ImportDarkFrames(object):
 
 
             image_height, image_width = hdulist[0].data.shape[:2]
-
+            m_avg = numpy.mean(hdulist[0].data, axis=0)[0]
 
             try:
                 imagetyp = hdulist[0].header['IMAGETYP']
@@ -247,6 +248,7 @@ class ImportDarkFrames(object):
             print('Bin mode:    {0:d}'.format(binning))
             print('Temperature: {0:0.1f}'.format(ccd_temp))
             print('Bit depth:   {0:d}'.format(bitpix))
+            print('Avg ADU:     {0:0.2f}'.format(m_avg))
 
             answer_options = [
                 [False, 'No'],
@@ -267,6 +269,7 @@ class ImportDarkFrames(object):
                 'temp'       : ccd_temp,
                 'width'      : image_width,
                 'height'     : image_height,
+                'adu'        : m_avg,
             }
 
             bpm_metadata = {
@@ -279,6 +282,7 @@ class ImportDarkFrames(object):
                 'temp'       : ccd_temp,
                 'width'      : image_width,
                 'height'     : image_height,
+                'adu'        : m_avg,
             }
 
 
