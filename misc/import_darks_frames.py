@@ -233,6 +233,13 @@ class ImportDarkFrames(object):
             if isinstance(ccd_temp, type(None)):
                 ccd_temp = self.select_int('What is the temperature?')
                 #logger.info('Selected: %d', ccd_temp)
+            else:
+                if ccd_temp <= 0.0:
+                    print()
+                    temp_over = input('Would you like to override the temperature? ')
+
+                    if temp_over.lower() == 'y':
+                        ccd_temp = float(self.select_int('What is the temperature?'))
 
 
             if isinstance(bitpix, type(None)):
