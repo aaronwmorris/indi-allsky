@@ -241,7 +241,7 @@ class ImportDarkFrames(object):
             else:
                 if data['ccd_temp'] <= 0.0:
                     print()
-                    temp_over = input('Would you like to override the temperature? [y/n] ')
+                    temp_over = input('Would you like to override the temperature ({0:0.1f})? [y/n] '.format(data['ccd_temp']))
 
                     if temp_over.lower() == 'y':
                         data['ccd_temp'] = float(self.select_int('What is the temperature?'))
