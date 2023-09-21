@@ -4,6 +4,7 @@ import time
 import io
 import json
 import tempfile
+import random
 from pathlib import Path
 from collections import OrderedDict
 from prettytable import PrettyTable
@@ -729,16 +730,21 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def _flush(self, **kwargs):
-        confirm1 = input('\nConfirm flushing all configs? [y/n]')
+        confirm1 = input('\nConfirm flushing all configs? [y/n] ')
         if confirm1.lower() != 'y':
             logger.warning('Cancel flush')
             sys.exit(1)
 
-        confirm2 = input('\nAre you lying? [y/n]')
+        confirm2 = input('\nAre you lying? [y/n] ')
         if confirm2.lower() != 'n':
             logger.warning('Cancel flush')
             sys.exit(1)
 
+        rand_int = random.randint(1000, 9999)
+        confirm3 = input('\nEnter the number {0:d} backwards to confirm: '.format(rand_int))
+        if confirm3 != str(rand_int)[::-1]:
+            logger.warning('Cancel flush')
+            sys.exit(1)
 
         configs_all = IndiAllSkyDbConfigTable.query
         configs_all.delete()
