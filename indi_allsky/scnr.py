@@ -61,7 +61,7 @@ class IndiAllskyScnr(object):
 
         start = time.time()
 
-        m = numpy.add(r, b) * 0.5
+        m = numpy.add(r.astype(numpy.uint16), b.astype(numpy.uint16)) * 0.5
         g = numpy.minimum(g, m.astype(numpy.uint8))
 
         elapsed_s = time.time() - start
