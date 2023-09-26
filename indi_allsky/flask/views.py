@@ -79,6 +79,7 @@ from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
+from .forms import IndiAllskyImageProcessingForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -3496,6 +3497,65 @@ class JsonFocusView(JsonView):
         vl_elapsed_s = time.time() - vl_start
         app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
 
+
+        return jsonify(json_data)
+
+
+class ImageProcessingView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ImageProcessingView, self).get_context()
+
+        context['form_processing'] = IndiAllskyImageProcessingForm(camera_id=session['camera_id'], fits_id=int(request.args['fits_id']))
+
+        return context
+
+
+class JsonImageProcessingView(JsonView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(JsonImageProcessingView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        import cv2
+        from PIL import Image
+        from astropy.io import fits
+
+
+        form_processing = IndiAllskyImageProcessingForm(data=request.json)
+        if not form_processing.validate():
+            form_errors = form_processing.errors  # this must be a property
+            form_errors['form_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+        fits_entry = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == int(request.json['CAMERA_ID']),
+                    IndiAllSkyDbFitsImageTable.id == int(request.json['FITS_ID']),
+                )
+            )\
+            .one()
+
+        filename_p = Path(fits_entry.filename)
+
+        hdulist = fits.open(filename_p)
+        image = hdulist[0].data
+
+        json_image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img.save(json_image_buffer, format='JPEG', quality=90)
+
+        json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
+
+        json_data = dict()
+        json_data['image_b64'] = json_image_b64.decode('utf-8')
 
         return jsonify(json_data)
 
