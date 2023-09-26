@@ -18,6 +18,7 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
+from ..image import ImageProcessor
 
 
 from flask import request
@@ -3523,7 +3524,6 @@ class JsonImageProcessingView(JsonView):
     def dispatch_request(self):
         import cv2
         from PIL import Image
-        from astropy.io import fits
 
 
         form_processing = IndiAllskyImageProcessingForm(data=request.json)
@@ -3533,20 +3533,56 @@ class JsonImageProcessingView(JsonView):
             return jsonify(form_errors), 400
 
 
+        camera_id = int(request.json['CAMERA_ID'])
+        fits_id = int(request.json['FITS_ID'])
+
+
         fits_entry = IndiAllSkyDbFitsImageTable.query\
             .join(IndiAllSkyDbFitsImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == int(request.json['CAMERA_ID']),
-                    IndiAllSkyDbFitsImageTable.id == int(request.json['FITS_ID']),
+                    IndiAllSkyDbCameraTable.id == camera_id,
+                    IndiAllSkyDbFitsImageTable.id == fits_id,
                 )
             )\
             .one()
 
         filename_p = Path(fits_entry.filename)
 
-        hdulist = fits.open(filename_p)
-        image = hdulist[0].data
+
+        processing_config = self.indi_allsky_config.copy()
+
+        image_processor = ImageProcessor(
+            processing_config,
+            None,  # latitude_v
+            None,  # longitude_v
+            None,  # elevation_v
+            None,  # ra_v
+            None,  # dec_v
+            None,  # exposure_v
+            None,  # gain_v
+            None,  # bin_v
+            None,  # sensortemp_v
+            None,  # night_v
+            None,  # moonmode_v
+            {},    # astrometric_data
+        )
+
+        image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+
+        processing_start = time.time()
+
+        self.image_processor.debayer()
+
+        self.image_processor.colorize()
+
+        processing_elapsed_s = time.time() - processing_start
+        app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
+
+        image = image_processor.image
+
 
         json_image_buffer = io.BytesIO()
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
