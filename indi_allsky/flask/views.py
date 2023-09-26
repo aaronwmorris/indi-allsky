@@ -18,7 +18,7 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
-from ..image import ImageProcessor
+from ..processing import ImageProcessor
 
 
 from flask import request
