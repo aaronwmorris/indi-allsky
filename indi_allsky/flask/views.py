@@ -4460,6 +4460,8 @@ bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropan
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
+bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
