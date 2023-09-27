@@ -2549,22 +2549,27 @@ class IndiAllskyImageViewer(FlaskForm):
                     .one()
 
                 image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['fits_id'] = fits_image.id
             except NoResultFound:
                 image_dict['fits'] = None
+                image_dict['fits_id'] = None
 
 
             # look for raw exports
             try:
-                fits_image = IndiAllSkyDbRawImageTable.query\
+                raw_image = IndiAllSkyDbRawImageTable.query\
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                image_dict['raw'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['raw'] = str(raw_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['raw_id'] = raw_image.id
             except NoResultFound:
                 image_dict['raw'] = None
+                image_dict['raw_id'] = None
             except ValueError:
                 # this can happen when RAW files are exported outside of the document root
                 image_dict['raw'] = None
+                image_dict['raw_id'] = None
 
             images_data.append(image_dict)
 

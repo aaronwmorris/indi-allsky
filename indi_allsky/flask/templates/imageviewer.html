@@ -198,6 +198,7 @@ function closeFullscreen() {
         <span id="chart_here"></span>
         <span id="img_download"></span>
         <span id="fits_download"></span>
+        <span id="fits_processing"></span>
         <span id="raw_download"></span>
     </div>
 </div>
@@ -657,8 +658,23 @@ function init() {
                         })
                     )
                 );
+
+                $('#fits_processing').html(
+                    $('<a />', {
+                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?fits_id=" + image_data[image_index]['fits_id'],
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Processing',
+                            'class' : "badge pill bg-danger",
+                        })
+                    )
+                );
             } else {
                 $('#fits_download').empty();
+                $('#fits_processing').empty();
             };
 
             // Add RAW download link if it exists
@@ -682,6 +698,7 @@ function init() {
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
+            $('#fits_processing').empty();
             $('#raw_download').empty();
         };
 
