@@ -3585,6 +3585,8 @@ class JsonImageProcessingView(JsonView):
 
         image_processor.debayer()
 
+        image_processor.convert_16bit_to_8bit()
+
         image_processor.colorize()
 
 
