@@ -16,6 +16,8 @@ import ephem
 
 from passlib.hash import argon2
 
+from multiprocessing import Value
+
 from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
@@ -3556,6 +3558,8 @@ class JsonImageProcessingView(JsonView):
 
         processing_config = self.indi_allsky_config.copy()
 
+        night_v = Value('i', 0)
+        moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             processing_config,
             None,  # latitude_v
@@ -3567,8 +3571,8 @@ class JsonImageProcessingView(JsonView):
             None,  # gain_v
             None,  # bin_v
             None,  # sensortemp_v
-            None,  # night_v
-            None,  # moonmode_v
+            night_v,
+            moonmode_v,
             {},    # astrometric_data
         )
 
