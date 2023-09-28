@@ -5,6 +5,13 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+#nav-image-tab, #nav-config-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+};
+
 canvas {
     width: 100%;
     height: auto;
@@ -15,7 +22,72 @@ var json_data = {
     'image_b64'  : null,
 };
 var fullscreen = false;  //initial state
+</script>
+{% endblock %}
 
+{% block content %}
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link link-danger bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
+    <button class="nav-link link-light bg-dark" id="nav-config-tab" data-bs-toggle="tab" data-bs-target="#nav-config" type="button" role="tab" aria-controls="nav-config" aria-selected="false">Config</button>
+  </div>
+</nav>
+
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
+
+    <div class="row">
+        <div class="col-10 offset-1">
+            <canvas id="image-canvas"/></canvas>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+  </div><!-- end image tab -->
+
+
+  <div class="tab-pane fade" id="nav-config" role="tabpanel" aria-labelledby="nav-config-tab">
+    <form id="form_image_processing" onSubmit="return false;">
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
+            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
+            <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            <button class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+
+    <div class="form-group row" style="height:100px;">
+        <div class="col-sm-8">
+            <div id="success-message" class="text-success" style="display: none;"></div>
+            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    </form>
+
+  </div><!-- end image tab -->
+</div>
+
+<script>
 function showImage(image_b64) {
     console.log('Showing image');
 
@@ -42,35 +114,12 @@ function showImage(image_b64) {
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
-
-        context.textAlign = 'left';
-        context.lineWidth = 10;
-        var maxWidth = 200;
-        var x = image_canvas.width-10-maxWidth;
-        var y = image_canvas.height-150;
-
-        context.font = '20px serif';
-
-        var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
-        context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+75, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(blur_score_text, x-175, y+75, maxWidth);
-
-        var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
-        context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+110, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(blur_score_text, x-175, y+110, maxWidth);
     };
 }
 
 
 function loadImage() {
     console.log('Loading next image');
-    var data = {
-        'zoom' : zoom,
-    }
     loadJS("{{ url_for('indi_allsky.js_image_processing_view') }}", data, function() {});
     showImage(json_data['image_b64']);
 }
@@ -147,44 +196,7 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-</script>
-{% endblock %}
 
-{% block content %}
-<hr>
-
-<div class="row">
-    <div class="col-10 offset-1">
-        <canvas id="image-canvas"/></canvas>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-8">
-    <div>
-</div>
-
-<form id="form_image_processing" onSubmit="return false;">
-
-    <div class="form-group row">
-        <div class="col-sm-3">
-            {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
-            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-3">
-            {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
-            <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-</form>
-
-
-<script>
 const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
