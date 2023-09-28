@@ -5,14 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-#nav-image-tab, #nav-config-tab {
-	width: 150px;
-	margin-top: 10px;
-	margin-right: 5px;
-	height: 50px;
-};
-
-canvas {
+#image-canvas {
     width: 100%;
     height: auto;
 };
@@ -26,19 +19,9 @@ var fullscreen = false;  //initial state
 {% endblock %}
 
 {% block content %}
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-danger bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
-    <button class="nav-link link-light bg-dark" id="nav-config-tab" data-bs-toggle="tab" data-bs-target="#nav-config" type="button" role="tab" aria-controls="nav-config" aria-selected="false">Config</button>
-  </div>
-</nav>
-
-<div class="tab-content" id="nav-tabContent">
-  <div class="tab-pane fade show active" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
-
     <div class="row">
         <div class="col-10 offset-1">
-            <canvas id="image-canvas"/></canvas>
+            <canvas id="image-canvas"></canvas>
         </div>
     </div>
 
@@ -47,10 +30,7 @@ var fullscreen = false;  //initial state
         <div class="col-sm-8">
         </div>
     </div>
-  </div><!-- end image tab -->
 
-
-  <div class="tab-pane fade" id="nav-config" role="tabpanel" aria-labelledby="nav-config-tab">
     <form id="form_image_processing" onSubmit="return false;">
 
     <div class="form-group row">
@@ -83,9 +63,6 @@ var fullscreen = false;  //initial state
     </div>
 
     </form>
-
-  </div><!-- end image tab -->
-</div>
 
 <script>
 function showImage(image_b64) {
