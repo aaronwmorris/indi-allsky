@@ -118,32 +118,6 @@ function showImage(image_b64) {
 }
 
 
-function loadImage() {
-    console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_image_processing_view') }}", data, function() {});
-    showImage(json_data['image_b64']);
-}
-
-
-function loadJS(url, data, onDone, onError) {
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        contentType: "application/json",
-        data: data,
-        success: function(data){
-            json_data = data;
-        },
-        error: function(data){
-            onError(data.status);
-        },
-    });
-}
-
-
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
     $(window).on("resize", function() {
@@ -201,7 +175,7 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
-    'CAMERA_ID",
+    'CAMERA_ID',
     'FITS_ID',
 ];
 
@@ -263,6 +237,8 @@ $('#form_image_processing').on('submit', function() {
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
+            json_data = data;
+            showImage(json_data['image_b64']);
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -278,7 +254,6 @@ $('#form_image_processing').on('submit', function() {
 
 
 function init() {
-    loadImage();
 }
 
 

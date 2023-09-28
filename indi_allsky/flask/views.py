@@ -3508,7 +3508,11 @@ class ImageProcessingView(TemplateView):
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
 
-        context['form_image_processing'] = IndiAllskyImageProcessingForm(camera_id=session['camera_id'], fits_id=int(request.args['fits_id']))
+        form_image_processing = IndiAllskyImageProcessingForm()
+        form_image_processing.CAMERA_ID.data = session['camera_id']
+        form_image_processing.FITS_ID.data = int(request.args['fits_id'])
+
+        context['form_image_processing'] = form_image_processing
 
         return context
 

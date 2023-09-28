@@ -3390,10 +3390,3 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     CAMERA_ID         = HiddenField('Camera ID', validators=[DataRequired()])
     FITS_ID           = HiddenField('FITS ID', validators=[DataRequired()])
 
-
-    def __init__(self, *args, **kwargs):
-        super(IndiAllskyImageProcessingForm, self).__init__(*args, **kwargs)
-
-        self.CAMERA_ID.data = kwargs.get('camera_id')
-        self.FITS_ID.data = kwargs.get('fits_id')
-
