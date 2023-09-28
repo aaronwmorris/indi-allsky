@@ -332,8 +332,12 @@ class ImageWorker(Process):
             image_data = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
+            filename_p.unlink()
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
+
+
+        filename_p.unlink()  # original file is no longer needed
 
 
         # use original value if not defined

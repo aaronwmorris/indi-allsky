@@ -319,7 +319,6 @@ class ImageProcessor(object):
             try:
                 hdulist = fits.open(filename_p)
             except OSError as e:
-                filename_p.unlink()
                 raise BadImage(str(e)) from e
 
             #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
@@ -334,7 +333,6 @@ class ImageProcessor(object):
                 with Image.open(str(filename_p)) as img:
                     data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
-                filename_p.unlink()
                 raise BadImage('Bad jpeg image')
 
 
@@ -351,7 +349,6 @@ class ImageProcessor(object):
                 with Image.open(str(filename_p)) as img:
                     data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
-                filename_p.unlink()
                 raise BadImage('Bad png image')
 
 
@@ -363,14 +360,12 @@ class ImageProcessor(object):
             hdulist = fits.HDUList([hdu])
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
-                filename_p.unlink()
                 raise Exception('*** rawpy module not available ***')
 
             # DNG raw
             try:
                 raw = rawpy.imread(str(filename_p))
             except rawpy._rawpy.LibRawIOError as e:
-                filename_p.unlink()
                 raise BadImage(str(e)) from e
 
             data = raw.raw_image
@@ -450,9 +445,6 @@ class ImageProcessor(object):
 
 
         #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
-
-
-        filename_p.unlink()  # no longer need the original file
 
 
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
