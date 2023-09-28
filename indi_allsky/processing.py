@@ -291,8 +291,7 @@ class ImageProcessor(object):
         self._text_font_height = int(new_height)
 
 
-
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera, indi_rgb=True):  # INDI returns color arrays in the wrong order for cv2
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -311,8 +310,6 @@ class ImageProcessor(object):
             # disable stacking during daytime and moonmode
             self.image_list.clear()
 
-
-        indi_rgb = True  # INDI returns array in the wrong order for cv2
 
         ### Open file
         if filename_p.suffix in ['.fit']:

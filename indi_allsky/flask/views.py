@@ -3576,14 +3576,17 @@ class JsonImageProcessingView(JsonView):
             {},    # astrometric_data
         )
 
-        image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-
-
         processing_start = time.time()
 
-        self.image_processor.debayer()
 
-        self.image_processor.colorize()
+        image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+        image_processor.stack()  # this just populates self.image
+
+        image_processor.debayer()
+
+        image_processor.colorize()
+
 
         processing_elapsed_s = time.time() - processing_start
         app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
