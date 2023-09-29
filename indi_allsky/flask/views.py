@@ -3556,12 +3556,12 @@ class JsonImageProcessingView(JsonView):
         filename_p = Path(fits_entry.filename)
 
 
-        processing_config = self.indi_allsky_config.copy()
+        p_config = self.indi_allsky_config.copy()
 
         night_v = Value('i', 0)
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
-            processing_config,
+            p_config,
             None,  # latitude_v
             None,  # longitude_v
             None,  # elevation_v
@@ -3585,9 +3585,32 @@ class JsonImageProcessingView(JsonView):
 
         image_processor.debayer()
 
-        #image_processor.stretch()
+        image_processor.stretch()
+
+        if p_config.get('CONTRAST_ENHANCE_16BIT'):
+            image_processor.contrast_clahe_16bit()
 
         image_processor.convert_16bit_to_8bit()
+
+        # green removal
+        if p_config.get('SCNR_ALGORITHM'):
+            image_processor.scnr()
+
+        # white balance
+        image_processor.white_balance_manual_bgr()
+
+        if p_config.get('AUTO_WB'):
+            image_processor.white_balance_auto_bgr()
+
+        # saturation
+        image_processor.saturation_adjust()
+
+
+        if not p_config.get('CONTRAST_ENHANCE_16BIT'):
+            if p_config['DAYTIME_CONTRAST_ENHANCE']:
+                # Contrast enhancement during the day
+                image_processor.contrast_clahe()
+
 
         image_processor.colorize()
 
