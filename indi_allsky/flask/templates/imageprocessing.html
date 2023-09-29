@@ -20,14 +20,14 @@ var fullscreen = false;  //initial state
 
 {% block content %}
     <div class="row">
-        <div class="col-10 offset-1">
+        <div class="col-12">
             <canvas id="image-canvas"></canvas>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-8">
+        <div class="col-sm-7 offset-5">
+            <div id="processing_time"></div>
         </div>
     </div>
 
@@ -215,7 +215,12 @@ $('#form_image_processing').on('submit', function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
             json_data = data;
+
             showImage(json_data['image_b64']);
+            $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+
+            //window.scrollTo(0, 0);
+            //window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);

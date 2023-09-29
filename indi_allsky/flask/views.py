@@ -3630,6 +3630,7 @@ class JsonImageProcessingView(JsonView):
 
         json_data = dict()
         json_data['image_b64'] = json_image_b64.decode('utf-8')
+        json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
 
         return jsonify(json_data)
 
