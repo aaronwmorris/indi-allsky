@@ -1363,16 +1363,16 @@ def FILETRANSFER__TIMEOUT_validator(form, field):
     if field.data < 1:
         raise ValidationError('Timeout must be 1.0 or greater')
 
-    if field.data > 120:
-        raise ValidationError('Timeout must be 120 or less')
+    if field.data > 1200:
+        raise ValidationError('Timeout must be 1200 or less')
 
 
 def SYNCAPI__TIMEOUT_validator(form, field):
     if field.data < 1:
         raise ValidationError('Timeout must be 1.0 or greater')
 
-    if field.data > 120:
-        raise ValidationError('Timeout must be 120 or less')
+    if field.data > 1200:
+        raise ValidationError('Timeout must be 1200 or less')
 
 
 def FILETRANSFER__PRIVATE_KEY_validator(form, field):
