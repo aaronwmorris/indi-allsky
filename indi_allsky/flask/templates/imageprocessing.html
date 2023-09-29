@@ -5,6 +5,21 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 #image-canvas {
     width: 100%;
     height: auto;
@@ -52,6 +67,9 @@ var fullscreen = false;  //initial state
     <div class="form-group row">
         <div class="col-sm-1">
             <button class="btn btn-primary">Process</button>
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_processing"></div>
         </div>
     </div>
 
@@ -183,6 +201,8 @@ fields['form_global'] = {
 
 
 $('#form_image_processing').on('submit', function() {
+    $('#processing_time').text('Processing...');
+    $("#loader_processing").css({'display' : 'block'});
 
     // hide all errors
     successMessage.css({'display' : 'none'});
@@ -219,6 +239,7 @@ $('#form_image_processing').on('submit', function() {
             showImage(json_data['image_b64']);
             $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
 
+            $("#loader_processing").css({'display' : 'none'});
             //window.scrollTo(0, 0);
             //window.scrollTo({ top: 0, behavior: 'smooth' });
         },
