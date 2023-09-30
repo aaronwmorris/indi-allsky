@@ -3387,6 +3387,7 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
-    CAMERA_ID         = HiddenField('Camera ID', validators=[DataRequired()])
-    FITS_ID           = HiddenField('FITS ID', validators=[DataRequired()])
+    DISABLE_PROCESSING      = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
+    CAMERA_ID               = HiddenField('Camera ID', validators=[DataRequired()])
+    FITS_ID                 = HiddenField('FITS ID', validators=[DataRequired()])
 

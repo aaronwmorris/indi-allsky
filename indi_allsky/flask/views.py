@@ -3539,8 +3539,9 @@ class JsonImageProcessingView(JsonView):
             return jsonify(form_errors), 400
 
 
-        camera_id = int(request.json['CAMERA_ID'])
-        fits_id = int(request.json['FITS_ID'])
+        disable_processing  = bool(request.json['DISABLE_PROCESSING'])
+        camera_id           = int(request.json['CAMERA_ID'])
+        fits_id             = int(request.json['FITS_ID'])
 
 
         fits_entry = IndiAllSkyDbFitsImageTable.query\
@@ -3558,7 +3559,7 @@ class JsonImageProcessingView(JsonView):
 
         p_config = self.indi_allsky_config.copy()
 
-        night_v = Value('i', 0)
+        night_v = Value('i', 1)
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
@@ -3585,31 +3586,36 @@ class JsonImageProcessingView(JsonView):
 
         image_processor.debayer()
 
-        image_processor.stretch()
 
-        if p_config.get('CONTRAST_ENHANCE_16BIT'):
-            image_processor.contrast_clahe_16bit()
+        if disable_processing:
+            # just return original image with no processing
+            image_processor.convert_16bit_to_8bit()
+        else:
+            image_processor.stretch()
 
-        image_processor.convert_16bit_to_8bit()
+            if p_config.get('CONTRAST_ENHANCE_16BIT'):
+                image_processor.contrast_clahe_16bit()
 
-        # green removal
-        if p_config.get('SCNR_ALGORITHM'):
-            image_processor.scnr()
+            image_processor.convert_16bit_to_8bit()
 
-        # white balance
-        image_processor.white_balance_manual_bgr()
+            # green removal
+            if p_config.get('SCNR_ALGORITHM'):
+                image_processor.scnr()
 
-        if p_config.get('AUTO_WB'):
-            image_processor.white_balance_auto_bgr()
+            # white balance
+            image_processor.white_balance_manual_bgr()
 
-        # saturation
-        image_processor.saturation_adjust()
+            if p_config.get('AUTO_WB'):
+                image_processor.white_balance_auto_bgr()
+
+            # saturation
+            image_processor.saturation_adjust()
 
 
-        if not p_config.get('CONTRAST_ENHANCE_16BIT'):
-            if p_config['DAYTIME_CONTRAST_ENHANCE']:
-                # Contrast enhancement during the day
-                image_processor.contrast_clahe()
+            if not p_config.get('CONTRAST_ENHANCE_16BIT'):
+                if p_config['DAYTIME_CONTRAST_ENHANCE']:
+                    # Contrast enhancement during the day
+                    image_processor.contrast_clahe()
 
 
         image_processor.colorize()
