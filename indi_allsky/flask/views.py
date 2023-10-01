@@ -3677,6 +3677,25 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
             image_processor.convert_16bit_to_8bit()
+
+
+            if p_config.get('IMAGE_ROTATE'):
+                image_processor.rotate_90()
+
+
+            # rotation
+            if p_config.get('IMAGE_ROTATE_ANGLE'):
+                image_processor.rotate_angle()
+
+
+            # verticle flip
+            if p_config.get('IMAGE_FLIP_V'):
+                image_processor.flip_v()
+
+            # horizontal flip
+            if p_config.get('IMAGE_FLIP_H'):
+                image_processor.flip_h()
+
         else:
             image_processor.stretch()
 
