@@ -3405,4 +3405,8 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
     SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator])
+    IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
+    IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
+    IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
+    IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
 

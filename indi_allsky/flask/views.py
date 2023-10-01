@@ -3527,6 +3527,10 @@ class ImageProcessingView(TemplateView):
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+            'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
+            'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
+            'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
+            'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
         }
         form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
 
@@ -3589,6 +3593,10 @@ class JsonImageProcessingView(JsonView):
         p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
         p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+        p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
+        p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
+        p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
+        p_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
 
 
         night_v = Value('i', 1)  # using night values for processing
@@ -3630,15 +3638,36 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.convert_16bit_to_8bit()
 
+
+            if p_config.get('IMAGE_ROTATE'):
+                image_processor.rotate_90()
+
+
+            # rotation
+            if p_config.get('IMAGE_ROTATE_ANGLE'):
+                image_processor.rotate_angle()
+
+
+            # verticle flip
+            if p_config.get('IMAGE_FLIP_V'):
+                image_processor.flip_v()
+
+            # horizontal flip
+            if p_config.get('IMAGE_FLIP_H'):
+                image_processor.flip_h()
+
+
             # green removal
             if p_config.get('SCNR_ALGORITHM'):
                 image_processor.scnr()
+
 
             # white balance
             image_processor.white_balance_manual_bgr()
 
             if p_config.get('AUTO_WB'):
                 image_processor.white_balance_auto_bgr()
+
 
             # saturation
             image_processor.saturation_adjust()
@@ -3647,6 +3676,7 @@ class JsonImageProcessingView(JsonView):
             if not p_config.get('CONTRAST_ENHANCE_16BIT'):
                 if p_config['NIGHT_CONTRAST_ENHANCE']:
                     image_processor.contrast_clahe()
+
 
 
         image_processor.colorize()
