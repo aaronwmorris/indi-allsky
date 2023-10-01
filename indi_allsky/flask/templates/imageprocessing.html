@@ -540,14 +540,14 @@ function submitProcessingData() {
 
 
     // Populate fields object
-    var json_data = {};
+    var submit_data = {};
     field_names.forEach(item => {
-        json_data[item] = fields[item].input.val();
+        submit_data[item] = fields[item].input.val();
     });
 
     // checkboxes
     checkbox_field_names.forEach(item => {
-        json_data[item] = fields[item].input.prop('checked');
+        submit_data[item] = fields[item].input.prop('checked');
     });
 
 
@@ -555,7 +555,7 @@ function submitProcessingData() {
         type: "POST",
         url: "{{ url_for('indi_allsky.js_image_processing_view') }}",
         contentType: "application/json",
-        data: JSON.stringify(json_data),
+        data: JSON.stringify(submit_data),
         success: function(data){
             successMessage.html(data['success-message']);
             successMessage.css({'display' : 'block'});
@@ -565,7 +565,6 @@ function submitProcessingData() {
             json_data = data;
 
             showImage(json_data['image_b64']);
-            $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
 
             $("#loader_processing").css({'display' : 'none'});
             //window.scrollTo(0, 0);
@@ -587,12 +586,14 @@ function submitProcessingData() {
 $('#form_image_processing').on('submit', function() {
     $("#DISABLE_PROCESSING").val('');  // enable processing
     submitProcessingData();
+    $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
 });
 
 
 function init() {
     $("#DISABLE_PROCESSING").val('1');  // disable processing to get original image
     submitProcessingData();
+    $('#processing_time').text('Unprocessed image');
 }
 
 
