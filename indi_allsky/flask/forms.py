@@ -3387,7 +3387,22 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
-    DISABLE_PROCESSING      = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
-    CAMERA_ID               = HiddenField('Camera ID', validators=[DataRequired()])
-    FITS_ID                 = HiddenField('FITS ID', validators=[DataRequired()])
+    DISABLE_PROCESSING               = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
+    CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
+    CLAHE_CLIPLIMIT                  = FloatField('CLAHE Clip Limit', validators=[CLAHE_CLIPLIMIT_validator])
+    CLAHE_GRIDSIZE                   = IntegerField('CLAHE Grid Size', validators=[CLAHE_GRIDSIZE_validator])
+    IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
+    IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
+    IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
+    #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
+    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=IndiAllskyConfigForm.CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
+    SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
+    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator])
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator])
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator])
+    AUTO_WB                          = BooleanField('Auto White Balance')
+    SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator])
 

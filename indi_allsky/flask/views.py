@@ -3510,9 +3510,25 @@ class ImageProcessingView(TemplateView):
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
 
-        form_image_processing = IndiAllskyImageProcessingForm()
-        form_image_processing.CAMERA_ID.data = session['camera_id']
-        form_image_processing.FITS_ID.data = int(request.args['fits_id'])
+        form_data = {
+            'CAMERA_ID'                      : session['camera_id'],
+            'FITS_ID'                        : int(request.args['fits_id']),
+            'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
+            'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
+            'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
+            'CLAHE_GRIDSIZE'                 : self.indi_allsky_config.get('CLAHE_GRIDSIZE', 8),
+            'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
+            'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
+            'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
+            'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
+            'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
+            'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
+            'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+        }
+        form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
 
         context['form_image_processing'] = form_image_processing
 
@@ -3539,9 +3555,9 @@ class JsonImageProcessingView(JsonView):
             return jsonify(form_errors), 400
 
 
-        disable_processing  = bool(request.json['DISABLE_PROCESSING'])
-        camera_id           = int(request.json['CAMERA_ID'])
-        fits_id             = int(request.json['FITS_ID'])
+        disable_processing                  = bool(request.json['DISABLE_PROCESSING'])
+        camera_id                           = int(request.json['CAMERA_ID'])
+        fits_id                             = int(request.json['FITS_ID'])
 
 
         fits_entry = IndiAllSkyDbFitsImageTable.query\
@@ -3559,7 +3575,23 @@ class JsonImageProcessingView(JsonView):
 
         p_config = self.indi_allsky_config.copy()
 
-        night_v = Value('i', 1)
+        p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
+        p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
+        p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
+        p_config['CLAHE_GRIDSIZE']                       = int(request.json['CLAHE_GRIDSIZE'])
+        p_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
+        p_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
+        p_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        p_config['IMAGE_STRETCH']['SPLIT']               = False
+        p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
+        p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        p_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
+        p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
+        p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
+        p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+
+
+        night_v = Value('i', 1)  # using night values for processing
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
@@ -3613,8 +3645,7 @@ class JsonImageProcessingView(JsonView):
 
 
             if not p_config.get('CONTRAST_ENHANCE_16BIT'):
-                if p_config['DAYTIME_CONTRAST_ENHANCE']:
-                    # Contrast enhancement during the day
+                if p_config['NIGHT_CONTRAST_ENHANCE']:
                     image_processor.contrast_clahe()
 
 

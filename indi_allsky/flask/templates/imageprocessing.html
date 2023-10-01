@@ -80,12 +80,198 @@ var fullscreen = false;  //initial state
         </div>
     </div>
 
-    <div class="form-group row" style="height:100px;">
+    <div class="form-group row">
         <div class="col-sm-8">
             <div id="success-message" class="text-success" style="display: none;"></div>
             <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.NIGHT_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_CLIPLIMIT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_CLIPLIMIT(class='form-control bg-secondary') }}
+            <div id="CLAHE_CLIPLIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Increase value for more contrast</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_GRIDSIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_GRIDSIZE(class='form-control bg-secondary') }}
+            <div id="CLAHE_GRIDSIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html" target="_blank">OpenCV CLAHE Tutorial</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CONTRAST_ENHANCE_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CONTRAST_ENHANCE_16BIT(class='form-check-input') }}
+                <div id="CONTRAST_ENHANCE_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Perform CLAHE in 16-bit mode (early in order of operations)</div>
+            <div>Increase the clip limit in 16-bit mode by 3-4 times for similiar results</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Requires 2GB of RAM for images over 3000x1500 (for 16-bit mode)</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__MODE1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Image stretching and contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CFA_PATTERN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CFA_PATTERN(class='form-control bg-secondary') }}
+            <div id="CFA_PATTERN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.SCNR_ALGORITHM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.SCNR_ALGORITHM(class='form-control bg-secondary') }}
+            <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>SCNR algorithm to apply to reduce green bias in image</div>
+            <div>
+              <ul>
+                <li>Average Neutral - Good colors <span class="badge rounded-pill bg-warning text-dark">Warning</span> Can cause a magenta bias (especially during the day)</li>
+                <li>Maximum Neutral - Use this if you enable day time caputures</li>
+              </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBG_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBB_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.AUTO_WB.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.AUTO_WB(class='form-check-input') }}
+                <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.SATURATION_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.SATURATION_FACTOR(class='form-control bg-secondary') }}
+            <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
+    </div>
+
+    <hr>
+
+
 
     </form>
 
@@ -180,9 +366,23 @@ const field_names = [
     'DISABLE_PROCESSING',
     'CAMERA_ID',
     'FITS_ID',
+    'CLAHE_CLIPLIMIT',
+    'CLAHE_GRIDSIZE',
+    'IMAGE_STRETCH__MODE1_GAMMA',
+    'IMAGE_STRETCH__MODE1_STDDEVS',
+    'CFA_PATTERN',
+    'SCNR_ALGORITHM',
+    'WBR_FACTOR',
+    'WBG_FACTOR',
+    'WBB_FACTOR',
+    'SATURATION_FACTOR',
 ];
 
 const checkbox_field_names = [
+    'NIGHT_CONTRAST_ENHANCE',
+    'CONTRAST_ENHANCE_16BIT',
+    'IMAGE_STRETCH__MODE1_ENABLE',
+    'AUTO_WB',
 ];
 
 var fields = {};
@@ -258,6 +458,7 @@ function submitProcessingData() {
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
             });
+            $("#loader_processing").css({'display' : 'none'});
         },
     });
 }
