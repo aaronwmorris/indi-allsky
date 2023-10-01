@@ -73,7 +73,6 @@ class IndiClient(PyIndi.BaseClient):
         pass
 
 
-
 # connect to the server
 indiclient = IndiClient()
 indiclient.setServer(INDI_SERVER, INDI_PORT)
