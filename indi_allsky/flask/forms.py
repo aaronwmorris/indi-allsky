@@ -942,22 +942,22 @@ def LOGO_OVERLAY_validator(form, field):
     if not re.search(ext_regex, field.data, re.IGNORECASE):
         raise ValidationError('Mask file must be a PNG')
 
-    detect_mask_p = Path(field.data)
+    overlay_p = Path(field.data)
 
     try:
-        if not detect_mask_p.exists():
+        if not overlay_p.exists():
             raise ValidationError('File does not exist')
 
-        if not detect_mask_p.is_file():
+        if not overlay_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(detect_mask_p), 'r'):
+        with io.open(str(overlay_p), 'r'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
 
 
-    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+    mask_data = cv2.imread(str(overlay_p), cv2.IMREAD_UNCHANGED)
     if isinstance(mask_data, type(None)):
         raise ValidationError('File is not a valid image')
 
@@ -3409,4 +3409,10 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
+    DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
+    SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
+    SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
+    SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
+    SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
+    SQM_FOV_DIV                      = SelectField('SQM FoV', choices=IndiAllskyConfigForm.SQM_FOV_DIV_choices, validators=[SQM_FOV_DIV_validator])
 

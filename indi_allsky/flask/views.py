@@ -3531,7 +3531,38 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
+            'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
+            'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
         }
+
+        # SQM_ROI
+        SQM_ROI = self.indi_allsky_config.get('SQM_ROI', [])
+        if SQM_ROI is None:
+            SQM_ROI = []
+        elif isinstance(SQM_ROI, bool):
+            SQM_ROI = []
+
+        try:
+            form_data['SQM_ROI_X1'] = SQM_ROI[0]
+        except IndexError:
+            form_data['SQM_ROI_X1'] = 0
+
+        try:
+            form_data['SQM_ROI_Y1'] = SQM_ROI[1]
+        except IndexError:
+            form_data['SQM_ROI_Y1'] = 0
+
+        try:
+            form_data['SQM_ROI_X2'] = SQM_ROI[2]
+        except IndexError:
+            form_data['SQM_ROI_X2'] = 0
+
+        try:
+            form_data['SQM_ROI_Y2'] = SQM_ROI[3]
+        except IndexError:
+            form_data['SQM_ROI_Y2'] = 0
+
+
         form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
 
         context['form_image_processing'] = form_image_processing
@@ -3597,6 +3628,22 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
         p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
         p_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
+        p_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
+        p_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
+
+
+        # SQM_ROI
+        sqm_roi_x1 = int(request.json['SQM_ROI_X1'])
+        sqm_roi_y1 = int(request.json['SQM_ROI_Y1'])
+        sqm_roi_x2 = int(request.json['SQM_ROI_X2'])
+        sqm_roi_y2 = int(request.json['SQM_ROI_Y2'])
+
+        # the x2 and y2 values must be positive integers in order to be enabled and valid
+        if sqm_roi_x2 and sqm_roi_y2:
+            p_config['SQM_ROI'] = [sqm_roi_x1, sqm_roi_y1, sqm_roi_x2, sqm_roi_y2]
+        else:
+            p_config['SQM_ROI'] = []
+
 
 
         night_v = Value('i', 1)  # using night values for processing
