@@ -3682,15 +3682,16 @@ class JsonImageProcessingView(JsonView):
         processing_start = time.time()
 
 
-        image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-
-        image_processor.stack()  # this just populates self.image
-
-        image_processor.debayer()
-
-
         if disable_processing:
             # just return original image with no processing
+
+            image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+            image_processor.stack()  # this just populates self.image
+
+            image_processor.debayer()
+
+
             image_processor.convert_16bit_to_8bit()
 
 
@@ -3711,7 +3712,16 @@ class JsonImageProcessingView(JsonView):
             if p_config.get('IMAGE_FLIP_H'):
                 image_processor.flip_h()
 
+            image_processor.colorize()
+
         else:
+            image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+            image_processor.stack()  # this just populates self.image
+
+            image_processor.debayer()
+
+
             image_processor.stretch()
 
             if p_config['NIGHT_CONTRAST_ENHANCE']:
@@ -3760,8 +3770,8 @@ class JsonImageProcessingView(JsonView):
                     image_processor.contrast_clahe()
 
 
+            image_processor.colorize()
 
-        image_processor.colorize()
 
 
         processing_elapsed_s = time.time() - processing_start
