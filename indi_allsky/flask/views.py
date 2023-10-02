@@ -3714,8 +3714,9 @@ class JsonImageProcessingView(JsonView):
         else:
             image_processor.stretch()
 
-            if p_config.get('CONTRAST_ENHANCE_16BIT'):
-                image_processor.contrast_clahe_16bit()
+            if p_config['NIGHT_CONTRAST_ENHANCE']:
+                if p_config.get('CONTRAST_ENHANCE_16BIT'):
+                    image_processor.contrast_clahe_16bit()
 
             image_processor.convert_16bit_to_8bit()
 
@@ -3754,8 +3755,8 @@ class JsonImageProcessingView(JsonView):
             image_processor.saturation_adjust()
 
 
-            if not p_config.get('CONTRAST_ENHANCE_16BIT'):
-                if p_config['NIGHT_CONTRAST_ENHANCE']:
+            if p_config['NIGHT_CONTRAST_ENHANCE']:
+                if not p_config.get('CONTRAST_ENHANCE_16BIT'):
                     image_processor.contrast_clahe()
 
 
