@@ -3548,6 +3548,12 @@ class ImageProcessingView(TemplateView):
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
+            'IMAGE_STACK_METHOD'             : self.indi_allsky_config.get('IMAGE_STACK_METHOD', 'maximum'),
+            'IMAGE_STACK_COUNT'              : str(self.indi_allsky_config.get('IMAGE_STACK_COUNT', 1)),  # string in form, int in config
+            'IMAGE_STACK_ALIGN'              : self.indi_allsky_config.get('IMAGE_STACK_ALIGN', False),
+            'IMAGE_ALIGN_DETECTSIGMA'        : self.indi_allsky_config.get('IMAGE_ALIGN_DETECTSIGMA', 5),
+            'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
+            'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
         }
 
         # SQM_ROI
@@ -3645,6 +3651,13 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
         p_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
         p_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
+        p_config['IMAGE_STACK_METHOD']                   = str(request.json['IMAGE_STACK_METHOD'])
+        p_config['IMAGE_STACK_COUNT']                    = int(request.json['IMAGE_STACK_COUNT'])
+        p_config['IMAGE_STACK_ALIGN']                    = bool(request.json['IMAGE_STACK_ALIGN'])
+        p_config['IMAGE_ALIGN_DETECTSIGMA']              = int(request.json['IMAGE_ALIGN_DETECTSIGMA'])
+        p_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
+        p_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
+        p_config['IMAGE_STACK_SPLIT']                    = False
 
 
         # SQM_ROI
@@ -3715,7 +3728,20 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
         else:
-            image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+            if p_config['IMAGE_STACK_COUNT'] > 1:
+                image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+                fits_image_query = IndiAllSkyDbFitsImageTable.query\
+                    .join(IndiAllSkyDbFitsImageTable.camera)\
+                    .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                    .filter(IndiAllSkyDbFitsImageTable.createDate < fits_entry.createDate)\
+                    .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+                    .limit(p_config['IMAGE_STACK_COUNT'] - 1)
+
+                for f_image in fits_image_query:
+                    image_processor.add(f_image.filename, 0.0, datetime.now(), 0.0, f_image.camera)
+            else:
+                image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
 
             image_processor.stack()  # this just populates self.image
 
