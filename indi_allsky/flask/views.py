@@ -3510,9 +3510,24 @@ class ImageProcessingView(TemplateView):
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
 
+
+        camera_id = session['camera_id']
+
+        fits_id = int(request.args.get('fits_id', 0))
+        if not fits_id:
+            # just pick the last fits file is none specified
+            fits_entry = IndiAllSkyDbFitsImageTable.query\
+                .join(IndiAllSkyDbFitsImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+                .first()
+
+            fits_id = fits_entry.id
+
+
         form_data = {
-            'CAMERA_ID'                      : session['camera_id'],
-            'FITS_ID'                        : int(request.args['fits_id']),
+            'CAMERA_ID'                      : camera_id,
+            'FITS_ID'                        : fits_id,
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
             'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
