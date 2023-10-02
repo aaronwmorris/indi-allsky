@@ -31,13 +31,14 @@ pygifsicle
 gunicorn[gthread] >= 20.1.0
 inotify
 psutil
-Flask >= 2.3.2
+# problems with flask-login and werkzeug 3.0.0
+Flask == 2.3.3
 Flask-SQLAlchemy >= 3.0.4
 Flask-Migrate >= 4.0.4
 # needs at least 1.1.1 for flask 2.3
 Flask-WTF >= 1.1.1
-flask-login >= 0.6.2
-werkzeug >= 2.3.6
+Flask-Login >= 0.6.2
+werkzeug == 2.3.7
 is-safe-url
 certifi >= 2023.5.7
 # https://www.wheelodex.org/projects/cryptography/
