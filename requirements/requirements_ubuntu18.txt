@@ -47,6 +47,8 @@ Flask
 Flask-SQLAlchemy <= 2.5.1
 Flask-Migrate
 Flask-WTF
+Flask-Login
+werkzeug
 # https://www.piwheels.org/project/cryptography/
 cryptography <= 37.0.4
 dbus-python

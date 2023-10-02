@@ -48,7 +48,7 @@ Flask == 2.2.5
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
-flask-login
+Flask-Login
 werkzeug
 is-safe-url
 certifi
