@@ -1009,7 +1009,7 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_sx_ccd']:
             logger.warning('indi_sx_ccd does not support gain settings')
             return fake_gain_info
-        elif indi_exec in ['indi_canon_ccd']:
+        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indin_sony_ccd']:
             gain_ctl = self.get_control(self._ccd_device, 'CCD_ISO', 'switch')
 
             gain_max = int(gain_ctl[len(gain_ctl) - 1].getLabel())  # dont slice
@@ -1098,8 +1098,8 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_canon_ccd']:
-            logger.info('Mapping gain to ISO for Canon device')
+        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
+            logger.info('Mapping gain to ISO for libgphoto device')
 
             try:
                 gain_switch = self.__canon_gain_to_iso[gain_value]
@@ -1178,8 +1178,8 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_canon_ccd']:
-            logger.warning('indi_canon_ccd does not support bin settings')
+        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
+            logger.warning('indi_gphoto_ccd does not support bin settings')
             return
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
