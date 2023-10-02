@@ -942,22 +942,22 @@ def LOGO_OVERLAY_validator(form, field):
     if not re.search(ext_regex, field.data, re.IGNORECASE):
         raise ValidationError('Mask file must be a PNG')
 
-    detect_mask_p = Path(field.data)
+    overlay_p = Path(field.data)
 
     try:
-        if not detect_mask_p.exists():
+        if not overlay_p.exists():
             raise ValidationError('File does not exist')
 
-        if not detect_mask_p.is_file():
+        if not overlay_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(detect_mask_p), 'r'):
+        with io.open(str(overlay_p), 'r'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
 
 
-    mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_UNCHANGED)
+    mask_data = cv2.imread(str(overlay_p), cv2.IMREAD_UNCHANGED)
     if isinstance(mask_data, type(None)):
         raise ValidationError('File is not a valid image')
 
@@ -2549,22 +2549,27 @@ class IndiAllskyImageViewer(FlaskForm):
                     .one()
 
                 image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['fits_id'] = fits_image.id
             except NoResultFound:
                 image_dict['fits'] = None
+                image_dict['fits_id'] = None
 
 
             # look for raw exports
             try:
-                fits_image = IndiAllSkyDbRawImageTable.query\
+                raw_image = IndiAllSkyDbRawImageTable.query\
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                image_dict['raw'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['raw'] = str(raw_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['raw_id'] = raw_image.id
             except NoResultFound:
                 image_dict['raw'] = None
+                image_dict['raw_id'] = None
             except ValueError:
                 # this can happen when RAW files are exported outside of the document root
                 image_dict['raw'] = None
+                image_dict['raw_id'] = None
 
             images_data.append(image_dict)
 
@@ -3379,4 +3384,35 @@ class IndiAllskyImageExcludeForm(FlaskForm):
         super(IndiAllskyImageExcludeForm, self).__init__(*args, **kwargs)
 
         self.CAMERA_ID.data = kwargs.get('camera_id')
+
+
+class IndiAllskyImageProcessingForm(FlaskForm):
+    DISABLE_PROCESSING               = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
+    CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
+    CLAHE_CLIPLIMIT                  = FloatField('CLAHE Clip Limit', validators=[CLAHE_CLIPLIMIT_validator])
+    CLAHE_GRIDSIZE                   = IntegerField('CLAHE Grid Size', validators=[CLAHE_GRIDSIZE_validator])
+    IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
+    IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
+    IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
+    #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
+    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=IndiAllskyConfigForm.CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
+    SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
+    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator])
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator])
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator])
+    AUTO_WB                          = BooleanField('Auto White Balance')
+    SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator])
+    IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
+    IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
+    IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
+    IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
+    DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
+    SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
+    SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
+    SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
+    SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
+    SQM_FOV_DIV                      = SelectField('SQM FoV', choices=IndiAllskyConfigForm.SQM_FOV_DIV_choices, validators=[SQM_FOV_DIV_validator])
 

@@ -16,8 +16,11 @@ import ephem
 
 from passlib.hash import argon2
 
+from multiprocessing import Value
+
 from ..version import __version__
 from .. import constants
+from ..processing import ImageProcessor
 
 
 from flask import request
@@ -79,6 +82,7 @@ from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
+from .forms import IndiAllskyImageProcessingForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -3500,6 +3504,285 @@ class JsonFocusView(JsonView):
         return jsonify(json_data)
 
 
+class ImageProcessingView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ImageProcessingView, self).get_context()
+
+
+        camera_id = session['camera_id']
+
+        fits_id = int(request.args.get('fits_id', 0))
+        if not fits_id:
+            # just pick the last fits file is none specified
+            fits_entry = IndiAllSkyDbFitsImageTable.query\
+                .join(IndiAllSkyDbFitsImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+                .first()
+
+            fits_id = fits_entry.id
+
+
+        form_data = {
+            'CAMERA_ID'                      : camera_id,
+            'FITS_ID'                        : fits_id,
+            'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
+            'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
+            'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
+            'CLAHE_GRIDSIZE'                 : self.indi_allsky_config.get('CLAHE_GRIDSIZE', 8),
+            'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
+            'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
+            'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
+            'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
+            'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
+            'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
+            'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+            'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
+            'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
+            'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
+            'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
+            'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
+            'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
+        }
+
+        # SQM_ROI
+        SQM_ROI = self.indi_allsky_config.get('SQM_ROI', [])
+        if SQM_ROI is None:
+            SQM_ROI = []
+        elif isinstance(SQM_ROI, bool):
+            SQM_ROI = []
+
+        try:
+            form_data['SQM_ROI_X1'] = SQM_ROI[0]
+        except IndexError:
+            form_data['SQM_ROI_X1'] = 0
+
+        try:
+            form_data['SQM_ROI_Y1'] = SQM_ROI[1]
+        except IndexError:
+            form_data['SQM_ROI_Y1'] = 0
+
+        try:
+            form_data['SQM_ROI_X2'] = SQM_ROI[2]
+        except IndexError:
+            form_data['SQM_ROI_X2'] = 0
+
+        try:
+            form_data['SQM_ROI_Y2'] = SQM_ROI[3]
+        except IndexError:
+            form_data['SQM_ROI_Y2'] = 0
+
+
+        form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
+
+        context['form_image_processing'] = form_image_processing
+
+        return context
+
+
+class JsonImageProcessingView(JsonView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(JsonImageProcessingView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        import cv2
+        from PIL import Image
+
+
+        form_processing = IndiAllskyImageProcessingForm(data=request.json)
+        if not form_processing.validate():
+            form_errors = form_processing.errors  # this must be a property
+            form_errors['form_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+        disable_processing                  = bool(request.json['DISABLE_PROCESSING'])
+        camera_id                           = int(request.json['CAMERA_ID'])
+        fits_id                             = int(request.json['FITS_ID'])
+
+
+        fits_entry = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == camera_id,
+                    IndiAllSkyDbFitsImageTable.id == fits_id,
+                )
+            )\
+            .one()
+
+        filename_p = Path(fits_entry.filename)
+
+
+        p_config = self.indi_allsky_config.copy()
+
+        p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
+        p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
+        p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
+        p_config['CLAHE_GRIDSIZE']                       = int(request.json['CLAHE_GRIDSIZE'])
+        p_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
+        p_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
+        p_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        p_config['IMAGE_STRETCH']['SPLIT']               = False
+        p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
+        p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        p_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
+        p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
+        p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
+        p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+        p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
+        p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
+        p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
+        p_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
+        p_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
+        p_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
+
+
+        # SQM_ROI
+        sqm_roi_x1 = int(request.json['SQM_ROI_X1'])
+        sqm_roi_y1 = int(request.json['SQM_ROI_Y1'])
+        sqm_roi_x2 = int(request.json['SQM_ROI_X2'])
+        sqm_roi_y2 = int(request.json['SQM_ROI_Y2'])
+
+        # the x2 and y2 values must be positive integers in order to be enabled and valid
+        if sqm_roi_x2 and sqm_roi_y2:
+            p_config['SQM_ROI'] = [sqm_roi_x1, sqm_roi_y1, sqm_roi_x2, sqm_roi_y2]
+        else:
+            p_config['SQM_ROI'] = []
+
+
+
+        night_v = Value('i', 1)  # using night values for processing
+        moonmode_v = Value('i', 0)
+        image_processor = ImageProcessor(
+            p_config,
+            None,  # latitude_v
+            None,  # longitude_v
+            None,  # elevation_v
+            None,  # ra_v
+            None,  # dec_v
+            None,  # exposure_v
+            None,  # gain_v
+            None,  # bin_v
+            None,  # sensortemp_v
+            night_v,
+            moonmode_v,
+            {},    # astrometric_data
+        )
+
+        processing_start = time.time()
+
+
+        image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+        image_processor.stack()  # this just populates self.image
+
+        image_processor.debayer()
+
+
+        if disable_processing:
+            # just return original image with no processing
+            image_processor.convert_16bit_to_8bit()
+
+
+            if p_config.get('IMAGE_ROTATE'):
+                image_processor.rotate_90()
+
+
+            # rotation
+            if p_config.get('IMAGE_ROTATE_ANGLE'):
+                image_processor.rotate_angle()
+
+
+            # verticle flip
+            if p_config.get('IMAGE_FLIP_V'):
+                image_processor.flip_v()
+
+            # horizontal flip
+            if p_config.get('IMAGE_FLIP_H'):
+                image_processor.flip_h()
+
+        else:
+            image_processor.stretch()
+
+            if p_config.get('CONTRAST_ENHANCE_16BIT'):
+                image_processor.contrast_clahe_16bit()
+
+            image_processor.convert_16bit_to_8bit()
+
+
+            if p_config.get('IMAGE_ROTATE'):
+                image_processor.rotate_90()
+
+
+            # rotation
+            if p_config.get('IMAGE_ROTATE_ANGLE'):
+                image_processor.rotate_angle()
+
+
+            # verticle flip
+            if p_config.get('IMAGE_FLIP_V'):
+                image_processor.flip_v()
+
+            # horizontal flip
+            if p_config.get('IMAGE_FLIP_H'):
+                image_processor.flip_h()
+
+
+            # green removal
+            if p_config.get('SCNR_ALGORITHM'):
+                image_processor.scnr()
+
+
+            # white balance
+            image_processor.white_balance_manual_bgr()
+
+            if p_config.get('AUTO_WB'):
+                image_processor.white_balance_auto_bgr()
+
+
+            # saturation
+            image_processor.saturation_adjust()
+
+
+            if not p_config.get('CONTRAST_ENHANCE_16BIT'):
+                if p_config['NIGHT_CONTRAST_ENHANCE']:
+                    image_processor.contrast_clahe()
+
+
+
+        image_processor.colorize()
+
+
+        processing_elapsed_s = time.time() - processing_start
+        app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
+
+        image = image_processor.image
+
+
+        json_image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img.save(json_image_buffer, format='JPEG', quality=90)
+
+        json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
+
+        json_data = dict()
+        json_data['image_b64'] = json_image_b64.decode('utf-8')
+        json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
+
+        return jsonify(json_data)
+
+
 class LogView(TemplateView):
     decorators = [login_required]
 
@@ -4364,6 +4647,8 @@ bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropan
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
+bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

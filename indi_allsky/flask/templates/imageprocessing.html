@@ -1,0 +1,617 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Image Processing{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#image-canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var json_data = {
+    'image_b64'  : null,
+};
+var fullscreen = false;  //initial state
+</script>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <canvas id="image-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-7 offset-5">
+            <div id="processing_time"></div>
+        </div>
+    </div>
+
+    <form id="form_image_processing" onSubmit="return false;">
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            {{ form_image_processing.DISABLE_PROCESSING(class='form-control bg-secondary') }}
+            <div id="DISABLE_PROCESSING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
+            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+            {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
+            <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            <button class="btn btn-primary">Process</button>
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_processing"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-8">
+            <div id="success-message" class="text-success" style="display: none;"></div>
+            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_MASK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_image_processing.DETECT_MASK(class='form-control bg-secondary') }}
+            <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Image mask file for detection area.  Must be a PNG</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_FOV_DIV.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_FOV_DIV(class='form-control bg-secondary') }}
+            <div id="SQM_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Central region to use for SQM calculations (not used if ROI defined)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            SQM/Star Region of Interest
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_ROI_X1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>x1, y1</div>
+            <div>* Not used if Detection Mask is defined *</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label"></div>
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_ROI_X2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_image_processing.SQM_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.NIGHT_CONTRAST_ENHANCE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_CLIPLIMIT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_CLIPLIMIT(class='form-control bg-secondary') }}
+            <div id="CLAHE_CLIPLIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Increase value for more contrast</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_GRIDSIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CLAHE_GRIDSIZE(class='form-control bg-secondary') }}
+            <div id="CLAHE_GRIDSIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html" target="_blank">OpenCV CLAHE Tutorial</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CONTRAST_ENHANCE_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CONTRAST_ENHANCE_16BIT(class='form-check-input') }}
+                <div id="CONTRAST_ENHANCE_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Perform CLAHE in 16-bit mode (early in order of operations)</div>
+            <div>Increase the clip limit in 16-bit mode by 3-4 times for similiar results</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Requires 2GB of RAM for images over 3000x1500 (for 16-bit mode)</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE(class='form-check-input') }}
+                <div id="IMAGE_STRETCH__MODE1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Image stretching and contrast enhancement</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CFA_PATTERN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CFA_PATTERN(class='form-control bg-secondary') }}
+            <div id="CFA_PATTERN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.SCNR_ALGORITHM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.SCNR_ALGORITHM(class='form-control bg-secondary') }}
+            <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>SCNR algorithm to apply to reduce green bias in image</div>
+            <div>
+              <ul>
+                <li>Average Neutral - Good colors <span class="badge rounded-pill bg-warning text-dark">Warning</span> Can cause a magenta bias (especially during the day)</li>
+                <li>Maximum Neutral - Use this if you enable day time caputures</li>
+              </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBG_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_FACTOR(class='form-control bg-secondary') }}
+            <div id="WBB_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.AUTO_WB.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.AUTO_WB(class='form-check-input') }}
+                <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.SATURATION_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.SATURATION_FACTOR(class='form-control bg-secondary') }}
+            <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
+    </div>
+
+    <hr>
+
+    <div>
+      <h5>These options are applied to the unprocessed image automatically</h5>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ROTATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.IMAGE_ROTATE(class='form-control bg-secondary') }}
+            <div id="IMAGE_ROTATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Image rotation options</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ROTATE_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ROTATE_ANGLE(class='form-control bg-secondary') }}
+            <div id="IMAGE_ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Rotate by arbitrary angle (0 == disabled)</div>
+            <div>Combine with cropping and image circle mask to clean up image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_FLIP_V(class='form-check-input') }}
+                <div id="IMAGE_FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Flip timelapse images vertically</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_FLIP_H(class='form-check-input') }}
+                <div id="IMAGE_FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Flip timelapse images horizontally</div>
+    </div>
+
+    </form>
+
+<script>
+function showImage(image_b64) {
+    console.log('Showing image');
+
+    if (image_b64 == null) {
+        return;
+    }
+
+    var image_canvas = document.getElementById("image-canvas");
+    var context = image_canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = "data:image/jpg;base64," + image_b64;
+    img.onload = function() {
+        image_canvas.setAttribute("width", window.innerWidth);
+        image_canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = image_canvas.width  / this.width;
+        var vRatio = image_canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
+
+        context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(json_data['image_b64']);
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+const field_names = [
+    'csrf_token',
+    'DISABLE_PROCESSING',
+    'CAMERA_ID',
+    'FITS_ID',
+    'CLAHE_CLIPLIMIT',
+    'CLAHE_GRIDSIZE',
+    'IMAGE_STRETCH__MODE1_GAMMA',
+    'IMAGE_STRETCH__MODE1_STDDEVS',
+    'CFA_PATTERN',
+    'SCNR_ALGORITHM',
+    'WBR_FACTOR',
+    'WBG_FACTOR',
+    'WBB_FACTOR',
+    'SATURATION_FACTOR',
+    'IMAGE_ROTATE',
+    'IMAGE_ROTATE_ANGLE',
+    'IMAGE_FLIP_V',
+    'IMAGE_FLIP_H',
+    'DETECT_MASK',
+    'SQM_FOV_DIV',
+    'SQM_ROI_X1',
+    'SQM_ROI_Y1',
+    'SQM_ROI_X2',
+    'SQM_ROI_Y2',
+];
+
+const checkbox_field_names = [
+    'NIGHT_CONTRAST_ENHANCE',
+    'CONTRAST_ENHANCE_16BIT',
+    'IMAGE_STRETCH__MODE1_ENABLE',
+    'AUTO_WB',
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+function submitProcessingData() {
+    $('#processing_time').text('Processing...');
+    $("#loader_processing").css({'display' : 'block'});
+
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var submit_data = {};
+    field_names.forEach(item => {
+        submit_data[item] = fields[item].input.val();
+    });
+
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        submit_data[item] = fields[item].input.prop('checked');
+    });
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.js_image_processing_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(submit_data),
+        success: function(data){
+            successMessage.html(data['success-message']);
+            successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                successMessage.css({'display' : 'none'});
+            }, 10000);
+            json_data = data;
+
+            showImage(json_data['image_b64']);
+
+            $("#loader_processing").css({'display' : 'none'});
+            //window.scrollTo(0, 0);
+            //window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+            $("#loader_processing").css({'display' : 'none'});
+        },
+    });
+}
+
+
+$('#form_image_processing').on('submit', function() {
+    $("#DISABLE_PROCESSING").val('');  // enable processing
+    submitProcessingData();
+    $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+});
+
+
+function init() {
+    $("#DISABLE_PROCESSING").val('1');  // disable processing to get original image
+    submitProcessingData();
+    $('#processing_time').text('Unprocessed image');
+}
+
+
+$( document ).ready(function() {
+    $('#image-canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+
+
+{% endblock %}
