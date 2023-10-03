@@ -3387,7 +3387,7 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
-    DISABLE_PROCESSING               = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
+    DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
@@ -3422,4 +3422,5 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ALIGN_POINTS               = IntegerField('Alignment points', validators=[DataRequired(), IMAGE_ALIGN_POINTS_validator])
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
+    PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 

@@ -3554,6 +3554,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ALIGN_DETECTSIGMA'        : self.indi_allsky_config.get('IMAGE_ALIGN_DETECTSIGMA', 5),
             'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
+            'PROCESSING_SPLIT_SCREEN'        : False,
         }
 
         # SQM_ROI
@@ -3658,6 +3659,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
         p_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         p_config['IMAGE_STACK_SPLIT']                    = False
+        p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
 
 
         # SQM_ROI

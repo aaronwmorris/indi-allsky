@@ -50,13 +50,6 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-3">
-            {{ form_image_processing.DISABLE_PROCESSING(class='form-control bg-secondary') }}
-            <div id="DISABLE_PROCESSING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-3">
             {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
             <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -78,6 +71,16 @@ var fullscreen = false;  //initial state
         <div class="col-sm-1">
             <div class="loader" id="loader_processing"></div>
         </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_image_processing.DISABLE_PROCESSING(class='form-check-input') }}
+                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.DISABLE_PROCESSING.label }}
+        </div>
     </div>
 
     <div class="form-group row">
@@ -88,6 +91,23 @@ var fullscreen = false;  //initial state
     </div>
 
     <hr>
+
+    <!--
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.PROCESSING_SPLIT_SCREEN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.PROCESSING_SPLIT_SCREEN(class='form-check-input') }}
+                <div id="PROCESSING_SPLIT_SCREEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+    -->
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -557,7 +577,6 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
-    'DISABLE_PROCESSING',
     'CAMERA_ID',
     'FITS_ID',
     'CLAHE_CLIPLIMIT',
@@ -588,11 +607,13 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'DISABLE_PROCESSING',
     'NIGHT_CONTRAST_ENHANCE',
     'CONTRAST_ENHANCE_16BIT',
     'IMAGE_STRETCH__MODE1_ENABLE',
     'AUTO_WB',
     'IMAGE_STACK_ALIGN',
+    //'PROCESSING_SPLIT_SCREEN',
 ];
 
 var fields = {};
@@ -674,16 +695,19 @@ function submitProcessingData() {
 
 
 $('#form_image_processing').on('submit', function() {
-    $("#DISABLE_PROCESSING").val('');  // enable processing
     submitProcessingData();
     $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
 });
 
 
 function init() {
-    $("#DISABLE_PROCESSING").val('1');  // disable processing to get original image
+    // disable processing for initial image
+    $('#DISABLE_PROCESSING').prop('checked', true);
+
     submitProcessingData();
     $('#processing_time').text('Unprocessed image');
+
+    $('#DISABLE_PROCESSING').prop('checked', false);
 }
 
 
