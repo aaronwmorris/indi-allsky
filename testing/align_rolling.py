@@ -169,7 +169,7 @@ class AlignRolling(object):
 
 
             if self.split_screen:
-                stacked_img = self._splitscreen(reference_hdulist[0].data, stacked_img)
+                stacked_img = self.splitscreen(reference_hdulist[0].data, stacked_img)
 
 
             stacked_bitdepth = self._detectBitDepth(stacked_img)
@@ -260,7 +260,7 @@ class AlignRolling(object):
         ]
 
 
-    def _splitscreen(self, left_data, right_data):
+    def splitscreen(self, left_data, right_data):
         image_height, image_width = left_data.shape[:2]
 
 

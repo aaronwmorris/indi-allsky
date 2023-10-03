@@ -92,6 +92,23 @@ var fullscreen = false;  //initial state
 
     <hr>
 
+    <!--
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.PROCESSING_SPLIT_SCREEN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.PROCESSING_SPLIT_SCREEN(class='form-check-input') }}
+                <div id="PROCESSING_SPLIT_SCREEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+    -->
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_image_processing.DETECT_MASK.label(class='col-form-label') }}
@@ -596,6 +613,7 @@ const checkbox_field_names = [
     'IMAGE_STRETCH__MODE1_ENABLE',
     'AUTO_WB',
     'IMAGE_STACK_ALIGN',
+    //'PROCESSING_SPLIT_SCREEN',
 ];
 
 var fields = {};

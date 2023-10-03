@@ -881,7 +881,7 @@ class ImageProcessor(object):
 
 
         if self.config.get('IMAGE_STACK_SPLIT'):
-            self.image = self._splitscreen(i_ref['hdulist'][0].data, self.image)
+            self.image = self.splitscreen(i_ref['hdulist'][0].data, self.image)
 
 
         stack_elapsed_s = time.time() - stack_start
@@ -1466,14 +1466,14 @@ class ImageProcessor(object):
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
-    def _splitscreen(self, original_data, stacked_data):
+    def splitscreen(self, original_data, new_data):
         # if flip horizontal is set, this data will swap sides later
         if self.config.get('IMAGE_FLIP_H'):
-            left_data = stacked_data
+            left_data = new_data
             right_data = original_data
         else:
             left_data = original_data
-            right_data = stacked_data
+            right_data = new_data
 
 
         image_height, image_width = left_data.shape[:2]
@@ -2362,7 +2362,7 @@ class ImageProcessor(object):
 
 
         if is_stretched and self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
-            self.image = self._splitscreen(self.image, stretched_image)
+            self.image = self.splitscreen(self.image, stretched_image)
             return
 
 
