@@ -552,6 +552,11 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
     def list(self, **kwargs):
+        with app.app_context():
+            self._list(**kwargs)
+
+
+    def _list(self, **kwargs):
         table = PrettyTable()
         table.field_names = ['ID', 'Create Date', 'User ID', 'Level', 'Note']
 
