@@ -41,6 +41,7 @@ class IndiClientPassive(IndiClient):
         image_q,
         latitude_v,
         longitude_v,
+        elevation_v,
         ra_v,
         dec_v,
         gain_v,
@@ -54,6 +55,7 @@ class IndiClientPassive(IndiClient):
 
         self.latitude_v = latitude_v
         self.longitude_v = longitude_v
+        self.elevation_v = elevation_v
 
         self.ra_v = ra_v
         self.dec_v = dec_v
