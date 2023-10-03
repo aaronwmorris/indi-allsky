@@ -3387,7 +3387,7 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
-    DISABLE_PROCESSING               = HiddenField('Disable processing', validators=[], default='1')  # disabled by default
+    DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
