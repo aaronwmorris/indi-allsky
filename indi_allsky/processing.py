@@ -705,7 +705,7 @@ class ImageProcessor(object):
 
 
         if bpm_entry:
-            p_bpm = Path(bpm_entry.filename)
+            p_bpm = Path(bpm_entry.getFilesystemPath())
             if p_bpm.exists():
                 logger.info('Matched bad pixel map: %s', p_bpm)
                 with fits.open(p_bpm) as bpm_f:
@@ -717,7 +717,7 @@ class ImageProcessor(object):
             bpm = None
 
 
-        p_dark_frame = Path(dark_frame_entry.filename)
+        p_dark_frame = Path(dark_frame_entry.getFilesystemPath())
         if not p_dark_frame.exists():
             logger.error('Dark file missing: %s', dark_frame_entry.filename)
             raise CalibrationNotFound('Dark file missing: {0:s}'.format(dark_frame_entry.filename))

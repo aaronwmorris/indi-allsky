@@ -872,13 +872,13 @@ class IndiAllSkyDarks(object):
 
 
         self._miscDb.addBadPixelMap(
-            full_bpm_filename_p,
+            full_bpm_filename_p.relative_to(self.image_dir),
             self.camera_id,
             bpm_metadata,
         )
 
         self._miscDb.addDarkFrame(
-            full_dark_filename_p,
+            full_dark_filename_p.relative_to(self.image_dir),
             self.camera_id,
             dark_metadata,
         )
@@ -903,14 +903,14 @@ class IndiAllSkyDarks(object):
         time.sleep(10.0)
 
         for bpm_entry in badpixelmaps_all:
-            filename = Path(bpm_entry.filename)
+            filename = Path(bpm_entry.getFilesystemPath())
 
             if filename.exists():
                 logger.warning('Removing bad pixel map: %s', filename)
                 filename.unlink()
 
         for dark_frame_entry in dark_frames_all:
-            filename = Path(dark_frame_entry.filename)
+            filename = Path(dark_frame_entry.getFilesystemPath())
 
             if filename.exists():
                 logger.warning('Removing dark frame: %s', filename)
