@@ -1096,8 +1096,14 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref['smoke_rating'],
         }
 
+        try:
+            raw_filename = filename.relative_to(self.image_dir)
+        except ValueError:
+            # raw exports may be outside the image path
+            raw_filename = filename
+
         self._miscDb.addRawImage(
-            filename.relative_to(self.image_dir),
+            raw_filename,
             i_ref['camera_id'],
             raw_metadata,
         )
