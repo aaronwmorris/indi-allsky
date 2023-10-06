@@ -48,6 +48,7 @@ from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -265,7 +266,12 @@ class VideoWorker(Process):
         try:
             # delete old video entry if it exists
             video_entry = IndiAllSkyDbVideoTable.query\
-                .filter(IndiAllSkyDbVideoTable.filename == str(video_file))\
+                .filter(
+                    or_(
+                        IndiAllSkyDbVideoTable.filename == str(video_file),
+                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(img_folder)),
+                    )
+                )\
                 .one()
 
             logger.warning('Removing orphaned video db entry')
@@ -364,7 +370,7 @@ class VideoWorker(Process):
 
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
-            video_file,
+            video_file.relative_to(img_folder),
             camera.id,
             video_metadata,
         )
@@ -449,7 +455,12 @@ class VideoWorker(Process):
         try:
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
-                .filter(IndiAllSkyDbKeogramTable.filename == str(keogram_file))\
+                .filter(
+                    or_(
+                        IndiAllSkyDbKeogramTable.filename == str(keogram_file),
+                        IndiAllSkyDbKeogramTable.filename == str(keogram_file.relative_to(img_folder)),
+                    )
+                )\
                 .one()
 
             logger.warning('Removing orphaned keogram db entry')
@@ -462,7 +473,12 @@ class VideoWorker(Process):
         try:
             # delete old star trail entry if it exists
             old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                .filter(IndiAllSkyDbStarTrailsTable.filename == str(startrail_file))\
+                .filter(
+                    or_(
+                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file),
+                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file.relative_to(img_folder)),
+                    )
+                )\
                 .one()
 
             logger.warning('Removing orphaned star trail db entry')
@@ -475,7 +491,12 @@ class VideoWorker(Process):
         try:
             # delete old star trail video entry if it exists
             old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                .filter(IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file))\
+                .filter(
+                    or_(
+                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file),
+                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file.relative_to(img_folder)),
+                    )
+                )\
                 .one()
 
             logger.warning('Removing orphaned star trail video db entry')
@@ -613,14 +634,14 @@ class VideoWorker(Process):
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
-            keogram_file,
+            keogram_file.relative_to(img_folder),
             camera.id,
             keogram_metadata,
         )
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
-                startrail_file,
+                startrail_file.relative_to(img_folder),
                 camera.id,
                 startrail_metadata,
             )
@@ -715,7 +736,7 @@ class VideoWorker(Process):
             st_frame_count = stg.timelapse_frame_count
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
                 startrail_video_entry = self._miscDb.addStarTrailVideo(
-                    startrail_video_file,
+                    startrail_video_file.relative_to(img_folder),
                     camera.id,
                     startrail_video_metadata,
                 )

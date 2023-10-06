@@ -626,7 +626,7 @@ class ImageWorker(Process):
             image_metadata['data'] = {}
 
             image_entry = self._miscDb.addImage(
-                new_filename,
+                new_filename.relative_to(self.image_dir),
                 camera_id,
                 image_metadata,
             )
@@ -935,7 +935,7 @@ class ImageWorker(Process):
         }
 
         self._miscDb.addFitsImage(
-            filename,
+            filename.relative_to(self.image_dir),
             i_ref['camera_id'],
             fits_metadata,
         )
@@ -1097,7 +1097,7 @@ class ImageWorker(Process):
         }
 
         self._miscDb.addRawImage(
-            filename,
+            filename.relative_to(self.image_dir),
             i_ref['camera_id'],
             raw_metadata,
         )
