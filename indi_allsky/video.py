@@ -106,6 +106,11 @@ class VideoWorker(Process):
         self._detection_mask = self._load_detection_mask()
 
 
+        if self.config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
+
         self._shutdown = False
 
 
@@ -269,7 +274,7 @@ class VideoWorker(Process):
                 .filter(
                     or_(
                         IndiAllSkyDbVideoTable.filename == str(video_file),
-                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(img_folder)),
+                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(self.image_dir)),
                     )
                 )\
                 .one()
@@ -370,7 +375,7 @@ class VideoWorker(Process):
 
         # Create DB entry before creating file
         video_entry = self._miscDb.addVideo(
-            video_file.relative_to(img_folder),
+            video_file.relative_to(self.image_dir),
             camera.id,
             video_metadata,
         )
@@ -451,14 +456,13 @@ class VideoWorker(Process):
             return
 
 
-
         try:
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(
                     or_(
                         IndiAllSkyDbKeogramTable.filename == str(keogram_file),
-                        IndiAllSkyDbKeogramTable.filename == str(keogram_file.relative_to(img_folder)),
+                        IndiAllSkyDbKeogramTable.filename == str(keogram_file.relative_to(self.image_dir))
                     )
                 )\
                 .one()
@@ -476,7 +480,7 @@ class VideoWorker(Process):
                 .filter(
                     or_(
                         IndiAllSkyDbStarTrailsTable.filename == str(startrail_file),
-                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file.relative_to(img_folder)),
+                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file.relative_to(self.image_dir)),
                     )
                 )\
                 .one()
@@ -494,7 +498,7 @@ class VideoWorker(Process):
                 .filter(
                     or_(
                         IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file),
-                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file.relative_to(img_folder)),
+                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file.relative_to(self.image_dir)),
                     )
                 )\
                 .one()
@@ -634,14 +638,14 @@ class VideoWorker(Process):
 
         # Add DB entries before creating files
         keogram_entry = self._miscDb.addKeogram(
-            keogram_file.relative_to(img_folder),
+            keogram_file.relative_to(self.image_dir),
             camera.id,
             keogram_metadata,
         )
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
-                startrail_file.relative_to(img_folder),
+                startrail_file.relative_to(self.image_dir),
                 camera.id,
                 startrail_metadata,
             )
@@ -736,7 +740,7 @@ class VideoWorker(Process):
             st_frame_count = stg.timelapse_frame_count
             if st_frame_count >= self.config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250):
                 startrail_video_entry = self._miscDb.addStarTrailVideo(
-                    startrail_video_file.relative_to(img_folder),
+                    startrail_video_file.relative_to(self.image_dir),
                     camera.id,
                     startrail_video_metadata,
                 )
