@@ -3627,7 +3627,7 @@ class JsonImageProcessingView(JsonView):
             )\
             .one()
 
-        filename_p = Path(fits_entry.filename)
+        filename_p = Path(fits_entry.getFilesystemPath())
 
 
         p_config = self.indi_allsky_config.copy()
@@ -3741,7 +3741,7 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    image_processor.add(f_image.filename, 0.0, datetime.now(), 0.0, f_image.camera)
+                    image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
             else:
                 image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
 
