@@ -9,6 +9,7 @@ import logging
 import numpy
 from astropy.io import fits
 
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 #from sqlalchemy.exc import IntegrityError
 
@@ -93,7 +94,12 @@ class ImportDarkFrames(object):
             # see if file is already imported
             try:
                 IndiAllSkyDbDarkFrameTable.query\
-                    .filter(IndiAllSkyDbDarkFrameTable.filename == str(frame))\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbDarkFrameTable.filename == str(frame),
+                            IndiAllSkyDbDarkFrameTable.filename == str(frame.relative_to(self.image_dir)),
+                        )
+                    )\
                     .one()
 
                 logger.warning('File already imported as a dark frame')
@@ -105,7 +111,12 @@ class ImportDarkFrames(object):
 
             try:
                 IndiAllSkyDbBadPixelMapTable.query\
-                    .filter(IndiAllSkyDbBadPixelMapTable.filename == str(frame))\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbBadPixelMapTable.filename == str(frame),
+                            IndiAllSkyDbBadPixelMapTable.filename == str(frame.relative_to(self.image_dir)),
+                        )
+                    )\
                     .one()
 
                 logger.warning('File already imported as a bad pixel map')

@@ -178,7 +178,7 @@ class FileUploader(Thread):
                 task.setFailed('ID {0:d} not found in {1:s}'.format(entry_id, entry_model))
                 return
 
-            local_file_p = Path(entry.filename)
+            local_file_p = Path(entry.getFilesystemPath())
 
 
         elif local_file:

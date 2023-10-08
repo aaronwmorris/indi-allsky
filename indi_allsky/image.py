@@ -626,7 +626,7 @@ class ImageWorker(Process):
             image_metadata['data'] = {}
 
             image_entry = self._miscDb.addImage(
-                new_filename,
+                new_filename.relative_to(self.image_dir),
                 camera_id,
                 image_metadata,
             )
@@ -935,7 +935,7 @@ class ImageWorker(Process):
         }
 
         self._miscDb.addFitsImage(
-            filename,
+            filename.relative_to(self.image_dir),
             i_ref['camera_id'],
             fits_metadata,
         )
@@ -1096,8 +1096,14 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref['smoke_rating'],
         }
 
+        try:
+            raw_filename = filename.relative_to(self.image_dir)
+        except ValueError:
+            # raw exports may be outside the image path
+            raw_filename = filename
+
         self._miscDb.addRawImage(
-            filename,
+            raw_filename,
             i_ref['camera_id'],
             raw_metadata,
         )
