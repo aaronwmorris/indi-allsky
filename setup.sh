@@ -299,7 +299,169 @@ sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+    DEBIAN_DISTRO=1
+    REDHAT_DISTRO=0
+
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3
+
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
+    elif [ "$CPU_ARCH" == "armv6l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_32_post.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    fi
+
+
+    # reconfigure system timezone
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
+
+
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        apache2 \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff5-dev \
+        libjpeg62-turbo-dev \
+        libopenjp2-7-dev \
+        zlib1g-dev \
+        libfreetype6-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkg-config \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-sv305 \
+            libsv305 \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            libcamera-apps
+    fi
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     DEBIAN_DISTRO=1
     REDHAT_DISTRO=0
 

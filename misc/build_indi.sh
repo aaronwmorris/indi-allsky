@@ -126,7 +126,54 @@ START_TIME=$(date +%s)
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-22-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        zlib1g-dev
+
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
