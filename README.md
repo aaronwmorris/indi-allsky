@@ -77,6 +77,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
 | Raspbian 10 (Legacy)  | armhf          | (NOT RECOMMENDED) Compile indi with build_indi.sh |
 | Armbian               | aarch64/armhf  | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| Debian 12             | x86_64         | Compile indi with build_indi.sh |
 | Debian 11             | x86_64         | Compile indi with build_indi.sh |
 | Debian 10             | x86_64         | (NOT RECOMMENDED) Compile indi with build_indi.sh |
 | Ubuntu 22.04          | aarch64        | Indi installed from ppa:mutlaqja/ppa |

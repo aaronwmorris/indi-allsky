@@ -52,7 +52,18 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
+    #MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        mosquitto \
+        mosquitto-clients \
+        mosquitto-dev \
+        ca-certificates
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -64,6 +75,17 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+    #MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        mosquitto \
+        mosquitto-clients \
+        mosquitto-dev \
+        ca-certificates
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 

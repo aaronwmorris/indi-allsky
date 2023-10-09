@@ -57,13 +57,22 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
-  
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+    sudo apt-get update
+    sudo apt-get -y install \
+        i2c-tools
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+    sudo apt-get update
+    sudo apt-get -y install \
+        i2c-tools
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
