@@ -158,7 +158,7 @@ if [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libboost-regex-dev \
         libcfitsio-dev \
         libcurl4-gnutls-dev \
-        libdc1394-22-dev \
+        libdc1394-dev \
         libev-dev \
         libfftw3-dev \
         libftdi1-dev \
