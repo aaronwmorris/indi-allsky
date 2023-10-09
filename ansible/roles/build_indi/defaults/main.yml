@@ -1,9 +1,0 @@
----
-# defaults file for build_indi
-projects_folder: "{{ lookup('env','HOME') }}/Projects"
-parallel_processes: "{{ ansible_facts['processor_vcpus'] }}"
-install_prefix: /usr/local
-indi_core_git_version: 'v2.0.1'
-indi_3rdparty_git_version: 'v2.0.1'
-indi_3rdparty_build_libs: []
-indi_3rdparty_build_drivers: []
