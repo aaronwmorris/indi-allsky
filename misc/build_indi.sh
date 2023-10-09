@@ -20,7 +20,7 @@ if [ -n "${1:-}" ]; then
     INDI_CORE_TAG="$1"
     INDI_3RDPARTY_TAG=$INDI_CORE_TAG
 else
-    INDI_CORE_TAG="v2.0.3"
+    INDI_CORE_TAG="v2.0.4"
     INDI_3RDPARTY_TAG=$INDI_CORE_TAG
 fi
 
@@ -169,9 +169,9 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
-        #libnutclient-dev \
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -217,9 +217,9 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
-        #libnutclient-dev \
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -267,7 +267,6 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libusb-1.0-0-dev \
         zlib1g-dev
 
-        #libnutclient-dev \
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -315,7 +314,6 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         libusb-1.0-0-dev \
         zlib1g-dev
 
-        #libnutclient-dev \
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -360,9 +358,9 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libnutclient-dev \
         zlib1g-dev
 
-        #libnutclient-dev \
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -409,7 +407,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libusb-1.0-0-dev \
         zlib1g-dev 
 
-        #libnutclient-dev \
 
 else
     echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
