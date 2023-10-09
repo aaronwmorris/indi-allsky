@@ -29,6 +29,9 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
+CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
+
 
 PROJECTS_FOLDER="$HOME/Projects"
 
@@ -87,6 +90,9 @@ echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
+echo
+echo "CPUs: $CPU_TOTAL"
+echo "Memory: $MEM_TOTAL kB"
 echo
 echo "Indi core:     $INDI_CORE_TAG"
 echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
