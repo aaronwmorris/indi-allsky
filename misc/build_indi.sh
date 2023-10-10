@@ -29,6 +29,9 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
+CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
+
 
 PROJECTS_FOLDER="$HOME/Projects"
 
@@ -88,6 +91,9 @@ echo "Release: $DISTRO_RELEASE"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
 echo
+echo "CPUs: $CPU_TOTAL"
+echo "Memory: $MEM_TOTAL kB"
+echo
 echo "Indi core:     $INDI_CORE_TAG"
 echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
 echo
@@ -126,7 +132,101 @@ START_TIME=$(date +%s)
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        zlib1g-dev
+
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        zlib1g-dev
+
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then

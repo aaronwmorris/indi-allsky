@@ -90,7 +90,22 @@ START_TIME=$(date +%s)
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
+    PYTHON_BIN=python3
+
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
+    fi
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
@@ -109,6 +124,21 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+    PYTHON_BIN=python3
+
+    if [ "$CPU_ARCH" == "armv7l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [ "$CPU_ARCH" == "i686" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_latest.txt
+    fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     PYTHON_BIN=python3

@@ -60,7 +60,17 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        udisks2 \
+        udiskie \
+        exfatprogs \
+        dosfstools
+
+
+elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
@@ -76,6 +86,15 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         udisks2 \
         udiskie \
         exfat-utils \
+        dosfstools
+
+elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        udisks2 \
+        udiskie \
+        exfatprogs \
         dosfstools
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
