@@ -1848,7 +1848,12 @@ DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
 echo
 echo
 echo "Detected INDI version: $DETECTED_INDIVERSION"
-sleep 5
+sleep 3
+
+
+if [ "$DETECTED_INDIVERSION" == "2.0.4" ]; then
+    whiptail --msgbox "There is a bug in INDI 2.0.4 that will\ncause the build for pyindi-client to fail\n\nhttps://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug" 0 0 --title "WARNING"
+fi
 
 
 INDI_VERSIONS=()
