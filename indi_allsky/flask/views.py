@@ -3697,6 +3697,8 @@ class JsonImageProcessingView(JsonView):
         processing_start = time.time()
 
 
+        message_list = list()
+
         if disable_processing:
             # just return original image with no processing
 
@@ -3729,6 +3731,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.colorize()
 
+            message_list.append('Unprocessed image')
+
         else:
             if p_config['IMAGE_STACK_COUNT'] > 1:
                 image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
@@ -3742,6 +3746,8 @@ class JsonImageProcessingView(JsonView):
 
                 for f_image in fits_image_query:
                     image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
+
+                message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
             else:
                 image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
 
@@ -3755,6 +3761,9 @@ class JsonImageProcessingView(JsonView):
             if p_config['NIGHT_CONTRAST_ENHANCE']:
                 if p_config.get('CONTRAST_ENHANCE_16BIT'):
                     image_processor.contrast_clahe_16bit()
+
+                    message_list.append('16-bit CLAHE')
+
 
             image_processor.convert_16bit_to_8bit()
 
@@ -3781,12 +3790,16 @@ class JsonImageProcessingView(JsonView):
             if p_config.get('SCNR_ALGORITHM'):
                 image_processor.scnr()
 
+                message_list.append('SCNR')
+
 
             # white balance
             image_processor.white_balance_manual_bgr()
 
             if p_config.get('AUTO_WB'):
                 image_processor.white_balance_auto_bgr()
+
+                message_list.append('Auto White Balance')
 
 
             # saturation
@@ -3796,6 +3809,8 @@ class JsonImageProcessingView(JsonView):
             if p_config['NIGHT_CONTRAST_ENHANCE']:
                 if not p_config.get('CONTRAST_ENHANCE_16BIT'):
                     image_processor.contrast_clahe()
+
+                    message_list.append('CLAHE Contrast Enhance')
 
 
             image_processor.colorize()
@@ -3818,6 +3833,8 @@ class JsonImageProcessingView(JsonView):
         json_data = dict()
         json_data['image_b64'] = json_image_b64.decode('utf-8')
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
+        #json_data['message'] = ', '.join(message_list)
+        json_data['message'] = ''  #  Blank until I can get messages from all processing actions
 
         return jsonify(json_data)
 

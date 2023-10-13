@@ -45,6 +45,11 @@ var fullscreen = false;  //initial state
             <div id="processing_time"></div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-sm-7 offset-5">
+            <div id="processing_message"></div>
+        </div>
+    </div>
 
     <form id="form_image_processing" onSubmit="return false;">
 
@@ -680,6 +685,9 @@ function submitProcessingData() {
             $("#loader_processing").css({'display' : 'none'});
             //window.scrollTo(0, 0);
             //window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+            $('#processing_message').text(json_data['message']);
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);
@@ -696,7 +704,6 @@ function submitProcessingData() {
 
 $('#form_image_processing').on('submit', function() {
     submitProcessingData();
-    $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
 });
 
 
