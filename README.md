@@ -1,4 +1,4 @@
-# Indi Allsky
+# indi-allsky
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera can be functional.
 
 ![](./content/20210930_224951.jpg)
@@ -71,21 +71,21 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 
 
 ## Distibution support
-| Distribution          | Arch           | Note |
-| --------------------- | -------------- | ---- |
-| Raspbian 11 64-bit    | aarch64        | Compile indi with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
-| Raspbian 11 32-bit    | armhf          | Compile indi with build_indi.sh |
-| Raspbian 10 (Legacy)  | armhf          | (NOT RECOMMENDED) Compile indi with build_indi.sh |
-| Armbian               | aarch64/armhf  | Compile indi with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
-| Debian 12             | x86_64         | Compile indi with build_indi.sh |
-| Debian 11             | x86_64         | Compile indi with build_indi.sh |
-| Debian 10             | x86_64         | (NOT RECOMMENDED) Compile indi with build_indi.sh |
-| Ubuntu 22.04          | aarch64        | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 22.04          | armhf          | Compile indi with build_indi.sh |
-| Ubuntu 22.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04          | x86_64         | Indi installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04<br />inc. Ubuntu Mate | aarch64 | Compile indi with build_indi.sh |
-| ~~Astroberry Server 2.0~~ | armhf      | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
+| Distribution                   | Arch           | Note |
+| ------------------------------ | -------------- | ---- |
+| Raspberry Pi OS 12 (bookworm)  | aarch64/armhf  | Compile INDI with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
+| Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
+| Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
+| Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
+| Debian 10 (buster)             | x86_64         | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
+| Ubuntu 22.04 (focal)           | aarch64        | INDI installed from ppa:mutlaqja/ppa |
+| Ubuntu 22.04                   | armhf          | Compile INDI with build_indi.sh |
+| Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
+| Ubuntu 20.04 (bionic)          | x86_64         | INDI installed from ppa:mutlaqja/ppa |
+| Ubuntu 20.04                   | aarch64        | Compile INDI with build_indi.sh |
+| Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
 
 # Installation
@@ -122,7 +122,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Security-Notifications
 ### libcamera support
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
-Proper libcamera support is only working on Raspbian 11 on Raspberry Pi 3 & 4.
+Proper libcamera support is only working on Raspberry Pi OS 11 on Raspberry Pi 3 & 4.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement
 
@@ -406,10 +406,10 @@ Common problems you might run into.
     * 1K (1920x1080) h.264 encoding with ffmpeg requires an additional ~500MB of RAM.  1GB of RAM should be the bare minimum system memory.  You should also have 100-500MB of additional swap space to prevent running out of memory during encoding.  2GB of RAM recommended.
     * 4K (3840x2160) h.264 encoding requires an additional 2+GB of RAM.  4GB of RAM recommended.
     * 8K resolution (ArduCam 64MP HawkEye) requires 8GB of RAM for full resolution video processing.
-* In Raspbian 10 (legacy), the h.264 codec in ffmpeg has a maximum frame size of 4096×2304 (AVC level 5.1).  If your camera generates higher resolution images, you will need to scale the video  or use the Region of Interest (RoI) options to reduce the frame size.
+* In Raspberry Pi OS 10, the h.264 codec in ffmpeg has a maximum frame size of 4096×2304 (AVC level 5.1).  If your camera generates higher resolution images, you will need to scale the video  or use the Region of Interest (RoI) options to reduce the frame size.
     * NEW: indi-allsky now has the ability to scale the native resolution images during the ffmpeg encoding phase, so you do not need to pre-scale your images.
     * The RaspberryPi HQ camera has a bin1 image size of 4056x3040.  Setting IMAGE_SCALE to 75 in the config results in a image size of 3042x2280.  Alternatively, you can center crop the image using IMAGE_CROP_ROI set to [0, 368, 4056, 2672] for an image size of 4056×2304.
-* ffmpeg in Raspbian 11 enables AVC level 6.0+ which permits h.264 resolutions up to 8192×4320 (you must have sufficient system memory)
+* ffmpeg in Raspberry Pi OS 11 enables AVC level 6.0+ which permits h.264 resolutions up to 8192×4320 (you must have sufficient system memory)
     * https://en.wikipedia.org/wiki/Advanced_Video_Coding
 
 
