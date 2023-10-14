@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 import math
 import time
 import signal
@@ -1509,8 +1510,8 @@ class ImageProcessor(object):
 
 
     def get_astrometric_data(self):
-        utcnow = datetime.utcnow()  # ephem expects UTC dates
-        #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)
@@ -1617,7 +1618,7 @@ class ImageProcessor(object):
 
             try:
                 iss_next_pass = obs.next_pass(iss)
-                self.astrometric_data['iss_next_h'] = (iss_next_pass[0].datetime() - utcnow).total_seconds() / 3600
+                self.astrometric_data['iss_next_h'] = (iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
                 self.astrometric_data['iss_next_alt'] = math.degrees(iss_next_pass[3])
             except ValueError as e:
                 logger.error('ISS next pass error: %s', str(e))
@@ -1639,7 +1640,7 @@ class ImageProcessor(object):
 
             try:
                 hst_next_pass = obs.next_pass(hst)
-                self.astrometric_data['hst_next_h'] = (hst_next_pass[0].datetime() - utcnow).total_seconds() / 3600
+                self.astrometric_data['hst_next_h'] = (hst_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
                 self.astrometric_data['hst_next_alt'] = math.degrees(hst_next_pass[3])
             except ValueError as e:
                 logger.error('HST next pass error: %s', str(e))
@@ -1724,8 +1725,8 @@ class ImageProcessor(object):
         image_height, image_width = self.image.shape[:2]
 
 
-        utcnow = datetime.utcnow()  # ephem expects UTC dates
-        #utcnow = datetime.utcnow() - timedelta(hours=13)  # testing
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
         obs.lon = math.radians(self.longitude_v.value)

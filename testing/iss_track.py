@@ -4,6 +4,7 @@
 import io
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 import socket
 import ssl
@@ -81,7 +82,7 @@ class IssTrack(object):
 
 
             while True:
-                utcnow = datetime.utcnow()
+                utcnow = datetime.now(tz=timezone.utc)
 
                 obs.date = utcnow
                 #obs.date = utcnow + timedelta(hours=6)  # testing
@@ -97,7 +98,7 @@ class IssTrack(object):
                 logger.info('iss: altitude %4.1f, azimuth %5.1f', math.degrees(iss.alt), math.degrees(iss.az))
                 logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S} ({1:0.1f}h), max: {2:%Y-%m-%d %H:%M:%S}, set: {3:%Y-%m-%d %H:%M:%S} - duration {4:d}s - elev {5:0.1f}km'.format(
                     ephem.localtime(iss_next_pass[0]),
-                    (iss_next_pass[0].datetime() - utcnow).total_seconds() / 3600,
+                    (iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600,
                     ephem.localtime(iss_next_pass[2]),
                     ephem.localtime(iss_next_pass[4]),
                     (ephem.localtime(iss_next_pass[4]) - ephem.localtime(iss_next_pass[0])).seconds,

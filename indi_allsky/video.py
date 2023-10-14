@@ -822,7 +822,7 @@ class VideoWorker(Process):
 
         logger.info('Generating Allsky EndOfNight data.json')
 
-        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         obs = ephem.Observer()
         obs.lon = math.radians(camera.longitude)

@@ -370,7 +370,7 @@ class CaptureWorker(Process):
 
                     # update system time from GPS offset
                     if self.update_time_offset:
-                        utcnow = datetime.utcnow()
+                        utcnow = datetime.utcnow()  # fixme python 3.12
 
                         gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
 
@@ -1272,7 +1272,7 @@ class CaptureWorker(Process):
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
         obs.elevation = self.elevation_v.value
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         sun = ephem.Sun()
         sun.compute(obs)
@@ -1288,7 +1288,7 @@ class CaptureWorker(Process):
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
         obs.elevation = self.elevation_v.value
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         moon = ephem.Moon()
         moon.compute(obs)
@@ -1469,7 +1469,7 @@ class CaptureWorker(Process):
             return
 
 
-        systemtime_utc = datetime.utcnow()
+        systemtime_utc = datetime.utcnow()  # fixme python 3.12
         logger.info('System time: %s', systemtime_utc)
 
         time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()

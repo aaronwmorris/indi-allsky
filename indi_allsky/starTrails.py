@@ -351,7 +351,7 @@ class StarTrailGenerator(object):
 
 
         ### EXIF tags ###
-        exp_date_utc = datetime.utcnow()
+        exp_date_utc = datetime.now(tz=timezone.utc)
 
         # Python 3.6, 3.7 does not support as_integer_ratio()
         focal_length_frac = Fraction(camera.lensFocalLength).limit_denominator()

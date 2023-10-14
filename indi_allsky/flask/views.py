@@ -1635,7 +1635,7 @@ class AjaxSetTimeView(BaseView):
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
 
-        systemtime_utc = datetime.utcnow()
+        systemtime_utc = datetime.now(tz=timezone.utc)
 
         time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
         app.logger.info('Time offset: %ds', int(time_offset))
@@ -3834,7 +3834,7 @@ class JsonImageProcessingView(JsonView):
         json_data['image_b64'] = json_image_b64.decode('utf-8')
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
         #json_data['message'] = ', '.join(message_list)
-        json_data['message'] = ''  #  Blank until I can get messages from all processing actions
+        json_data['message'] = ''  # Blank until I can get messages from all processing actions
 
         return jsonify(json_data)
 
@@ -4342,7 +4342,7 @@ class AjaxAstroPanelView(BaseView):
         obs.elevation = camera.elevation
 
         # update time
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(tz=timezone.utc)
 
         obs.date = utcnow
 
@@ -4519,7 +4519,7 @@ class AjaxAstroPanelView(BaseView):
 
 
     def astropanel_get_body_positions(self, obs, body):
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(tz=timezone.utc)
 
         obs.date = utcnow
         body.compute(obs)

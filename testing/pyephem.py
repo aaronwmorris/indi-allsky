@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import ephem
-import datetime
-from dateutil import tz
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 import math
 import json
 import logging
@@ -13,14 +14,10 @@ logger = logging
 
 LATITUDE = 33
 LONGITUDE = -84
-TIMEZONE = 'EST5EDT'
-TIME_OFFSET = -5
 
 
-local_tz = tz.gettz(TIMEZONE)
-
-utcnow = datetime.datetime.utcnow()  # ephem expects UTC dates
-#utcnow = datetime.datetime.utcnow() + datetime.timedelta(days=10)
+utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+#utcnow = datetime.now(tz=timezone.utc) + timedelta(days=10)
 
 obs = ephem.Observer()
 obs.lat = math.radians(LATITUDE)
@@ -51,11 +48,10 @@ sun_rise_ha = math.degrees(obs.sidereal_time() - sun.ra)
 logger.info('Sun alt: %0.7f rad', sun.alt)
 logger.info('Sun alt: %0.1f', sun_alt_deg)
 logger.info('Sun HA: %0.1f', sun_ha_deg)
-logger.info('Sun Transit: %s', sun_next_transit)
-logger.info('Sun rise: %s', ephem.Date(sun_rise_date + (ephem.hour * TIME_OFFSET)))
-#logger.info('Sun rise: %s', sun_rise_date.datetime().astimezone(local_tz))
+logger.info('Sun rise: %s', ephem.localtime(sun_rise_date))
+logger.info('Sun set: %s', ephem.localtime(sun_set_date))
+logger.info('Sun Transit: %s', ephem.localtime(sun_next_transit))
 logger.info('Sun rise HA: %0.1f', sun_rise_ha)
-logger.info('Sun set: %s', ephem.Date(sun_set_date + (ephem.hour * TIME_OFFSET)))
 
 
 obs.horizon = math.radians(-18)
@@ -63,11 +59,11 @@ sun.compute(obs)
 sun_dawn_date = obs.next_rising(sun)
 sun_twilight_date = obs.next_setting(sun)
 
-logger.info('Sun dawn: %s', ephem.Date(sun_dawn_date + (ephem.hour * TIME_OFFSET)))
-logger.info('Sun twilight: %s', ephem.Date(sun_twilight_date + (ephem.hour * TIME_OFFSET)))
+logger.info('Sun dawn: %s', ephem.localtime(sun_dawn_date))
+logger.info('Sun twilight: %s', ephem.localtime(sun_twilight_date))
 
 # Moon
-obs.date = datetime.datetime.utcnow()  # ephem expects UTC dates
+obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 obs.horizon = math.radians(0)
 
 moon = ephem.Moon()
@@ -112,25 +108,25 @@ try:
         sun_civilDawn_date = obs.previous_rising(sun, use_center=True).datetime()
 except ephem.NeverUpError:
     # northern hemisphere
-    sun_civilDawn_date = utcnow + datetime.timedelta(years=10)
+    sun_civilDawn_date = utcnow + timedelta(years=10)
 except ephem.AlwaysUpError:
     # southern hemisphere
-    sun_civilDawn_date = utcnow - datetime.timedelta(days=1)
+    sun_civilDawn_date = utcnow - timedelta(days=1)
 
 
 try:
     sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
 except ephem.AlwaysUpError:
     # northern hemisphere
-    sun_civilTwilight_date = utcnow - datetime.timedelta(days=1)
+    sun_civilTwilight_date = utcnow - timedelta(days=1)
 except ephem.NeverUpError:
     # southern hemisphere
-    sun_civilTwilight_date = utcnow + datetime.timedelta(years=10)
+    sun_civilTwilight_date = utcnow + timedelta(years=10)
 
 
 data = {
-    'sunrise'            : sun_civilDawn_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
-    'sunset'             : sun_civilTwilight_date.replace(tzinfo=datetime.timezone.utc).isoformat(),
+    'sunrise'            : sun_civilDawn_date.replace(tzinfo=timezone.utc).isoformat(),
+    'sunset'             : sun_civilTwilight_date.replace(tzinfo=timezone.utc).isoformat(),
     'streamDaytime'      : False,
 }
 

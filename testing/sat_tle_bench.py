@@ -18,6 +18,7 @@ class SatBench(object):
     def main(self):
         setup_sat = '''
 from datetime import datetime
+from datetime import timezone
 import io
 import math
 import ephem
@@ -30,7 +31,7 @@ with io.open('/tmp/iss_27272897.txt', 'r') as f_tle:
 
         s_sat = '''
 iss = ephem.readtle(*tle_data)
-obs.date = datetime.utcnow()
+obs.date = datetime.now(tz=timezone.utc)
 iss.compute(obs)
 iss_next_pass = obs.next_pass(iss)
 #math.degrees(iss.alt)
