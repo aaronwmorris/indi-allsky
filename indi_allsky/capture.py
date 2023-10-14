@@ -370,7 +370,7 @@ class CaptureWorker(Process):
 
                     # update system time from GPS offset
                     if self.update_time_offset:
-                        utcnow = datetime.utcnow()  # fixme python 3.12
+                        utcnow = datetime.now(tz=timezone.utc)
 
                         gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
 
@@ -1469,10 +1469,10 @@ class CaptureWorker(Process):
             return
 
 
-        systemtime_utc = datetime.utcnow()  # fixme python 3.12
+        systemtime_utc = datetime.now(tz=timezone.utc)
         logger.info('System time: %s', systemtime_utc)
 
-        time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
+        time_offset = systemtime_utc.timestamp() - gps_utc.astimezone(tz=timezone.utc).timestamp()
         logger.info('GPS time offset: %ds', int(time_offset))
 
 

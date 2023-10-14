@@ -1630,7 +1630,7 @@ class AjaxSetTimeView(BaseView):
 
 
         new_datetime_str = str(request.json['NEW_DATETIME'])
-        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S').astimezone()
 
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
