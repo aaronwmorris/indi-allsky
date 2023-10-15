@@ -3,6 +3,7 @@
 import math
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 import ephem
 import logging
 
@@ -26,7 +27,7 @@ sun = ephem.Sun()
 moon = ephem.Moon()
 
 
-utcnow = datetime.utcnow() - timedelta(days=30)
+utcnow = datetime.now(tz=timezone.utc) - timedelta(days=30)
 
 for x in range(40000):
     utcnow = utcnow + timedelta(hours=1)

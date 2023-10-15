@@ -9,6 +9,7 @@ import math
 import time
 #import copy
 from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 import logging
 from pprint import pformat
@@ -177,7 +178,7 @@ class KeogramGenerator(object):
 
 
         ### EXIF tags ###
-        exp_date_utc = datetime.utcnow()
+        exp_date_utc = datetime.now(tz=timezone.utc)
 
         zeroth_ifd = {
             piexif.ImageIFD.Model            : camera.name,

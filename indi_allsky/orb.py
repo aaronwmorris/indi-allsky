@@ -709,7 +709,7 @@ class IndiAllskyOrbGenerator(object):
         alt_deg = math.degrees(skyObj.alt)
 
         skyObj_transit_date = obs.next_transit(skyObj).datetime()
-        skyObj_transit_delta = skyObj_transit_date - utcnow
+        skyObj_transit_delta = skyObj_transit_date - utcnow.replace(tzinfo=None)
         if skyObj_transit_delta.seconds < 43200:  # 12 hours
             # rising, put on right
             x = image_width

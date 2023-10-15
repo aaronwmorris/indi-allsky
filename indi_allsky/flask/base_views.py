@@ -4,6 +4,7 @@ import time
 import ipaddress
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 import ephem
 
@@ -266,7 +267,7 @@ class TemplateView(BaseView):
             elevation = 0
 
 
-        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         obs = ephem.Observer()
         obs.lon = math.radians(longitude)
@@ -327,7 +328,7 @@ class TemplateView(BaseView):
         data['elevation'] = elevation
 
 
-        utcnow = datetime.utcnow()  # ephem expects UTC dates
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         obs = ephem.Observer()
         obs.lon = math.radians(longitude)
@@ -348,7 +349,7 @@ class TemplateView(BaseView):
         data['sun_alt'] = sun_alt
 
         sun_transit_date = obs.next_transit(sun).datetime()
-        sun_transit_delta = sun_transit_date - utcnow
+        sun_transit_delta = sun_transit_date - utcnow.replace(tzinfo=None)
         if sun_transit_delta.seconds < 43200:  # 12 hours
             #rising
             data['sun_rising_sign'] = '&nearr;'
@@ -366,7 +367,7 @@ class TemplateView(BaseView):
         data['moon_phase_percent'] = moon_phase_percent
 
         moon_transit_date = obs.next_transit(moon).datetime()
-        moon_transit_delta = moon_transit_date - utcnow
+        moon_transit_delta = moon_transit_date - utcnow.replace(tzinfo=None)
         if moon_transit_delta.seconds < 43200:  # 12 hours
             #rising
             data['moon_rising_sign'] = '&nearr;'

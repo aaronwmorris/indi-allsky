@@ -884,7 +884,6 @@ class ConfigView(FormView):
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'CCD_TEMP_SCRIPT'                : self.indi_allsky_config.get('CCD_TEMP_SCRIPT', ''),
             'GPS_ENABLE'                     : self.indi_allsky_config.get('GPS_ENABLE', False),
-            'GPS_TIMESYNC'                   : self.indi_allsky_config.get('GPS_TIMESYNC', False),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DAY'                 : self.indi_allsky_config.get('TARGET_ADU_DAY', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
@@ -1324,7 +1323,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['GPS_ENABLE']                           = bool(request.json['GPS_ENABLE'])
-        self.indi_allsky_config['GPS_TIMESYNC']                         = bool(request.json['GPS_TIMESYNC'])
         self.indi_allsky_config['CCD_TEMP_SCRIPT']                      = str(request.json['CCD_TEMP_SCRIPT'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         self.indi_allsky_config['TARGET_ADU_DAY']                       = int(request.json['TARGET_ADU_DAY'])
@@ -1630,12 +1628,12 @@ class AjaxSetTimeView(BaseView):
 
 
         new_datetime_str = str(request.json['NEW_DATETIME'])
-        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S')
+        new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S').astimezone()
 
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
 
-        systemtime_utc = datetime.utcnow()
+        systemtime_utc = datetime.now(tz=timezone.utc)
 
         time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
         app.logger.info('Time offset: %ds', int(time_offset))
@@ -3522,7 +3520,10 @@ class ImageProcessingView(TemplateView):
                 .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
                 .first()
 
-            fits_id = fits_entry.id
+            if fits_entry:
+                fits_id = fits_entry.id
+            else:
+                fits_id = 0  # will not exist
 
 
         form_data = {
@@ -3617,15 +3618,25 @@ class JsonImageProcessingView(JsonView):
         fits_id                             = int(request.json['FITS_ID'])
 
 
-        fits_entry = IndiAllSkyDbFitsImageTable.query\
-            .join(IndiAllSkyDbFitsImageTable.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbFitsImageTable.id == fits_id,
-                )
-            )\
-            .one()
+        try:
+            fits_entry = IndiAllSkyDbFitsImageTable.query\
+                .join(IndiAllSkyDbFitsImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                        IndiAllSkyDbFitsImageTable.id == fits_id,
+                    )
+                )\
+                .one()
+        except NoResultFound:
+            json_data = {
+                'image_b64' : None,
+                'processing_elapsed_s' : 0.0,
+                'message' : 'No FITS images found',
+            }
+            return jsonify(json_data)
+
+
 
         filename_p = Path(fits_entry.getFilesystemPath())
 
@@ -3834,7 +3845,7 @@ class JsonImageProcessingView(JsonView):
         json_data['image_b64'] = json_image_b64.decode('utf-8')
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
         #json_data['message'] = ', '.join(message_list)
-        json_data['message'] = ''  #  Blank until I can get messages from all processing actions
+        json_data['message'] = ''  # Blank until I can get messages from all processing actions
 
         return jsonify(json_data)
 
@@ -4342,7 +4353,7 @@ class AjaxAstroPanelView(BaseView):
         obs.elevation = camera.elevation
 
         # update time
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(tz=timezone.utc)
 
         obs.date = utcnow
 
@@ -4519,7 +4530,7 @@ class AjaxAstroPanelView(BaseView):
 
 
     def astropanel_get_body_positions(self, obs, body):
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(tz=timezone.utc)
 
         obs.date = utcnow
         body.compute(obs)

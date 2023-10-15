@@ -368,16 +368,16 @@ class CaptureWorker(Process):
                     self._periodic_tasks()
 
 
-                    # update system time from GPS offset
+                    # update system time from time offset
                     if self.update_time_offset:
-                        utcnow = datetime.utcnow()
+                        utcnow = datetime.now(tz=timezone.utc)
 
-                        gps_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
+                        new_time_utc = datetime.fromtimestamp(utcnow.timestamp() - self.update_time_offset).astimezone(tz=timezone.utc)
 
                         self.update_time_offset = None  # reset
 
                         try:
-                            self.setTimeSystemd(gps_utc)
+                            self.setTimeSystemd(new_time_utc)
                         except dbus.exceptions.DBusException as e:
                             logger.error('DBus Error: %s', str(e))
 
@@ -976,10 +976,6 @@ class CaptureWorker(Process):
         self._miscDb.setState('WATCHDOG', int(now))
 
 
-        if self.config.get('GPS_TIMESYNC'):
-            self.validateGpsTime()
-
-
         if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
@@ -1002,10 +998,6 @@ class CaptureWorker(Process):
 
         # Update watchdog
         self._miscDb.setState('WATCHDOG', int(now))
-
-
-        if self.config.get('GPS_TIMESYNC'):
-            self.validateGpsTime()
 
 
         if self.camera_server in ['indi_asi_ccd']:
@@ -1272,7 +1264,7 @@ class CaptureWorker(Process):
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
         obs.elevation = self.elevation_v.value
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         sun = ephem.Sun()
         sun.compute(obs)
@@ -1288,7 +1280,7 @@ class CaptureWorker(Process):
         obs.lon = math.radians(self.longitude_v.value)
         obs.lat = math.radians(self.latitude_v.value)
         obs.elevation = self.elevation_v.value
-        obs.date = datetime.utcnow()  # ephem expects UTC dates
+        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         moon = ephem.Moon()
         moon.compute(obs)
@@ -1446,40 +1438,6 @@ class CaptureWorker(Process):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
-
-
-    def validateGpsTime(self):
-        if not self.config.get('GPS_ENABLE'):
-            return
-
-        if not self.config.get('GPS_TIMESYNC'):
-            return
-
-        if not self.indiclient.gps_device:
-            logger.error('No GPS device for time sync')
-            return
-
-
-        self.indiclient.refreshGps()
-        gps_utc, gps_offset = self.indiclient.getGpsTime()
-
-
-        if not gps_utc:
-            logger.error('GPS did not return time data')
-            return
-
-
-        systemtime_utc = datetime.utcnow()
-        logger.info('System time: %s', systemtime_utc)
-
-        time_offset = systemtime_utc.timestamp() - gps_utc.timestamp()
-        logger.info('GPS time offset: %ds', int(time_offset))
-
-
-        # if there is a delta of more than 60 seconds, update system time
-        if abs(time_offset) > 60:
-            # time will be updated next time the camera is not taking an exposure
-            self.update_time_offset = time_offset
 
 
     def setTimeSystemd(self, new_datetime_utc):
