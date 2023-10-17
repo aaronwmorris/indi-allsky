@@ -74,6 +74,7 @@ def CAMERA_INTERFACE_validator(form, field):
         'libcamera_imx296_gs',
         'libcamera_imx290',
         'libcamera_imx462',
+        'pycurl_camera',
     ):
         raise ValidationError('Invalid camera interface')
 
@@ -1735,6 +1736,11 @@ def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
         raise ValidationError('Invalid characters')
 
 
+def PYCURL_CAMERA__URL_validator(form, field):
+    if not field.data:
+        return
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -1807,6 +1813,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
         ('libcamera_imx290', 'libcamera IMX290'),
         ('libcamera_imx462', 'libcamera IMX462'),
+        ('pycurl_camera', 'pyCurl Camera'),
     )
 
     CCD_BIT_DEPTH_choices = (
@@ -2237,6 +2244,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__AWB_ENABLE_DAY        = BooleanField('Day Enable AWB')
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
+    PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')

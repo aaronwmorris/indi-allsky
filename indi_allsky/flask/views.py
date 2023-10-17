@@ -1049,6 +1049,7 @@ class ConfigView(FormView):
             'LIBCAMERA__AWB_ENABLE_DAY'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY', False),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
+            'PYCURL_CAMERA__URL'             : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('URL', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1283,6 +1284,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('LIBCAMERA'):
             self.indi_allsky_config['LIBCAMERA'] = {}
 
+        if not self.indi_allsky_config.get('PYCURL_CAMERA'):
+            self.indi_allsky_config['PYCURL_CAMERA'] = {}
+
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
 
@@ -1501,6 +1505,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['AWB_ENABLE_DAY']          = bool(request.json['LIBCAMERA__AWB_ENABLE_DAY'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])
+        self.indi_allsky_config['PYCURL_CAMERA']['URL']                 = str(request.json['PYCURL_CAMERA__URL'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
