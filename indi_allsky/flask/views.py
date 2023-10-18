@@ -1052,6 +1052,8 @@ class ConfigView(FormView):
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
             'PYCURL_CAMERA__URL'             : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('URL', ''),
+            'PYCURL_CAMERA__USERNAME'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('USERNAME', ''),
+            'PYCURL_CAMERA__PASSWORD'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1510,6 +1512,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])
         self.indi_allsky_config['PYCURL_CAMERA']['URL']                 = str(request.json['PYCURL_CAMERA__URL'])
+        self.indi_allsky_config['PYCURL_CAMERA']['USERNAME']            = str(request.json['PYCURL_CAMERA__USERNAME'])
+        self.indi_allsky_config['PYCURL_CAMERA']['PASSWORD']            = str(request.json['PYCURL_CAMERA__PASSWORD'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
