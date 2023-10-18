@@ -52,8 +52,11 @@ class PycurlCameraWorker(Thread):
         client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
         client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
-        #client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
-        #client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
+        username = self.config.get('PYCURL_CAMERA', {}).get('USERNAME')
+        password = self.config.get('PYCURL_CAMERA', {}).get('PASSWORD')
+        if username:
+            client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
+            client.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_ANY)
 
         url = self.config.get('PYCURL_CAMERA', {}).get('URL', '')
         logger.info('Camera URL: %s', url)
