@@ -56,6 +56,26 @@ if [ -f "/etc/astroberry.version" ]; then
 fi
 
 
+echo
+echo "User info"
+id
+echo
+
+echo "Process info"
+# shellcheck disable=SC2009
+ps auxwww | grep indi | grep -v grep
+echo
+
+echo "USB info"
+lsusb
+echo
+
+
+echo "Module info"
+lsmod
+echo
+
+
 if pkg-config --exists libindi; then
     DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
     echo "indi version: $DETECTED_INDIVERSION"
