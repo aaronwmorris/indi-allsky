@@ -422,6 +422,30 @@
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.PYCURL_CAMERA__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.PYCURL_CAMERA__USERNAME(class='form-control bg-secondary') }}
+            <div id="PYCURL_CAMERA__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.PYCURL_CAMERA__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.PYCURL_CAMERA__PASSWORD(class='form-control bg-secondary') }}
+            <div id="PYCURL_CAMERA__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -3142,6 +3166,8 @@ const field_names = [
     'LIBCAMERA__EXTRA_OPTIONS',
     'LIBCAMERA__EXTRA_OPTIONS_DAY',
     'PYCURL_CAMERA__URL',
+    'PYCURL_CAMERA__USERNAME',
+    'PYCURL_CAMERA__PASSWORD',
     'INDI_CONFIG_DEFAULTS',
     'CONFIG_NOTE',
 ];

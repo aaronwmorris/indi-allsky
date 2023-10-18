@@ -1348,6 +1348,16 @@ def SYNCAPI__USERNAME_validator(form, field):
         raise ValidationError('Invalid username')
 
 
+def PYCURL_CAMERA__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
 def FILETRANSFER__PASSWORD_validator(form, field):
     pass
 
@@ -1357,6 +1367,10 @@ def MQTTPUBLISH__PASSWORD_validator(form, field):
 
 
 def SYNCAPI__APIKEY_validator(form, field):
+    pass
+
+
+def PYCURL_CAMERA__PASSWORD_validator(form, field):
     pass
 
 
@@ -2171,8 +2185,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
     FILETRANSFER__HOST               = StringField('Host', validators=[FILETRANSFER__HOST_validator])
     FILETRANSFER__PORT               = IntegerField('Port', validators=[FILETRANSFER__PORT_validator])
-    FILETRANSFER__USERNAME           = StringField('Username', validators=[FILETRANSFER__USERNAME_validator])
-    FILETRANSFER__PASSWORD           = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[FILETRANSFER__PASSWORD_validator])
+    FILETRANSFER__USERNAME           = StringField('Username', validators=[FILETRANSFER__USERNAME_validator], render_kw={'autocomplete' : 'off'})
+    FILETRANSFER__PASSWORD           = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[FILETRANSFER__PASSWORD_validator], render_kw={'autocomplete' : 'off'})
     FILETRANSFER__PRIVATE_KEY        = StringField('Private Key', validators=[FILETRANSFER__PRIVATE_KEY_validator])
     FILETRANSFER__PUBLIC_KEY         = StringField('Public Key', validators=[FILETRANSFER__PUBLIC_KEY_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
@@ -2213,16 +2227,16 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     MQTTPUBLISH__PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
-    MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator])
-    MQTTPUBLISH__PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator])
+    MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'off'})
+    MQTTPUBLISH__PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'off'})
     MQTTPUBLISH__BASE_TOPIC          = StringField('MQTT Base Topic', validators=[DataRequired(), MQTTPUBLISH__BASE_TOPIC_validator])
     MQTTPUBLISH__QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     MQTTPUBLISH__TLS                 = BooleanField('Use TLS')
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     SYNCAPI__ENABLE                  = BooleanField('Enable Sync API')
     SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator])
-    SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator])
-    SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator])
+    SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator], render_kw={'autocomplete' : 'off'})
+    SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator], render_kw={'autocomplete' : 'off'})
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
     SYNCAPI__POST_S3                 = BooleanField('Sync after S3 Upload')
     SYNCAPI__EMPTY_FILE              = BooleanField('Sync empty file')
@@ -2247,6 +2261,8 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
+    PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'off'})
+    PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'off'})
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')

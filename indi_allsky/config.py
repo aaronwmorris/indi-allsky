@@ -294,6 +294,9 @@ class IndiAllSkyConfigBase(object):
         },
         "PYCURL_CAMERA" : {
             "URL"                    : '',
+            "USERNAME"               : "",
+            "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
         },
     })
 
@@ -412,6 +415,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
 
+
             syncapi__apikey_e = config.get('SYNCAPI', {}).get('APIKEY_E', '')
             if syncapi__apikey_e:
                 # not catching InvalidToken
@@ -419,12 +423,21 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
 
+
+            pycurl_camera__password_e = config.get('PYCURL_CAMERA', {}).get('PASSWORD_E', '')
+            if pycurl_camera__password_e:
+                # not catching InvalidToken
+                pycurl_camera__password = f_key.decrypt(pycurl_camera__password_e.encode()).decode()
+            else:
+                pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
+
         else:
             # passwords should not be encrypted
             filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
             s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
             mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
             syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
+            pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -435,6 +448,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['MQTTPUBLISH']['PASSWORD_E'] = ''
         config['SYNCAPI']['APIKEY'] = syncapi__apikey
         config['SYNCAPI']['APIKEY_E'] = ''
+        config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
+        config['PYCURL_CAMERA']['PASSWORD_E'] = ''
 
         return config
 
@@ -498,6 +513,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 syncapi__apikey = ''
 
 
+            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            if pycurl_camera__password:
+                pycurl_camera__password_e = f_key.encrypt(pycurl_camera__password.encode()).decode()
+                pycurl_camera__password = ''
+            else:
+                pycurl_camera__password_e = ''
+                pycurl_camera__password = ''
+
         else:
             # passwords should not be encrypted
             encrypted = False
@@ -510,6 +533,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             mqttpublish__password_e = ''
             syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
             syncapi__apikey_e = ''
+            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            pycurl_camera__password_e = ''
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -520,6 +545,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
         config['SYNCAPI']['APIKEY'] = syncapi__apikey
         config['SYNCAPI']['APIKEY_E'] = syncapi__apikey_e
+        config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
+        config['PYCURL_CAMERA']['PASSWORD_E'] = pycurl_camera__password_e
 
 
         return config, encrypted
