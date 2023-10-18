@@ -282,16 +282,14 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : mqtt_task.id})
 
 
-    def s3_upload_image(self, asset_entry, asset_metadata):
+    def s3_upload_asset(self, asset_entry, asset_metadata):
         if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
             #logger.warning('S3 uploading disabled')
             return
 
-
         if not asset_entry:
             #logger.warning('S3 uploading disabled')
             return
-
 
         logger.info('Uploading to S3 bucket')
 
@@ -314,48 +312,40 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : s3_task.id})
 
 
-    def s3_upload_video(self, asset_entry, asset_metadata):
-        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
+    def s3_upload_image(self, *args):
+        self.s3_upload_asset(*args)
+
+
+    def s3_upload_fits(self, *args):
+        if not self.config.get('S3UPLOAD', {}).get('UPLOAD_FITS'):
             #logger.warning('S3 uploading disabled')
             return
 
+        self.s3_upload_asset(*args)
 
-        if not asset_entry:
+
+    def s3_upload_raw(self, *args):
+        if not self.config.get('S3UPLOAD', {}).get('UPLOAD_RAW'):
             #logger.warning('S3 uploading disabled')
             return
 
+        self.s3_upload_asset(*args)
 
-        logger.info('Uploading to S3 bucket')
 
-        # publish data to s3 bucket
-        jobdata = {
-            'action'      : constants.TRANSFER_S3,
-            'model'       : asset_entry.__class__.__name__,
-            'id'          : asset_entry.id,
-            'metadata'    : asset_metadata,
-        }
-
-        s3_task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.UPLOAD,
-            state=TaskQueueState.QUEUED,
-            data=jobdata,
-        )
-        db.session.add(s3_task)
-        db.session.commit()
-
-        self.upload_q.put({'task_id' : s3_task.id})
+    def s3_upload_video(self, *args):
+        self.s3_upload_asset(*args)
 
 
     def s3_upload_keogram(self, *args):
-        self.s3_upload_video(*args)
+        self.s3_upload_asset(*args)
 
 
     def s3_upload_startrail(self, *args):
-        self.s3_upload_video(*args)
+        self.s3_upload_asset(*args)
 
 
     def s3_upload_startrailvideo(self, *args):
-        self.s3_upload_video(*args)
+        self.s3_upload_asset(*args)
 
 
     def syncapi_image(self, asset_entry, asset_metadata):
