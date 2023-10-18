@@ -260,15 +260,16 @@ echo
 echo
 echo "indi-allsky supports the following camera interfaces."
 echo
-echo "indi: For astro/planetary cameras normally connected via USB"
-echo "libcamera: supports cameras connected via CSI interface on Raspberry Pi SoCs"
-echo "indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+echo "          indi: For astro/planetary cameras normally connected via USB"
+echo "     libcamera: Supports cameras connected via CSI interface on Raspberry Pi SoCs"
+echo "  indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+echo " pycurl_camera: Download images from a remote web camera"
 echo
 
 # whiptail might not be installed yet
 while [ -z "${CAMERA_INTERFACE:-}" ]; do
     PS3="Select a camera interface: "
-    select camera_interface in indi libcamera indi_passive; do
+    select camera_interface in indi libcamera indi_passive pycurl_camera; do
         if [ -n "$camera_interface" ]; then
             CAMERA_INTERFACE=$camera_interface
             break
