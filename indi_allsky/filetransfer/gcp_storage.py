@@ -66,7 +66,7 @@ class gcp_storage(GenericFileTransfer):
         bucket = kwargs['bucket']
         key = kwargs['key']
         #storage_class = kwargs['storage_class']
-        #acl = kwargs['acl']
+        acl = kwargs['acl']
         #metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
@@ -96,8 +96,8 @@ class gcp_storage(GenericFileTransfer):
             content_type = 'application/octet-stream'
 
 
-        #if acl:
-        #    extra_args['ACL'] = acl  # all assets are normally publicly readable
+        if acl:
+            blob.acl = acl  # all assets are normally publicly readable
 
 
         #if storage_class:
