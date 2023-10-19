@@ -78,8 +78,8 @@ class gcp_storage(GenericFileTransfer):
 
         #extra_args = dict()
 
-        # cache 30 days
-        #extra_args['CacheControl'] = 'max-age=2592000'
+        # cache 90 days
+        blob.cache_control = 'public, max-age=7776000'
 
 
         if local_file_p.suffix in ['.jpg', '.jpeg']:
