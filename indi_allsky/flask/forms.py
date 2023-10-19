@@ -1622,6 +1622,9 @@ def S3UPLOAD__PORT_validator(form, field):
 
 
 def S3UPLOAD__REGION_validator(form, field):
+    if not field.data:
+        return
+
     region_regex = r'^[a-zA-Z0-9\-]+$'
 
     if not re.search(region_regex, field.data):
@@ -1663,6 +1666,9 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 
 
 def S3UPLOAD__ACL_validator(form, field):
+    if not field.data:
+        return
+
     acl_regex = r'^[a-zA-Z0-9\-]+$'
 
     if not re.search(acl_regex, field.data):
@@ -2241,7 +2247,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
     S3UPLOAD__CREDS_FILE             = StringField('Credentials File', validators=[S3UPLOAD__CREDS_FILE_validator])
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
-    S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
+    S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
