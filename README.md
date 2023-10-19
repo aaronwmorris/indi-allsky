@@ -38,6 +38,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Remote web portal
 * Network file transfers - Upload images and videos to remote site
     * S3 Object Storage support
+        * Amazon Web Services
+        * Google Cloud Storage
 * Publish data to an MQTT service for monitoring
 * Keograms
 * Star Trails
@@ -286,7 +288,9 @@ You may choose to upload images and timelapse files to an S3 bucket.  Once the i
 
 Currently, only Amazon Web Services is supported, but other providers could be easily be added.  Just open an issue.
 
-Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
+Estimated cost for an allsky camera holding 90 days of timelapses and 30 days of images on AWS (day and night):  ~$2.00 (USD) per month  (50GB of data + 180,000 requests)
+
+AWS S3 and GCP Storage are currently supported.
 
 *Note:  As of writing this, the AWS free tier for S3 supports 5GB and 2000 requests per month.  In a single night, I achieved 80% of the requests limit (8 hours of images every 15 seconds is 1920 upload requests).  The free tier is only sufficient for basic testing, but not long term usage.*
 
@@ -328,6 +332,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 |                   | requests      | https://requests.readthedocs.io/en/latest/ |
 | S3 Object Storage | boto3         | https://boto3.amazonaws.com/v1/documentation/api/latest/index.html |
 |                   | apache-libcloud | https://libcloud.apache.org/ |
+|                   | google-cloud-storage | https://cloud.google.com/python/docs/reference/storage/latest |
 | Database          | SQLite        | https://www.sqlite.org/ |
 |                   | SQLAlchemy    | https://www.sqlalchemy.org/ |
 |                   | alembic       | https://alembic.sqlalchemy.org/ |
