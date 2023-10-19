@@ -149,6 +149,8 @@ class pycurl_syncapi_v1(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_URL_MALFORMAT]:
+                raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:

@@ -1576,6 +1576,7 @@ def S3UPLOAD__CLASSNAME_validator(form, field):
     class_names = (
         'boto3_s3',
         'libcloud_s3',
+        'gcp_storage',
     )
 
     if field.data not in class_names:
@@ -1621,6 +1622,9 @@ def S3UPLOAD__PORT_validator(form, field):
 
 
 def S3UPLOAD__REGION_validator(form, field):
+    if not field.data:
+        return
+
     region_regex = r'^[a-zA-Z0-9\-]+$'
 
     if not re.search(region_regex, field.data):
@@ -1662,6 +1666,9 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 
 
 def S3UPLOAD__ACL_validator(form, field):
+    if not field.data:
+        return
+
     acl_regex = r'^[a-zA-Z0-9\-]+$'
 
     if not re.search(acl_regex, field.data):
@@ -1676,6 +1683,31 @@ def S3UPLOAD__STORAGE_CLASS_validator(form, field):
 
     if not re.search(class_regex, field.data):
         raise ValidationError('Invalid storage class syntax')
+
+
+def S3UPLOAD__CREDS_FILE_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    creds_p = Path(field.data)
+
+    try:
+        if not creds_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not creds_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(creds_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
 
 
 def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
@@ -2003,6 +2035,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__CLASSNAME_choices = (
         ('boto3_s3', 'Boto3 (AWS)'),
         ('libcloud_s3', 'Apache Libcloud (AWS)'),
+        ('gcp_storage', 'Google Cloud Storage'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (
@@ -2212,8 +2245,9 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
     S3UPLOAD__ACCESS_KEY             = StringField('Access Key', validators=[S3UPLOAD__ACCESS_KEY_validator])
     S3UPLOAD__SECRET_KEY             = PasswordField('Secret Key', widget=PasswordInput(hide_value=False), validators=[S3UPLOAD__SECRET_KEY_validator])
+    S3UPLOAD__CREDS_FILE             = StringField('Credentials File', validators=[S3UPLOAD__CREDS_FILE_validator])
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
-    S3UPLOAD__REGION                 = StringField('Region', validators=[DataRequired(), S3UPLOAD__REGION_validator])
+    S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])

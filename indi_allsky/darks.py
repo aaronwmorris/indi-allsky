@@ -249,6 +249,8 @@ class IndiAllSkyDarks(object):
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
 
+            'hidden'      : False,  # unhide camera
+
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),

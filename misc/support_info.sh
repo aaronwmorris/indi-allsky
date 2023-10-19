@@ -70,6 +70,9 @@ echo "USB info"
 lsusb
 echo
 
+echo "USB Permissions"
+find /dev/bus/usb -ls
+echo
 
 echo "Module info"
 lsmod
