@@ -251,7 +251,7 @@ class IndiAllSkyConfigBase(object):
             "HOST"                   : "amazonaws.com",
             "PORT"                   : 0,
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
-            "ACL"                    : "public-read",
+            "ACL"                    : "public-read",  # s3: public-read, gcp:  publicRead
             "STORAGE_CLASS"          : "STANDARD",
             "TLS"                    : True,
             "CERT_BYPASS"            : False,
