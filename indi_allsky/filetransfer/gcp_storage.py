@@ -66,7 +66,7 @@ class gcp_storage(GenericFileTransfer):
         bucket = kwargs['bucket']
         key = kwargs['key']
         #storage_class = kwargs['storage_class']
-        #acl = kwargs['acl']
+        acl = kwargs['acl']
         #metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
@@ -96,15 +96,17 @@ class gcp_storage(GenericFileTransfer):
             content_type = 'application/octet-stream'
 
 
-        #if acl:
-        #    blob.acl = acl  # all assets are normally publicly readable
-
-
-        #if storage_class:
-        #    extra_args['StorageClass'] = storage_class
-
-
         generation_match_precondition = 0
+
+        upload_kwargs = {
+            'if_generation_match'   : generation_match_precondition,
+            'timeout'               : self._timeout,
+            'content_type'          : content_type,
+        }
+
+
+        if acl:
+            upload_kwargs['acl'] = acl  # all assets are normally publicly readable
 
 
         start = time.time()
@@ -112,9 +114,7 @@ class gcp_storage(GenericFileTransfer):
         try:
             blob.upload_from_filename(
                 str(local_file_p),
-                if_generation_match=generation_match_precondition,
-                timeout=self._timeout,
-                content_type=content_type,
+                **upload_kwargs,
             )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
