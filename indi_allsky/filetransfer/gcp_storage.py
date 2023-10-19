@@ -3,6 +3,7 @@ from .generic import GenericFileTransfer
 from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
+import os
 from pathlib import Path
 #from datetime import datetime
 #from datetime import timedelta
@@ -10,7 +11,7 @@ import socket
 import time
 #import urllib3.exceptions
 from google.cloud import storage
-from google.api_core.client_options import ClientOptions
+#from google.api_core.client_options import ClientOptions
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -39,13 +40,19 @@ class gcp_storage(GenericFileTransfer):
         #    verify = True
 
 
-        options = ClientOptions(
-            credentials_file=creds_file,
-        )
+        # not sure why this is not working
+        #options = ClientOptions(
+        #    credentials_file=creds_file,
+        #)
 
-        self.client = storage.Client(
-            client_options=options,
-        )
+        #self.client = storage.Client(
+        #    client_options=options,
+        #)
+
+
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_file
+
+        self.client = storage.Client()
 
 
     def close(self):
