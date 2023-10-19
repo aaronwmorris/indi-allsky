@@ -120,6 +120,8 @@ class pycurl_ftp(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_URL_MALFORMAT]:
+                raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
                 logger.error('Upload failed.  PycURL does not support relative path names')
                 raise TransferFailure(msg) from e

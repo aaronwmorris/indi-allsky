@@ -120,6 +120,8 @@ class pycurl_webdav_https(GenericFileTransfer):
                     raise ConnectionFailure(msg) from e
                 elif rc in [pycurl.E_COULDNT_CONNECT]:
                     raise ConnectionFailure(msg) from e
+                elif rc in [pycurl.E_URL_MALFORMAT]:
+                    raise ConnectionFailure(msg) from e
                 elif rc in [pycurl.E_OPERATION_TIMEDOUT]:
                     raise ConnectionFailure(msg) from e
                 elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
