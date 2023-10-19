@@ -2696,6 +2696,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__CREDS_FILE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.S3UPLOAD__CREDS_FILE(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__CREDS_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">GCP Specific Option</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__BUCKET.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -3130,6 +3141,7 @@ const field_names = [
     'S3UPLOAD__CLASSNAME',
     'S3UPLOAD__ACCESS_KEY',
     'S3UPLOAD__SECRET_KEY',
+    'S3UPLOAD__CREDS_FILE',
     'S3UPLOAD__BUCKET',
     'S3UPLOAD__REGION',
     'S3UPLOAD__HOST',

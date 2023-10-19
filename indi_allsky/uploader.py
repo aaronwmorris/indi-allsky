@@ -227,6 +227,7 @@ class FileUploader(Thread):
                 'username'     : '*',  # not logging access key
                 'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
                 'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
+                'creds_file'   : self.config['S3UPLOAD'].get('CREDS_FILE'),
                 'region'       : self.config['S3UPLOAD']['REGION'],
                 'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
                 'tls'          : self.config['S3UPLOAD']['TLS'],

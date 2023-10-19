@@ -245,6 +245,7 @@ class IndiAllSkyConfigBase(object):
             "ACCESS_KEY"             : "",
             "SECRET_KEY"             : "",
             "SECRET_KEY_E"           : "",
+            "CREDS_FILE"             : "",
             "BUCKET"                 : "change-me",
             "REGION"                 : "us-east-2",
             "HOST"                   : "amazonaws.com",
