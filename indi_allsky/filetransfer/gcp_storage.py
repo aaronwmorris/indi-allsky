@@ -9,7 +9,7 @@ from pathlib import Path
 #from datetime import timedelta
 import socket
 import time
-import urllib3.exceptions
+import requests.exceptions
 from google.cloud import storage
 #from google.api_core.client_options import ClientOptions
 import logging
@@ -102,6 +102,7 @@ class gcp_storage(GenericFileTransfer):
             'if_generation_match'   : generation_match_precondition,
             'content_type'          : content_type,
             'timeout'               : self._timeout,
+            'retry'                 : None,
         }
 
 
@@ -122,7 +123,9 @@ class gcp_storage(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
-        except urllib3.exceptions.ConnectTimeoutError as e:
+        except requests.exceptions.ConnectTimeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ConnectionError as e:
             raise ConnectionFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
