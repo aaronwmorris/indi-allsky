@@ -106,7 +106,7 @@ class gcp_storage(GenericFileTransfer):
 
 
         if acl:
-            upload_kwargs['acl'] = acl  # all assets are normally publicly readable
+            upload_kwargs['predefined_acl'] = acl  # all assets are normally publicly readable
 
 
         start = time.time()
