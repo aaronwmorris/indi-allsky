@@ -2742,7 +2742,14 @@
             {{ form_config.S3UPLOAD__HOST(class='form-control bg-secondary') }}
             <div id="S3UPLOAD__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div>
+              <ul>
+                <li>AWS: amazonaws.com</li>
+                <li>GCP: storage.googleapis.com</li>
+              </ul>
+            </div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -2767,6 +2774,12 @@
         <div class="col-sm-6">
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
             <div>Available variables: <pre>bucket, region, host</pre></div>
+            <div>
+              <ul>
+                <li>AWS: https://{bucket}.s3.{region}.{host}</li>
+                <li>GCP: https://{bucket}.{host}</li>
+              </ul>
+            </div>
         </div>
     </div>
 
@@ -2780,7 +2793,14 @@
         </div>
         <div class="col-sm-6">
             <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" class="text-decoration-none link-info" target="_blank">AWS S3 ACLs</a></div>
-            <div>Not used with GCP <a href="https://cloud.google.com/storage/docs/access-control/lists" class="text-decoration-none link-info" target="_blank">GCP ACLs</a></div>
+            <div><a href="https://cloud.google.com/storage/docs/access-control/lists" class="text-decoration-none link-info" target="_blank">GCP ACLs</a></div>
+            <div>
+              <ul>
+                <li>Leave blank to use bucket default ACL</li>
+                <li>AWS: public-read</li>
+                <li>GCP: publicRead</li>
+              </ul>
+            </div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
