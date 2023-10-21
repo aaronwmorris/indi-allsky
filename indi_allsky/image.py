@@ -494,6 +494,21 @@ class ImageWorker(Process):
         adu, adu_average = self.calculate_exposure(adu, exposure)
 
 
+        # line detection
+        if self.night_v.value and self.config.get('DETECT_METEORS'):
+            self.image_processor.detectLines()
+
+
+        # star detection
+        if self.night_v.value and self.config.get('DETECT_STARS', True):
+            self.image_processor.detectStars()
+
+
+        # additional draw code
+        if self.config.get('DETECT_DRAW'):
+            self.image_processor.drawDetections()
+
+
         if self.config.get('IMAGE_ROTATE'):
             self.image_processor.rotate_90()
 
@@ -510,21 +525,6 @@ class ImageWorker(Process):
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
             self.image_processor.flip_h()
-
-
-        # line detection
-        if self.night_v.value and self.config.get('DETECT_METEORS'):
-            self.image_processor.detectLines()
-
-
-        # star detection
-        if self.night_v.value and self.config.get('DETECT_STARS', True):
-            self.image_processor.detectStars()
-
-
-        # additional draw code
-        if self.config.get('DETECT_DRAW'):
-            self.image_processor.drawDetections()
 
 
         # crop
