@@ -47,8 +47,8 @@ function init() {
     $('#mask_download').html(
         $('<a />', {
             'href'   : $('#mask_img').attr('src'),
-            'target' : '_blank',
             'rel'    : 'noopener noreferrer',
+            'download' : 'mask_base.png',
         }).html(
             $('<span />', {
                 'text'  : 'Download Mask Base',
