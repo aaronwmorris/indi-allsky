@@ -346,10 +346,6 @@ class ImageWorker(Process):
 
         self.image_count += 1
 
-        if self.image_count % 200 == 0:
-            # Generate a new mask base every 200 images
-            self.generate_mask_base = True
-
 
         # use original value if not defined
         libcamera_black_level = image_data.get('libcamera_black_level', libcamera_black_level)
@@ -505,7 +501,8 @@ class ImageWorker(Process):
         adu, adu_average = self.calculate_exposure(adu, exposure)
 
 
-        # periodically generate a new mask base once the target ADU is found
+        # generate a new mask base once the target ADU is found
+        # this should only only fire once per restart
         if self.generate_mask_base and self.target_adu_found:
             self.generate_mask_base = False
             self.write_mask_base_img(self.image_processor.image)
@@ -1145,6 +1142,7 @@ class ImageWorker(Process):
 
 
     def write_mask_base_img(self, data):
+        logger.info('Generating new mask base')
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.png')
         f_tmpfile.close()
 
