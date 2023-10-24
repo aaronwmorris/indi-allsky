@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Mask Base{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+#mask_img {
+    width: 100%;
+    height: auto;
+}
+</style>
+<script>
+var url = '{{ mask_image_uri }}';
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-1"></div>
+    <div class="col-10">
+        <img id="mask_img">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 text-center">
+        <span id="mask_download"></span>
+    </div>
+</div>
+<script>
+function init() {
+    $('#mask_img').attr('src', url + '?' + new Date().getTime());
+
+    $('#mask_download').html(
+        $('<a />', {
+            'href'   : $('#mask_img').attr('src'),
+            'target' : '_blank',
+            'rel'    : 'noopener noreferrer',
+        }).html(
+            $('<span />', {
+                'text'  : 'Download Mask Base',
+                'class' : "badge pill bg-info text-dark",
+            })
+        )
+    );
+}
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
+{% endblock %}
