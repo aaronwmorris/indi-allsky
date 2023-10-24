@@ -251,7 +251,21 @@ class MaskView(TemplateView):
     def get_context(self):
         context = super(MaskView, self).get_context()
 
-        context['mask_image_uri'] = 'images/mask_base.png'
+        mask_image_uri = Path('images/mask_base.png')
+
+        context['mask_image_uri'] = str(mask_image_uri)
+
+
+        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        mask_image_p = image_dir.joinpath(mask_image_uri.name)
+
+        if mask_image_p.exists():
+            mask_mtime = mask_image_p.stat().st_mtime
+            mask_mtime_dt = datetime.fromtimestamp(mask_mtime)
+            context['mask_date'] = mask_mtime_dt.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            context['mask_date'] = ''
+
 
         return context
 
