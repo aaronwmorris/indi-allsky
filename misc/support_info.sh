@@ -41,6 +41,9 @@ echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
+echo "Uptime"
+uptime
+echo
 echo "Filesystems"
 df -k
 echo

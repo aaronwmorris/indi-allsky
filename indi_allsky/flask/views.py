@@ -247,6 +247,29 @@ class PublicIndexView(BaseView):
         return redirect(url_for('indi_allsky.index_view'))
 
 
+class MaskView(TemplateView):
+    def get_context(self):
+        context = super(MaskView, self).get_context()
+
+        mask_image_uri = Path('images/mask_base.png')
+
+        context['mask_image_uri'] = str(mask_image_uri)
+
+
+        image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+        mask_image_p = image_dir.joinpath(mask_image_uri.name)
+
+        if mask_image_p.exists():
+            mask_mtime = mask_image_p.stat().st_mtime
+            mask_mtime_dt = datetime.fromtimestamp(mask_mtime)
+            context['mask_date'] = mask_mtime_dt.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            context['mask_date'] = ''
+
+
+        return context
+
+
 class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
@@ -4731,6 +4754,7 @@ bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_vie
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
 bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
+bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

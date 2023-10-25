@@ -28,6 +28,7 @@ from .miscUpload import miscUpload
 from .aurora import IndiAllskyAuroraUpdate
 from .smoke import IndiAllskySmokeUpdate
 from .satellite_download import IndiAllskyUpdateSatelliteData
+from .maskProcessing import MaskProcessor
 
 from .flask import create_app
 from .flask import db
@@ -1209,11 +1210,42 @@ class VideoWorker(Process):
             logger.error('%s is not a valid image', detect_mask_p)
             return
 
-
         ### any compression artifacts will be set to black
         #mask_data[mask_data < 255] = 0  # did not quite work
 
 
-        return mask_data
+        mask_processor = MaskProcessor(
+            self.config,
+            self.bin_v,
+        )
+
+
+        # masks need to be rotated, flipped, cropped for post-processed images
+        mask_processor.image = mask_data
+
+
+        if self.config.get('IMAGE_ROTATE'):
+            mask_processor.rotate_90()
+
+
+        # rotation
+        if self.config.get('IMAGE_ROTATE_ANGLE'):
+            mask_processor.rotate_angle()
+
+
+        # verticle flip
+        if self.config.get('IMAGE_FLIP_V'):
+            mask_processor.flip_v()
+
+        # horizontal flip
+        if self.config.get('IMAGE_FLIP_H'):
+            mask_processor.flip_h()
+
+        # crop
+        if self.config.get('IMAGE_CROP_ROI'):
+            mask_processor.crop_image()
+
+
+        return mask_processor.image
 
 

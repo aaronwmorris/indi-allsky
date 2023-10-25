@@ -89,6 +89,7 @@ class ImageWorker(Process):
         self.name = 'Image-{0:d}'.format(idx)
 
         self.config = config
+
         self.error_q = error_q
         self.image_q = image_q
         self.upload_q = upload_q
@@ -140,12 +141,15 @@ class ImageWorker(Process):
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
+        self.generate_mask_base = True
+
         self.target_adu_found = False
         self.current_adu_target = 0
         self.hist_adu = []
 
         self.sqm_value = 0
 
+        self.image_count = 0
         self.metadata_count = 0
 
         self.image_processor = ImageProcessor(
@@ -340,6 +344,9 @@ class ImageWorker(Process):
         filename_p.unlink()  # original file is no longer needed
 
 
+        self.image_count += 1
+
+
         # use original value if not defined
         libcamera_black_level = image_data.get('libcamera_black_level', libcamera_black_level)
 
@@ -494,6 +501,28 @@ class ImageWorker(Process):
         adu, adu_average = self.calculate_exposure(adu, exposure)
 
 
+        # generate a new mask base once the target ADU is found
+        # this should only only fire once per restart
+        if self.generate_mask_base and self.target_adu_found:
+            self.generate_mask_base = False
+            self.write_mask_base_img(self.image_processor.image)
+
+
+        # line detection
+        if self.night_v.value and self.config.get('DETECT_METEORS'):
+            self.image_processor.detectLines()
+
+
+        # star detection
+        if self.night_v.value and self.config.get('DETECT_STARS', True):
+            self.image_processor.detectStars()
+
+
+        # additional draw code
+        if self.config.get('DETECT_DRAW'):
+            self.image_processor.drawDetections()
+
+
         if self.config.get('IMAGE_ROTATE'):
             self.image_processor.rotate_90()
 
@@ -510,21 +539,6 @@ class ImageWorker(Process):
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
             self.image_processor.flip_h()
-
-
-        # line detection
-        if self.night_v.value and self.config.get('DETECT_METEORS'):
-            self.image_processor.detectLines()
-
-
-        # star detection
-        if self.night_v.value and self.config.get('DETECT_STARS', True):
-            self.image_processor.detectStars()
-
-
-        # additional draw code
-        if self.config.get('DETECT_DRAW'):
-            self.image_processor.drawDetections()
 
 
         # crop
@@ -1125,6 +1139,31 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
         self._miscUpload.s3_upload_raw(raw_entry, raw_metadata)
+
+
+    def write_mask_base_img(self, data):
+        logger.info('Generating new mask base')
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.png')
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+
+
+        cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+
+        mask_file = self.image_dir.joinpath('mask_base.png')
+
+        try:
+            mask_file.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_name), str(mask_file))
+        mask_file.chmod(0o644)
+
+
+        tmpfile_name.unlink()
 
 
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
