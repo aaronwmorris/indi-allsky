@@ -1237,13 +1237,20 @@ class VideoWorker(Process):
         if self.config.get('IMAGE_FLIP_V'):
             mask_processor.flip_v()
 
+
         # horizontal flip
         if self.config.get('IMAGE_FLIP_H'):
             mask_processor.flip_h()
 
+
         # crop
         if self.config.get('IMAGE_CROP_ROI'):
             mask_processor.crop_image()
+
+
+        # scale
+        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
+            mask_processor.scale_image()
 
 
         return mask_processor.image
