@@ -52,7 +52,7 @@ class StarTrailGenerator(object):
 
         self.image_processing_elapsed_s = 0
 
-        self._sqm_mask = self._preprocess_mask(mask)
+        self._sqm_mask = mask
 
         # this is a default image that is used in case all images are excluded
         self.placeholder_image = None
@@ -491,55 +491,4 @@ class StarTrailGenerator(object):
         )
 
         self._sqm_mask = mask
-
-
-    def _preprocess_mask(self, mask):
-        # If the images were cropped and/or scaled, the mask must have the same
-        # dimensions as the images
-
-        if isinstance(mask, type(None)):
-            return mask
-
-
-        # crop mask
-        if self.config.get('IMAGE_CROP_ROI'):
-            mask = self.crop_mask(mask)
-
-
-        # scale mask
-        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-            mask = self.scale_mask(mask)
-
-        return mask
-
-
-    def crop_mask(self, mask):
-        # divide the coordinates by binning value
-        x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.bin_v.value)
-        y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.bin_v.value)
-        x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.bin_v.value)
-        y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.bin_v.value)
-
-
-        cropped_mask = mask[
-            y1:y2,
-            x1:x2,
-        ]
-
-        new_height, new_width = cropped_mask.shape[:2]
-        logger.info('New cropped mask size: %d x %d', new_width, new_height)
-
-        return cropped_mask
-
-
-    def scale_mask(self, mask):
-        image_height, image_width = mask.shape[:2]
-
-        logger.info('Scaling mask by %d%%', self.config['IMAGE_SCALE'])
-        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
-        new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
-
-        logger.info('New mask size: %d x %d', new_width, new_height)
-
-        return cv2.resize(mask, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
