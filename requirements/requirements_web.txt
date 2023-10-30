@@ -1,6 +1,6 @@
 ### Requirements for a web interface only interface
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22
+numpy >= 1.22.2
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless
 # https://www.wheelodex.org/projects/ccdproc/
@@ -17,16 +17,15 @@ pycurl
 gunicorn[gthread] >= 20.1.0
 inotify
 psutil
-# problems with flask-login and werkzeug 3.0.0
-Flask == 2.3.3
+Flask
 Flask-SQLAlchemy >= 3.0.4
 Flask-Migrate >= 4.0.4
 # needs at least 1.1.1 for flask 2.3
 Flask-WTF >= 1.1.1
 Flask-Login >= 0.6.2
-werkzeug == 2.3.7
+werkzeug
 is-safe-url
-certifi >= 2023.5.7
+certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
 cryptography
 dbus-python
