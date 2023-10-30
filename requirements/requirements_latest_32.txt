@@ -35,9 +35,8 @@ psutil
 Flask
 Flask-SQLAlchemy >= 3.0.4
 Flask-Migrate >= 4.0.4
-# needs at least 1.1.1 for flask 2.3
 Flask-WTF >= 1.1.1
-Flask-Login >= 0.6.2
+Flask-Login >= 0.6.3
 werkzeug
 is-safe-url
 certifi >= 2023.7.22
