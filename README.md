@@ -75,7 +75,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| Raspberry Pi OS 12 (bookworm)  | aarch64/armhf  | Compile INDI with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 12             | armhf (32-bit) | **Currently has package dependency problems, please use 64-bit** |
 | Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
 | Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
@@ -452,6 +453,7 @@ Please let me know if you want to make an addition or correction.
 * [Giles Coochey](https://coochey.net/?cat=29)
 * [PampaSkies](http://www.pampaskies.com/gallery3/Equipment/All-Sky-Camera-with-Sky-Condition-Detection)
 * [The Suffolk Sky](http://www.suffolksky.com/all-sky-camera/)
+* [Boletim da Sociedade Astronômica Brasileira](https://sab-astro.org.br/wp-content/uploads/2023/04/GabrielSantos2.pdf)
 
 
 ## Alternatives
@@ -497,3 +499,10 @@ Please let me know if you want to make an addition or correction.
 * [PixInsight](https://www.pixinsight.com/) - Various algorithms were used that are in the PixInsight documentation
 * [Radek Kaczorek](https://github.com/rkaczorek) - [astropanel](https://github.com/rkaczorek/astropanel/) has been integrated into indi-allsky
 * [CelesTrak](https://celestrak.org/) - Satellite orbital data
+
+## Donate
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://paypal.me/aaronwmorris)
+
+If you would like to fund equipment purchases for testing (or more Dr Pepper), you can use this link.
+
+**However, I would rather you to donate something to charity.  As a suggestion, the [Ronald McDonald House](https://rmhc.org/) has helped my family in the past.  I would love to hear if you give, please let me know!**
