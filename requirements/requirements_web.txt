@@ -1,6 +1,6 @@
 ### Requirements for a web interface only interface
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22
+numpy >= 1.22.2
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless
 # https://www.wheelodex.org/projects/ccdproc/
@@ -25,7 +25,7 @@ Flask-WTF >= 1.1.1
 Flask-Login >= 0.6.2
 werkzeug
 is-safe-url
-certifi >= 2023.5.7
+certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
 cryptography
 dbus-python
