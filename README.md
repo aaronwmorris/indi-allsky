@@ -500,7 +500,7 @@ Please let me know if you want to make an addition or correction.
 * [CelesTrak](https://celestrak.org/) - Satellite orbital data
 
 ## Donate
-[![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://https://paypal.me/aaronwmorris)
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://paypal.me/aaronwmorris)
 
 If you would like to fund equipment purchases for testing (or more Dr Pepper), you can use this link.
 
