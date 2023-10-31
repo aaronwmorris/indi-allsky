@@ -907,6 +907,14 @@ class ImageWorker(Process):
         data = i_ref['hdulist'][0].data
         image_height, image_width = data.shape[:2]
 
+        if len(data.shape) == 3:
+            # RGB data has a different axis order for FITS
+
+            data = numpy.swapaxes(data, 0, 2)
+            data = numpy.swapaxes(data, 0, 1)
+            #logger.info('Channels: %s', pformat(hdulist[0].data.shape))
+
+
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
 
         i_ref['hdulist'].writeto(f_tmpfile)
