@@ -292,7 +292,7 @@ class ImageProcessor(object):
         self._text_font_height = int(new_height)
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera, indi_rgb=True):  # INDI returns color arrays in the wrong order for cv2
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera, fits_rgb=True):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -325,7 +325,7 @@ class ImageProcessor(object):
 
             #data = hdulist[0].data
         elif filename_p.suffix in ['.jpg', '.jpeg']:
-            indi_rgb = False
+            fits_rgb = False
 
             try:
                 with Image.open(str(filename_p)) as img:
@@ -341,7 +341,7 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
         elif filename_p.suffix in ['.png']:
-            indi_rgb = False
+            fits_rgb = False
 
             try:
                 with Image.open(str(filename_p)) as img:
@@ -451,8 +451,8 @@ class ImageProcessor(object):
         if not len(hdulist[0].data.shape) == 2:
             # color data
 
-            if indi_rgb:
-                # INDI returns array in the wrong order for cv2
+            if fits_rgb:
+                # FITS RGB data is in the wrong order for cv2
                 hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 2)
                 hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 1)
                 #logger.info('Channels: %s', pformat(hdulist[0].data.shape))
@@ -490,7 +490,7 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
             'target_adu'       : target_adu,
-            'indi_rgb'         : indi_rgb,
+            'fits_rgb'         : fits_rgb,
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
             'stars'            : list(),  # populated later
