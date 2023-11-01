@@ -2370,6 +2370,43 @@ class ImageProcessor(object):
         self.image = stretched_image
 
 
+    def fish2pano(self, scale=0.5):
+        ### Courtesy of Russell Valentine <russell.valentine@gmail.com>
+        ### https://github.com/bluthen/fish2pano
+        image_height, image_width = self.image.shape[:2]
+
+        x_offset = self.config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_X', 0)
+        y_offset = self.config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_Y', 0)
+        center_xy = [(image_width / 2) + x_offset, (image_height / 2) - y_offset]  # note minus for y
+
+        radius = self.config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER ', 1000) / 2
+
+
+        w = int(scale * 2 * math.pi * radius + 0.5)
+        h = int(scale * radius + 0.5)
+        img_pano = numpy.zeros((h, w, 3), dtype=numpy.uint8)
+
+        for x in range(w):
+            theta = (2.0 * math.pi) * x / w
+
+            for y in range(h):
+                r_0 = radius * y / h
+
+                x_ = r_0 * math.cos(theta) + center_xy[0]
+                y_ = r_0 * math.sin(theta) + center_xy[1]
+
+                ix_ = int(x_ + 0.5)
+                iy_ = int(y_ + 0.5)
+
+                if x_ > 0 and ix_ < image_width[1] and y_ > 0 and iy_ < image_height[0]:
+                    img_pano[y][x] = self.image[iy_][ix_]
+                else:
+                    img_pano[y][x] = [0, 0, 0]
+
+
+        return img_pano
+
+
     def _load_detection_mask(self):
         detect_mask = self.config.get('DETECT_MASK', '')
 
