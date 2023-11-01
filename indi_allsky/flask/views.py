@@ -3593,6 +3593,10 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ALIGN_DETECTSIGMA'        : self.indi_allsky_config.get('IMAGE_ALIGN_DETECTSIGMA', 5),
             'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
+            'FISH2PANO'                      : False,
+            'IMAGE_CIRCLE_MASK__OFFSET_X'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_X', 0),
+            'IMAGE_CIRCLE_MASK__OFFSET_Y'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_Y', 0),
+            'IMAGE_CIRCLE_MASK__DIAMETER'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER', 1000),
             'PROCESSING_SPLIT_SCREEN'        : False,
         }
 
@@ -3709,6 +3713,9 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         p_config['IMAGE_STACK_SPLIT']                    = False
         p_config['FISH2PANO']                            = bool(request.json['FISH2PANO'])
+        p_config['IMAGE_CIRCLE_MASK__OFFSET_X']          = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_X'])
+        p_config['IMAGE_CIRCLE_MASK__OFFSET_Y']          = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_Y'])
+        p_config['IMAGE_CIRCLE_MASK__DIAMETER']          = int(request.json['IMAGE_CIRCLE_MASK__DIAMETER'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
 
 
