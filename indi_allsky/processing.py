@@ -2398,13 +2398,13 @@ class ImageProcessor(object):
                 ix_ = int(x_ + 0.5)
                 iy_ = int(y_ + 0.5)
 
-                if x_ > 0 and ix_ < image_width[1] and y_ > 0 and iy_ < image_height[0]:
+                if x_ > 0 and ix_ < image_width and y_ > 0 and iy_ < image_height:
                     img_pano[y][x] = self.image[iy_][ix_]
                 else:
                     img_pano[y][x] = [0, 0, 0]
 
 
-        return img_pano
+        self.image = img_pano
 
 
     def _load_detection_mask(self):

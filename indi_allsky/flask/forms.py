@@ -3480,6 +3480,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ALIGN_DETECTSIGMA          = IntegerField('Alignment sensitivity', validators=[DataRequired(), IMAGE_ALIGN_DETECTSIGMA_validator])
     IMAGE_ALIGN_POINTS               = IntegerField('Alignment points', validators=[DataRequired(), IMAGE_ALIGN_POINTS_validator])
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
+    FISH2PANO                        = BooleanField('Fisheye to Panoramic')
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 

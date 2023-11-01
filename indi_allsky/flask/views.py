@@ -3708,6 +3708,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
         p_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         p_config['IMAGE_STACK_SPLIT']                    = False
+        p_config['FISH2PANO']                            = bool(request.json['FISH2PANO'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
 
 
@@ -3864,6 +3865,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.colorize()
 
+
+            if p_config.get('FISH2PANO'):
+                image_processor.fish2pano()
 
 
         processing_elapsed_s = time.time() - processing_start
