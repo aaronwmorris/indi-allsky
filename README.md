@@ -6,6 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## Features
+* NEW: Fish-eye to Panoramic perspective
 * NEW: Satellite tracking and visibility info
 * NEW: Wildfire smoke reporting *(North America only)*
 * NEW: Aurora prediction and Kp-index reporting
