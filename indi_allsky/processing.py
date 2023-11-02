@@ -2379,7 +2379,7 @@ class ImageProcessor(object):
         y_offset = self.config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_Y', 0)
         center_xy = [(image_width / 2) + x_offset, (image_height / 2) - y_offset]  # note minus for y
 
-        radius = self.config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER ', 1000) / 2
+        radius = self.config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER', 1000) / 2
 
 
         w = int(scale * 2 * math.pi * radius + 0.5)
