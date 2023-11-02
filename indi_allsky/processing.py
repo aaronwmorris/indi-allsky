@@ -2370,16 +2370,17 @@ class ImageProcessor(object):
         self.image = stretched_image
 
 
-    def fish2pano(self, scale=0.5):
+    def fish2pano(self):
         ### Courtesy of Russell Valentine <russell.valentine@gmail.com>
         ### https://github.com/bluthen/fish2pano
         image_height, image_width = self.image.shape[:2]
 
-        x_offset = self.config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_X', 0)
-        y_offset = self.config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_Y', 0)
+        x_offset = self.config.get('FISH2PANO', {}).get('OFFSET_X', 0)
+        y_offset = self.config.get('FISH2PANO', {}).get('OFFSET_Y', 0)
         center_xy = [(image_width / 2) + x_offset, (image_height / 2) - y_offset]  # note minus for y
 
-        radius = self.config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER', 1000) / 2
+        radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 1000) / 2
+        scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.5)
 
 
         w = int(scale * 2 * math.pi * radius + 0.5)
