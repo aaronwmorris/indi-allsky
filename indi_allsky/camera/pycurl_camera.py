@@ -41,7 +41,7 @@ class PycurlCameraWorker(Thread):
         client = pycurl.Curl()
 
         # deprecated: will be replaced by PROTOCOLS_STR
-        client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS)
+        client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS | pycurl.PROTO_FILE)
 
         client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
 
