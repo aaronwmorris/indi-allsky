@@ -164,6 +164,13 @@ class IndiAllSkyConfigBase(object):
             "OPACITY"  : 100,
             "OUTLINE"  : False,
         },
+        "FISH2PANO" : {
+            "ENABLE"   : False,
+            "DIAMETER" : 1500,
+            "OFFSET_X" : 0,
+            "OFFSET_Y" : 0,
+            "SCALE"    : 0.5,
+        },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
         "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",

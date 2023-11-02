@@ -590,6 +590,11 @@ class ImageWorker(Process):
         # denoise
         #self.image_processor.fastDenoise()
 
+
+        if self.config.get('FISH2PANO', {}).get('ENABLE'):
+            self.image_processor.fish2pano()
+
+
         self.image_processor.orb_image()
 
         self.image_processor.label_image()

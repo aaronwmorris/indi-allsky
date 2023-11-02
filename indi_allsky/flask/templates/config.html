@@ -1896,6 +1896,73 @@
         <div class="col-sm-8">Minimum frames for star trails timelapse.  250 frames = 10s @ 25fps</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FISH2PANO__ENABLE(class='form-check-input') }}
+                <div id="FISH2PANO__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__DIAMETER(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Diameter in pixels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>X Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Y Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__SCALE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Increasing scale increases processing time</div>
+        </div>
+    </div>
+
 </div><!-- end processing tab -->
 <div class="tab-pane fade" id="nav-location" role="tabpanel" aria-labelledby="nav-location-tab">
 
@@ -3114,6 +3181,10 @@ const field_names = [
     'IMAGE_CROP_ROI_Y1',
     'IMAGE_CROP_ROI_X2',
     'IMAGE_CROP_ROI_Y2',
+    'FISH2PANO__DIAMETER',
+    'FISH2PANO__OFFSET_X',
+    'FISH2PANO__OFFSET_Y',
+    'FISH2PANO__SCALE',
     'IMAGE_EXPORT_RAW',
     'IMAGE_EXPORT_FOLDER',
     'IMAGE_STACK_METHOD',
@@ -3234,6 +3305,7 @@ const checkbox_field_names = [
     'IMAGE_FLIP_H',
     'IMAGE_CIRCLE_MASK__ENABLE',
     'IMAGE_CIRCLE_MASK__OUTLINE',
+    'FISH2PANO__ENABLE',
     'IMAGE_SAVE_FITS',
     'IMAGE_STACK_ALIGN',
     'IMAGE_STACK_SPLIT',
