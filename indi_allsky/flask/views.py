@@ -3713,9 +3713,9 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         p_config['IMAGE_STACK_SPLIT']                    = False
         p_config['FISH2PANO']                            = bool(request.json['FISH2PANO'])
-        p_config['IMAGE_CIRCLE_MASK__OFFSET_X']          = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_X'])
-        p_config['IMAGE_CIRCLE_MASK__OFFSET_Y']          = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_Y'])
-        p_config['IMAGE_CIRCLE_MASK__DIAMETER']          = int(request.json['IMAGE_CIRCLE_MASK__DIAMETER'])
+        p_config['IMAGE_CIRCLE_MASK']['OFFSET_X']        = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_X'])
+        p_config['IMAGE_CIRCLE_MASK']['OFFSET_Y']        = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_Y'])
+        p_config['IMAGE_CIRCLE_MASK']['DIAMETER']        = int(request.json['IMAGE_CIRCLE_MASK__DIAMETER'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
 
 
