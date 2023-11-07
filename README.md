@@ -500,6 +500,7 @@ Please let me know if you want to make an addition or correction.
 * [PixInsight](https://www.pixinsight.com/) - Various algorithms were used that are in the PixInsight documentation
 * [Radek Kaczorek](https://github.com/rkaczorek) - [astropanel](https://github.com/rkaczorek/astropanel/) has been integrated into indi-allsky
 * [CelesTrak](https://celestrak.org/) - Satellite orbital data
+* [Russell Valentine](https://github.com/bluthen) - [fish2pano](https://github.com/bluthen/fish2pano) Fish-eye to panoramic perspective conversion
 
 ## Donate
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://paypal.me/aaronwmorris)
