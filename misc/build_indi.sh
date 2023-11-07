@@ -46,8 +46,10 @@ INSTALL_PREFIX="/usr/local"
 
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 if [ "$MEM_TOTAL" -lt "1536000" ]; then
+    # <= 1GB memory should use 1 process
     MAKE_CONCURRENT=1
 elif [ "$MEM_TOTAL" -lt "2560000" ]; then
+    # 2GB memory should use 2 processes
     MAKE_CONCURRENT=2
 else
     MAKE_CONCURRENT=$(nproc)
