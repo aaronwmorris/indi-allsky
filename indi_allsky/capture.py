@@ -49,7 +49,7 @@ logger = logging.getLogger('indi_allsky')
 
 class CaptureWorker(Process):
 
-    periodic_tasks_offset = 180.0  # 3 minutes
+    periodic_tasks_offset = 300.0  # 5 minutes
 
 
     def __init__(
@@ -284,10 +284,10 @@ class CaptureWorker(Process):
 
                 # check exposure state every 3 minutes
                 if check_exposure_state < loop_start_time:
-                    check_exposure_state = time.time() + 180  # next check in 3 minutes
+                    check_exposure_state = time.time() + 300  # next check in 5 minutes
 
                     camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                    if camera_last_ready_s > 180:
+                    if camera_last_ready_s > 300:
                         self._miscDb.addNotification(
                             NotificationCategory.CAMERA,
                             'last_ready',
