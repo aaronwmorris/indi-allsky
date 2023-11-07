@@ -76,9 +76,9 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br />Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>libcamera is not stable with all cameras, recommend using bullseye |
 | Raspberry Pi OS 12             | armhf (32-bit) | **Currently has package dependency problems, please use 64-bit** |
-| Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
+| **Raspberry Pi OS 11 (bullseye)**  | **aarch64**/armhf  | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
 | Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
@@ -88,7 +88,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04 (bionic)          | x86_64         | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04                   | aarch64        | Compile INDI with build_indi.sh |
-| Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br />https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
 
@@ -391,7 +391,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One        | Mars-C                        | A | |
 | Player One        | Neptune-C                     | A | |
 | Starlight Xpress  | Superstar                     | A | Fixed gain.  Using stretching and/or contrast enhance |
-| Datyson           | T7C                           | A | Using indi_asi_ccd driver<br />Recommend ASI120MC Linux compatibility firmware |
+| Datyson           | T7C                           | A | Using indi_asi_ccd driver<br>Recommend ASI120MC Linux compatibility firmware |
 | Raspberry Pi      | CM3 imx708 (libcamera)        | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
 | Raspberry Pi      | HQ Camera imx477 (libcamera)  | A | |
 | Raspberry Pi      | HQ Camera (indi_pylibcamera)  | A | https://github.com/scriptorron/indi_pylibcamera |
