@@ -421,7 +421,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         for x in range(5):
             if self._libCameraPidRunning():
                 self.libcamera_process.terminate()
-                time.sleep(0.25)
+                time.sleep(0.5)
+                continue
             else:
                 break
 
