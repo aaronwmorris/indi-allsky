@@ -232,6 +232,12 @@ class IndiClientLibCameraGeneric(IndiClient):
         cmd.extend(['--output', str(image_tmp_p)])
 
 
+        ### testing an expoure that times out
+        #cmd = [
+        #    'sleep', '600',
+        #]
+
+
         logger.info('image command: %s', ' '.join(cmd))
 
 
@@ -421,7 +427,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         for x in range(5):
             if self._libCameraPidRunning():
                 self.libcamera_process.terminate()
-                time.sleep(0.25)
+                time.sleep(0.5)
+                continue
             else:
                 break
 
