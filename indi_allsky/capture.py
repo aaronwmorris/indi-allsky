@@ -282,18 +282,20 @@ class CaptureWorker(Process):
                     continue
 
 
-                # check exposure state every 5 minutes
+                # check exposure state every 3 minutes
                 if check_exposure_state < loop_start_time:
-                    check_exposure_state = time.time() + 300  # next check in 5 minutes
+                    check_exposure_state = time.time() + 180  # next check in 3 minutes
 
                     camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                    if camera_last_ready_s > 300:
+                    if camera_last_ready_s > 180:
                         self._miscDb.addNotification(
                             NotificationCategory.CAMERA,
                             'last_ready',
-                            'Camera last ready {0:d}s ago.  Camera might be hung.'.format(camera_last_ready_s),
+                            'Camera last ready {0:d}s ago. Camera might be hung. Aborting exposure.'.format(camera_last_ready_s),
                             expire=timedelta(minutes=60),
                         )
+
+                        self.indiclient.abortCcdExposure()
 
 
                 # Loop to run for 11 seconds (prime number)
