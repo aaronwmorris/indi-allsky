@@ -3441,9 +3441,9 @@ class IndiAllskyUserInfoForm(FlaskForm):
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
     EMAIL             = StringField('Email', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
-    CURRENT_PASSWORD  = PasswordField('Current Password', widget=PasswordInput(), validators=[])
-    NEW_PASSWORD      = PasswordField('New Password', widget=PasswordInput(), validators=[USER__NEW_PASSWORD_validator])
-    NEW_PASSWORD2     = PasswordField('', widget=PasswordInput(), validators=[])
+    CURRENT_PASSWORD  = PasswordField('Current Password', widget=PasswordInput(), validators=[], render_kw={'autocomplete' : 'new-password'})
+    NEW_PASSWORD      = PasswordField('New Password', widget=PasswordInput(), validators=[USER__NEW_PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    NEW_PASSWORD2     = PasswordField('', widget=PasswordInput(), validators=[], render_kw={'autocomplete' : 'new-password'})
 
 
     def validate(self, user):
