@@ -92,6 +92,14 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
 
+## indi support
+| Version         | Note |
+| --------------- | ---- |
+| v2.0.4          | [Typo in indibash.h breaks building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
+| v2.0.3          |      |
+| v2.0.2          |      |
+
+
 # Installation
 The process for installing indi-allsky is documented in the wiki.
 
