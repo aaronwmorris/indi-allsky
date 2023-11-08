@@ -136,7 +136,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Security-Notifications
 ### libcamera support
 libcamera is a new camera interface designed to replace the legacy camera interfaces such as V4L2.
 
-Proper libcamera support is only working on Raspberry Pi OS 11 on Raspberry Pi 3 & 4.
+Proper libcamera support is only working on Raspberry Pi OS 11 (bullseye) on Raspberry Pi 3 & 4.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement
 
