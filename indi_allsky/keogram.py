@@ -54,7 +54,7 @@ class KeogramGenerator(object):
 
     @angle.setter
     def angle(self, new_angle):
-        self._angle = new_angle
+        self._angle = float(new_angle)
 
 
     @property
@@ -274,7 +274,7 @@ class KeogramGenerator(object):
         center_x = int(width / 2)
         center_y = int(height / 2)
 
-        rot = cv2.getRotationMatrix2D((center_x, center_y), self._angle, 1.0)
+        rot = cv2.getRotationMatrix2D((center_x, center_y), self.angle, 1.0)
 
         abs_cos = abs(rot[0, 0])
         abs_sin = abs(rot[0, 1])
@@ -296,11 +296,11 @@ class KeogramGenerator(object):
         logger.info('Switch angle: %0.2f', switch_angle)
 
 
-        angle_180_r = abs(self._angle) % 180
+        angle_180_r = abs(self.angle) % 180
         if angle_180_r > 90:
-            angle_90_r = 90 - (abs(self._angle) % 90)
+            angle_90_r = 90 - (abs(self.angle) % 90)
         else:
-            angle_90_r = abs(self._angle) % 90
+            angle_90_r = abs(self.angle) % 90
 
 
         if angle_90_r < switch_angle:
