@@ -158,8 +158,8 @@ class KeogramGenerator(object):
 
         # scale horizontal size
         trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
-        new_width = int(trimmed_width * self._h_scale_factor / 100)
-        new_height = int(trimmed_height * self._v_scale_factor / 100)
+        new_width = int(trimmed_width * self.h_scale_factor / 100)
+        new_height = int(trimmed_height * self.v_scale_factor / 100)
         self.keogram_final = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 

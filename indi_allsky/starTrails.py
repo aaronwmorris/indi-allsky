@@ -223,7 +223,7 @@ class StarTrailGenerator(object):
         if isinstance(self.trail_image, type(None)):
             image_height, image_width = image.shape[:2]
 
-            self.pixels_cutoff = (image_height * image_width) * (self._pixel_cutoff_threshold / 100)
+            self.pixels_cutoff = (image_height * image_width) * (self.pixel_cutoff_threshold / 100)
 
             # base image is just a black image
             if len(image.shape) == 2:
@@ -281,14 +281,14 @@ class StarTrailGenerator(object):
             return
 
 
-        if m_avg > self._max_brightness:
+        if m_avg > self.max_brightness:
             #logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
             return
 
         #logger.info(' Image brightness: %0.2f', m_avg)
 
-        pixels_above_cutoff = (image_gray > self._mask_threshold).sum()
+        pixels_above_cutoff = (image_gray > self.mask_threshold).sum()
         if pixels_above_cutoff > self.pixels_cutoff:
             #logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
             self.excluded_images += 1
