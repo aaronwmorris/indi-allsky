@@ -157,7 +157,7 @@ class IndiAllSkyConfigBase(object):
         "DAYTIME_GRAYSCALE": False,
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
-            "DIAMETER" : 1000,
+            "DIAMETER" : 1500,
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
             "BLUR"     : 35,
@@ -166,10 +166,10 @@ class IndiAllSkyConfigBase(object):
         },
         "FISH2PANO" : {
             "ENABLE"   : False,
-            "DIAMETER" : 1500,
+            "DIAMETER" : 3000,
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
-            "SCALE"    : 0.5,
+            "SCALE"    : 0.3,
         },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)

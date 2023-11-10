@@ -149,7 +149,7 @@ class KeogramGenerator(object):
         # scale horizontal
         trimmed_height, trimmed_width = trimmed_keogram.shape[:2]
         new_width = trimmed_width
-        new_height = int(trimmed_height * self._h_scale_factor / 100)
+        new_height = int(trimmed_height * self.h_scale_factor / 100)
         self.keogram_final = cv2.resize(trimmed_keogram, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
@@ -168,8 +168,8 @@ class KeogramGenerator(object):
         center_x = int(width / 2)
         center_y = int(height / 2)
 
-        rot = cv2.getRotationMatrix2D((center_x, center_y), self._angle, 1.0)
-        #bbox = cv2.boundingRect2f((0, 0), image.size(), self._angle)
+        rot = cv2.getRotationMatrix2D((center_x, center_y), self.angle, 1.0)
+        #bbox = cv2.boundingRect2f((0, 0), image.size(), self.angle)
 
         #rot[0, 2] += bbox.width / 2.0 - image.cols / 2.0
         #rot[1, 2] += bbox.height / 2.0 - imagesrc.rows / 2.0
@@ -195,11 +195,11 @@ class KeogramGenerator(object):
         logger.info('Switch angle: %0.2f', switch_angle)
 
 
-        angle_180_r = abs(self._angle) % 180
+        angle_180_r = abs(self.angle) % 180
         if angle_180_r > 90:
-            angle_90_r = 90 - (abs(self._angle) % 90)
+            angle_90_r = 90 - (abs(self.angle) % 90)
         else:
-            angle_90_r = abs(self._angle) % 90
+            angle_90_r = abs(self.angle) % 90
 
 
         if angle_90_r < switch_angle:

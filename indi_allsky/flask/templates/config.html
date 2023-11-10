@@ -1014,142 +1014,6 @@
         <div class="col-sm-8">Save images in grayscale during day time</div>
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPORT_RAW.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPORT_RAW(class='form-control bg-secondary') }}
-            <div id="IMAGE_EXPORT_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Enable saving raw (non-stacked) images</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPORT_FOLDER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.IMAGE_EXPORT_FOLDER(class='form-control bg-secondary') }}
-            <div id="IMAGE_EXPORT_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">Folder to save raw exported images</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_SAVE_FITS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.IMAGE_SAVE_FITS(class='form-check-input') }}
-                <div id="IMAGE_SAVE_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Enable saving raw FITS (non-stacked) data</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__0__KEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__0__KEY(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__0__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FITSHEADERS__0__VAL(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__0__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__1__KEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__1__KEY(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__1__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FITSHEADERS__1__VAL(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__1__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__2__KEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__2__KEY(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__2__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FITSHEADERS__2__VAL(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__2__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__3__KEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__3__KEY(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__3__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FITSHEADERS__3__VAL(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__3__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__4__KEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FITSHEADERS__4__KEY(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__4__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FITSHEADERS__4__VAL(class='form-control bg-secondary') }}
-            <div id="FITSHEADERS__4__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
-            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Maximum age of original image files before deletion</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_EXPIRE_DAYS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='form-control bg-secondary') }}
-            <div id="TIMELAPSE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Maximum age of timelapse, keogram, and star trails before deletion</div>
-    </div>
-
     <hr>
 
     <div class="form-group row">
@@ -1421,6 +1285,145 @@
         </div>
         <div class="col-sm-8">Color of Moon Orb</div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_RAW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_RAW(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPORT_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Enable saving raw (non-stacked) images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_EXPORT_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPORT_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">Folder to save raw exported images</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_FITS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_SAVE_FITS(class='form-check-input') }}
+                <div id="IMAGE_SAVE_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable saving raw FITS (non-stacked) data</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__0__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__0__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__0__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__0__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__0__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__1__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__1__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__1__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__1__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__1__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__2__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__2__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__2__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__2__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__2__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__3__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__3__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__3__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__3__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__3__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__4__KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FITSHEADERS__4__KEY(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__4__KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FITSHEADERS__4__VAL(class='form-control bg-secondary') }}
+            <div id="FITSHEADERS__4__VAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Maximum age of original image files before deletion</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Maximum age of timelapse, keogram, and star trails before deletion</div>
+    </div>
+
 
 </div><!-- end image tab -->
 <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">

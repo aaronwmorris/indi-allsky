@@ -2380,8 +2380,8 @@ class ImageProcessor(object):
         center_x = int(image_width / 2) + x_offset
         center_y = int(image_height / 2) - y_offset  # note minus for y
 
-        radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 1500) / 2
-        scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.5)
+        radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / 2
+        scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
 
 
         w = int(scale * 2 * math.pi * radius + 0.5)
