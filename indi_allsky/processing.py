@@ -28,6 +28,7 @@ from .detectLines import IndiAllskyDetectLines
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
+from .compassEdgeLabel import IndiAllskyCompassEdgeLabel
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -153,6 +154,7 @@ class ImageProcessor(object):
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
+        self._compass_edge_label = IndiAllskyCompassEdgeLabel(self.config)
 
         self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
         self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
@@ -1702,6 +1704,13 @@ class ImageProcessor(object):
         else:
             logger.warning('Image labels disabled')
             return
+
+
+    def compass_edge_label(self):
+        if not self.config.get('COMPASS_DIRECTIONS', {}).get('ENABLE'):
+            return
+
+        self.image = self._compass_edge_label.main(self.image)
 
 
     def orb_image(self):

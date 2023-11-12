@@ -210,11 +210,17 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_CUSTOM": "",
             "PIL_FONT_SIZE"  : 30,
         },
+        "COMPASS_DIRECTIONS" : {
+            "ENABLE"         : False,
+            "FONT_COLOR"     : [200, 0, 0],
+            "SWAP_NS"        : False,
+            "SWAP_EW"        : False,
+        },
         "ORB_PROPERTIES" : {
-            "MODE"        : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
-            "RADIUS"      : 9,
-            "SUN_COLOR"   : [200, 200, 0],
-            "MOON_COLOR"  : [128, 128, 128],
+            "MODE"           : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
+            "RADIUS"         : 9,
+            "SUN_COLOR"      : [200, 200, 0],
+            "MOON_COLOR"     : [128, 128, 128],
         },
         "UPLOAD_WORKERS" : 2,
         "FILETRANSFER" : {

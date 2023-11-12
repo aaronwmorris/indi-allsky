@@ -1009,6 +1009,9 @@ class ConfigView(FormView):
             'TEXT_PROPERTIES__PIL_FONT_FILE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_FILE', 'fonts-freefont-ttf/FreeSans.ttf'),
             'TEXT_PROPERTIES__PIL_FONT_CUSTOM' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_CUSTOM', ''),
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
+            'COMPASS_DIRECTIONS__ENABLE'     : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('ENABLE', False),
+            'COMPASS_DIRECTIONS__SWAP_NS'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('SWAP_NS', False),
+            'COMPASS_DIRECTIONS__SWAP_EW'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('SWAP_EW', False),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
             'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 2),
@@ -1179,8 +1182,13 @@ class ConfigView(FormView):
         text_properties__font_color_str = [str(x) for x in text_properties__font_color]
         form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join(text_properties__font_color_str)
 
+        # Compass directions color
+        compass_directions__font_color = self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('FONT_COLOR', [200, 0, 0])
+        compass_directions__font_color_str = [str(x) for x in compass_directions__font_color]
+        form_data['COMPASS_DIRECTIONS__FONT_COLOR'] = ','.join(compass_directions__font_color_str)
+
         # Sun orb color
-        orb_properties__sun_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [200, 200, 0])
+        orb_properties__sun_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [200, 200, 100])
         orb_properties__sun_color_str = [str(x) for x in orb_properties__sun_color]
         form_data['ORB_PROPERTIES__SUN_COLOR'] = ','.join(orb_properties__sun_color_str)
 
@@ -1298,6 +1306,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('TEXT_PROPERTIES'):
             self.indi_allsky_config['TEXT_PROPERTIES'] = {}
+
+        if not self.indi_allsky_config.get('COMPASS_DIRECTIONS'):
+            self.indi_allsky_config['COMPASS_DIRECTIONS'] = {}
 
         if not self.indi_allsky_config.get('IMAGE_STRETCH'):
             self.indi_allsky_config['IMAGE_STRETCH'] = {}
@@ -1468,6 +1479,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_FILE']     = str(request.json['TEXT_PROPERTIES__PIL_FONT_FILE'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['ENABLE']         = bool(request.json['COMPASS_DIRECTIONS__FONT_COLOR'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['SWAP_NS']        = bool(request.json['COMPASS_DIRECTIONS__SWAP_NS'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['SWAP_EW']        = bool(request.json['COMPASS_DIRECTIONS__SWAP_EW'])
         self.indi_allsky_config['ORB_PROPERTIES']['MODE']               = str(request.json['ORB_PROPERTIES__MODE'])
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
         self.indi_allsky_config['UPLOAD_WORKERS']                       = int(request.json['UPLOAD_WORKERS'])
@@ -1606,6 +1620,11 @@ class AjaxConfigView(BaseView):
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
         font_r, font_g, font_b = font_color_str.split(',')
         self.indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(font_r), int(font_g), int(font_b)]
+
+        # COMPASS_DIRECTIONS FONT_COLOR
+        compass_color_str = str(request.json['COMPASS_DIRECTIONS__FONT_COLOR'])
+        compass_r, compass_g, compass_b = compass_color_str.split(',')
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['FONT_COLOR'] = [int(compass_r), int(compass_g), int(compass_b)]
 
         # ORB_PROPERTIES SUN_COLOR
         sun_color_str = str(request.json['ORB_PROPERTIES__SUN_COLOR'])

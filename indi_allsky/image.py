@@ -597,6 +597,8 @@ class ImageWorker(Process):
 
         self.image_processor.orb_image()
 
+        self.image_processor.compass_edge_label()
+
         self.image_processor.label_image()
 
 
