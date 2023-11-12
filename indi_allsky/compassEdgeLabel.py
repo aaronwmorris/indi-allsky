@@ -17,8 +17,8 @@ class IndiAllskyCompassEdgeLabel(object):
 
         self.NORTH_STR = 'N'
         self.EAST_STR  = 'E'
-        self.SOUTH_STR = 'S'
         self.WEST_STR  = 'W'
+        self.SOUTH_STR = 'S'
 
 
         # pillow defaults
@@ -30,28 +30,24 @@ class IndiAllskyCompassEdgeLabel(object):
 
         self._az = 0
 
-        self.az = self.config.get('LENS_AZIMUTH', 0)
 
-        # label is added after flipping
+        # most all sky lenses will flip the image horizontally and vertically
+        self.az = self.config.get('LENS_AZIMUTH', 0) + 180
+
+
         if self.config['IMAGE_FLIP_V']:
-            self.az = self.az + 180
+            self.NORTH_STR, self.SOUTH_STR = self.SOUTH_STR, self.NORTH_STR
 
         if self.config.get('IMAGE_FLIP_H'):
-            orig_e = self.EAST_STR
-            orig_w = self.WEST_STR
-            self.EAST_STR = orig_w
-            self.WEST_STR = orig_e
+            self.EAST_STR, self.WEST_STR = self.WEST_STR, self.EAST_STR
 
 
         # manual swap
         if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_NS'):
-            self.az = self.az - 180
+            self.NORTH_STR, self.SOUTH_STR = self.SOUTH_STR, self.NORTH_STR
 
         if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_EW'):
-            orig_e = self.EAST_STR
-            orig_w = self.WEST_STR
-            self.EAST_STR = orig_w
-            self.WEST_STR = orig_e
+            self.EAST_STR, self.WEST_STR = self.WEST_STR, self.EAST_STR
 
 
         base_path  = Path(__file__).parent
@@ -77,7 +73,6 @@ class IndiAllskyCompassEdgeLabel(object):
 
 
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
-
         if image_label_system == 'pillow':
             image = self.applyLabels_pillow(image, coord_dict)
         else:
