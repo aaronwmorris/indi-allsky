@@ -66,16 +66,13 @@ class DirectionEdgeLabel(object):
 
         coord_dict = dict()
         # these return x, y lists
-        coord_dict['n'] = self.findDirectionCoordinate(image, self.az)
-        coord_dict['e'] = self.findDirectionCoordinate(image, self.az + 90)
-        coord_dict['w'] = self.findDirectionCoordinate(image, self.az - 90)
-        coord_dict['s'] = self.findDirectionCoordinate(image, self.az + 180)
+        coord_dict['N'] = self.findDirectionCoordinate(image, self.az)
+        coord_dict['E'] = self.findDirectionCoordinate(image, self.az + 90)
+        coord_dict['W'] = self.findDirectionCoordinate(image, self.az - 90)
+        coord_dict['S'] = self.findDirectionCoordinate(image, self.az + 180)
 
 
-        self.writeDirection(image, coord_dict['n'], 'N')
-        self.writeDirection(image, coord_dict['e'], 'E')
-        self.writeDirection(image, coord_dict['w'], 'W')
-        self.writeDirection(image, coord_dict['s'], 'S')
+        self.writeDirections(image, coord_dict)
 
 
         final_rgb = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -152,41 +149,46 @@ class DirectionEdgeLabel(object):
             d_y = 0
 
 
-        if d_x < self.left_offset:
-            d_x = self.left_offset
-        elif d_x > width - self.right_offset:
-            d_x = width - self.right_offset
-
-        if d_y < self.top_offset:
-            d_y = self.top_offset
-        elif d_y > height - self.bottom_offset:
-            d_y = height - self.bottom_offset
-
-
         return int(d_x), int(d_y)
 
 
-    def writeDirection(self, image, xy, text):
-        cv2.putText(
-            img=image,
-            text=text,
-            org=xy,
-            fontFace=self.font_face,
-            color=(0, 0, 0),
-            lineType=self.line_type,
-            fontScale=self.font_scale,
-            thickness=self.font_thickness + 1,
-        )
-        cv2.putText(
-            img=image,
-            text=text,
-            org=xy,
-            fontFace=self.font_face,
-            color=self.line_color,
-            lineType=self.line_type,
-            fontScale=self.font_scale,
-            thickness=self.font_thickness,
-        )
+    def writeDirections(self, image, coord_dict):
+        height, width = image.shape[:2]
+
+        for k, v in coord_dict.items():
+            x, y = v
+
+            if x < self.left_offset:
+                x = self.left_offset
+            elif x > width - self.right_offset:
+                x = width - self.right_offset
+
+            if y < self.top_offset:
+                y = self.top_offset
+            elif y > height - self.bottom_offset:
+                y = height - self.bottom_offset
+
+
+            cv2.putText(
+                img=image,
+                text=k,
+                org=(x, y),
+                fontFace=self.font_face,
+                color=(0, 0, 0),
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness + 1,
+            )
+            cv2.putText(
+                img=image,
+                text=k,
+                org=(x, y),
+                fontFace=self.font_face,
+                color=self.line_color,
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness,
+            )
 
 
 if __name__ == "__main__":
