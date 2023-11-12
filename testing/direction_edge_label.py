@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+
+#import sys
+import argparse
+from pathlib import Path
+import math
+import numpy
+import cv2
+#import PIL
+from PIL import Image
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging
+
+
+class DirectionEdgeLabel(object):
+    # label settings
+    font_face = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.8
+    font_thickness = 1
+    line_color = (100, 200, 200)  # BGR
+    line_type = cv2.LINE_AA
+
+
+    def __init__(self):
+        self._angle = 0.0
+
+
+    @property
+    def angle(self):
+        return self._angle
+
+    @angle.setter
+    def angle(self, new_angle):
+        self._angle = float(new_angle)
+
+
+
+    def main(self, i, o):
+        input_file = Path(i)
+        output_file = Path(o)
+
+
+        if not input_file.exists():
+            raise Exception('Input file does not exist')
+
+        if output_file.exists():
+            raise Exception('Output file already exists')
+
+
+
+        logger.info('Reading file: %s', input_file)
+
+        with Image.open(str(input_file)) as img:
+            image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+
+
+        height, width = image.shape[:2]
+        logger.info('Image: %d x %d', width, height)
+
+        n_x, n_y = self.findDirectionCoordinate(image, self.angle)
+        #logger.info('North coordinates: %d, %d', n_x, n_y)
+        e_x, e_y = self.findDirectionCoordinate(image, self.angle + 90)
+        s_x, s_y = self.findDirectionCoordinate(image, self.angle + 180)
+        w_x, w_y = self.findDirectionCoordinate(image, self.angle - 90)
+
+        self.writeDirection(image, [n_x, n_y], 'N')
+        self.writeDirection(image, [e_x, e_y], 'E')
+        self.writeDirection(image, [s_x, s_y], 'S')
+        self.writeDirection(image, [w_x, w_y], 'W')
+
+
+        final_rgb = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        final_rgb.save(str(output_file), quality=90)
+
+
+    def findDirectionCoordinate(self, image, dir_angle):
+        height, width = image.shape[:2]
+
+        if dir_angle >= 360:
+            angle = dir_angle - 360
+        elif dir_angle < 0:
+            angle = dir_angle + 360
+        else:
+            angle = dir_angle
+
+        logger.info('Finding direction angle for: %0.1f', angle)
+
+
+        switch_angle = 90 - math.degrees(math.atan(height / width))
+        logger.info('Switch angle: %0.1f', switch_angle)
+
+
+        angle_180_r = abs(angle) % 180
+        if angle_180_r > 90:
+            angle_90_r = 90 - (abs(angle) % 90)
+        else:
+            angle_90_r = abs(angle) % 90
+
+
+        if angle_90_r < switch_angle:
+            adj = height / 2
+            c_angle = angle_90_r
+        else:
+            adj = width / 2
+            c_angle = 90 - angle_90_r
+
+
+        opp = math.tan(math.radians(c_angle)) * adj
+        logger.info('Opposite: %d', int(opp))
+
+
+        if angle >= 0 and angle < switch_angle:
+            logger.info('Top right')
+            d_x = (width / 2) + opp
+            d_y = 0 + 20
+        elif angle >= switch_angle and angle < 90:
+            logger.info('Right top')
+            d_x = width - 20
+            d_y = (height / 2) - opp
+        elif angle >= 90 and angle < (180 - switch_angle):
+            logger.info('Right bottom')
+            d_x = width - 20
+            d_y = (height / 2) + opp
+        elif angle >= (180 - switch_angle) and angle < 180:
+            logger.info('Bottom right')
+            d_x = (width / 2) + opp
+            d_y = height - 5
+        elif angle >= 180 and angle < (180 + switch_angle):
+            logger.info('Bottom left')
+            d_x = (width / 2) - opp
+            d_y = height - 5
+        elif angle >= (180 + switch_angle) and angle < 270:
+            logger.info('Left bottom')
+            d_x = 0 + 5
+            d_y = (height / 2) + opp
+        elif angle >= 270 and angle < (360 - switch_angle):
+            logger.info('Left top')
+            d_x = 0 + 5
+            d_y = (height / 2) - opp
+        elif angle >= (360 - switch_angle) and angle < 360:
+            logger.info('Top left')
+            d_x = (width / 2) - opp
+            d_y = 0 + 20
+
+
+        return int(d_x), int(d_y)
+
+
+    def writeDirection(self, image, xy, text):
+        cv2.putText(
+            img=image,
+            text=text,
+            org=xy,
+            fontFace=self.font_face,
+            color=(0, 0, 0),
+            lineType=self.line_type,
+            fontScale=self.font_scale,
+            thickness=self.font_thickness + 1,
+        )
+        cv2.putText(
+            img=image,
+            text=text,
+            org=xy,
+            fontFace=self.font_face,
+            color=self.line_color,
+            lineType=self.line_type,
+            fontScale=self.font_scale,
+            thickness=self.font_thickness,
+        )
+
+
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        'input',
+        help='Input file',
+        type=str,
+    )
+    argparser.add_argument(
+        '--output',
+        '-o',
+        help='output file',
+        type=str,
+        required=True,
+    )
+    argparser.add_argument(
+        '--angle',
+        '-a',
+        help='angle [default: 45]',
+        type=int,
+        default=45,
+    )
+
+
+    args = argparser.parse_args()
+
+    dl = DirectionEdgeLabel()
+    dl.angle = args.angle
+    dl.main(args.input, args.output)
+
