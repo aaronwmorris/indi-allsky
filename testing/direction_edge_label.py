@@ -64,16 +64,18 @@ class DirectionEdgeLabel(object):
         height, width = image.shape[:2]
         logger.info('Image: %d x %d', width, height)
 
-        n_x, n_y = self.findDirectionCoordinate(image, self.az)
-        #logger.info('North coordinates: %d, %d', n_x, n_y)
-        e_x, e_y = self.findDirectionCoordinate(image, self.az + 90)
-        s_x, s_y = self.findDirectionCoordinate(image, self.az + 180)
-        w_x, w_y = self.findDirectionCoordinate(image, self.az - 90)
+        coord_dict = dict()
+        # these return x, y lists
+        coord_dict['n'] = self.findDirectionCoordinate(image, self.az)
+        coord_dict['e'] = self.findDirectionCoordinate(image, self.az + 90)
+        coord_dict['w'] = self.findDirectionCoordinate(image, self.az - 90)
+        coord_dict['s'] = self.findDirectionCoordinate(image, self.az + 180)
 
-        self.writeDirection(image, [n_x, n_y], 'N')
-        self.writeDirection(image, [e_x, e_y], 'E')
-        self.writeDirection(image, [s_x, s_y], 'S')
-        self.writeDirection(image, [w_x, w_y], 'W')
+
+        self.writeDirection(image, coord_dict['n'], 'N')
+        self.writeDirection(image, coord_dict['e'], 'E')
+        self.writeDirection(image, coord_dict['w'], 'W')
+        self.writeDirection(image, coord_dict['s'], 'S')
 
 
         final_rgb = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
