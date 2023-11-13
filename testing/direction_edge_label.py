@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
-class DirectionEdgeLabel(object):
+class CardinalDirsLabel(object):
     # label settings
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.8
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    dl = DirectionEdgeLabel()
+    dl = CardinalDirsLabel()
     dl.az = args.azimuth
     dl.main(args.input, args.output)
 

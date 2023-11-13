@@ -210,7 +210,7 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_CUSTOM": "",
             "PIL_FONT_SIZE"  : 30,
         },
-        "COMPASS_DIRECTIONS" : {
+        "CARDINAL_DIRS" : {
             "ENABLE"         : False,
             "FONT_COLOR"     : [200, 0, 0],
             "SWAP_NS"        : False,

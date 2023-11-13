@@ -10,21 +10,21 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllskyCompassEdgeLabel(object):
+class IndiAllskyCardinalDirsLabel(object):
 
     def __init__(self, config):
         self.config = config
 
-        self.NORTH_CHAR = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_NORTH', 'N')
-        self.EAST_CHAR  = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_EAST', 'E')
-        self.WEST_CHAR  = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_WEST', 'W')
-        self.SOUTH_CHAR = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_SOUTH', 'S')
+        self.NORTH_CHAR = self.config.get('CARDINAL_DIRS', {}).get('CHAR_NORTH', 'N')
+        self.EAST_CHAR  = self.config.get('CARDINAL_DIRS', {}).get('CHAR_EAST', 'E')
+        self.WEST_CHAR  = self.config.get('CARDINAL_DIRS', {}).get('CHAR_WEST', 'W')
+        self.SOUTH_CHAR = self.config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S')
 
 
-        self.top_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_TOP', 3)
-        self.left_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_LEFT', 5)
-        self.right_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_RIGHT', 20)
-        self.bottom_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_BOTTOM', 30)
+        self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 3)
+        self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 5)
+        self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 20)
+        self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 30)
 
 
         self._az = 0
@@ -42,10 +42,10 @@ class IndiAllskyCompassEdgeLabel(object):
 
 
         # manual swap
-        if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_NS'):
+        if self.config.get('CARDINAL_DIRS', {}).get('SWAP_NS'):
             self.NORTH_CHAR, self.SOUTH_CHAR = self.SOUTH_CHAR, self.NORTH_CHAR
 
-        if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_EW'):
+        if self.config.get('CARDINAL_DIRS', {}).get('SWAP_EW'):
             self.EAST_CHAR, self.WEST_CHAR = self.WEST_CHAR, self.EAST_CHAR
 
 
@@ -163,7 +163,7 @@ class IndiAllskyCompassEdgeLabel(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        color_bgr = list(self.config['COMPASS_DIRECTIONS']['FONT_COLOR'])
+        color_bgr = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])
         color_bgr.reverse()
 
 
@@ -189,7 +189,7 @@ class IndiAllskyCompassEdgeLabel(object):
                     fontFace=fontFace,
                     color=(0, 0, 0),
                     lineType=lineType,
-                    fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('OPENCV_FONT_SCALE', 0.8),
+                    fontScale=self.config.get('CARDINAL_DIRS', {}).get('OPENCV_FONT_SCALE', 0.8),
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
             cv2.putText(
@@ -199,7 +199,7 @@ class IndiAllskyCompassEdgeLabel(object):
                 fontFace=fontFace,
                 color=tuple(color_bgr),
                 lineType=lineType,
-                fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('OPENCV_FONT_SCALE', 0.8),
+                fontScale=self.config.get('CARDINAL_DIRS', {}).get('OPENCV_FONT_SCALE', 0.8),
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 
@@ -217,12 +217,12 @@ class IndiAllskyCompassEdgeLabel(object):
             pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
 
 
-        pillow_font_size = self.config.get('COMPASS_DIRECTIONS', {}).get('PIL_FONT_SIZE', 30)
+        pillow_font_size = self.config.get('CARDINAL_DIRS', {}).get('PIL_FONT_SIZE', 30)
 
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
 
-        color_rgb = list(self.config['COMPASS_DIRECTIONS']['FONT_COLOR'])  # RGB for pillow
+        color_rgb = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])  # RGB for pillow
 
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
