@@ -261,7 +261,7 @@ class IndiAllskyCardinalDirsLabel(object):
                 font=font,
                 stroke_width=stroke_width,
                 stroke_fill=(0, 0, 0),
-                anchor='la',  # left-ascender
+                anchor='mm',  # middle-middle
             )
 
 
