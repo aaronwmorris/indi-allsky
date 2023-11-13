@@ -65,10 +65,18 @@ class IndiAllskyCardinalDirsLabel(object):
     def main(self, image):
 
         coord_dict = dict()
-        coord_dict[self.NORTH_CHAR] = self.findDirectionCoordinate(image, self.az)
-        coord_dict[self.EAST_CHAR]  = self.findDirectionCoordinate(image, self.az + 90)
-        coord_dict[self.WEST_CHAR]  = self.findDirectionCoordinate(image, self.az - 90)
-        coord_dict[self.SOUTH_CHAR] = self.findDirectionCoordinate(image, self.az + 180)
+
+        if self.NORTH_CHAR:
+            coord_dict[self.NORTH_CHAR] = self.findDirectionCoordinate(image, self.az)
+
+        if self.EAST_CHAR:
+            coord_dict[self.EAST_CHAR]  = self.findDirectionCoordinate(image, self.az + 90)
+
+        if self.WEST_CHAR:
+            coord_dict[self.WEST_CHAR]  = self.findDirectionCoordinate(image, self.az - 90)
+
+        if self.SOUTH_CHAR:
+            coord_dict[self.SOUTH_CHAR] = self.findDirectionCoordinate(image, self.az + 180)
 
 
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')

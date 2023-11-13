@@ -1229,6 +1229,9 @@ def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
 
 
 def CARDINAL_DIRS__CHAR_validator(form, field):
+    if not field.data:
+        return
+
     if len(field.data) != 1:
         raise ValidationError('String must be one character')
 
@@ -2264,10 +2267,10 @@ class IndiAllskyConfigForm(FlaskForm):
     CARDINAL_DIRS__FONT_COLOR        = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     CARDINAL_DIRS__SWAP_NS           = BooleanField('Swap North/South')
     CARDINAL_DIRS__SWAP_EW           = BooleanField('Swap East/West')
-    CARDINAL_DIRS__CHAR_NORTH        = StringField('North Character', validators=[DataRequired(), CARDINAL_DIRS__CHAR_validator])
-    CARDINAL_DIRS__CHAR_EAST         = StringField('East Character', validators=[DataRequired(), CARDINAL_DIRS__CHAR_validator])
-    CARDINAL_DIRS__CHAR_WEST         = StringField('West Character', validators=[DataRequired(), CARDINAL_DIRS__CHAR_validator])
-    CARDINAL_DIRS__CHAR_SOUTH        = StringField('South Character', validators=[DataRequired(), CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_NORTH        = StringField('North Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_EAST         = StringField('East Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_WEST         = StringField('West Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_SOUTH        = StringField('South Character', validators=[CARDINAL_DIRS__CHAR_validator])
     CARDINAL_DIRS__OFFSET_TOP        = IntegerField('Top Offset', validators=[CARDINAL_DIRS__OFFSET_validator])
     CARDINAL_DIRS__OFFSET_LEFT       = IntegerField('Left Offset', validators=[CARDINAL_DIRS__OFFSET_validator])
     CARDINAL_DIRS__OFFSET_RIGHT      = IntegerField('Right Offset', validators=[CARDINAL_DIRS__OFFSET_validator])
