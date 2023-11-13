@@ -211,7 +211,7 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_SIZE"  : 30,
         },
         "CARDINAL_DIRS" : {
-            "ENABLE"         : False,
+            "ENABLE"         : True,
             "FONT_COLOR"     : [255, 0, 0],
             "SWAP_NS"        : False,
             "SWAP_EW"        : False,
