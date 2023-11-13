@@ -212,19 +212,19 @@ class IndiAllSkyConfigBase(object):
         },
         "CARDINAL_DIRS" : {
             "ENABLE"         : False,
-            "FONT_COLOR"     : [200, 0, 0],
+            "FONT_COLOR"     : [255, 0, 0],
             "SWAP_NS"        : False,
             "SWAP_EW"        : False,
             "CHAR_NORTH"     : "N",
             "CHAR_EAST"      : "E",
             "CHAR WEST"      : "W",
             "CHAR_SOUTH"     : "S",
-            "OFFSET_TOP"     : 3,
+            "OFFSET_TOP"     : 5,
             "OFFSET_LEFT"    : 5,
             "OFFSET_RIGHT"   : 20,
             "OFFSET_BOTTOM"  : 30,
-            "OPENCV_FONT_SCALE" : 0.8,
-            "PIL_FONT_SIZE"  : 30,
+            "OPENCV_FONT_SCALE" : 0.5,
+            "PIL_FONT_SIZE"  : 20,
         },
         "ORB_PROPERTIES" : {
             "MODE"           : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off
