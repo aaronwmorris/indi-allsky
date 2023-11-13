@@ -71,12 +71,13 @@ class IndiAllskyCompassEdgeLabel(object):
         coord_dict[self.SOUTH_CHAR] = self.findDirectionCoordinate(image, self.az + 180)
 
 
-        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
-        if image_label_system == 'pillow':
-            image = self.applyLabels_pillow(image, coord_dict)
-        else:
-            # opencv is default
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+        if image_label_system == 'opencv':
             image = self.applyLabels_opencv(image, coord_dict)
+        else:
+            # pillow is default
+            image = self.applyLabels_pillow(image, coord_dict)
 
 
         return image
