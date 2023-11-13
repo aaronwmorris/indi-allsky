@@ -28,7 +28,7 @@ from .detectLines import IndiAllskyDetectLines
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
-from .compassEdgeLabel import IndiAllskyCardinalDirsLabel
+from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
