@@ -166,13 +166,13 @@ class KeogramGenerator(object):
         # apply time labels
         if self.config.get('KEOGRAM_LABEL', True):
             # Keogram labels enabled by default
-            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
+            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
-            if image_label_system == 'pillow':
-                self.keogram_final = self.applyLabels_pillow(self.keogram_final)
-            else:
-                # opencv is default
+            if image_label_system == 'opencv':
                 self.keogram_final = self.applyLabels_opencv(self.keogram_final)
+            else:
+                # pillow is default
+                self.keogram_final = self.applyLabels_pillow(self.keogram_final)
         else:
             logger.warning('Keogram labels disabled')
 

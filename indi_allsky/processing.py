@@ -28,6 +28,7 @@ from .detectLines import IndiAllskyDetectLines
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
+from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -153,6 +154,7 @@ class ImageProcessor(object):
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
+        self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
 
         self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
         self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
@@ -1702,6 +1704,13 @@ class ImageProcessor(object):
         else:
             logger.warning('Image labels disabled')
             return
+
+
+    def cardinal_dirs_label(self):
+        if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
+            return
+
+        self.image = self._cardinal_dirs_label.main(self.image)
 
 
     def orb_image(self):
