@@ -189,7 +189,7 @@ class IndiAllskyCompassEdgeLabel(object):
                     fontFace=fontFace,
                     color=(0, 0, 0),
                     lineType=lineType,
-                    fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
+                    fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('OPENCV_FONT_SCALE', 0.8),
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
             cv2.putText(
@@ -199,7 +199,7 @@ class IndiAllskyCompassEdgeLabel(object):
                 fontFace=fontFace,
                 color=tuple(color_bgr),
                 lineType=lineType,
-                fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
+                fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('OPENCV_FONT_SCALE', 0.8),
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 

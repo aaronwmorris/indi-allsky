@@ -1020,7 +1020,7 @@ class ConfigView(FormView):
             'COMPASS_DIRECTIONS__OFFSET_LEFT'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_LEFT', 5),
             'COMPASS_DIRECTIONS__OFFSET_RIGHT'   : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_RIGHT', 20),
             'COMPASS_DIRECTIONS__OFFSET_BOTTOM'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_BOTTOM', 30),
-            'COMPASS_DIRECTIONS__CV2_FONT_SCALE' : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
+            'COMPASS_DIRECTIONS__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OPENCV_FONT_SCALE', 0.8),
             'COMPASS_DIRECTIONS__PIL_FONT_SIZE'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('PIL_FONT_SIZE', 30),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
@@ -1500,7 +1500,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_LEFT']    = int(request.json['COMPASS_DIRECTIONS__OFFSET_LEFT'])
         self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_RIGHT']   = int(request.json['COMPASS_DIRECTIONS__OFFSET_RIGHT'])
         self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_BOTTOM']  = int(request.json['COMPASS_DIRECTIONS__OFFSET_BOTTOM'])
-        self.indi_allsky_config['COMPASS_DIRECTIONS']['CV2_FONT_SCALE'] = float(request.json['COMPASS_DIRECTIONS__CV2_FONT_SCALE'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['OPENCV_FONT_SCALE'] = float(request.json['COMPASS_DIRECTIONS__OPENCV_FONT_SCALE'])
         self.indi_allsky_config['COMPASS_DIRECTIONS']['PIL_FONT_SIZE']  = int(request.json['COMPASS_DIRECTIONS__PIL_FONT_SIZE'])
         self.indi_allsky_config['ORB_PROPERTIES']['MODE']               = str(request.json['ORB_PROPERTIES__MODE'])
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])

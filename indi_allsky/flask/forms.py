@@ -2272,7 +2272,7 @@ class IndiAllskyConfigForm(FlaskForm):
     COMPASS_DIRECTIONS__OFFSET_LEFT  = IntegerField('Left Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
     COMPASS_DIRECTIONS__OFFSET_RIGHT = IntegerField('Right Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
     COMPASS_DIRECTIONS__OFFSET_BOTTOM = IntegerField('Bottom Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
-    COMPASS_DIRECTIONS__CV2_FONT_SCALE = FloatField('Font Scale (cv2)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    COMPASS_DIRECTIONS__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     COMPASS_DIRECTIONS__PIL_FONT_SIZE = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])

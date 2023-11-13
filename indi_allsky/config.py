@@ -223,7 +223,7 @@ class IndiAllSkyConfigBase(object):
             "OFFSET_LEFT"    : 5,
             "OFFSET_RIGHT"   : 20,
             "OFFSET_BOTTOM"  : 30,
-            "CV2_FONT_SCALE" : 0.8,
+            "OPENCV_FONT_SCALE" : 0.8,
             "PIL_FONT_SIZE"  : 30,
         },
         "ORB_PROPERTIES" : {
