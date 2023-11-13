@@ -1228,6 +1228,22 @@ def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
         raise ValidationError('Size must be 10 or greater')
 
 
+def COMPASS_DIRECTIONS__CHAR_validator(form, field):
+    if len(field.data) != 1:
+        raise ValidationError('String must be one character')
+
+
+def COMPASS_DIRECTIONS__OFFSET_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -20:
+        raise ValidationError('Offset must be greater than -20')
+
+    if field.data > 300:
+        raise ValidationError('Offset must be less than 300')
+
+
 def RGB_COLOR_validator(form, field):
     color_regex = r'^\d+\,\d+\,\d+$'
 
@@ -2248,6 +2264,16 @@ class IndiAllskyConfigForm(FlaskForm):
     COMPASS_DIRECTIONS__FONT_COLOR   = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     COMPASS_DIRECTIONS__SWAP_NS      = BooleanField('Swap North/South')
     COMPASS_DIRECTIONS__SWAP_EW      = BooleanField('Swap East/West')
+    COMPASS_DIRECTIONS__CHAR_NORTH   = StringField('North Char', validators=[DataRequired(), COMPASS_DIRECTIONS__CHAR_validator])
+    COMPASS_DIRECTIONS__CHAR_EAST    = StringField('East Char', validators=[DataRequired(), COMPASS_DIRECTIONS__CHAR_validator])
+    COMPASS_DIRECTIONS__CHAR_WEST    = StringField('West Char', validators=[DataRequired(), COMPASS_DIRECTIONS__CHAR_validator])
+    COMPASS_DIRECTIONS__CHAR_SOUTH   = StringField('South Char', validators=[DataRequired(), COMPASS_DIRECTIONS__CHAR_validator])
+    COMPASS_DIRECTIONS__OFFSET_TOP   = IntegerField('Top Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
+    COMPASS_DIRECTIONS__OFFSET_LEFT  = IntegerField('Left Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
+    COMPASS_DIRECTIONS__OFFSET_RIGHT = IntegerField('Right Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
+    COMPASS_DIRECTIONS__OFFSET_BOTTOM = IntegerField('Bottom Offset', validators=[COMPASS_DIRECTIONS__OFFSET_validator])
+    COMPASS_DIRECTIONS__CV2_FONT_SCALE = FloatField('Font Scale (cv2)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    COMPASS_DIRECTIONS__PIL_FONT_SIZE = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     ORB_PROPERTIES__MODE             = SelectField('Orb Mode', choices=ORB_PROPERTIES__MODE_choices, validators=[DataRequired(), ORB_PROPERTIES__MODE_validator])
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])

@@ -1012,6 +1012,16 @@ class ConfigView(FormView):
             'COMPASS_DIRECTIONS__ENABLE'     : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('ENABLE', False),
             'COMPASS_DIRECTIONS__SWAP_NS'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('SWAP_NS', False),
             'COMPASS_DIRECTIONS__SWAP_EW'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('SWAP_EW', False),
+            'COMPASS_DIRECTIONS__CHAR_NORTH' : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CHAR_NORTH', 'N'),
+            'COMPASS_DIRECTIONS__CHAR_EAST'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CHAR_EAST', 'E'),
+            'COMPASS_DIRECTIONS__CHAR_WEST'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CHAR_WEST', 'W'),
+            'COMPASS_DIRECTIONS__CHAR_SOUTH' : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CHAR_SOUTH', 'S'),
+            'COMPASS_DIRECTIONS__OFFSET_TOP'     : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_TOP', 3),
+            'COMPASS_DIRECTIONS__OFFSET_LEFT'    : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_LEFT', 5),
+            'COMPASS_DIRECTIONS__OFFSET_RIGHT'   : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_RIGHT', 20),
+            'COMPASS_DIRECTIONS__OFFSET_BOTTOM'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_BOTTOM', 30),
+            'COMPASS_DIRECTIONS__CV2_FONT_SCALE' : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
+            'COMPASS_DIRECTIONS__PIL_FONT_SIZE'  : self.indi_allsky_config.get('COMPASS_DIRECTIONS', {}).get('PIL_FONT_SIZE', 30),
             'ORB_PROPERTIES__MODE'           : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MODE', 'ha'),
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
             'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 2),
@@ -1482,6 +1492,16 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['COMPASS_DIRECTIONS']['ENABLE']         = bool(request.json['COMPASS_DIRECTIONS__FONT_COLOR'])
         self.indi_allsky_config['COMPASS_DIRECTIONS']['SWAP_NS']        = bool(request.json['COMPASS_DIRECTIONS__SWAP_NS'])
         self.indi_allsky_config['COMPASS_DIRECTIONS']['SWAP_EW']        = bool(request.json['COMPASS_DIRECTIONS__SWAP_EW'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['CHAR_NORTH']     = str(request.json['COMPASS_DIRECTIONS__CHAR_NORTH'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['CHAR_EAST']      = str(request.json['COMPASS_DIRECTIONS__CHAR_EAST'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['CHAR_WEST']      = str(request.json['COMPASS_DIRECTIONS__CHAR_WEST'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['CHAR_SOUTH']     = str(request.json['COMPASS_DIRECTIONS__CHAR_SOUTH'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_TOP']     = int(request.json['COMPASS_DIRECTIONS__OFFSET_TOP'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_LEFT']    = int(request.json['COMPASS_DIRECTIONS__OFFSET_LEFT'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_RIGHT']   = int(request.json['COMPASS_DIRECTIONS__OFFSET_RIGHT'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['OFFSET_BOTTOM']  = int(request.json['COMPASS_DIRECTIONS__OFFSET_BOTTOM'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['CV2_FONT_SCALE'] = float(request.json['COMPASS_DIRECTIONS__CV2_FONT_SCALE'])
+        self.indi_allsky_config['COMPASS_DIRECTIONS']['PIL_FONT_SIZE']  = int(request.json['COMPASS_DIRECTIONS__PIL_FONT_SIZE'])
         self.indi_allsky_config['ORB_PROPERTIES']['MODE']               = str(request.json['ORB_PROPERTIES__MODE'])
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
         self.indi_allsky_config['UPLOAD_WORKERS']                       = int(request.json['UPLOAD_WORKERS'])

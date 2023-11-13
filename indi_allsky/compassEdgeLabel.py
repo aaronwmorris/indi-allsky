@@ -15,17 +15,16 @@ class IndiAllskyCompassEdgeLabel(object):
     def __init__(self, config):
         self.config = config
 
-        self.NORTH_STR = 'N'
-        self.EAST_STR  = 'E'
-        self.WEST_STR  = 'W'
-        self.SOUTH_STR = 'S'
+        self.NORTH_CHAR = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_NORTH', 'N')
+        self.EAST_CHAR  = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_EAST', 'E')
+        self.WEST_CHAR  = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_WEST', 'W')
+        self.SOUTH_CHAR = self.config.get('COMPASS_DIRECTIONS', {}).get('CHAR_SOUTH', 'S')
 
 
-        # pillow defaults
-        self.top_offset = 5
-        self.right_offset = 20
-        self.bottom_offset = 30
-        self.left_offset = 5
+        self.top_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_TOP', 3)
+        self.left_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_LEFT', 5)
+        self.right_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_RIGHT', 20)
+        self.bottom_offset = self.config.get('COMPASS_DIRECTIONS', {}).get('OFFSET_BOTTOM', 30)
 
 
         self._az = 0
@@ -36,18 +35,18 @@ class IndiAllskyCompassEdgeLabel(object):
 
 
         if self.config['IMAGE_FLIP_V']:
-            self.NORTH_STR, self.SOUTH_STR = self.SOUTH_STR, self.NORTH_STR
+            self.NORTH_CHAR, self.SOUTH_CHAR = self.SOUTH_CHAR, self.NORTH_CHAR
 
         if self.config.get('IMAGE_FLIP_H'):
-            self.EAST_STR, self.WEST_STR = self.WEST_STR, self.EAST_STR
+            self.EAST_CHAR, self.WEST_CHAR = self.WEST_CHAR, self.EAST_CHAR
 
 
         # manual swap
         if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_NS'):
-            self.NORTH_STR, self.SOUTH_STR = self.SOUTH_STR, self.NORTH_STR
+            self.NORTH_CHAR, self.SOUTH_CHAR = self.SOUTH_CHAR, self.NORTH_CHAR
 
         if self.config.get('COMPASS_DIRECTIONS', {}).get('SWAP_EW'):
-            self.EAST_STR, self.WEST_STR = self.WEST_STR, self.EAST_STR
+            self.EAST_CHAR, self.WEST_CHAR = self.WEST_CHAR, self.EAST_CHAR
 
 
         base_path  = Path(__file__).parent
@@ -66,10 +65,10 @@ class IndiAllskyCompassEdgeLabel(object):
     def main(self, image):
 
         coord_dict = dict()
-        coord_dict[self.NORTH_STR] = self.findDirectionCoordinate(image, self.az)
-        coord_dict[self.EAST_STR]  = self.findDirectionCoordinate(image, self.az + 90)
-        coord_dict[self.WEST_STR]  = self.findDirectionCoordinate(image, self.az - 90)
-        coord_dict[self.SOUTH_STR] = self.findDirectionCoordinate(image, self.az + 180)
+        coord_dict[self.NORTH_CHAR] = self.findDirectionCoordinate(image, self.az)
+        coord_dict[self.EAST_CHAR]  = self.findDirectionCoordinate(image, self.az + 90)
+        coord_dict[self.WEST_CHAR]  = self.findDirectionCoordinate(image, self.az - 90)
+        coord_dict[self.SOUTH_CHAR] = self.findDirectionCoordinate(image, self.az + 180)
 
 
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'opencv')
@@ -177,7 +176,7 @@ class IndiAllskyCompassEdgeLabel(object):
                     fontFace=fontFace,
                     color=(0, 0, 0),
                     lineType=lineType,
-                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
             cv2.putText(
@@ -187,7 +186,7 @@ class IndiAllskyCompassEdgeLabel(object):
                 fontFace=fontFace,
                 color=tuple(color_bgr),
                 lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                fontScale=self.config.get('COMPASS_DIRECTIONS', {}).get('CV2_FONT_SCALE', 0.8),
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 
@@ -205,7 +204,7 @@ class IndiAllskyCompassEdgeLabel(object):
             pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
 
 
-        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
+        pillow_font_size = self.config.get('COMPASS_DIRECTIONS', {}).get('PIL_FONT_SIZE', 30)
 
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
