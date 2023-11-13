@@ -152,7 +152,7 @@ class IndiAllskyCompassEdgeLabel(object):
             d_y = 0
 
 
-        return d_x, d_y
+        return int(d_x), int(d_y)
 
 
     def applyLabels_opencv(self, image, coord_dict):
