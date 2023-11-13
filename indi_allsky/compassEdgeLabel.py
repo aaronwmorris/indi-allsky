@@ -92,8 +92,11 @@ class IndiAllskyCompassEdgeLabel(object):
         else:
             angle = dir_az
 
+        #logger.info('Finding direction angle for: %0.1f', angle)
+
 
         switch_angle = 90 - math.degrees(math.atan(height / width))
+        #logger.info('Switch angle: %0.1f', switch_angle)
 
 
         angle_180_r = abs(angle) % 180
@@ -112,30 +115,39 @@ class IndiAllskyCompassEdgeLabel(object):
 
 
         opp = math.tan(math.radians(c_angle)) * adj
+        #logger.info('Opposite: %d', int(opp))
 
 
         if angle >= 0 and angle < switch_angle:
+            #logger.info('Top right')
             d_x = (width / 2) + opp
             d_y = 0
         elif angle >= switch_angle and angle < 90:
+            #logger.info('Right top')
             d_x = width
             d_y = (height / 2) - opp
-        elif angle >= 90 and angle < (switch_angle * 2):
+        elif angle >= 90 and angle < (180 - switch_angle):
+            #logger.info('Right bottom')
             d_x = width
             d_y = (height / 2) + opp
-        elif angle >= (switch_angle * 2) and angle < 180:
+        elif angle >= (180 - switch_angle) and angle < 180:
+            #logger.info('Bottom right')
             d_x = (width / 2) + opp
             d_y = height
-        elif angle >= 180 and angle < (switch_angle * 4):
+        elif angle >= 180 and angle < (180 + switch_angle):
+            #logger.info('Bottom left')
             d_x = (width / 2) - opp
             d_y = height
-        elif angle >= (switch_angle * 4) and angle < 270:
+        elif angle >= (180 + switch_angle) and angle < 270:
+            #logger.info('Left bottom')
             d_x = 0
             d_y = (height / 2) + opp
-        elif angle >= 270 and angle < (switch_angle * 6):
+        elif angle >= 270 and angle < (360 - switch_angle):
+            #logger.info('Left top')
             d_x = 0
             d_y = (height / 2) - opp
-        elif angle >= (switch_angle * 6) and angle < 360:
+        elif angle >= (360 - switch_angle) and angle < 360:
+            #logger.info('Top left')
             d_x = (width / 2) - opp
             d_y = 0
 
