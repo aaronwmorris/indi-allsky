@@ -2384,13 +2384,14 @@
         <div class="col-sm-2">
             {{ form_config.ADMIN_NETWORKS_FLASK.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-4">
             {{ form_config.ADMIN_NETWORKS_FLASK(class='form-control bg-secondary', rows='10') }}
             <div id="ADMIN_NETWORKS_FLASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">
+        <div class="col-sm-6">
             <div>Networks which administrative requests have to originate</div>
-            <div>(updated in flask.json)</div>
+            <div>Local interface subnets are automatically added to this list</div>
+            <div>(Additions may be made in flask.json)</div>
         </div>
     </div>
 
