@@ -1,7 +1,9 @@
 import io
+import socket
 import math
 import time
 import ipaddress
+import psutil
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -105,11 +107,30 @@ class BaseView(View):
 
 
     def verify_admin_network(self):
-        for n in app.config.get('ADMIN_NETWORKS', []):
+        network_list = list()
+
+        network_list.extend(app.config.get('ADMIN_NETWORKS', []))
+
+        net_info = psutil.net_if_addrs()
+        for dev, addr_info in net_info.items():
+            if dev == 'lo':
+                # skip loopback
+                continue
+
+            for addr in addr_info:
+                if addr.family == socket.AF_INET:
+                    cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
+                    network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
+
+                elif addr.family == socket.AF_INET6:
+                    network_list.append('{0:s}/{1:d}'.format(addr.address, 64))  # assume /64 for ipv6
+
+
+        for net in network_list:
             try:
-                admin_network = ipaddress.ip_network(n, strict=False)
+                admin_network = ipaddress.ip_network(net, strict=False)
             except ValueError:
-                app.logger.error('Invalid network: %s', n)
+                app.logger.error('Invalid network: %s', net)
                 continue
 
 

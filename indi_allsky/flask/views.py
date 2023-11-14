@@ -1257,7 +1257,36 @@ class ConfigView(FormView):
 
 
         # populated from flask config
-        form_data['ADMIN_NETWORKS_FLASK'] = '\n'.join(app.config.get('ADMIN_NETWORKS', []))
+        network_list = list()
+
+        network_list.extend(app.config.get('ADMIN_NETWORKS', []))
+
+        net_info = psutil.net_if_addrs()
+        for dev, addr_info in net_info.items():
+            if dev == 'lo':
+                # skip loopback
+                continue
+
+            for addr in addr_info:
+                if addr.family == socket.AF_INET:
+                    cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
+                    network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
+
+                elif addr.family == socket.AF_INET6:
+                    network_list.append('{0:s}/{1:d}'.format(addr.address, 64))  # assume /64 for ipv6
+
+
+        admin_network_list = list()
+        for net in network_list:
+            try:
+                net = ipaddress.ip_network(net, strict=False)
+            except ValueError:
+                app.logger.error('Invalid network: %s', net)
+                continue
+
+            admin_network_list.append('{0:s}'.format(str(net)))
+
+        form_data['ADMIN_NETWORKS_FLASK'] = '\n'.join(admin_network_list)
 
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
