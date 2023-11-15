@@ -103,6 +103,9 @@ class IndiAllskySmokeUpdate(object):
             except requests.exceptions.ConnectionError as e:
                 logger.error('Connection error: %s', str(e))
                 self.hms_kml_data = None
+            except requests.exceptions.ReadTimeout as e:
+                logger.error('Connection error: %s', str(e))
+                self.hms_kml_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 self.hms_kml_data = None

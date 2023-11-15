@@ -47,6 +47,9 @@ class IndiAllskyUpdateSatelliteData(object):
             except requests.exceptions.ConnectionError as e:
                 logger.error('Connection error: %s', str(e))
                 continue
+            except requests.exceptions.ReadTimeout as e:
+                logger.error('Connection error: %s', str(e))
+                continue
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 continue

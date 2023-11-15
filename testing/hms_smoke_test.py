@@ -98,6 +98,9 @@ class HmsSmokeTest(object):
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
                 self.hms_kml_data = None
+            except requests.exceptions.ReadTimeout as e:
+                logger.error('Timeout error: %s', str(e))
+                self.hms_kml_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 self.hms_kml_data = None
