@@ -114,15 +114,28 @@ class CardinalDirsLabel(object):
         if angle_90_r < switch_angle:
             hyp = self.diameter / 2
             c_angle = angle_90_r
+
+            adj = math.cos(math.radians(c_angle)) * hyp
+
+            if adj <= height / 2:
+                opp = math.sin(math.radians(c_angle)) * hyp
+            else:
+                adj = height / 2
+                opp = math.tan(math.radians(c_angle)) * adj
         else:
             hyp = self.diameter / 2
             c_angle = 90 - angle_90_r
 
+            adj = math.cos(math.radians(c_angle)) * hyp
 
-        opp = math.sin(math.radians(c_angle)) * hyp
+            if adj <= width / 2:
+                opp = math.sin(math.radians(c_angle)) * hyp
+            else:
+                adj = width / 2
+                opp = math.tan(math.radians(c_angle)) * adj
+
+
         logger.info('Opposite: %d', int(opp))
-
-        adj = math.cos(math.radians(c_angle)) * hyp
         logger.info('Adjacent: %d', int(adj))
 
 
