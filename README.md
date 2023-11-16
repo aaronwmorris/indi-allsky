@@ -17,7 +17,6 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * INDI - 16-bit FITS data
     * libcamera - 16-bit DNG data
     * Also supports 8-bit RGB, PNG, and JPEG input
-* Multi-image stacking
 * Multiple camera vendor support
     * ZWO
     * Svbony
@@ -37,7 +36,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Generic web cameras
     * More to come
 * Image stretching (16-bit)
-* Dark frames to remove hot pixels
+* Multi-image stacking
+* Dark calibration frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
 * Timelapse video generation
 * GPS support
