@@ -1016,6 +1016,7 @@ class ConfigView(FormView):
             'CARDINAL_DIRS__CHAR_EAST'       : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_EAST', 'E'),
             'CARDINAL_DIRS__CHAR_WEST'       : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_WEST', 'W'),
             'CARDINAL_DIRS__CHAR_SOUTH'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S'),
+            'CARDINAL_DIRS__DIAMETER'        : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('DIAMETER', 4000),
             'CARDINAL_DIRS__OFFSET_TOP'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15),
             'CARDINAL_DIRS__OFFSET_LEFT'     : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15),
             'CARDINAL_DIRS__OFFSET_RIGHT'    : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15),
@@ -1525,6 +1526,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CARDINAL_DIRS']['CHAR_EAST']           = str(request.json['CARDINAL_DIRS__CHAR_EAST'])
         self.indi_allsky_config['CARDINAL_DIRS']['CHAR_WEST']           = str(request.json['CARDINAL_DIRS__CHAR_WEST'])
         self.indi_allsky_config['CARDINAL_DIRS']['CHAR_SOUTH']          = str(request.json['CARDINAL_DIRS__CHAR_SOUTH'])
+        self.indi_allsky_config['CARDINAL_DIRS']['DIAMETER']            = int(request.json['CARDINAL_DIRS__DIAMETER'])
         self.indi_allsky_config['CARDINAL_DIRS']['OFFSET_TOP']          = int(request.json['CARDINAL_DIRS__OFFSET_TOP'])
         self.indi_allsky_config['CARDINAL_DIRS']['OFFSET_LEFT']         = int(request.json['CARDINAL_DIRS__OFFSET_LEFT'])
         self.indi_allsky_config['CARDINAL_DIRS']['OFFSET_RIGHT']        = int(request.json['CARDINAL_DIRS__OFFSET_RIGHT'])

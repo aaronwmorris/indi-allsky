@@ -28,10 +28,13 @@ class IndiAllskyCardinalDirsLabel(object):
 
 
         self._az = 0
+        self._diameter = 0
 
 
         # most all sky lenses will flip the image horizontally and vertically
         self.az = self.config.get('LENS_AZIMUTH', 0) + 180
+
+        self.diameter = self.config.get('CARDINAL_DIRS', {}).get('DIAMETER', 4000)
 
 
         if self.config['IMAGE_FLIP_V']:
@@ -60,6 +63,15 @@ class IndiAllskyCardinalDirsLabel(object):
     @az.setter
     def az(self, new_az):
         self._az = float(new_az)
+
+
+    @property
+    def diameter(self):
+        return self._diameter
+
+    @diameter.setter
+    def diameter(self, new_diameter):
+        self._diameter = int(new_diameter)
 
 
     def main(self, image):
@@ -116,49 +128,65 @@ class IndiAllskyCardinalDirsLabel(object):
 
 
         if angle_90_r < switch_angle:
-            adj = height / 2
+            hyp = self.diameter / 2
             c_angle = angle_90_r
+
+            adj = math.cos(math.radians(c_angle)) * hyp
+
+            if adj <= height / 2:
+                opp = math.sin(math.radians(c_angle)) * hyp
+            else:
+                adj = height / 2
+                opp = math.tan(math.radians(c_angle)) * adj
         else:
-            adj = width / 2
+            hyp = self.diameter / 2
             c_angle = 90 - angle_90_r
 
+            adj = math.cos(math.radians(c_angle)) * hyp
 
-        opp = math.tan(math.radians(c_angle)) * adj
+            if adj <= width / 2:
+                opp = math.sin(math.radians(c_angle)) * hyp
+            else:
+                adj = width / 2
+                opp = math.tan(math.radians(c_angle)) * adj
+
+
         #logger.info('Opposite: %d', int(opp))
+        #logger.info('Adjacent: %d', int(adj))
 
 
         if angle >= 0 and angle < switch_angle:
             #logger.info('Top right')
             d_x = (width / 2) + opp
-            d_y = 0
+            d_y = (height / 2) - adj
         elif angle >= switch_angle and angle < 90:
             #logger.info('Right top')
-            d_x = width
+            d_x = (width / 2) + adj
             d_y = (height / 2) - opp
         elif angle >= 90 and angle < (180 - switch_angle):
             #logger.info('Right bottom')
-            d_x = width
+            d_x = (width / 2) + adj
             d_y = (height / 2) + opp
         elif angle >= (180 - switch_angle) and angle < 180:
             #logger.info('Bottom right')
             d_x = (width / 2) + opp
-            d_y = height
+            d_y = (height / 2) + adj
         elif angle >= 180 and angle < (180 + switch_angle):
             #logger.info('Bottom left')
             d_x = (width / 2) - opp
-            d_y = height
+            d_y = (height / 2) + adj
         elif angle >= (180 + switch_angle) and angle < 270:
             #logger.info('Left bottom')
-            d_x = 0
+            d_x = (width / 2) - adj
             d_y = (height / 2) + opp
         elif angle >= 270 and angle < (360 - switch_angle):
             #logger.info('Left top')
-            d_x = 0
+            d_x = (width / 2) - adj
             d_y = (height / 2) - opp
         elif angle >= (360 - switch_angle) and angle < 360:
             #logger.info('Top left')
             d_x = (width / 2) - opp
-            d_y = 0
+            d_y = (height / 2) - adj
 
 
         return int(d_x), int(d_y)
