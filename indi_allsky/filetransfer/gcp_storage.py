@@ -127,6 +127,8 @@ class gcp_storage(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ConnectionError as e:
             raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ReadTimeout as e:
+            raise ConnectionFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
