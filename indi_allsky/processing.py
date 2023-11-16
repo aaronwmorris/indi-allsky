@@ -1614,7 +1614,7 @@ class ImageProcessor(object):
             self.astrometric_data['iss_alt'] = iss_alt
 
             if iss_alt >= 0:
-                self.astrometric_data['iss_up'] = 'Yes'
+                self.astrometric_data['iss_up'] = '{0:0.0f}°'.format(iss_alt)
             else:
                 self.astrometric_data['iss_up'] = 'No'
 
@@ -1636,7 +1636,7 @@ class ImageProcessor(object):
             self.astrometric_data['hst_alt'] = hst_alt
 
             if hst_alt >= 0:
-                self.astrometric_data['hst_up'] = 'Yes'
+                self.astrometric_data['hst_up'] = '{0:0.0f}°'.format(hst_alt)
             else:
                 self.astrometric_data['hst_up'] = 'No'
 
