@@ -220,6 +220,8 @@ class IndiAllSkyConfigBase(object):
             "CHAR WEST"      : "W",
             "CHAR_SOUTH"     : "S",
             "DIAMETER"       : 4000,
+            "OFFSET_X"       : 0,
+            "OFFSET_Y"       : 0,
             "OFFSET_TOP"     : 15,
             "OFFSET_LEFT"    : 15,
             "OFFSET_RIGHT"   : 15,

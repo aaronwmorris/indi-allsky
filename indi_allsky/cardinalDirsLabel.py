@@ -21,10 +21,13 @@ class IndiAllskyCardinalDirsLabel(object):
         self.SOUTH_CHAR = self.config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S')
 
 
-        self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 3)
-        self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 5)
-        self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 20)
-        self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 30)
+        self.x_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_X', 0)
+        self.y_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_Y', 0)
+
+        self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15)
+        self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15)
+        self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15)
+        self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 15)
 
 
         self._az = 0
@@ -187,6 +190,14 @@ class IndiAllskyCardinalDirsLabel(object):
             #logger.info('Top left')
             d_x = (width / 2) - opp
             d_y = (height / 2) - adj
+
+
+        # add center offsets
+        if self.x_offset:
+            d_x += self.x_offset
+
+        if self.y_offset:
+            d_y -= self.y_offset  # minus
 
 
         return int(d_x), int(d_y)

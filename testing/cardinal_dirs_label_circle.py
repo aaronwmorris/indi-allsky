@@ -27,6 +27,9 @@ class CardinalDirsLabel(object):
         self._az = 0
         self._diameter = 1000
 
+        self.x_offset = 0
+        self.y_offset = 0
+
         self.top_offset = 20
         self.right_offset = 20
         self.bottom_offset = 5
@@ -171,6 +174,14 @@ class CardinalDirsLabel(object):
             logger.info('Top left')
             d_x = (width / 2) - opp
             d_y = (height / 2) - adj
+
+
+        # add center offsets
+        if self.x_offset:
+            d_x += self.x_offset
+
+        if self.y_offset:
+            d_y -= self.y_offset  # minus
 
 
         return int(d_x), int(d_y)
