@@ -5,14 +5,18 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 
+## New Features
+* Cardinal direction labels
+* Fish-eye to Panoramic perspective
+* Satellite tracking and visibility info
+* Wildfire smoke reporting *(North America only)*
+* Aurora prediction and Kp-index reporting
+
 ## Features
-* NEW: Fish-eye to Panoramic perspective
-* NEW: Satellite tracking and visibility info
-* NEW: Wildfire smoke reporting *(North America only)*
-* NEW: Aurora prediction and Kp-index reporting
-* NEW: Docker containerization support
-* NEW: Image stretching
-* Multi-image stacking
+* RAW data is the default and preferred input
+    * INDI - 16-bit FITS data
+    * libcamera - 16-bit DNG data
+    * Also supports 8-bit RGB, PNG, and JPEG input
 * Multiple camera vendor support
     * ZWO
     * Svbony
@@ -25,12 +29,15 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * HQ Camera (IMX477)
         * IMX378
         * Camera Module v3 (imx708)
+        * IMX519
         * 64mp HawkEye
         * other libcamera supported modules
-    * Canon DSLRs
+    * DSLRs
     * Generic web cameras
     * More to come
-* Dark frames to remove hot pixels
+* Image stretching (16-bit)
+* Multi-image stacking
+* Dark calibration frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
 * Timelapse video generation
 * GPS support
@@ -45,6 +52,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Keograms
 * Star Trails
 * Automatic meteor/plane/satellite detection
+* Docker containerization support
 * Images display local hour angle of sun and moon
 * Moon mode - reduced gain when the moon is overhead
 * Remote INDI server operation - operate camera remotely over the network
@@ -77,7 +85,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
 | Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>libcamera is not stable with all cameras, recommend using bullseye |
-| Raspberry Pi OS 12             | armhf (32-bit) | **Currently has package dependency problems, please use 64-bit** |
+| Raspberry Pi OS 12             | armhf (32-bit) | WARNING: Currently has package dependency problems, please use 64-bit |
 | **Raspberry Pi OS 11 (bullseye)**  | **aarch64**/armhf  | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
 | Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
@@ -369,8 +377,6 @@ indi-allsky utilizes python's multiprocessing library to enable parallelizing ta
 
 All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
 You may use the config.py utility to manipulate the configuration from the command line.
-
-https://github.com/aaronwmorris/indi-allsky/wiki/Configuration-Reference
 
 
 ## Tested Hardware

@@ -83,6 +83,32 @@ class CardinalDirsLabel(object):
         coord_dict['W'] = self.findDirectionCoordinate(image, self.az - 90)
         coord_dict['S'] = self.findDirectionCoordinate(image, self.az + 180)
 
+        # testing
+        #coord_dict['A'] = self.findDirectionCoordinate(image, self.az)
+        #coord_dict['B'] = self.findDirectionCoordinate(image, self.az + 15)
+        #coord_dict['C'] = self.findDirectionCoordinate(image, self.az + 30)
+        #coord_dict['D'] = self.findDirectionCoordinate(image, self.az + 45)
+        #coord_dict['E'] = self.findDirectionCoordinate(image, self.az + 60)
+        #coord_dict['F'] = self.findDirectionCoordinate(image, self.az + 75)
+        #coord_dict['G'] = self.findDirectionCoordinate(image, self.az + 90)
+        #coord_dict['H'] = self.findDirectionCoordinate(image, self.az + 105)
+        #coord_dict['I'] = self.findDirectionCoordinate(image, self.az + 120)
+        #coord_dict['J'] = self.findDirectionCoordinate(image, self.az + 135)
+        #coord_dict['K'] = self.findDirectionCoordinate(image, self.az + 150)
+        #coord_dict['L'] = self.findDirectionCoordinate(image, self.az + 165)
+        #coord_dict['M'] = self.findDirectionCoordinate(image, self.az + 180)
+        #coord_dict['N'] = self.findDirectionCoordinate(image, self.az + 195)
+        #coord_dict['O'] = self.findDirectionCoordinate(image, self.az + 210)
+        #coord_dict['P'] = self.findDirectionCoordinate(image, self.az + 225)
+        #coord_dict['Q'] = self.findDirectionCoordinate(image, self.az + 240)
+        #coord_dict['R'] = self.findDirectionCoordinate(image, self.az + 255)
+        #coord_dict['S'] = self.findDirectionCoordinate(image, self.az + 270)
+        #coord_dict['T'] = self.findDirectionCoordinate(image, self.az + 285)
+        #coord_dict['U'] = self.findDirectionCoordinate(image, self.az + 300)
+        #coord_dict['V'] = self.findDirectionCoordinate(image, self.az + 315)
+        #coord_dict['W'] = self.findDirectionCoordinate(image, self.az + 330)
+        #coord_dict['X'] = self.findDirectionCoordinate(image, self.az + 345)
+
         self.writeDirections(image, coord_dict)
 
 
