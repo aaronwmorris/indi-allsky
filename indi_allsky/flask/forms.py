@@ -349,7 +349,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
             stderr=subprocess.DEVNULL,
         )
     except OSError as e:
-        raise ValidationError('Temperature script failed to execute: %s', str(e))
+        raise ValidationError('Temperature script failed to execute: {0:s}'.format(str(e)))
 
 
     try:
