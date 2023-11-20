@@ -228,6 +228,7 @@ class IndiAllSkyConfigBase(object):
             "OFFSET_BOTTOM"  : 15,
             "OPENCV_FONT_SCALE" : 0.5,
             "PIL_FONT_SIZE"  : 20,
+            "OUTLINE_CIRCLE" : False,
         },
         "ORB_PROPERTIES" : {
             "MODE"           : "ha",  # ha = hour angle, az = azimuth, alt = altitude, off = off

@@ -103,7 +103,8 @@ class IndiAllskyCardinalDirsLabel(object):
             image = self.applyLabels_pillow(image, coord_dict)
 
 
-        #self.drawCircle(image)
+        if self.config.get('CARDINAL_DIRS', {}).get('OUTLINE_CIRCLE'):
+            self.drawCircle(image)
 
 
         return image

@@ -1354,7 +1354,7 @@
             {{ form_config.CARDINAL_DIRS__OFFSET_X(class='form-control bg-secondary') }}
             <div id="CARDINAL_DIRS__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">X Offset from center</div>
     </div>
 
     <div class="form-group row">
@@ -1365,7 +1365,7 @@
             {{ form_config.CARDINAL_DIRS__OFFSET_Y(class='form-control bg-secondary') }}
             <div id="CARDINAL_DIRS__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">Y Offset from center</div>
     </div>
 
     <div class="form-group row">
@@ -1432,6 +1432,21 @@
             <div id="CARDINAL_DIRS__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE(class='form-check-input') }}
+                <div id="CARDINAL_DIRS__OUTLINE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable for debugging</div>
+        </div>
     </div>
 
     <hr>
@@ -3530,6 +3545,7 @@ const checkbox_field_names = [
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',
     'CARDINAL_DIRS__SWAP_EW',
+    'CARDINAL_DIRS__OUTLINE_CIRCLE',
     'FILETRANSFER__CERT_BYPASS',
     'FILETRANSFER__UPLOAD_METADATA',
     'FILETRANSFER__UPLOAD_VIDEO',
