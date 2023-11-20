@@ -19,7 +19,7 @@ class CardinalDirsLabel(object):
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.8
     font_thickness = 1
-    line_color = (100, 200, 200)  # BGR
+    font_color = (100, 200, 200)  # BGR
     line_type = cv2.LINE_AA
 
 
@@ -209,7 +209,7 @@ class CardinalDirsLabel(object):
                 text=k,
                 org=(x, y),
                 fontFace=self.font_face,
-                color=self.line_color,
+                color=self.font_color,
                 lineType=self.line_type,
                 fontScale=self.font_scale,
                 thickness=self.font_thickness,

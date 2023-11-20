@@ -103,6 +103,10 @@ class IndiAllskyCardinalDirsLabel(object):
             image = self.applyLabels_pillow(image, coord_dict)
 
 
+        if self.config.get('CARDINAL_DIRS', {}).get('OUTLINE_CIRCLE'):
+            self.drawCircle(image)
+
+
         return image
 
 
@@ -119,10 +123,75 @@ class IndiAllskyCardinalDirsLabel(object):
         #logger.info('Finding direction angle for: %0.1f', angle)
 
 
-        switch_angle = 90 - math.degrees(math.atan(height / width))
-        #logger.info('Switch angle: %0.1f', switch_angle)
+        # quadrants
+        q1_height = (height / 2) + self.y_offset
+        q1_width = (width / 2) - self.x_offset
+        switch_angle_q1 = 90 - math.degrees(math.atan(q1_height / q1_width))
+
+        q2_height = (height / 2) - self.y_offset
+        q2_width = (width / 2) - self.x_offset
+        switch_angle_q2 = 90 - math.degrees(math.atan(q2_height / q2_width))
+
+        q3_height = (height / 2) - self.y_offset
+        q3_width = (width / 2) + self.x_offset
+        switch_angle_q3 = 90 - math.degrees(math.atan(q3_height / q3_width))
+
+        q4_height = (height / 2) + self.y_offset
+        q4_width = (width / 2) + self.x_offset
+        switch_angle_q4 = 90 - math.degrees(math.atan(q4_height / q4_width))
+
+        #logger.info('Switch angle 1: %0.1f', switch_angle_q1)
+        #logger.info('Switch angle 2: %0.1f', switch_angle_q2)
+        #logger.info('Switch angle 3: %0.1f', switch_angle_q3)
+        #logger.info('Switch angle 4: %0.1f', switch_angle_q4)
 
 
+        if angle >= 0 and angle < switch_angle_q1:
+            #logger.info('Top right')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q1, q1_height, q1_width)
+            d_x = (width / 2) + self.x_offset + opp
+            d_y = (height / 2) - self.y_offset - adj
+        elif angle >= switch_angle_q1 and angle < 90:
+            #logger.info('Right top')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q1, q1_height, q1_width)
+            d_x = (width / 2) + self.x_offset + adj
+            d_y = (height / 2) - self.y_offset - opp
+        elif angle >= 90 and angle < (180 - switch_angle_q2):
+            #logger.info('Right bottom')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q2, q2_height, q2_width)
+            d_x = (width / 2) + self.x_offset + adj
+            d_y = (height / 2) - self.y_offset + opp
+        elif angle >= (180 - switch_angle_q2) and angle < 180:
+            #logger.info('Bottom right')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q2, q2_height, q2_width)
+            d_x = (width / 2) + self.x_offset + opp
+            d_y = (height / 2) - self.y_offset + adj
+        elif angle >= 180 and angle < (180 + switch_angle_q3):
+            #logger.info('Bottom left')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q3, q3_height, q3_width)
+            d_x = (width / 2) + self.x_offset - opp
+            d_y = (height / 2) - self.y_offset + adj
+        elif angle >= (180 + switch_angle_q3) and angle < 270:
+            #logger.info('Left bottom')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q3, q3_height, q3_width)
+            d_x = (width / 2) + self.x_offset - adj
+            d_y = (height / 2) - self.y_offset + opp
+        elif angle >= 270 and angle < (360 - switch_angle_q4):
+            #logger.info('Left top')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q4, q4_height, q4_width)
+            d_x = (width / 2) + self.x_offset - adj
+            d_y = (height / 2) - self.y_offset - opp
+        elif angle >= (360 - switch_angle_q4) and angle < 360:
+            #logger.info('Top left')
+            opp, adj = self.getCircleOppAdj(angle, switch_angle_q4, q4_height, q4_width)
+            d_x = (width / 2) + self.x_offset - opp
+            d_y = (height / 2) - self.y_offset - adj
+
+
+        return int(d_x), int(d_y)
+
+
+    def getCircleOppAdj(self, angle, switch_angle, q_height, q_width):
         angle_180_r = abs(angle) % 180
         if angle_180_r > 90:
             angle_90_r = 90 - (abs(angle) % 90)
@@ -130,77 +199,35 @@ class IndiAllskyCardinalDirsLabel(object):
             angle_90_r = abs(angle) % 90
 
 
+        radius = self.diameter / 2
+        hyp = radius
+
         if angle_90_r < switch_angle:
-            hyp = self.diameter / 2
             c_angle = angle_90_r
 
             adj = math.cos(math.radians(c_angle)) * hyp
 
-            if adj <= height / 2:
+            if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
             else:
-                adj = height / 2
+                adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
         else:
-            hyp = self.diameter / 2
             c_angle = 90 - angle_90_r
 
             adj = math.cos(math.radians(c_angle)) * hyp
 
-            if adj <= width / 2:
+            if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
             else:
-                adj = width / 2
+                adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
 
 
         #logger.info('Opposite: %d', int(opp))
         #logger.info('Adjacent: %d', int(adj))
 
-
-        if angle >= 0 and angle < switch_angle:
-            #logger.info('Top right')
-            d_x = (width / 2) + opp
-            d_y = (height / 2) - adj
-        elif angle >= switch_angle and angle < 90:
-            #logger.info('Right top')
-            d_x = (width / 2) + adj
-            d_y = (height / 2) - opp
-        elif angle >= 90 and angle < (180 - switch_angle):
-            #logger.info('Right bottom')
-            d_x = (width / 2) + adj
-            d_y = (height / 2) + opp
-        elif angle >= (180 - switch_angle) and angle < 180:
-            #logger.info('Bottom right')
-            d_x = (width / 2) + opp
-            d_y = (height / 2) + adj
-        elif angle >= 180 and angle < (180 + switch_angle):
-            #logger.info('Bottom left')
-            d_x = (width / 2) - opp
-            d_y = (height / 2) + adj
-        elif angle >= (180 + switch_angle) and angle < 270:
-            #logger.info('Left bottom')
-            d_x = (width / 2) - adj
-            d_y = (height / 2) + opp
-        elif angle >= 270 and angle < (360 - switch_angle):
-            #logger.info('Left top')
-            d_x = (width / 2) - adj
-            d_y = (height / 2) - opp
-        elif angle >= (360 - switch_angle) and angle < 360:
-            #logger.info('Top left')
-            d_x = (width / 2) - opp
-            d_y = (height / 2) - adj
-
-
-        # add center offsets
-        if self.x_offset:
-            d_x += self.x_offset
-
-        if self.y_offset:
-            d_y -= self.y_offset  # minus
-
-
-        return int(d_x), int(d_y)
+        return opp, adj
 
 
     def applyLabels_opencv(self, image, coord_dict):
@@ -306,3 +333,31 @@ class IndiAllskyCardinalDirsLabel(object):
 
         # convert back to numpy array
         return cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
+
+
+    def drawCircle(self, image):
+        height, width = image.shape[:2]
+
+        color_bgr = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])
+        color_bgr.reverse()
+
+        pt = (
+            int(width / 2) + self.x_offset,
+            int(height / 2) - self.y_offset,
+        )
+
+        cv2.circle(
+            img=image,
+            center=pt,
+            radius=5,
+            color=color_bgr,
+            thickness=cv2.FILLED,
+        )
+
+        cv2.circle(
+            img=image,
+            center=pt,
+            radius=int(self.diameter / 2),
+            color=color_bgr,
+            thickness=1,
+        )
