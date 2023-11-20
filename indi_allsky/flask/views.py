@@ -1521,7 +1521,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_FILE']     = str(request.json['TEXT_PROPERTIES__PIL_FONT_FILE'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         self.indi_allsky_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
-        self.indi_allsky_config['CARDINAL_DIRS']['ENABLE']              = bool(request.json['CARDINAL_DIRS__FONT_COLOR'])
+        self.indi_allsky_config['CARDINAL_DIRS']['ENABLE']              = bool(request.json['CARDINAL_DIRS__ENABLE'])
         self.indi_allsky_config['CARDINAL_DIRS']['SWAP_NS']             = bool(request.json['CARDINAL_DIRS__SWAP_NS'])
         self.indi_allsky_config['CARDINAL_DIRS']['SWAP_EW']             = bool(request.json['CARDINAL_DIRS__SWAP_EW'])
         self.indi_allsky_config['CARDINAL_DIRS']['CHAR_NORTH']          = str(request.json['CARDINAL_DIRS__CHAR_NORTH'])
