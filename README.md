@@ -104,9 +104,25 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Version         | Note |
 | --------------- | ---- |
 | v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
-| v2.0.3          |      |
+| v2.0.3          | **Recommended** |
 | v2.0.2          |      |
 | v2.0.1          |      |
+
+
+## Single Board Computer support
+| Board                         | Note |
+| ----------------------------- | ---- |
+| Raspberry Pi 5                | libcamera and rpicam-apps need to be rebuilt from source for bookworm |
+| Raspberry Pi 4                | Recommend 64-bit bullseye |
+| Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
+| Raspberry Pi Zero             | Recommend 32-bit bullseye, memory constrained |
+| Rock Pi                       |      |
+| Libre Computer (Le Potato)    |      |
+| Orange Pi                     |      |
+| Orange Pi PC Plus             | Requires 2GB swap (and patience) to build all python modules |
+| Banana Pi                     |      |
+| BeagleBone                    |      |
 
 
 # Installation
