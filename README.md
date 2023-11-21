@@ -112,7 +112,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | libcamera and rpicam-apps need to be rebuilt from source for bookworm |
+| Raspberry Pi 5                | Requires bookworm<br>INDI: No issues reported<br>libcamera and rpicam-apps need to be rebuilt from source for bookworm |
 | Raspberry Pi 4                | Recommend 64-bit bullseye |
 | Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
 | Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
