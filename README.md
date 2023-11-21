@@ -84,7 +84,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>libcamera is not stable with all cameras, recommend using bullseye |
+| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>**libcamera and rpicam-apps currently must be rebuilt from source, recommend using bullseye** |
 | Raspberry Pi OS 12             | armhf (32-bit) | WARNING: Currently has package dependency problems, please use 64-bit |
 | **Raspberry Pi OS 11 (bullseye)**  | **aarch64**/armhf  | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
@@ -104,9 +104,25 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Version         | Note |
 | --------------- | ---- |
 | v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
-| v2.0.3          |      |
+| v2.0.3          | **Recommended** |
 | v2.0.2          |      |
 | v2.0.1          |      |
+
+
+## Single Board Computer support
+| Board                         | Note |
+| ----------------------------- | ---- |
+| Raspberry Pi 5                | Requires bookworm<br>INDI: No issues reported<br>libcamera and rpicam-apps need to be rebuilt from source for bookworm |
+| Raspberry Pi 4                | Recommend 64-bit bullseye |
+| Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
+| Raspberry Pi Zero             | Recommend 32-bit bullseye, memory constrained |
+| Rock Pi                       |      |
+| Libre Computer (Le Potato)    |      |
+| Orange Pi                     |      |
+| Orange Pi PC Plus             | Requires 2GB swap (and patience) to build all python modules |
+| Banana Pi                     |      |
+| BeagleBone                    |      |
 
 
 # Installation

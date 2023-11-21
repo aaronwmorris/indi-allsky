@@ -397,7 +397,7 @@ class FakeIndiDevice(object):
 
     @device_name.setter
     def device_name(self, new_device_name):
-        self._device_name = new_device_name
+        self._device_name = str(new_device_name)
 
 
     @property
@@ -406,7 +406,7 @@ class FakeIndiDevice(object):
 
     @driver_exec.setter
     def driver_exec(self, new_driver_exec):
-        self._driver_exec = new_driver_exec
+        self._driver_exec = str(new_driver_exec)
 
 
     def getDeviceName(self):

@@ -1,4 +1,5 @@
 import io
+import shutil
 from datetime import datetime
 from collections import OrderedDict
 import time
@@ -51,7 +52,14 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.ccd_device_name = 'CHANGEME'
-        self.ccd_driver_exec = 'libcamera-still'
+
+
+        # pick correct executable
+        if shutil.which('rpicam-still'):
+            self.ccd_driver_exec = 'rpicam-still'
+        else:
+            self.ccd_driver_exec = 'libcamera-still'
+
 
         self.camera_info = {
             'width'         : 0,
@@ -154,7 +162,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         if image_type in ['dng']:
             cmd = [
-                'libcamera-still',
+                self.ccd_device.driver_exec,
                 '--immediate',
                 '--nopreview',
                 '--raw',
@@ -167,7 +175,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
             cmd = [
-                'libcamera-still',
+                self.ccd_device.driver_exec,
                 '--immediate',
                 '--nopreview',
                 '--encoding', '{0:s}'.format(image_type),
@@ -623,7 +631,6 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx477, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx477'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4056,
@@ -652,7 +659,6 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx378, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx378'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4056,
@@ -680,7 +686,6 @@ class IndiClientLibCameraOv5647(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraOv5647, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_ov5647'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 2592,
@@ -705,7 +710,6 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx219, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx219'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 3280,
@@ -733,7 +737,6 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx519, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx519'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4656,
@@ -760,7 +763,6 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
         super(IndiClientLibCamera64mpHawkeye, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_64mp_hawkeye'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 9152,
@@ -788,7 +790,6 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx708, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx708'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 4608,
@@ -816,7 +817,6 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx296, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx296_gs'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 1456,
@@ -841,7 +841,6 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx290, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx290'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 1920,
@@ -866,7 +865,6 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
         super(IndiClientLibCameraImx462, self).__init__(*args, **kwargs)
 
         self.ccd_device_name = 'libcamera_imx462'
-        self.ccd_driver_exec = 'libcamera-still'
 
         self.camera_info = {
             'width'         : 1920,
