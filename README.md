@@ -84,7 +84,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>libcamera is not stable with all cameras, recommend using bullseye |
+| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit)| Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>**libcamera and rpicam-apps currently must be rebuilt from source, recommend using bullseye** |
 | Raspberry Pi OS 12             | armhf (32-bit) | WARNING: Currently has package dependency problems, please use 64-bit |
 | **Raspberry Pi OS 11 (bullseye)**  | **aarch64**/armhf  | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
