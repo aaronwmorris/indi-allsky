@@ -1,0 +1,40 @@
+
+FROM httpd:bookworm
+
+ARG INDIALLSKY_IMAGE_FOLDER
+ARG DEBIAN_FRONTEND=noninteractive
+
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN apt-get -y install \
+    ca-certificates
+
+
+# cleanup
+RUN apt-get clean
+
+
+# need the uid and gid to match in all containers
+RUN groupadd --gid 10001 allsky
+RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
+
+
+# installs latest code
+RUN mkdir /home/allsky/indi-allsky
+COPY . /home/allsky/indi-allsky
+RUN chown -R allsky:allsky /home/allsky/indi-allsky
+
+
+RUN rm -f /usr/local/apache2/conf/httpd.conf
+COPY docker/apache.local.conf /usr/local/apache2/conf/httpd.conf
+RUN sed \
+    -i \
+    -e "s|%INDIALLSKY_IMAGE_FOLDER%|$INDIALLSKY_IMAGE_FOLDER|g" \
+    /usr/local/apache2/conf/httpd.conf
+COPY docker/ssl.crt /etc/ssl/certs/apache.crt
+COPY docker/ssl.key /etc/ssl/private/apache.key
+
+RUN chmod 600 /etc/ssl/private/apache.key
+
