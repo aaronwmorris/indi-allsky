@@ -592,7 +592,18 @@ class ImageWorker(Process):
 
 
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
-            self.image_processor.fish2pano()
+            if self.config.get('FISH2PANO', {}).get('INPLACE'):
+                pano_data = self.image_processor.fish2pano()
+
+                # replace original image
+                self.image_processor.image = pano_data
+
+
+            elif self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
+                pano_data = self.image_processor.fish2pano()
+
+                self.write_panorama_img(pano_data, jpeg_exif=jpeg_exif)
+
 
 
         self.image_processor.orb_image()
@@ -1338,6 +1349,54 @@ class ImageWorker(Process):
             hour_folder.mkdir(mode=0o755)
 
         return hour_folder
+
+
+    def write_panorama_img(self, pano_data, jpeg_exif=None):
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+
+
+        write_img_start = time.time()
+
+        # write to temporary file
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            # exif does not appear to work with png
+            #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            #img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+
+            # opencv is faster than Pillow with PNG
+            cv2.imwrite(str(tmpfile_name), pano_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            # exif does not appear to work with tiff
+            img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
+        else:
+            tmpfile_name.unlink()
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        write_img_elapsed_s = time.time() - write_img_start
+        logger.info('Panorama image compressed in %0.4f s', write_img_elapsed_s)
+
+
+        ### Always write the latest file for web access
+        latest_pano_file = self.image_dir.joinpath('panorama.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+
+        try:
+            latest_pano_file.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_name), str(latest_pano_file))
+        latest_pano_file.chmod(0o644)
 
 
     def calculate_exposure(self, adu, exposure):
