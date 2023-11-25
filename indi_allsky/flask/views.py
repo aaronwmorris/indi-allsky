@@ -3969,7 +3969,7 @@ class JsonImageProcessingView(JsonView):
 
 
             if p_config.get('FISH2PANO', {}).get('ENABLE'):
-                image_processor.fish2pano()
+                image_processor.image = image_processor.fish2pano()
 
 
         processing_elapsed_s = time.time() - processing_start
