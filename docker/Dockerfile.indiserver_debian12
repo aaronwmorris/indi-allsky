@@ -1,0 +1,28 @@
+
+# docker- prefix due to files in docker/ folder
+FROM docker-indi.base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+
+
+# cleanup
+RUN apt-get clean
+
+
+#RUN rm -f /etc/sudoers.d/allsky
+
+
+COPY docker/start_indiserver.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_indiserver.sh
+RUN chmod 755 /home/allsky/start_indiserver.sh
+
+
+USER allsky
+WORKDIR /home/allsky
+
+
+ENTRYPOINT ["./start_indiserver.sh"]
