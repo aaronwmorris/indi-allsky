@@ -2,6 +2,7 @@
 FROM ubuntu:jammy as indi.base
 
 ARG TZ
+ARG INDI_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
@@ -9,7 +10,8 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 RUN apt-get -y install \
-    software-properties-common \
+    build-essential \
+    lsb-release \
     iputils-ping \
     bind9-host \
     apt-utils \
@@ -19,7 +21,8 @@ RUN apt-get -y install \
     tzdata \
     netcat \
     sudo \
-    git
+    git \
+    software-properties-common
 
 
 RUN add-apt-repository -y ppa:mutlaqja/ppa
@@ -47,5 +50,4 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 
 #USER allsky
 #WORKDIR /home/allsky
-
 

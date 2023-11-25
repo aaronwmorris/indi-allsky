@@ -4,9 +4,11 @@ services:
   indi.base:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_base
+      dockerfile: docker/Dockerfile.indi_base_debian12
+      #dockerfile: docker/Dockerfile.indi_base_ubuntu2204
       args:
         - TZ=${TZ}
+        - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
     env_file: .env
 
 
@@ -24,7 +26,8 @@ services:
   indiserver.indi.allsky:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indiserver
+      dockerfile: docker/Dockerfile.indiserver_debian12
+      #dockerfile: docker/Dockerfile.indiserver_ubuntu2204
     env_file: .env
     depends_on:
       - indi.base
@@ -36,7 +39,8 @@ services:
   indi.allsky.base:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_allsky_base
+      dockerfile: docker/Dockerfile.indi_allsky_base_debian12
+      #dockerfile: docker/Dockerfile.indi_allsky_base_ubuntu2204
     env_file: .env
     depends_on:
       - indi.base

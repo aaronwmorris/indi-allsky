@@ -4,7 +4,7 @@
 set -o errexit
 set -o nounset
 
-PATH=/usr/bin:/bin
+PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
 
 
