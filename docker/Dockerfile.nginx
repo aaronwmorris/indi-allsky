@@ -1,5 +1,5 @@
 
-FROM nginx:bullseye
+FROM nginx:bookworm
 
 ARG INDIALLSKY_IMAGE_FOLDER
 ARG DEBIAN_FRONTEND=noninteractive
