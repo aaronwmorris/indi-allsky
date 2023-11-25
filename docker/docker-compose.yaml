@@ -76,10 +76,11 @@ services:
       - images_indi_allsky:/var/www/html/allsky
 
 
-  nginx.indi.allsky:
+  webserver.indi.allsky:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.nginx
+      dockerfile: docker/Dockerfile.webserver_apache
+      #dockerfile: docker/Dockerfile.webserver_nginx
       args:
         - INDIALLSKY_IMAGE_FOLDER=${INDIALLSKY_IMAGE_FOLDER}
     env_file: .env
