@@ -1050,6 +1050,14 @@ def FISH2PANO__SCALE_validator(form, field):
         raise ValidationError('Scale must be 1.0 or less')
 
 
+def FISH2PANO__MODULUS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Modulus must be 1 or greater')
+
+
 def IMAGE_CROP_ROI_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -2245,6 +2253,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator])
     FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
+    FISH2PANO__MODULUS               = IntegerField('Modulus', validators=[DataRequired(), FISH2PANO__MODULUS_validator])
+    FISH2PANO__INPLACE               = BooleanField('In-place processing')
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')

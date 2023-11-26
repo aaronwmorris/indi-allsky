@@ -2415,7 +2415,8 @@ class ImageProcessor(object):
                     img_pano[y][x] = [0, 0, 0]
 
 
-        self.image = img_pano
+        # original image not replaced
+        return img_pano
 
 
     def _load_detection_mask(self):
