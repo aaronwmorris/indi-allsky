@@ -97,6 +97,11 @@ class IndiAllSkyDbCameraTable(db.Model):
         pass
 
 
+    def getFilesystemPath(self):
+        ### virtual function used for the sync api
+        return 'camera'
+
+
 class IndiAllSkyDbFileBase(db.Model):
     __abstract__ = True
 
