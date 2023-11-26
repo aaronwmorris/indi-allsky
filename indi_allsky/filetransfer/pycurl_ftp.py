@@ -41,7 +41,8 @@ class pycurl_ftp(GenericFileTransfer):
         # deprecated: will be replaced by PROTOCOLS_STR
         self.client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_FTP)
 
-        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self.connect_timeout))
+        self.client.setopt(pycurl.TIMEOUT, int(self.timeout))
         self.client.setopt(pycurl.FTP_CREATE_MISSING_DIRS, 1)
 
         self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))

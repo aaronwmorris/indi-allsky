@@ -43,7 +43,8 @@ class boto3_s3(GenericFileTransfer):
 
 
         boto_config = Config(
-            connect_timeout=self._timeout,
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.timeout,
             retries={'max_attempts': 0},
         )
 

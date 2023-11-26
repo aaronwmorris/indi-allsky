@@ -248,7 +248,8 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD_E"             : "",
             "PRIVATE_KEY"            : "",
             "PUBLIC_KEY"             : "",
-            "TIMEOUT"                : 5.0,
+            "CONNECT_TIMEOUT"        : 10.0,
+            "TIMEOUT"                : 60.0,
             "CERT_BYPASS"            : True,
             "REMOTE_IMAGE_NAME"      : "image.{0}",
             "REMOTE_IMAGE_FOLDER"        : "allsky",
@@ -279,6 +280,8 @@ class IndiAllSkyConfigBase(object):
             "REGION"                 : "us-east-2",
             "HOST"                   : "amazonaws.com",
             "PORT"                   : 0,
+            "CONNECT_TIMEOUT"        : 10.0,
+            "TIMEOUT"                : 60.0,
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
             "ACL"                    : "public-read",  # s3: public-read, gcp: publicRead
             "STORAGE_CLASS"          : "STANDARD",
@@ -311,7 +314,8 @@ class IndiAllSkyConfigBase(object):
             "EMPTY_FILE"             : False,
             "UPLOAD_IMAGE"           : 1,
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
-            "TIMEOUT"                : 5.0,
+            "CONNECT_TIMEOUT"        : 10.0,
+            "TIMEOUT"                : 60.0,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

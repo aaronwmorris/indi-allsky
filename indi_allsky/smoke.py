@@ -195,7 +195,7 @@ class IndiAllskySmokeUpdate(object):
 
     def download_kml(self, url):
         logger.warning('Downloading %s', url)
-        r = requests.get(url, allow_redirects=True, verify=True, timeout=15.0)
+        r = requests.get(url, allow_redirects=True, verify=True, timeout=(15.0, 30.0))
 
         if r.status_code >= 400:
             logger.error('URL returned %d', r.status_code)
