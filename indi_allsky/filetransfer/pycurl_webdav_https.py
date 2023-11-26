@@ -42,7 +42,8 @@ class pycurl_webdav_https(GenericFileTransfer):
         # deprecated: will be replaced by PROTOCOLS_STR
         self.client.setopt(pycurl.PROTOCOLS, pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS)
 
-        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self._timeout))
+        self.client.setopt(pycurl.CONNECTTIMEOUT, int(self.connect_timeout))
+        self.client.setopt(pycurl.TIMEOUT, int(self.timeout))
 
         self.client.setopt(pycurl.HTTPHEADER, ['Accept: */*', 'Connection: Keep-Alive'])
 

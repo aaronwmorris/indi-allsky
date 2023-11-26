@@ -312,7 +312,7 @@ class FileUploader(Thread):
                 return
 
             client = client_class(self.config)
-            client.timeout = self.config.get('SYNCAPI', {}).get('TIMEOUT', 5.0)
+            client.timeout = self.config.get('SYNCAPI', {}).get('TIMEOUT', 60.0)
         else:
             task.setFailed('Invalid transfer action')
             raise Exception('Invalid transfer action')

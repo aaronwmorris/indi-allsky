@@ -41,7 +41,7 @@ class paramiko_sftp(GenericFileTransfer):
         connect_kwargs = {
             'port'      : self._port,
             'username'  : username,
-            'timeout'   : self._timeout,
+            'timeout'   : self.timeout,
         }
 
 

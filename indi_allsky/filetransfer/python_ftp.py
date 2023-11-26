@@ -34,7 +34,7 @@ class python_ftp(GenericFileTransfer):
         self.client = ftplib.FTP()
 
         try:
-            self.client.connect(host=hostname, port=self._port, timeout=self._timeout)
+            self.client.connect(host=hostname, port=self._port, timeout=self.timeout)
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

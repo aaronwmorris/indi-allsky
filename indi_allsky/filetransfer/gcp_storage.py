@@ -101,7 +101,7 @@ class gcp_storage(GenericFileTransfer):
         upload_kwargs = {
             'if_generation_match'   : generation_match_precondition,
             'content_type'          : content_type,
-            'timeout'               : self._timeout,
+            'timeout'               : (self.connect_timeout, self.timeout),
             'retry'                 : None,
         }
 

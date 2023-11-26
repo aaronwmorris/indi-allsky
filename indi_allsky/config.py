@@ -248,7 +248,7 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD_E"             : "",
             "PRIVATE_KEY"            : "",
             "PUBLIC_KEY"             : "",
-            "TIMEOUT"                : 5.0,
+            "TIMEOUT"                : 60.0,
             "CERT_BYPASS"            : True,
             "REMOTE_IMAGE_NAME"      : "image.{0}",
             "REMOTE_IMAGE_FOLDER"        : "allsky",
@@ -311,7 +311,7 @@ class IndiAllSkyConfigBase(object):
             "EMPTY_FILE"             : False,
             "UPLOAD_IMAGE"           : 1,
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
-            "TIMEOUT"                : 5.0,
+            "TIMEOUT"                : 60.0,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

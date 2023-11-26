@@ -40,7 +40,7 @@ class libcloud_s3(GenericFileTransfer):
             access_key,
             secret=secret_key,
             region=region,
-            timeout=self._timeout,
+            timeout=self.timeout,
             secure=tls,
         )
 
