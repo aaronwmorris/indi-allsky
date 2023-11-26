@@ -2100,13 +2100,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FILETRANSFER__CLASSNAME_choices = (
         ('pycurl_sftp', 'PycURL SFTP [22]'),
-        ('paramiko_sftp', 'Paramiko SFTP [22]'),
         ('pycurl_ftpes', 'PycURL FTPES [21]'),
         ('pycurl_ftps', 'PycURL FTPS [990]'),
         ('pycurl_ftp', 'PycURL FTP [21] *no encryption*'),
+        ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
+        ('paramiko_sftp', 'Paramiko SFTP [22]'),
         ('python_ftp', 'Python FTP [21] *no encryption*'),
         ('python_ftpes', 'Python FTPES [21]'),
-        ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
     )
 
     S3UPLOAD__CLASSNAME_choices = (
