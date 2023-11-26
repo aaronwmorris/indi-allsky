@@ -253,8 +253,8 @@ class FileUploader(Thread):
 
 
             client = client_class(self.config)
-            client.connect_timeout = self.config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10)  # reusing file transfer timeout
-            client.timeout = self.config.get('FILETRANSFER', {}).get('TIMEOUT', 60)
+            client.connect_timeout = self.config.get('S3UPLOAD', {}).get('CONNECT_TIMEOUT', 10)
+            client.timeout = self.config.get('S3UPLOAD', {}).get('TIMEOUT', 60)
 
 
             if self.config['S3UPLOAD']['PORT']:

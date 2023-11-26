@@ -1066,6 +1066,8 @@ class ConfigView(FormView):
             'S3UPLOAD__REGION'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('REGION', 'us-east-2'),
             'S3UPLOAD__HOST'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('HOST', 'amazonaws.com'),
             'S3UPLOAD__PORT'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('PORT', 0),
+            'S3UPLOAD__CONNECT_TIMEOUT'      : self.indi_allsky_config.get('S3UPLOAD', {}).get('CONNECT_TIMEOUT', 10.0),
+            'S3UPLOAD__TIMEOUT'              : self.indi_allsky_config.get('S3UPLOAD', {}).get('TIMEOUT', 60.0),
             'S3UPLOAD__URL_TEMPLATE'         : self.indi_allsky_config.get('S3UPLOAD', {}).get('URL_TEMPLATE', 'https://{bucket}.s3.{region}.{host}'),
             'S3UPLOAD__STORAGE_CLASS'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('STORAGE_CLASS', 'STANDARD'),
             'S3UPLOAD__ACL'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACL', 'public-read'),
@@ -1583,6 +1585,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['S3UPLOAD']['REGION']                   = str(request.json['S3UPLOAD__REGION'])
         self.indi_allsky_config['S3UPLOAD']['HOST']                     = str(request.json['S3UPLOAD__HOST'])
         self.indi_allsky_config['S3UPLOAD']['PORT']                     = int(request.json['S3UPLOAD__PORT'])
+        self.indi_allsky_config['S3UPLOAD']['CONNECT_TIMEOUT']          = float(request.json['S3UPLOAD__CONNECT_TIMEOUT'])
+        self.indi_allsky_config['S3UPLOAD']['TIMEOUT']                  = float(request.json['S3UPLOAD__TIMEOUT'])
         self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE']             = str(request.json['S3UPLOAD__URL_TEMPLATE'])
         self.indi_allsky_config['S3UPLOAD']['STORAGE_CLASS']            = str(request.json['S3UPLOAD__STORAGE_CLASS'])
         self.indi_allsky_config['S3UPLOAD']['ACL']                      = str(request.json['S3UPLOAD__ACL'])

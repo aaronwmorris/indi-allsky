@@ -1451,6 +1451,14 @@ def FILETRANSFER__TIMEOUT_validator(form, field):
         raise ValidationError('Timeout must be 1200 or less')
 
 
+def S3UPLOAD__TIMEOUT_validator(form, field):
+    if field.data < 1:
+        raise ValidationError('Timeout must be 1.0 or greater')
+
+    if field.data > 1200:
+        raise ValidationError('Timeout must be 1200 or less')
+
+
 def SYNCAPI__TIMEOUT_validator(form, field):
     if field.data < 1:
         raise ValidationError('Timeout must be 1.0 or greater')
@@ -2345,6 +2353,8 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
+    S3UPLOAD__CONNECT_TIMEOUT        = FloatField('Connect Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])
+    S3UPLOAD__TIMEOUT                = FloatField('Read Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])
     S3UPLOAD__URL_TEMPLATE           = StringField('URL Template', validators=[DataRequired(), S3UPLOAD__URL_TEMPLATE_validator])
     S3UPLOAD__ACL                    = StringField('S3 ACL', validators=[S3UPLOAD__ACL_validator])
     S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
