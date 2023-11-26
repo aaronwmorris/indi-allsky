@@ -215,7 +215,8 @@ class FileUploader(Thread):
                 return
 
             client = client_class(self.config)
-            client.timeout = self.config['FILETRANSFER']['TIMEOUT']
+            client.connect_timeout = self.config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10)
+            client.timeout = self.config.get('FILETRANSFER', {}).get('TIMEOUT', 60)
 
             if self.config['FILETRANSFER']['PORT']:
                 client.port = self.config['FILETRANSFER']['PORT']
@@ -252,7 +253,8 @@ class FileUploader(Thread):
 
 
             client = client_class(self.config)
-            client.timeout = self.config['FILETRANSFER']['TIMEOUT']  # reusing file transfer timeout
+            client.connect_timeout = self.config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10)  # reusing file transfer timeout
+            client.timeout = self.config.get('FILETRANSFER', {}).get('TIMEOUT', 60)
 
 
             if self.config['S3UPLOAD']['PORT']:
@@ -312,6 +314,7 @@ class FileUploader(Thread):
                 return
 
             client = client_class(self.config)
+            client.connect_timeout = self.config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0)
             client.timeout = self.config.get('SYNCAPI', {}).get('TIMEOUT', 60.0)
         else:
             task.setFailed('Invalid transfer action')
