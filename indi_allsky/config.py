@@ -252,7 +252,7 @@ class IndiAllSkyConfigBase(object):
             "TIMEOUT"                : 60.0,
             "CERT_BYPASS"            : True,
             "REMOTE_IMAGE_NAME"      : "image.{0}",
-            "REMOTE_IMAGE_FOLDER"        : "allsky",
+            "REMOTE_IMAGE_FOLDER"        : "/home/allsky/upload",
             "REMOTE_METADATA_NAME"       : "latest_metadata.json",
             "REMOTE_METADATA_FOLDER"     : "allsky",
             "REMOTE_VIDEO_FOLDER"        : "allsky/videos",
