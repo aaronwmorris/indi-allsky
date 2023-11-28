@@ -72,6 +72,7 @@ services:
       - mariadb.indi.allsky
       - indiserver.indi.allsky
       - indi.allsky.base
+    #privileged: true  # enable for libcamera
     volumes:
       - images_indi_allsky:/var/www/html/allsky
 
