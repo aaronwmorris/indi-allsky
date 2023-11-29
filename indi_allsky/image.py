@@ -921,24 +921,9 @@ class ImageWorker(Process):
         return stars_data
 
 
-    def write_fit(self, i_ref, camera, fits_rgb=False):
+    def write_fit(self, i_ref, camera):
         data = i_ref['hdulist'][0].data
         image_height, image_width = data.shape[:2]
-
-
-        if len(data.shape) == 3:
-            fits_rgb = True
-
-            original_data = data  # keep reference to original data
-
-            rgb_data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
-
-            # RGB data has a different axis order for FITS
-            rgb_data = numpy.swapaxes(rgb_data, 1, 0)
-            rgb_data = numpy.swapaxes(rgb_data, 2, 0)
-
-            i_ref['hdulist'][0].data = rgb_data
-            #logger.info('Channels: %s', pformat(data.shape))
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
@@ -947,11 +932,6 @@ class ImageWorker(Process):
         f_tmpfile.close()
 
         tmpfile_p = Path(f_tmpfile.name)
-
-
-        if fits_rgb:
-            # put the original data back
-            i_ref['hdulist'][0].data = original_data
 
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')

@@ -294,7 +294,7 @@ class ImageProcessor(object):
         self._text_font_height = int(new_height)
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera, fits_rgb=True):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -324,16 +324,17 @@ class ImageProcessor(object):
             #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
-
-            #data = hdulist[0].data
         elif filename_p.suffix in ['.jpg', '.jpeg']:
-            fits_rgb = False
-
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    data = numpy.array(img)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad jpeg image')
+
+
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
 
 
             image_bitpix = 8
@@ -343,13 +344,16 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
         elif filename_p.suffix in ['.png']:
-            fits_rgb = False
-
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    data = numpy.array(img)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad png image')
+
+
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
 
 
             image_bitpix = 8
@@ -450,21 +454,6 @@ class ImageProcessor(object):
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
-        if not len(hdulist[0].data.shape) == 2:
-            # color data
-
-            if fits_rgb:
-                # FITS RGB data is in the wrong order for cv2
-                hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 2)
-                hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 1)
-                #logger.info('Channels: %s', pformat(hdulist[0].data.shape))
-
-                hdulist[0].data = cv2.cvtColor(hdulist[0].data, cv2.COLOR_RGB2BGR)
-            else:
-                # normal rgb data
-                pass
-
-
         detected_bit_depth = self._detectBitDepth(hdulist)
 
 
@@ -478,6 +467,7 @@ class ImageProcessor(object):
 
         image_data = {
             'hdulist'          : hdulist,
+            'opencv_data'      : None,  # populated in calibrate()
             'calibrated'       : False,
             'exposure'         : exposure,
             'exp_date'         : exp_date,
@@ -492,7 +482,6 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
             'target_adu'       : target_adu,
-            'fits_rgb'         : fits_rgb,
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
             'stars'            : list(),  # populated later
@@ -523,6 +512,17 @@ class ImageProcessor(object):
         self.image_list.insert(0, image_data)  # new image is first in list
 
         return return_data
+
+
+    def fits2opencv(self, data):
+        if len(data.shape) == 2:
+            # mono data does not need to be converted
+            return data
+
+        data = numpy.swapaxes(data, 0, 2)
+        data = numpy.swapaxes(data, 0, 1)
+
+        return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
 
 
     def _detectBitDepth(self, hdulist):
@@ -583,6 +583,7 @@ class ImageProcessor(object):
 
         if i_ref['calibrated']:
             # already calibrated
+            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
         try:
@@ -602,6 +603,9 @@ class ImageProcessor(object):
                     i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
 
+
+        # always convert fits to opencv compatible data
+        i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
@@ -801,7 +805,7 @@ class ImageProcessor(object):
             i_ref['sqm_value'] = 0
             return
 
-        i_ref['sqm_value'] = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
+        i_ref['sqm_value'] = self._sqm.calculate(i_ref['opencv_data'], i_ref['exposure'], self.gain_v.value)
 
 
     def stack(self):
@@ -811,13 +815,13 @@ class ImageProcessor(object):
 
         if self.focus_mode:
             # disable processing in focus mode
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
             # set aside non-stacked data for raw export
-            self.non_stacked_image = i_ref['hdulist'][0].data
+            self.non_stacked_image = i_ref['opencv_data'][0]
 
 
         stack_i_ref_list = list()
@@ -833,7 +837,7 @@ class ImageProcessor(object):
 
         if stack_list_len == 1:
             # no reason to stack a single image
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
@@ -863,12 +867,12 @@ class ImageProcessor(object):
             except TimeOutException:
                 # stack unaligned images
                 logger.error('Registration exceeded the exposure period, cancel alignment')
-                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+                stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
 
             signal.alarm(0)
         else:
             # stack unaligned images
-            stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+            stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
 
 
         stack_start = time.time()
@@ -879,12 +883,12 @@ class ImageProcessor(object):
             self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
         if self.config.get('IMAGE_STACK_SPLIT'):
-            self.image = self.splitscreen(i_ref['hdulist'][0].data, self.image)
+            self.image = self.splitscreen(i_ref['opencv_data'], self.image)
 
 
         stack_elapsed_s = time.time() - stack_start
