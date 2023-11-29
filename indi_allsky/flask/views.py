@@ -13,6 +13,7 @@ import re
 import psutil
 import dbus
 import ephem
+from pprint import pformat  # noqa: F401
 
 from passlib.hash import argon2
 
@@ -3864,6 +3865,11 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
 
+            i_ref = image_processor.getLatestImage()
+            i_ref['calibrated'] = True
+
+            image_processor.calibrate()  # this populates opencv_data
+
             image_processor.stack()  # this just populates self.image
 
             image_processor.debayer()
@@ -3910,6 +3916,12 @@ class JsonImageProcessingView(JsonView):
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
             else:
                 image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+
+
+            i_ref = image_processor.getLatestImage()
+            i_ref['calibrated'] = True
+
+            image_processor.calibrate()  # this populates opencv_data
 
             image_processor.stack()  # this just populates self.image
 

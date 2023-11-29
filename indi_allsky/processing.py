@@ -467,7 +467,7 @@ class ImageProcessor(object):
 
         image_data = {
             'hdulist'          : hdulist,
-            'opencv_data'      : None,  # populated in calibrate()
+            #'opencv_data'      : None,  # populated in calibrate()
             'calibrated'       : False,
             'exposure'         : exposure,
             'exp_date'         : exp_date,
@@ -578,7 +578,7 @@ class ImageProcessor(object):
         return self.image_list[0]
 
 
-    def calibrate(self, libcamera_black_level):
+    def calibrate(self, libcamera_black_level=None):
         i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
@@ -602,6 +602,8 @@ class ImageProcessor(object):
                     # use opencv to prevent underruns
                     i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
+
+                    i_ref['calibrated'] = True
 
 
         # always convert fits to opencv compatible data
@@ -821,7 +823,7 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_EXPORT_RAW'):
             # set aside non-stacked data for raw export
-            self.non_stacked_image = i_ref['opencv_data'][0]
+            self.non_stacked_image = i_ref['opencv_data']
 
 
         stack_i_ref_list = list()

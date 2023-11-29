@@ -351,7 +351,7 @@ class ImageWorker(Process):
         libcamera_black_level = image_data.get('libcamera_black_level', libcamera_black_level)
 
 
-        self.image_processor.calibrate(libcamera_black_level)
+        self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
