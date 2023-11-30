@@ -427,6 +427,7 @@ class CaptureWorker(Process):
     def _initialize(self):
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
+
         # this is only needed for libcamera
         libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
         if libcamera_image_type != 'dng':
