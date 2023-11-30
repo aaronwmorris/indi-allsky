@@ -197,7 +197,7 @@ class IndiAllSkyDarks(object):
         # this is only needed for libcamera
         libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
         if libcamera_image_type != 'dng':
-            camera_interface.libcamera_bit_depth = 8
+            self.indiclient.libcamera_bit_depth = 8
 
 
         # set indi server localhost and port
