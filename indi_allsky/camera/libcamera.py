@@ -825,7 +825,7 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'height'        : 1088,
             'pixel'         : 3.45,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 16,  # verified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
@@ -833,7 +833,9 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 1456:1088:10',
             1 : '',
+            # no bin2
         }
 
 
