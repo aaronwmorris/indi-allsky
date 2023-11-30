@@ -96,7 +96,7 @@ class IndiClientLibCameraGeneric(IndiClient):
     @libcamera_bit_depth.setter
     def libcamera_bit_depth(self, new_libcamera_bit_depth):
         self.camera_info['bit_depth'] = int(new_libcamera_bit_depth)
-        self.ccd_device.bit_depth = int(new_libcamera_bit_depth)
+        self.ccd_device.bit_depth = self.camera_info['bit_depth']
 
 
     def getCcdGain(self):
