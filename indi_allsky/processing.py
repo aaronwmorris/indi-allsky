@@ -343,6 +343,27 @@ class ImageProcessor(object):
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['EXTEND'] = True
+            hdulist[0].header['IMAGETYP'] = 'Light Frame'
+            hdulist[0].header['INSTRUME'] = 'jpg'
+            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+            hdulist[0].header['APTDIA'] = 10  # smallest possible value
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
+            hdulist[0].header['SITELAT'] = self.latitude_v.value
+            hdulist[0].header['SITELONG'] = self.longitude_v.value
+            hdulist[0].header['RA'] = self.ra_v.value
+            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
+
         elif filename_p.suffix in ['.png']:
             try:
                 with Image.open(str(filename_p)) as img:
@@ -362,6 +383,27 @@ class ImageProcessor(object):
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['EXTEND'] = True
+            hdulist[0].header['IMAGETYP'] = 'Light Frame'
+            hdulist[0].header['INSTRUME'] = 'png'
+            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+            hdulist[0].header['APTDIA'] = 10  # smallest possible value
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
+            hdulist[0].header['SITELAT'] = self.latitude_v.value
+            hdulist[0].header['SITELONG'] = self.longitude_v.value
+            hdulist[0].header['RA'] = self.ra_v.value
+            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
+
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 raise Exception('*** rawpy module not available ***')
