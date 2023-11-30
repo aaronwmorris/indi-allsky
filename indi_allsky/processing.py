@@ -453,17 +453,6 @@ class ImageProcessor(object):
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
 
-        return_data = dict()
-
-
-        # indi_pylibcamera specific stuff
-        # read this before it is overriden with the customer FITSHEADERS below
-        instrume_header = hdulist[0].header.get('INSTRUME', '')
-        if instrume_header == 'indi_pylibcamera':
-            # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            return_data['libcamera_black_level'] = hdulist[0].header.get('OFFSET_0')
-
-
         # Override these
         hdulist[0].header['OBJECT'] = 'AllSky'
         hdulist[0].header['TELESCOP'] = 'indi-allsky'
@@ -530,6 +519,15 @@ class ImageProcessor(object):
         }
 
 
+
+        # indi_pylibcamera specific stuff
+        # read this before it is overriden with the customer FITSHEADERS below
+        instrume_header = hdulist[0].header.get('INSTRUME', '')
+        if instrume_header == 'indi_pylibcamera':
+            # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
+            image_data['libcamera_black_level'] = int(hdulist[0].header.get('OFFSET_0'))
+
+
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
@@ -550,10 +548,9 @@ class ImageProcessor(object):
             image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
 
 
-
         self.image_list.insert(0, image_data)  # new image is first in list
 
-        return return_data
+        return image_data
 
 
     def fits2opencv(self, data):

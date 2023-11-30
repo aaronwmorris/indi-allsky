@@ -333,7 +333,7 @@ class ImageWorker(Process):
 
 
         try:
-            image_data = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
+            i_ref = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
             filename_p.unlink()
@@ -348,7 +348,7 @@ class ImageWorker(Process):
 
 
         # use original value if not defined
-        libcamera_black_level = image_data.get('libcamera_black_level', libcamera_black_level)
+        libcamera_black_level = i_ref.get('libcamera_black_level', libcamera_black_level)
 
 
         self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
