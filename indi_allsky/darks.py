@@ -194,12 +194,6 @@ class IndiAllSkyDarks(object):
         )
 
 
-        # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
-        if libcamera_image_type != 'dng':
-            self.indiclient.libcamera_bit_depth = 8
-
-
         # set indi server localhost and port
         self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
 
@@ -225,6 +219,12 @@ class IndiAllSkyDarks(object):
             logger.error('No CCDs detected')
             time.sleep(1)
             sys.exit(1)
+
+
+        # this is only needed for libcamera
+        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+        if libcamera_image_type != 'dng':
+            self.indiclient.libcamera_bit_depth = 8
 
 
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())

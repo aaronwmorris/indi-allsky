@@ -443,12 +443,6 @@ class CaptureWorker(Process):
         )
 
 
-        # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
-        if libcamera_image_type != 'dng':
-            self.indiclient.libcamera_bit_depth = 8
-
-
         # set indi server localhost and port
         self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
 
@@ -489,6 +483,13 @@ class CaptureWorker(Process):
 
         self.indiclient.findTelescope(telescope_name='Telescope Simulator')
         self.indiclient.findGps()
+
+
+        # this is only needed for libcamera
+        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+        if libcamera_image_type != 'dng':
+            self.indiclient.libcamera_bit_depth = 8
+
 
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
