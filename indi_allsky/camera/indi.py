@@ -196,6 +196,17 @@ class IndiClient(PyIndi.BaseClient):
         self._filename_t = new_filename_t
 
 
+    @property
+    def libcamera_bit_depth(self):
+        # Not needed here
+        return None
+
+    @libcamera_bit_depth.setter
+    def libcamera_bit_depth(self, new_libcamera_bit_depth):
+        # Not needed here
+        pass
+
+
     def updateConfig(self, new_config):
         self.config = new_config
 

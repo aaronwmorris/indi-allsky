@@ -61,6 +61,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.ccd_driver_exec = 'libcamera-still'
 
 
+        # override in subclass
         self.camera_info = {
             'width'         : 0,
             'height'        : 0,
@@ -70,7 +71,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'min_exposure'  : 0.0,
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
-            'bit_depth'     : 16,
+            'bit_depth'     : 0,
         }
 
 
@@ -86,6 +87,16 @@ class IndiClientLibCameraGeneric(IndiClient):
     @camera_id.setter
     def camera_id(self, new_camera_id):
         self._camera_id = int(new_camera_id)
+
+
+    @property
+    def libcamera_bit_depth(self):
+        return self.ccd_device.bit_depth
+
+    @libcamera_bit_depth.setter
+    def libcamera_bit_depth(self, new_libcamera_bit_depth):
+        self.camera_info['bit_depth'] = int(new_libcamera_bit_depth)
+        self.ccd_device.bit_depth = int(new_libcamera_bit_depth)
 
 
     def getCcdGain(self):
