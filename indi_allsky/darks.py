@@ -1206,7 +1206,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         start = time.time()
 
         avg_data = (numpy.sum(image_data, axis=0) / len(image_data)).astype(numpy_type)
-        logger.info('Avg dims: %s', str(avg_data.shape))
+        #logger.info('Avg dims: %s', str(avg_data.shape))
 
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)
