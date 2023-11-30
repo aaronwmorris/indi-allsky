@@ -91,41 +91,6 @@ class IndiClientPassive(IndiClient):
 
 
     @property
-    def camera_id(self):
-        return self._camera_id
-
-    @camera_id.setter
-    def camera_id(self, new_camera_id):
-        self._camera_id = int(new_camera_id)
-
-    @property
-    def ccd_device(self):
-        return self._ccd_device
-
-    @ccd_device.setter
-    def ccd_device(self, new_ccd_device):
-        self._ccd_device = new_ccd_device
-
-
-    @property
-    def telescope_device(self):
-        return self._telescope_device
-
-    @telescope_device.setter
-    def telescope_device(self, new_telescope_device):
-        self._telescope_device = new_telescope_device
-
-
-    @property
-    def gps_device(self):
-        return self._gps_device
-
-    @gps_device.setter
-    def gps_device(self, new_gps_device):
-        self._gps_device = new_gps_device
-
-
-    @property
     def timeout(self):
         return self._timeout
 
@@ -348,7 +313,7 @@ class IndiClientPassive(IndiClient):
 
         self._exposure = exposure
 
-        exposure_ctl = self.get_control(self._ccd_device, 'CCD_CONTROLS', 'number')
+        exposure_ctl = self.get_control(self.ccd_device, 'CCD_CONTROLS', 'number')
 
         self._ctl_ccd_exposure = exposure_ctl
 
