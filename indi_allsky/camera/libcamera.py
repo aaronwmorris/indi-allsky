@@ -753,9 +753,11 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 4656:3496:10',
             1 : '',
-            #1 : '--mode 4656:3496',  # unverified
-            #2 : '--mode 2323:1748',
+            2 : '--mode 2328:1748:10',
+            #4 : '--mode 1920x1080:10',  # cropped
+            4 : '--mode 1280:720:10',  # cropped
         }
 
 
@@ -859,7 +861,9 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 1920:1080:12',
             1 : '',
+            2 : '--mode 1280:720:12',  # cropped
         }
 
 
