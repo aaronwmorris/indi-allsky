@@ -144,15 +144,6 @@ class IndiClientPycurl(IndiClient):
         }
 
 
-    @property
-    def camera_id(self):
-        return self._camera_id
-
-    @camera_id.setter
-    def camera_id(self, new_camera_id):
-        self._camera_id = int(new_camera_id)
-
-
     def getCcdGain(self):
         return self.gain_v.value
 

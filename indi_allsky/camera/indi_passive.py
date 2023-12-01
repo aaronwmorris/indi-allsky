@@ -90,31 +90,6 @@ class IndiClientPassive(IndiClient):
         logger.info('PyIndi version: %s', pyindi_version)
 
 
-    @property
-    def timeout(self):
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, new_timeout):
-        self._timeout = float(new_timeout)
-
-    @property
-    def exposure(self):
-        return self._exposure
-
-    @exposure.setter
-    def exposure(self, new_exposure):
-        self._exposure = float(new_exposure)
-
-    @property
-    def filename_t(self):
-        return self._filename_t
-
-    @filename_t.setter
-    def filename_t(self, new_filename_t):
-        self._filename_t = new_filename_t
-
-
     def newDevice(self, d):
         logger.info("new device %s", d.getDeviceName())
 

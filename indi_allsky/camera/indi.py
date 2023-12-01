@@ -193,7 +193,7 @@ class IndiClient(PyIndi.BaseClient):
 
     @filename_t.setter
     def filename_t(self, new_filename_t):
-        self._filename_t = new_filename_t
+        self._filename_t = str(new_filename_t)
 
 
     @property
