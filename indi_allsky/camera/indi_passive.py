@@ -143,9 +143,9 @@ class IndiClientPassive(IndiClient):
 
         self._exposure = exposure
 
-        exposure_ctl = self.get_control(self.ccd_device, 'CCD_CONTROLS', 'number')
+        ctl_ccd_exposure = self.get_control(self.ccd_device, 'CCD_EXPOSURE', 'number')
 
-        self._ctl_ccd_exposure = exposure_ctl
+        self._ctl_ccd_exposure = ctl_ccd_exposure
 
 
     def getCcdExposureStatus(self):
