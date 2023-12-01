@@ -12,7 +12,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound
 
-from multiprocessing import Process
+import threading
 
 import logging
 from multiprocessing import log_to_stderr
@@ -25,7 +25,7 @@ WRITE_WORKERS = 100
 DATABASE_URL = 'sqlite:///test_deleteme.sqlite'  # /// is relative path
 
 
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s: %(message)s')
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s/%(threadName)s: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
@@ -90,10 +90,19 @@ def create_app():
 app = create_app()
 
 
-class BaseWorker(Process):
+class BaseWorker(threading.Thread):
 
     def __init__(self, *args, **kwargs):
         super(BaseWorker, self).__init__(*args, **kwargs)
+        self._stopper = threading.Event()
+
+
+    def stop(self):
+        self._stopper.set()
+
+
+    def stopped(self):
+        return self._stopper.isSet()
 
 
     def setState(self, key, value):
@@ -145,6 +154,7 @@ class ReaderWorker(BaseWorker):
 
     def __init__(self, idx, key):
         super(ReaderWorker, self).__init__()
+
         self.threadID = idx
         self.name = 'ReaderWorker{0:03d}'.format(idx)
 
@@ -154,10 +164,8 @@ class ReaderWorker(BaseWorker):
     def run(self):
         logger.warning('Starting')
 
-        signal.signal(signal.SIGINT, self.sigint_handler_worker)
-
         with app.app_context():
-            while True:
+            while not self.stopped():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
@@ -190,18 +198,15 @@ class WriterWorker(BaseWorker):
     def run(self):
         logger.warning('Starting')
 
-        signal.signal(signal.SIGINT, self.sigint_handler_worker)
-
         with app.app_context():
-            while True:
+            while not self.stopped():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
 
                 start = time.time()
 
-                with app.app_context():
-                    self.setState(self.key, int(time.time()))
+                self.setState(self.key, int(time.time()))
 
                 #try:
                 #    self.getState(self.key)
@@ -217,6 +222,9 @@ class SqliteDbTest(object):
 
     def __init__(self):
         self.shutdown = False
+
+        self.reader_workers = list()
+        self.writer_workers = list()
 
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
@@ -250,17 +258,15 @@ class SqliteDbTest(object):
 
 
 
-        reader_workers = list()
         for x in range(READ_WORKERS):
             p = ReaderWorker(x, key)
-            reader_workers.append(p)
+            self.reader_workers.append(p)
             p.start()
 
 
-        writer_workers = list()
         for x in range(WRITE_WORKERS):
             p = WriterWorker(x, key)
-            writer_workers.append(p)
+            self.writer_workers.append(p)
             p.start()
 
 
@@ -280,17 +286,17 @@ class SqliteDbTest(object):
             time.sleep(2)
 
 
-        for x in reader_workers:
-            x.terminate()
-        for x in writer_workers:
-            x.terminate()
+        for x in self.reader_workers:
+            x.stop()
+        for x in self.writer_workers:
+            x.stop()
 
 
         # Wait for the log workers to finish
-        for p in reader_workers:
+        for p in self.reader_workers:
             p.join()
 
-        for p in writer_workers:
+        for p in self.writer_workers:
             p.join()
 
 
