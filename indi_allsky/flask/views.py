@@ -130,10 +130,17 @@ class JsonLatestImageView(JsonView):
             history_seconds = 86400
 
 
+        no_image_message = 'No Image for 15 minutes'
+
+
+        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+            no_image_message += '<br>(Non-local images enabled)'
+
+
         data = {
             'latest_image' : {
                 'url' : None,
-                'message' : 'No Image for 15 minutes'
+                'message' : no_image_message,
             },
         }
 
