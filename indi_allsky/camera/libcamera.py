@@ -61,6 +61,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.ccd_driver_exec = 'libcamera-still'
 
 
+        # override in subclass
         self.camera_info = {
             'width'         : 0,
             'height'        : 0,
@@ -70,7 +71,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'min_exposure'  : 0.0,
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
-            'bit_depth'     : 16,
+            'bit_depth'     : 0,
         }
 
 
@@ -80,12 +81,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     @property
-    def camera_id(self):
-        return self._camera_id
+    def libcamera_bit_depth(self):
+        return self.ccd_device.bit_depth
 
-    @camera_id.setter
-    def camera_id(self, new_camera_id):
-        self._camera_id = int(new_camera_id)
+    @libcamera_bit_depth.setter
+    def libcamera_bit_depth(self, new_libcamera_bit_depth):
+        self.camera_info['bit_depth'] = int(new_libcamera_bit_depth)
+        self.ccd_device.bit_depth = self.camera_info['bit_depth']
 
 
     def getCcdGain(self):
@@ -507,9 +509,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         new_ccd.cfa = self.camera_info['cfa']
         new_ccd.bit_depth = self.camera_info['bit_depth']
 
-        self._ccd_device = new_ccd
+        self.ccd_device = new_ccd
 
-        return self._ccd_device
+        return new_ccd
 
 
     def getCcdInfo(self):
@@ -518,8 +520,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         ccdinfo['CCD_EXPOSURE'] = dict()
         ccdinfo['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE'] = {
             'current' : None,
-            'min'     : self._ccd_device.min_exposure,
-            'max'     : self._ccd_device.max_exposure,
+            'min'     : self.ccd_device.min_exposure,
+            'max'     : self.ccd_device.max_exposure,
             'step'    : None,
             'format'  : None,
         }
@@ -528,40 +530,40 @@ class IndiClientLibCameraGeneric(IndiClient):
         ccdinfo['CCD_INFO']['CCD_MAX_X'] = dict()
         ccdinfo['CCD_INFO']['CCD_MAX_Y'] = dict()
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE'] = {
-            'current' : self._ccd_device.pixel,
-            'min'     : self._ccd_device.pixel,
-            'max'     : self._ccd_device.pixel,
+            'current' : self.ccd_device.pixel,
+            'min'     : self.ccd_device.pixel,
+            'max'     : self.ccd_device.pixel,
             'step'    : None,
             'format'  : None,
         }
 
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_X'] = {
-            'current' : self._ccd_device.pixel,
-            'min'     : self._ccd_device.pixel,
-            'max'     : self._ccd_device.pixel,
+            'current' : self.ccd_device.pixel,
+            'min'     : self.ccd_device.pixel,
+            'max'     : self.ccd_device.pixel,
             'step'    : None,
             'format'  : None,
         }
 
         ccdinfo['CCD_INFO']['CCD_PIXEL_SIZE_Y'] = {
-            'current' : self._ccd_device.pixel,
-            'min'     : self._ccd_device.pixel,
-            'max'     : self._ccd_device.pixel,
+            'current' : self.ccd_device.pixel,
+            'min'     : self.ccd_device.pixel,
+            'max'     : self.ccd_device.pixel,
             'step'    : None,
             'format'  : None,
         }
 
         ccdinfo['CCD_INFO']['CCD_BITSPERPIXEL'] = {
-            'current' : self._ccd_device.bit_depth,
-            'min'     : self._ccd_device.bit_depth,
-            'max'     : self._ccd_device.bit_depth,
+            'current' : self.ccd_device.bit_depth,
+            'min'     : self.ccd_device.bit_depth,
+            'max'     : self.ccd_device.bit_depth,
             'step'    : None,
             'format'  : None,
         }
 
         ccdinfo['CCD_CFA'] = dict()
         ccdinfo['CCD_CFA']['CFA_TYPE'] = {
-            'text' : self._ccd_device.cfa,
+            'text' : self.ccd_device.cfa,
         }
 
         ccdinfo['CCD_FRAME'] = dict()
@@ -569,17 +571,17 @@ class IndiClientLibCameraGeneric(IndiClient):
         ccdinfo['CCD_FRAME']['Y'] = dict()
 
         ccdinfo['CCD_FRAME']['WIDTH'] = {
-            'current' : self._ccd_device.width,
-            'min'     : self._ccd_device.width,
-            'max'     : self._ccd_device.width,
+            'current' : self.ccd_device.width,
+            'min'     : self.ccd_device.width,
+            'max'     : self.ccd_device.width,
             'step'    : None,
             'format'  : None,
         }
 
         ccdinfo['CCD_FRAME']['HEIGHT'] = {
-            'current' : self._ccd_device.height,
-            'min'     : self._ccd_device.height,
-            'max'     : self._ccd_device.height,
+            'current' : self.ccd_device.height,
+            'min'     : self.ccd_device.height,
+            'max'     : self.ccd_device.height,
             'step'    : None,
             'format'  : None,
         }
@@ -592,9 +594,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         }
 
         ccdinfo['GAIN_INFO'] = {
-            'current' : self._ccd_device.min_gain,
-            'min'     : self._ccd_device.min_gain,
-            'max'     : self._ccd_device.max_gain,
+            'current' : self.ccd_device.min_gain,
+            'min'     : self.ccd_device.min_gain,
+            'max'     : self.ccd_device.max_gain,
             'step'    : None,
             'format'  : None,
         }
@@ -743,7 +745,7 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'height'        : 3496,
             'pixel'         : 1.22,
             'min_gain'      : 1,
-            'max_gain'      : 16,
+            'max_gain'      : 16,  # verified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
@@ -751,9 +753,11 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 4656:3496:10',
             1 : '',
-            #1 : '--mode 4656:3496',  # unverified
-            #2 : '--mode 2323:1748',
+            2 : '--mode 2328:1748:10',
+            #4 : '--mode 1920x1080:10',  # cropped
+            4 : '--mode 1280:720:10',  # cropped
         }
 
 
@@ -823,7 +827,7 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'height'        : 1088,
             'pixel'         : 3.45,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'max_gain'      : 16,  # verified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
@@ -831,7 +835,9 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 1456:1088:10',
             1 : '',
+            # no bin2
         }
 
 
@@ -855,7 +861,9 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
         }
 
         self._binmode_options = {
+            #1 : '--mode 1920:1080:12',
             1 : '',
+            2 : '--mode 1280:720:12',  # cropped
         }
 
 

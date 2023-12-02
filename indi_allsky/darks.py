@@ -178,6 +178,7 @@ class IndiAllSkyDarks(object):
     def _initialize(self):
         camera_interface = getattr(camera_module, self.config.get('CAMERA_INTERFACE', 'indi'))
 
+
         # instantiate the client
         self.indiclient = camera_interface(
             self.config,
@@ -191,6 +192,7 @@ class IndiAllSkyDarks(object):
             self.bin_v,
             self.night_v,
         )
+
 
         # set indi server localhost and port
         self.indiclient.setServer(self.config['INDI_SERVER'], self.config['INDI_PORT'])
@@ -217,6 +219,12 @@ class IndiAllSkyDarks(object):
             logger.error('No CCDs detected')
             time.sleep(1)
             sys.exit(1)
+
+
+        # this is only needed for libcamera
+        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+        if libcamera_image_type != 'dng':
+            self.indiclient.libcamera_bit_depth = 8
 
 
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
@@ -384,6 +392,59 @@ class IndiAllSkyDarks(object):
             except OSError as e:
                 filename_p.unlink()
                 raise BadImage(str(e)) from e
+        elif filename_p.suffix in ['.jpg', '.jpeg']:
+            import PIL
+            from PIL import Image
+
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = numpy.array(img)
+            except PIL.UnidentifiedImageError:
+                raise BadImage('Bad jpeg image')
+
+
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
+            # create a new fits container
+            hdu = fits.PrimaryHDU(data)
+            hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['IMAGETYP'] = 'Dark Frame'
+            hdulist[0].header['INSTRUME'] = 'jpeg'
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
+        elif filename_p.suffix in ['.png']:
+            try:
+                with Image.open(str(filename_p)) as img:
+                    data = numpy.array(img)
+            except PIL.UnidentifiedImageError:
+                raise BadImage('Bad png image')
+
+
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
+            # create a new fits container
+            hdu = fits.PrimaryHDU(data)
+            hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['IMAGETYP'] = 'Dark Frame'
+            hdulist[0].header['INSTRUME'] = 'png'
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
@@ -423,7 +484,7 @@ class IndiAllSkyDarks(object):
             #for h in hdulist[0].header.keys():
             #    logger.info('  Header: %s = %s', h, str(hdulist[0].header[h]))
         else:
-            raise Exception('Dark frames only supported with raw formats (fits, dng)')
+            raise Exception('Unsupported dark frame source')
 
 
         filename_p.unlink()  # no longer need the original file
@@ -789,8 +850,16 @@ class IndiAllSkyDarks(object):
 
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
-            image_height, image_width = hdulist[0].data.shape[:2]
+            #logger.info('Shape: %s', str(hdulist[0].data.shape))
+            if len(hdulist[0].data.shape) == 3:
+                # RGB fits data
+                image_height, image_width = hdulist[0].data.shape[-2:]
+            else:
+                # Mono data
+                image_height, image_width = hdulist[0].data.shape[:2]
+
             image_bitpix = hdulist[0].header['BITPIX']
+
 
             f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
             hdulist.writeto(f_tmp_fit)
@@ -799,7 +868,7 @@ class IndiAllSkyDarks(object):
 
             #logger.info('FIT: %s', f_tmp_fit.name)
 
-            m_avg = numpy.mean(hdulist[0].data, axis=0)[0]
+            m_avg = numpy.mean(hdulist[0].data)
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getSensorTemperature()
@@ -1087,8 +1156,7 @@ class IndiAllSkyDarksProcessor(object):
                 image_data.append(hdulist[0].data)
 
 
-        image_height, image_width = image_data[0].shape[:2]
-        bpm = numpy.zeros((image_height, image_width), dtype=numpy_type)
+        bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
 
         # take the max values of each pixel from each image
         for image in image_data:
@@ -1105,7 +1173,7 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
 
-        bpm_adu_avg = numpy.mean(bpm, axis=0)[0]
+        bpm_adu_avg = numpy.mean(bpm)
         logger.info('Master BPM average adu: %0.2f', bpm_adu_avg)
 
         hdulist[0].data = bpm
@@ -1145,16 +1213,16 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        avg_image = numpy.mean(image_data, axis=0)
-        data = numpy.floor(avg_image).astype(numpy_type)  # no floats
+        avg_data = (numpy.sum(image_data, axis=0) / len(image_data)).astype(numpy_type)
+        #logger.info('Avg dims: %s', str(avg_data.shape))
 
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)
 
-        dark_adu_avg = numpy.mean(data, axis=0)[0]
+        dark_adu_avg = numpy.mean(avg_data)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
-        hdulist[0].data = data
+        hdulist[0].data = avg_data
 
         # reuse the last fits file for the stacked data
         hdulist.writeto(filename_p)

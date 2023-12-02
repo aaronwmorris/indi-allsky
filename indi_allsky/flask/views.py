@@ -13,6 +13,7 @@ import re
 import psutil
 import dbus
 import ephem
+from pprint import pformat  # noqa: F401
 
 from passlib.hash import argon2
 
@@ -129,10 +130,17 @@ class JsonLatestImageView(JsonView):
             history_seconds = 86400
 
 
+        no_image_message = 'No Image for 15 minutes'
+
+
+        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+            no_image_message += '<br>(Non-local images enabled)'
+
+
         data = {
             'latest_image' : {
                 'url' : None,
-                'message' : 'No Image for 15 minutes'
+                'message' : no_image_message,
             },
         }
 
@@ -3862,9 +3870,11 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+            i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
-            image_processor.stack()  # this just populates self.image
+
+            image_processor.stack()  # this populates self.image
 
             image_processor.debayer()
 
@@ -3895,7 +3905,8 @@ class JsonImageProcessingView(JsonView):
 
         else:
             if p_config['IMAGE_STACK_COUNT'] > 1:
-                image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
                 fits_image_query = IndiAllSkyDbFitsImageTable.query\
                     .join(IndiAllSkyDbFitsImageTable.camera)\
@@ -3905,13 +3916,16 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
+                    i_ref = image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
+                    i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
             else:
-                image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
+                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
-            image_processor.stack()  # this just populates self.image
+
+            image_processor.stack()  # this populates self.image
 
             image_processor.debayer()
 

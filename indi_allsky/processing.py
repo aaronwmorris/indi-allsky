@@ -294,7 +294,7 @@ class ImageProcessor(object):
         self._text_font_height = int(new_height)
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera, fits_rgb=True):
+    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -324,40 +324,86 @@ class ImageProcessor(object):
             #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
-
-            #data = hdulist[0].data
         elif filename_p.suffix in ['.jpg', '.jpeg']:
-            fits_rgb = False
-
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    data = numpy.array(img)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad jpeg image')
 
 
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
             image_bitpix = 8
             image_bayerpat = None
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
-        elif filename_p.suffix in ['.png']:
-            fits_rgb = False
 
+            hdulist[0].header['EXTEND'] = True
+            hdulist[0].header['IMAGETYP'] = 'Light Frame'
+            hdulist[0].header['INSTRUME'] = 'jpg'
+            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+            hdulist[0].header['APTDIA'] = 10  # smallest possible value
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
+            hdulist[0].header['SITELAT'] = self.latitude_v.value
+            hdulist[0].header['SITELONG'] = self.longitude_v.value
+            hdulist[0].header['RA'] = self.ra_v.value
+            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
+
+        elif filename_p.suffix in ['.png']:
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    data = numpy.array(img)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad png image')
 
 
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
             image_bitpix = 8
             image_bayerpat = None
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
+
+            hdulist[0].header['EXTEND'] = True
+            hdulist[0].header['IMAGETYP'] = 'Light Frame'
+            hdulist[0].header['INSTRUME'] = 'png'
+            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
+            hdulist[0].header['APTDIA'] = 10  # smallest possible value
+            hdulist[0].header['EXPTIME'] = float(exposure)
+            hdulist[0].header['XBINNING'] = 1
+            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['BITPIX'] = 8
+            hdulist[0].header['SITELAT'] = self.latitude_v.value
+            hdulist[0].header['SITELONG'] = self.longitude_v.value
+            hdulist[0].header['RA'] = self.ra_v.value
+            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+            if camera.owner:
+                hdulist[0].header['ORIGIN'] = camera.owner
+
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 raise Exception('*** rawpy module not available ***')
@@ -407,17 +453,6 @@ class ImageProcessor(object):
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
 
 
-        return_data = dict()
-
-
-        # indi_pylibcamera specific stuff
-        # read this before it is overriden with the customer FITSHEADERS below
-        instrume_header = hdulist[0].header.get('INSTRUME', '')
-        if instrume_header == 'indi_pylibcamera':
-            # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            return_data['libcamera_black_level'] = hdulist[0].header.get('OFFSET_0')
-
-
         # Override these
         hdulist[0].header['OBJECT'] = 'AllSky'
         hdulist[0].header['TELESCOP'] = 'indi-allsky'
@@ -450,21 +485,6 @@ class ImageProcessor(object):
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
-        if not len(hdulist[0].data.shape) == 2:
-            # color data
-
-            if fits_rgb:
-                # FITS RGB data is in the wrong order for cv2
-                hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 2)
-                hdulist[0].data = numpy.swapaxes(hdulist[0].data, 0, 1)
-                #logger.info('Channels: %s', pformat(hdulist[0].data.shape))
-
-                hdulist[0].data = cv2.cvtColor(hdulist[0].data, cv2.COLOR_RGB2BGR)
-            else:
-                # normal rgb data
-                pass
-
-
         detected_bit_depth = self._detectBitDepth(hdulist)
 
 
@@ -478,6 +498,7 @@ class ImageProcessor(object):
 
         image_data = {
             'hdulist'          : hdulist,
+            #'opencv_data'      : None,  # populated in calibrate()
             'calibrated'       : False,
             'exposure'         : exposure,
             'exp_date'         : exp_date,
@@ -492,11 +513,19 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
             'target_adu'       : target_adu,
-            'fits_rgb'         : fits_rgb,
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
             'stars'            : list(),  # populated later
         }
+
+
+
+        # indi_pylibcamera specific stuff
+        # read this before it is overriden with the customer FITSHEADERS below
+        instrume_header = hdulist[0].header.get('INSTRUME', '')
+        if instrume_header == 'indi_pylibcamera':
+            # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
+            image_data['libcamera_black_level'] = int(hdulist[0].header.get('OFFSET_0'))
 
 
         # aurora and smoke data
@@ -519,10 +548,20 @@ class ImageProcessor(object):
             image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
 
 
-
         self.image_list.insert(0, image_data)  # new image is first in list
 
-        return return_data
+        return image_data
+
+
+    def fits2opencv(self, data):
+        if len(data.shape) == 2:
+            # mono data does not need to be converted
+            return data
+
+        data = numpy.swapaxes(data, 0, 2)
+        data = numpy.swapaxes(data, 0, 1)
+
+        return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
 
 
     def _detectBitDepth(self, hdulist):
@@ -578,11 +617,12 @@ class ImageProcessor(object):
         return self.image_list[0]
 
 
-    def calibrate(self, libcamera_black_level):
+    def calibrate(self, libcamera_black_level=None):
         i_ref = self.getLatestImage()
 
         if i_ref['calibrated']:
             # already calibrated
+            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
         try:
@@ -602,6 +642,11 @@ class ImageProcessor(object):
                     i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
 
+                    i_ref['calibrated'] = True
+
+
+        # always convert fits to opencv compatible data
+        i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
 
 
     def _calibrate(self, data, exposure, camera_id, image_bitpix):
@@ -801,7 +846,7 @@ class ImageProcessor(object):
             i_ref['sqm_value'] = 0
             return
 
-        i_ref['sqm_value'] = self._sqm.calculate(i_ref['hdulist'][0].data, i_ref['exposure'], self.gain_v.value)
+        i_ref['sqm_value'] = self._sqm.calculate(i_ref['opencv_data'], i_ref['exposure'], self.gain_v.value)
 
 
     def stack(self):
@@ -811,13 +856,13 @@ class ImageProcessor(object):
 
         if self.focus_mode:
             # disable processing in focus mode
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
             # set aside non-stacked data for raw export
-            self.non_stacked_image = i_ref['hdulist'][0].data
+            self.non_stacked_image = i_ref['opencv_data']
 
 
         stack_i_ref_list = list()
@@ -833,7 +878,7 @@ class ImageProcessor(object):
 
         if stack_list_len == 1:
             # no reason to stack a single image
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
@@ -863,12 +908,12 @@ class ImageProcessor(object):
             except TimeOutException:
                 # stack unaligned images
                 logger.error('Registration exceeded the exposure period, cancel alignment')
-                stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+                stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
 
             signal.alarm(0)
         else:
             # stack unaligned images
-            stack_data_list = [x['hdulist'][0].data for x in stack_i_ref_list]
+            stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
 
 
         stack_start = time.time()
@@ -879,12 +924,12 @@ class ImageProcessor(object):
             self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
-            self.image = i_ref['hdulist'][0].data
+            self.image = i_ref['opencv_data']
             return
 
 
         if self.config.get('IMAGE_STACK_SPLIT'):
-            self.image = self.splitscreen(i_ref['hdulist'][0].data, self.image)
+            self.image = self.splitscreen(i_ref['opencv_data'], self.image)
 
 
         stack_elapsed_s = time.time() - stack_start
