@@ -3594,3 +3594,26 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 
+
+class IndiAllskyImageCircleSimulatorForm(FlaskForm):
+    SENSOR_SELECT_choices = (
+        ('imx477', 'IMX477 - HQ Camera'),
+        ('imx378', 'IMX378'),
+        ('imx708', 'IMX708 - Camera Module 3'),
+        ('imx462', 'IMX462'),
+        ('imx290', 'IMX290'),
+        ('imx519', 'IMX519'),
+        ('imx219', 'IMX219 - Camera Module 2'),
+        ('ov5647', 'OV5647 - Camera Module 1'),
+        ('imx296gs', 'IMX296 Global Shutter'),
+    )
+
+    LENS_SELECT_choices = (
+        ('zwo21', 'ZWO 2.1mm'),
+        ('zwo25', 'ZWO 2.5mm'),
+        ('f20_155', 'Arecont f/2.0 1.55mm'),
+        ('f15_155', 'Stardot f/1.5 1.55mm'),
+    )
+
+    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
+    LENS_SELECT       = SelectField('Lens', choices=LENS_SELECT_choices)

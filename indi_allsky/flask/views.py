@@ -84,6 +84,7 @@ from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
+from .forms import IndiAllskyImageCircleSimulatorForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -4466,6 +4467,15 @@ class AjaxImageExcludeView(BaseView):
         return jsonify({}), 400
 
 
+class ImageCircleView(TemplateView):
+    def get_context(self):
+        context = super(ImageCircleView, self).get_context()
+
+        context['form_image_circle'] = IndiAllskyImageCircleSimulatorForm()
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -4903,4 +4913,5 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
+bp_allsky.add_url_rule('/imagecircle', view_func=ImageCircleView.as_view('imagecircle_view', template_name='imagecircle.html'))
 

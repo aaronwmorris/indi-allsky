@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Image Circle Simulator{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+canvas {
+    width:80%;
+}
+</style>
+<script>
+// sensor dimensions
+var sd = {
+    'imx477' : {
+        'w' : 6.29,
+        'h' : 4.21,
+    },
+    'imx378' : {
+        'w' : 6.29,
+        'h' : 4.21,
+    },
+    'imx708' : {
+        'w' : 6.45,
+        'h' : 3.63,
+    },
+    'imx462' : {
+        'w' : 5.57,
+        'h' : 3.13,
+    },
+    'imx519' : {
+        'w' : 5.68,
+        'h' : 4.27,
+    },
+    'imx290' : {
+        'w' : 5.57,
+        'h' : 3.13,
+    },
+    'ov5647' : {
+        'w' : 3.63,
+        'h' : 2.72,
+    },
+    'imx219' : {
+        'w' : 3.67,
+        'h' : 2.76,
+    },
+    'imx296gs' : {
+        'w' : 5.02,
+        'h' : 3.75,
+    },
+};
+
+// lens image circle diameter
+var icd = {
+    'zwo21' : 6.7,
+    'zwo25' : 6.7,
+    'f20_155' : 4.6,
+    'f15_155' : 4.8,
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_image_circle" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_image_circle.LENS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_circle.LENS_SELECT(class='form-control bg-secondary') }}
+            <div id="LENS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_image_circle.SENSOR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_circle.SENSOR_SELECT(class='form-control bg-secondary') }}
+            <div id="SENSOR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+</form>
+
+<hr>
+
+<div class="row">
+    <div class="text-center">
+        <canvas id="image-circle-canvas" width="500" height="500"></canvas>
+    </div>
+</div>
+
+<script>
+
+function show_simulation() {
+    lens = $("#LENS_SELECT").val();
+    sensor = $("#SENSOR_SELECT").val();
+
+    const canvas = document.getElementById("image-circle-canvas");
+    const ctx = canvas.getContext("2d");
+
+    // clear canvas
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // sensor rectangle
+    var r = {
+        x : 10,
+        y : 10,
+        w : sd[sensor]['w'] * 100 / 2,
+        h : sd[sensor]['h'] * 100 / 2
+    };
+
+    // image circle
+    var c = {
+        x : (r['w'] / 2) + r['x'],
+        y : (r['h'] / 2) + r['y'],
+        r : (icd[lens] / 2) * 100 / 2
+    };
+
+    //console.log('Sensor rect: ' + r.w + ' x ' + r.h)
+    //console.log('Image circle: ' + c.x + ' x ' + c.y)
+
+    ctx.save();
+
+
+    ctx.beginPath();
+    ctx.fillStyle="#000000";
+    ctx.rect(r.x, r.y, r.w, r.h);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.fillStyle="#444444";
+    ctx.globalCompositeOperation="source-atop";
+    //ctx.globalCompositeOperation="source-bottom";
+    ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI, false);
+    ctx.stroke();
+    ctx.fill();
+    //ctx.restore();
+}
+
+
+$("#LENS_SELECT").on("change", function() {
+    show_simulation();
+});
+
+
+$("#SENSOR_SELECT").on("change", function() {
+    show_simulation();
+});
+
+
+function init() {
+    show_simulation();
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
+{% endblock %}
