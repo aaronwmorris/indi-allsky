@@ -202,6 +202,31 @@ function show_simulation() {
     ctx.arc(r.w * ratio / 2, r.h * ratio / 2, c.r * ratio, 0, 2 * Math.PI, false);
     ctx.stroke();
     ctx.fill();
+
+
+    ctx.textAlign = 'left';
+    ctx.lineWidth = 10;
+    var maxWidth = 200;
+    var x_text = (r.w * ratio) - 10 - maxWidth;
+    var y_text = (r.h * ratio) - 150;
+
+    ctx.font = '20px serif';
+
+    var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'];
+    var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
+    var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
+    var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
+
+    ctx.strokeStyle = 'black';
+    ctx.strokeText(resolution_text, x_text - 50, y_text + 40, maxWidth);
+    ctx.strokeText(size_text, x_text - 50, y_text + 70, maxWidth);
+    ctx.strokeText(diag_text, x_text - 50, y_text + 100, maxWidth);
+    ctx.strokeText(img_c_text, x_text - 50, y_text + 130, maxWidth);
+    ctx.fillStyle = 'lightgrey';
+    ctx.fillText(resolution_text, x_text - 50, y_text + 40, maxWidth);
+    ctx.fillText(size_text, x_text - 50, y_text + 70, maxWidth);
+    ctx.fillText(diag_text, x_text - 50, y_text + 100, maxWidth);
+    ctx.fillText(img_c_text, x_text - 50, y_text + 130, maxWidth);
 }
 
 
