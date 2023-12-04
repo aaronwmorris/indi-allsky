@@ -62,7 +62,10 @@
                                 <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
                             </li>
-
+                            <li>
+                                <a href="{{ url_for('indi_allsky.camera_simulator_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Camera Simulator"><span class="ms-1 d-none d-sm-inline">Camera Simulator</span> </a>
+                            </li>
                             {% if current_user.is_authenticated or login_disabled %}
                             <li>
                                 <a href="{{ url_for('indi_allsky.darks_view') }}" class="dropdown-item">
@@ -87,10 +90,6 @@
                             <li>
                                 <a href="{{ url_for('indi_allsky.mask_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/layers.svg') }}" width="16" height="16" alt="Mask"><span class="ms-1 d-none d-sm-inline">Mask Base</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.camera_simulator_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Camera Simulator"><span class="ms-1 d-none d-sm-inline">Camera Simulator</span> </a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.log_view') }}" class="dropdown-item">
