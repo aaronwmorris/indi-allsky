@@ -409,6 +409,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -571,6 +572,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -733,6 +735,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -895,6 +898,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -1369,6 +1373,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -1545,6 +1550,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
