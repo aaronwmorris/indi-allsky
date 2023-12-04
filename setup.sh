@@ -1982,6 +1982,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     TMP1=$(mktemp)
     sed \
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
      -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
