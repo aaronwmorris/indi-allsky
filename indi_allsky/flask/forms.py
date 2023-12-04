@@ -3597,12 +3597,12 @@ class IndiAllskyImageProcessingForm(FlaskForm):
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = (
+        ('imx477', 'IMX477 - HQ Camera'),
+        ('imx178', 'IMX178'),
+        ('imx678', 'IMX678'),
         ('asi120', 'ASI120'),
         ('asi220', 'ASI220'),
         ('imx224', 'IMX224'),
-        ('imx178', 'IMX178'),
-        ('imx678', 'IMX678'),
-        ('imx477', 'IMX477 - HQ Camera'),
         ('imx378', 'IMX378'),
         ('imx708', 'IMX708 - Camera Module 3'),
         ('imx462', 'IMX462'),
@@ -3622,6 +3622,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('imx585', 'IMX585'),
         ('imx183', 'IMX183'),
         ('imx533', 'IMX533'),
+        ('imx294', 'IMX294'),
         ('imx571', 'IMX571 - ASI2600'),
         ('imx455', 'IMX455 - ASI6200'),
     )
