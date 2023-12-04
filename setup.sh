@@ -409,6 +409,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -571,6 +572,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -733,6 +735,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -895,6 +898,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -1369,6 +1373,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -1545,6 +1550,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libfreetype6-dev \
         liblcms2-dev \
         libwebp-dev \
+        libcap-dev \
         tcl8.6-dev \
         tk8.6-dev \
         python3-tk \
@@ -1838,6 +1844,7 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.0.5"
     "2.0.4"
     "2.0.3"
     "2.0.2"
@@ -1887,7 +1894,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.0.4" ]; then
+if [ "$INDI_VERSION" == "2.0.5" ]; then
+    pip3 install "$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.4" ]; then
     pip3 install "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.0.3" ]; then
     pip3 install "$PYINDI_2_0_0"
@@ -1973,6 +1982,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     TMP1=$(mktemp)
     sed \
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
      -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \

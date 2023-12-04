@@ -178,6 +178,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libahp-gt-dev \
         zlib1g-dev
 
 
@@ -225,6 +226,8 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
         zlib1g-dev
 
 
@@ -272,6 +275,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
 
@@ -320,6 +324,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
 
@@ -461,8 +466,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
+        #libahp-gt-dev \  # for 24.04
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -507,6 +514,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libzmq3-dev \
         zlib1g-dev 
 
 
@@ -566,6 +574,8 @@ fi
 ### INDI Core ###
 
 
+sudo ldconfig
+
 
 ### INDI 3rdparty ###
 if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
@@ -578,39 +588,54 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
     fi
 
 
-    #### libs ####
-    INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
-    cd "$INDI_3RDPARTY_LIB_BUILD"
+    if [ "${BUILD_INDI_3RDPARTY_LIB:-true}" == "true" ]; then
+        #### libs ####
+        INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+        cd "$INDI_3RDPARTY_LIB_BUILD"
 
-    # Setup library build
-    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
+        # Setup library build
+        $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
-    # Compile
-    make -j "$MAKE_CONCURRENT"
-    sudo make install
+        # Compile
+        make -j "$MAKE_CONCURRENT"
+        sudo make install
 
-    cd "$OLDPWD"
-    #### libs ####
+        cd "$OLDPWD"
 
-
-
-    #### drivers ####
-    INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
-    cd "$INDI_3RDPARTY_DRIVER_BUILD"
-
-    # Setup driver build
-    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
-
-    # Compile
-    make -j "$MAKE_CONCURRENT"
-    sudo make install
-    cd "$OLDPWD"
-    #### drivers ####
+        # Cleanup
+        [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
+        #### libs ####
+    else
+        echo
+        echo
+        echo "Skipping indi 3rdparty library build"
+        sleep 5
+    fi
 
 
-    # Cleanup
-    [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
-    [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+    if [ "${BUILD_INDI_3RDPARTY_DRIVER:-true}" == "true" ]; then
+        #### drivers ####
+        INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+        cd "$INDI_3RDPARTY_DRIVER_BUILD"
+
+        # Setup driver build
+        $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
+
+        # Compile
+        make -j "$MAKE_CONCURRENT"
+        sudo make install
+        cd "$OLDPWD"
+
+
+        # Cleanup
+        [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+        #### drivers ####
+    else
+        echo
+        echo
+        echo "Skipping indi 3rdparty driver build"
+        sleep 5
+    fi
 else
     echo
     echo

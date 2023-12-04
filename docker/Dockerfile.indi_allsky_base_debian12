@@ -59,6 +59,7 @@ RUN apt-get -y install \
     libfreetype6-dev \
     liblcms2-dev \
     libwebp-dev \
+    libcap-dev \
     tcl8.6-dev \
     tk8.6-dev \
     python3-tk \
