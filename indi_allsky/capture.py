@@ -564,15 +564,6 @@ class CaptureWorker(Process):
                         'LAT' : self.latitude_v.value,
                         'LONG' : self.longitude_v.value,
                     },
-                    'TELESCOPE_INFO' : {
-                        'TELESCOPE_APERTURE' : 10,
-                        'TELESCOPE_FOCAL_LENGTH' : 10,
-                    },
-                },
-                'TEXT' : {
-                    'SCOPE_CONFIG_NAME' : {
-                        'SCOPE_CONFIG_NAME' : 'indi-allsky',
-                    },
                 },
             }
 
