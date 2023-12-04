@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}indi-allsky: Image Circle Simulator{% endblock %}
+{% block title %}indi-allsky: Camera Simulator{% endblock %}
 
 {% block head %}
 <meta charset="UTF-8">
@@ -125,21 +125,21 @@ var icd = {
 {% endblock %}
 
 {% block content %}
-<form id="form_image_circle" onSubmit="return false;">
+<form id="form_camera_simulator" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
-            {{ form_image_circle.LENS_SELECT.label(class='col-form-label') }}
+            {{ form_camera_simulator.LENS_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_image_circle.LENS_SELECT(class='form-control bg-secondary') }}
+            {{ form_camera_simulator.LENS_SELECT(class='form-control bg-secondary') }}
             <div id="LENS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-1">
-            {{ form_image_circle.SENSOR_SELECT.label(class='col-form-label') }}
+            {{ form_camera_simulator.SENSOR_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_image_circle.SENSOR_SELECT(class='form-control bg-secondary') }}
+            {{ form_camera_simulator.SENSOR_SELECT(class='form-control bg-secondary') }}
             <div id="SENSOR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
     </div>

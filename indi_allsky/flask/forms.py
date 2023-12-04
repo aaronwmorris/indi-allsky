@@ -3595,7 +3595,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 
 
-class IndiAllskyImageCircleSimulatorForm(FlaskForm):
+class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = (
         ('imx477', 'IMX477 - HQ Camera'),
         ('imx378', 'IMX378'),
@@ -3605,7 +3605,7 @@ class IndiAllskyImageCircleSimulatorForm(FlaskForm):
         ('imx519', 'IMX519'),
         ('imx219', 'IMX219 - Camera Module 2'),
         ('ov5647', 'OV5647 - Camera Module 1'),
-        ('imx296gs', 'IMX296 Global Shutter'),
+        ('imx296gs', 'IMX296 - Global Shutter'),
         ('asi120', 'ASI120'),
         ('asi220', 'ASI220'),
         ('imx224', 'IMX224'),
