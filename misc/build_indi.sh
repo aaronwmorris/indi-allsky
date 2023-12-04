@@ -226,6 +226,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         libahp-gt-dev \
         zlib1g-dev
 
@@ -274,6 +275,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
 
@@ -322,6 +324,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
 
@@ -463,8 +466,10 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libtiff-dev \
         libusb-1.0-0-dev \
         libnutclient-dev \
+        libzmq3-dev \
         zlib1g-dev
 
+        #libahp-gt-dev \  # for 24.04
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -509,6 +514,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libtheora-dev \
         libtiff-dev \
         libusb-1.0-0-dev \
+        libzmq3-dev \
         zlib1g-dev 
 
 
@@ -567,6 +573,8 @@ else
 fi
 ### INDI Core ###
 
+
+sudo ldconfig
 
 
 ### INDI 3rdparty ###
