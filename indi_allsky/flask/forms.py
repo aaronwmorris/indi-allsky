@@ -3607,8 +3607,16 @@ class IndiAllskyImageCircleSimulatorForm(FlaskForm):
         ('ov5647', 'OV5647 - Camera Module 1'),
         ('imx296gs', 'IMX296 Global Shutter'),
         ('asi120', 'ASI120'),
-        ('asi385', 'ASI385'),
+        ('asi220', 'ASI220'),
+        ('imx224', 'IMX224'),
+        ('imx385', 'IMX385'),
+        ('qhy5lii', 'QHY5LII'),
+        ('imx715', 'IMX715'),
+        ('imx485', 'IMX485'),
+        ('imx585', 'IMX585'),
         ('imx183', 'IMX183'),
+        ('imx533', 'IMX533'),
+        ('imx571', 'IMX571'),
     )
 
     LENS_SELECT_choices = (
