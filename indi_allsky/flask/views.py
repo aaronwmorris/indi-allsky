@@ -84,6 +84,7 @@ from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
+from .forms import IndiAllskyCameraSimulatorForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -4466,6 +4467,15 @@ class AjaxImageExcludeView(BaseView):
         return jsonify({}), 400
 
 
+class CameraSimulatorView(TemplateView):
+    def get_context(self):
+        context = super(CameraSimulatorView, self).get_context()
+
+        context['form_camera_simulator'] = IndiAllskyCameraSimulatorForm()
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -4883,6 +4893,7 @@ bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', 
 bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
 bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
+bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

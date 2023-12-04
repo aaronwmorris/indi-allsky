@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Camera Simulator{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+canvas {
+    width:90%;
+}
+</style>
+<script>
+// sensor dimensions
+var sd = {
+    'imx477' : {
+        'w' : 4056,
+        'h' : 3040,
+        'p' : 1.55,
+    },
+    'imx378' : {
+        'w' : 4056,
+        'h' : 3040,
+        'p' : 1.55,
+    },
+    'imx708' : {
+        'w' : 4608,
+        'h' : 2592,
+        'p' : 1.4,
+    },
+    'imx462' : {
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 2.9,
+    },
+    'imx290' : {
+        'w' : 1936,
+        'h' : 1096,
+        'p' : 2.9,
+    },
+    'imx519' : {
+        'w' : 4656,
+        'h' : 3496,
+        'p' : 1.22,
+    },
+    'ov5647' : {
+        'w' : 2592,
+        'h' : 1944,
+        'p' : 1.4,
+    },
+    'imx219' : {
+        'w' : 3280,
+        'h' : 2464,
+        'p' : 1.12,
+    },
+    'imx296gs' : {
+        'w' : 1456,
+        'h' : 1088,
+        'p' : 3.45,
+    },
+    'asi120' : {
+        'w' : 1280,
+        'h' : 960,
+        'p' : 3.75,
+    },
+    'asi220' : {
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 4,
+    },
+    'imx224' : {
+        'w' : 1304,
+        'h' : 976,
+        'p' : 3.75,
+    },
+    'imx385' : {
+        'w' : 1936,
+        'h' : 1096,
+        'p' : 3.75,
+    },
+    'imx183' : {
+        'w' : 5472,
+        'h' : 3648,
+        'p' : 2.4,
+    },
+    'imx533' : {
+        'w' : 3008,
+        'h' : 3008,
+        'p' : 3.76,
+    },
+    'imx485' : {
+        'w' : 3840,
+        'h' : 2160,
+        'p' : 2.9,
+    },
+    'imx585' : {
+        'w' : 3856,
+        'h' : 2180,
+        'p' : 2.9,
+    },
+    'imx715' : {
+        'w' : 3864,
+        'h' : 2192,
+        'p' : 1.45,
+    },
+    'qhy5lii' : {
+        'w' : 1280,
+        'h' : 960,
+        'p' : 3.75,
+    },
+    'imx571' : {
+        'w' : 6248,
+        'h' : 4176,
+        'p' : 3.76,
+    },
+    'imx455' : {
+        'w' : 9576,
+        'h' : 6388,
+        'p' : 3.76,
+    },
+    'imx178' : {
+        'w' : 3096,
+        'h' : 2080,
+        'p' : 2.4,
+    },
+    'imx678' : {
+        'w' : 3840,
+        'h' : 2160,
+        'p' : 2,
+    },
+    'imx482' : {
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 5.8,
+    },
+    'imx174' : {
+        'w' : 1936,
+        'h' : 1216,
+        'p' : 5.86,
+    },
+    'imx432' : {
+        'w' : 1608,
+        'h' : 1104,
+        'p' : 9,
+    },
+    'imx662' : {
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 2.9,
+    },
+    'imx294' : {
+        'w' : 4144,
+        'h' : 2822,
+        'p' : 4.63,
+    },
+};
+
+// lens image circle diameter
+var icd = {
+    'zwo21' : 6.7,
+    'zwo25' : 6.7,
+    'f20_155' : 4.6,
+    'f15_155' : 4.8,
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_camera_simulator" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_camera_simulator.LENS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_camera_simulator.LENS_SELECT(class='form-control bg-secondary') }}
+            <div id="LENS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_camera_simulator.SENSOR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_camera_simulator.SENSOR_SELECT(class='form-control bg-secondary') }}
+            <div id="SENSOR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+</form>
+
+<hr>
+
+<div class="row">
+    <div class="text-center" style="font-size:10px">
+        Only simulates the image circle.  Field of View is dependant on lens.
+    </div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <canvas id="image-circle-canvas"></canvas>
+    </div>
+</div>
+
+<script>
+
+function pixels2mm(pixels, pixel_um) {
+    return pixels * (pixel_um / 1000);
+}
+
+function show_simulation() {
+    lens = $("#LENS_SELECT").val();
+    sensor = $("#SENSOR_SELECT").val();
+
+    const canvas = document.getElementById("image-circle-canvas");
+    const ctx = canvas.getContext("2d");
+
+    // sensor rectangle
+    var r = {
+        w : pixels2mm(sd[sensor]['w'], sd[sensor]['p']),
+        h : pixels2mm(sd[sensor]['h'], sd[sensor]['p']),
+    };
+
+    // image circle
+    var c = {
+        r : icd[lens] / 2,
+    };
+
+    //console.log('Sensor rect: ' + r.w + ' x ' + r.h)
+    //console.log('Image circle: ' + c.r)
+
+
+    // clear canvas
+    canvas.setAttribute("width", window.innerWidth);
+    canvas.setAttribute("height", window.innerHeight);
+    var hRatio = canvas.width  / r['w'];
+    var vRatio = canvas.height / r['h'];
+    var ratio  = Math.min ( hRatio, vRatio );
+
+
+    ctx.beginPath();
+    ctx.fillStyle="#000000";
+    ctx.rect(0, 0, r.w * ratio, r.h * ratio);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.fillStyle="#444444";
+    ctx.globalCompositeOperation="source-atop";
+    //ctx.globalCompositeOperation="source-bottom";
+    ctx.arc(r.w * ratio / 2, r.h * ratio / 2, c.r * ratio, 0, 2 * Math.PI, false);
+    ctx.stroke();
+    ctx.fill();
+
+
+    ctx.textAlign = 'left';
+    ctx.lineWidth = 10;
+    var maxWidth = 200;
+    var x_text = (r.w * ratio) - 10 - maxWidth;
+    var y_text = (r.h * ratio) - 150;
+
+    ctx.font = '20px serif';
+
+    var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'] + " (" + sd[sensor]['p'] + "µm)";
+    var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
+    var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
+    var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
+
+    ctx.strokeStyle = 'black';
+    ctx.strokeText(resolution_text, x_text - 50, y_text + 40, maxWidth);
+    ctx.strokeText(size_text, x_text - 50, y_text + 70, maxWidth);
+    ctx.strokeText(diag_text, x_text - 50, y_text + 100, maxWidth);
+    ctx.strokeText(img_c_text, x_text - 50, y_text + 130, maxWidth);
+    ctx.fillStyle = 'lightgrey';
+    ctx.fillText(resolution_text, x_text - 50, y_text + 40, maxWidth);
+    ctx.fillText(size_text, x_text - 50, y_text + 70, maxWidth);
+    ctx.fillText(diag_text, x_text - 50, y_text + 100, maxWidth);
+    ctx.fillText(img_c_text, x_text - 50, y_text + 130, maxWidth);
+}
+
+
+$("#LENS_SELECT").on("change", function() {
+    show_simulation();
+});
+
+
+$("#SENSOR_SELECT").on("change", function() {
+    show_simulation();
+});
+
+
+function init() {
+    show_simulation();
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
+{% endblock %}

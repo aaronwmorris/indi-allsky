@@ -3594,3 +3594,45 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 
+
+class IndiAllskyCameraSimulatorForm(FlaskForm):
+    SENSOR_SELECT_choices = (
+        ('imx477', 'IMX477 - HQ Camera'),
+        ('imx178', 'IMX178'),
+        ('imx678', 'IMX678'),
+        ('asi120', 'ASI120'),
+        ('asi220', 'ASI220'),
+        ('imx224', 'IMX224'),
+        ('imx378', 'IMX378'),
+        ('imx708', 'IMX708 - Camera Module 3'),
+        ('imx462', 'IMX462'),
+        ('imx290', 'IMX290'),
+        ('imx519', 'IMX519'),
+        ('imx219', 'IMX219 - Camera Module 2'),
+        ('ov5647', 'OV5647 - Camera Module 1'),
+        ('imx296gs', 'IMX296 - Global Shutter'),
+        ('imx385', 'IMX385'),
+        ('qhy5lii', 'QHY5LII'),
+        ('imx662', 'IMX662'),
+        ('imx715', 'IMX715'),
+        ('imx174', 'IMX174'),
+        ('imx432', 'IMX432'),
+        ('imx482', 'IMX482'),
+        ('imx485', 'IMX485'),
+        ('imx585', 'IMX585'),
+        ('imx183', 'IMX183'),
+        ('imx533', 'IMX533'),
+        ('imx294', 'IMX294'),
+        ('imx571', 'IMX571 - ASI2600'),
+        ('imx455', 'IMX455 - ASI6200'),
+    )
+
+    LENS_SELECT_choices = (
+        ('zwo21', 'ZWO 2.1mm f/2.0 - 150°'),
+        ('zwo25', 'ZWO 2.5mm f/1.2 - 170°'),
+        ('f20_155', 'Arecont 1.55mm f/2.0 - 180°'),
+        ('f15_155', 'Stardot 1.55mm f/1.5 - 180°'),
+    )
+
+    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
+    LENS_SELECT       = SelectField('Lens', choices=LENS_SELECT_choices)
