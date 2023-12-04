@@ -247,7 +247,7 @@ function show_simulation() {
 
     ctx.font = '20px serif';
 
-    var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'];
+    var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'] + " (" + sd[sensor]['p'] + "µm)";
     var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
     var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
     var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
