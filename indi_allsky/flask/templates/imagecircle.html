@@ -6,59 +6,71 @@
 <meta charset="UTF-8">
 <style>
 canvas {
-    width:80%;
+    width:90%;
 }
 </style>
 <script>
 // sensor dimensions
 var sd = {
     'imx477' : {
-        'w' : 6.29,
-        'h' : 4.21,
+        'w' : 4056,
+        'h' : 3040,
+        'p' : 1.55,
     },
     'imx378' : {
-        'w' : 6.29,
-        'h' : 4.21,
+        'w' : 4056,
+        'h' : 3040,
+        'p' : 1.55,
     },
     'imx708' : {
-        'w' : 6.45,
-        'h' : 3.63,
+        'w' : 4608,
+        'h' : 2592,
+        'p' : 1.4,
     },
     'imx462' : {
-        'w' : 5.57,
-        'h' : 3.13,
-    },
-    'imx519' : {
-        'w' : 5.68,
-        'h' : 4.27,
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 2.9,
     },
     'imx290' : {
-        'w' : 5.57,
-        'h' : 3.13,
+        'w' : 1920,
+        'h' : 1080,
+        'p' : 2.9,
+    },
+    'imx519' : {
+        'w' : 4656,
+        'h' : 3496,
+        'p' : 1.22,
     },
     'ov5647' : {
-        'w' : 3.63,
-        'h' : 2.72,
+        'w' : 2592,
+        'h' : 1944,
+        'p' : 1.4,
     },
     'imx219' : {
-        'w' : 3.67,
-        'h' : 2.76,
+        'w' : 3280,
+        'h' : 2464,
+        'p' : 1.12,
     },
     'imx296gs' : {
-        'w' : 5.02,
-        'h' : 3.75,
+        'w' : 1456,
+        'h' : 1088,
+        'p' : 3.45,
     },
     'asi120' : {
-        'w' : 4.8,
-        'h' : 3.6,
+        'w' : 1280,
+        'h' : 960,
+        'p' : 3.75,
     },
     'asi385' : {
-        'w' : 7.26,
-        'h' : 4.11,
+        'w' : 1936,
+        'h' : 1096,
+        'p' : 3.75,
     },
     'imx183' : {
-        'w' : 13.13,
-        'h' : 8.76,
+        'w' : 5472,
+        'h' : 3648,
+        'p' : 2.4,
     },
 };
 
@@ -97,11 +109,15 @@ var icd = {
 
 <div class="row">
     <div class="text-center">
-        <canvas id="image-circle-canvas" width="500" height="500"></canvas>
+        <canvas id="image-circle-canvas"></canvas>
     </div>
 </div>
 
 <script>
+
+function pixels2mm(pixels, pixel_um) {
+    return pixels * (pixel_um / 1000);
+}
 
 function show_simulation() {
     lens = $("#LENS_SELECT").val();
@@ -110,33 +126,32 @@ function show_simulation() {
     const canvas = document.getElementById("image-circle-canvas");
     const ctx = canvas.getContext("2d");
 
-    // clear canvas
-    //ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     // sensor rectangle
     var r = {
-        x : 10,
-        y : 10,
-        w : sd[sensor]['w'] * 100 / 2,
-        h : sd[sensor]['h'] * 100 / 2
+        w : pixels2mm(sd[sensor]['w'], sd[sensor]['p']),
+        h : pixels2mm(sd[sensor]['h'], sd[sensor]['p']),
     };
 
     // image circle
     var c = {
-        x : (r['w'] / 2) + r['x'],
-        y : (r['h'] / 2) + r['y'],
-        r : (icd[lens] / 2) * 100 / 2
+        r : icd[lens] / 2,
     };
 
     //console.log('Sensor rect: ' + r.w + ' x ' + r.h)
-    //console.log('Image circle: ' + c.x + ' x ' + c.y)
+    //console.log('Image circle: ' + c.r)
 
-    ctx.save();
+
+    // clear canvas
+    canvas.setAttribute("width", window.innerWidth);
+    canvas.setAttribute("height", window.innerHeight);
+    var hRatio = canvas.width  / r['w'];
+    var vRatio = canvas.height / r['h'];
+    var ratio  = Math.min ( hRatio, vRatio );
 
 
     ctx.beginPath();
     ctx.fillStyle="#000000";
-    ctx.rect(r.x, r.y, r.w, r.h);
+    ctx.rect(0, 0, r.w * ratio, r.h * ratio);
     ctx.stroke();
     ctx.fill();
 
@@ -144,10 +159,9 @@ function show_simulation() {
     ctx.fillStyle="#444444";
     ctx.globalCompositeOperation="source-atop";
     //ctx.globalCompositeOperation="source-bottom";
-    ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI, false);
+    ctx.arc(r.w * ratio / 2, r.h * ratio / 2, c.r * ratio, 0, 2 * Math.PI, false);
     ctx.stroke();
     ctx.fill();
-    //ctx.restore();
 }
 
 
