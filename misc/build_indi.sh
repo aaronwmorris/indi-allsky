@@ -597,6 +597,11 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
         # Cleanup
         [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
         #### libs ####
+    else
+        echo
+        echo
+        echo "Skipping indi 3rdparty library build"
+        sleep 5
     fi
 
 
@@ -617,6 +622,11 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
         # Cleanup
         [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
         #### drivers ####
+    else
+        echo
+        echo
+        echo "Skipping indi 3rdparty driver build"
+        sleep 5
     fi
 else
     echo
