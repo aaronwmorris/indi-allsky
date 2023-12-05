@@ -3,6 +3,8 @@ FROM debian:bookworm-slim as indi.base
 
 ARG TZ
 ARG INDI_VERSION
+ARG LIBCAMERA_TAG
+ARG RPICAM_APPS_TAG
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
@@ -44,9 +46,15 @@ COPY misc/build_indi.sh /home/allsky
 RUN chown allsky:allsky /home/allsky/build_indi.sh
 RUN chmod 755 /home/allsky/build_indi.sh
 
+COPY misc/build_libcamera.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/build_libcamera.sh
+RUN chmod 755 /home/allsky/build_indi.sh
+
 
 USER allsky
 WORKDIR /home/allsky
 
+
 RUN ./build_indi.sh $INDI_VERSION
+RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
 

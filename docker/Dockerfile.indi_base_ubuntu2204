@@ -3,6 +3,8 @@ FROM ubuntu:jammy as indi.base
 
 ARG TZ
 ARG INDI_VERSION
+ARG LIBCAMERA_TAG
+ARG RPICAM_APPS_TAG
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root

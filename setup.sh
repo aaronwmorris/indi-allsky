@@ -405,6 +405,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
         libtiff5-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -568,6 +569,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         libtiff5-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -731,6 +733,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff5-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -894,6 +897,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         libtiff5-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -1050,6 +1054,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         libtiff5-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -1369,6 +1374,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         libtiff5-dev \
         libjpeg8-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \
@@ -1546,6 +1552,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         libtiff5-dev \
         libjpeg8-dev \
         libopenjp2-7-dev \
+        libpng-dev \
         zlib1g-dev \
         libfreetype6-dev \
         liblcms2-dev \

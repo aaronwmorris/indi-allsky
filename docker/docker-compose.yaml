@@ -9,6 +9,8 @@ services:
       args:
         - TZ=${TZ}
         - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
+        - LIBCAMERA_TAG=${INDIALLSKY_LIBCAMERA_TAG}
+        - RPICAM_APPS_TAG=${INDIALLSKY_RPICAM_APPS_TAG}
     env_file: .env
 
 

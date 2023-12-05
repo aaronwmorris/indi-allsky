@@ -55,6 +55,7 @@ RUN apt-get -y install \
     libtiff5-dev \
     libjpeg62-turbo-dev \
     libopenjp2-7-dev \
+    libpng-dev \
     zlib1g-dev \
     libfreetype6-dev \
     liblcms2-dev \
