@@ -3,6 +3,8 @@ FROM debian:bookworm-slim as indi.base
 
 ARG TZ
 ARG INDI_VERSION
+ARG LIBCAMERA_TAG
+ARG RPICAM_APPS_TAG
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
@@ -34,7 +36,7 @@ RUN dpkg-reconfigure -f noninteractive tzdata
 
 # need the uid and gid to match in all containers
 RUN groupadd --gid 10001 allsky
-RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
+RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --groups dialout,video --home-dir /home/allsky --shell /bin/bash allsky
 
 RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
@@ -44,9 +46,16 @@ COPY misc/build_indi.sh /home/allsky
 RUN chown allsky:allsky /home/allsky/build_indi.sh
 RUN chmod 755 /home/allsky/build_indi.sh
 
+COPY misc/build_libcamera.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/build_libcamera.sh
+RUN chmod 755 /home/allsky/build_indi.sh
+
 
 USER allsky
 WORKDIR /home/allsky
 
-RUN ./build_indi.sh $INDI_VERSION
 
+RUN ./build_indi.sh $INDI_VERSION
+RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
+
+RUN rm -fR /home/allsky/Projects
