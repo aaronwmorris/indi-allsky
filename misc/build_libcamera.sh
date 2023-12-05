@@ -99,7 +99,7 @@ START_TIME=$(date +%s)
 
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
@@ -131,7 +131,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
 
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
@@ -163,7 +163,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
 
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
@@ -192,7 +192,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
@@ -222,7 +222,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
 
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
@@ -254,7 +254,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
 
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
-    BLOCKING_PACKAGES="libcamera"
+    BLOCKING_PACKAGES="libcamera libcamera-apps"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then
             echo
