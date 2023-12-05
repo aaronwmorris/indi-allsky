@@ -53,3 +53,4 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 #USER allsky
 #WORKDIR /home/allsky
 
+#RUN rm -fR /home/allsky/Projects

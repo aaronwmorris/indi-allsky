@@ -58,3 +58,4 @@ WORKDIR /home/allsky
 RUN ./build_indi.sh $INDI_VERSION
 RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
 
+RUN rm -fR /home/allsky/Projects
