@@ -10,6 +10,14 @@ canvas {
 }
 </style>
 <script>
+// lens image circle diameter
+var icd = {
+    'zwo_f2.0_2.1mm' : 6.7,
+    'zwo_f1.2_2.5mm' : 6.7,
+    'arecont_f2.0_1.55mm' : 4.8,
+    'stardot_f1.5_1.55mm' : 4.8,
+}
+
 // sensor dimensions
 var sd = {
     'imx477' : {
@@ -153,14 +161,6 @@ var sd = {
         'p' : 4.63,
     },
 };
-
-// lens image circle diameter
-var icd = {
-    'zwo21' : 6.7,
-    'zwo25' : 6.7,
-    'f20_155' : 4.6,
-    'f15_155' : 4.8,
-}
 </script>
 {% endblock %}
 

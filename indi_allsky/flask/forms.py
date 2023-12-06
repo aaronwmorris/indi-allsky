@@ -3628,10 +3628,10 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
     )
 
     LENS_SELECT_choices = (
-        ('zwo21', 'ZWO 2.1mm f/2.0 - 150°'),
-        ('zwo25', 'ZWO 2.5mm f/1.2 - 170°'),
-        ('f20_155', 'Arecont 1.55mm f/2.0 - 180°'),
-        ('f15_155', 'Stardot 1.55mm f/1.5 - 180°'),
+        ('zwo_f2.0_2.1mm', 'ZWO 2.1mm f/2.0 - 150°'),
+        ('zwo_f1.2_2.5mm', 'ZWO 2.5mm f/1.2 - 170°'),
+        ('arecont_f2.0_1.55mm', 'Arecont 1.55mm f/2.0 - 180°'),
+        ('stardot_f1.5_1.55mm', 'Stardot 1.55mm f/1.5 - 180°'),
     )
 
     SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
