@@ -249,29 +249,40 @@ function show_simulation() {
     ctx.fill();
 
 
-    ctx.textAlign = 'left';
     ctx.lineWidth = 10;
-    var maxWidth = 200;
-    var x_text = (r.w * ratio) - 10 - maxWidth;
-    var y_text = (r.h * ratio) - 150;
 
     ctx.font = '20px serif';
 
+    var lens_text = $("#LENS_SELECT option:selected").text()
+    var camera_text = $("#SENSOR_SELECT option:selected").text()
     var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'] + " (" + sd[sensor]['p'] + "µm)";
     var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
     var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
     var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
 
     ctx.strokeStyle = 'black';
-    ctx.strokeText(resolution_text, x_text - 50, y_text + 40, maxWidth);
-    ctx.strokeText(size_text, x_text - 50, y_text + 70, maxWidth);
-    ctx.strokeText(diag_text, x_text - 50, y_text + 100, maxWidth);
-    ctx.strokeText(img_c_text, x_text - 50, y_text + 130, maxWidth);
     ctx.fillStyle = 'lightgrey';
-    ctx.fillText(resolution_text, x_text - 50, y_text + 40, maxWidth);
-    ctx.fillText(size_text, x_text - 50, y_text + 70, maxWidth);
-    ctx.fillText(diag_text, x_text - 50, y_text + 100, maxWidth);
-    ctx.fillText(img_c_text, x_text - 50, y_text + 130, maxWidth);
+
+    ctx.textAlign = 'left';
+    ctx.strokeText(lens_text, 25, 40, 400);
+    ctx.strokeText(camera_text, 25, 70, 400);
+    ctx.fillText(lens_text, 25, 40, 400);
+    ctx.fillText(camera_text, 25, 70, 400);
+
+
+    var x_text = (r.w * ratio) - 25;
+    var y_text = (r.h * ratio) - 150;
+    var maxWidth = 200;
+
+    ctx.textAlign = 'right';
+    ctx.strokeText(resolution_text, x_text, y_text + 40, maxWidth);
+    ctx.strokeText(size_text, x_text, y_text + 70, maxWidth);
+    ctx.strokeText(diag_text, x_text, y_text + 100, maxWidth);
+    ctx.strokeText(img_c_text, x_text, y_text + 130, maxWidth);
+    ctx.fillText(resolution_text, x_text, y_text + 40, maxWidth);
+    ctx.fillText(size_text, x_text, y_text + 70, maxWidth);
+    ctx.fillText(diag_text, x_text, y_text + 100, maxWidth);
+    ctx.fillText(img_c_text, x_text, y_text + 130, maxWidth);
 }
 
 
