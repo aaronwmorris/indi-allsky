@@ -42,7 +42,7 @@ class gcp_storage(GenericFileTransfer):
 
         # not sure why this is not working
         #options = ClientOptions(
-        #    credentials_file=creds_file,
+        #    credentials_file=str(creds_file),
         #)
 
         #self.client = storage.Client(
@@ -50,7 +50,7 @@ class gcp_storage(GenericFileTransfer):
         #)
 
 
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_file
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(creds_file)
 
         self.client = storage.Client()
 

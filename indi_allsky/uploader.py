@@ -238,6 +238,7 @@ class FileUploader(Thread):
             put_kwargs = {
                 'local_file'    : local_file_p,
                 'bucket'        : self.config['S3UPLOAD']['BUCKET'],
+                'namespace'     : self.config['S3UPLOAD'].get('NAMESPACE'),
                 'key'           : str(s3_key),
                 'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                 'acl'           : self.config['S3UPLOAD']['ACL'],
