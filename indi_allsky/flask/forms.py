@@ -1714,9 +1714,9 @@ def S3UPLOAD__NAMESPACE_validator(form, field):
     if not field.data:
         return
 
-    region_regex = r'^[a-zA-Z0-9\-]+$'
+    namespace_regex = r'^[a-zA-Z0-9\-]+$'
 
-    if not re.search(region_regex, field.data):
+    if not re.search(namespace_regex, field.data):
         raise ValidationError('Invalid namespace name')
 
 

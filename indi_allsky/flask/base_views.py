@@ -59,9 +59,10 @@ class BaseView(View):
 
     def getS3Prefix(self):
         s3_data = {
-            'host'   : self.indi_allsky_config['S3UPLOAD']['HOST'],
-            'bucket' : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
-            'region' : self.indi_allsky_config['S3UPLOAD']['REGION'],
+            'host'      : self.indi_allsky_config['S3UPLOAD']['HOST'],
+            'bucket'    : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
+            'region'    : self.indi_allsky_config['S3UPLOAD']['REGION'],
+            'namespace' : self.indi_allsky_config['S3UPLOAD'].get('NAMESPACE', ''),
         }
 
         try:
