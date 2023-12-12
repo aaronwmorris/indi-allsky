@@ -2058,12 +2058,36 @@ class SystemInfoView(TemplateView):
         import platform
         import pycurl
         import paramiko
-        import paho.mqtt
         import ccdproc
         import astropy
         import flask
         import numpy
         import cv2
+
+        try:
+            import paho.mqtt
+        except ImportError:
+            paho.mqtt = None
+
+        try:
+            import boto3
+        except ImportError:
+            boto3 = None
+
+        try:
+            import libcloud
+        except ImportError:
+            libcloud = None
+
+        try:
+            import google.cloud.version
+        except ImportError:
+            google.cloud.version = None
+
+        try:
+            import oci
+        except ImportError:
+            oci = None
 
         try:
             import PyIndi
@@ -2112,12 +2136,36 @@ class SystemInfoView(TemplateView):
         context['ephem_version'] = str(getattr(ephem, '__version__', -1))
         context['numpy_version'] = str(getattr(numpy, '__version__', -1))
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
+        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
         context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
         context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
-        context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
-        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
+
+        if paho.mqtt:
+            context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        else:
+            context['pahomqtt_version'] = 'Not installed'
+
+        if boto3:
+            context['boto3_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        else:
+            context['boto3_version'] = 'Not installed'
+
+        if libcloud:
+            context['libcloud_version'] = str(getattr(libcloud, '__version__', -1))
+        else:
+            context['libcloud_version'] = 'Not installed'
+
+        if google.cloud.version:
+            context['googlecloudversion_version'] = str(getattr(google.cloud.version, '__version__', -1))
+        else:
+            context['googlecloudversion_version'] = 'Not installed'
+
+        if oci:
+            context['oci_version'] = str(getattr(oci, '__version__', -1))
+        else:
+            context['oci_version'] = 'Not installed'
 
         if PyIndi:
             context['pyindi_version'] = '.'.join((
