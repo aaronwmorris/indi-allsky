@@ -222,7 +222,7 @@ echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
 chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
 if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
-    virtualenv -p "${PYTHON_BIN}" "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky"
+    "${PYTHON_BIN}" -m venv "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky"
 fi
 # shellcheck source=/dev/null
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
