@@ -9,10 +9,6 @@ from pathlib import Path
 import socket
 import time
 import urllib3.exceptions
-from botocore.client import Config
-import boto3
-import botocore.exceptions
-import boto3.exceptions
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -27,6 +23,10 @@ class boto3_s3(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(boto3_s3, self).connect(*args, **kwargs)
+
+        from botocore.client import Config
+        import boto3
+
 
         access_key = kwargs['access_key']
         secret_key = kwargs['secret_key']
@@ -68,6 +68,10 @@ class boto3_s3(GenericFileTransfer):
 
     def put(self, *args, **kwargs):
         super(boto3_s3, self).put(*args, **kwargs)
+
+        import botocore.exceptions
+        import boto3.exceptions
+
 
         local_file = kwargs['local_file']
         bucket = kwargs['bucket']

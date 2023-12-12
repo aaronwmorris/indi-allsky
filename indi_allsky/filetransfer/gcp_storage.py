@@ -10,8 +10,6 @@ from pathlib import Path
 import socket
 import time
 import requests.exceptions
-from google.cloud import storage
-#from google.api_core.client_options import ClientOptions
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -26,6 +24,10 @@ class gcp_storage(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(gcp_storage, self).connect(*args, **kwargs)
+
+        from google.cloud import storage
+        #from google.api_core.client_options import ClientOptions
+
 
         creds_file = kwargs['creds_file']
         #region = kwargs['region']

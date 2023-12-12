@@ -8,9 +8,6 @@ from pathlib import Path
 #from datetime import timedelta
 import socket
 import time
-from libcloud.storage.types import Provider
-from libcloud.storage.providers import get_driver
-from libcloud.common.types import InvalidCredsError
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -25,6 +22,10 @@ class libcloud_s3(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(libcloud_s3, self).connect(*args, **kwargs)
+
+        from libcloud.storage.types import Provider
+        from libcloud.storage.providers import get_driver
+
 
         access_key = kwargs['access_key']
         secret_key = kwargs['secret_key']
@@ -51,6 +52,9 @@ class libcloud_s3(GenericFileTransfer):
 
     def put(self, *args, **kwargs):
         super(libcloud_s3, self).put(*args, **kwargs)
+
+        from libcloud.common.types import InvalidCredsError
+
 
         local_file = kwargs['local_file']
         bucket = kwargs['bucket']
