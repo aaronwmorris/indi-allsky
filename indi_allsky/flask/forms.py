@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 import tempfile
 import subprocess
-import pycurl
 
 from passlib.hash import argon2
 
@@ -1611,7 +1610,9 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
         raise ValidationError(str(e))
 
 
+    import pycurl
     client = pycurl.Curl()  # test client
+
 
     for k, v in json_data.items():
         if not isinstance(k, str):

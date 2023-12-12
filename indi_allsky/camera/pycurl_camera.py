@@ -6,8 +6,6 @@ import psutil
 from pathlib import Path
 import logging
 
-import pycurl
-
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
@@ -38,6 +36,8 @@ class PycurlCameraWorker(Thread):
 
 
     def run(self):
+        import pycurl
+
         client = pycurl.Curl()
 
         # deprecated: will be replaced by PROTOCOLS_STR

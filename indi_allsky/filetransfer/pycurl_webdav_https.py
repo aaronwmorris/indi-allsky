@@ -6,7 +6,6 @@ from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
-import pycurl
 import io
 import time
 import logging
@@ -25,6 +24,9 @@ class pycurl_webdav_https(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(pycurl_webdav_https, self).connect(*args, **kwargs)
+
+        import pycurl
+
 
         ### The full connect and transfer happens under the put() function
         ### The curl instance is just setup here
@@ -87,6 +89,9 @@ class pycurl_webdav_https(GenericFileTransfer):
 
     def put(self, *args, **kwargs):
         super(pycurl_webdav_https, self).put(*args, **kwargs)
+
+        import pycurl
+
 
         local_file = kwargs['local_file']
         remote_file = kwargs['remote_file']

@@ -2056,13 +2056,21 @@ class SystemInfoView(TemplateView):
 
     def get_context(self):
         import platform
-        import pycurl
-        import paramiko
         import ccdproc
         import astropy
         import flask
         import numpy
         import cv2
+
+        try:
+            import pycurl
+        except ImportError:
+            pycurl = None
+
+        try:
+            import paramiko
+        except ImportError:
+            paramiko = None
 
         try:
             import paho.mqtt
@@ -2139,8 +2147,16 @@ class SystemInfoView(TemplateView):
         context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
-        context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
-        context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
+
+        if pycurl:
+            context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
+        else:
+            context['pycurl_version'] = 'Not installed'
+
+        if paramiko:
+            context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
+        else:
+            context['paramiko_version'] = 'Not installed'
 
         if paho.mqtt:
             context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
@@ -2158,9 +2174,9 @@ class SystemInfoView(TemplateView):
             context['libcloud_version'] = 'Not installed'
 
         if google.cloud.version:
-            context['googlecloudversion_version'] = str(getattr(google.cloud.version, '__version__', -1))
+            context['googlecloud_version'] = str(getattr(google.cloud.version, '__version__', -1))
         else:
-            context['googlecloudversion_version'] = 'Not installed'
+            context['googlecloud_version'] = 'Not installed'
 
         if oci:
             context['oci_version'] = str(getattr(oci, '__version__', -1))
