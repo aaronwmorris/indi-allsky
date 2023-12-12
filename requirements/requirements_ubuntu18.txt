@@ -60,10 +60,5 @@ passlib[argon2]
 flask-login
 is-safe-url
 prettytable
-mysql-connector-python
-PyMySQL
-boto3
-apache-libcloud
-google-cloud-storage
 lxml
 shapely
