@@ -4,7 +4,6 @@ from .exceptions import ConnectionFailure
 from .exceptions import TransferFailure
 
 from pathlib import Path
-import paramiko
 import socket
 import time
 import logging
@@ -23,6 +22,9 @@ class paramiko_sftp(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(paramiko_sftp, self).connect(*args, **kwargs)
+
+        import paramiko
+
 
         hostname = kwargs['hostname']
         username = kwargs['username']
