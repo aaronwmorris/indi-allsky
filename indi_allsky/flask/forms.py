@@ -1651,13 +1651,7 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
 
 
 def S3UPLOAD__CLASSNAME_validator(form, field):
-    class_names = (
-        'boto3_s3',
-        'libcloud_s3',
-        'gcp_storage',
-    )
-
-    if field.data not in class_names:
+    if field.data not in list(zip(*form.S3UPLOAD__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
 
 
@@ -2122,9 +2116,10 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     S3UPLOAD__CLASSNAME_choices = (
-        ('boto3_s3', 'Boto3 (AWS)'),
+        ('boto3_s3', 'AWS S3 (boto3)'),
         ('libcloud_s3', 'Apache Libcloud (AWS)'),
         ('gcp_storage', 'Google Cloud Storage'),
+        ('oci_storage', 'Oracle OCI Storage'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (

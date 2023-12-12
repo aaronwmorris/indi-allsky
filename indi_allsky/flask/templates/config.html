@@ -2988,6 +2988,8 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.S3UPLOAD__CLASSNAME.label(class='col-form-label') }}
@@ -3033,6 +3035,8 @@
         <div class="col-sm-4">GCP Specific Option</div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.S3UPLOAD__BUCKET.label(class='col-form-label') }}
@@ -3044,8 +3048,11 @@
         <div class="col-sm-6">
             <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html" class="text-decoration-none link-info" target="_blank">AWS S3 Bucket Access</a></div>
             <div><a href="https://cloud.google.com/storage/docs/request-endpoints#access_to_public_objects" class="text-decoration-none link-info" target="_blank">GCP Bucket Access</a></div>
+            <div><a href="https://docs.oracle.com/en/cloud/paas/autonomous-database/dedicated/adbdj/#articletitle" class="text-decoration-none link-info" target="_blank">OCI Bucket Access</a></div>
         </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3057,10 +3064,13 @@
         </div>
         <div class="col-sm-6">
             <div><a href="https://docs.aws.amazon.com/general/latest/gr/s3.html" class="text-decoration-none link-info" target="_blank">AWS S3 Regions</a> (scroll on table)</div>
+            <div><a href="https://docs.oracle.com/en-us/iaas/api/#/en/objectstorage/20160918/" class="text-decoration-none link-info" target="_blank">OCI Storage Regions</a></div>
             <div>Not used with GCP</div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
         </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3075,6 +3085,8 @@
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.S3UPLOAD__HOST.label(class='col-form-label') }}
@@ -3088,10 +3100,79 @@
               <ul>
                 <li>AWS: amazonaws.com</li>
                 <li>GCP: storage.googleapis.com</li>
+                <li>OCI: oraclecloud.com</li>
               </ul>
             </div>
         </div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__URL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__URL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__URL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div>Available variables: <pre>bucket, region, namespace, host</pre></div>
+            <div>
+              <ul>
+                <li>AWS: https://{bucket}.s3.{region}.{host}</li>
+                <li>GCP: https://{bucket}.{host}</li>
+                <li>OCI: https://objectstorage.{region}.{host}/n/{namespace}/b/{bucket}/o</li>
+              </ul>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ACL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__ACL(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__ACL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" class="text-decoration-none link-info" target="_blank">AWS S3 ACLs</a></div>
+            <div><a href="https://cloud.google.com/storage/docs/access-control/lists" class="text-decoration-none link-info" target="_blank">GCP ACLs</a></div>
+            <div>
+              <ul>
+                <li>Leave blank to use bucket default ACL</li>
+                <li>AWS: public-read</li>
+                <li>GCP: publicRead</li>
+                <li>OCI: *not implemented*</li>
+              </ul>
+            </div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__STORAGE_CLASS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__STORAGE_CLASS(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__STORAGE_CLASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://aws.amazon.com/s3/storage-classes/" class="text-decoration-none link-info" target="_blank">AWS Storage Classes</a></div>
+            <div>Not used with GCP</div>
+            <div>Not used with OCI</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
+        </div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3124,63 +3205,6 @@
             <div id="S3UPLOAD__TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">This timeout is for the whole transfer.  Ensure it is large enough to transfer videos</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.S3UPLOAD__URL_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.S3UPLOAD__URL_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="S3UPLOAD__URL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
-            <div>Available variables: <pre>bucket, region, namespace, host</pre></div>
-            <div>
-              <ul>
-                <li>AWS: https://{bucket}.s3.{region}.{host}</li>
-                <li>GCP: https://{bucket}.{host}</li>
-              </ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.S3UPLOAD__ACL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.S3UPLOAD__ACL(class='form-control bg-secondary') }}
-            <div id="S3UPLOAD__ACL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html" class="text-decoration-none link-info" target="_blank">AWS S3 ACLs</a></div>
-            <div><a href="https://cloud.google.com/storage/docs/access-control/lists" class="text-decoration-none link-info" target="_blank">GCP ACLs</a></div>
-            <div>
-              <ul>
-                <li>Leave blank to use bucket default ACL</li>
-                <li>AWS: public-read</li>
-                <li>GCP: publicRead</li>
-              </ul>
-            </div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.S3UPLOAD__STORAGE_CLASS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.S3UPLOAD__STORAGE_CLASS(class='form-control bg-secondary') }}
-            <div id="S3UPLOAD__STORAGE_CLASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://aws.amazon.com/s3/storage-classes/" class="text-decoration-none link-info" target="_blank">AWS Storage Classes</a></div>
-            <div>Not used with GCP</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not validated</div>
-        </div>
     </div>
 
     <div class="form-group row">
