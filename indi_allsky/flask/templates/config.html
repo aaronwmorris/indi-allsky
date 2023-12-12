@@ -3060,6 +3060,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__NAMESPACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__NAMESPACE(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__NAMESPACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Oracle OCI specific option</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__HOST.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -3119,7 +3132,7 @@
         </div>
         <div class="col-sm-6">
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
-            <div>Available variables: <pre>bucket, region, host</pre></div>
+            <div>Available variables: <pre>bucket, region, namespace, host</pre></div>
             <div>
               <ul>
                 <li>AWS: https://{bucket}.s3.{region}.{host}</li>
@@ -3545,6 +3558,7 @@ const field_names = [
     'S3UPLOAD__CREDS_FILE',
     'S3UPLOAD__BUCKET',
     'S3UPLOAD__REGION',
+    'S3UPLOAD__NAMESPACE',
     'S3UPLOAD__HOST',
     'S3UPLOAD__PORT',
     'S3UPLOAD__CONNECT_TIMEOUT',

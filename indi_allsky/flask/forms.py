@@ -1715,6 +1715,16 @@ def S3UPLOAD__BUCKET_validator(form, field):
         raise ValidationError('Invalid bucket name')
 
 
+def S3UPLOAD__NAMESPACE_validator(form, field):
+    if not field.data:
+        return
+
+    region_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(region_regex, field.data):
+        raise ValidationError('Invalid namespace name')
+
+
 def S3UPLOAD__URL_TEMPLATE_validator(form, field):
     urlt_regex = r'^[a-zA-Z0-9\.\-\:\/\{\}]+$'
 
@@ -1729,9 +1739,10 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 
 
     test_data = {
-        'host'   : 'foobar',
-        'bucket' : 'foobar',
-        'region' : 'foobar',
+        'host'      : 'foobar',
+        'bucket'    : 'foobar',
+        'region'    : 'foobar',
+        'namespace' : 'foobar',
     }
 
     try:
@@ -2351,6 +2362,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__CREDS_FILE             = StringField('Credentials File', validators=[S3UPLOAD__CREDS_FILE_validator])
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
+    S3UPLOAD__NAMESPACE              = StringField('Namespace', validators=[S3UPLOAD__NAMESPACE_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__CONNECT_TIMEOUT        = FloatField('Connect Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])
