@@ -44,7 +44,10 @@ class oci_storage(GenericFileTransfer):
 
         config = oci.config.from_file(file_location=str(creds_file))
 
-        self.client = oci.object_storage.ObjectStorageClient(config)
+        self.client = oci.object_storage.ObjectStorageClient(
+            config,
+            timeout=(self.connect_timeout, self.timeout),
+        )
 
         #namespace = self.client.get_namespace().data
 
@@ -88,7 +91,6 @@ class oci_storage(GenericFileTransfer):
 
         upload_kwargs = {
             'content_type'          : content_type,
-            'timeout'               : (self.connect_timeout, self.timeout),
             'cache_control'         : cache_control,
         }
 
