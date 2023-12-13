@@ -104,9 +104,9 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.0.5          | Requires upgrade to indi-allsky v7.7 |
+| v2.0.5          | **Recommended**<br>Requires upgrade to indi-allsky v7.7 |
 | v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
-| v2.0.3          | **Recommended** |
+| v2.0.3          |      |
 | v2.0.2          |      |
 | v2.0.1          |      |
 
