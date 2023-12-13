@@ -68,6 +68,8 @@ WEB_PASS="${INDIALLSKY_WEB_PASS:-}"
 WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
 WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 
+OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
+
 PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@6f8fa80#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
@@ -1893,7 +1895,7 @@ pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
-if [ -n "${OPTIONAL_PYTHON_MODULES:-}" ]; then
+if [ "${OPTIONAL_PYTHON_MODULES}" == "true" ]; then
     pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
 fi
 
