@@ -1893,7 +1893,7 @@ pip3 install --upgrade pip setuptools wheel
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
-if [ -z "${OPTIONAL_PYTHON_MODULES:-}" ]; then
+if [ -n "${OPTIONAL_PYTHON_MODULES:-}" ]; then
     pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
 fi
 
