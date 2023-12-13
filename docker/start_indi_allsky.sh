@@ -147,7 +147,7 @@ fi
 
 if [ "${INDIALLSKY_DARK_CAPTURE_ENABLE:-false}" == "true" ]; then
     # take dark frames
-    echo "Starting dark frame capture"
+    echo "*** Starting dark frame capture ***"
     ./darks.py \
         --bitmax "${INDIALLSKY_DARK_CAPTURE_BITMAX:-16}" \
         "${INDIALLSKY_DARK_CAPTURE_DAYTIME:-}" \
