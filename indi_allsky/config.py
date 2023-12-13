@@ -278,6 +278,7 @@ class IndiAllSkyConfigBase(object):
             "CREDS_FILE"             : "",
             "BUCKET"                 : "change-me",
             "REGION"                 : "us-east-2",
+            "NAMESPACE"              : "",
             "HOST"                   : "amazonaws.com",
             "PORT"                   : 0,
             "CONNECT_TIMEOUT"        : 10.0,

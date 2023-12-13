@@ -50,10 +50,5 @@ setuptools-rust
 bcrypt
 passlib[argon2]
 prettytable
-mysql-connector-python
-PyMySQL
-boto3
-apache-libcloud
-google-cloud-storage
 lxml
 shapely

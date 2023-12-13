@@ -3,7 +3,8 @@ from .generic import GenericFileTransfer
 from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
-import os
+#import os
+import io
 from pathlib import Path
 #from datetime import datetime
 #from datetime import timedelta
@@ -15,18 +16,17 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class gcp_storage(GenericFileTransfer):
+class oci_storage(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(gcp_storage, self).__init__(*args, **kwargs)
+        super(oci_storage, self).__init__(*args, **kwargs)
 
         self._port = 443
 
 
     def connect(self, *args, **kwargs):
-        super(gcp_storage, self).connect(*args, **kwargs)
+        super(oci_storage, self).connect(*args, **kwargs)
 
-        from google.cloud import storage
-        #from google.api_core.client_options import ClientOptions
+        import oci
 
 
         creds_file = kwargs['creds_file']
@@ -42,46 +42,37 @@ class gcp_storage(GenericFileTransfer):
         #    verify = True
 
 
-        # not sure why this is not working
-        #options = ClientOptions(
-        #    credentials_file=str(creds_file),
-        #)
+        config = oci.config.from_file(file_location=str(creds_file))
 
-        #self.client = storage.Client(
-        #    client_options=options,
-        #)
+        self.client = oci.object_storage.ObjectStorageClient(
+            config,
+            timeout=(self.connect_timeout, self.timeout),
+        )
 
-
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(creds_file)
-
-        self.client = storage.Client()
+        #namespace = self.client.get_namespace().data
 
 
     def close(self):
-        super(gcp_storage, self).close()
+        super(oci_storage, self).close()
 
 
     def put(self, *args, **kwargs):
-        super(gcp_storage, self).put(*args, **kwargs)
+        super(oci_storage, self).put(*args, **kwargs)
 
         local_file = kwargs['local_file']
         bucket = kwargs['bucket']
         key = kwargs['key']
+        namespace = kwargs['namespace']
         #storage_class = kwargs['storage_class']
-        acl = kwargs['acl']
+        #acl = kwargs['acl']
         #metadata = kwargs['metadata']
 
         local_file_p = Path(local_file)
 
-
-        bucket = self.client.bucket(bucket)
-        blob = bucket.blob(key)
-
-
         #extra_args = dict()
 
         # cache 90 days
-        blob.cache_control = 'public, max-age=7776000'
+        cache_control = 'public, max-age=7776000'
 
 
         if local_file_p.suffix in ['.jpg', '.jpeg']:
@@ -98,27 +89,27 @@ class gcp_storage(GenericFileTransfer):
             content_type = 'application/octet-stream'
 
 
-        generation_match_precondition = 0
-
         upload_kwargs = {
-            'if_generation_match'   : generation_match_precondition,
             'content_type'          : content_type,
-            'timeout'               : (self.connect_timeout, self.timeout),
-            'retry'                 : None,
+            'cache_control'         : cache_control,
         }
 
 
-        if acl:
-            upload_kwargs['predefined_acl'] = acl  # all assets are normally publicly readable
+        #if acl:
+        #    upload_kwargs['predefined_acl'] = acl  # all assets are normally publicly readable
 
 
         start = time.time()
 
         try:
-            blob.upload_from_filename(
-                str(local_file_p),
-                **upload_kwargs,
-            )
+            with io.open(str(local_file_p), 'rb') as f_localfile:
+                self.client.put_object(
+                    namespace,
+                    bucket,
+                    key,
+                    f_localfile,
+                    **upload_kwargs,
+                )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

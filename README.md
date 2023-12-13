@@ -48,6 +48,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * S3 Object Storage support
         * Amazon Web Services
         * Google Cloud Storage
+        * Oracle OCI Storage
 * Publish data to an MQTT service for monitoring
 * Keograms
 * Star Trails

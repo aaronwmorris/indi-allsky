@@ -1073,6 +1073,7 @@ class ConfigView(FormView):
             'S3UPLOAD__CREDS_FILE'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('CREDS_FILE', ''),
             'S3UPLOAD__BUCKET'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('BUCKET', 'change-me'),
             'S3UPLOAD__REGION'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('REGION', 'us-east-2'),
+            'S3UPLOAD__NAMESPACE'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('NAMESPACE', ''),
             'S3UPLOAD__HOST'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('HOST', 'amazonaws.com'),
             'S3UPLOAD__PORT'                 : self.indi_allsky_config.get('S3UPLOAD', {}).get('PORT', 0),
             'S3UPLOAD__CONNECT_TIMEOUT'      : self.indi_allsky_config.get('S3UPLOAD', {}).get('CONNECT_TIMEOUT', 10.0),
@@ -1592,6 +1593,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['S3UPLOAD']['CREDS_FILE']               = str(request.json['S3UPLOAD__CREDS_FILE'])
         self.indi_allsky_config['S3UPLOAD']['BUCKET']                   = str(request.json['S3UPLOAD__BUCKET'])
         self.indi_allsky_config['S3UPLOAD']['REGION']                   = str(request.json['S3UPLOAD__REGION'])
+        self.indi_allsky_config['S3UPLOAD']['NAMESPACE']                = str(request.json['S3UPLOAD__NAMESPACE'])
         self.indi_allsky_config['S3UPLOAD']['HOST']                     = str(request.json['S3UPLOAD__HOST'])
         self.indi_allsky_config['S3UPLOAD']['PORT']                     = int(request.json['S3UPLOAD__PORT'])
         self.indi_allsky_config['S3UPLOAD']['CONNECT_TIMEOUT']          = float(request.json['S3UPLOAD__CONNECT_TIMEOUT'])
@@ -2054,14 +2056,46 @@ class SystemInfoView(TemplateView):
 
     def get_context(self):
         import platform
-        import pycurl
-        import paramiko
-        import paho.mqtt
         import ccdproc
         import astropy
         import flask
         import numpy
         import cv2
+
+        try:
+            import pycurl
+        except ImportError:
+            pycurl = None
+
+        try:
+            import paramiko
+        except ImportError:
+            paramiko = None
+
+        try:
+            import paho.mqtt
+        except ImportError:
+            paho.mqtt = None
+
+        try:
+            import boto3
+        except ImportError:
+            boto3 = None
+
+        try:
+            import libcloud
+        except ImportError:
+            libcloud = None
+
+        try:
+            import google.cloud.version
+        except ImportError:
+            google.cloud.version = None
+
+        try:
+            import oci
+        except ImportError:
+            oci = None
 
         try:
             import PyIndi
@@ -2110,12 +2144,44 @@ class SystemInfoView(TemplateView):
         context['ephem_version'] = str(getattr(ephem, '__version__', -1))
         context['numpy_version'] = str(getattr(numpy, '__version__', -1))
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
+        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
-        context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
-        context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
-        context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
-        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
+
+        if pycurl:
+            context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
+        else:
+            context['pycurl_version'] = 'Not installed'
+
+        if paramiko:
+            context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
+        else:
+            context['paramiko_version'] = 'Not installed'
+
+        if paho.mqtt:
+            context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        else:
+            context['pahomqtt_version'] = 'Not installed'
+
+        if boto3:
+            context['boto3_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        else:
+            context['boto3_version'] = 'Not installed'
+
+        if libcloud:
+            context['libcloud_version'] = str(getattr(libcloud, '__version__', -1))
+        else:
+            context['libcloud_version'] = 'Not installed'
+
+        if google.cloud.version:
+            context['googlecloud_version'] = str(getattr(google.cloud.version, '__version__', -1))
+        else:
+            context['googlecloud_version'] = 'Not installed'
+
+        if oci:
+            context['oci_version'] = str(getattr(oci, '__version__', -1))
+        else:
+            context['oci_version'] = 'Not installed'
 
         if PyIndi:
             context['pyindi_version'] = '.'.join((

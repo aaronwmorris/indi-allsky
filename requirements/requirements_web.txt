@@ -11,9 +11,7 @@ scikit-image
 Pillow
 bottleneck
 ephem
-paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
-pycurl
 gunicorn[gthread] >= 20.1.0
 inotify
 psutil
@@ -29,11 +27,8 @@ certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
 cryptography
 dbus-python
-paho-mqtt
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
 passlib[argon2]
 prettytable
-mysql-connector-python
-PyMySQL

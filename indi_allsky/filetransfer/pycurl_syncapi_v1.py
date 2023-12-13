@@ -6,7 +6,6 @@ from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
 from pathlib import Path
-import pycurl
 import io
 import time
 import json
@@ -29,6 +28,9 @@ class pycurl_syncapi_v1(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(pycurl_syncapi_v1, self).connect(*args, **kwargs)
+
+        import pycurl
+
 
         ### The full connect and transfer happens under the put() function
         ### The curl instance is just setup here
@@ -92,6 +94,9 @@ class pycurl_syncapi_v1(GenericFileTransfer):
 
     def put(self, *args, **kwargs):
         super(pycurl_syncapi_v1, self).put(*args, **kwargs)
+
+        import pycurl
+
 
         local_file = kwargs['local_file']
         metadata = kwargs['metadata']

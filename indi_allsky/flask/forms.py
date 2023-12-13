@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 import tempfile
 import subprocess
-import pycurl
 
 from passlib.hash import argon2
 
@@ -1611,7 +1610,9 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
         raise ValidationError(str(e))
 
 
+    import pycurl
     client = pycurl.Curl()  # test client
+
 
     for k, v in json_data.items():
         if not isinstance(k, str):
@@ -1650,13 +1651,7 @@ def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
 
 
 def S3UPLOAD__CLASSNAME_validator(form, field):
-    class_names = (
-        'boto3_s3',
-        'libcloud_s3',
-        'gcp_storage',
-    )
-
-    if field.data not in class_names:
+    if field.data not in list(zip(*form.S3UPLOAD__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
 
 
@@ -1715,6 +1710,16 @@ def S3UPLOAD__BUCKET_validator(form, field):
         raise ValidationError('Invalid bucket name')
 
 
+def S3UPLOAD__NAMESPACE_validator(form, field):
+    if not field.data:
+        return
+
+    namespace_regex = r'^[a-zA-Z0-9\-]+$'
+
+    if not re.search(namespace_regex, field.data):
+        raise ValidationError('Invalid namespace name')
+
+
 def S3UPLOAD__URL_TEMPLATE_validator(form, field):
     urlt_regex = r'^[a-zA-Z0-9\.\-\:\/\{\}]+$'
 
@@ -1729,9 +1734,10 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
 
 
     test_data = {
-        'host'   : 'foobar',
-        'bucket' : 'foobar',
-        'region' : 'foobar',
+        'host'      : 'foobar',
+        'bucket'    : 'foobar',
+        'region'    : 'foobar',
+        'namespace' : 'foobar',
     }
 
     try:
@@ -2110,9 +2116,10 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     S3UPLOAD__CLASSNAME_choices = (
-        ('boto3_s3', 'Boto3 (AWS)'),
+        ('boto3_s3', 'AWS S3 (boto3)'),
         ('libcloud_s3', 'Apache Libcloud (AWS)'),
         ('gcp_storage', 'Google Cloud Storage'),
+        ('oci_storage', 'Oracle OCI Storage'),
     )
 
     MQTTPUBLISH__TRANSPORT_choices = (
@@ -2351,6 +2358,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__CREDS_FILE             = StringField('Credentials File', validators=[S3UPLOAD__CREDS_FILE_validator])
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
+    S3UPLOAD__NAMESPACE              = StringField('Namespace', validators=[S3UPLOAD__NAMESPACE_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__CONNECT_TIMEOUT        = FloatField('Connect Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])

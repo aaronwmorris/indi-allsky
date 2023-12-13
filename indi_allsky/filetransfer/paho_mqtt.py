@@ -4,8 +4,6 @@ from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 
 from pathlib import Path
-import paho.mqtt.publish as publish
-from paho.mqtt import MQTTException
 import ssl
 import io
 import socket
@@ -67,6 +65,10 @@ class paho_mqtt(GenericFileTransfer):
 
     def put(self, *args, **kwargs):
         super(paho_mqtt, self).put(*args, **kwargs)
+
+        import paho.mqtt.publish as publish
+        from paho.mqtt import MQTTException
+
 
         local_file = kwargs['local_file']
         base_topic = kwargs['base_topic']
