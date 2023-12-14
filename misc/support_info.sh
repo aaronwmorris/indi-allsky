@@ -16,6 +16,13 @@ CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 
+if [ -f "/proc/device-tree/model" ]; then
+    SYSTEM_MODEL=$(cat /proc/device-tree/model)
+else
+    SYSTEM_MODEL="Generic PC"
+fi
+
+
 if which indiserver >/dev/null 2>&1; then
     INDISERVER=$(which indiserver)
 else
@@ -40,6 +47,8 @@ echo "Bits: $CPU_BITS"
 echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
+echo
+echo "System: $SYSTEM_MODEL"
 echo
 echo "Uptime"
 uptime
