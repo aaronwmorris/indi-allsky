@@ -674,6 +674,9 @@ class CaptureWorker(Process):
         if not self.config.get('CCD_EXPOSURE_MIN'):
             with self.exposure_min_v.get_lock():
                 self.exposure_min_v.value = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN') > ccd_min_exp:
+            with self.exposure_min_v.get_lock():
+                self.exposure_min_v.value = float(self.config.get('CCD_EXPOSURE_MIN'))
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
                 'Minimum exposure %0.8f too low, increasing to %0.8f',
@@ -915,6 +918,7 @@ class CaptureWorker(Process):
                 ccd_min_exp,
             )
             self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+
 
         logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
 
