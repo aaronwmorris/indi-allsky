@@ -151,7 +151,7 @@ echo
 
 echo "libcamera cameras"
 if which rpicam-hello >/dev/null 2>&1; then
-    echo "rpicam-hello: $(which rpcam-hello)"
+    echo "rpicam-hello: $(which rpicam-hello)"
     rpicam-hello --list-cameras || true
     echo
 elif which libcamera-hello >/dev/null 2>&1; then
