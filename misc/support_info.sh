@@ -8,6 +8,27 @@ PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
 
 
+function catch_error() {
+    echo
+    echo
+    echo "The script exited abnormally, please try to run again..."
+    echo
+    echo
+    exit 1
+}
+trap catch_error ERR
+
+function catch_sigint() {
+    echo
+    echo
+    echo "The script was interrupted, please run the script again to finish..."
+    echo
+    echo
+    exit 1
+}
+trap catch_sigint SIGINT
+
+
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
