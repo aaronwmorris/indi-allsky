@@ -68,6 +68,7 @@ class CaptureWorker(Process):
         dec_v,
         exposure_v,
         exposure_min_v,
+        exposure_min_day_v,
         exposure_max_v,
         gain_v,
         bin_v,
@@ -96,6 +97,7 @@ class CaptureWorker(Process):
 
         self.exposure_v = exposure_v
         self.exposure_min_v = exposure_min_v
+        self.exposure_min_day_v = exposure_min_day_v
         self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -669,21 +671,43 @@ class CaptureWorker(Process):
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp = ccd_min_exp + 0.00000001
+        ccd_min_exp += 0.00000001
+
+
+        if not self.config.get('CCD_EXPOSURE_MIN_DAY'):
+            with self.exposure_min_day_v.get_lock():
+                self.exposure_min_day_v.value = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN_DAY') > ccd_min_exp:
+            with self.exposure_min_day_v.get_lock():
+                self.exposure_min_day_v.value = float(self.config.get('CCD_EXPOSURE_MIN_DAY'))
+        elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
+            logger.warning(
+                'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
+                self.config.get('CCD_EXPOSURE_MIN_DAY'),
+                ccd_min_exp,
+            )
+            with self.exposure_min_day_v.get_lock():
+                self.exposure_min_day_v.value = ccd_min_exp
+
+        logger.info('Minimum CCD exposure: %0.8f (day)', self.exposure_min_day_v.value)
+
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
             with self.exposure_min_v.get_lock():
                 self.exposure_min_v.value = ccd_min_exp
+        elif self.config.get('CCD_EXPOSURE_MIN') > ccd_min_exp:
+            with self.exposure_min_v.get_lock():
+                self.exposure_min_v.value = float(self.config.get('CCD_EXPOSURE_MIN'))
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
-                'Minimum exposure %0.8f too low, increasing to %0.8f',
+                'Minimum exposure (night) %0.8f too low, increasing to %0.8f',
                 self.config.get('CCD_EXPOSURE_MIN'),
                 ccd_min_exp,
             )
             with self.exposure_min_v.get_lock():
                 self.exposure_min_v.value = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f', self.exposure_min_v.value)
+        logger.info('Minimum CCD exposure: %0.8f (night)', self.exposure_min_v.value)
 
 
         # set maximum exposure
@@ -915,6 +939,7 @@ class CaptureWorker(Process):
                 ccd_min_exp,
             )
             self.config['CCD_EXPOSURE_MIN'] = ccd_min_exp
+
 
         logger.info('Minimum CCD exposure: %0.8f', self.config['CCD_EXPOSURE_MIN'])
 

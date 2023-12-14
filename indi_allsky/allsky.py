@@ -116,6 +116,7 @@ class IndiAllSky(object):
 
         self.exposure_v = Value('f', -1.0)  # this must be -1.0 to indicate unset
         self.exposure_min_v = Value('f', -1.0)
+        self.exposure_min_day_v = Value('f', -1.0)
         self.exposure_max_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -300,6 +301,7 @@ class IndiAllSky(object):
             self.dec_v,
             self.exposure_v,
             self.exposure_min_v,
+            self.exposure_min_day_v,
             self.exposure_max_v,
             self.gain_v,
             self.bin_v,
@@ -368,6 +370,7 @@ class IndiAllSky(object):
             self.dec_v,
             self.exposure_v,
             self.exposure_min_v,
+            self.exposure_min_day_v,
             self.exposure_max_v,
             self.gain_v,
             self.bin_v,

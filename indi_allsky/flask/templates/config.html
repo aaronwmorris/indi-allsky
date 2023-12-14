@@ -190,6 +190,7 @@
         </div>
         <div class="col-sm-8">0 = auto</div>
     </div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MIN.label(class='col-form-label') }}
@@ -197,6 +198,16 @@
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0 = auto</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_MIN_DAY(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_MIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">0 = auto</div>
     </div>
@@ -3450,6 +3461,7 @@ const field_names = [
     'CCD_EXPOSURE_MAX',
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
+    'CCD_EXPOSURE_MIN_DAY',
     'CCD_BIT_DEPTH',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',

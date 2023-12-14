@@ -8,12 +8,48 @@ PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
 
 
+function catch_error() {
+    echo
+    echo
+    echo "###############"
+    echo "###  ERROR  ###"
+    echo "###############"
+    echo
+    echo "The script exited abnormally, please try to run again..."
+    echo
+    echo
+    exit 1
+}
+trap catch_error ERR
+
+function catch_sigint() {
+    echo
+    echo
+    echo "###############"
+    echo "###  ERROR  ###"
+    echo "###############"
+    echo
+    echo "The script was interrupted, please run the script again to finish..."
+    echo
+    echo
+    exit 1
+}
+trap catch_sigint SIGINT
+
+
 DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
 CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
+
+
+if [ -f "/proc/device-tree/model" ]; then
+    SYSTEM_MODEL=$(cat /proc/device-tree/model)
+else
+    SYSTEM_MODEL="Generic PC"
+fi
 
 
 if which indiserver >/dev/null 2>&1; then
@@ -41,6 +77,8 @@ echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
+echo "System: $SYSTEM_MODEL"
+echo
 echo "Uptime"
 uptime
 echo
@@ -66,7 +104,7 @@ echo
 
 echo "Process info"
 # shellcheck disable=SC2009
-ps auxwww | grep indi | grep -v grep
+ps auxwww | grep indi | grep -v grep || true
 echo
 
 echo "USB info"
@@ -112,7 +150,11 @@ dpkg -l | grep libcamera || true
 echo
 
 echo "libcamera cameras"
-if which libcamera-hello >/dev/null 2>&1; then
+if which rpicam-hello >/dev/null 2>&1; then
+    echo "rpicam-hello: $(which rpicam-hello)"
+    rpicam-hello --list-cameras || true
+    echo
+elif which libcamera-hello >/dev/null 2>&1; then
     echo "libcamera-hello: $(which libcamera-hello)"
     libcamera-hello --list-cameras || true
     echo
