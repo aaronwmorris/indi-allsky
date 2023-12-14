@@ -75,7 +75,7 @@ echo
 
 echo "Process info"
 # shellcheck disable=SC2009
-ps auxwww | grep indi | grep -v grep
+ps auxwww | grep indi | grep -v grep || true
 echo
 
 echo "USB info"
