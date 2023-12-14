@@ -77,6 +77,7 @@ class ImageWorker(Process):
         dec_v,
         exposure_v,
         exposure_min_v,
+        exposure_min_day_v,
         exposure_max_v,
         gain_v,
         bin_v,
@@ -103,6 +104,7 @@ class ImageWorker(Process):
 
         self.exposure_v = exposure_v
         self.exposure_min_v = exposure_min_v
+        self.exposure_min_day_v = exposure_min_day_v
         self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
@@ -1388,8 +1390,10 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
+            exposure_min = self.exposure_min_v.value
         else:
             target_adu = self.config['TARGET_ADU_DAY']
+            exposure_min = self.exposure_min_day_v.value
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
@@ -1420,7 +1424,7 @@ class ImageWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
+            self.recalculate_exposure(exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor)
             return adu, 0.0
 
 
@@ -1451,7 +1455,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
+    def recalculate_exposure(self, exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
@@ -1472,8 +1476,8 @@ class ImageWorker(Process):
 
 
         # Do not exceed the limits
-        if new_exposure < self.exposure_min_v.value:
-            new_exposure = float(self.exposure_min_v.value)
+        if new_exposure < exposure_min:
+            new_exposure = float(exposure_min)
         elif new_exposure > self.exposure_max_v.value:
             new_exposure = float(self.exposure_max_v.value)
 
