@@ -3624,6 +3624,8 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('imx662', 'IMX662'),
         ('imx715', 'IMX715'),
         ('imx174', 'IMX174'),
+        ('imx230', 'IMX230'),
+        ('ar0234', 'AR0234 - Global Shutter'),
         ('imx429', 'IMX429 - POA Apollo-M MINI'),
         ('imx432', 'IMX432'),
         ('imx482', 'IMX482'),
