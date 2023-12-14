@@ -11,6 +11,10 @@ export PATH
 function catch_error() {
     echo
     echo
+    echo "###############"
+    echo "###  ERROR  ###"
+    echo "###############"
+    echo
     echo "The script exited abnormally, please try to run again..."
     echo
     echo
@@ -20,6 +24,10 @@ trap catch_error ERR
 
 function catch_sigint() {
     echo
+    echo
+    echo "###############"
+    echo "###  ERROR  ###"
+    echo "###############"
     echo
     echo "The script was interrupted, please run the script again to finish..."
     echo
