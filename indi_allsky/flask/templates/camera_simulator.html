@@ -337,6 +337,8 @@ function show_simulation() {
     ctx.fillStyle = 'lightgrey';
 
     ctx.textAlign = 'left';
+
+    // top left
     ctx.strokeText(lens_text, 25, 40, 400);
     ctx.strokeText(camera_text, 25, 70, 400);
     ctx.fillText(lens_text, 25, 40, 400);
@@ -348,14 +350,18 @@ function show_simulation() {
     var maxWidth = 200;
 
     ctx.textAlign = 'right';
-    ctx.strokeText(resolution_text, x_text, y_text + 40, maxWidth);
-    ctx.strokeText(size_text, x_text, y_text + 70, maxWidth);
-    ctx.strokeText(diag_text, x_text, y_text + 100, maxWidth);
+
+    // top right
+    ctx.strokeText(resolution_text, x_text, 40, maxWidth);
+    ctx.strokeText(size_text, x_text, 70, maxWidth);
+    ctx.strokeText(diag_text, x_text, 100, maxWidth);
+    ctx.fillText(resolution_text, x_text, 40, maxWidth);
+    ctx.fillText(size_text, x_text, 70, maxWidth);
+    ctx.fillText(diag_text, x_text, 100, maxWidth);
+
+    // bottom right
     ctx.strokeText(img_c_text, x_text, y_text + 130, maxWidth);
     ctx.strokeText(offset_text, x_text, y_text + 160, maxWidth);
-    ctx.fillText(resolution_text, x_text, y_text + 40, maxWidth);
-    ctx.fillText(size_text, x_text, y_text + 70, maxWidth);
-    ctx.fillText(diag_text, x_text, y_text + 100, maxWidth);
     ctx.fillText(img_c_text, x_text, y_text + 130, maxWidth);
     ctx.fillText(offset_text, x_text, y_text + 160, maxWidth);
 }
