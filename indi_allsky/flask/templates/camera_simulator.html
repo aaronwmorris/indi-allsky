@@ -217,7 +217,6 @@ var sd = {
         </div>
         <div class="col-sm-3">
             {{ form_camera_simulator.LENS_SELECT(class='form-control bg-secondary') }}
-            <div id="LENS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-1">
@@ -225,7 +224,20 @@ var sd = {
         </div>
         <div class="col-sm-3">
             {{ form_camera_simulator.SENSOR_SELECT(class='form-control bg-secondary') }}
-            <div id="SENSOR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_camera_simulator.OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_camera_simulator.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_camera_simulator.OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_camera_simulator.OFFSET_Y(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>
@@ -270,6 +282,8 @@ function show_simulation() {
     //console.log('Sensor rect: ' + r.w + ' x ' + r.h)
     //console.log('Image circle: ' + c.r)
 
+    var offset_x = pixels2mm($("#OFFSET_X").val(), sd[sensor]['p']);
+    var offset_y = pixels2mm($("#OFFSET_Y").val(), sd[sensor]['p']);
 
     // clear canvas
     canvas.setAttribute("width", window.innerWidth);
@@ -277,11 +291,17 @@ function show_simulation() {
     var hRatio = canvas.width  / r['w'];
     var vRatio = canvas.height / r['h'];
     var ratio  = Math.min ( hRatio, vRatio );
+    //console.log('Ratio: ' + ratio);
 
 
     ctx.beginPath();
     ctx.fillStyle="#000000";
-    ctx.rect(0, 0, r.w * ratio, r.h * ratio);
+    ctx.rect(
+        0,
+        0,
+        r.w * ratio,
+        r.h * ratio
+    );
     ctx.stroke();
     ctx.fill();
 
@@ -289,7 +309,14 @@ function show_simulation() {
     ctx.fillStyle="#444444";
     ctx.globalCompositeOperation="source-atop";
     //ctx.globalCompositeOperation="source-bottom";
-    ctx.arc(r.w * ratio / 2, r.h * ratio / 2, c.r * ratio, 0, 2 * Math.PI, false);
+    ctx.arc(
+        (r.w * ratio / 2) + (offset_x * ratio),
+        (r.h * ratio / 2) - (offset_y * ratio),
+        c.r * ratio,
+        0,
+        2 * Math.PI,
+        false
+    );
     ctx.stroke();
     ctx.fill();
 
@@ -304,6 +331,7 @@ function show_simulation() {
     var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
     var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
     var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
+    var offset_text = offset_x.toFixed(1) + " x " + offset_y.toFixed(1) + "mm offset";
 
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'lightgrey';
@@ -316,7 +344,7 @@ function show_simulation() {
 
 
     var x_text = (r.w * ratio) - 25;
-    var y_text = (r.h * ratio) - 150;
+    var y_text = (r.h * ratio) - 180;
     var maxWidth = 200;
 
     ctx.textAlign = 'right';
@@ -324,10 +352,12 @@ function show_simulation() {
     ctx.strokeText(size_text, x_text, y_text + 70, maxWidth);
     ctx.strokeText(diag_text, x_text, y_text + 100, maxWidth);
     ctx.strokeText(img_c_text, x_text, y_text + 130, maxWidth);
+    ctx.strokeText(offset_text, x_text, y_text + 160, maxWidth);
     ctx.fillText(resolution_text, x_text, y_text + 40, maxWidth);
     ctx.fillText(size_text, x_text, y_text + 70, maxWidth);
     ctx.fillText(diag_text, x_text, y_text + 100, maxWidth);
     ctx.fillText(img_c_text, x_text, y_text + 130, maxWidth);
+    ctx.fillText(offset_text, x_text, y_text + 160, maxWidth);
 }
 
 
@@ -337,6 +367,16 @@ $("#LENS_SELECT").on("change", function() {
 
 
 $("#SENSOR_SELECT").on("change", function() {
+    show_simulation();
+});
+
+
+$("#OFFSET_X").on("change", function() {
+    show_simulation();
+});
+
+
+$("#OFFSET_Y").on("change", function() {
     show_simulation();
 });
 
