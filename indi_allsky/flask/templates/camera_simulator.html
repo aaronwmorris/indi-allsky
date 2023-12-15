@@ -387,6 +387,26 @@ $("#OFFSET_Y").on("change", function() {
 });
 
 
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    show_simulation();
+}
+setResizeHandler(resize_callback, 500);
+
+
 function init() {
     show_simulation();
 }
