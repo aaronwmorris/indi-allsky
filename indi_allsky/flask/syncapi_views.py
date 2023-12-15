@@ -65,7 +65,7 @@ class SyncApiBaseView(BaseView):
 
     def dispatch_request(self):
         try:
-            self.authorize(request.files['metadata'].read())  # authenticate the request
+            self.authorize(request.files['metadata'].stream.read())  # authenticate the request
         except AuthenticationFailure as e:
             app.logger.error('Authentication failure: %s', str(e))
             return jsonify({'error' : 'authentication failed'}), 400
@@ -278,8 +278,8 @@ class SyncApiBaseView(BaseView):
     def saveMetadata(self):
         metadata_file = request.files['metadata']
 
-        metadata_file.seek(0)  # rewind file
-        metadata_json = json.load(metadata_file)
+        metadata_file.stream.seek(0)  # rewind file
+        metadata_json = json.load(metadata_file.stream)
 
         #app.logger.info('Json: %s', metadata_json)
 
@@ -294,7 +294,7 @@ class SyncApiBaseView(BaseView):
 
         f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix=media_file_p.suffix)
         while True:
-            data = media_file.read(32768)
+            data = media_file.stream.read(131072)
             if data:
                 f_tmp_media.write(data)
             else:
