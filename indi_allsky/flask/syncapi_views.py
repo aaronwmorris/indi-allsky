@@ -343,16 +343,14 @@ class SyncApiBaseView(BaseView):
             time_floor - 1,
             time_floor + 1,
             time_floor - 2,  # large file uploads my take a long time
-            time_floor + 2,
             time_floor - 3,
-            time_floor + 3,
             time_floor - 4,
-            time_floor + 4,
         ]
 
         for t in time_floor_list:
             #app.logger.info('Time floor: %d', t)
-            hmac_message = str(time_floor).encode() + data
+
+            hmac_message = str(t).encode() + data
             #app.logger.info('Data: %s', hmac_message)
 
             message_hmac = hmac.new(
