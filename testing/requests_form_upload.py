@@ -2,6 +2,7 @@
 
 import sys
 import io
+import argparse
 from datetime import datetime
 import time
 import math
@@ -14,9 +15,19 @@ from pathlib import Path
 import http.client as http_client
 import logging
 
+from sqlalchemy.orm.exc import NoResultFound
+
+
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 from indi_allsky import constants
+from indi_allsky.flask import create_app
+from indi_allsky.config import IndiAllSkyConfig
+
+
+# setup flask context for db access
+app = create_app()
+app.app_context().push()
 
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -34,15 +45,25 @@ requests_log.propagate = True
 class FormUploader(object):
 
     def __init__(self):
-        self.cur_dur = Path(__file__).parent.absolute().parent
+        try:
+            self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
+
+        self.config = self._config_obj.config
 
 
-    def main(self):
-        endpoint_url = 'https://localhost/indi-allsky/sync/v1/image'
-        #endpoint_url = 'https://localhost/indi-allsky/sync/v1/video'
-        username = 'foobar33'
-        apikey = '0000000000000000000000000000000000000000000000000000000000000000'
-        camera_uuid = '00000000-0000-0000-0000-000000000000'
+    def main(self, camera_uuid, media_file):
+        local_file_p = Path(media_file)
+
+        base_url = self.config['SYNCAPI']['BASEURL']
+        username = self.config['SYNCAPI']['USERNAME']
+        apikey = self.config['SYNCAPI']['APIKEY']
+
+        endpoint_url = base_url + '/sync/v1/video'
+
         cert_bypass = True
 
         if cert_bypass:
@@ -56,6 +77,7 @@ class FormUploader(object):
         image_metadata = {  # noqa: F841
             'type'         : constants.IMAGE,
             'createDate'   : now.timestamp(),
+            'dayDate'      : now.strftime('%Y%m%d'),
             'exposure'     : 5.6,
             'exp_elapsed'  : 1.1,
             'gain'         : 100,
@@ -96,10 +118,6 @@ class FormUploader(object):
             'id'           : 1,
             'camera_uuid'  : camera_uuid,
         }
-
-
-        local_file_p = self.cur_dur / 'testing' / 'blob_detection' / 'test_no_clouds.jpg'
-        #local_file_p = self.cur_dur.parent.parent / 'allsky-timelapse_ccd1_20230302_night.mp4'
 
 
         metadata = image_metadata
@@ -159,6 +177,23 @@ class FormUploader(object):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        'file',
+        help='Input file',
+        type=str,
+    )
+    argparser.add_argument(
+        '--camera',
+        '-c',
+        help='camera uuid',
+        type=str,
+        required=True,
+    )
+
+
+    args = argparser.parse_args()
+
     fu = FormUploader()
-    fu.main()
+    fu.main(args.camera, args.file)
 
