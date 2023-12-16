@@ -63,3 +63,4 @@ passlib[argon2]
 prettytable
 lxml
 shapely
+requests-toolbelt
