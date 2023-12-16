@@ -91,11 +91,12 @@ class SyncApiBaseView(BaseView):
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
 
-        media_file_p = self.saveFile()
+        tmp_media_file_p = self.saveFile()
 
 
-        media_file_size = media_file_p.stat().st_size
+        media_file_size = tmp_media_file_p.stat().st_size
         if media_file_size != metadata.get('file_size', -1):
+            tmp_media_file_p.unlink()
             raise AuthenticationFailure('Media file size does not match')
 
 
@@ -107,7 +108,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file_p, overwrite=overwrite)
+            file_entry = self.processPost(camera, metadata, tmp_media_file_p, overwrite=overwrite)
         except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
