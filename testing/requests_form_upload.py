@@ -8,6 +8,7 @@ import math
 import hmac
 import hashlib
 import requests
+from requests_toolbelt import MultipartEncoder
 import json
 from pathlib import Path
 import http.client as http_client
@@ -109,6 +110,15 @@ class FormUploader(object):
         json_metadata = json.dumps(metadata)
 
 
+        fields = {  # noqa: F841
+            'metadata' : ('metadata.json', io.StringIO(json_metadata), 'application/json'),
+            'media'    : (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream'),  # need file extension from original file
+        }
+
+
+        mp_enc = MultipartEncoder(fields=fields)
+
+
         time_floor = math.floor(time.time() / 300)
 
         # data is received as bytes
@@ -125,23 +135,18 @@ class FormUploader(object):
         self.headers = {
             'Authorization' : 'Bearer {0:s}:{1:s}'.format(username, message_hmac),
             'Connection'    : 'close',  # no need for keep alives
+            'Content-Type'  : mp_enc.content_type,
         }
-
-
-        files = [  # noqa: F841
-            ('metadata', ('metadata.json', io.StringIO(json_metadata), 'application/json')),
-            ('media', (local_file_p.name, io.open(str(local_file_p), 'rb'), 'application/octet-stream')),  # need file extension from original file
-        ]
 
 
         logger.info('Headers: %s', self.headers)
 
         start = time.time()
 
-        #r = requests.get(endpoint_url, params=get_params, files=files, headers=self.headers, verify=verify, stream=True, timeout=(5.0, 10.0))
-        r = requests.post(endpoint_url, files=files, headers=self.headers, verify=verify, stream=True, timeout=(5.0, 10.0))
-        #r = requests.put(endpoint_url, files=files, headers=self.headers, verify=verify, stream=True, timeout=(5.0, 10.0))
-        #r = requests.delete(endpoint_url, files=files, headers=self.headers, verify=verify, stream=True, timeout=(5.0, 10.0))
+        #r = requests.get(endpoint_url, params=get_params, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+        r = requests.post(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+        #r = requests.put(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+        #r = requests.delete(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
