@@ -336,7 +336,6 @@ class SyncApiBaseView(BaseView):
 
 
         time_floor = math.floor(time.time() / self.time_skew)
-        #app.logger.info('Time floor: %d', time_floor)
 
         # the time on the remote system needs to be plus/minus the time_floor period
         time_floor_list = [
@@ -352,6 +351,7 @@ class SyncApiBaseView(BaseView):
         ]
 
         for t in time_floor_list:
+            #app.logger.info('Time floor: %d', t)
             hmac_message = str(time_floor).encode() + data
             #app.logger.info('Data: %s', hmac_message)
 

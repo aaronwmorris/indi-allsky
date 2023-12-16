@@ -165,10 +165,17 @@ class FormUploader(object):
 
         start = time.time()
 
-        #r = requests.get(endpoint_url, params=get_params, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
-        r = requests.post(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
-        #r = requests.put(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
-        #r = requests.delete(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+        try:
+            #r = requests.get(endpoint_url, params=get_params, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+            r = requests.post(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+            #r = requests.put(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+            #r = requests.delete(endpoint_url, data=mp_enc, headers=self.headers, verify=verify, timeout=(5.0, 10.0))
+        except requests.exceptions.ConnectTimeout as e:
+            logger.error('Connect timeout: %s', str(e))
+            sys.exit(1)
+        except requests.exceptions.ReadTimeout as e:
+            logger.error('Read timeout: %s', str(e))
+            sys.exit(1)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
