@@ -347,8 +347,11 @@ class SyncApiBaseView(BaseView):
             time_floor - 1,
             time_floor + 1,
             time_floor - 2,  # large file uploads my take a long time
+            time_floor + 2,
             time_floor - 3,
+            time_floor + 3,
             time_floor - 4,
+            time_floor + 4,
         ]
 
         for t in time_floor_list:
