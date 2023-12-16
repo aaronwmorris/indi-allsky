@@ -141,6 +141,7 @@ class FormUploader(object):
 
 
         time_floor = math.floor(time.time() / self.time_skew)
+        logger.info('Time floor: %d', time_floor)
 
         # data is received as bytes
         hmac_message = str(time_floor).encode() + json_metadata.encode()

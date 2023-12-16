@@ -65,6 +65,7 @@ class SyncApiBaseView(BaseView):
 
     def dispatch_request(self):
         try:
+            #time.sleep(10)  # testing
             self.authorize(request.files['metadata'].stream.read())  # authenticate the request
         except AuthenticationFailure as e:
             app.logger.error('Authentication failure: %s', str(e))
@@ -335,6 +336,7 @@ class SyncApiBaseView(BaseView):
 
 
         time_floor = math.floor(time.time() / self.time_skew)
+        #app.logger.info('Time floor: %d', time_floor)
 
         # the time on the remote system needs to be plus/minus the time_floor period
         time_floor_list = [
