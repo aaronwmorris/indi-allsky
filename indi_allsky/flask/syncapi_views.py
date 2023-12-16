@@ -1,4 +1,3 @@
-import sys
 import time
 import math
 from datetime import datetime
@@ -7,6 +6,8 @@ from pathlib import Path
 import hashlib
 import hmac
 import json
+import tempfile
+import shutil
 
 
 from flask import request
@@ -90,17 +91,10 @@ class SyncApiBaseView(BaseView):
     def post(self, overwrite=False):
         metadata = self.saveMetadata()
 
-        media_file = request.files['media']
-        media_file_suffix = Path(media_file.filename).suffix
+        media_file_p = self.saveFile()
 
 
-        if media_file.stream.name:
-            media_file_size = Path(media_file.stream.name).stat().st_size
-        else:
-            # in memory
-            media_file_size = sys.getsizeof(media_file.stream)
-
-
+        media_file_size = media_file_p.stat().st_size
         if media_file_size != metadata.get('file_size', -1):
             raise AuthenticationFailure('Media file size does not match')
 
@@ -113,7 +107,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file, media_file_suffix, overwrite=overwrite)
+            file_entry = self.processPost(camera, metadata, media_file_p, overwrite=overwrite)
         except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -169,7 +163,7 @@ class SyncApiBaseView(BaseView):
         })
 
 
-    def processPost(self, camera, metadata, tmp_file, suffix, overwrite=False):
+    def processPost(self, camera, metadata, tmp_file_p, overwrite=False):
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
@@ -182,7 +176,7 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename_p = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, suffix))  # suffix includes dot
+        filename_p = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))  # suffix includes dot
 
         if not filename_p.exists():
             try:
@@ -233,20 +227,15 @@ class SyncApiBaseView(BaseView):
         )
 
 
-        if tmp_file.stream.name:
-            tmp_file_size = Path(tmp_file.stream.name).stat().st_size
-        else:
-            tmp_file_size = sys.getsizeof(tmp_file.stream)
-
-
+        tmp_file_size = tmp_file_p.stat().st_size
         if tmp_file_size != 0:
             # only copy file if it is not empty
             # if the empty file option is selected, this can be expected
-            tmp_file.save(str(filename_p))
+            shutil.copy2(str(tmp_file_p), str(filename_p))
             filename_p.chmod(0o644)
 
 
-        #tmp_file_p.unlink()
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded file: %s', filename_p)
 
@@ -296,6 +285,20 @@ class SyncApiBaseView(BaseView):
         #app.logger.info('Json: %s', metadata_json)
 
         return metadata_json
+
+
+    def saveFile(self, media_file):
+        media_file_p = Path(media_file.filename)  # need this for the extension
+        #app.logger.info('File: %s', media_file_p)
+
+        f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix=media_file_p.suffix)
+        f_tmp_media.close()
+
+        tmp_media_p = Path(f_tmp_media.name)
+
+        media_file.save(str(tmp_media_p))
+
+        return tmp_media_p
 
 
     #def put(self):
@@ -397,7 +400,7 @@ class SyncApiCameraView(SyncApiBaseView):
         metadata = self.saveMetadata()
 
 
-        camera_entry = self.processPost(None, metadata, None, None, overwrite=overwrite)
+        camera_entry = self.processPost(None, metadata, None, overwrite=overwrite)
 
         return jsonify({
             'id'   : camera_entry.id,
@@ -422,7 +425,7 @@ class SyncApiCameraView(SyncApiBaseView):
         return entry
 
 
-    def processPost(self, camera_notUsed, metadata, file_notUsed, suffix_notUsed, overwrite=True):
+    def processPost(self, camera_notUsed, metadata, file_notUsed, overwrite=True):
         addFunction_method = getattr(self._miscDb, self.add_function)
         entry = addFunction_method(
             metadata,
@@ -445,12 +448,12 @@ class SyncApiImageView(SyncApiBaseView):
     add_function = 'addImage'
 
 
-    def processPost(self, camera, image_metadata, tmp_file, suffix, overwrite=False):
+    def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
         createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        image_file_p = folder.joinpath(self.filename_t.format(camera.id, date_str, suffix))  # suffix includes dot
+        image_file_p = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
 
 
         if not image_file_p.exists():
@@ -494,20 +497,15 @@ class SyncApiImageView(SyncApiBaseView):
         )
 
 
-        if tmp_file.stream.name:
-            tmp_file_size = Path(tmp_file.stream.name).stat().st_size
-        else:
-            tmp_file_size = sys.getsizeof(tmp_file.stream)
-
-
+        tmp_file_size = tmp_file_p.stat().st_size
         if tmp_file_size != 0:
             # only copy file if it is not empty
             # if the empty file option is selected, this can be expected
-            tmp_file.save(str(image_file_p))
+            shutil.copy2(str(tmp_file_p), str(image_file_p))
             image_file_p.chmod(0o644)
 
 
-        #tmp_file_p.unlink()
+        tmp_file_p.unlink()
 
         app.logger.info('Uploaded image: %s', image_file_p)
 
