@@ -89,9 +89,9 @@ class SyncApiBaseView(BaseView):
 
 
     def post(self, overwrite=False):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
-        tmp_media_file_p = self.saveFile()
+        tmp_media_file_p = self.saveMedia(request.files['media'])
 
 
         media_file_size = tmp_media_file_p.stat().st_size
@@ -124,7 +124,7 @@ class SyncApiBaseView(BaseView):
 
 
     def delete(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
         # no media
 
         try:
@@ -143,7 +143,7 @@ class SyncApiBaseView(BaseView):
 
 
     def get(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
         # no media
 
         try:
@@ -277,9 +277,7 @@ class SyncApiBaseView(BaseView):
         return entry
 
 
-    def saveMetadata(self):
-        metadata_file = request.files['metadata']
-
+    def saveMetadata(self, metadata_file):
         metadata_file.seek(0)  # rewind file
         metadata_json = json.load(metadata_file)
 
@@ -288,7 +286,7 @@ class SyncApiBaseView(BaseView):
         return metadata_json
 
 
-    def saveFile(self, media_file):
+    def saveMedia(self, media_file):
         media_file_p = Path(media_file.filename)  # need this for the extension
         #app.logger.info('File: %s', media_file_p)
 
@@ -385,7 +383,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def get(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
         try:
             file_entry = self.getEntry(metadata)
@@ -398,7 +396,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def post(self, overwrite=True):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
 
         camera_entry = self.processPost(None, metadata, None, overwrite=overwrite)
