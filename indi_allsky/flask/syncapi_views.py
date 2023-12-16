@@ -91,14 +91,14 @@ class SyncApiBaseView(BaseView):
         metadata = self.saveMetadata()
 
         media_file = request.files['media']
-        media_file_suffix = Path(request.files['media'].filename).suffix
+        media_file_suffix = Path(media_file.filename).suffix
 
 
-        if media_file.filename:
-            media_file_size = Path(media_file.name).stat().st_size
+        if media_file.stream.name:
+            media_file_size = Path(media_file.stream.name).stat().st_size
         else:
             # in memory
-            media_file_size = sys.getsizeof(media_file)
+            media_file_size = sys.getsizeof(media_file.stream)
 
 
         if media_file_size != metadata.get('file_size', -1):
@@ -233,10 +233,10 @@ class SyncApiBaseView(BaseView):
         )
 
 
-        if tmp_file.filename:
-            tmp_file_size = Path(tmp_file.name).stat().st_size
+        if tmp_file.stream.name:
+            tmp_file_size = Path(tmp_file.stream.name).stat().st_size
         else:
-            tmp_file_size = sys.getsizeof(tmp_file_size)
+            tmp_file_size = sys.getsizeof(tmp_file.stream)
 
 
         if tmp_file_size != 0:
@@ -494,10 +494,10 @@ class SyncApiImageView(SyncApiBaseView):
         )
 
 
-        if tmp_file.filename:
-            tmp_file_size = Path(tmp_file.name).stat().st_size
+        if tmp_file.stream.name:
+            tmp_file_size = Path(tmp_file.stream.name).stat().st_size
         else:
-            tmp_file_size = sys.getsizeof(tmp_file_size)
+            tmp_file_size = sys.getsizeof(tmp_file.stream)
 
 
         if tmp_file_size != 0:
