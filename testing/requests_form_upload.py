@@ -44,6 +44,9 @@ requests_log.propagate = True
 
 class FormUploader(object):
 
+    time_skew = 300
+
+
     def __init__(self):
         try:
             self._config_obj = IndiAllSkyConfig()
@@ -137,7 +140,7 @@ class FormUploader(object):
         mp_enc = MultipartEncoder(fields=fields)
 
 
-        time_floor = math.floor(time.time() / 300)
+        time_floor = math.floor(time.time() / self.time_skew)
 
         # data is received as bytes
         hmac_message = str(time_floor).encode() + json_metadata.encode()
