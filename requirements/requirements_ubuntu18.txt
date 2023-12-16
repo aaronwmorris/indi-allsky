@@ -62,3 +62,4 @@ is-safe-url
 prettytable
 lxml
 shapely
+requests-toolbelt

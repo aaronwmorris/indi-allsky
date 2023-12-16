@@ -7,6 +7,7 @@ from .exceptions import TransferFailure
 
 from pathlib import Path
 import requests
+from requests_toolbelt import MultipartEncoder
 import io
 import time
 import math
@@ -16,6 +17,7 @@ import json
 import hashlib
 import hmac
 import logging
+
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
@@ -103,6 +105,23 @@ class requests_syncapi_v1(GenericFileTransfer):
         f_metadata = io.StringIO(json_metadata)
 
 
+        fields = {
+            'metadata' : (
+                'metadata.json',
+                f_metadata,
+                'application/json',
+            ),
+            'media' : (
+                local_file_p.name,  # need file extension from original file
+                f_media,
+                'application/octet-stream',
+            ),
+        }
+
+
+        mp_enc = MultipartEncoder(fields=fields)
+
+
         time_floor = math.floor(time.time() / self.time_skew)
 
         # data is received as bytes
@@ -118,33 +137,21 @@ class requests_syncapi_v1(GenericFileTransfer):
         headers = {
             'Authorization' : 'Bearer {0:s}:{1:s}'.format(self.username, message_hmac),
             'Connection'    : 'close',  # no need for keep alives
+            'Content-Type'  : mp_enc.content_type,
         }
-
-
-        files = [
-            (
-                'metadata',
-                (
-                    'metadata.json',
-                    f_metadata,
-                    'application/json',
-                )
-            ),
-            (
-                'media', (
-                    local_file_p.name,  # need file extension from original file
-                    f_media,
-                    'application/octet-stream',
-                )
-            ),
-        ]
 
 
         start = time.time()
 
         try:
             # put allows overwrites
-            r = self.client.put(self.url, files=files, headers=headers, verify=self.verify, stream=True, timeout=(self.connect_timeout, self.timeout))
+            r = self.client.put(
+                self.url,
+                data=mp_enc,
+                headers=headers,
+                verify=self.verify,
+                timeout=(self.connect_timeout, self.timeout)
+            )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
         except socket.timeout as e:

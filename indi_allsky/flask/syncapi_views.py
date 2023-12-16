@@ -65,6 +65,7 @@ class SyncApiBaseView(BaseView):
 
     def dispatch_request(self):
         try:
+            #time.sleep(10)  # testing
             self.authorize(request.files['metadata'].stream.read())  # authenticate the request
         except AuthenticationFailure as e:
             app.logger.error('Authentication failure: %s', str(e))
@@ -89,13 +90,14 @@ class SyncApiBaseView(BaseView):
 
 
     def post(self, overwrite=False):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
-        media_file_p = self.saveFile()
+        tmp_media_file_p = self.saveMedia(request.files['media'])
 
 
-        if media_file_p.stat().st_size != metadata.get('file_size', -1):
-            media_file_p.unlink()
+        media_file_size = tmp_media_file_p.stat().st_size
+        if media_file_size != metadata.get('file_size', -1):
+            tmp_media_file_p.unlink()
             raise AuthenticationFailure('Media file size does not match')
 
 
@@ -107,7 +109,7 @@ class SyncApiBaseView(BaseView):
 
 
         try:
-            file_entry = self.processPost(camera, metadata, media_file_p, overwrite=overwrite)
+            file_entry = self.processPost(camera, metadata, tmp_media_file_p, overwrite=overwrite)
         except EntryExists:
             return jsonify({'error' : 'file_exists'}), 400
 
@@ -123,7 +125,7 @@ class SyncApiBaseView(BaseView):
 
 
     def delete(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
         # no media
 
         try:
@@ -142,7 +144,7 @@ class SyncApiBaseView(BaseView):
 
 
     def get(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
         # no media
 
         try:
@@ -176,13 +178,13 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))
+        filename_p = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))  # suffix includes dot
 
-        if not filename.exists():
+        if not filename_p.exists():
             try:
                 # delete old entry if it exists
                 old_entry = self.model.query\
-                    .filter(self.model.filename == str(filename))\
+                    .filter(self.model.filename == str(filename_p))\
                     .one()
 
                 app.logger.warning('Removing orphaned video entry')
@@ -196,11 +198,11 @@ class SyncApiBaseView(BaseView):
                 raise EntryExists()
 
             app.logger.warning('Replacing file')
-            filename.unlink()
+            filename_p.unlink()
 
             try:
                 old_entry = self.model.query\
-                    .filter(self.model.filename == str(filename))\
+                    .filter(self.model.filename == str(filename_p))\
                     .one()
 
                 app.logger.warning('Removing old entry')
@@ -221,22 +223,23 @@ class SyncApiBaseView(BaseView):
 
         addFunction_method = getattr(self._miscDb, self.add_function)
         new_entry = addFunction_method(
-            filename,
+            filename_p,
             camera.id,
             metadata,
         )
 
 
-        if tmp_file_p.stat().st_size != 0:
+        tmp_file_size = tmp_file_p.stat().st_size
+        if tmp_file_size != 0:
             # only copy file if it is not empty
             # if the empty file option is selected, this can be expected
-            shutil.copy2(str(tmp_file_p), str(filename))
-            filename.chmod(0o644)
+            shutil.copy2(str(tmp_file_p), str(filename_p))
+            filename_p.chmod(0o644)
 
 
         tmp_file_p.unlink()
 
-        app.logger.info('Uploaded file: %s', filename)
+        app.logger.info('Uploaded file: %s', filename_p)
 
         return new_entry
 
@@ -275,34 +278,27 @@ class SyncApiBaseView(BaseView):
         return entry
 
 
-    def saveMetadata(self):
-        metadata_file = request.files['metadata']
-
-        metadata_file.stream.seek(0)  # rewind file
-        metadata_json = json.load(metadata_file.stream)
+    def saveMetadata(self, metadata_file):
+        metadata_file.seek(0)  # rewind file
+        metadata_json = json.load(metadata_file)
 
         #app.logger.info('Json: %s', metadata_json)
 
         return metadata_json
 
 
-    def saveFile(self):
-        media_file = request.files['media']
-
+    def saveMedia(self, media_file):
         media_file_p = Path(media_file.filename)  # need this for the extension
         #app.logger.info('File: %s', media_file_p)
 
         f_tmp_media = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix=media_file_p.suffix)
-        while True:
-            data = media_file.stream.read(131072)
-            if data:
-                f_tmp_media.write(data)
-            else:
-                break
-
         f_tmp_media.close()
 
-        return Path(f_tmp_media.name)
+        tmp_media_p = Path(f_tmp_media.name)
+
+        media_file.save(str(tmp_media_p))
+
+        return tmp_media_p
 
 
     #def put(self):
@@ -347,15 +343,14 @@ class SyncApiBaseView(BaseView):
             time_floor - 1,
             time_floor + 1,
             time_floor - 2,  # large file uploads my take a long time
-            time_floor + 2,
             time_floor - 3,
-            time_floor + 3,
             time_floor - 4,
-            time_floor + 4,
         ]
 
         for t in time_floor_list:
-            hmac_message = str(time_floor).encode() + data
+            #app.logger.info('Time floor: %d', t)
+
+            hmac_message = str(t).encode() + data
             #app.logger.info('Data: %s', hmac_message)
 
             message_hmac = hmac.new(
@@ -388,7 +383,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def get(self):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
         try:
             file_entry = self.getEntry(metadata)
@@ -401,7 +396,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def post(self, overwrite=True):
-        metadata = self.saveMetadata()
+        metadata = self.saveMetadata(request.files['metadata'])
 
 
         camera_entry = self.processPost(None, metadata, None, overwrite=overwrite)
@@ -429,7 +424,7 @@ class SyncApiCameraView(SyncApiBaseView):
         return entry
 
 
-    def processPost(self, notUsed1, metadata, notUsed2, overwrite=True):
+    def processPost(self, camera_notUsed, metadata, file_notUsed, overwrite=True):
         addFunction_method = getattr(self._miscDb, self.add_function)
         entry = addFunction_method(
             metadata,
@@ -457,14 +452,14 @@ class SyncApiImageView(SyncApiBaseView):
         folder = self.getImageFolder(createDate, image_metadata['night'], camera)
 
         date_str = createDate.strftime('%Y%m%d_%H%M%S')
-        image_file = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
+        image_file_p = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
 
 
-        if not image_file.exists():
+        if not image_file_p.exists():
             try:
                 # delete old entry if it exists
                 old_image_entry = self.model.query\
-                    .filter(self.model.filename == str(image_file))\
+                    .filter(self.model.filename == str(image_file_p))\
                     .one()
 
                 app.logger.warning('Removing orphaned image entry')
@@ -479,11 +474,11 @@ class SyncApiImageView(SyncApiBaseView):
                 raise EntryExists()
 
             app.logger.warning('Replacing image')
-            image_file.unlink()
+            image_file_p.unlink()
 
             try:
                 old_image_entry = self.model.query\
-                    .filter(self.model.filename == str(image_file))\
+                    .filter(self.model.filename == str(image_file_p))\
                     .one()
 
                 app.logger.warning('Removing old image entry')
@@ -495,22 +490,23 @@ class SyncApiImageView(SyncApiBaseView):
 
         addFunction_method = getattr(self._miscDb, self.add_function)
         new_entry = addFunction_method(
-            image_file,
+            image_file_p,
             camera.id,
             image_metadata,
         )
 
 
-        if tmp_file_p.stat().st_size != 0:
+        tmp_file_size = tmp_file_p.stat().st_size
+        if tmp_file_size != 0:
             # only copy file if it is not empty
             # if the empty file option is selected, this can be expected
-            shutil.copy2(str(tmp_file_p), str(image_file))
-            image_file.chmod(0o644)
+            shutil.copy2(str(tmp_file_p), str(image_file_p))
+            image_file_p.chmod(0o644)
 
 
         tmp_file_p.unlink()
 
-        app.logger.info('Uploaded image: %s', image_file)
+        app.logger.info('Uploaded image: %s', image_file_p)
 
         return new_entry
 
