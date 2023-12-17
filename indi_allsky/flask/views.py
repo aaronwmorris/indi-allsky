@@ -2075,9 +2075,9 @@ class SystemInfoView(TemplateView):
             paramiko = None
 
         try:
-            import paho.mqtt
+            import paho.mqtt as paho_mqtt
         except ImportError:
-            paho.mqtt = None
+            paho_mqtt = None
 
         try:
             import boto3
@@ -2090,9 +2090,9 @@ class SystemInfoView(TemplateView):
             libcloud = None
 
         try:
-            import google.cloud.version
+            import google.cloud.version as google_cloud_version
         except ImportError:
-            google.cloud.version = None
+            google_cloud_version = None
 
         try:
             import oci
@@ -2160,13 +2160,13 @@ class SystemInfoView(TemplateView):
         else:
             context['paramiko_version'] = 'Not installed'
 
-        if paho.mqtt:
-            context['pahomqtt_version'] = str(getattr(paho.mqtt, '__version__', -1))
+        if paho_mqtt:
+            context['pahomqtt_version'] = str(getattr(paho_mqtt, '__version__', -1))
         else:
             context['pahomqtt_version'] = 'Not installed'
 
         if boto3:
-            context['boto3_version'] = str(getattr(paho.mqtt, '__version__', -1))
+            context['boto3_version'] = str(getattr(boto3, '__version__', -1))
         else:
             context['boto3_version'] = 'Not installed'
 
@@ -2175,8 +2175,8 @@ class SystemInfoView(TemplateView):
         else:
             context['libcloud_version'] = 'Not installed'
 
-        if google.cloud.version:
-            context['googlecloud_version'] = str(getattr(google.cloud.version, '__version__', -1))
+        if google_cloud_version:
+            context['googlecloud_version'] = str(getattr(google_cloud_version, '__version__', -1))
         else:
             context['googlecloud_version'] = 'Not installed'
 
