@@ -1110,6 +1110,12 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
+            'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
+            'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
+            'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
+            'YOUTUBE__TITLE'                 : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE', ''),
+            'YOUTUBE__DESCRIPTION'           : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION', ''),
+            'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
@@ -1230,6 +1236,11 @@ class ConfigView(FormView):
         orb_properties__moon_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
         orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
+
+
+        # Youtube tags
+        youtube_tags = self.indi_allsky_config.get('YOUTUBE', {}).get('TAGS', [])
+        form_data['YOUTUBE__TAGS_STR'] = ', '.join(youtube_tags)
 
 
         # FITS headers
@@ -1390,6 +1401,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('SYNCAPI'):
             self.indi_allsky_config['SYNCAPI'] = {}
+
+        if not self.indi_allsky_config.get('YOUTUBE'):
+            self.indi_allsky_config['YOUTUBE'] = {}
 
         if not self.indi_allsky_config.get('LIBCAMERA'):
             self.indi_allsky_config['LIBCAMERA'] = {}
@@ -1631,6 +1645,12 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])
+        self.indi_allsky_config['YOUTUBE']['SECRETS_FILE']              = str(request.json['YOUTUBE__SECRETS_FILE'])
+        self.indi_allsky_config['YOUTUBE']['PRIVACY_STATUS']            = str(request.json['YOUTUBE__PRIVACY_STATUS'])
+        self.indi_allsky_config['YOUTUBE']['TITLE']                     = str(request.json['YOUTUBE__TITLE'])
+        self.indi_allsky_config['YOUTUBE']['DESCRIPTION']               = str(request.json['YOUTUBE__DESCRIPTION'])
+        self.indi_allsky_config['YOUTUBE']['CATEGORY']                  = int(request.json['YOUTUBE__CATEGORY'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
@@ -1720,6 +1740,18 @@ class AjaxConfigView(BaseView):
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
         moon_r, moon_g, moon_b = moon_color_str.split(',')
         self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+
+
+        # Youtube tags
+        youtube__tags_str = str(request.json['YOUTUBE__TAGS_STR'])
+        tags_set = set()
+        for tag in youtube__tags_str.split(','):
+            tag_s = tag.strip()
+
+            if tag_s:
+                tags_set.add(tag_s)
+
+        self.indi_allsky_config['YOUTUBE']['TAGS'] = list(tags_set)
 
 
         # save new config

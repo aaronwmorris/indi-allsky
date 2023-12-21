@@ -1836,6 +1836,55 @@ def SYNCAPI__BASEURL_validator(form, field):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
+def YOUTUBE__SECRETS_FILE_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    secrets_p = Path(field.data)
+
+    try:
+        if not secrets_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not secrets_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(secrets_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def YOUTUBE__PRIVACY_STATUS_validator(form, field):
+    if field.data not in list(zip(*form.YOUTUBE__PRIVACY_STATUS_choices))[0]:
+        raise ValidationError('Please select a privacy status')
+
+
+def YOUTUBE__TITLE_validator(form, field):
+    pass
+
+
+def YOUTUBE__DESCRIPTION_validator(form, field):
+    if not field.data:
+        return
+
+
+def YOUTUBE__CATEGORY_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid category number')
+
+
+def YOUTUBE__TAGS_STR_validator(form, field):
+    if not field.data:
+        return
+
+
 def FITSHEADER_KEY_validator(form, field):
     header_regex = r'^[a-zA-Z0-9\-]+$'
 
@@ -2144,6 +2193,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('custom', 'Custom'),
     )
 
+    YOUTUBE__PRIVACY_STATUS_choices = (
+        ('private', 'Private'),
+        ('public', 'Public'),
+        ('unlisted', 'Unlisted'),
+    )
+
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
@@ -2392,6 +2447,13 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
+    YOUTUBE__ENABLE                  = BooleanField('Enable')
+    YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])
+    YOUTUBE__PRIVACY_STATUS          = SelectField('Privacy Status', choices=YOUTUBE__PRIVACY_STATUS_choices, validators=[DataRequired(), YOUTUBE__PRIVACY_STATUS_validator])
+    YOUTUBE__TITLE                   = StringField('Title', validators=[DataRequired(), YOUTUBE__TITLE_validator])
+    YOUTUBE__DESCRIPTION             = StringField('Description', validators=[YOUTUBE__DESCRIPTION_validator])
+    YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
+    YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])

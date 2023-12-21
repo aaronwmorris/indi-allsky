@@ -319,6 +319,15 @@ class IndiAllSkyConfigBase(object):
             "CONNECT_TIMEOUT"        : 10.0,
             "TIMEOUT"                : 60.0,
         },
+        "YOUTUBE" : {
+            "ENABLE"                 : False,
+            "SECRETS_FILE"           : "",
+            "PRIVACY_STATUS"         : "private",
+            "TITLE"                  : "Allsky Timelapse - {timeofday} - {timestamp:%Y.%m.%d}",
+            "DESCRIPTION"            : "",
+            "CATEGORY"               : 22,
+            "TAGS"                   : ["allsky", "timelapse", "astronomy"],
+        },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",
             "AWB"                    : "auto",
