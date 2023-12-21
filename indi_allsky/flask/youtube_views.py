@@ -81,7 +81,7 @@ class YoutubeCallbackView(BaseView):
 
         credentials_json = json.dumps(credentials_dict)
 
-        self._miscDb.setState('YOUTUBE_CREDS', credentials_json)
+        self._miscDb.setEncryptedState('YOUTUBE_CREDS', credentials_json)
 
 
         return redirect(url_for('indi_allsky.config_view'))

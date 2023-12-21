@@ -775,6 +775,10 @@ class miscDb(object):
         db.session.commit()
 
 
+    def setEncryptedState(self, key, value):
+        self.setState(key, value, encrypted=True)
+
+
     def getState(self, key):
         # all values must be upper-case strings
         key_upper = str(key).upper()
