@@ -64,7 +64,7 @@ class YoutubeCallbackView(BaseView):
 
         client_secrets_file = self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE')
 
-        youtube_state = session['state']
+        youtube_state = session['youtube_state']
 
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             client_secrets_file,
@@ -84,10 +84,10 @@ class YoutubeCallbackView(BaseView):
         self._miscDb.setState('YOUTUBE_CREDS', credentials_json)
 
 
-        return redirect(url_for('test_api_request'))
+        return redirect(url_for('indi_allsky.config_view'))
 
 
-    def credentials_to_dict(credentials):
+    def credentials_to_dict(self, credentials):
         credentials = {
             'token'         : credentials.token,
             'refresh_token' : credentials.refresh_token,
