@@ -2984,8 +2984,11 @@
     <div class="row">
         <div class="col-sm-2">
         </div>
-        <div class="col-sm-5">
+        <div class="col-sm-1">
             <a href="{{ url_for('indi_allsky.youtube_authorize_view') }}"><span class="badge rounded-pill bg-info text-dark">Authorize</span></a>
+        </div>
+        <div class="col-sm-4">
+            <a href="{{ url_for('indi_allsky.youtube_oauth2revoke_view') }}"><span class="badge rounded-pill bg-warning text-dark">Revoke</span></a>
         </div>
         <div class="col-sm-5">Click to start authorization process</div>
     </div>

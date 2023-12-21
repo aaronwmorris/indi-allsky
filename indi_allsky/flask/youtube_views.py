@@ -1,5 +1,5 @@
-#import google.oauth2.credentials
 import json
+import requests
 
 from flask import redirect
 from flask import request
@@ -9,6 +9,8 @@ from flask import url_for
 from flask import current_app as app
 
 from flask_login import login_required
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from .base_views import BaseView
 
@@ -98,4 +100,34 @@ class YoutubeCallbackView(BaseView):
         }
 
         return credentials
+
+
+class YoutubeRevokeAuthView(BaseView):
+    decorators = [login_required]
+
+
+    def dispatch_request(self):
+        import google.oauth2.credentials
+
+        try:
+            credentials_json = self._miscDb.getState('YOUTUBE_CREDS')
+        except NoResultFound:
+            abort(400, 'Youtube credentials not configured')
+
+
+        credentials_dict = json.loads(credentials_json)
+
+        credentials = google.oauth2.credentials.Credentials(**credentials_dict)
+
+        revoke = requests.post(
+            'https://oauth2.googleapis.com/revoke',
+            params={'token': credentials.token},
+            headers={'content-type': 'application/x-www-form-urlencoded'},
+        )
+
+        status_code = getattr(revoke, 'status_code')
+        if status_code != 200:
+            abort(400, 'Something went wrong')
+
+        return redirect(url_for('indi_allsky.config_view'))
 
