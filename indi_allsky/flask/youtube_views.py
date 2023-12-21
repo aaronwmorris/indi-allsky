@@ -4,6 +4,7 @@ import json
 from flask import redirect
 from flask import request
 from flask import session
+from flask import abort
 from flask import url_for
 from flask import current_app as app
 
@@ -23,6 +24,12 @@ class YoutubeAuthorizeView(BaseView):
 
     def dispatch_request(self):
         import google_auth_oauthlib.flow
+
+        if not self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE'):
+            abort(400, 'Youtube uploading not enabled')
+
+        if not self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE'):
+            abort(400, 'Client secrets not configured')
 
         client_secrets_file = self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE')
 
