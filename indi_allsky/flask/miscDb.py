@@ -798,3 +798,17 @@ class miscDb(object):
 
         return value
 
+
+    def removeState(self, key):
+        # all values must be upper-case strings
+        key_upper = str(key).upper()
+
+        # not catching NoResultFound
+        state = IndiAllSkyDbStateTable.query\
+            .filter(IndiAllSkyDbStateTable.key == key_upper)\
+            .one()
+
+
+        db.session.delete(state)
+        db.session.commit()
+

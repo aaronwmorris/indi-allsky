@@ -129,5 +129,9 @@ class YoutubeRevokeAuthView(BaseView):
         if status_code != 200:
             abort(400, 'Something went wrong')
 
+
+        self._miscDb.removeState('YOUTUBE_CREDENTIALS')
+
+
         return redirect(url_for('indi_allsky.config_view'))
 
