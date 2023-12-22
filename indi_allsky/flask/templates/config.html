@@ -3037,22 +3037,22 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.YOUTUBE__TITLE.label(class='col-form-label') }}
+            {{ form_config.YOUTUBE__TITLE_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.YOUTUBE__TITLE(class='form-control bg-secondary') }}
-            <div id="YOUTUBE__TITLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.YOUTUBE__TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6"></div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.YOUTUBE__DESCRIPTION.label(class='col-form-label') }}
+            {{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.YOUTUBE__DESCRIPTION(class='form-control bg-secondary') }}
-            <div id="YOUTUBE__DESCRIPTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__DESCRIPTION_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6"></div>
     </div>
@@ -3758,8 +3758,8 @@ const field_names = [
     'SYNCAPI__TIMEOUT',
     'YOUTUBE__SECRETS_FILE',
     'YOUTUBE__PRIVACY_STATUS',
-    'YOUTUBE__TITLE',
-    'YOUTUBE__DESCRIPTION',
+    'YOUTUBE__TITLE_TEMPLATE',
+    'YOUTUBE__DESCRIPTION_TEMPLATE',
     'YOUTUBE__CATEGORY',
     'YOUTUBE__TAGS_STR',
     'YOUTUBE__REDIRECT_URI',

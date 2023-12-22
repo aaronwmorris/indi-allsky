@@ -1866,11 +1866,11 @@ def YOUTUBE__PRIVACY_STATUS_validator(form, field):
         raise ValidationError('Please select a privacy status')
 
 
-def YOUTUBE__TITLE_validator(form, field):
+def YOUTUBE__TITLE_TEMPLATE_validator(form, field):
     pass
 
 
-def YOUTUBE__DESCRIPTION_validator(form, field):
+def YOUTUBE__DESCRIPTION_TEMPLATE_validator(form, field):
     if not field.data:
         return
 
@@ -2450,8 +2450,8 @@ class IndiAllskyConfigForm(FlaskForm):
     YOUTUBE__ENABLE                  = BooleanField('Enable')
     YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])
     YOUTUBE__PRIVACY_STATUS          = SelectField('Privacy Status', choices=YOUTUBE__PRIVACY_STATUS_choices, validators=[DataRequired(), YOUTUBE__PRIVACY_STATUS_validator])
-    YOUTUBE__TITLE                   = StringField('Title', validators=[DataRequired(), YOUTUBE__TITLE_validator])
-    YOUTUBE__DESCRIPTION             = StringField('Description', validators=[YOUTUBE__DESCRIPTION_validator])
+    YOUTUBE__TITLE_TEMPLATE          = StringField('Title', validators=[DataRequired(), YOUTUBE__TITLE_TEMPLATE_validator])
+    YOUTUBE__DESCRIPTION_TEMPLATE    = StringField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
     YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
     YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
     YOUTUBE__REDIRECT_URI            = StringField('Redirect URI', render_kw={'readonly' : True, 'disabled' : 'disabled'})
