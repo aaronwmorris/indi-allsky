@@ -1239,9 +1239,17 @@ class ConfigView(FormView):
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
 
-        # Youtube tags
+        # Youtube
         youtube_tags = self.indi_allsky_config.get('YOUTUBE', {}).get('TAGS', [])
         form_data['YOUTUBE__TAGS_STR'] = ', '.join(youtube_tags)
+
+        form_data['YOUTUBE__REDIRECT_URI'] = url_for('indi_allsky.youtube_oauth2callback_view', _external=True)
+
+        try:
+            self._miscDb.getState('YOUTUBE_CREDENTIALS')
+            form_data['YOUTUBE__CREDS_STORED'] = True
+        except NoResultFound:
+            form_data['YOUTUBE__CREDS_STORED'] = False
 
 
         # FITS headers

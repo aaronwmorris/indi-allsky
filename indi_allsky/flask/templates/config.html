@@ -2981,17 +2981,48 @@
         <div class="col-sm-5"></div>
     </div>
 
+    <hr>
+
     <div class="row">
         <div class="col-sm-2">
         </div>
-        <div class="col-sm-1">
-            <a href="{{ url_for('indi_allsky.youtube_authorize_view') }}"><span class="badge rounded-pill bg-info text-dark">Authorize</span></a>
+        <div class="col-sm-5">
+            <a href="{{ url_for('indi_allsky.youtube_authorize_view') }}"><span class="badge rounded-pill bg-success text-dark">Authorize</span></a>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">Click to start Oauth2 authorization process</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__CREDS_STORED.label }}
+        </div>
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__CREDS_STORED(class='form-check-input') }}
+                <div id="YOUTUBE__CREDS_STORED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
             <a href="{{ url_for('indi_allsky.youtube_oauth2revoke_view') }}"><span class="badge rounded-pill bg-warning text-dark">Revoke</span></a>
         </div>
-        <div class="col-sm-5">Click to start authorization process</div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__REDIRECT_URI.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.YOUTUBE__REDIRECT_URI(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__REDIRECT_URI-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">The domain must be a real TLD (.com / .net / etc)</div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3034,7 +3065,7 @@
             {{ form_config.YOUTUBE__CATEGORY(class='form-control bg-secondary') }}
             <div id="YOUTUBE__CATEGORY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">Only private is valid until you app is approved</div>
     </div>
 
     <div class="form-group row">
@@ -3731,6 +3762,7 @@ const field_names = [
     'YOUTUBE__DESCRIPTION',
     'YOUTUBE__CATEGORY',
     'YOUTUBE__TAGS_STR',
+    'YOUTUBE__REDIRECT_URI',
     'FITSHEADERS__0__KEY',
     'FITSHEADERS__0__VAL',
     'FITSHEADERS__1__KEY',
@@ -3813,6 +3845,7 @@ const checkbox_field_names = [
     'SYNCAPI__EMPTY_FILE',
     'SYNCAPI__UPLOAD_VIDEO',
     'YOUTUBE__ENABLE',
+    'YOUTUBE__CREDS_STORED',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',

@@ -83,7 +83,7 @@ class YoutubeCallbackView(BaseView):
 
         credentials_json = json.dumps(credentials_dict)
 
-        self._miscDb.setEncryptedState('YOUTUBE_CREDS', credentials_json)
+        self._miscDb.setEncryptedState('YOUTUBE_CREDENTIALS', credentials_json)
 
 
         return redirect(url_for('indi_allsky.config_view'))
@@ -110,7 +110,7 @@ class YoutubeRevokeAuthView(BaseView):
         import google.oauth2.credentials
 
         try:
-            credentials_json = self._miscDb.getState('YOUTUBE_CREDS')
+            credentials_json = self._miscDb.getState('YOUTUBE_CREDENTIALS')
         except NoResultFound:
             abort(400, 'Youtube credentials not configured')
 

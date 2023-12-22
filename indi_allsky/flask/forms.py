@@ -2454,6 +2454,8 @@ class IndiAllskyConfigForm(FlaskForm):
     YOUTUBE__DESCRIPTION             = StringField('Description', validators=[YOUTUBE__DESCRIPTION_validator])
     YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
     YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
+    YOUTUBE__REDIRECT_URI            = StringField('Redirect URI', render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    YOUTUBE__CREDS_STORED            = BooleanField('Credentials authorized', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
