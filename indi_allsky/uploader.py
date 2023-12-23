@@ -332,7 +332,8 @@ class FileUploader(Thread):
             }
 
             put_kwargs = {
-                'local_file'         : local_file_p,
+                'local_file'    : local_file_p,
+                'metadata'      : metadata,
             }
 
             try:

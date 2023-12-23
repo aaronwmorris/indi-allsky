@@ -1867,12 +1867,38 @@ def YOUTUBE__PRIVACY_STATUS_validator(form, field):
 
 
 def YOUTUBE__TITLE_TEMPLATE_validator(form, field):
-    pass
+    now = datetime.now()
+
+    template_data = {
+        'day_date'   : now.date(),
+        'timeofday'  : 'Night',
+    }
+
+    try:
+        field.data.format(**template_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
 def YOUTUBE__DESCRIPTION_TEMPLATE_validator(form, field):
     if not field.data:
         return
+
+    now = datetime.now()
+
+    template_data = {
+        'day_date'   : now.date(),
+        'timeofday'  : 'Night',
+    }
+
+    try:
+        field.data.format(**template_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
 def YOUTUBE__CATEGORY_validator(form, field):
