@@ -6,6 +6,7 @@ from .generic import GenericFileTransfer
 
 from pathlib import Path
 #import socket
+from datetime import datetime
 import time
 import json
 import logging
@@ -50,17 +51,40 @@ class youtube_oauth2(GenericFileTransfer):
         from googleapiclient.http import MediaFileUpload
 
         local_file = kwargs['local_file']
-        privacy_status = kwargs['privacy_status']
-        tags = kwargs['tags']
-        category = kwargs['category']
+        metadata = kwargs['metadata']
+
+
+        title_tmpl = self.config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {timeofday} - {day_date:%Y-%m-%d}')
+        description_tmpl = self.config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', '')
+
+
+        if metadata['night']:
+            timeofday = 'Night'
+        else:
+            timeofday = 'Day'
+
+
+        template_data = {
+            'day_date' : datetime.strptime(metadata['dayDate'], '%Y%m%d').date(),
+            'timeofday' : timeofday,
+        }
+
+
+        title = title_tmpl.format(**template_data)
+        description = description_tmpl.format(**template_data)
+
+
+        privacy_status = self.config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private')
+        tags = self.config.get('YOUTUBE', {}).get('TAGS', [])
+        category = self.config.get('YOUTUBE', {}).get('CATEGORY', 22)
 
         local_file_p = Path(local_file)
 
 
         body = {
             'snippet' : {
-                'title'       : video_args.title,
-                'description' : video_args.description,
+                'title'       : title,
+                'description' : description,
                 'tags'        : tags,
                 'categoryId'  : category,
             },
@@ -98,27 +122,27 @@ class youtube_oauth2(GenericFileTransfer):
 
         while response is None:
             try:
-                print("Uploading file...")
+                logger.info("Uploading file...")
                 status, response = insert_request.next_chunk()
                 if response is not None:
                     if 'id' in response:
-                        print("Video id '%s' was successfully uploaded." % response['id'])
+                        logger.info('Video id "%s" was successfully uploaded.', response['id'])
                         return response['id']
                     else:
                         raise Exception('The upload failed with an unexpected response: {0:s}'.format(response))
             except HttpError as e:
                 if e.resp.status in RETRIABLE_STATUS_CODES:
-                    error = f"A retriable HTTP error {e.resp.status} occurred:\n{e.content}"
+                    error = 'A retriable HTTP error {0} occurred:\n{1}'.format(e.resp.status, e.content)
                 else:
                     raise
             except retriable_exceptions as e:
                 error = 'A retriable error occurred: {0}'.format(str(e))
 
             if error is not None:
-                print(error)
+                logger.error(error)
                 retry += 1
                 if retry > MAX_RETRIES:
                     raise Exception('No longer attempting to retry.')
 
-                logger.error('Sleeping 2 seconds and then retrying...')
+                logger.warning('Sleeping 2 seconds and then retrying...')
                 time.sleep(2.0)
