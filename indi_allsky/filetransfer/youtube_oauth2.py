@@ -54,7 +54,7 @@ class youtube_oauth2(GenericFileTransfer):
         metadata = kwargs['metadata']
 
 
-        title_tmpl = self.config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {timeofday} - {day_date:%Y-%m-%d}')
+        title_tmpl = self.config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}')
         description_tmpl = self.config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', '')
 
 
