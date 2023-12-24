@@ -512,9 +512,24 @@ function upload_youtube_video(video_id, asset_type) {
         data: JSON.stringify(json_data),
         success: function(data){
             $("#loader_filter").css({'display' : 'none'});
+
+            successMessage.html(data['success-message']);
+            successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                successMessage.css({'display' : 'none'});
+            }, 10000);
+
         },
         error: function(data){
             $("#loader_filter").css({'display' : 'none'});
+
+            failureMessage.html('Error submitting upload');
+            failureMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                failureMessage.css({'display' : 'none'});
+            }, 10000);
+
+
         },
     });
 };

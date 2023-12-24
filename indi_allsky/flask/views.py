@@ -4649,7 +4649,7 @@ class AjaxUploadYoutubeView(BaseView):
         db.session.commit()
 
         message = {
-            'success-message' : 'Job submitted',
+            'success-message' : 'Upload task submitted',
         }
 
         return jsonify(message)
