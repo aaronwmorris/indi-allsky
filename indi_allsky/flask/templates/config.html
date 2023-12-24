@@ -2957,6 +2957,10 @@
 
     <hr>
 
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Youtube support requires installing the "optional" python modules during setup</div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.YOUTUBE__ENABLE.label }}
@@ -2967,8 +2971,12 @@
                 <div id="YOUTUBE__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Youtube-Uploads" class="text-decoration-none link-info" target="_blank">Youtube Setup Wiki</a></div>
+        </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3069,7 +3077,7 @@
             <div id="YOUTUBE__CATEGORY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://developers.google.com/youtube/v3/docs/videoCategories/list">Categories API</a></div>
+            <div><a href="https://developers.google.com/youtube/v3/docs/videoCategories/list" class="text-decoration-none link-info" target="_blank">Categories API</a></div>
             <div>22 = People & Blogs</div>
         </div>
     </div>
@@ -3106,6 +3114,8 @@
         </div>
         <div class="col-sm-8"></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3403,6 +3413,8 @@
         </div>
         <div class="col-sm-8"><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup" class="text-decoration-none link-info" target="_blank">SyncAPI Setup Wiki</a></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
