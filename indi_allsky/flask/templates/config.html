@@ -3043,7 +3043,10 @@
             {{ form_config.YOUTUBE__TITLE_TEMPLATE(class='form-control bg-secondary') }}
             <div id="YOUTUBE__TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>day_date, timeofday</pre></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -3065,7 +3068,10 @@
             {{ form_config.YOUTUBE__CATEGORY(class='form-control bg-secondary') }}
             <div id="YOUTUBE__CATEGORY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">Only private is valid until you app is approved</div>
+        <div class="col-sm-6">
+            <div><a href="https://developers.google.com/youtube/v3/docs/videoCategories/list">Categories API</a></div>
+            <div>22 = People & Blogs</div>
+        </div>
     </div>
 
     <div class="form-group row">

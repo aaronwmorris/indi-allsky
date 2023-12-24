@@ -1,6 +1,6 @@
 from .generic import GenericFileTransfer
 #from .exceptions import AuthenticationFailure
-#from .exceptions import ConnectionFailure
+from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
 
@@ -33,6 +33,11 @@ class youtube_oauth2(GenericFileTransfer):
 
     def connect(self, *args, **kwargs):
         super(youtube_oauth2, self).connect(*args, **kwargs)
+
+
+        if not self.config.get('YOUTUBE', {}).get('ENABLE'):
+            raise ConnectionFailure('Youtube uploads are not enabled')
+
 
         import google.oauth2.credentials
 
