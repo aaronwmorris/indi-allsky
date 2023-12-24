@@ -4618,10 +4618,17 @@ class AjaxUploadYoutubeView(BaseView):
             return jsonify({}), 400
 
 
+        metadata = {
+            'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
+            'night'   : video_entry.night,
+        }
+
+
         jobdata = {
             'action'      : constants.TRANSFER_YOUTUBE,
             'model'       : video_entry.__class__.__name__,
             'id'          : video_entry.id,
+            'metadata'    : metadata,
         }
 
 
