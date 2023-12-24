@@ -5,6 +5,9 @@ import uuid
 import logging
 #from pprint import pformat
 
+from cryptography.fernet import Fernet
+
+from flask import current_app as app  # prevent circular import
 from . import db
 
 from .models import IndiAllSkyDbCameraTable
@@ -735,7 +738,7 @@ class miscDb(object):
         return new_notice
 
 
-    def setState(self, key, value):
+    def setState(self, key, value, encrypted=False):
         now = datetime.now()
 
         # all keys must be upper-case
@@ -744,24 +747,36 @@ class miscDb(object):
         # all values must be strings
         value_str = str(value)
 
+
+        if encrypted:
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+            value_str = f_key.encrypt(value_str.encode()).decode()
+
+
         try:
             state = IndiAllSkyDbStateTable.query\
                 .filter(IndiAllSkyDbStateTable.key == key_upper)\
                 .one()
 
             state.value = value_str
+            state.encrypted = encrypted
             state.createDate = now
         except NoResultFound:
             state = IndiAllSkyDbStateTable(
                 key=key_upper,
                 value=value_str,
                 createDate=now,
+                encrypted=encrypted,
             )
 
             db.session.add(state)
 
 
         db.session.commit()
+
+
+    def setEncryptedState(self, key, value):
+        self.setState(key, value, encrypted=True)
 
 
     def getState(self, key):
@@ -773,6 +788,27 @@ class miscDb(object):
             .filter(IndiAllSkyDbStateTable.key == key_upper)\
             .one()
 
-        return state.value
 
+        if state.encrypted:
+            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+            value = f_key.decrypt(state.value.encode()).decode()
+        else:
+            value = state.value
+
+
+        return value
+
+
+    def removeState(self, key):
+        # all values must be upper-case strings
+        key_upper = str(key).upper()
+
+        # not catching NoResultFound
+        state = IndiAllSkyDbStateTable.query\
+            .filter(IndiAllSkyDbStateTable.key == key_upper)\
+            .one()
+
+
+        db.session.delete(state)
+        db.session.commit()
 

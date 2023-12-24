@@ -317,6 +317,33 @@ class FileUploader(Thread):
             client = client_class(self.config)
             client.connect_timeout = self.config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0)
             client.timeout = self.config.get('SYNCAPI', {}).get('TIMEOUT', 60.0)
+        elif action == constants.TRANSFER_YOUTUBE:
+            try:
+                credentials_json = self._miscDb.getState('YOUTUBE_CREDENTIALS')
+            except NoResultFound:
+                task.setFailed('Youtube authorization credentials not found')
+                raise Exception('Youtube authorization credentials not found')
+
+
+            connect_kwargs = {
+                'hostname'           : 'youtube',
+                'username'           : '*',
+                'credentials_json'   : credentials_json,
+            }
+
+            put_kwargs = {
+                'local_file'    : local_file_p,
+                'metadata'      : metadata,
+            }
+
+            try:
+                client_class = getattr(filetransfer, 'youtube_oauth2')
+            except AttributeError:
+                logger.error('Unknown filetransfer class: %s', 'youtube_oauth2')
+                task.setFailed('Unknown filetransfer class: {0:s}'.format('youtube_oauth2'))
+                return
+
+            client = client_class(self.config)
         else:
             task.setFailed('Invalid transfer action')
             raise Exception('Invalid transfer action')
@@ -462,6 +489,18 @@ class FileUploader(Thread):
 
         if entry and action == constants.TRANSFER_SYNC_V1:
             entry.sync_id = response['id']
+            db.session.commit()
+
+
+        if entry and action == constants.TRANSFER_YOUTUBE:
+            if entry.data:
+                data_dict = dict(entry.data)
+            else:
+                data_dict = dict()
+
+            data_dict['youtube_id'] = response['id']
+            entry.data = data_dict
+
             db.session.commit()
 
 

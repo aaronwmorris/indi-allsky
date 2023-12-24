@@ -55,9 +55,11 @@
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
+            {% if current_user.is_authenticated or login_disabled %}
             <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">
                 <span class="badge pill bg-success">Generate</span>
             </a>
+            {% endif %}
         </div>
         <div class="col-sm-2">
             <div class="loader" id="loader_filter"></div>
@@ -170,24 +172,6 @@ function populate_videos(video_list) {
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
-            // Link to star trail image
-            if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : item['startrail'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Star Trail",
-                        'class' : "badge pill bg-info text-dark",
-                    })
-                ).appendTo(st_a);
-
-            }
-
 
             // Link to keogram image
             var kl_a = $('<a />', {
@@ -202,6 +186,28 @@ function populate_videos(video_list) {
                     'class' : "badge pill bg-warning text-dark",
                 })
             ).appendTo(kl_a);
+
+
+            // Link to star trail image
+            if (item['startrail'] != 'None') {
+                var st_a = $('<a />', {
+                    'href'   : item['startrail'],
+                    'target' : "_blank",
+                    'rel'    : "noopener noreferrer",
+                    'class'  : "text-decoration-none link-warning",
+                }).appendTo(datetime_div);
+
+                $('<div />', {}).html(
+                    $('<span />', {
+                        'text'  : "Star Trail",
+                        'class' : "badge pill bg-primary text-dark",
+                    })
+                ).appendTo(st_a);
+
+            }
+
+
+            $('<hr>').appendTo(datetime_div);
 
 
             $('<div />', {
@@ -246,6 +252,9 @@ function populate_videos(video_list) {
             ).appendTo(kl_a);
 
 
+            $('<hr>').appendTo(datetime_div);
+
+
             $('<div />', {
                 'text' : 'Smoke: ' + item['max_smoke_rating'],
                 'style' : "font-size:12px",
@@ -274,6 +283,24 @@ function populate_videos(video_list) {
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
                         'alt'   : "Startrail",
                     }).appendTo(st_tl_a);
+
+
+                    {% if current_user.is_authenticated or login_disabled %}
+                    // Youtube link
+                    var youtube_st_a = $('<a />', {
+                        'rel'     : "noopener noreferrer",
+                        'class'   : "text-decoration-none link-warning",
+                        'style'   : "cursor: pointer;",
+                        'onclick' : "upload_youtube_video(" + item['id'] + ", 6)",  // 6 == STARTRAIL_VIDEO constant
+                    }).appendTo(startrail_div);
+                    $('<div />', {}).html(
+                        $('<span />', {
+                            'text'  : "Upload to YouTube",
+                            'class' : "badge pill bg-danger text-dark",
+                        })
+                    ).appendTo(youtube_st_a);
+                    {% endif %}
+
                 } else {
                     // No link
                     $('<img />', {
@@ -299,6 +326,24 @@ function populate_videos(video_list) {
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);
+
+
+        {% if current_user.is_authenticated or login_disabled %}
+        // Youtube link
+        var youtube_video_a = $('<a />', {
+            'target'  : "_blank",
+            'rel'     : "noopener noreferrer",
+            'class'   : "text-decoration-none link-warning",
+            'onclick' : "upload_youtube_video(" + item['id'] + ", 3)", // 3 == VIDEO constant
+        }).appendTo(keogram_div);
+        $('<div />', {}).html(
+            $('<span />', {
+                'text'  : "Upload to YouTube",
+                'class' : "badge pill bg-danger text-dark",
+                'style' : "cursor: pointer;",
+            })
+        ).appendTo(youtube_video_a);
+        {% endif %}
 
 
         if (item['keogram'] != 'None') {
@@ -464,6 +509,42 @@ $("#YEAR_SELECT").on("change", function() {
 });
 
 
+function upload_youtube_video(video_id, asset_type) {
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'VIDEO_ID'   : video_id,
+        'ASSET_TYPE' : asset_type,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_upload_youtube_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+
+            successMessage.html(data['success-message']);
+            successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                successMessage.css({'display' : 'none'});
+            }, 10000);
+
+        },
+        error: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+
+            failureMessage.html('Error submitting upload');
+            failureMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                failureMessage.css({'display' : 'none'});
+            }, 10000);
+
+
+        },
+    });
+};
 
 
 function init() {

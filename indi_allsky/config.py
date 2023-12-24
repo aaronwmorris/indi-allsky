@@ -187,7 +187,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_EXPIRE_DAYS"     : 30,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
         "FFMPEG_FRAMERATE" : 25,
-        "FFMPEG_BITRATE"   : "2500k",
+        "FFMPEG_BITRATE"   : "5000k",
         "FFMPEG_VFSCALE"   : "",
         "FFMPEG_CODEC"     : "libx264",
         "FITSHEADERS" : [
@@ -318,6 +318,15 @@ class IndiAllSkyConfigBase(object):
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
             "CONNECT_TIMEOUT"        : 10.0,
             "TIMEOUT"                : 60.0,
+        },
+        "YOUTUBE" : {
+            "ENABLE"                 : False,
+            "SECRETS_FILE"           : "",
+            "PRIVACY_STATUS"         : "private",
+            "TITLE_TEMPLATE"         : "Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}",
+            "DESCRIPTION_TEMPLATE"   : "",
+            "CATEGORY"               : 22,
+            "TAGS"                   : ["allsky", "timelapse", "astronomy"],
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

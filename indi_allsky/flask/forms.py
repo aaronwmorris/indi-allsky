@@ -1836,6 +1836,81 @@ def SYNCAPI__BASEURL_validator(form, field):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
+def YOUTUBE__SECRETS_FILE_validator(form, field):
+    if not field.data:
+        return
+
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/\ ]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid file name')
+
+
+    secrets_p = Path(field.data)
+
+    try:
+        if not secrets_p.exists():
+            raise ValidationError('File does not exist')
+
+        if not secrets_p.is_file():
+            raise ValidationError('Not a file')
+
+        with io.open(str(secrets_p), 'r'):
+            pass
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def YOUTUBE__PRIVACY_STATUS_validator(form, field):
+    if field.data not in list(zip(*form.YOUTUBE__PRIVACY_STATUS_choices))[0]:
+        raise ValidationError('Please select a privacy status')
+
+
+def YOUTUBE__TITLE_TEMPLATE_validator(form, field):
+    now = datetime.now()
+
+    template_data = {
+        'day_date'   : now.date(),
+        'timeofday'  : 'Night',
+    }
+
+    try:
+        field.data.format(**template_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+def YOUTUBE__DESCRIPTION_TEMPLATE_validator(form, field):
+    if not field.data:
+        return
+
+    now = datetime.now()
+
+    template_data = {
+        'day_date'   : now.date(),
+        'timeofday'  : 'Night',
+    }
+
+    try:
+        field.data.format(**template_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+def YOUTUBE__CATEGORY_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid category number')
+
+
+def YOUTUBE__TAGS_STR_validator(form, field):
+    if not field.data:
+        return
+
+
 def FITSHEADER_KEY_validator(form, field):
     header_regex = r'^[a-zA-Z0-9\-]+$'
 
@@ -2144,6 +2219,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('custom', 'Custom'),
     )
 
+    YOUTUBE__PRIVACY_STATUS_choices = (
+        ('private', 'Private'),
+        ('public', 'Public'),
+        ('unlisted', 'Unlisted'),
+    )
+
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
@@ -2392,6 +2473,15 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
+    YOUTUBE__ENABLE                  = BooleanField('Enable')
+    YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])
+    YOUTUBE__PRIVACY_STATUS          = SelectField('Privacy Status', choices=YOUTUBE__PRIVACY_STATUS_choices, validators=[DataRequired(), YOUTUBE__PRIVACY_STATUS_validator])
+    YOUTUBE__TITLE_TEMPLATE          = StringField('Title', validators=[DataRequired(), YOUTUBE__TITLE_TEMPLATE_validator])
+    YOUTUBE__DESCRIPTION_TEMPLATE    = StringField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
+    YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
+    YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
+    YOUTUBE__REDIRECT_URI            = StringField('Detected Redirect URI', render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    YOUTUBE__CREDS_STORED            = BooleanField('Credentials authorized', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
     FITSHEADERS__0__VAL              = StringField('FITS Header 1 Value', validators=[])
     FITSHEADERS__1__KEY              = StringField('FITS Header 2', validators=[DataRequired(), FITSHEADER_KEY_validator])
@@ -2948,6 +3038,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 data = {}
 
             entry = {
+                'id'                : v.id,
                 'url'               : str(url),
                 'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
                 'night'             : v.night,
@@ -2998,11 +3089,14 @@ class IndiAllskyVideoViewer(FlaskForm):
             if keogram_entry:
                 try:
                     keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    keogram_id = keogram_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
+                    keogram_id = 0
             else:
                 keogram_url = None
+                keogram_id = 0
 
 
             ### Star trail
@@ -3036,11 +3130,14 @@ class IndiAllskyVideoViewer(FlaskForm):
             if startrail_entry:
                 try:
                     startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    startrail_id = startrail_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
+                    startrail_id = -1
             else:
                 startrail_url = None
+                startrail_id = -1
 
 
             ### Star trail timelapses
@@ -3074,16 +3171,22 @@ class IndiAllskyVideoViewer(FlaskForm):
             if startrail_video_entry:
                 try:
                     startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    startrail_video_id = startrail_video_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
+                    startrail_video_id = -1
             else:
                 startrail_video_url = None
+                startrail_video_id = -1
 
 
             entry['keogram']    = str(keogram_url)
+            entry['keogram_id'] = keogram_id
             entry['startrail']  = str(startrail_url)
+            entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
+            entry['startrail_timelapse_id']  = startrail_video_id
 
 
         return videos_data

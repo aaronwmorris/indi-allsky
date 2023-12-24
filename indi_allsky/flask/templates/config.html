@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -24,6 +24,7 @@
     <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
     <button class="nav-link link-warning bg-dark" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
     <button class="nav-link link-primary bg-dark" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
+    <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
     <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
   </div>
@@ -2952,6 +2953,147 @@
     </div>
 
 </div><!-- end filetransfer tab -->
+<div class="tab-pane fade" id="nav-youtube" role="tabpanel" aria-labelledby="nav-youtube-tab">
+
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Youtube support requires installing the "optional" python modules during setup</div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__ENABLE(class='form-check-input') }}
+                <div id="YOUTUBE__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Youtube-Uploads" class="text-decoration-none link-info" target="_blank">Youtube Setup Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__SECRETS_FILE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.YOUTUBE__SECRETS_FILE(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__SECRETS_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5"></div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-5">
+            <a href="{{ url_for('indi_allsky.youtube_authorize_view') }}"><span class="badge rounded-pill bg-success text-dark">Authorize</span></a>
+        </div>
+        <div class="col-sm-5">Click to start Oauth2 authorization process</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__CREDS_STORED.label }}
+        </div>
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__CREDS_STORED(class='form-check-input') }}
+                <div id="YOUTUBE__CREDS_STORED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <a href="{{ url_for('indi_allsky.youtube_oauth2revoke_view') }}"><span class="badge rounded-pill bg-warning text-dark">Revoke</span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__REDIRECT_URI.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.YOUTUBE__REDIRECT_URI(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__REDIRECT_URI-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">The domain must be a real TLD (.com / .net / etc)</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__PRIVACY_STATUS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.YOUTUBE__PRIVACY_STATUS(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__PRIVACY_STATUS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.YOUTUBE__TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>day_date, timeofday</pre></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__DESCRIPTION_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__CATEGORY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.YOUTUBE__CATEGORY(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__CATEGORY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://developers.google.com/youtube/v3/docs/videoCategories/list" class="text-decoration-none link-info" target="_blank">Categories API</a></div>
+            <div>22 = People & Blogs</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__TAGS_STR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.YOUTUBE__TAGS_STR(class='form-control bg-secondary') }}
+            <div id="YOUTUBE__TAGS_STR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Comma separated list</div>
+    </div>
+
+</div><!-- end youtubetab -->
 <div class="tab-pane fade" id="nav-s3" role="tabpanel" aria-labelledby="nav-s3-tab">
 
     <hr>
@@ -2972,6 +3114,8 @@
         </div>
         <div class="col-sm-8"></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3269,6 +3413,8 @@
         </div>
         <div class="col-sm-8"><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup" class="text-decoration-none link-info" target="_blank">SyncAPI Setup Wiki</a></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3628,6 +3774,13 @@ const field_names = [
     'SYNCAPI__UPLOAD_IMAGE',
     'SYNCAPI__CONNECT_TIMEOUT',
     'SYNCAPI__TIMEOUT',
+    'YOUTUBE__SECRETS_FILE',
+    'YOUTUBE__PRIVACY_STATUS',
+    'YOUTUBE__TITLE_TEMPLATE',
+    'YOUTUBE__DESCRIPTION_TEMPLATE',
+    'YOUTUBE__CATEGORY',
+    'YOUTUBE__TAGS_STR',
+    'YOUTUBE__REDIRECT_URI',
     'FITSHEADERS__0__KEY',
     'FITSHEADERS__0__VAL',
     'FITSHEADERS__1__KEY',
@@ -3709,6 +3862,8 @@ const checkbox_field_names = [
     'SYNCAPI__POST_S3',
     'SYNCAPI__EMPTY_FILE',
     'SYNCAPI__UPLOAD_VIDEO',
+    'YOUTUBE__ENABLE',
+    'YOUTUBE__CREDS_STORED',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',
