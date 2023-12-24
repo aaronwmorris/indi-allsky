@@ -207,7 +207,8 @@ function populate_videos(video_list) {
             }
 
 
-            $('<hr />').appendTo(datetime_div);
+            $('<hr>').appendTo(datetime_div);
+
 
             $('<div />', {
                 'text' : 'Avg Stars: ' + item['avg_stars'],
@@ -249,6 +250,9 @@ function populate_videos(video_list) {
                     'class' : "badge pill bg-warning text-dark",
                 })
             ).appendTo(kl_a);
+
+
+            $('<hr>').appendTo(datetime_div);
 
 
             $('<div />', {
