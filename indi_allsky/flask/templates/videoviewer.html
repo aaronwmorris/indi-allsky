@@ -170,24 +170,6 @@ function populate_videos(video_list) {
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
-            // Link to star trail image
-            if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : item['startrail'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Star Trail",
-                        'class' : "badge pill bg-info text-dark",
-                    })
-                ).appendTo(st_a);
-
-            }
-
 
             // Link to keogram image
             var kl_a = $('<a />', {
@@ -202,6 +184,25 @@ function populate_videos(video_list) {
                     'class' : "badge pill bg-warning text-dark",
                 })
             ).appendTo(kl_a);
+
+
+            // Link to star trail image
+            if (item['startrail'] != 'None') {
+                var st_a = $('<a />', {
+                    'href'   : item['startrail'],
+                    'target' : "_blank",
+                    'rel'    : "noopener noreferrer",
+                    'class'  : "text-decoration-none link-warning",
+                }).appendTo(datetime_div);
+
+                $('<div />', {}).html(
+                    $('<span />', {
+                        'text'  : "Star Trail",
+                        'class' : "badge pill bg-primary text-dark",
+                    })
+                ).appendTo(st_a);
+
+            }
 
 
             $('<div />', {
