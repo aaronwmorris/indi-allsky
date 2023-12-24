@@ -3038,6 +3038,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 data = {}
 
             entry = {
+                'id'                : v.id,
                 'url'               : str(url),
                 'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
                 'night'             : v.night,
@@ -3088,11 +3089,14 @@ class IndiAllskyVideoViewer(FlaskForm):
             if keogram_entry:
                 try:
                     keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    keogram_id = keogram_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
+                    keogram_id = 0
             else:
                 keogram_url = None
+                keogram_id = 0
 
 
             ### Star trail
@@ -3126,11 +3130,14 @@ class IndiAllskyVideoViewer(FlaskForm):
             if startrail_entry:
                 try:
                     startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    startrail_id = startrail_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
+                    startrail_id = -1
             else:
                 startrail_url = None
+                startrail_id = -1
 
 
             ### Star trail timelapses
@@ -3164,16 +3171,22 @@ class IndiAllskyVideoViewer(FlaskForm):
             if startrail_video_entry:
                 try:
                     startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    startrail_video_id = startrail_video_entry.id
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
+                    startrail_video_id = -1
             else:
                 startrail_video_url = None
+                startrail_video_id = -1
 
 
             entry['keogram']    = str(keogram_url)
+            entry['keogram_id'] = keogram_id
             entry['startrail']  = str(startrail_url)
+            entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
+            entry['startrail_timelapse_id']  = startrail_video_id
 
 
         return videos_data

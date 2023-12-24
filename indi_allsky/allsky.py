@@ -1012,6 +1012,7 @@ class IndiAllSky(object):
                 or_(
                     IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.MAIN,
                     IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO,
+                    IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD,
                 )
             )\
             .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
@@ -1021,9 +1022,14 @@ class IndiAllSky(object):
 
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
-                logger.info('Queuing manual task %d', task.id)
+                logger.info('Queuing manual video task %d', task.id)
                 task.setQueued()
                 self.video_q.put({'task_id' : task.id})
+
+            elif task.queue == TaskQueueQueue.UPLOAD:
+                logger.info('Queuing manual upload task %d', task.id)
+                task.setQueued()
+                self.upload_q.put({'task_id' : task.id})
 
             elif task.queue == TaskQueueQueue.MAIN:
                 logger.info('Picked up MAIN task')

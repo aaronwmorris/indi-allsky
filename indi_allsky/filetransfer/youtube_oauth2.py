@@ -16,6 +16,9 @@ import googleapiclient.discovery
 logger = logging.getLogger('indi_allsky')
 
 
+API_SERVICE_NAME = 'youtube'
+API_VERSION = 'v3'
+
 RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 MAX_RETRIES = 3
 
@@ -38,7 +41,7 @@ class youtube_oauth2(GenericFileTransfer):
         credentials_dict = json.loads(credentials_json)
         credentials = google.oauth2.credentials.Credentials(**credentials_dict)
 
-        self.client = googleapiclient.discovery.build(self.api_service_name, self.api_version, credentials=credentials)
+        self.client = googleapiclient.discovery.build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
 
     def close(self):

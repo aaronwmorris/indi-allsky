@@ -4576,7 +4576,69 @@ class AjaxImageExcludeView(BaseView):
         image.exclude = exclude
         db.session.commit()
 
-        return jsonify({}), 400
+        return jsonify({})
+
+
+class AjaxUploadYoutubeView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxUploadYoutubeView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        camera_id = session['camera_id']
+        video_id = int(request.json['VIDEO_ID'])
+        asset_type = int(request.json['ASSET_TYPE'])
+
+
+        if asset_type == constants.VIDEO:
+            table = IndiAllSkyDbVideoTable
+        elif asset_type == constants.STARTRAIL_VIDEO:
+            table = IndiAllSkyDbStarTrailsVideoTable
+        else:
+            app.logger.error('Unknown video type: %d', video_id)
+            return jsonify(), 400
+
+
+        try:
+            video_entry = table.query\
+                .join(table.camera)\
+                .filter(
+                    and_(
+                        table.id == video_id,
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                    )
+                )\
+                .one()
+        except NoResultFound:
+            app.logger.error('Video not found')
+            return jsonify({}), 400
+
+
+        jobdata = {
+            'action'      : constants.TRANSFER_YOUTUBE,
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
+        }
+
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.MANUAL,
+            data=jobdata,
+        )
+
+        db.session.add(upload_task)
+        db.session.commit()
+
+        message = {
+            'success-message' : 'Job submitted',
+        }
+
+        return jsonify(message)
 
 
 class CameraSimulatorView(TemplateView):
@@ -5019,6 +5081,7 @@ bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_v
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
 bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
+bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as_view('ajax_upload_youtube_view'))
 
 # youtube
 bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_view('youtube_authorize_view'))
