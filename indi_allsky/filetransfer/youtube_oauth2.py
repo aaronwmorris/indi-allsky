@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import time
 import json
+from pprint import pformat  # noqa: F401
 import logging
 
 import googleapiclient.discovery
@@ -106,11 +107,14 @@ class youtube_oauth2(GenericFileTransfer):
 
         start = time.time()
 
-        self.resumable_upload(insert_request)
+        response = self.resumable_upload(insert_request)
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
+
+
+        return response
 
 
     def resumable_upload(self, insert_request):
@@ -130,7 +134,8 @@ class youtube_oauth2(GenericFileTransfer):
                 if response is not None:
                     if 'id' in response:
                         logger.info('Video id "%s" was successfully uploaded.', response['id'])
-                        return response['id']
+                        #logger.info('Response %s', pformat(response))
+                        return response
                     else:
                         raise Exception('The upload failed with an unexpected response: {0:s}'.format(response))
             except HttpError as e:

@@ -492,6 +492,18 @@ class FileUploader(Thread):
             db.session.commit()
 
 
+        if entry and action == constants.TRANSFER_YOUTUBE:
+            if entry.data:
+                data_dict = dict(entry.data)
+            else:
+                data_dict = dict()
+
+            data_dict['youtube_id'] = response['id']
+            entry.data = data_dict
+
+            db.session.commit()
+
+
         if remove_local:
             try:
                 local_file_p.unlink()
