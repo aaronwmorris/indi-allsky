@@ -6,6 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Upload timelapse videos directly to YouTube
 * Cardinal direction labels
 * Fish-eye to Panoramic perspective
 * Satellite tracking and visibility info
@@ -317,6 +318,12 @@ The indi-allsky web interface is designed to be directly exposed to the Internet
 https://github.com/aaronwmorris/indi-allsky/wiki/Security-considerations
 
 It is also possible to use cloud security offerings like [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) to further protect your indi-allsky site.
+
+
+## YouTube support
+indi-allsky supports being able to upload timlapse and star trail videos directly to YouTube
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Youtube-Uploads
 
 
 ## S3 Object Storage

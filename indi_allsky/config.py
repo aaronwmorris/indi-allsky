@@ -187,7 +187,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_EXPIRE_DAYS"     : 30,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
         "FFMPEG_FRAMERATE" : 25,
-        "FFMPEG_BITRATE"   : "2500k",
+        "FFMPEG_BITRATE"   : "5000k",
         "FFMPEG_VFSCALE"   : "",
         "FFMPEG_CODEC"     : "libx264",
         "FITSHEADERS" : [
