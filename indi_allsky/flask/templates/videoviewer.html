@@ -170,24 +170,6 @@ function populate_videos(video_list) {
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
-            // Link to star trail image
-            if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : item['startrail'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Star Trail",
-                        'class' : "badge pill bg-info text-dark",
-                    })
-                ).appendTo(st_a);
-
-            }
-
 
             // Link to keogram image
             var kl_a = $('<a />', {
@@ -202,6 +184,25 @@ function populate_videos(video_list) {
                     'class' : "badge pill bg-warning text-dark",
                 })
             ).appendTo(kl_a);
+
+
+            // Link to star trail image
+            if (item['startrail'] != 'None') {
+                var st_a = $('<a />', {
+                    'href'   : item['startrail'],
+                    'target' : "_blank",
+                    'rel'    : "noopener noreferrer",
+                    'class'  : "text-decoration-none link-warning",
+                }).appendTo(datetime_div);
+
+                $('<div />', {}).html(
+                    $('<span />', {
+                        'text'  : "Star Trail",
+                        'class' : "badge pill bg-primary text-dark",
+                    })
+                ).appendTo(st_a);
+
+            }
 
 
             $('<div />', {
@@ -274,6 +275,21 @@ function populate_videos(video_list) {
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
                         'alt'   : "Startrail",
                     }).appendTo(st_tl_a);
+
+
+                    // Youtube link
+                    var youtube_st_a = $('<a />', {
+                        'rel'    : "noopener noreferrer",
+                        'class'  : "text-decoration-none link-warning",
+                        'style'  : "cursor: pointer;",
+                    }).appendTo(startrail_div);
+                    $('<div />', {}).html(
+                        $('<span />', {
+                            'text'  : "Upload to Youtube",
+                            'class' : "badge pill bg-danger text-dark",
+                        })
+                    ).appendTo(youtube_st_a);
+
                 } else {
                     // No link
                     $('<img />', {
@@ -299,6 +315,22 @@ function populate_videos(video_list) {
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);
+
+
+        // Youtube link
+        var youtube_video_a = $('<a />', {
+            'target'  : "_blank",
+            'rel'     : "noopener noreferrer",
+            'class'   : "text-decoration-none link-warning",
+            'onclick' : "upload_youtube_video(" + item['id'] + ", 3)",
+        }).appendTo(keogram_div);
+        $('<div />', {}).html(
+            $('<span />', {
+                'text'  : "Upload to Youtube",
+                'class' : "badge pill bg-danger text-dark",
+                'style' : "cursor: pointer;",
+            })
+        ).appendTo(youtube_video_a);
 
 
         if (item['keogram'] != 'None') {
@@ -464,6 +496,27 @@ $("#YEAR_SELECT").on("change", function() {
 });
 
 
+function upload_youtube_video(video_id, asset_type) {
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'VIDEO_ID'   : video_id,
+        'ASSET_TYPE' : asset_type,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_upload_youtube_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+        },
+    });
+};
 
 
 function init() {

@@ -549,7 +549,8 @@ class IndiAllSkyDbStateTable(db.Model):
 
     key = db.Column(db.String(length=32), primary_key=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
-    value = db.Column(db.String(length=255), nullable=False)
+    value = db.Column(db.String(length=4096), nullable=False)
+    encrypted = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
 
 
 class IndiAllSkyDbUserTable(db.Model):

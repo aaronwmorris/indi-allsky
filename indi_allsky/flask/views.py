@@ -23,6 +23,7 @@ from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
 
+from cryptography.fernet import InvalidToken
 
 from flask import request
 from flask import session
@@ -90,6 +91,10 @@ from .base_views import BaseView
 from .base_views import TemplateView
 from .base_views import FormView
 from .base_views import JsonView
+
+from .youtube_views import YoutubeAuthorizeView
+from .youtube_views import YoutubeCallbackView
+from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
 
@@ -1007,7 +1012,7 @@ class ConfigView(FormView):
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
             'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
-            'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '2500k'),
+            'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'),
             'FFMPEG_VFSCALE'                 : self.indi_allsky_config.get('FFMPEG_VFSCALE', ''),
             'FFMPEG_CODEC'                   : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
             'IMAGE_LABEL_SYSTEM'             : self.indi_allsky_config.get('IMAGE_LABEL_SYSTEM', 'opencv'),
@@ -1107,6 +1112,12 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
+            'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
+            'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
+            'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
+            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', ''),
+            'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
+            'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
@@ -1227,6 +1238,25 @@ class ConfigView(FormView):
         orb_properties__moon_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
         orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
+
+
+        # Youtube
+        youtube_tags = self.indi_allsky_config.get('YOUTUBE', {}).get('TAGS', [])
+        form_data['YOUTUBE__TAGS_STR'] = ', '.join(youtube_tags)
+
+        form_data['YOUTUBE__REDIRECT_URI'] = url_for('indi_allsky.youtube_oauth2callback_view', _external=True)
+
+        try:
+            self._miscDb.getState('YOUTUBE_CREDENTIALS')
+            form_data['YOUTUBE__CREDS_STORED'] = True
+        except NoResultFound:
+            form_data['YOUTUBE__CREDS_STORED'] = False
+        except InvalidToken:
+            app.logger.error('Invalid Fernet decryption key')
+            form_data['YOUTUBE__CREDS_STORED'] = False
+        except ValueError as e:
+            app.logger.error('Invalid Fernet decryption key: %s', str(e))
+            form_data['YOUTUBE__CREDS_STORED'] = False
 
 
         # FITS headers
@@ -1387,6 +1417,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('SYNCAPI'):
             self.indi_allsky_config['SYNCAPI'] = {}
+
+        if not self.indi_allsky_config.get('YOUTUBE'):
+            self.indi_allsky_config['YOUTUBE'] = {}
 
         if not self.indi_allsky_config.get('LIBCAMERA'):
             self.indi_allsky_config['LIBCAMERA'] = {}
@@ -1628,6 +1661,12 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])
+        self.indi_allsky_config['YOUTUBE']['SECRETS_FILE']              = str(request.json['YOUTUBE__SECRETS_FILE'])
+        self.indi_allsky_config['YOUTUBE']['PRIVACY_STATUS']            = str(request.json['YOUTUBE__PRIVACY_STATUS'])
+        self.indi_allsky_config['YOUTUBE']['TITLE_TEMPLATE']            = str(request.json['YOUTUBE__TITLE_TEMPLATE'])
+        self.indi_allsky_config['YOUTUBE']['DESCRIPTION_TEMPLATE']      = str(request.json['YOUTUBE__DESCRIPTION_TEMPLATE'])
+        self.indi_allsky_config['YOUTUBE']['CATEGORY']                  = int(request.json['YOUTUBE__CATEGORY'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
@@ -1717,6 +1756,18 @@ class AjaxConfigView(BaseView):
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
         moon_r, moon_g, moon_b = moon_color_str.split(',')
         self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+
+
+        # Youtube tags
+        youtube__tags_str = str(request.json['YOUTUBE__TAGS_STR'])
+        tags_set = set()
+        for tag in youtube__tags_str.split(','):
+            tag_s = tag.strip()
+
+            if tag_s:
+                tags_set.add(tag_s)
+
+        self.indi_allsky_config['YOUTUBE']['TAGS'] = list(tags_set)
 
 
         # save new config
@@ -4532,7 +4583,76 @@ class AjaxImageExcludeView(BaseView):
         image.exclude = exclude
         db.session.commit()
 
-        return jsonify({}), 400
+        return jsonify({})
+
+
+class AjaxUploadYoutubeView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxUploadYoutubeView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        camera_id = session['camera_id']
+        video_id = int(request.json['VIDEO_ID'])
+        asset_type = int(request.json['ASSET_TYPE'])
+
+
+        if asset_type == constants.VIDEO:
+            table = IndiAllSkyDbVideoTable
+        elif asset_type == constants.STARTRAIL_VIDEO:
+            table = IndiAllSkyDbStarTrailsVideoTable
+        else:
+            app.logger.error('Unknown video type: %d', video_id)
+            return jsonify(), 400
+
+
+        try:
+            video_entry = table.query\
+                .join(table.camera)\
+                .filter(
+                    and_(
+                        table.id == video_id,
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                    )
+                )\
+                .one()
+        except NoResultFound:
+            app.logger.error('Video not found')
+            return jsonify({}), 400
+
+
+        metadata = {
+            'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
+            'night'   : video_entry.night,
+        }
+
+
+        jobdata = {
+            'action'      : constants.TRANSFER_YOUTUBE,
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
+            'metadata'    : metadata,
+        }
+
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.MANUAL,
+            data=jobdata,
+        )
+
+        db.session.add(upload_task)
+        db.session.commit()
+
+        message = {
+            'success-message' : 'Job submitted',
+        }
+
+        return jsonify(message)
 
 
 class CameraSimulatorView(TemplateView):
@@ -4975,6 +5095,12 @@ bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_v
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
 bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
+bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as_view('ajax_upload_youtube_view'))
+
+# youtube
+bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_view('youtube_authorize_view'))
+bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.as_view('youtube_oauth2callback_view'))
+bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))

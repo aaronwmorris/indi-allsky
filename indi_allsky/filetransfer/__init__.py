@@ -22,6 +22,8 @@ from .oci_storage import oci_storage
 #from .pycurl_syncapi_v1 import pycurl_syncapi_v1
 from .requests_syncapi_v1 import requests_syncapi_v1
 
+from .youtube_oauth2 import youtube_oauth2
+
 
 __all__ = (
     'paramiko_sftp',
@@ -46,4 +48,6 @@ __all__ = (
 
     #'pycurl_syncapi_v1',
     'requests_syncapi_v1',
+
+    'youtube_oauth2',
 )

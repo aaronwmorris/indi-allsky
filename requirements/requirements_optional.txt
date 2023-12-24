@@ -5,3 +5,5 @@ boto3
 apache-libcloud
 google-cloud-storage
 oci
+google-api-python-client
+google_auth_oauthlib
