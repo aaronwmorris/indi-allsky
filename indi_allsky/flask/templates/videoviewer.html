@@ -282,6 +282,7 @@ function populate_videos(video_list) {
                         'rel'    : "noopener noreferrer",
                         'class'  : "text-decoration-none link-warning",
                         'style'  : "cursor: pointer;",
+                        'onclick' : "upload_youtube_video(" + item['id'] + ", 6)",  // 6 == STARTRAIL_VIDEO constant
                     }).appendTo(startrail_div);
                     $('<div />', {}).html(
                         $('<span />', {
@@ -322,7 +323,7 @@ function populate_videos(video_list) {
             'target'  : "_blank",
             'rel'     : "noopener noreferrer",
             'class'   : "text-decoration-none link-warning",
-            'onclick' : "upload_youtube_video(" + item['id'] + ", 3)",
+            'onclick' : "upload_youtube_video(" + item['id'] + ", 3)", // 3 == VIDEO constant
         }).appendTo(keogram_div);
         $('<div />', {}).html(
             $('<span />', {
