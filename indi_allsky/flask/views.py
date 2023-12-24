@@ -23,6 +23,7 @@ from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
 
+from cryptography.fernet import InvalidToken
 
 from flask import request
 from flask import session
@@ -1249,6 +1250,12 @@ class ConfigView(FormView):
             self._miscDb.getState('YOUTUBE_CREDENTIALS')
             form_data['YOUTUBE__CREDS_STORED'] = True
         except NoResultFound:
+            form_data['YOUTUBE__CREDS_STORED'] = False
+        except InvalidToken:
+            app.logger.error('Invalid Fernet decryption key')
+            form_data['YOUTUBE__CREDS_STORED'] = False
+        except ValueError as e:
+            app.logger.error('Invalid Fernet decryption key: %s', str(e))
             form_data['YOUTUBE__CREDS_STORED'] = False
 
 
