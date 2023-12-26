@@ -463,7 +463,7 @@ Common problems you might run into.
 
 ## File Transfer
 
-indi-allsky supports several file transfer methods.  Additional file transfer methods are planned such as direct to YouTube uploads.
+indi-allsky supports several file transfer methods.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers
 

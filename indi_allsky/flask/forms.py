@@ -2798,6 +2798,7 @@ class IndiAllskyImageViewer(FlaskForm):
                 entry_str = img.createDate.strftime('%H:%M:%S')
 
             image_dict = dict()
+            image_dict['id'] = img.id
             image_dict['url'] = str(url)
             image_dict['date'] = entry_str
             image_dict['ts'] = int(img.createDate.timestamp())
@@ -3652,15 +3653,12 @@ class IndiAllskyUserInfoForm(FlaskForm):
 
 
 class IndiAllskyImageExcludeForm(FlaskForm):
-    CAMERA_ID         = HiddenField('Camera ID', validators=[DataRequired()])
-    IMAGE_ID          = HiddenField('Image ID', validators=[DataRequired()])
-    EXCLUDE           = BooleanField('Exclude')
+    EXCLUDE_IMAGE_ID    = HiddenField('Image ID', validators=[DataRequired()])
+    EXCLUDE_EXCLUDE     = BooleanField('Exclude Image From Processing', render_kw={'disabled' : 'disabled'})  # enabled in template
 
 
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageExcludeForm, self).__init__(*args, **kwargs)
-
-        self.CAMERA_ID.data = kwargs.get('camera_id')
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
