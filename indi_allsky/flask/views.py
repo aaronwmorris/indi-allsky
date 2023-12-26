@@ -4583,7 +4583,11 @@ class AjaxImageExcludeView(BaseView):
         image.exclude = exclude
         db.session.commit()
 
-        return jsonify({})
+        data = {
+            'exclude' : exclude,
+        }
+
+        return jsonify(data)
 
 
 class AjaxUploadYoutubeView(BaseView):

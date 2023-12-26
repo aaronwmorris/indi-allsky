@@ -140,7 +140,7 @@ function closeFullscreen() {
     <div class="form-group row">
         <form id="form_image_exclude" onSubmit="return false;">
         <div class="col-sm-1">
-            <div>
+            <div class="form-switch">
                 {{ form_image_exclude.EXCLUDE_EXCLUDE(class='form-check-input') }}
                 <div id="EXCLUDE_EXCLUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
@@ -149,13 +149,13 @@ function closeFullscreen() {
                 <div id="EXCLUDE_IMAGE_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-4">
             {{ form_image_exclude.EXCLUDE_EXCLUDE.label }}
         </div>
 
         </form>
 
-        <div class="col-sm-6"></div>
+        <div class="col-sm-4"></div>
 
         <div class="col-sm-1">
             {{ form_image_exclude.csrf_token }}
@@ -807,7 +807,7 @@ $("#EXCLUDE_EXCLUDE").on("change", function() {
         data: JSON.stringify(json_data),
         success: function(data){
             $("#loader_filter").css({'display' : 'none'});
-            image_data[image_index]['exclude'] = $('#EXCLUDE_EXCLUDE').prop('checked');  // update image exclude value
+            image_data[image_index]['exclude'] = data['exclude'];  // update image exclude value
         },
         error: function(data){
             $("#loader_filter").css({'display' : 'none'});
