@@ -4553,6 +4553,9 @@ class AjaxImageExcludeView(BaseView):
 
 
     def dispatch_request(self):
+        if not current_user.is_admin:
+            return jsonify({}), 400
+
         form_image_exclude = IndiAllskyImageExcludeForm(data=request.json)
 
         if not form_image_exclude.validate():
