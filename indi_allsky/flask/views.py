@@ -2029,6 +2029,8 @@ class VideoViewerView(FormView):
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
 
+        context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
+
         form_data = {
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
