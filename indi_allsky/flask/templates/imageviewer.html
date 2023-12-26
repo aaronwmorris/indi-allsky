@@ -30,6 +30,8 @@ var img;
 var fullscreen = false;  //initial state
 var newest_image_default = true;  // load last image by default
 var image_data = [];
+var image_index = -1;
+
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
@@ -136,33 +138,31 @@ function closeFullscreen() {
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-5"></div>
-
-        <div class="col-sm-1"></div>
-        <div class="col-sm-1"></div>
-        <!--
         <form id="form_image_exclude" onSubmit="return false;">
+        <div class="col-sm-1">
+            <div>
+                {{ form_image_exclude.EXCLUDE_EXCLUDE(class='form-check-input') }}
+                <div id="EXCLUDE_EXCLUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div>
+                {{ form_image_exclude.EXCLUDE_IMAGE_ID(class='form-control bg-secondary') }}
+                <div id="EXCLUDE_IMAGE_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_exclude.EXCLUDE_EXCLUDE.label }}
+        </div>
+
+        </form>
+
+        <div class="col-sm-6"></div>
 
         <div class="col-sm-1">
             {{ form_image_exclude.csrf_token }}
             <div class="text-danger my-2" id="csrf_token-error2"></div>
-            {{ form_image_exclude.EXCLUDE.label }}
-        </div>
-
-        <div class="col-sm-1">
-            <div>
-                {{ form_image_exclude.EXCLUDE(class='form-check-input') }}
-                <div id="EXCLUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-
-        </form>
-        -->
-
-        <div class="col-sm-2"></div>
-        <div class="col-sm-1">
             {{ form_viewer.FILTER_DETECTIONS.label }}
         </div>
+
         <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
@@ -604,8 +604,6 @@ function init() {
         );
 
 
-        var image_index = -1;
-
         $('#IMG_SELECT option').each(function(index, element) {
             if (element.value == $("#IMG_SELECT").val()) {
                 image_index = index;
@@ -615,6 +613,16 @@ function init() {
 
 
         if (image_index > -1) {
+            // Update exclude form
+            $('#EXCLUDE_IMAGE_ID').val(image_data[image_index]['id']);
+
+            if (image_data[image_index]['exclude']) {
+                $('#EXCLUDE_EXCLUDE').prop('checked', true);
+            } else {
+                $('#EXCLUDE_EXCLUDE').prop('checked', false);
+            }
+
+
             // Add Loop here link
             $('#loop_here').html(
                 $('<a />', {
@@ -707,6 +715,7 @@ function init() {
 
     img.src = $("#IMG_SELECT").val();
 
+
     $(document).keydown(function(e) {
         var arrow = { left: 37, up: 38, right: 39, down: 40 };
         var img_select_val = $("#IMG_SELECT").val();
@@ -783,6 +792,30 @@ function init() {
 }
 
 
+$("#EXCLUDE_EXCLUDE").on("change", function() {
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'EXCLUDE_IMAGE_ID' : $('#EXCLUDE_IMAGE_ID').val(),
+        'EXCLUDE_EXCLUDE' : $('#EXCLUDE_EXCLUDE').prop('checked'),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_image_exclude_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+            image_data[image_index]['exclude'] = $('#EXCLUDE_EXCLUDE').prop('checked');  // update image exclude value
+        },
+        error: function(data){
+            $("#loader_filter").css({'display' : 'none'});
+        },
+    });
+});
+
+
 $( document ).ready(function() {
     $('#canvas').on("click", function() {
         goFullscreen(this);
@@ -790,6 +823,10 @@ $( document ).ready(function() {
 
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
+
+    {% if current_user.is_authenticated or login_disabled %}
+        $('#EXCLUDE_EXCLUDE').removeAttr('disabled');
+    {% endif %}
 
     init();
 });

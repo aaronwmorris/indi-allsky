@@ -1889,9 +1889,7 @@ class ImageViewerView(FormView):
             local=local,
         )
 
-        context['form_image_exclude'] = IndiAllskyImageExcludeForm(
-            camera_id=session['camera_id'],
-        )
+        context['form_image_exclude'] = IndiAllskyImageExcludeForm()
 
         return context
 
@@ -4555,16 +4553,16 @@ class AjaxImageExcludeView(BaseView):
 
 
     def dispatch_request(self):
-        form_image_exclude = IndiAllskyImageExcludeForm(data=request.json, camera_id=session['camera_id'])
+        form_image_exclude = IndiAllskyImageExcludeForm(data=request.json)
 
         if not form_image_exclude.validate():
             form_errors = form_image_exclude.errors  # this must be a property
             return jsonify(form_errors), 400
 
 
-        camera_id = int(request.json['camera_id'])
-        image_id = int(request.json['image_id'])
-        exclude = bool(request.json['exclude'])
+        camera_id = session['camera_id']
+        image_id = int(request.json['EXCLUDE_IMAGE_ID'])
+        exclude = bool(request.json['EXCLUDE_EXCLUDE'])
 
 
         try:
