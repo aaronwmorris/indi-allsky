@@ -3654,7 +3654,7 @@ class IndiAllskyUserInfoForm(FlaskForm):
 
 class IndiAllskyImageExcludeForm(FlaskForm):
     EXCLUDE_IMAGE_ID    = HiddenField('Image ID', validators=[DataRequired()])
-    EXCLUDE_EXCLUDE     = BooleanField('Exclude Image From Processing', render_kw={'disabled' : 'disabled'})  # enabled in template
+    EXCLUDE_EXCLUDE     = BooleanField('Exclude Image From Timelapse', render_kw={'disabled' : 'disabled'})  # enabled in template
 
 
     def __init__(self, *args, **kwargs):
