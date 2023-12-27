@@ -520,7 +520,7 @@ class IndiAllSkyDarks(object):
         self._pre_run_tasks()
 
         current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self._temp_delta
+        next_temp_thold = current_temp - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
@@ -536,7 +536,7 @@ class IndiAllSkyDarks(object):
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self._temp_delta
+            next_temp_thold = next_temp_thold - self.temp_delta
 
             self._run(IndiAllSkyDarksAverage)
 
@@ -568,7 +568,7 @@ class IndiAllSkyDarks(object):
         self._pre_run_tasks()
 
         current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self._temp_delta
+        next_temp_thold = current_temp - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
@@ -584,7 +584,7 @@ class IndiAllSkyDarks(object):
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self._temp_delta
+            next_temp_thold = next_temp_thold - self.temp_delta
 
             self._run(IndiAllSkyDarksSigmaClip)
 
@@ -675,9 +675,9 @@ class IndiAllSkyDarks(object):
         dark_exposures.extend(
             list(
                 range(
-                    self._time_delta,
-                    math.ceil(self.config['CCD_EXPOSURE_MAX'] / self._time_delta) * self._time_delta,
-                    self._time_delta,
+                    self.time_delta,
+                    math.ceil(self.config['CCD_EXPOSURE_MAX'] / self.time_delta) * self.time_delta,
+                    self.time_delta,
                 )
             )
         )
@@ -904,8 +904,8 @@ class IndiAllSkyDarks(object):
 
 
         s = stacking_class(self.gain_v, self.bin_v)
-        s.bitmax = self._bitmax
-        s.hotpixel_adu_percent = self._hotpixel_adu_percent
+        s.bitmax = self.bitmax
+        s.hotpixel_adu_percent = self.hotpixel_adu_percent
 
         bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
         dark_adu_avg = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
@@ -1166,10 +1166,10 @@ class IndiAllSkyDarksProcessor(object):
         max_val = numpy.amax(bpm)
         logger.info('Image max value: %d', int(max_val))
 
-        if self._bitmax:
-            bitmax_percent = (2 ** self._bitmax) * (self._hotpixel_adu_percent / 100.0)
+        if self.bitmax:
+            bitmax_percent = (2 ** self.bitmax) * (self.hotpixel_adu_percent / 100.0)
         else:
-            bitmax_percent = (2 ** image_bitpix) * (self._hotpixel_adu_percent / 100.0)
+            bitmax_percent = (2 ** image_bitpix) * (self.hotpixel_adu_percent / 100.0)
 
         bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
 
