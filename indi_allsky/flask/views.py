@@ -1115,7 +1115,7 @@ class ConfigView(FormView):
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
             'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
             'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
-            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', ''),
+            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}'),
             'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
             'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
