@@ -201,7 +201,11 @@ class JsonLatestImageView(JsonView):
 
 
         # use database
-        data['latest_image']['url'] = self.getLatestImage(session['camera_id'], history_seconds)
+        latest_image_url = self.getLatestImage(session['camera_id'], history_seconds)
+        if latest_image_url:
+            data['latest_image']['url'] = latest_image_url
+            data['latest_image']['message'] = ''
+
 
         return data
 
