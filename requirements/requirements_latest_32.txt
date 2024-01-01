@@ -29,10 +29,10 @@ imageio-ffmpeg
 cython
 #rawpy  # installed later
 pygifsicle
-gunicorn[gthread] >= 20.1.0
+gunicorn[gthread] >= 21.2.0
 inotify
 psutil
-Flask
+Flask >= 3.0.0
 Flask-SQLAlchemy >= 3.0.4
 Flask-Migrate >= 4.0.4
 Flask-WTF >= 1.1.1
@@ -48,7 +48,7 @@ paho-mqtt
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
 bcrypt
-passlib[argon2]
+passlib[argon2] >= 1.7.4
 prettytable
 lxml
 shapely

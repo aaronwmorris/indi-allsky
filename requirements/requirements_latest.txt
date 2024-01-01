@@ -4,7 +4,7 @@ astropy
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 1.22.2
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless
+opencv-python-headless >= 4.8.1.78
 # https://www.wheelodex.org/projects/scipy/
 scipy >= 1.11.3
 # https://www.wheelodex.org/projects/ccdproc/
@@ -28,10 +28,10 @@ imageio-ffmpeg
 cython
 rawpy
 pygifsicle
-gunicorn[gthread] >= 20.1.0
+gunicorn[gthread] >= 21.2.0
 inotify
 psutil
-Flask
+Flask >= 3.0.0
 Flask-SQLAlchemy >= 3.0.4
 Flask-Migrate >= 4.0.4
 Flask-WTF >= 1.1.1
@@ -40,13 +40,13 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 41.0.5
+cryptography >= 41.0.7
 dbus-python
 paho-mqtt
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
-passlib[argon2]
+passlib[argon2] >= 1.7.4
 prettytable
 lxml
 shapely
