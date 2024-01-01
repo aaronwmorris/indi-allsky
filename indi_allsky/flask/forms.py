@@ -3665,6 +3665,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
     CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
     CLAHE_CLIPLIMIT                  = FloatField('CLAHE Clip Limit', validators=[CLAHE_CLIPLIMIT_validator])
