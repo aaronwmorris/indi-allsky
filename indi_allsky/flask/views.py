@@ -3800,6 +3800,7 @@ class ImageProcessingView(TemplateView):
         form_data = {
             'CAMERA_ID'                      : camera_id,
             'FITS_ID'                        : fits_id,
+            'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
             'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
@@ -3919,6 +3920,7 @@ class JsonImageProcessingView(JsonView):
 
         p_config = self.indi_allsky_config.copy()
 
+        p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
