@@ -86,6 +86,10 @@
 
     <hr>
 
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
@@ -95,7 +99,6 @@
             <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changing gain or binning requires a full restart of indi-allsky</div>
             <div>Camera dependent</div>
         </div>
     </div>
@@ -154,20 +157,7 @@
 
     <hr>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_BIT_DEPTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_BIT_DEPTH(class='form-control bg-secondary') }}
-            <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div class="col-sm-8">Bit depth of data returned by the camera</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Switching your camera to JPEG/8-bit mode can affect this setting</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this incorrectly will cause problems</div>
-        </div>
-    </div>
+    <div><span class="badge rounded-pill bg-info text-dark">Info</span> A full service restart (not reload) is recommended when changing exposure controls</div>
 
     <hr>
 
@@ -179,7 +169,9 @@
             {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Default: 15, Min 1, Max 60</div>
+        <div class="col-sm-8">
+            <div>Min: 1 - Max: 120 seconds</div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -241,6 +233,24 @@
             <div>It is not recommended to set this below 5.0</div>
         </div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_BIT_DEPTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_BIT_DEPTH(class='form-control bg-secondary') }}
+            <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div class="col-sm-8">Bit depth of data returned by the camera</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Switching your camera to JPEG/8-bit mode can affect this setting</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this incorrectly will cause problems</div>
+        </div>
+    </div>
+
 
     <hr>
 
