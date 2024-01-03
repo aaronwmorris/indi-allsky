@@ -120,6 +120,16 @@ lsmod
 echo
 
 
+echo "git status"
+git status | head -n 100
+echo
+
+
+echo "git log"
+git log -n 1 | head -n 100
+echo
+
+
 if pkg-config --exists libindi; then
     DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
     echo "indi version: $DETECTED_INDIVERSION"
