@@ -195,8 +195,8 @@ def CCD_EXPOSURE_MAX_validator(form, field):
     if field.data <= 0.0:
         raise ValidationError('Max Exposure must be more than 0')
 
-    if field.data > 60.0:
-        raise ValidationError('Max Exposure cannot be more than 60')
+    if field.data > 120.0:
+        raise ValidationError('Max Exposure cannot be more than 120')
 
 
 def CCD_EXPOSURE_DEF_validator(form, field):
@@ -206,8 +206,8 @@ def CCD_EXPOSURE_DEF_validator(form, field):
     if field.data < 0.0:
         raise ValidationError('Default Exposure must be 0 or more')
 
-    if field.data > 60.0:
-        raise ValidationError('Default Exposure cannot be more than 60')
+    if field.data > 120.0:
+        raise ValidationError('Default Exposure cannot be more than 120')
 
 
 def CCD_EXPOSURE_MIN_validator(form, field):
@@ -217,8 +217,8 @@ def CCD_EXPOSURE_MIN_validator(form, field):
     if field.data < 0.0:
         raise ValidationError('Minimum Exposure must be 0 or more')
 
-    if field.data > 60.0:
-        raise ValidationError('Minimum Exposure cannot be more than 60')
+    if field.data > 120.0:
+        raise ValidationError('Minimum Exposure cannot be more than 120')
 
 
 def EXPOSURE_PERIOD_validator(form, field):

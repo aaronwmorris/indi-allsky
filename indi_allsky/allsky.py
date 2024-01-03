@@ -329,16 +329,6 @@ class IndiAllSky(object):
         self.capture_worker.join()
 
 
-    def _reloadCaptureWorker(self):
-        if not self.capture_worker:
-            return
-
-        if not self.capture_worker.is_alive():
-            return
-
-        self.capture_q.put({'reload' : True})
-
-
     def _startImageWorker(self):
         from .image import ImageWorker
 
