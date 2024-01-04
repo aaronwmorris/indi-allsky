@@ -12,7 +12,6 @@ import json
 from pprint import pformat  # noqa: F401
 import logging
 
-import googleapiclient.discovery
 
 logger = logging.getLogger('indi_allsky')
 
@@ -40,6 +39,7 @@ class youtube_oauth2(GenericFileTransfer):
 
 
         import google.oauth2.credentials
+        import googleapiclient.discovery
 
         credentials_json = kwargs['credentials_json']
 
