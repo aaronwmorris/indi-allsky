@@ -68,6 +68,9 @@ cd "$OLDPWD"
 echo "#################################"
 echo "### indi-allsky support info  ###"
 echo "#################################"
+
+sleep 3
+
 echo
 echo "Distribution: $DISTRO_NAME"
 echo "Release: $DISTRO_RELEASE"
