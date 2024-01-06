@@ -196,6 +196,14 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
     echo "virtualenv python: $(python3 -V)"
     echo "virtualenv PATH: $PATH"
+
+    if which flask >/dev/null 2>&1; then
+        echo "flask command: $(which flask)"
+    else
+        echo "flask: not found"
+    fi
+
+    echo
     echo "virtualenv python modules"
     pip freeze
     deactivate
