@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  homeassistant.indi.allsky:
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    env_file: .env
+    volumes:
+      - homeassistant_config_indi_allsky:/config
+      #- /etc/localtime:/etc/localtime:ro
+      #- /run/dbus:/run/dbus:ro
+    #privileged: true
+    ports:
+      - "18123:8123"
+
+
+volumes:
+  homeassistant_config_indi_allsky:
+
