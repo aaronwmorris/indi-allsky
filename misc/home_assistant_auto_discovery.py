@@ -3,6 +3,7 @@
 import sys
 from pathlib import Path
 from pprint import pformat  # noqa: F401
+import time
 import json
 import re
 import psutil
@@ -50,6 +51,38 @@ class HADiscovery(object):
         if not self.config['MQTTPUBLISH'].get('ENABLE'):
             logger.error('MQ Publishing not enabled')
             sys.exit(1)
+
+
+        transport = self.config['MQTTPUBLISH']['TRANSPORT']
+        hostname = self.config['MQTTPUBLISH']['HOST']
+        port = self.config['MQTTPUBLISH']['PORT']
+        username = self.config['MQTTPUBLISH']['USERNAME']
+        password = self.config['MQTTPUBLISH']['PASSWORD']
+        tls = self.config['MQTTPUBLISH']['TLS']
+        cert_bypass = self.config['MQTTPUBLISH'].get('CERT_BYPASS', True)
+
+
+        if port:
+            self._port = port
+
+
+
+        print('')
+        print('#################################################')
+        print('##### Home Assistant Discovery Setup Script #####')
+        print('#################################################')
+        print('')
+        print('Transport: {0}'.format(transport))
+        print('Hostname: {0}'.format(hostname))
+        print('Port: {0}'.format(port))
+        print('TLS: {0}'.format(str(tls)))
+        print('Username: {0}'.format(username))
+        print('')
+
+        print('Setup proceeding in 10 seconds... (control-c to cancel)')
+
+
+        time.sleep(10.0)
 
 
         base_topic  = self.config['MQTTPUBLISH']['BASE_TOPIC']
@@ -360,19 +393,6 @@ class HADiscovery(object):
 
 
         #logger.warning('Messages: %s', pformat(message_list))
-
-
-        transport = self.config['MQTTPUBLISH']['TRANSPORT']
-        hostname = self.config['MQTTPUBLISH']['HOST']
-        port = self.config['MQTTPUBLISH']['PORT']
-        username = self.config['MQTTPUBLISH']['USERNAME']
-        password = self.config['MQTTPUBLISH']['PASSWORD']
-        tls = self.config['MQTTPUBLISH']['TLS']
-        cert_bypass = self.config['MQTTPUBLISH'].get('CERT_BYPASS', True)
-
-
-        if port:
-            self._port = port
 
 
         mq_auth = None
