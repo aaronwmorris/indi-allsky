@@ -96,6 +96,7 @@ class HADiscovery(object):
                     'name' : "indi-allsky Camera",
                     'unique_id' : 'indi_allsky_latest_{0}'.format(self.unique_id_base),
                     'content_type' : 'image/jpeg',
+                    #'content_type' : 'image/png',
                     'image_topic' : '/'.join((base_topic, 'latest')),
                 },
             },
@@ -329,7 +330,7 @@ class HADiscovery(object):
 
             else:
                 # remove slashes
-                fs_mountpoint_safe = re.sub(r'/', '__', fs.mountpoint)
+                fs_mountpoint_safe = re.sub(r'/\.', '__', fs.mountpoint)
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
@@ -356,15 +357,15 @@ class HADiscovery(object):
                     label = t.label
 
 
-                t_key_safe = re.sub(r'[#+\$\*\>\ ]', '_', t_key)
-                label_safe = re.sub(r'[#+\$\*\>\ ]', '_', label)
+                t_key_safe = re.sub(r'[#+\$\*\>\.\ ]', '_', t_key)
+                label_safe = re.sub(r'[#+\$\*\>\.\ ]', '_', label)
 
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
                     'object_id' : '{0}_{1}_temp'.format(t_key_safe, label_safe),
                     'config' : {
-                        'name' : 'Sensor {0} {1}'.format(t_key_safe, label_safe),
+                        'name' : 'Thermal {0} {1}'.format(t_key, label),
                         'unit_of_measurement' : '°',
                         'unique_id' : 'indi_allsky_temp_{0}_{1}'.format(t_key_safe, label_safe),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),

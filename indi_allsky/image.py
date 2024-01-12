@@ -741,11 +741,11 @@ class ImageWorker(Process):
             for t_key in temp_info.keys():
                 for i, t in enumerate(temp_info[t_key]):
                     if self.config.get('TEMP_DISPLAY') == 'f':
-                        current_temp = ((t.current * 9.0 ) / 5.0) + 32
+                        current_temp = round(((t.current * 9.0 ) / 5.0) + 32, 1)
                     elif self.config.get('TEMP_DISPLAY') == 'k':
-                        current_temp = t.current + 273.15
+                        current_temp = round(t.current + 273.15, 1)
                     else:
-                        current_temp = float(t.current)
+                        current_temp = round(float(t.current), 1)
 
                     if not t.label:
                         # use index for label name
@@ -756,7 +756,7 @@ class ImageWorker(Process):
                     topic = 'temp/{0:s}/{1:s}'.format(t_key, label)
 
                     # no spaces, etc in topics
-                    topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
+                    topic_sub = re.sub(r'[#+\$\*\>\.\ ]', '_', topic)
 
                     mqtt_data[topic_sub] = current_temp
 
