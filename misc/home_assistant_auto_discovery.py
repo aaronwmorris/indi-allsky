@@ -365,7 +365,7 @@ class HADiscovery(object):
                     'component' : 'sensor',
                     'object_id' : '{0}_{1}_temp'.format(t_key_safe, label_safe),
                     'config' : {
-                        'name' : 'Sensor {0} {1}'.format(t_key, label),
+                        'name' : 'Thermal {0} {1}'.format(t_key, label),
                         'unit_of_measurement' : '°',
                         'unique_id' : 'indi_allsky_temp_{0}_{1}'.format(t_key_safe, label_safe),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),
