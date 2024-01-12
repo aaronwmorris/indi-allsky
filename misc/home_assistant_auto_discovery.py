@@ -329,7 +329,7 @@ class HADiscovery(object):
 
             else:
                 # remove slashes
-                fs_mountpoint_safe = re.sub(r'/', '__', fs.mountpoint)
+                fs_mountpoint_safe = re.sub(r'/\.', '__', fs.mountpoint)
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
@@ -356,15 +356,15 @@ class HADiscovery(object):
                     label = t.label
 
 
-                t_key_safe = re.sub(r'[#+\$\*\>\ ]', '_', t_key)
-                label_safe = re.sub(r'[#+\$\*\>\ ]', '_', label)
+                t_key_safe = re.sub(r'[#+\$\*\>\.\ ]', '_', t_key)
+                label_safe = re.sub(r'[#+\$\*\>\.\ ]', '_', label)
 
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
                     'object_id' : '{0}_{1}_temp'.format(t_key_safe, label_safe),
                     'config' : {
-                        'name' : 'Sensor {0} {1}'.format(t_key_safe, label_safe),
+                        'name' : 'Sensor {0} {1}'.format(t_key, label),
                         'unit_of_measurement' : '°',
                         'unique_id' : 'indi_allsky_temp_{0}_{1}'.format(t_key_safe, label_safe),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),
