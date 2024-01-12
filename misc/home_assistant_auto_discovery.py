@@ -96,6 +96,7 @@ class HADiscovery(object):
                     'name' : "indi-allsky Camera",
                     'unique_id' : 'indi_allsky_latest_{0}'.format(self.unique_id_base),
                     'content_type' : 'image/jpeg',
+                    #'content_type' : 'image/png',
                     'image_topic' : '/'.join((base_topic, 'latest')),
                 },
             },
