@@ -51,6 +51,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * Google Cloud Storage
         * Oracle OCI Storage
 * Publish data to an MQTT service for monitoring
+    * Home Assistant Auto-Discovery integration
 * Keograms
 * Star Trails
 * Automatic meteor/plane/satellite detection
