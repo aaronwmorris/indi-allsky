@@ -13,8 +13,6 @@ DISTRO_NAME=$(lsb_release -s -i)
 DISTRO_RELEASE=$(lsb_release -s -r)
 CPU_ARCH=$(uname -m)
 
-M_USERNAME="indi-allsky"
-
 echo
 echo "#########################################################"
 echo "### Welcome to the indi-allsky mosquitto setup script ###"
@@ -61,6 +59,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -72,6 +71,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -83,6 +83,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
@@ -94,6 +95,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -105,6 +107,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
@@ -116,6 +119,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
@@ -127,6 +131,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
@@ -138,6 +143,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
+        whiptail \
         ca-certificates
 
 else
@@ -216,14 +222,37 @@ sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
 
-echo
-echo "Please enter a password for the $M_USERNAME mqtt user"
-echo
+
+while [ -z "${M_USER:-}" ]; do
+    # shellcheck disable=SC2068
+    M_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username for mosquitto" 0 0 3>&1 1>&2 2>&3)
+done
+
+while [ -z "${M_PASS:-}" ]; do
+    # shellcheck disable=SC2068
+    M_PASS=$(whiptail --title "Password" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+
+    if [ "${#M_PASS}" -lt 8 ]; then
+        M_PASS=""
+        whiptail --msgbox "Error: Password needs to be at least 8 characters" 0 0
+        continue
+    fi
+
+
+    M_PASS2=$(whiptail --title "Password (#2)" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+
+    if [ "$M_PASS" != "$M_PASS2" ]; then
+        M_PASS=""
+        whiptail --msgbox "Error: Passwords did not match" 0 0
+        continue
+    fi
+done
+
 
 if [[ -f "/etc/mosquitto/passwd" ]]; then
-    sudo mosquitto_passwd /etc/mosquitto/passwd "$M_USERNAME"
+    sudo mosquitto_passwd -b /etc/mosquitto/passwd "$M_USER" "$M_PASS"
 else
-    sudo mosquitto_passwd -c /etc/mosquitto/passwd "$M_USERNAME"
+    sudo mosquitto_passwd -b -c /etc/mosquitto/passwd "$M_USER" "$M_PASS"
 fi
 
 
@@ -231,15 +260,15 @@ sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/passwd
 sudo chmod 640 /etc/mosquitto/passwd
 
 
-echo
-echo "Use this password in the indi-allsky configuration"
-echo
-
-
 sudo systemctl enable mosquitto
 sudo systemctl restart mosquitto
 
 
+echo
+echo "##################################################"
+echo "Username for mosquitto configuration: $M_USER"
+echo "##################################################"
+echo
 
 
 echo
