@@ -1033,6 +1033,14 @@ class ImageWorker(Process):
         #logger.info('Image type: %s', str(scaled_data.dtype))
         #logger.info('Image shape: %s', str(scaled_data.shape))
 
+
+        if not self.config.get('IMAGE_EXPORT_FLIP_V'):
+            scaled_data = self.image_processor._flip(scaled_data, 0)
+
+        if not self.config.get('IMAGE_EXPORT_FLIP_H'):
+            scaled_data = self.image_processor._flip(scaled_data, 1)
+
+
         write_img_start = time.time()
 
         if self.config['IMAGE_EXPORT_RAW'] in ('jpg', 'jpeg'):
