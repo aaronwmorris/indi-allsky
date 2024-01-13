@@ -1094,16 +1094,16 @@ class ImageProcessor(object):
         logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
 
-    def flip(self, cv2_axis):
-        self.image = cv2.flip(self.image, cv2_axis)
+    def _flip(self, data, cv2_axis):
+        return cv2.flip(data, cv2_axis)
 
 
     def flip_v(self):
-        self.flip(0)
+        self.image = self._flip(self.image, 0)
 
 
     def flip_h(self):
-        self.flip(1)
+        self.image = self._flip(self.image, 1)
 
 
     def detectLines(self):
