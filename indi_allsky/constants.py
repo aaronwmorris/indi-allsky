@@ -12,6 +12,7 @@ USER            = 9
 DARK_FRAME      = 10
 BPM_FRAME       = 11
 METADATA        = 12
+PANORAMA        = 13
 
 
 ENDPOINT_V1 = {
@@ -23,6 +24,7 @@ ENDPOINT_V1 = {
     STARTRAIL_VIDEO : 'sync/v1/startrailvideo',
     RAW_IMAGE       : 'sync/v1/rawimage',
     FITS_IMAGE      : 'sync/v1/fitsimage',
+    PANORAMA        : 'sync/v1/panoramaimage',
     #USER            : 'sync/v1/user',
 }
 
