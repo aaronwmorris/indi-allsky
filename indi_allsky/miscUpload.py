@@ -258,6 +258,48 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def upload_panorama(self, panorama_entry):
+        ### Upload video
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'):
+            logger.warning('Panorama uploading disabled')
+            return
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'camera_uuid'  : panorama_entry.camera.uuid,
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER'].format(**file_data_dict)
+
+
+        panorama_file_p = Path(panorama_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(panorama_file_p.name)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : panorama_entry.__class__.__name__,
+            'id'          : panorama_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
 
     def mqtt_publish_image(self, upload_filename, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
@@ -329,6 +371,10 @@ class miscUpload(object):
             #logger.warning('S3 uploading disabled')
             return
 
+        self.s3_upload_asset(*args)
+
+
+    def s3_upload_panorama(self, *args):
         self.s3_upload_asset(*args)
 
 
@@ -436,5 +482,9 @@ class miscUpload(object):
 
 
     def syncapi_startrailvideo(self, *args):
+        self.syncapi_video(*args)
+
+
+    def syncapi_panorama(self, *args):
         self.syncapi_video(*args)
 
