@@ -177,6 +177,8 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
         "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
+        "IMAGE_EXPORT_FLIP_V" : False,
+        "IMAGE_EXPORT_FLIP_H" : False,
         "IMAGE_STACK_METHOD"  : "maximum",  # maximum, average, or minimum
         "IMAGE_STACK_COUNT"   : 1,
         "IMAGE_STACK_ALIGN"   : False,

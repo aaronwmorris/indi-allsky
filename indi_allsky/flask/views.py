@@ -1006,6 +1006,8 @@ class ConfigView(FormView):
             'DAYTIME_GRAYSCALE'              : self.indi_allsky_config.get('DAYTIME_GRAYSCALE', False),
             'IMAGE_EXPORT_RAW'               : self.indi_allsky_config.get('IMAGE_EXPORT_RAW', ''),
             'IMAGE_EXPORT_FOLDER'            : self.indi_allsky_config.get('IMAGE_EXPORT_FOLDER', '/var/www/html/allsky/images/export'),
+            'IMAGE_EXPORT_FLIP_V'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_V', False),
+            'IMAGE_EXPORT_FLIP_H'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_H', False),
             'IMAGE_STACK_METHOD'             : self.indi_allsky_config.get('IMAGE_STACK_METHOD', 'maximum'),
             'IMAGE_STACK_COUNT'              : str(self.indi_allsky_config.get('IMAGE_STACK_COUNT', 1)),  # string in form, int in config
             'IMAGE_STACK_ALIGN'              : self.indi_allsky_config.get('IMAGE_STACK_ALIGN', False),
@@ -1555,6 +1557,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DAYTIME_GRAYSCALE']                    = bool(request.json['DAYTIME_GRAYSCALE'])
         self.indi_allsky_config['IMAGE_EXPORT_RAW']                     = str(request.json['IMAGE_EXPORT_RAW'])
         self.indi_allsky_config['IMAGE_EXPORT_FOLDER']                  = str(request.json['IMAGE_EXPORT_FOLDER'])
+        self.indi_allsky_config['IMAGE_EXPORT_FLIP_V']                  = bool(request.json['IMAGE_EXPORT_FLIP_V'])
+        self.indi_allsky_config['IMAGE_EXPORT_FLIP_H']                  = bool(request.json['IMAGE_EXPORT_FLIP_H'])
         self.indi_allsky_config['IMAGE_STACK_METHOD']                   = str(request.json['IMAGE_STACK_METHOD'])
         self.indi_allsky_config['IMAGE_STACK_COUNT']                    = int(request.json['IMAGE_STACK_COUNT'])
         self.indi_allsky_config['IMAGE_STACK_ALIGN']                    = bool(request.json['IMAGE_STACK_ALIGN'])

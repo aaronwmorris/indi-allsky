@@ -1544,6 +1544,32 @@
         <div class="col-sm-5">Folder to save raw exported images</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_EXPORT_FLIP_V(class='form-check-input') }}
+                <div id="IMAGE_EXPORT_FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPORT_FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_EXPORT_FLIP_H(class='form-check-input') }}
+                <div id="IMAGE_EXPORT_FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -3842,6 +3868,8 @@ const checkbox_field_names = [
     'IMAGE_CIRCLE_MASK__OUTLINE',
     'FISH2PANO__ENABLE',
     'FISH2PANO__INPLACE',
+    'IMAGE_EXPORT_FLIP_V',
+    'IMAGE_EXPORT_FLIP_H',
     'IMAGE_SAVE_FITS',
     'IMAGE_STACK_ALIGN',
     'IMAGE_STACK_SPLIT',
