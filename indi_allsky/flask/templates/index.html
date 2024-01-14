@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}indi-allsky: Latest{% endblock %}
+{% block title %}indi-allsky: {{ title }}{% endblock %}
 
 {% block head %}
 <meta charset="UTF-8">
@@ -72,7 +72,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for('indi_allsky.js_latest_image_view') }}", {'limit_s' : max_age, 'night' : night}, function() {});
+    loadJS("{{ url_for(latest_image_view) }}", {'limit_s' : max_age, 'night' : night}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 

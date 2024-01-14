@@ -49,6 +49,7 @@ from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
+from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -111,8 +112,15 @@ bp_allsky = Blueprint(
 
 
 class IndexView(TemplateView):
+    title = 'Latest'
+    latest_image_view = 'indi_allsky.js_latest_image_view'
+
+
     def get_context(self):
         context = super(IndexView, self).get_context()
+
+        context['title'] = self.title
+        context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
@@ -121,6 +129,10 @@ class IndexView(TemplateView):
 
 
 class JsonLatestImageView(JsonView):
+    model = IndiAllSkyDbImageTable
+    latest_image_t = 'images/latest.{0}'
+
+
     def __init__(self, **kwargs):
         super(JsonLatestImageView, self).__init__(**kwargs)
 
@@ -181,7 +193,7 @@ class JsonLatestImageView(JsonView):
                         return data
 
                 # images are not stored in the DB in this condition
-                latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+                latest_image_uri = Path(self.latest_image_t.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
 
                 image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
                 latest_image_p = image_dir.joinpath(latest_image_uri.name)
@@ -213,12 +225,12 @@ class JsonLatestImageView(JsonView):
     def getLatestImage(self, camera_id, history_seconds):
         now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
 
-        latest_image_q = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        latest_image_q = self.model.query\
+            .join(self.model.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > now_minus_seconds,
+                    self.model.createDate > now_minus_seconds,
                 )
             )
 
@@ -234,14 +246,14 @@ class JsonLatestImageView(JsonView):
                 latest_image_q = latest_image_q\
                     .filter(
                         or_(
-                            IndiAllSkyDbImageTable.remote_url != sa_null(),
-                            IndiAllSkyDbImageTable.s3_key != sa_null(),
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
                         )
                     )
 
 
         latest_image = latest_image_q\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .order_by(self.model.createDate.desc())\
             .first()
 
 
@@ -257,6 +269,16 @@ class JsonLatestImageView(JsonView):
 
 
         return str(url)
+
+
+class PanoramaView(IndexView):
+    title = 'Panorama'
+    latest_image_view = 'indi_allsky.js_latest_panorama_view'
+
+
+class JsonLatestPanoramaView(JsonLatestImageView):
+    model = IndiAllSkyDbPanoramaImageTable
+    latest_image_t = 'images/panorama.{0}'
 
 
 class PublicIndexView(BaseView):
@@ -5078,48 +5100,64 @@ def images_folder(path):
     return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
 
 
-
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
-bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
-bp_allsky.add_url_rule('/gallery', view_func=ImageViewerView.as_view('gallery_view', template_name='gallery.html'))
-bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
-bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
-bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
+bp_allsky.add_url_rule('/panorama', view_func=PanoramaView.as_view('panorama_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
+
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
+
+bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
+
 bp_allsky.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
 bp_allsky.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
-bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
+
+bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
+bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
+bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
+
+bp_allsky.add_url_rule('/gallery', view_func=ImageViewerView.as_view('gallery_view', template_name='gallery.html'))
+
+bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
+bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+
 bp_allsky.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
+bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+
+bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
+bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+
+bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
+bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+
 bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
 bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))
-bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_view', template_name='cameraLens.html'))
+
 bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropanel_view', template_name='astropanel.html'))
+bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
+
+bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
+bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
+
+bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_view', template_name='cameraLens.html'))
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
-bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
-bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
-bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
-bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
-bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
-bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
-bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
-bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
-bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
-bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
 bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as_view('ajax_upload_youtube_view'))
 
 # youtube
