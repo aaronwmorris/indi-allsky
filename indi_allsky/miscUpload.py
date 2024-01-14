@@ -264,10 +264,10 @@ class miscUpload(object):
             return
 
 
-        panorama_remain = panorama_entry.id % int(self.config['FILETRANSFER'].get('UPLOAD_PANORAMA', 1))
+        panorama_remain = panorama_entry.id % int(self.config['FILETRANSFER']['UPLOAD_PANORAMA'])
         if panorama_remain != 0:
-            next_panorama = int(self.config['FILETRANSFER'].get('UPLOAD_PANORAMA', 1)) - panorama_remain
-            logger.info('Next panorama upload in %d images (%d s)', next_panorama, int(self.config['EXPOSURE_PERIOD'] * next_panorama))
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_PANORAMA']) - panorama_remain
+            logger.info('Next panorama upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
 
@@ -408,7 +408,6 @@ class miscUpload(object):
 
 
     def syncapi_image(self, asset_entry, asset_metadata):
-        ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
@@ -428,9 +427,9 @@ class miscUpload(object):
             return
 
 
-        image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
+        image_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_IMAGE'])
         if image_remain != 0:
-            next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
+            next_image = int(self.config['SYNCAPI']['UPLOAD_IMAGE']) - image_remain
             logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
@@ -498,6 +497,48 @@ class miscUpload(object):
         self.syncapi_video(*args)
 
 
-    def syncapi_panorama(self, *args):
-        self.syncapi_video(*args)
+    def syncapi_panorama(self, asset_entry, asset_metadata):
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        if self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is uploaded after s3 upload
+            return
+
+
+        if not asset_entry:
+            # image was not saved
+            return
+
+
+        if not self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'):
+            #logger.warning('Image syncing disabled')
+            return
+
+
+        panorama_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_PANORAMA'])
+        if panorama_remain != 0:
+            next_image = int(self.config['SYNCAPI']['UPLOAD_PANORAMA']) - panorama_remain
+            logger.info('Next panorama sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : asset_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 
