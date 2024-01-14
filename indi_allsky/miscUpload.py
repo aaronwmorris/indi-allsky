@@ -259,28 +259,41 @@ class miscUpload(object):
 
 
     def upload_panorama(self, panorama_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'):
             logger.warning('Panorama uploading disabled')
             return
 
 
-        now = datetime.now()
+        panorama_remain = panorama_entry.id % int(self.config['FILETRANSFER'].get('UPLOAD_PANORAMA', 1))
+        if panorama_remain != 0:
+            next_panorama = int(self.config['FILETRANSFER'].get('UPLOAD_PANORAMA', 1)) - panorama_remain
+            logger.info('Next panorama upload in %d images (%d s)', next_panorama, int(self.config['EXPOSURE_PERIOD'] * next_panorama))
+            return
+
+
+        # Parameters for string formatting
+        file_data_list = [
+            self.config['IMAGE_FILE_TYPE'],
+        ]
+
 
         # Parameters for string formatting
         file_data_dict = {
-            'timestamp'    : now,
-            'ts'           : now,  # shortcut
+            'timestamp'    : panorama_entry.createDate,
+            'ts'           : panorama_entry.createDate,  # shortcut
+            'ext'          : self.config['IMAGE_FILE_TYPE'],
             'camera_uuid'  : panorama_entry.camera.uuid,
+            'day_date'     : panorama_entry.dayDate,
         }
+
 
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_PANORAMA_NAME'].format(*file_data_list, **file_data_dict)
 
 
-        panorama_file_p = Path(panorama_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(panorama_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
         # tell worker to upload file
         jobdata = {
