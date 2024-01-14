@@ -514,8 +514,14 @@ class SqmView(TemplateView):
 
 
 class ImageLoopView(TemplateView):
+    title = 'Loop'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
+
     def get_context(self):
         context = super(ImageLoopView, self).get_context()
+
+        context['title'] = self.title
+        context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
@@ -528,6 +534,8 @@ class ImageLoopView(TemplateView):
 
 
 class JsonImageLoopView(JsonView):
+    model = IndiAllSkyDbImageTable
+
     def __init__(self, **kwargs):
         super(JsonImageLoopView, self).__init__(**kwargs)
 
@@ -563,13 +571,13 @@ class JsonImageLoopView(JsonView):
     def getLoopImages(self, camera_id, loop_dt, history_seconds):
         ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
 
-        latest_images_q = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        latest_images_q = self.model.query\
+            .join(self.model.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > ts_minus_seconds,
-                    IndiAllSkyDbImageTable.createDate < loop_dt,
+                    self.model.createDate > ts_minus_seconds,
+                    self.model.createDate < loop_dt,
                 )
             )
 
@@ -585,14 +593,14 @@ class JsonImageLoopView(JsonView):
                 latest_images_q = latest_images_q\
                     .filter(
                         or_(
-                            IndiAllSkyDbImageTable.remote_url != sa_null(),
-                            IndiAllSkyDbImageTable.s3_key != sa_null(),
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
                         )
                     )
 
 
         latest_images = latest_images_q\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .order_by(self.model.createDate.desc())\
             .limit(self.limit)
 
 
@@ -606,10 +614,19 @@ class JsonImageLoopView(JsonView):
 
             data = {
                 'url'        : str(url),
-                'sqm'        : i.sqm,
-                'stars'      : i.stars,
-                'detections' : i.detections,
             }
+
+
+            try:
+                data['sqm'] = i.sqm
+                data['stars'] = i.stars
+                data['detections'] = i.detections
+            except AttributeError:
+                # view is reused for panoramas
+                data['sqm'] = 0
+                data['stars'] = 0
+                data['detections'] = 0
+
 
             image_list.append(data)
 
@@ -619,18 +636,18 @@ class JsonImageLoopView(JsonView):
     def getSqmData(self, camera_id, ts_dt):
         ts_minus_minutes = ts_dt - timedelta(minutes=self.sqm_history_minutes)
 
-        sqm_images = IndiAllSkyDbImageTable.query\
+        sqm_images = self.model.query\
             .add_columns(
-                func.max(IndiAllSkyDbImageTable.sqm).label('image_max_sqm'),
-                func.min(IndiAllSkyDbImageTable.sqm).label('image_min_sqm'),
-                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+                func.max(self.model.sqm).label('image_max_sqm'),
+                func.min(self.model.sqm).label('image_min_sqm'),
+                func.avg(self.model.sqm).label('image_avg_sqm'),
             )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > ts_minus_minutes,
-                    IndiAllSkyDbImageTable.createDate < ts_dt,
+                    self.model.createDate > ts_minus_minutes,
+                    self.model.createDate < ts_dt,
                 )
             )\
             .first()
@@ -648,18 +665,18 @@ class JsonImageLoopView(JsonView):
     def getStarsData(self, camera_id, ts_dt):
         ts_minus_minutes = ts_dt - timedelta(minutes=self.stars_history_minutes)
 
-        stars_images = IndiAllSkyDbImageTable.query\
+        stars_images = self.model.query\
             .add_columns(
-                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
-                func.min(IndiAllSkyDbImageTable.stars).label('image_min_stars'),
-                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.max(self.model.stars).label('image_max_stars'),
+                func.min(self.model.stars).label('image_min_stars'),
+                func.avg(self.model.stars).label('image_avg_stars'),
             )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbImageTable.createDate > ts_minus_minutes,
-                    IndiAllSkyDbImageTable.createDate < ts_dt,
+                    self.model.createDate > ts_minus_minutes,
+                    self.model.createDate < ts_dt,
                 )
             )\
             .first()
@@ -669,6 +686,35 @@ class JsonImageLoopView(JsonView):
             'max' : stars_images.image_max_stars,
             'min' : stars_images.image_min_stars,
             'avg' : stars_images.image_avg_stars,
+        }
+
+        return stars_data
+
+
+class PanoramaLoopView(ImageLoopView):
+    title = 'Panorama Loop'
+    image_loop_view = 'indi_allsky.js_panorama_loop_view'
+
+
+class JsonPanoramaLoopView(JsonImageLoopView):
+    model = IndiAllSkyDbPanoramaImageTable
+
+
+    def getSqmData(self, *args):
+        sqm_data = {
+            'max' : 0,
+            'min' : 0,
+            'avg' : 0,
+        }
+
+        return sqm_data
+
+
+    def getStarsData(self, *args):
+        stars_data = {
+            'max' : 0,
+            'min' : 0,
+            'avg' : 0,
         }
 
         return stars_data
@@ -5107,6 +5153,8 @@ bp_allsky.add_url_rule('/js/panorama', view_func=JsonLatestPanoramaView.as_view(
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
+bp_allsky.add_url_rule('/panoramaloop', view_func=PanoramaLoopView.as_view('panorama_loop_view', template_name='loop.html'))
+bp_allsky.add_url_rule('/js/panoramaloop', view_func=JsonPanoramaLoopView.as_view('js_panorama_loop_view'))
 
 bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 
