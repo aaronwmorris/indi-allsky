@@ -157,6 +157,7 @@ class FileUploader(Thread):
         remove_local = task.data.get('remove_local')
 
         metadata = task.data.get('metadata')
+        image_topic = task.data.get('image_topic')  # mq specific
 
 
         if entry_model and entry_id:
@@ -274,6 +275,7 @@ class FileUploader(Thread):
 
             put_kwargs = {
                 'local_file'  : local_file_p,
+                'image_topic' : image_topic,
                 'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                 'qos'         : self.config['MQTTPUBLISH']['QOS'],
                 'mq_data'     : metadata,

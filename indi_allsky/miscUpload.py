@@ -314,7 +314,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def mqtt_publish_image(self, upload_filename, mq_data):
+    def mqtt_publish_image(self, upload_filename, image_topic, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')
             return
@@ -323,6 +323,7 @@ class miscUpload(object):
         jobdata = {
             'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
+            'image_topic' : image_topic,
             'metadata'    : mq_data,
         }
 

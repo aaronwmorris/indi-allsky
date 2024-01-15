@@ -672,6 +672,8 @@ class ImageWorker(Process):
 
         if latest_file:
             # build mqtt data
+            mq_topic_latest = 'latest'
+
             mqtt_data = {
                 'exposure' : round(exposure, 6),
                 'gain'     : self.gain_v.value,
@@ -770,7 +772,7 @@ class ImageWorker(Process):
 
             self._miscUpload.s3_upload_image(image_entry, image_metadata)
             self._miscUpload.syncapi_image(image_entry, image_metadata)
-            self._miscUpload.mqtt_publish_image(upload_filename, mqtt_data)
+            self._miscUpload.mqtt_publish_image(upload_filename, mq_topic_latest, mqtt_data)
             self._miscUpload.upload_image(image_entry)
 
             self.upload_metadata(i_ref, adu, adu_average)
