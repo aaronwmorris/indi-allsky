@@ -55,6 +55,10 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
                             <li>
+                                <a href="{{ url_for('indi_allsky.panorama_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/aspect-ratio.svg') }}" width="16" height="16" alt="Astropanel"><span class="ms-1 d-none d-sm-inline">Panorama</span></a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.astropanel_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/newspaper.svg') }}" width="16" height="16" alt="Astropanel"><span class="ms-1 d-none d-sm-inline">Astropanel</span></a>
                             </li>
