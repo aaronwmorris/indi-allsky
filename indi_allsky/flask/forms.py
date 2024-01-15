@@ -48,6 +48,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbPanoramaImageTable
 
 from . import db
 
@@ -2841,6 +2842,20 @@ class IndiAllskyImageViewer(FlaskForm):
                 # this can happen when RAW files are exported outside of the document root
                 image_dict['raw'] = None
                 image_dict['raw_id'] = None
+
+
+            # look for panorama
+            try:
+                panorama_image = IndiAllSkyDbPanoramaImageTable.query\
+                    .filter(IndiAllSkyDbPanoramaImageTable.createDate == img.createDate)\
+                    .one()
+
+                image_dict['panorama'] = str(panorama_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['panorama_id'] = panorama_image.id
+            except NoResultFound:
+                image_dict['panorama'] = None
+                image_dict['panorama_id'] = None
+
 
             images_data.append(image_dict)
 
