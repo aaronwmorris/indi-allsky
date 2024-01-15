@@ -1416,7 +1416,7 @@ class ImageWorker(Process):
 
 
         panorama_metadata = {
-            'type'       : constants.RAW_IMAGE,
+            'type'       : constants.PANORAMA_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
