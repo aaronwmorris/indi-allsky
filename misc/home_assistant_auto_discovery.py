@@ -275,8 +275,21 @@ class HADiscovery(object):
                     'state_topic' : '/'.join((base_topic, 'sidereal_time')),
                 },
             },
-
         ]
+
+
+        if self.config['FISH2PANO'].get('ENABLE'):
+            basic_sensor_list.append({
+                'component' : 'image',
+                'object_id' : 'panorama',
+                'config' : {
+                    'name' : "indi-allsky Panorama",
+                    'unique_id' : 'indi_allsky_panorama_{0}'.format(self.unique_id_base),
+                    'content_type' : 'image/jpeg',
+                    #'content_type' : 'image/png',
+                    'image_topic' : '/'.join((base_topic, 'panorama')),
+                },
+            })
 
 
         extended_sensor_list = [

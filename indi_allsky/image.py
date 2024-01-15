@@ -1465,6 +1465,7 @@ class ImageWorker(Process):
 
         self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
         self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)
+        self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
         self._miscUpload.upload_panorama(panorama_entry)
 
 
