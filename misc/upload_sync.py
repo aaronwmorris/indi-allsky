@@ -443,7 +443,7 @@ class UploadSync(object):
                     else:
                         panorama_metadata['data'] = dict()
 
-                    self._miscUpload.syncapi_panorama(entry, video_metadata)
+                    self._miscUpload.syncapi_panorama(entry, panorama_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     video_metadata = {
                         'type'          : constants.VIDEO,
