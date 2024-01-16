@@ -48,6 +48,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbPanoramaImageTable
 
 from . import db
 
@@ -2419,8 +2420,10 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__TIMEOUT            = FloatField('Read Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__CERT_BYPASS        = BooleanField('Disable Certificate Validation')
     FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])
-    FILETRANSFER__REMOTE_IMAGE_NAME  = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
+    FILETRANSFER__REMOTE_IMAGE_NAME        = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
+    FILETRANSFER__REMOTE_PANORAMA_NAME     = StringField('Remote Panorama Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
     FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_PANORAMA_FOLDER   = StringField('Remote Panorama Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_METADATA_NAME     = StringField('Remote Metadata Name', validators=[DataRequired(), FILETRANSFER__REMOTE_METADATA_NAME_validator])
     FILETRANSFER__REMOTE_METADATA_FOLDER   = StringField('Remote Metadata Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
@@ -2429,6 +2432,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER = StringField('Remote Star Trail Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER = StringField('Remote EndOfNight Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
+    FILETRANSFER__UPLOAD_PANORAMA    = IntegerField('Transfer panoramas', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_METADATA    = BooleanField('Transfer metadata')
     FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
@@ -2472,6 +2476,7 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__POST_S3                 = BooleanField('Sync after S3 Upload')
     SYNCAPI__EMPTY_FILE              = BooleanField('Sync empty file')
     SYNCAPI__UPLOAD_IMAGE            = IntegerField('Transfer images', validators=[SYNCAPI__UPLOAD_IMAGE_validator])
+    SYNCAPI__UPLOAD_PANORAMA         = IntegerField('Transfer panoramas', validators=[SYNCAPI__UPLOAD_IMAGE_validator])
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
@@ -2837,6 +2842,20 @@ class IndiAllskyImageViewer(FlaskForm):
                 # this can happen when RAW files are exported outside of the document root
                 image_dict['raw'] = None
                 image_dict['raw_id'] = None
+
+
+            # look for panorama
+            try:
+                panorama_image = IndiAllSkyDbPanoramaImageTable.query\
+                    .filter(IndiAllSkyDbPanoramaImageTable.createDate == img.createDate)\
+                    .one()
+
+                image_dict['panorama'] = str(panorama_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['panorama_id'] = panorama_image.id
+            except NoResultFound:
+                image_dict['panorama'] = None
+                image_dict['panorama_id'] = None
+
 
             images_data.append(image_dict)
 

@@ -604,7 +604,7 @@ class ImageWorker(Process):
             elif self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
                 pano_data = self.image_processor.fish2pano()
 
-                self.write_panorama_img(pano_data, jpeg_exif=jpeg_exif)
+                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 
 
@@ -672,6 +672,8 @@ class ImageWorker(Process):
 
         if latest_file:
             # build mqtt data
+            mq_topic_latest = 'latest'
+
             mqtt_data = {
                 'exposure' : round(exposure, 6),
                 'gain'     : self.gain_v.value,
@@ -770,7 +772,7 @@ class ImageWorker(Process):
 
             self._miscUpload.s3_upload_image(image_entry, image_metadata)
             self._miscUpload.syncapi_image(image_entry, image_metadata)
-            self._miscUpload.mqtt_publish_image(upload_filename, mqtt_data)
+            self._miscUpload.mqtt_publish_image(upload_filename, mq_topic_latest, mqtt_data)
             self._miscUpload.upload_image(image_entry)
 
             self.upload_metadata(i_ref, adu, adu_average)
@@ -1341,7 +1343,9 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def write_panorama_img(self, pano_data, jpeg_exif=None):
+    def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
+        panorama_height, panorama_width = pano_data.shape[:2]
+
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1387,6 +1391,82 @@ class ImageWorker(Process):
 
         shutil.copy2(str(tmpfile_name), str(latest_pano_file))
         latest_pano_file.chmod(0o644)
+
+
+        ### disable timelapse images in focus mode
+        if self.config.get('FOCUS_MODE', False):
+            logger.warning('Focus mode enabled, not saving timelapse image')
+            tmpfile_name.unlink()
+            return
+
+
+        ### Do not write daytime image files if daytime timelapse is disabled
+        if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
+            tmpfile_name.unlink()
+            return
+
+
+        ### Write the panorama file
+        folder = self.getImageFolder(i_ref['exp_date'], camera)
+
+
+        panorama_filename_t = 'panorama_{0:s}'.format(self.filename_t)
+        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
+        filename = folder.joinpath(panorama_filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
+
+        #logger.info('Panorama filename: %s', filename)
+
+
+        panorama_metadata = {
+            'type'       : constants.PANORAMA_IMAGE,
+            'createDate' : i_ref['exp_date'].timestamp(),
+            'exposure'   : i_ref['exposure'],
+            'gain'       : self.gain_v.value,
+            'binmode'    : self.bin_v.value,
+            'night'      : bool(self.night_v.value),
+            'height'     : panorama_height,
+            'width'      : panorama_width,
+            'camera_uuid': i_ref['camera_uuid'],
+        }
+
+        panorama_metadata['data'] = {
+            'moonmode'        : bool(self.moonmode_v.value),
+            'moonphase'       : self.astrometric_data['moon_phase'],
+            'sqm'             : i_ref['sqm_value'],
+            'stars'           : len(i_ref['stars']),
+            'detections'      : len(i_ref['lines']),
+            'kpindex'         : i_ref['kpindex'],
+            'ovation_max'     : i_ref['ovation_max'],
+            'smoke_rating'    : i_ref['smoke_rating'],
+        }
+
+
+        panorama_entry = self._miscDb.addPanoramaImage(
+            filename.relative_to(self.image_dir),
+            i_ref['camera_id'],
+            panorama_metadata,
+        )
+
+
+        if filename.exists():
+            logger.error('File exists: %s (skipping)', filename)
+            tmpfile_name.unlink()
+            return
+
+
+        shutil.copy2(str(tmpfile_name), str(filename))
+        filename.chmod(0o644)
+
+        tmpfile_name.unlink()
+
+
+        # set mtime to original exposure time
+        #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
+
+        self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
+        self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)
+        self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
+        self._miscUpload.upload_panorama(panorama_entry)
 
 
     def calculate_exposure(self, adu, exposure):

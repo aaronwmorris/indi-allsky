@@ -31,6 +31,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
+from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbUserTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -571,7 +572,7 @@ class SyncApiRawImageView(SyncApiImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbRawImageTable
-    filename_t = 'ccd{0:d}_{1:s}{2:s}'
+    filename_t = 'raw_ccd{0:d}_{1:s}{2:s}'
     add_function = 'addRawImage'
 
     # fixme need processImage/getImageFolder function for export folder
@@ -583,6 +584,14 @@ class SyncApiFitsImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbFitsImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'
     add_function = 'addFitsImage'
+
+
+class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
+    decorators = []
+
+    model = IndiAllSkyDbPanoramaImageTable
+    filename_t = 'panorama_ccd{0:d}_{1:s}{2:s}'
+    add_function = 'addPanoramaImage'
 
 
 class EntryExists(Exception):
@@ -605,4 +614,5 @@ bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailV
 bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/rawimage', view_func=SyncApiRawImageView.as_view('syncapi_v1_rawimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/fitsimage', view_func=SyncApiFitsImageView.as_view('syncapi_v1_fitsimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/panoramaimage', view_func=SyncApiPanoramaImageView.as_view('syncapi_v1_panoramaimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 

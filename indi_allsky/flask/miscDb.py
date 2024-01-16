@@ -20,6 +20,7 @@ from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
+from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
 
@@ -688,6 +689,63 @@ class miscDb(object):
         db.session.commit()
 
         return raw_image
+
+
+    def addPanoramaImage(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'exposure'
+        #    'gain'
+        #    'binmode'
+        #    'night'
+        #    'width'
+        #    'height'
+        #}
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
+        logger.info('Adding fits image %s to DB', filename_p)
+
+
+        panorama_image = IndiAllSkyDbPanoramaImageTable(
+            camera_id=camera_id,
+            filename=str(filename_p),
+            createDate=createDate,
+            exposure=metadata['exposure'],
+            gain=metadata['gain'],
+            binmode=metadata['binmode'],
+            dayDate=dayDate,
+            night=metadata['night'],
+            height=metadata['height'],
+            width=metadata['width'],
+            data=metadata.get('data', {}),
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
+        )
+
+        db.session.add(panorama_image)
+        db.session.commit()
+
+        return panorama_image
 
 
     def getCurrentCameraId(self):

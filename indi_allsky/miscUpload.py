@@ -258,8 +258,63 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def upload_panorama(self, panorama_entry):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'):
+            logger.warning('Panorama uploading disabled')
+            return
 
-    def mqtt_publish_image(self, upload_filename, mq_data):
+
+        panorama_remain = panorama_entry.id % int(self.config['FILETRANSFER']['UPLOAD_PANORAMA'])
+        if panorama_remain != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_PANORAMA']) - panorama_remain
+            logger.info('Next panorama upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        # Parameters for string formatting
+        file_data_list = [
+            self.config['IMAGE_FILE_TYPE'],
+        ]
+
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : panorama_entry.createDate,
+            'ts'           : panorama_entry.createDate,  # shortcut
+            'ext'          : self.config['IMAGE_FILE_TYPE'],
+            'camera_uuid'  : panorama_entry.camera.uuid,
+            'day_date'     : panorama_entry.dayDate,
+        }
+
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_PANORAMA_NAME'].format(*file_data_list, **file_data_dict)
+
+
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : panorama_entry.__class__.__name__,
+            'id'          : panorama_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def mqtt_publish_image(self, upload_filename, image_topic, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')
             return
@@ -268,6 +323,7 @@ class miscUpload(object):
         jobdata = {
             'action'      : constants.TRANSFER_MQTT,
             'local_file'  : str(upload_filename),
+            'image_topic' : image_topic,
             'metadata'    : mq_data,
         }
 
@@ -332,6 +388,10 @@ class miscUpload(object):
         self.s3_upload_asset(*args)
 
 
+    def s3_upload_panorama(self, *args):
+        self.s3_upload_asset(*args)
+
+
     def s3_upload_video(self, *args):
         self.s3_upload_asset(*args)
 
@@ -349,7 +409,6 @@ class miscUpload(object):
 
 
     def syncapi_image(self, asset_entry, asset_metadata):
-        ### sync camera
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
@@ -369,9 +428,9 @@ class miscUpload(object):
             return
 
 
-        image_remain = asset_entry.id % int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1))
+        image_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_IMAGE'])
         if image_remain != 0:
-            next_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE', 1)) - image_remain
+            next_image = int(self.config['SYNCAPI']['UPLOAD_IMAGE']) - image_remain
             logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
@@ -437,4 +496,50 @@ class miscUpload(object):
 
     def syncapi_startrailvideo(self, *args):
         self.syncapi_video(*args)
+
+
+    def syncapi_panorama(self, asset_entry, asset_metadata):
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            return
+
+
+        if self.config.get('SYNCAPI', {}).get('POST_S3'):
+            # file is uploaded after s3 upload
+            return
+
+
+        if not asset_entry:
+            # image was not saved
+            return
+
+
+        if not self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'):
+            #logger.warning('Image syncing disabled')
+            return
+
+
+        panorama_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_PANORAMA'])
+        if panorama_remain != 0:
+            next_image = int(self.config['SYNCAPI']['UPLOAD_PANORAMA']) - panorama_remain
+            logger.info('Next panorama sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_SYNC_V1,
+            'model'       : asset_entry.__class__.__name__,
+            'id'          : asset_entry.id,
+            'metadata'    : asset_metadata,
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
 

@@ -200,6 +200,7 @@ function closeFullscreen() {
         <span id="fits_download"></span>
         <span id="fits_processing"></span>
         <span id="raw_download"></span>
+        <span id="panorama_download"></span>
     </div>
 </div>
 
@@ -645,7 +646,7 @@ function init() {
                 }).html(
                     $('<span />', {
                         'text'  : 'Chart',
-                        'class' : "badge pill bg-success",
+                        'class' : "badge pill bg-secondary",
                     })
                 )
             );
@@ -703,11 +704,32 @@ function init() {
             } else {
                 $('#raw_download').empty();
             };
+
+            // Add panorama download link if it exists
+            if (image_data[image_index]['panorama']) {
+                $('#panorama_download').html(
+                    $('<a />', {
+                        'href'   : image_data[image_index]['panorama'],
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Panorama',
+                            'class' : "badge pill bg-success",
+                        })
+                    )
+                );
+            } else {
+                $('#panorama_download').empty();
+            };
+
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
             $('#fits_processing').empty();
             $('#raw_download').empty();
+            $('#panorama_download').empty();
         };
 
     };
