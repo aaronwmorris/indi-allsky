@@ -35,6 +35,7 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
+from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 
 
 from indi_allsky import constants
@@ -219,6 +220,8 @@ class UploadSync(object):
             if x['upload_type'] == 'upload':
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
                     self._miscUpload.upload_image(entry)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaImageTable':
+                    self._miscUpload.upload_panorama(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     self._miscUpload.upload_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
@@ -351,7 +354,6 @@ class UploadSync(object):
                         fits_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_fits(entry, fits_metadata)
-
                 elif x['table'].__name__ == 'IndiAllSkyDbRawImageTable':
                     raw_metadata = {
                         'type'       : constants.RAW_IMAGE,
@@ -364,12 +366,28 @@ class UploadSync(object):
                     }
 
                     if entry.data:
-                        fits_metadata['data'] = dict(entry.data)
+                        raw_metadata['data'] = dict(entry.data)
                     else:
-                        fits_metadata['data'] = dict()
+                        raw_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_raw(entry, raw_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaImageTable':
+                    panorama_metadata = {
+                        'type'       : constants.PANORAMA_IMAGE,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
 
+                    if entry.data:
+                        panorama_metadata['data'] = dict(entry.data)
+                    else:
+                        panorama_metadata['data'] = dict()
+
+                    self._miscUpload.s3_upload_panorama(entry, panorama_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -409,6 +427,23 @@ class UploadSync(object):
                         image_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_image(entry, image_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaImageTable':
+                    panorama_metadata = {
+                        'type'          : constants.PANORAMA_IMAGE,
+                        'createDate'    : entry.createDate.timestamp(),
+                        'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'night'         : entry.night,
+                        'width'         : entry.width,
+                        'height'        : entry.height,
+                        'camera_uuid'   : entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        panorama_metadata['data'] = dict(entry.data)
+                    else:
+                        panorama_metadata['data'] = dict()
+
+                    self._miscUpload.syncapi_panorama(entry, video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     video_metadata = {
                         'type'          : constants.VIDEO,
@@ -539,15 +574,25 @@ class UploadSync(object):
 
 
         if self.upload_images:
+            # Images
             upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
             if upload_image:
-                uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
-                not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
-                status_dict['upload'][IndiAllSkyDbImageTable] = [uploaded, not_uploaded]
+                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
+                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+                status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
             else:
                 logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
                 status_dict['upload'][IndiAllSkyDbImageTable] = None
 
+            # Panoramas
+            upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
+            if upload_panorama:
+                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True)
+                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
+            else:
+                logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
 
 
         # s3
@@ -557,6 +602,7 @@ class UploadSync(object):
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
             IndiAllSkyDbImageTable,
+            IndiAllSkyDbPanoramaImageTable,
         ]
         for table in s3_table_list:
             # s3
@@ -607,17 +653,32 @@ class UploadSync(object):
 
 
         if self.config.get('SYNCAPI', {}).get('ENABLE'):
+            # Images
             syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
             if syncapi_image:
-                syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
-                not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
-                status_dict['syncapi'][IndiAllSkyDbImageTable] = [syncapi_entries, not_syncapi_entries]
+                i_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
+                i_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
+                status_dict['syncapi'][IndiAllSkyDbImageTable] = [i_syncapi_entries, i_not_syncapi_entries]
             else:
                 logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
                 status_dict['syncapi'][IndiAllSkyDbImageTable] = None
+
+            # Panorama
+            syncapi_panorama = int(self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'))
+            if syncapi_image:
+                p_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=True)
+                p_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=False)
+                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = [p_syncapi_entries, p_not_syncapi_entries]
+            else:
+                logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
+                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
+
         else:
             logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
             status_dict['syncapi'][IndiAllSkyDbImageTable] = None
+
+            logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
+            status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
 
 
         return status_dict
