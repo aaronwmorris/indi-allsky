@@ -61,6 +61,8 @@ class HADiscovery(object):
         tls = self.config['MQTTPUBLISH']['TLS']
         cert_bypass = self.config['MQTTPUBLISH'].get('CERT_BYPASS', True)
 
+        base_topic  = self.config['MQTTPUBLISH']['BASE_TOPIC']
+
 
         if port:
             self._port = port
@@ -78,14 +80,14 @@ class HADiscovery(object):
         print('TLS: {0}'.format(str(tls)))
         print('Username: {0}'.format(username))
         print('')
+        print('Auto-discovery base topic: {0}'.format(self.discovery_base_topic))
+        print('indi-allsky base topic:    {0}'.format(base_topic))
+        print('')
 
         print('Setup proceeding in 10 seconds... (control-c to cancel)')
 
 
         time.sleep(10.0)
-
-
-        base_topic  = self.config['MQTTPUBLISH']['BASE_TOPIC']
 
 
         basic_sensor_list = [
