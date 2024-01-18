@@ -61,6 +61,8 @@ class HADiscovery(object):
         tls = self.config['MQTTPUBLISH']['TLS']
         cert_bypass = self.config['MQTTPUBLISH'].get('CERT_BYPASS', True)
 
+        base_topic  = self.config['MQTTPUBLISH']['BASE_TOPIC']
+
 
         if port:
             self._port = port
@@ -78,6 +80,9 @@ class HADiscovery(object):
         print('TLS: {0}'.format(str(tls)))
         print('Username: {0}'.format(username))
         print('')
+        print('Auto-discovery base topic: {0}'.format(self.discovery_base_topic))
+        print('indi-allsky base topic:    {0}'.format(base_topic))
+        print('')
 
         print('Setup proceeding in 10 seconds... (control-c to cancel)')
 
@@ -85,13 +90,10 @@ class HADiscovery(object):
         time.sleep(10.0)
 
 
-        base_topic  = self.config['MQTTPUBLISH']['BASE_TOPIC']
-
-
         basic_sensor_list = [
             {
                 'component' : 'image',
-                'object_id' : 'latest',
+                'object_id' : 'indi_allsky_latest',
                 'config' : {
                     'name' : "indi-allsky Camera",
                     'unique_id' : 'indi_allsky_latest_{0}'.format(self.unique_id_base),
@@ -102,7 +104,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'exposure',
+                'object_id' : 'indi_allsky_exposure',
                 'config' : {
                     'name' : 'Exposure',
                     'unit_of_measurement' : 's',
@@ -112,7 +114,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'gain',
+                'object_id' : 'indi_allsky_gain',
                 'config' : {
                     'name' : 'Camera Gain',
                     'unique_id' : 'indi_allsky_gain_{0}'.format(self.unique_id_base),
@@ -121,7 +123,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'bin',
+                'object_id' : 'indi_allsky_bin',
                 'config' : {
                     'name' : 'Camera Binmode',
                     'unique_id' : 'indi_allsky_bin_{0}'.format(self.unique_id_base),
@@ -130,7 +132,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'temp',
+                'object_id' : 'indi_allsky_temp',
                 'config' : {
                     'name' : 'Camera Temp',
                     'unit_of_measurement' : '°',
@@ -140,7 +142,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'sunalt',
+                'object_id' : 'indi_allsky_sunalt',
                 'config' : {
                     'name' : 'Sun Altitude',
                     'unit_of_measurement' : '°',
@@ -150,7 +152,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'moonalt',
+                'object_id' : 'indi_allsky_moonalt',
                 'config' : {
                     'name' : 'Moon Altitude',
                     'unit_of_measurement' : '°',
@@ -160,7 +162,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'moonphase',
+                'object_id' : 'indi_allsky_moonphase',
                 'config' : {
                     'name' : 'Moon Phase',
                     'unit_of_measurement' : '%',
@@ -170,7 +172,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'binary_sensor',
-                'object_id' : 'moonmode',
+                'object_id' : 'indi_allsky_moonmode',
                 'config' : {
                     'name' : 'Moon Mode',
                     'payload_on' : True,
@@ -181,7 +183,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'binary_sensor',
-                'object_id' : 'night',
+                'object_id' : 'indi_allsky_night',
                 'config' : {
                     'name' : 'Night',
                     'payload_on' : True,
@@ -192,7 +194,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'sqm',
+                'object_id' : 'indi_allsky_sqm',
                 'config' : {
                     'name' : 'SQM',
                     'unique_id' : 'indi_allsky_sqm_{0}'.format(self.unique_id_base),
@@ -201,7 +203,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'stars',
+                'object_id' : 'indi_allsky_stars',
                 'config' : {
                     'name' : 'Stars',
                     'unique_id' : 'indi_allsky_stars_{0}'.format(self.unique_id_base),
@@ -210,7 +212,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'latitude',
+                'object_id' : 'indi_allsky_latitude',
                 'config' : {
                     'name' : 'Latitude',
                     'unit_of_measurement' : '°',
@@ -220,7 +222,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'longitude',
+                'object_id' : 'indi_allsky_longitude',
                 'config' : {
                     'name' : 'Longitude',
                     'unit_of_measurement' : '°',
@@ -230,7 +232,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'elevation',
+                'object_id' : 'indi_allsky_elevation',
                 'config' : {
                     'name' : 'Elevation',
                     'unit_of_measurement' : 'm',
@@ -240,7 +242,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'kpindex',
+                'object_id' : 'indi_allsky_kpindex',
                 'config' : {
                     'name' : 'K-P Index',
                     'unique_id' : 'indi_allsky_kpindex_{0}'.format(self.unique_id_base),
@@ -249,7 +251,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'ovation_max',
+                'object_id' : 'indi_allsky_ovation_max',
                 'config' : {
                     'name' : 'Aurora',
                     'unit_of_measurement' : '%',
@@ -259,7 +261,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'smoke_rating',
+                'object_id' : 'indi_allsky_smoke_rating',
                 'config' : {
                     'name' : 'Smoke Rating',
                     'unique_id' : 'indi_allsky_smoke_rating_{0}'.format(self.unique_id_base),
@@ -268,7 +270,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'sidereal_time',
+                'object_id' : 'indi_allsky_sidereal_time',
                 'config' : {
                     'name' : 'Sidereal Time',
                     'unique_id' : 'indi_allsky_sidereal_time_{0}'.format(self.unique_id_base),
@@ -281,7 +283,7 @@ class HADiscovery(object):
         if self.config['FISH2PANO'].get('ENABLE'):
             basic_sensor_list.append({
                 'component' : 'image',
-                'object_id' : 'panorama',
+                'object_id' : 'indi_allsky_panorama',
                 'config' : {
                     'name' : "indi-allsky Panorama",
                     'unique_id' : 'indi_allsky_panorama_{0}'.format(self.unique_id_base),
@@ -295,7 +297,7 @@ class HADiscovery(object):
         extended_sensor_list = [
             {
                 'component' : 'sensor',
-                'object_id' : 'cpu_total',
+                'object_id' : 'indi_allsky_cpu_total',
                 'config' : {
                     'name' : 'CPU Total',
                     'unique_id' : 'indi_allsky_cpu_total_{0}'.format(self.unique_id_base),
@@ -304,7 +306,7 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'memory_total',
+                'object_id' : 'indi_allsky_memory_total',
                 'config' : {
                     'name' : 'Memory Total',
                     'unit_of_measurement' : '%',
@@ -331,7 +333,7 @@ class HADiscovery(object):
             if fs.mountpoint == '/':
                 extended_sensor_list.append({
                     'component' : 'sensor',
-                    'object_id' : 'root_fs',
+                    'object_id' : 'indi_allsky_root_fs',
                     'config' : {
                         'name' : 'Filesystem /',
                         'unit_of_measurement' : '%',
@@ -347,7 +349,7 @@ class HADiscovery(object):
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
-                    'object_id' : '{0}_fs'.format(fs_mountpoint_safe),
+                    'object_id' : 'indi_allsky_fs_{0}'.format(fs_mountpoint_safe),
                     'config' : {
                         'name' : 'Filesystem {0}'.format(fs.mountpoint),
                         'unit_of_measurement' : '%',
@@ -376,11 +378,11 @@ class HADiscovery(object):
 
                 extended_sensor_list.append({
                     'component' : 'sensor',
-                    'object_id' : '{0}_{1}_temp'.format(t_key_safe, label_safe),
+                    'object_id' : 'indi_allsky_thermal_{0}_{1}'.format(t_key_safe, label_safe),
                     'config' : {
                         'name' : 'Thermal {0} {1}'.format(t_key, label),
                         'unit_of_measurement' : '°',
-                        'unique_id' : 'indi_allsky_temp_{0}_{1}'.format(t_key_safe, label_safe),
+                        'unique_id' : 'indi_allsky_thermal_{0}_{1}'.format(t_key_safe, label_safe),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),
                     },
                 })
