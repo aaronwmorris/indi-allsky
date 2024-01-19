@@ -391,21 +391,30 @@ class HADiscovery(object):
 
         message_list = list()
         for sensor in basic_sensor_list:
-            message_list.append({
+            message = {
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
                 'retain'   : False,
-            })
+            }
+            message_list.append(message)
+
+            logger.warning('Create topic: %s', message['topic'])
+            #logger.warning('Data: %s', pformat(message))
+
 
         for sensor in extended_sensor_list:
-            message_list.append({
+            message = {
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
                 'retain'   : False,
-            })
+            }
 
+            message_list.append(message)
+
+            logger.warning('Create topic: %s', message['topic'])
+            #logger.warning('Data: %s', pformat(message))
 
 
         #logger.warning('Messages: %s', pformat(message_list))
