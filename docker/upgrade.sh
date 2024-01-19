@@ -48,8 +48,6 @@ echo
 echo
 echo "You may now restart your containers"
 echo
-echo "  docker compose restart capture.indi.allsky gunicorn.indi.allsky webserver.indi.allsky"
-echo
 
 
 echo
