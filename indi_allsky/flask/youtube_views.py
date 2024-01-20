@@ -27,9 +27,6 @@ class YoutubeAuthorizeView(BaseView):
     def dispatch_request(self):
         import google_auth_oauthlib.flow
 
-        if not self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE'):
-            abort(400, 'Youtube uploading not enabled')
-
         if not self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE'):
             abort(400, 'Client secrets not configured')
 
