@@ -117,9 +117,9 @@ class IndiAllskyUpdateSatelliteData(object):
             #logger.warning('Title: %s %s %s', title, line1, line2)
 
             tle_entry = {
-                'title' : title.rstrip().upper(),
-                'line1' : line1,
-                'line2' : line2,
+                'title' : title.strip().upper(),
+                'line1' : line1.strip(),
+                'line2' : line2.strip(),
                 'group' : group,
             }
             tle_entry_list.append(tle_entry)
