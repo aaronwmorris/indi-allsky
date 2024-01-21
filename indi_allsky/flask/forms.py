@@ -3070,6 +3070,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
+                'youtube'           : bool(data.get('youtube_id', False)),
             }
             videos_data.append(entry)
 
@@ -3191,16 +3192,24 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
             if startrail_video_entry:
+                if startrail_video_entry.data:
+                    st_v_data = startrail_video_entry.data
+                else:
+                    st_v_data = {}
+
                 try:
                     startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                     startrail_video_id = startrail_video_entry.id
+                    startrail_video_youtube = bool(st_v_data.get('youtube_id', False))
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
                     startrail_video_id = -1
+                    startrail_video_youtube = False
             else:
                 startrail_video_url = None
                 startrail_video_id = -1
+                startrail_video_youtube = False
 
 
             entry['keogram']    = str(keogram_url)
@@ -3209,6 +3218,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
+            entry['startrail_timelapse_youtube']  = startrail_video_youtube
 
 
         return videos_data
