@@ -276,6 +276,7 @@ function populateData() {
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Altitude'));
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Duration'));
     tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Elevation'));
+    tr1.append($('<td />', {'class' : 'satelliteshdrdata'}).html('Eclipsed'));
     table_sat.append(tr1);
 
     json_data['satellite_list'].forEach(sat => {
@@ -290,8 +291,18 @@ function populateData() {
         } else if ( sat.alt > 0 ) {
             tr_sat.css({'color' : "#ff9900"});
         } else {
-            tr_sat.css({'color' : "#fff"});
+            tr_sat.css({'color' : "#888888"});
         }
+
+
+        var eclipsed = '';
+
+        if ( sat.alt < 0 ) {
+            eclipsed = '';
+        } else if ( sat.eclipsed ) {
+            eclipsed = 'yes';
+        }
+
 
         tr_sat.append($('<td />', {'class' : 'satelliteshdr'}).html(sat['name']));
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['rise']));
@@ -301,6 +312,7 @@ function populateData() {
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['alt'] + "&deg;"));
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['duration'] + "s"));
         tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(sat['elevation'] + "km"));
+        tr_sat.append($('<td />', {'class' : 'satellitesdata'}).html(eclipsed));
         table_sat.append(tr_sat);
     });
 }
