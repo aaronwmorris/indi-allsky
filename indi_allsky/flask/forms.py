@@ -3070,7 +3070,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
-                'youtube'           : bool(data.get('youtube_id', False)),
+                'youtube_uploaded'  : bool(data.get('youtube_id', False)),
             }
             videos_data.append(entry)
 
@@ -3218,7 +3218,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
-            entry['startrail_timelapse_youtube']  = startrail_video_youtube
+            entry['startrail_timelapse_youtube_uploaded']  = startrail_video_youtube
 
 
         return videos_data
