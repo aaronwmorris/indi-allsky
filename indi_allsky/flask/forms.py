@@ -2352,7 +2352,6 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
     FISH2PANO__MODULUS               = IntegerField('Modulus', validators=[DataRequired(), FISH2PANO__MODULUS_validator])
-    FISH2PANO__INPLACE               = BooleanField('In-place processing')
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
