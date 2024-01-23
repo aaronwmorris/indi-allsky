@@ -2691,11 +2691,17 @@ class TaskQueueView(TemplateView):
 
         task_list = list()
         for task in tasks:
+            if task.data:
+                task_data = task.data
+            else:
+                task_data = {}
+
             t = {
                 'id'         : task.id,
                 'createDate' : task.createDate,
                 'queue'      : task.queue.name,
                 'state'      : task.state.name,
+                'action'     : task_data.get('action', 'MISSING'),
                 'result'     : task.result,
             }
 
@@ -3397,10 +3403,16 @@ class TimelapseGeneratorView(TemplateView):
 
         task_list = list()
         for task in tasks:
+            if task.data:
+                task_data = task.data
+            else:
+                task_data = {}
+
             t = {
                 'id'         : task.id,
                 'createDate' : task.createDate,
                 'queue'      : task.queue.name,
+                'action'     : task_data.get('action', 'MISSING'),
                 'state'      : task.state.name,
                 'result'     : task.result,
             }

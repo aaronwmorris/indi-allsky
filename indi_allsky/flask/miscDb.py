@@ -723,7 +723,7 @@ class miscDb(object):
             dayDate = createDate.date()
 
 
-        logger.info('Adding fits image %s to DB', filename_p)
+        logger.info('Adding panorama image %s to DB', filename_p)
 
 
         panorama_image = IndiAllSkyDbPanoramaImageTable(

@@ -66,8 +66,9 @@ Tasks
     <div class="col-sm-1" style="font-weight: bold;">ID</div>
     <div class="col-sm-2" style="font-weight: bold;">Date</div>
     <div class="col-sm-1" style="font-weight: bold;">Queue</div>
+    <div class="col-sm-2" style="font-weight: bold;">Action</div>
     <div class="col-sm-1" style="font-weight: bold;">State</div>
-    <div class="col-sm-7" style="font-weight: bold;">Result</div>
+    <div class="col-sm-5" style="font-weight: bold;">Result</div>
 </div>
 
 {% for task in task_list %}
@@ -75,8 +76,9 @@ Tasks
     <div class="col-sm-1">{{ task.id }}</div>
     <div class="col-sm-2">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
     <div class="col-sm-1">{{ task.queue }}</div>
+    <div class="col-sm-2">{{ task.action }}</div>
     <div class="col-sm-1">{{ task.state }}</div>
-    <div class="col-sm-7">{{ task.result }}</div>
+    <div class="col-sm-5">{{ task.result }}</div>
 </div>
 {% endfor %}
 
