@@ -172,7 +172,6 @@ class IndiAllSkyConfigBase(object):
             "OFFSET_Y" : 0,
             "SCALE"    : 0.3,
             "MODULUS"  : 4,
-            "INPLACE"  : False,
         },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)

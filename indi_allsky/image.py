@@ -594,14 +594,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
-            if self.config.get('FISH2PANO', {}).get('INPLACE'):
-                pano_data = self.image_processor.fish2pano()
-
-                # replace original image
-                self.image_processor.image = pano_data
-
-
-            elif self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
+            if self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
                 pano_data = self.image_processor.fish2pano()
 
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
