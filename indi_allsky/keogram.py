@@ -120,12 +120,9 @@ class KeogramGenerator(object):
         self.timestamps_list.append(filename.stat().st_mtime)
 
         height, width = image.shape[:2]
-        self.original_height = height
-        self.original_width = width
 
 
         rotated_image = self.rotate(image)
-        del image
 
 
         rot_height, rot_width = rotated_image.shape[:2]
@@ -135,6 +132,11 @@ class KeogramGenerator(object):
         rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
 
         if isinstance(self.keogram_data, type(None)):
+            # this only happens on the first image
+
+            self.original_height = height
+            self.original_width = width
+
             new_shape = rotated_center_line.shape
             logger.info('New Shape: %s', pformat(new_shape))
 
@@ -142,6 +144,13 @@ class KeogramGenerator(object):
             logger.info('New dtype: %s', new_dtype)
 
             self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
+
+
+        if height != self.original_height or width != self.original_width:
+            # all images have to match dimensions of the first image
+            logger.error('Image with dimension mismatch: %s', filename)
+            return
+
 
         self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
 

@@ -41,6 +41,9 @@ class StarTrailGenerator(object):
         self._moon_phase_threshold = 101.0
 
 
+        self.original_height = None
+        self.original_width = None
+
         self.trail_image = None
         self.trail_count = 0
         self.pixels_cutoff = None
@@ -219,9 +222,14 @@ class StarTrailGenerator(object):
     def processImage(self, file_p, image):
         image_processing_start = time.time()
 
+        image_height, image_width = image.shape[:2]
+
 
         if isinstance(self.trail_image, type(None)):
-            image_height, image_width = image.shape[:2]
+            # this only happens on the first image
+
+            self.original_height = image_height
+            self.original_width = image_width
 
             self.pixels_cutoff = (image_height * image_width) * (self.pixel_cutoff_threshold / 100)
 
@@ -232,9 +240,13 @@ class StarTrailGenerator(object):
                 self.trail_image = numpy.zeros((image_height, image_width, 3), dtype=numpy.uint8)
 
 
+        if image_height != self.original_height or image_width != self.original_width:
+            logger.error('Image with dimension mismatch: %s', file_p)
+            return
+
+
         if isinstance(self._sqm_mask, type(None)):
             self._generateSqmMask(image)
-
 
 
         # need grayscale image for mask generation
