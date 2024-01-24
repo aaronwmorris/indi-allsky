@@ -621,6 +621,23 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
+def WEB_STATUS_TEMPLATE_validator(form, field):
+    now = datetime.now()
+
+    test_data = {
+    }
+
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+
+
 def WEB_EXTRA_TEXT_validator(form, field):
     if not field.data:
         return
@@ -2301,6 +2318,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
     NIGHT_MOONMODE_ALT_DEG           = FloatField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
+    WEB_STATUS_TEMPLATE              = TextAreaField('Status Template', validators=[DataRequired(), WEB_STATUS_TEMPLATE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
     WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
