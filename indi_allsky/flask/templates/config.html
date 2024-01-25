@@ -2454,10 +2454,12 @@
             {{ form_config.WEB_STATUS_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
-            {{ form_config.WEB_STATUS_TEMPLATE(class='form-control bg-secondary', rows='10') }}
+            {{ form_config.WEB_STATUS_TEMPLATE(class='form-control bg-secondary', rows='12') }}
             <div id="WEB_STATUS_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-5"></div>
+        <div class="col-sm-5">
+            <div>HTML is permitted</div>
+        </div>
     </div>
 
     <hr>

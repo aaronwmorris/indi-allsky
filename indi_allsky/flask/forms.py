@@ -626,6 +626,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'status' : 'foobar',
         'latitude' : 0.0,
         'longitude' : 0.0,
+        'elevation' : 0,
         'sidereal_time' : 'foo',
         'mode' : 'foobar',
         'sun_alt' : 0.0,
