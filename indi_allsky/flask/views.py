@@ -1060,6 +1060,7 @@ class ConfigView(FormView):
             'NIGHT_SUN_ALT_DEG'              : self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0),
             'NIGHT_MOONMODE_ALT_DEG'         : self.indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0),
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
+            'WEB_STATUS_TEMPLATE'            : self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', ''),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
@@ -1612,6 +1613,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_SUN_ALT_DEG']                    = float(request.json['NIGHT_SUN_ALT_DEG'])
         self.indi_allsky_config['NIGHT_MOONMODE_ALT_DEG']               = float(request.json['NIGHT_MOONMODE_ALT_DEG'])
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
+        self.indi_allsky_config['WEB_STATUS_TEMPLATE']                  = str(request.json['WEB_STATUS_TEMPLATE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])

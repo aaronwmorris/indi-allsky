@@ -2451,6 +2451,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.WEB_STATUS_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.WEB_STATUS_TEMPLATE(class='form-control bg-secondary', rows='10') }}
+            <div id="WEB_STATUS_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.WEB_EXTRA_TEXT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -3721,6 +3734,7 @@ const field_names = [
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
+    'WEB_STATUS_TEMPLATE',
     'WEB_EXTRA_TEXT',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',

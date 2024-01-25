@@ -625,6 +625,19 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
     now = datetime.now()
 
     test_data = {
+        'indi_allsky_status' : 'foobar',
+        'latitude' : 0.0,
+        'longitude' : 0.0,
+        'sidereal' : str(now),
+        'mode' : 'foobar',
+        'sun_alt' : 0.0,
+        'moon_alt' : 0.0,
+        'moon_phase_str' : 'foobar',
+        'moon_phase_icon' : 'f',
+        'smoke_rating' : 'foobar',
+        'kpindex' : 0.0,
+        'ovation_max' : 0,
+
     }
 
 
@@ -634,8 +647,6 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         raise ValidationError('KeyError: {0:s}'.format(str(e)))
     except ValueError as e:
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
-
-
 
 
 def WEB_EXTRA_TEXT_validator(form, field):
