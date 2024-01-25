@@ -23,6 +23,7 @@ __all__ = (
     'IndiAllSkyDbFitsImageTable',
     'IndiAllSkyDbRawImageTable',
     'IndiAllSkyDbPanoramaImageTable',
+    'IndiAllSkyDbPanoramaVideoTable',
     'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
@@ -83,6 +84,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     fitsimages = db.relationship('IndiAllSkyDbFitsImageTable', back_populates='camera')
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
     panoramaimages = db.relationship('IndiAllSkyDbPanoramaImageTable', back_populates='camera')
+    panoramavideos = db.relationship('IndiAllSkyDbPanoramaVideoTable', back_populates='camera')
 
 
     @property
@@ -471,6 +473,29 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<PanoramaImage {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
+    __tablename__ = 'panoramavideo'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True, index=True)
+    s3_key = db.Column(db.String(length=255), nullable=True, index=True)
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    dayDate = db.Column(db.Date, nullable=False, index=True)
+    night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, index=True)
+    success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    data = db.Column(db.JSON, index=True)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='panoramavideos')
+
+    def __repr__(self):
+        return '<PanoramaVideo {0:s}>'.format(self.filename)
 
 
 class TaskQueueState(enum.Enum):
