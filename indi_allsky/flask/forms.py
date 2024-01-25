@@ -621,6 +621,48 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
+def WEB_STATUS_TEMPLATE_validator(form, field):
+    test_data = {
+        'status' : '',
+        'latitude' : 0.0,
+        'longitude' : 0.0,
+        'elevation' : 0,
+        'sidereal_time' : '',
+        'mode' : '',
+        'sun_alt' : 0.0,
+        'sun_dir' : '',
+        'moon_alt' : 0.0,
+        'moon_dir' : '',
+        'moon_phase_str' : '',
+        'moon_glyph' : '',
+        'moon_phase' : 0.0,
+        'moon_cycle_percent' : 0.0,
+        'smoke_rating' : '',
+        'smoke_rating_status' : '',
+        'kpindex' : 0.0,
+        'kpindex_rating' : '',
+        'kpindex_trend' : '',
+        'kpindex_status' : '',
+        'ovation_max' : 0,
+        'ovation_max_status' : '',
+        'owner' : '',
+        'location' : '',
+        'lens_name' : '',
+        'alt' : 0.0,
+        'az' : 0.0,
+        'camera_name' : '',
+        'camera_friendly_name' : '',
+    }
+
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def WEB_EXTRA_TEXT_validator(form, field):
     if not field.data:
         return
@@ -2301,6 +2343,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_SUN_ALT_DEG                = FloatField('Sun altitude', validators=[NIGHT_SUN_ALT_DEG_validator])
     NIGHT_MOONMODE_ALT_DEG           = FloatField('Moonmode Moon Altitude', validators=[NIGHT_MOONMODE_ALT_DEG_validator])
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
+    WEB_STATUS_TEMPLATE              = TextAreaField('Status Template', validators=[DataRequired(), WEB_STATUS_TEMPLATE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
     WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
@@ -2323,6 +2366,7 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
     STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
     STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
+    IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])

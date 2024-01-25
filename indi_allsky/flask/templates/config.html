@@ -2264,6 +2264,26 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_EXIF_PRIVACY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_EXIF_PRIVACY(class='form-check-input') }}
+                <div id="IMAGE_EXIF_PRIVACY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div>Exclude private identifying information from EXIF tags including owner and GPS details</div>
+                <div>Camera information is still included.  Only valid for JPEG images</div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LOCATION_NAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -2445,6 +2465,25 @@
             </div>
         </div>
         <div class="col-sm-8">Encrypt passwords in the database</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_STATUS_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.WEB_STATUS_TEMPLATE(class='form-control bg-secondary', rows='12') }}
+            <div id="WEB_STATUS_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>HTML is permitted</div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
+            <div>Available variables: <pre>status, latitude, longitude, elevation, sidereal_time, mode,<br>sun_alt, sun_dir, moon_alt, moon_dir, moon_phase_str,<br>moon_glyph, moon_phase, moon_cycle_percent, smoke_rating,<br>smoke_rating_status, kpindex, kpindex_rating, kpindex_trend,<br>kpindex_status, ovation_max, ovation_max_status,<br>owner, location, lens_name, alt, az,<br>camera_name, camera_friendly_name</pre></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Web-Status-Configuration" class="text-decoration-none link-info" target="_blank">Web Status Wiki</a></div>
+        </div>
     </div>
 
     <hr>
@@ -3721,6 +3760,7 @@ const field_names = [
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
+    'WEB_STATUS_TEMPLATE',
     'WEB_EXTRA_TEXT',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
@@ -3906,6 +3946,7 @@ const checkbox_field_names = [
     'KEOGRAM_LABEL',
     'STARTRAILS_MOONMODE_THOLD',
     'STARTRAILS_TIMELAPSE',
+    'IMAGE_EXIF_PRIVACY',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
     'IMAGE_CIRCLE_MASK__ENABLE',

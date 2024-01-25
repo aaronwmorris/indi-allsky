@@ -406,51 +406,55 @@ class ImageWorker(Process):
         }
 
 
-        if camera.owner:
-            zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
-
-
         if self.sensortemp_v.value > -150:
             # Add temperature data
             temperature_frac = Fraction(self.sensortemp_v.value).limit_denominator()
             exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
-        long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
-        lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
-
-        if long_deg < 0:
-            long_ref = 'W'
-        else:
-            long_ref = 'E'
-
-        if lat_deg < 0:
-            lat_ref = 'S'
-        else:
-            lat_ref = 'N'
-
-        gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
-        gps_hour   = int(exp_date_utc.strftime('%H'))
-        gps_minute = int(exp_date_utc.strftime('%M'))
-        gps_second = int(exp_date_utc.strftime('%S'))
-
-        gps_ifd = {
-            piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
-            piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
-            piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
-            piexif.GPSIFD.GPSLongitudeRef    : long_ref,
-            piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
-            piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
-            piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
-            #piexif.GPSIFD.GPSAltitudeRef     : 0,  # 0 = above sea level, 1 = below
-            #piexif.GPSIFD.GPSAltitude        : (0, 1),
-        }
-
         jpeg_exif_dict = {
             '0th'   : zeroth_ifd,
             'Exif'  : exif_ifd,
-            'GPS'   : gps_ifd,
         }
+
+
+        if not self.config.get('IMAGE_EXIF_PRIVACY'):
+            if camera.owner:
+                zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
+
+
+            long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+            lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
+
+            if long_deg < 0:
+                long_ref = 'W'
+            else:
+                long_ref = 'E'
+
+            if lat_deg < 0:
+                lat_ref = 'S'
+            else:
+                lat_ref = 'N'
+
+            gps_datestamp = exp_date_utc.strftime('%Y:%m:%d')
+            gps_hour   = int(exp_date_utc.strftime('%H'))
+            gps_minute = int(exp_date_utc.strftime('%M'))
+            gps_second = int(exp_date_utc.strftime('%S'))
+
+            gps_ifd = {
+                piexif.GPSIFD.GPSVersionID       : (2, 2, 0, 0),
+                piexif.GPSIFD.GPSDateStamp       : gps_datestamp,
+                piexif.GPSIFD.GPSTimeStamp       : ((gps_hour, 1), (gps_minute, 1), (gps_second, 1)),
+                piexif.GPSIFD.GPSLongitudeRef    : long_ref,
+                piexif.GPSIFD.GPSLongitude       : ((int(abs(long_deg)), 1), (int(long_min), 1), (0, 1)),  # no seconds
+                piexif.GPSIFD.GPSLatitudeRef     : lat_ref,
+                piexif.GPSIFD.GPSLatitude        : ((int(abs(lat_deg)), 1), (int(lat_min), 1), (0, 1)),  # no seconds
+                #piexif.GPSIFD.GPSAltitudeRef     : 0,  # 0 = above sea level, 1 = below
+                #piexif.GPSIFD.GPSAltitude        : (0, 1),
+            }
+
+            jpeg_exif_dict['GPS'] = gps_ifd
+
 
         jpeg_exif = piexif.dump(jpeg_exif_dict)
 

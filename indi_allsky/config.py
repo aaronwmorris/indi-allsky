@@ -114,9 +114,10 @@ class IndiAllSkyConfigBase(object):
         "NIGHT_SUN_ALT_DEG"        : -6.0,
         "NIGHT_MOONMODE_ALT_DEG"   : 0,
         "NIGHT_MOONMODE_PHASE"     : 33,
-        "WEB_EXTRA_TEXT"           : "",
         "WEB_NONLOCAL_IMAGES"      : False,
         "WEB_LOCAL_IMAGES_ADMIN"   : False,
+        "WEB_EXTRA_TEXT"           : "",
+        "WEB_STATUS_TEMPLATE"      : "Status: {status:s}\nLat: {latitude:0.1f}/Long: {longitude:0.1f}\nSidereal: {sidereal_time:s}\nMode: {mode:s}\nSun: {sun_alt:0.1f}&deg; {sun_dir:s}\nMoon: {moon_alt:0.1f}&deg; {moon_dir:s}\nPhase: {moon_phase_str:s} <span data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" title=\"{moon_phase:0.0f}%\">{moon_glyph:s}</span>\nSmoke: {smoke_rating:s} {smoke_rating_status}\nKp-index: {kpindex:0.2f} {kpindex_rating:s} {kpindex_trend:s} {kpindex_status:s}\nAurora: {ovation_max:d}% {ovation_max_status}",
         "IMAGE_STRETCH" : {
             "MODE1_ENABLE"   : False,
             "MODE1_GAMMA"    : 3.0,
@@ -138,6 +139,7 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_MOONMODE_THOLD"      : True,
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
+        "IMAGE_EXIF_PRIVACY" : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
