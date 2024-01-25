@@ -388,10 +388,10 @@ class TemplateView(BaseView):
         sun_transit_delta = sun_transit_date - utcnow.replace(tzinfo=None)
         if sun_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['sun_rising_sign'] = '&nearr;'
+            data['sun_dir'] = '&nearr;'
         else:
             #setting
-            data['sun_rising_sign'] = '&searr;'
+            data['sun_dir'] = '&searr;'
 
 
         # moon
@@ -406,10 +406,10 @@ class TemplateView(BaseView):
         moon_transit_delta = moon_transit_date - utcnow.replace(tzinfo=None)
         if moon_transit_delta.seconds < 43200:  # 12 hours
             #rising
-            data['moon_rising_sign'] = '&nearr;'
+            data['moon_dir'] = '&nearr;'
         else:
             #setting
-            data['moon_rising_sign'] = '&searr;'
+            data['moon_dir'] = '&searr;'
 
 
         # day/night
@@ -530,7 +530,7 @@ class TemplateView(BaseView):
 
         if kpindex_current == 0:
             data['kpindex_rating'] = ''
-        elif kpindex_current < 5.0:
+        elif kpindex_current > 0 and kpindex_current < 5.0:
             data['kpindex_rating'] = '<span class="text-secondary">LOW</span>'
         elif kpindex_current >= 5.0 and kpindex_current < 6.0:
             data['kpindex_rating'] = '<span class="text-warning">MEDIUM</span>'
