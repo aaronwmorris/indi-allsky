@@ -458,27 +458,27 @@ class TemplateView(BaseView):
         if moon_cycle_percent <= 50:
             # waxing
             if moon_phase_percent >= 0 and moon_phase_percent < 15:
-                data['moon_phase_sign'] = '🌑'
+                data['moon_glyph'] = '&#127761;'
             elif moon_phase_percent >= 15 and moon_phase_percent < 35:
-                data['moon_phase_sign'] = '🌒'
+                data['moon_glyph'] = '&#127762;'
             elif moon_phase_percent >= 35 and moon_phase_percent < 65:
-                data['moon_phase_sign'] = '🌓'
+                data['moon_glyph'] = '&#127763;'
             elif moon_phase_percent >= 65 and moon_phase_percent < 85:
-                data['moon_phase_sign'] = '🌔'
+                data['moon_glyph'] = '&#127764;'
             elif moon_phase_percent >= 85 and moon_phase_percent <= 100:
-                data['moon_phase_sign'] = '🌕'
+                data['moon_glyph'] = '&#127765;'
         else:
             # waning
             if moon_phase_percent >= 85 and moon_phase_percent <= 100:
-                data['moon_phase_sign'] = '🌕'
+                data['moon_glyph'] = '&#127765;'
             elif moon_phase_percent >= 65 and moon_phase_percent < 85:
-                data['moon_phase_sign'] = '🌖'
+                data['moon_glyph'] = '&#127766;'
             elif moon_phase_percent >= 35 and moon_phase_percent < 65:
-                data['moon_phase_sign'] = '🌗'
+                data['moon_glyph'] = '&#127767;'
             elif moon_phase_percent >= 15 and moon_phase_percent < 35:
-                data['moon_phase_sign'] = '🌘'
+                data['moon_glyph'] = '&#127768;'
             elif moon_phase_percent >= 0 and moon_phase_percent < 15:
-                data['moon_phase_sign'] = '🌑'
+                data['moon_glyph'] = '&#127761;'
 
 
         #app.logger.info('Astrometric data: %s', data)

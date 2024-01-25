@@ -634,7 +634,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'moon_alt' : 0.0,
         'moon_dir' : '',
         'moon_phase_str' : '',
-        'moon_phase_sign' : '',
+        'moon_glyph' : '',
         'moon_phase' : 0.0,
         'moon_cycle_percent' : 0.0,
         'smoke_rating' : '',
