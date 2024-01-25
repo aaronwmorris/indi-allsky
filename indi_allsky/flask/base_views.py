@@ -492,8 +492,9 @@ class TemplateView(BaseView):
         if not camera_data:
             data = {
                 'kpindex' : 0.0,
-                'kpindex_trend' : '',
                 'kpindex_status' : 'No data',
+                'kpindex_trend' : '',
+                'kpindex_rating' : '',
                 'ovation_max' : 0,
                 'ovation_max_status' : 'No data',
             }
@@ -515,6 +516,7 @@ class TemplateView(BaseView):
                     'kpindex' : kpindex_current,
                     'kpindex_status' : '[old]',
                     'kpindex_trend' : '',
+                    'kpindex_rating' : '',
                     'ovation_max' : ovation_max,
                     'ovation_max_status' : '[old]',
                 }
