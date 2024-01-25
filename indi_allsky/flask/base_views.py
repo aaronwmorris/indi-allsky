@@ -67,11 +67,11 @@ class BaseView(View):
 
         try:
             prefix = self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
-        except KeyError:
-            app.logger.error('Failure to generate S3 prefix')
+        except KeyError as e:
+            app.logger.error('Failure to generate S3 prefix: %s', str(e))
             return ''
-        except ValueError:
-            app.logger.error('Failure to generate S3 prefix')
+        except ValueError as e:
+            app.logger.error('Failure to generate S3 prefix: %s', str(e))
             return ''
 
 
@@ -214,11 +214,15 @@ class TemplateView(BaseView):
 
 
     def get_context(self):
+        status_data = dict()
+
+        status_data.update(self.get_indi_allsky_status())
+        status_data.update(self.get_astrometric_info())
+        status_data.update(self.get_smoke_info())
+        status_data.update(self.get_aurora_info())
+
         context = {
-            'indi_allsky_status' : self.get_indi_allsky_status(),
-            'astrometric_data'   : self.get_astrometric_info(),
-            'aurora_data'        : self.get_aurora_info(),
-            'smoke_data'         : self.get_smoke_info(),
+            'status_text'        : self.get_status_text(status_data),
             'web_extra_text'     : self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
@@ -261,22 +265,28 @@ class TemplateView(BaseView):
 
 
     def get_indi_allsky_status(self):
+        data = {}
+
         if not self.local_indi_allsky:
-            return '<span class="text-muted">REMOTE</span>'
+            data['status'] = '<span class="text-muted">REMOTE</span>'
+            return data
 
 
         try:
             watchdog_time = int(self._miscDb.getState('WATCHDOG'))
         except NoResultFound:
-            return '<span class="text-warning">UNKNOWN</span>'
+            data['status'] = '<span class="text-warning">UNKNOWN</span>'
+            return data
         except ValueError:
-            return '<span class="text-warning">UNKNOWN</span>'
+            data['status'] = '<span class="text-warning">UNKNOWN</span>'
+            return data
 
 
         now = time.time()
 
         if now > (watchdog_time + 600):
-            return '<span class="text-danger">DOWN</span>'
+            data['status'] = '<span class="text-danger">DOWN</span>'
+            return data
 
 
         ### assuming indi-allsky process is running if we reach this point
@@ -309,7 +319,8 @@ class TemplateView(BaseView):
 
 
         if self.indi_allsky_config.get('FOCUS_MODE', False):
-            return '<span class="text-warning">FOCUS MODE</span>'
+            data['status'] = '<span class="text-warning">FOCUS MODE</span>'
+            return data
 
 
         if now > (watchdog_time + 600):
@@ -324,9 +335,12 @@ class TemplateView(BaseView):
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
-            return '<span class="text-muted">SLEEPING</span>'
+            data['sttaus'] = '<span class="text-muted">SLEEPING</span>'
+            return data
 
-        return '<span class="text-success">RUNNING</span>'
+
+        data['status'] = '<span class="text-success">RUNNING</span>'
+        return data
 
 
     def get_astrometric_info(self):
@@ -386,7 +400,7 @@ class TemplateView(BaseView):
 
         #moon phase
         moon_phase_percent = moon.moon_phase * 100.0
-        data['moon_phase_percent'] = moon_phase_percent
+        data['moon_phase'] = moon_phase_percent
 
         moon_transit_date = obs.next_transit(moon).datetime()
         moon_transit_delta = moon_transit_date - utcnow.replace(tzinfo=None)
@@ -416,17 +430,17 @@ class TemplateView(BaseView):
 
         if moon_quarter < 2:
             #0, 1
-            data['moon_phase'] = 'Waxing'
+            data['moon_phase_str'] = 'Waxing'
         else:
             #2, 3
-            data['moon_phase'] = 'Waning'
+            data['moon_phase_str'] = 'Waning'
 
 
 
-        cycle_percent = (sm_angle / math.tau) * 100
-        data['cycle_percent'] = cycle_percent
+        moon_cycle_percent = (sm_angle / math.tau) * 100
+        data['moon_cycle_percent'] = moon_cycle_percent
 
-        if cycle_percent <= 50:
+        if moon_cycle_percent <= 50:
             # waxing
             if moon_phase_percent >= 0 and moon_phase_percent < 15:
                 data['moon_phase_sign'] = '🌑'
@@ -462,8 +476,11 @@ class TemplateView(BaseView):
 
         if not camera_data:
             data = {
-                'kpindex' : 'No data',
-                'ovation' : 'No data',
+                'kpindex' : 0.0,
+                'kpindex_trend' : '',
+                'kpindex_status' : 'No data',
+                'ovation_max' : 0,
+                'ovation_max_status' : 'No data',
             }
             return data
 
@@ -480,40 +497,51 @@ class TemplateView(BaseView):
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
                 data = {
-                    'kpindex' : '{0:0.2f} [old]'.format(kpindex_current),
-                    'ovation' : '{0:d}% [old]'.format(ovation_max),
+                    'kpindex' : kpindex_current,
+                    'kpindex_status' : '[old]',
+                    'kpindex_trend' : '',
+                    'ovation_max' : ovation_max,
+                    'ovation_max_status' : '[old]',
                 }
                 return data
 
 
-        data = dict()
+        data = {
+            'kpindex' : kpindex_current,
+            'kpindex_status' : '',
+            'ovation_max' : ovation_max,
+            'ovation_max_status' : '',
+        }
+
+
 
         if kpindex_coef == 0:
-            kp_dir = ''
+            kpindex_trend = ''
         elif kpindex_coef >= 2:
-            kp_dir = '&nearr;'
+            kpindex_trend = '&nearr;'
         elif kpindex_coef <= 0.5:
-            kp_dir = '&searr;'
+            kpindex_trend = '&searr;'
         else:
-            kp_dir = '&rarr;'
+            kpindex_trend = '&rarr;'
+
+
+        data['kpindex_trend'] = kpindex_trend
 
 
         if kpindex_current == 0:
-            data['kpindex'] = '-'
+            data['kpindex_rating'] = ''
         elif kpindex_current < 5.0:
-            data['kpindex'] = '<span class="text-secondary">{0:0.2f} - LOW</span> {1:s}'.format(kpindex_current, kp_dir)
+            data['kpindex_rating'] = '<span class="text-secondary">LOW</span>'
         elif kpindex_current >= 5.0 and kpindex_current < 6.0:
-            data['kpindex'] = '<span class="text-warning">{0:0.2f} - MEDIUM</span> {1:s}'.format(kpindex_current, kp_dir)
+            data['kpindex_rating'] = '<span class="text-warning">MEDIUM</span>'
         elif kpindex_current >= 6.0 and kpindex_current < 8.0:
-            data['kpindex'] = '<span class="text-danger">{0:0.2f} - HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
+            data['kpindex_rating'] = '<span class="text-danger">HIGH</span>'
         elif kpindex_current >= 8.0:
-            data['kpindex'] = '<span class="text-danger">{0:0.2f} - VERY HIGH</span> {1:s}'.format(kpindex_current, kp_dir)
+            data['kpindex_rating'] = '<span class="text-danger">VERY HIGH</span>'
         else:
             # this should never happen
-            data['kpindex'] = '{0:0.2f} out of range'.format(kpindex_current)
+            data['kpindex_rating'] = 'ERROR'
 
-
-        data['ovation'] = '{0:d}%'.format(ovation_max)
 
         return data
 
@@ -521,16 +549,20 @@ class TemplateView(BaseView):
     def get_smoke_info(self):
         camera_data = self.camera.data
 
+        data = {
+            'smoke_rating' : '',
+            'smoke_rating_status' : '',
+        }
+
+
         if not camera_data:
-            data = {
-                'smoke_rating' : 'No data',
-            }
+            data['smoke_rating'] = 'No data'
             return data
 
 
         #app.logger.info('Smoke data: %s', camera_data)
 
-        smoke_rating = constants.SMOKE_RATING_MAP_STR[camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
+        data['smoke_rating'] = constants.SMOKE_RATING_MAP_STR[camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
 
 
         now = datetime.now()
@@ -539,14 +571,31 @@ class TemplateView(BaseView):
         data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_24h.timestamp():
-                smoke_rating = '{0:s} [old]'.format(smoke_rating)
-
-
-        data = {
-            'smoke_rating' : smoke_rating,
-        }
+                data['smoke_rating_status'] = '[old]'
 
         return data
+
+
+    def get_status_text(self, data):
+        status_lines = list()
+        for line in self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', 'Status: {status:s}').splitlines():
+            # encapsulate each line in a div
+            status_lines.append('<div>{0:s}</div>'.format(line))
+
+        status_tmpl = ''.join(status_lines)
+        #app.logger.info('Status Text: %s', status_html)
+
+        try:
+            status_text = status_tmpl.format(**data)
+        except KeyError as e:
+            app.logger.error('Failure to format status: %s', str(e))
+            return 'ERROR'
+        except ValueError as e:
+            app.logger.error('Failure to format status: %s', str(e))
+            return 'ERROR'
+
+
+        return status_text
 
 
     def get_web_extra_text(self):

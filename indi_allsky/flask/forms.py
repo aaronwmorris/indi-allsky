@@ -622,22 +622,26 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
 
 
 def WEB_STATUS_TEMPLATE_validator(form, field):
-    now = datetime.now()
-
     test_data = {
-        'indi_allsky_status' : 'foobar',
+        'status' : 'foobar',
         'latitude' : 0.0,
         'longitude' : 0.0,
-        'sidereal' : str(now),
+        'sidereal_time' : 'foo',
         'mode' : 'foobar',
         'sun_alt' : 0.0,
         'moon_alt' : 0.0,
         'moon_phase_str' : 'foobar',
-        'moon_phase_icon' : 'f',
+        'moon_phase_sign' : 'f',
+        'moon_phase' : 0.0,
+        'moon_cycle_percent' : 0.0,
         'smoke_rating' : 'foobar',
+        'smoke_rating_status' : 'foobar',
         'kpindex' : 0.0,
+        'kpindex_rating' : 'foobar',
+        'kpindex_trend' : 'foobar',
+        'kpindex_status' : 'foobar',
         'ovation_max' : 0,
-
+        'ovation_max_status' : 'foobar',
     }
 
 

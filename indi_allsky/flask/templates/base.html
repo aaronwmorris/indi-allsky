@@ -132,17 +132,8 @@
                         </form>
                     </div>
                     <hr>
-                    <div>Status: {{ indi_allsky_status|safe }}</div>
-                    <div>Lat: {{"%0.1f"|format(astrometric_data.latitude)}}/Long: {{"%0.1f"|format(astrometric_data.longitude)}}</div>
-                    <div>Sidereal: {{astrometric_data.sidereal_time}}</div>
-                    <div>Mode: {{astrometric_data.mode}}</div>
-                    <div>Sun: {{"%0.1f"|format(astrometric_data.sun_alt)}}&deg; {{ astrometric_data.sun_rising_sign|safe }}</div>
-                    <div>Moon: {{"%0.1f"|format(astrometric_data.moon_alt)}}&deg; {{ astrometric_data.moon_rising_sign|safe }}</div>
-                    <div data-bs-toggle="tooltip" data-bs-placement="right" title="{{"%.0f"|format(astrometric_data.moon_phase_percent)}}%">Phase: {{astrometric_data.moon_phase}} {{ astrometric_data.moon_phase_sign|safe }}</div>
-                    <div>Smoke: {{ smoke_data.smoke_rating }}</div>
-                    <div>Kp-index: {{ aurora_data.kpindex|safe }}</div>
-                    <div>Aurora: {{ aurora_data.ovation }}</div>
-                    {{ web_extra_text|safe }}
+                    <div>{{ status_text|safe }}</div>
+                    <div>{{ web_extra_text|safe }}</div>
                     <hr>
                     <div>{{ username_text|safe }}</div>
                 </div>
