@@ -217,6 +217,7 @@ class TemplateView(BaseView):
         status_data = dict()
 
         status_data.update(self.get_indi_allsky_status())
+        status_data.update(self.get_camera_info())
         status_data.update(self.get_astrometric_info())
         status_data.update(self.get_smoke_info())
         status_data.update(self.get_aurora_info())
@@ -340,6 +341,20 @@ class TemplateView(BaseView):
 
 
         data['status'] = '<span class="text-success">RUNNING</span>'
+        return data
+
+
+    def get_camera_info(self):
+        data = {
+            'camera_name' : str(self.camera.name),
+            'camera_friendly_name' : str(self.camera.friendlyName),
+            'location' : str(self.camera.location),
+            'owner' : str(self.camera.owner),
+            'lens_name' : str(self.camera.lensName),
+            'alt' : float(self.camera.alt),
+            'az' : float(self.camera.az),
+        }
+
         return data
 
 
@@ -675,5 +690,12 @@ class FakeCamera(object):
     longitude = 0.0
     elevation = 0
     nightSunAlt = 0.0
+    alt = 0.0
+    az = 0.0
+    owner = ''
+    location = ''
+    lensName = ''
+    name = ''
+    friendlyName = ''
     data = {}
 
