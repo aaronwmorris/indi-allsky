@@ -139,7 +139,7 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_MOONMODE_THOLD"      : True,
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
-        "IMAGE_EXIF_TAGS" : True,
+        "IMAGE_EXIF_PRIVACY" : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,

@@ -2264,18 +2264,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_EXIF_TAGS.label }}
+            {{ form_config.IMAGE_EXIF_PRIVACY.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.IMAGE_EXIF_TAGS(class='form-check-input') }}
-                <div id="IMAGE_EXIF_TAGS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.IMAGE_EXIF_PRIVACY(class='form-check-input') }}
+                <div id="IMAGE_EXIF_PRIVACY-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">
             <div>
-                <div>Only valid for JPEG images</div>
-                <div>Tag images with EXIF data including owner, camera, latitude, longitude, etc</div>
+                <div>Exclude private identifying information from EXIF tags including owner and GPS details</div>
+                <div>Camera information is still included.  Only valid for JPEG images</div>
             </div>
         </div>
     </div>
@@ -3946,7 +3946,7 @@ const checkbox_field_names = [
     'KEOGRAM_LABEL',
     'STARTRAILS_MOONMODE_THOLD',
     'STARTRAILS_TIMELAPSE',
-    'IMAGE_EXIF_TAGS',
+    'IMAGE_EXIF_PRIVACY',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
     'IMAGE_CIRCLE_MASK__ENABLE',
