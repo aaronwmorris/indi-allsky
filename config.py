@@ -9,7 +9,7 @@ from indi_allsky.config import IndiAllSkyConfigUtil
 logger = logging.getLogger('indi_allsky')
 logger.setLevel(logging.INFO)
 
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(module)s.%(funcName)s() [%(lineno)d]: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
