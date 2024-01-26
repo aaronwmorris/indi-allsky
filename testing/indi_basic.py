@@ -16,7 +16,7 @@ INDI_PORT = 7624
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 
-LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() #%(lineno)d: %(message)s')
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() [%(lineno)d]: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 logger.addHandler(LOG_HANDLER_STREAM)

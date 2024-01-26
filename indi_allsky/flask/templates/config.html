@@ -247,7 +247,7 @@
         <div class="col-sm-8">
             <div class="col-sm-8">Bit depth of data returned by the camera</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> Switching your camera to JPEG/8-bit mode can affect this setting</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this incorrectly will cause problems</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This should only be used if your camera does not pre-scale the image data to the full 16-bit space</div>
         </div>
     </div>
 
@@ -4067,6 +4067,19 @@ $('#form_config').on('submit', function() {
 });
 
 
+// Daytime timelapse
+$('#DAYTIME_CAPTURE').on('change', function() {
+    if ($('#DAYTIME_CAPTURE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').prop('checked', true);
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_TIMELAPSE').prop('checked', false);
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+});
+
 // Focus mode
 $('#FOCUS_MODE').on('change', function() {
     if ($('#FOCUS_MODE').prop('checked')) {
@@ -4134,6 +4147,15 @@ $('#WEB_NONLOCAL_IMAGES').on('change', function() {
 
 
 $( document ).ready(function() {
+    // Daytime timelapse
+    if ($('#DAYTIME_CAPTURE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+
     // FOCUS_MODE
     if ($('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').removeAttr('readonly');

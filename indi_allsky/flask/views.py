@@ -184,7 +184,9 @@ class JsonLatestImageView(JsonView):
 
 
         if not night:
-            if self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
+            if not self.indi_allsky_config['DAYTIME_CAPTURE']:
+                data['latest_image']['message'] = 'Daytime capture disabled'
+            elif self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
                 data['latest_image']['message'] = 'Daytime timelapse disabled'
 
                 if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):

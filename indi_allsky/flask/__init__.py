@@ -23,10 +23,10 @@ dictConfig({
     'version' : 1,
     'formatters' : {
         'default' : {
-            'format' : '[%(asctime)s] [%(levelname)s] %(processName)s-%(process)d %(module)s.%(funcName)s() #%(lineno)d: %(message)s',
+            'format' : '[%(asctime)s] [%(levelname)s] %(processName)s-%(process)d %(module)s.%(funcName)s() [%(lineno)d]: %(message)s',
         },
         'syslog' : {
-            'format' : '[%(levelname)s] %(processName)s-%(process)d %(module)s.%(funcName)s() #%(lineno)d: %(message)s',
+            'format' : '[%(levelname)s] %(processName)s-%(process)d %(module)s.%(funcName)s() [%(lineno)d]: %(message)s',
         },
 
     },
