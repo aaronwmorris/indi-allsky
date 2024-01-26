@@ -21,6 +21,7 @@ from .models import IndiAllSkyDbStarTrailsVideoTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
+from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
 
@@ -419,6 +420,57 @@ class miscDb(object):
         db.session.commit()
 
         return video
+
+
+    def addPanoramaVideo(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'night'
+        #    'data'
+        #}
+
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        logger.info('Adding video %s to DB', filename_p)
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+
+        panorama_video = IndiAllSkyDbPanoramaVideoTable(
+            createDate=createDate,
+            camera_id=camera_id,
+            filename=str(filename_p),
+            dayDate=dayDate,
+            night=metadata['night'],
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
+        )
+
+        db.session.add(panorama_video)
+        db.session.commit()
+
+        return panorama_video
 
 
     def addKeogram(self, filename, camera_id, metadata):
