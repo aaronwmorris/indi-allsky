@@ -265,6 +265,7 @@ class IndiAllSkyConfigBase(object):
             "REMOTE_KEOGRAM_FOLDER"      : "allsky/keograms",
             "REMOTE_STARTRAIL_FOLDER"    : "allsky/startrails",
             "REMOTE_STARTRAIL_VIDEO_FOLDER" : "allsky/videos",
+            "REMOTE_PANORAMA_VIDEO_FOLDER"  : "allsky/videos",
             "REMOTE_ENDOFNIGHT_FOLDER"   : "allsky",
             "UPLOAD_IMAGE"           : 0,
             "UPLOAD_PANORAMA"        : 0,
@@ -273,6 +274,7 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_KEOGRAM"         : False,
             "UPLOAD_STARTRAIL"       : False,
             "UPLOAD_STARTRAIL_VIDEO" : False,
+            "UPLOAD_PANORAMA_VIDEO"  : False,
             "UPLOAD_ENDOFNIGHT"      : False,
             "LIBCURL_OPTIONS"        : {},
         },
@@ -321,6 +323,7 @@ class IndiAllSkyConfigBase(object):
             "POST_S3"                : False,
             "EMPTY_FILE"             : False,
             "UPLOAD_IMAGE"           : 1,
+            "UPLOAD_PANORAMA"        : 1,
             #"UPLOAD_VIDEO"           : True,  # this cannot be changed
             "CONNECT_TIMEOUT"        : 10.0,
             "TIMEOUT"                : 60.0,
