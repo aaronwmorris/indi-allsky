@@ -606,10 +606,10 @@ class TemplateView(BaseView):
             status_text = status_tmpl.format(**data)
         except KeyError as e:
             app.logger.error('Failure to format status: %s', str(e))
-            return 'ERROR'
+            return 'TEMPLATE ERROR'
         except ValueError as e:
             app.logger.error('Failure to format status: %s', str(e))
-            return 'ERROR'
+            return 'TEMPLATE ERROR'
 
 
         return status_text
