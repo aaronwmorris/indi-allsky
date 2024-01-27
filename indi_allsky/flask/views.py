@@ -4004,7 +4004,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         if action == 'delete_images':
             image_list = IndiAllSkyDbImageTable.query\
-                .join(IndiAllSkyDbKeogramTable.camera)\
+                .join(IndiAllSkyDbImageTable.camera)\
                 .filter(
                     and_(
                         IndiAllSkyDbCameraTable.id == camera.id,
@@ -4013,11 +4013,28 @@ class AjaxTimelapseGeneratorView(BaseView):
                     )
                 )
 
+            panorama_list = IndiAllSkyDbPanoramaImageTable.query\
+                .join(IndiAllSkyDbPanoramaImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaImageTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaImageTable.night == night,
+                    )
+                )
+
+
             x = 0
-            for image in image_list:
+            for i in image_list:
                 x += 1
-                image.deleteAsset()
-                db.session.delete(image)
+                i.deleteAsset()
+                db.session.delete(i)
+
+            for p in panorama_list:
+                x += 1
+                p.deleteAsset()
+                db.session.delete(p)
+
 
             db.session.commit()
 
