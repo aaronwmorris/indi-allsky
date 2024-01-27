@@ -2866,7 +2866,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
-                image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix, local=self.local))
                 image_dict['fits_id'] = fits_image.id
             except NoResultFound:
                 image_dict['fits'] = None
@@ -2879,7 +2879,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
-                image_dict['raw'] = str(raw_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['raw'] = str(raw_image.getUrl(s3_prefix=self.s3_prefix, local=self.local))
                 image_dict['raw_id'] = raw_image.id
             except NoResultFound:
                 image_dict['raw'] = None
@@ -2896,7 +2896,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     .filter(IndiAllSkyDbPanoramaImageTable.createDate == img.createDate)\
                     .one()
 
-                image_dict['panorama'] = str(panorama_image.getUrl(s3_prefix=self.s3_prefix))
+                image_dict['panorama'] = str(panorama_image.getUrl(s3_prefix=self.s3_prefix, local=self.local))
                 image_dict['panorama_id'] = panorama_image.id
             except NoResultFound:
                 image_dict['panorama'] = None
