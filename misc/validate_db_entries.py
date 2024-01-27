@@ -60,7 +60,7 @@ class ValidateDatabaseEntries(object):
         image_notfound_list = list()
         for i in image_entries:
             try:
-                self._validate_entry(i)
+                i.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
@@ -108,7 +108,7 @@ class ValidateDatabaseEntries(object):
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
             try:
-                self._validate_entry(b)
+                b.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
@@ -126,7 +126,7 @@ class ValidateDatabaseEntries(object):
         darkframe_notfound_list = list()
         for d in darkframe_entries:
             try:
-                self._validate_entry(d)
+                d.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
@@ -145,7 +145,7 @@ class ValidateDatabaseEntries(object):
         video_notfound_list = list()
         for v in video_entries:
             try:
-                self._validate_entry(v)
+                v.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
@@ -163,7 +163,7 @@ class ValidateDatabaseEntries(object):
         keogram_notfound_list = list()
         for k in keogram_entries:
             try:
-                self._validate_entry(k)
+                k.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
@@ -182,7 +182,7 @@ class ValidateDatabaseEntries(object):
         startrail_notfound_list = list()
         for s in startrail_entries:
             try:
-                self._validate_entry(s)
+                s.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
@@ -201,8 +201,11 @@ class ValidateDatabaseEntries(object):
 
         startrail_video_notfound_list = list()
         for s in startrail_video_entries:
-            if not s.validateFile():
-                #logger.warning('Entry not found on filesystem: %s', s.filename)
+            try:
+                s.validateFile()
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', k.filename)
                 startrail_video_notfound_list.append(s)
 
 
@@ -217,7 +220,7 @@ class ValidateDatabaseEntries(object):
         panorama_notfound_list = list()
         for p in panorama_entries:
             try:
-                self._validate_entry(p)
+                p.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
@@ -235,10 +238,13 @@ class ValidateDatabaseEntries(object):
 
         panorama_video_notfound_list = list()
         for pv in panorama_video_entries:
-            if not pv.validateFile():
-                #logger.warning('Entry not found on filesystem: %s', s.filename)
-                panorama_video_notfound_list.append(pv)
 
+            try:
+                pv.validateFile()
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                panorama_video_notfound_list.append(pv)
 
 
         logger.warning('Images not found: %d', len(image_notfound_list))
@@ -320,14 +326,6 @@ class ValidateDatabaseEntries(object):
 
         # finalize transaction
         db.session.commit()
-
-
-    def _validate_entry(self, entry):
-        file_p = Path(entry.filename)
-
-        if not file_p.exists():
-            raise FileNotFoundError('File not found')
-
 
 
 if __name__ == "__main__":
