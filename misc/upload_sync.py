@@ -36,6 +36,7 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
+from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable
 
 
 from indi_allsky import constants
@@ -148,10 +149,17 @@ class UploadSync(object):
                             if not self.upload_images:
                                 continue
 
+                        if upload_type == 'upload' and table.__name__ == 'IndiAllSkyDbPanoramaImageTable':
+                            if not self.upload_images:
+                                continue
+
                         if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbImageTable':
                             if not self.syncapi_images:
                                 continue
 
+                        if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbPanoramaImageTable':
+                            if not self.syncapi_images:
+                                continue
 
                         upload_list.append({
                             'upload_type' : upload_type,
@@ -230,6 +238,8 @@ class UploadSync(object):
                     self._miscUpload.upload_startrail(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsVideoTable':
                     self._miscUpload.upload_startrailvideo(entry)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaVideoTable':
+                    self._miscUpload.upload_panorama_video(entry)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -388,6 +398,23 @@ class UploadSync(object):
                         panorama_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_panorama(entry, panorama_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaVideoTable':
+                    panorama_video_metadata = {
+                        'type'       : constants.PANORAMA_VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        panorama_video_metadata['data'] = dict(entry.data)
+                    else:
+                        panorama_video_metadata['data'] = dict()
+
+                    self._miscUpload.s3_upload_panorama_video(entry, panorama_video_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -436,6 +463,7 @@ class UploadSync(object):
                         'gain'          : entry.gain,
                         'binmode'       : entry.binmode,
                         'night'         : entry.night,
+                        'exclude'       : entry.exclude,
                         'width'         : entry.width,
                         'height'        : entry.height,
                         'camera_uuid'   : entry.camera.uuid,
@@ -515,6 +543,24 @@ class UploadSync(object):
                         startrail_video_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_startrailvideo(entry, startrail_video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbPanoramaVideoTable':
+                    panorama_video_metadata = {
+                        'type'       : constants.PANORAMA_VIDEO,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        panorama_video_metadata['data'] = dict(entry.data)
+                    else:
+                        panorama_video_metadata['data'] = dict()
+
+                    self._miscUpload.syncapi_panoramavideo(entry, panorama_video_metadata)
+
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -563,6 +609,7 @@ class UploadSync(object):
             [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
             [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
             [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
         ]
 
         for table in upload_table_list:
@@ -604,6 +651,7 @@ class UploadSync(object):
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
+            IndiAllSkyDbPanoramaVideoTable,
             IndiAllSkyDbImageTable,
             IndiAllSkyDbPanoramaImageTable,
         ]
@@ -644,6 +692,7 @@ class UploadSync(object):
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
+            IndiAllSkyDbPanoramaVideoTable,
         ]
         for table in syncapi_table_list:
             if self.config.get('SYNCAPI', {}).get('ENABLE'):
