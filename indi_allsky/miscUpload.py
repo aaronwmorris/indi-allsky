@@ -302,7 +302,7 @@ class miscUpload(object):
 
     def upload_panorama(self, panorama_entry):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'):
-            logger.warning('Panorama uploading disabled')
+            #logger.warning('Panorama uploading disabled')
             return
 
 
