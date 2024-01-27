@@ -1160,6 +1160,7 @@ class VideoWorker(Process):
     def expireData(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
+
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
@@ -1176,6 +1177,10 @@ class VideoWorker(Process):
             .join(IndiAllSkyDbRawImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+        old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
 
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
@@ -1197,6 +1202,10 @@ class VideoWorker(Process):
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
+        old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
 
 
         # images
@@ -1237,6 +1246,23 @@ class VideoWorker(Process):
         logger.warning('Found %d expired RAW images to delete', old_raw_images.count())
         for file_entry in old_raw_images:
             #logger.info('Removing old image: %s', file_entry.filename)
+
+            try:
+                file_entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(file_entry)
+
+
+        db.session.commit()
+
+
+        # panorama images
+        logger.warning('Found %d expired Panorama images to delete', old_panorama_images.count())
+        for file_entry in old_panorama_images:
+            #logger.info('Removing old panorama: %s', file_entry.filename)
 
             try:
                 file_entry.deleteAsset()
@@ -1317,6 +1343,22 @@ class VideoWorker(Process):
 
         db.session.commit()
 
+
+        # panorama video
+        logger.warning('Found %d expired panorama videos to delete', old_panorama_videos.count())
+        for file_entry in old_panorama_videos:
+            #logger.info('Removing old panorama video: %s', file_entry.filename)
+
+            try:
+                file_entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(file_entry)
+
+
+        db.session.commit()
 
 
         # Remove empty folders
