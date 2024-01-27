@@ -3001,6 +3001,20 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
 
+        ### Panorama Images
+        panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
+        file_count += panorama_image_query.count()
+
+        for p in panorama_image_query:
+            p.deleteAsset()
+            db.session.delete(p)
+
+        db.session.commit()
+
+
         return file_count
 
 
@@ -3021,12 +3035,17 @@ class AjaxSystemInfoView(BaseView):
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
+        panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
         video_count = video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
         startrail_video_count = startrail_video_query.count()
+        panorama_video_count = panorama_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count + startrail_video_count
+        file_count = video_count + keogram_count + startrail_count + startrail_video_count + panorama_video_count
 
 
         # videos
@@ -3057,6 +3076,14 @@ class AjaxSystemInfoView(BaseView):
         for sv in startrail_video_query:
             sv.deleteAsset()
             db.session.delete(sv)
+
+        db.session.commit()
+
+
+        # panorama videos
+        for pv in panorama_video_query:
+            pv.deleteAsset()
+            db.session.delete(pv)
 
         db.session.commit()
 
@@ -3112,6 +3139,21 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
 
+        ### Panorama Images
+        panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.night == sa_false())
+
+        file_count += panorama_image_query.count()
+
+        for i in panorama_image_query:
+            i.deleteAsset()
+            db.session.delete(i)
+
+        db.session.commit()
+
+
         ### Timelapses
         video_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
@@ -3142,6 +3184,23 @@ class AjaxSystemInfoView(BaseView):
             db.session.delete(k)
 
         db.session.commit()
+
+
+        ### Panorama Videos
+        panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbPanoramaVideoTable.night == sa_false())
+
+        file_count += panorama_video_query.count()
+
+
+        for pv in panorama_video_query:
+            pv.deleteAsset()
+            db.session.delete(pv)
+
+        db.session.commit()
+
 
         ## no startrails
         ## no startrail videos
