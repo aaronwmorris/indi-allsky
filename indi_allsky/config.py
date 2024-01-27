@@ -293,7 +293,7 @@ class IndiAllSkyConfigBase(object):
             "CONNECT_TIMEOUT"        : 10.0,
             "TIMEOUT"                : 60.0,
             "URL_TEMPLATE"           : "https://{bucket}.s3.{region}.{host}",
-            "ACL"                    : "public-read",  # s3: public-read, gcp: publicRead
+            "ACL"                    : "",
             "STORAGE_CLASS"          : "STANDARD",
             "TLS"                    : True,
             "CERT_BYPASS"            : False,
