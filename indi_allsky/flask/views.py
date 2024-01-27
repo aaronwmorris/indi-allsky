@@ -3412,7 +3412,7 @@ class AjaxSystemInfoView(BaseView):
         panorama_video_notfound_list = list()
         for p in panorama_video_entries:
             if not p.validateFile():
-                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                #logger.warning('Entry not found on filesystem: %s', p.filename)
                 panorama_video_notfound_list.append(p)
 
 

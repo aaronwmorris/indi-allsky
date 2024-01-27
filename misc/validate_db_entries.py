@@ -205,7 +205,7 @@ class ValidateDatabaseEntries(object):
                 s.validateFile()
                 continue
             except FileNotFoundError:
-                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_video_notfound_list.append(s)
 
 
@@ -223,7 +223,7 @@ class ValidateDatabaseEntries(object):
                 p.validateFile()
                 continue
             except FileNotFoundError:
-                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                #logger.warning('Entry not found on filesystem: %s', p.filename)
                 panorama_notfound_list.append(p)
 
 
@@ -243,7 +243,7 @@ class ValidateDatabaseEntries(object):
                 pv.validateFile()
                 continue
             except FileNotFoundError:
-                #logger.warning('Entry not found on filesystem: %s', k.filename)
+                #logger.warning('Entry not found on filesystem: %s', pv.filename)
                 panorama_video_notfound_list.append(pv)
 
 
