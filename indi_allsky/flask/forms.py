@@ -3258,6 +3258,55 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_video_youtube = False
 
 
+            ### Panorama timelapses
+            panorama_video_entry_q = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == dayDate,
+                        IndiAllSkyDbPanoramaVideoTable.night == entry['night'],
+                    )
+                )
+
+
+            if not self.local:
+                # Do not serve local assets
+                panorama_video_entry_q = panorama_video_entry_q\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbPanoramaVideoTable.remote_url != sa_null(),
+                            IndiAllSkyDbPanoramaVideoTable.s3_key != sa_null(),
+                        )
+                    )
+
+
+            panorama_video_entry = panorama_video_entry_q\
+                .order_by(IndiAllSkyDbPanoramaVideoTable.dayDate.asc())\
+                .first()  # use the oldest (asc)
+
+
+            if panorama_video_entry:
+                if panorama_video_entry.data:
+                    p_v_data = panorama_video_entry.data
+                else:
+                    p_v_data = {}
+
+                try:
+                    panorama_video_url = panorama_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                    panorama_video_id = panorama_video_entry.id
+                    panorama_video_youtube = bool(p_v_data.get('youtube_id', False))
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    panorama_video_url = None
+                    panorama_video_id = -1
+                    panorama_video_youtube = False
+            else:
+                panorama_video_url = None
+                panorama_video_id = -1
+                panorama_video_youtube = False
+
+
             entry['keogram']    = str(keogram_url)
             entry['keogram_id'] = keogram_id
             entry['startrail']  = str(startrail_url)
@@ -3265,6 +3314,9 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
             entry['startrail_timelapse_youtube_uploaded']  = startrail_video_youtube
+            entry['panorama_timelapse']  = str(panorama_video_url)
+            entry['panorama_timelapse_id']  = panorama_video_id
+            entry['panorama_timelapse_youtube_uploaded']  = panorama_video_youtube
 
 
         return videos_data
