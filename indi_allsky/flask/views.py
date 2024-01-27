@@ -3204,6 +3204,23 @@ class AjaxSystemInfoView(BaseView):
                 raw_image_notfound_list.append(i)
 
 
+        ### Panorama Images
+        panorama_image_entries = IndiAllSkyDbPanoramaImageTable.query\
+            .filter(IndiAllSkyDbPanoramaImageTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
+
+
+        panorama_image_entries_count = panorama_image_entries.count()
+        message_list.append('<p>Panorama Images: {0:d}</p>'.format(panorama_image_entries_count))
+
+        app.logger.info('Searching %d panorama images...', panorama_image_entries_count)
+        panorama_image_notfound_list = list()
+        for i in panorama_image_entries:
+            if not i.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                panorama_image_notfound_list.append(i)
+
+
         ### Bad Pixel Maps
         badpixelmap_entries = IndiAllSkyDbBadPixelMapTable.query\
             .order_by(IndiAllSkyDbBadPixelMapTable.createDate.asc())
@@ -3317,16 +3334,39 @@ class AjaxSystemInfoView(BaseView):
                 startrail_video_notfound_list.append(s)
 
 
+        ### Panorama videos
+        panorama_video_entries = IndiAllSkyDbPanoramaVideoTable.query\
+            .filter(
+                and_(
+                    IndiAllSkyDbPanoramaVideoTable.success == sa_true(),
+                    IndiAllSkyDbPanoramaVideoTable.s3_key == sa_null(),
+                )
+            )\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
+
+        panorama_video_entries_count = panorama_video_entries.count()
+        message_list.append('<p>Panorama timelapses: {0:d}</p>'.format(panorama_video_entries_count))
+
+        app.logger.info('Searching %d panorama timelapses...', panorama_video_entries_count)
+        panorama_video_notfound_list = list()
+        for p in panorama_video_entries:
+            if not p.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', s.filename)
+                panorama_video_notfound_list.append(s)
+
+
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
         app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
         app.logger.warning('RAW Images not found: %d', len(raw_image_notfound_list))
+        app.logger.warning('Panorama Images not found: %d', len(panorama_image_notfound_list))
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
+        app.logger.warning('Panorama timelapses not found: %d', len(panorama_video_notfound_list))
 
 
         ### DELETE ###
@@ -3340,6 +3380,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing RAW image entries</p>'.format(len(raw_image_notfound_list)))
         [db.session.delete(i) for i in raw_image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing panorama image entries</p>'.format(len(panorama_image_notfound_list)))
+        [db.session.delete(i) for i in panorama_image_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))
@@ -3364,6 +3408,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing star trail timelapse entries</p>'.format(len(startrail_video_notfound_list)))
         [db.session.delete(s) for s in startrail_video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing panorama timelapse entries</p>'.format(len(panorama_video_notfound_list)))
+        [db.session.delete(s) for p in panorama_video_notfound_list]
 
 
         # finalize transaction
