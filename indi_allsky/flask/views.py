@@ -3814,8 +3814,28 @@ class AjaxTimelapseGeneratorView(BaseView):
                 data=jobdata_kst,
             )
 
+
             db.session.add(task_video)
             db.session.add(task_kst)
+
+
+            if self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
+                jobdata_panorama_video = {
+                    'action'      : 'generatePanoramaVideo',
+                    'timespec'    : timespec,
+                    'img_folder'  : str(img_day_folder),
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                }
+
+                task_panorama_video = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.VIDEO,
+                    state=TaskQueueState.MANUAL,
+                    data=jobdata_panorama_video,
+                )
+
+                db.session.add(task_panorama_video)
+
 
             db.session.commit()
 
@@ -3868,6 +3888,14 @@ class AjaxTimelapseGeneratorView(BaseView):
             return jsonify(message)
 
         elif action == 'generate_panorama_video':
+            if not self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
+                message = {
+                    'success-message' : 'Panoramas disabled',
+                }
+
+                return jsonify(message)
+
+
             timespec = day_date.strftime('%Y%m%d')
 
             if night:
