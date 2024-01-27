@@ -130,7 +130,7 @@ class miscUpload(object):
 
     def upload_panorama_video(self, video_entry):
         ### Upload video
-        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO'):
             logger.warning('Video uploading disabled')
             return
 
