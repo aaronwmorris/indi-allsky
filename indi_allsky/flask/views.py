@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
+from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -3575,6 +3576,31 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        elif action == 'delete_panorama_video':
+            panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaVideoTable.night == night,
+                    )
+                )\
+                .first()
+
+            if panorama_video_entry:
+                panorama_video_entry.deleteAsset()
+                db.session.delete(panorama_video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Panorama Timelapse deleted',
+            }
+
+            return jsonify(message)
 
         if action == 'delete_k_st':
             keogram_entry = IndiAllSkyDbKeogramTable.query\
@@ -3734,6 +3760,46 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        elif action == 'generate_panorama_video':
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                timeofday_str = 'night'
+            else:
+                timeofday_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+
+            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
+
+            app.logger.warning('Generating %s time panorama timelapse for %s camera %d', timeofday_str, timespec, camera.id)
+
+            jobdata = {
+                'action'      : 'generatePanoramaVideo',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'night'       : night,
+                'camera_id'   : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
 
         elif action == 'generate_k_st':
             timespec = day_date.strftime('%Y%m%d')

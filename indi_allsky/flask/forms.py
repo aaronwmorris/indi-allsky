@@ -3330,9 +3330,11 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         ('generate_video_k_st', 'Generate All'),
         ('generate_video', 'Generate Timelapse Only'),
         ('generate_k_st', 'Generate Keogram/Star Trails'),
+        ('generate_panorama_video', 'Generate Panorama Timelapse'),
         ('delete_video_k_st', 'Delete Timelapse/Keogram/Star Trails'),
         ('delete_video', 'Delete Timelapse Only'),
         ('delete_k_st', 'Delete Keogram/Star Trails'),
+        ('delete_panorama_video', 'Delete Panorama Timelapse'),
         ('upload_endofnight', 'Upload End-of-Night Data [today only]'),
         ('delete_images', 'Delete Images for date *DANGER*'),
     )
