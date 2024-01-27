@@ -3411,7 +3411,7 @@ class AjaxSystemInfoView(BaseView):
         for p in panorama_video_entries:
             if not p.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
-                panorama_video_notfound_list.append(s)
+                panorama_video_notfound_list.append(p)
 
 
 
@@ -3466,11 +3466,11 @@ class AjaxSystemInfoView(BaseView):
 
 
         message_list.append('<p>Removed {0:d} missing star trail timelapse entries</p>'.format(len(startrail_video_notfound_list)))
-        [db.session.delete(s) for s in startrail_video_notfound_list]
+        [db.session.delete(sv) for sv in startrail_video_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing panorama timelapse entries</p>'.format(len(panorama_video_notfound_list)))
-        [db.session.delete(s) for p in panorama_video_notfound_list]
+        [db.session.delete(p) for p in panorama_video_notfound_list]
 
 
         # finalize transaction
