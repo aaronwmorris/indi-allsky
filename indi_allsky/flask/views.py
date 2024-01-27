@@ -2014,6 +2014,8 @@ class ImageViewerView(FormView):
                 local = False
 
 
+        context['panorama__enable'] = int(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', 0))
+
         context['form_viewer'] = IndiAllskyImageViewerPreload(
             data=form_data,
             camera_id=session['camera_id'],
