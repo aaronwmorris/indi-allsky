@@ -270,6 +270,24 @@ function populate_videos(video_list) {
             ).appendTo(kl_a);
 
 
+            // Link to panorama timelapse
+            if (item['panorama_timelapse'] != 'None') {
+                var p_a = $('<a />', {
+                    'href'   : item['panorama_timelapse'],
+                    'target' : "_blank",
+                    'rel'    : "noopener noreferrer",
+                    'class'  : "text-decoration-none link-warning",
+                }).appendTo(datetime_div);
+
+                $('<div />', {}).html(
+                    $('<span />', {
+                        'text'  : "Panorama",
+                        'class' : "badge pill bg-success",
+                    })
+                ).appendTo(p_a);
+            }
+
+
             $('<hr>').appendTo(datetime_div);
 
 
