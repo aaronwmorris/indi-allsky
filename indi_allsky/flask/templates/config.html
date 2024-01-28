@@ -2282,6 +2282,9 @@
 
     <hr>
 
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changes to LATITUDE and LONGITUDE will not be immediately reflected in the status area.  A reload is necessary to update the camera metadata.</div>
+    <div>&nbsp;</div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.LOCATION_NAME.label(class='col-form-label') }}
@@ -2827,6 +2830,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store panorama videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -2923,6 +2937,19 @@
             </div>
         </div>
         <div class="col-sm-8">Enable star trail video uploads</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_PANORAMA_VIDEO(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_PANORAMA_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable panorama video uploads</div>
     </div>
 
     <div class="form-group row">
@@ -3856,6 +3883,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_PANORAMA_NAME',
     'FILETRANSFER__REMOTE_IMAGE_FOLDER',
     'FILETRANSFER__REMOTE_PANORAMA_FOLDER',
+    'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER',
     'FILETRANSFER__REMOTE_METADATA_NAME',
     'FILETRANSFER__REMOTE_METADATA_FOLDER',
     'FILETRANSFER__REMOTE_VIDEO_FOLDER',
@@ -3970,6 +3998,7 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_KEOGRAM',
     'FILETRANSFER__UPLOAD_STARTRAIL',
     'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO',
+    'FILETRANSFER__UPLOAD_PANORAMA_VIDEO',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
     'S3UPLOAD__ENABLE',
     'S3UPLOAD__UPLOAD_FITS',

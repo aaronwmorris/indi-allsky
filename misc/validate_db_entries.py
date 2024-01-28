@@ -27,6 +27,8 @@ from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
+from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable
 
 
 
@@ -58,7 +60,7 @@ class ValidateDatabaseEntries(object):
         image_notfound_list = list()
         for i in image_entries:
             try:
-                self._validate_entry(i)
+                i.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
@@ -106,7 +108,7 @@ class ValidateDatabaseEntries(object):
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
             try:
-                self._validate_entry(b)
+                b.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
@@ -124,7 +126,7 @@ class ValidateDatabaseEntries(object):
         darkframe_notfound_list = list()
         for d in darkframe_entries:
             try:
-                self._validate_entry(d)
+                d.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
@@ -143,7 +145,7 @@ class ValidateDatabaseEntries(object):
         video_notfound_list = list()
         for v in video_entries:
             try:
-                self._validate_entry(v)
+                v.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
@@ -161,7 +163,7 @@ class ValidateDatabaseEntries(object):
         keogram_notfound_list = list()
         for k in keogram_entries:
             try:
-                self._validate_entry(k)
+                k.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
@@ -180,7 +182,7 @@ class ValidateDatabaseEntries(object):
         startrail_notfound_list = list()
         for s in startrail_entries:
             try:
-                self._validate_entry(s)
+                s.validateFile()
                 continue
             except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
@@ -199,11 +201,50 @@ class ValidateDatabaseEntries(object):
 
         startrail_video_notfound_list = list()
         for s in startrail_video_entries:
-            if not s.validateFile():
+            try:
+                s.validateFile()
+                continue
+            except FileNotFoundError:
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_video_notfound_list.append(s)
 
 
+        ### Panorama Images
+        panorama_entries = IndiAllSkyDbPanoramaImageTable.query\
+            .filter(IndiAllSkyDbPanoramaImageTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
+
+
+        logger.info('Searching %d panoramas...', panorama_entries.count())
+
+        panorama_notfound_list = list()
+        for p in panorama_entries:
+            try:
+                p.validateFile()
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', p.filename)
+                panorama_notfound_list.append(p)
+
+
+        ### Panorama videos
+        panorama_video_entries = IndiAllSkyDbPanoramaVideoTable.query\
+            .filter(IndiAllSkyDbPanoramaVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbPanoramaVideoTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
+
+
+        logger.info('Searching %d panorama timelapses...', panorama_video_entries.count())
+
+        panorama_video_notfound_list = list()
+        for pv in panorama_video_entries:
+
+            try:
+                pv.validateFile()
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', pv.filename)
+                panorama_video_notfound_list.append(pv)
 
 
         logger.warning('Images not found: %d', len(image_notfound_list))
@@ -215,6 +256,8 @@ class ValidateDatabaseEntries(object):
         logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         logger.warning('Star trail videos not found: %d', len(startrail_video_notfound_list))
+        logger.warning('Panorama images not found: %d', len(panorama_notfound_list))
+        logger.warning('Panorama videos not found: %d', len(panorama_video_notfound_list))
 
 
         print()
@@ -271,16 +314,18 @@ class ValidateDatabaseEntries(object):
             [db.session.delete(s) for s in startrail_video_notfound_list]
 
 
+        if len(panorama_notfound_list):
+            logger.warning('Removing %d missing panorama entries', len(panorama_notfound_list))
+            [db.session.delete(p) for p in panorama_notfound_list]
+
+
+        if len(panorama_video_notfound_list):
+            logger.warning('Removing %d missing panorama video entries', len(panorama_video_notfound_list))
+            [db.session.delete(pv) for pv in panorama_video_notfound_list]
+
+
         # finalize transaction
         db.session.commit()
-
-
-    def _validate_entry(self, entry):
-        file_p = Path(entry.filename)
-
-        if not file_p.exists():
-            raise FileNotFoundError('File not found')
-
 
 
 if __name__ == "__main__":

@@ -2460,6 +2460,20 @@ class ImageProcessor(object):
                     img_pano[y][x] = [0, 0, 0]
 
 
+        pano_height, pano_width = img_pano.shape[:2]
+        mod_height = pano_height % 2
+        mod_width = pano_width % 2
+
+        if mod_height or mod_width:
+            # width and height needs to be divisible by 2 for timelapse
+            crop_width = pano_width - mod_width
+
+            img_pano = img_pano[
+                mod_height:pano_height,  # trim the top
+                0:crop_width,
+            ]
+
+
         # original image not replaced
         return img_pano
 

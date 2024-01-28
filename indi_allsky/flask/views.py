@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
+from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -1174,15 +1175,16 @@ class ConfigView(FormView):
             'FILETRANSFER__CERT_BYPASS'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('CERT_BYPASS', True),
             'FILETRANSFER__REMOTE_IMAGE_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{ext}'),
             'FILETRANSFER__REMOTE_PANORAMA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_NAME', 'panorama.{ext}'),
-            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/home/allsky/upload'),
-            'FILETRANSFER__REMOTE_PANORAMA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_FOLDER', '/home/allsky/upload'),
+            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/home/allsky/upload/allsky'),
+            'FILETRANSFER__REMOTE_PANORAMA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__REMOTE_METADATA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_NAME', 'latest_metadata.json'),
-            'FILETRANSFER__REMOTE_METADATA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_FOLDER', 'allsky'),
-            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', 'allsky/videos'),
-            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', 'allsky/keograms'),
-            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', 'allsky/startrails'),
-            'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', 'allsky/videos'),
-            'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', 'allsky'),
+            'FILETRANSFER__REMOTE_METADATA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_FOLDER', '/home/allsky/upload/allsky'),
+            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
+            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms'),
+            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/home/allsky/upload/allsky/startrails'),
+            'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
+            'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
+            'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
             'FILETRANSFER__UPLOAD_PANORAMA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA', 0),
             'FILETRANSFER__UPLOAD_METADATA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_METADATA', False),
@@ -1190,6 +1192,7 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
+            'FILETRANSFER__UPLOAD_PANORAMA_VIDEO'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO', False),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
             'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
             'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
@@ -1205,7 +1208,7 @@ class ConfigView(FormView):
             'S3UPLOAD__TIMEOUT'              : self.indi_allsky_config.get('S3UPLOAD', {}).get('TIMEOUT', 60.0),
             'S3UPLOAD__URL_TEMPLATE'         : self.indi_allsky_config.get('S3UPLOAD', {}).get('URL_TEMPLATE', 'https://{bucket}.s3.{region}.{host}'),
             'S3UPLOAD__STORAGE_CLASS'        : self.indi_allsky_config.get('S3UPLOAD', {}).get('STORAGE_CLASS', 'STANDARD'),
-            'S3UPLOAD__ACL'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACL', 'public-read'),
+            'S3UPLOAD__ACL'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACL', ''),
             'S3UPLOAD__TLS'                  : self.indi_allsky_config.get('S3UPLOAD', {}).get('TLS', True),
             'S3UPLOAD__CERT_BYPASS'          : self.indi_allsky_config.get('S3UPLOAD', {}).get('CERT_BYPASS', False),
             'S3UPLOAD__UPLOAD_FITS'          : self.indi_allsky_config.get('S3UPLOAD', {}).get('UPLOAD_FITS', False),
@@ -1738,6 +1741,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA']      = int(request.json['FILETRANSFER__UPLOAD_PANORAMA'])
@@ -1746,6 +1750,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL_VIDEO'] = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA_VIDEO']  = bool(request.json['FILETRANSFER__UPLOAD_PANORAMA_VIDEO'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
         self.indi_allsky_config['S3UPLOAD']['CLASSNAME']                = str(request.json['S3UPLOAD__CLASSNAME'])
         self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
@@ -2008,6 +2013,8 @@ class ImageViewerView(FormView):
             else:
                 local = False
 
+
+        context['panorama__enable'] = int(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', 0))
 
         context['form_viewer'] = IndiAllskyImageViewerPreload(
             data=form_data,
@@ -2996,6 +3003,20 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
 
+        ### Panorama Images
+        panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
+        file_count += panorama_image_query.count()
+
+        for p in panorama_image_query:
+            p.deleteAsset()
+            db.session.delete(p)
+
+        db.session.commit()
+
+
         return file_count
 
 
@@ -3016,12 +3037,17 @@ class AjaxSystemInfoView(BaseView):
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)
 
+        panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+
         video_count = video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
         startrail_video_count = startrail_video_query.count()
+        panorama_video_count = panorama_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count + startrail_video_count
+        file_count = video_count + keogram_count + startrail_count + startrail_video_count + panorama_video_count
 
 
         # videos
@@ -3052,6 +3078,14 @@ class AjaxSystemInfoView(BaseView):
         for sv in startrail_video_query:
             sv.deleteAsset()
             db.session.delete(sv)
+
+        db.session.commit()
+
+
+        # panorama videos
+        for pv in panorama_video_query:
+            pv.deleteAsset()
+            db.session.delete(pv)
 
         db.session.commit()
 
@@ -3107,6 +3141,21 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
 
+        ### Panorama Images
+        panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.night == sa_false())
+
+        file_count += panorama_image_query.count()
+
+        for i in panorama_image_query:
+            i.deleteAsset()
+            db.session.delete(i)
+
+        db.session.commit()
+
+
         ### Timelapses
         video_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
@@ -3137,6 +3186,23 @@ class AjaxSystemInfoView(BaseView):
             db.session.delete(k)
 
         db.session.commit()
+
+
+        ### Panorama Videos
+        panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbPanoramaVideoTable.night == sa_false())
+
+        file_count += panorama_video_query.count()
+
+
+        for pv in panorama_video_query:
+            pv.deleteAsset()
+            db.session.delete(pv)
+
+        db.session.commit()
+
 
         ## no startrails
         ## no startrail videos
@@ -3197,6 +3263,23 @@ class AjaxSystemInfoView(BaseView):
             if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 raw_image_notfound_list.append(i)
+
+
+        ### Panorama Images
+        panorama_image_entries = IndiAllSkyDbPanoramaImageTable.query\
+            .filter(IndiAllSkyDbPanoramaImageTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
+
+
+        panorama_image_entries_count = panorama_image_entries.count()
+        message_list.append('<p>Panorama Images: {0:d}</p>'.format(panorama_image_entries_count))
+
+        app.logger.info('Searching %d panorama images...', panorama_image_entries_count)
+        panorama_image_notfound_list = list()
+        for i in panorama_image_entries:
+            if not i.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', i.filename)
+                panorama_image_notfound_list.append(i)
 
 
         ### Bad Pixel Maps
@@ -3312,16 +3395,39 @@ class AjaxSystemInfoView(BaseView):
                 startrail_video_notfound_list.append(s)
 
 
+        ### Panorama videos
+        panorama_video_entries = IndiAllSkyDbPanoramaVideoTable.query\
+            .filter(
+                and_(
+                    IndiAllSkyDbPanoramaVideoTable.success == sa_true(),
+                    IndiAllSkyDbPanoramaVideoTable.s3_key == sa_null(),
+                )
+            )\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
+
+        panorama_video_entries_count = panorama_video_entries.count()
+        message_list.append('<p>Panorama timelapses: {0:d}</p>'.format(panorama_video_entries_count))
+
+        app.logger.info('Searching %d panorama timelapses...', panorama_video_entries_count)
+        panorama_video_notfound_list = list()
+        for p in panorama_video_entries:
+            if not p.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', p.filename)
+                panorama_video_notfound_list.append(p)
+
+
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
         app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
         app.logger.warning('RAW Images not found: %d', len(raw_image_notfound_list))
+        app.logger.warning('Panorama Images not found: %d', len(panorama_image_notfound_list))
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
+        app.logger.warning('Panorama timelapses not found: %d', len(panorama_video_notfound_list))
 
 
         ### DELETE ###
@@ -3335,6 +3441,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing RAW image entries</p>'.format(len(raw_image_notfound_list)))
         [db.session.delete(i) for i in raw_image_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing panorama image entries</p>'.format(len(panorama_image_notfound_list)))
+        [db.session.delete(i) for i in panorama_image_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing bad pixel map entries</p>'.format(len(badpixelmap_notfound_list)))
@@ -3358,7 +3468,11 @@ class AjaxSystemInfoView(BaseView):
 
 
         message_list.append('<p>Removed {0:d} missing star trail timelapse entries</p>'.format(len(startrail_video_notfound_list)))
-        [db.session.delete(s) for s in startrail_video_notfound_list]
+        [db.session.delete(sv) for sv in startrail_video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing panorama timelapse entries</p>'.format(len(panorama_video_notfound_list)))
+        [db.session.delete(p) for p in panorama_video_notfound_list]
 
 
         # finalize transaction
@@ -3571,6 +3685,31 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        elif action == 'delete_panorama_video':
+            panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaVideoTable.night == night,
+                    )
+                )\
+                .first()
+
+            if panorama_video_entry:
+                panorama_video_entry.deleteAsset()
+                db.session.delete(panorama_video_entry)
+
+
+            db.session.commit()
+
+
+            message = {
+                'success-message' : 'Panorama Timelapse deleted',
+            }
+
+            return jsonify(message)
 
         if action == 'delete_k_st':
             keogram_entry = IndiAllSkyDbKeogramTable.query\
@@ -3677,8 +3816,28 @@ class AjaxTimelapseGeneratorView(BaseView):
                 data=jobdata_kst,
             )
 
+
             db.session.add(task_video)
             db.session.add(task_kst)
+
+
+            if self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
+                jobdata_panorama_video = {
+                    'action'      : 'generatePanoramaVideo',
+                    'timespec'    : timespec,
+                    'img_folder'  : str(img_day_folder),
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                }
+
+                task_panorama_video = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.VIDEO,
+                    state=TaskQueueState.MANUAL,
+                    data=jobdata_panorama_video,
+                )
+
+                db.session.add(task_panorama_video)
+
 
             db.session.commit()
 
@@ -3730,6 +3889,54 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             return jsonify(message)
 
+        elif action == 'generate_panorama_video':
+            if not self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
+                message = {
+                    'success-message' : 'Panoramas disabled',
+                }
+
+                return jsonify(message)
+
+
+            timespec = day_date.strftime('%Y%m%d')
+
+            if night:
+                timeofday_str = 'night'
+            else:
+                timeofday_str = 'day'
+
+
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+
+            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
+            if not img_day_folder.exists():
+                # try legacy folder
+                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
+
+
+            app.logger.warning('Generating %s time panorama timelapse for %s camera %d', timeofday_str, timespec, camera.id)
+
+            jobdata = {
+                'action'      : 'generatePanoramaVideo',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'night'       : night,
+                'camera_id'   : camera.id,
+            }
+
+            task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=TaskQueueState.MANUAL,
+                data=jobdata,
+            )
+            db.session.add(task)
+            db.session.commit()
+
+            message = {
+                'success-message' : 'Job submitted',
+            }
+
+            return jsonify(message)
 
         elif action == 'generate_k_st':
             timespec = day_date.strftime('%Y%m%d')
@@ -3799,7 +4006,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
         if action == 'delete_images':
             image_list = IndiAllSkyDbImageTable.query\
-                .join(IndiAllSkyDbKeogramTable.camera)\
+                .join(IndiAllSkyDbImageTable.camera)\
                 .filter(
                     and_(
                         IndiAllSkyDbCameraTable.id == camera.id,
@@ -3808,11 +4015,28 @@ class AjaxTimelapseGeneratorView(BaseView):
                     )
                 )
 
+            panorama_list = IndiAllSkyDbPanoramaImageTable.query\
+                .join(IndiAllSkyDbPanoramaImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaImageTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaImageTable.night == night,
+                    )
+                )
+
+
             x = 0
-            for image in image_list:
+            for i in image_list:
                 x += 1
-                image.deleteAsset()
-                db.session.delete(image)
+                i.deleteAsset()
+                db.session.delete(i)
+
+            for p in panorama_list:
+                x += 1
+                p.deleteAsset()
+                db.session.delete(p)
+
 
             db.session.commit()
 

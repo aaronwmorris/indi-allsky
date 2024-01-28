@@ -598,7 +598,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
-            if self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
+            if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
                 pano_data = self.image_processor.fish2pano()
 
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)

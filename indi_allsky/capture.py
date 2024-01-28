@@ -1169,7 +1169,7 @@ class CaptureWorker(Process):
 
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
 
-        jobdata = {
+        video_jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
@@ -1177,15 +1177,35 @@ class CaptureWorker(Process):
             'camera_id'   : camera.id,
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        video_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
             state=task_state,
-            data=jobdata,
+            data=video_jobdata,
         )
-        db.session.add(task)
+        db.session.add(video_task)
         db.session.commit()
 
-        self.video_q.put({'task_id' : task.id})
+        self.video_q.put({'task_id' : video_task.id})
+
+
+        if self.config.get('FISH2PANO', {}).get('ENABLE'):
+            panorama_video_jobdata = {
+                'action'      : 'generatePanoramaVideo',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'night'       : False,
+                'camera_id'   : camera.id,
+            }
+
+            panorama_video_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=panorama_video_jobdata,
+            )
+            db.session.add(panorama_video_task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : panorama_video_task.id})
 
 
     def _generateNightTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
@@ -1203,7 +1223,7 @@ class CaptureWorker(Process):
 
         logger.warning('Generating night time timelapse for %s camera %d', timespec, camera.id)
 
-        jobdata = {
+        video_jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
             'img_folder'  : str(img_day_folder),
@@ -1211,15 +1231,35 @@ class CaptureWorker(Process):
             'camera_id'   : camera.id,
         }
 
-        task = IndiAllSkyDbTaskQueueTable(
+        video_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
             state=task_state,
-            data=jobdata,
+            data=video_jobdata,
         )
-        db.session.add(task)
+        db.session.add(video_task)
         db.session.commit()
 
-        self.video_q.put({'task_id' : task.id})
+        self.video_q.put({'task_id' : video_task.id})
+
+
+        if self.config.get('FISH2PANO', {}).get('ENABLE'):
+            panorama_video_jobdata = {
+                'action'      : 'generatePanoramaVideo',
+                'timespec'    : timespec,
+                'img_folder'  : str(img_day_folder),
+                'night'       : True,
+                'camera_id'   : camera.id,
+            }
+
+            panorama_video_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.VIDEO,
+                state=task_state,
+                data=panorama_video_jobdata,
+            )
+            db.session.add(panorama_video_task)
+            db.session.commit()
+
+            self.video_q.put({'task_id' : panorama_video_task.id})
 
 
     def _generateNightKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):

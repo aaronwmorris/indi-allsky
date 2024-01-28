@@ -29,6 +29,7 @@ canvas {
 var img;
 var fullscreen = false;  //initial state
 var newest_image_default = true;  // load last image by default
+var panorama__enable = {{ panorama__enable }};
 var image_data = [];
 var image_index = -1;
 
@@ -201,6 +202,7 @@ function closeFullscreen() {
         <span id="fits_processing"></span>
         <span id="raw_download"></span>
         <span id="panorama_download"></span>
+        <span id="panorama_loop_here"></span>
     </div>
 </div>
 
@@ -722,6 +724,22 @@ function init() {
                 );
             } else {
                 $('#panorama_download').empty();
+            };
+
+            // Panorama Loop
+            if (panorama__enable) {
+                $('#panorama_loop_here').html(
+                    $('<a />', {
+                        'href' : "{{ url_for('indi_allsky.panorama_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Panorama Loop',
+                            'class' : "badge pill bg-primary",
+                        })
+                    )
+                );
             };
 
         } else {

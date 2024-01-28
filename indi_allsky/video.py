@@ -45,6 +45,8 @@ from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbFitsImageTable
+from .flask.models import IndiAllSkyDbPanoramaImageTable
+from .flask.models import IndiAllSkyDbPanoramaVideoTable
 from .flask.models import IndiAllSkyDbRawImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
@@ -406,6 +408,182 @@ class VideoWorker(Process):
         self._miscUpload.s3_upload_video(video_entry, video_metadata)
         self._miscUpload.syncapi_video(video_entry, video_metadata)
         self._miscUpload.upload_video(video_entry)
+
+
+    def generatePanoramaVideo(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
+        now = datetime.now()
+
+        try:
+            d_dayDate = datetime.strptime(timespec, '%Y%m%d').date()
+        except ValueError:
+            logger.error('Invalid time spec')
+            task.setFailed('Invalid time spec')
+            return
+
+
+        if night:
+            timeofday = 'night'
+        else:
+            timeofday = 'day'
+
+
+        if self.config['FFMPEG_CODEC'] in ['libx264']:
+            video_format = 'mp4'
+        elif self.config['FFMPEG_CODEC'] in ['libvpx']:
+            video_format = 'webm'
+        else:
+            logger.error('Invalid codec in config, timelapse generation failed')
+            task.setFailed('Invalid codec in config, timelapse generation failed')
+            return
+
+        video_file = img_folder.parent.joinpath('allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+
+        if video_file.exists():
+            logger.warning('Video is already generated: %s', video_file)
+            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
+            return
+
+
+        try:
+            # delete old video entry if it exists
+            video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbPanoramaVideoTable.filename == str(video_file),
+                        IndiAllSkyDbPanoramaVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                    )
+                )\
+                .one()
+
+            logger.warning('Removing orphaned video db entry')
+            db.session.delete(video_entry)
+            db.session.commit()
+        except NoResultFound:
+            pass
+
+
+        # find all files
+        timelapse_files_entries = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbPanoramaImageTable.night == night)\
+            .filter(IndiAllSkyDbPanoramaImageTable.exclude == sa_false())\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
+
+
+        logger.info('Found %d images for timelapse', timelapse_files_entries.count())
+
+
+        timelapse_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
+            .filter(IndiAllSkyDbImageTable.night == night)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
+            .first()
+
+
+        # some of these values might be NULL which might cause other problems
+        try:
+            max_kpindex = float(timelapse_data.image_max_kpindex)
+            max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            avg_stars = float(timelapse_data.image_avg_stars)
+            max_moonphase = float(timelapse_data.image_max_moonphase)
+            avg_sqm = float(timelapse_data.image_avg_sqm)
+        except TypeError:
+            max_kpindex = 0.0
+            max_ovation_max = 0
+            avg_stars = 0
+            max_moonphase = -1.0
+            avg_sqm = 0.0
+
+
+        try:
+            max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
+        timelapse_files = list()
+        for entry in timelapse_files_entries:
+            p_entry = Path(entry.getFilesystemPath())
+
+            if not p_entry.exists():
+                logger.error('File not found: %s', p_entry)
+                continue
+
+            if p_entry.stat().st_size == 0:
+                continue
+
+            timelapse_files.append(p_entry)
+
+
+        video_metadata = {
+            'type'          : constants.PANORAMA_VIDEO,
+            'createDate'    : now.timestamp(),
+            'dayDate'       : d_dayDate.strftime('%Y%m%d'),
+            'night'         : night,
+            'camera_uuid'   : camera.uuid,
+        }
+
+        video_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'avg_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'avg_sqm'           : avg_sqm,
+        }
+
+
+        # Create DB entry before creating file
+        video_entry = self._miscDb.addPanoramaVideo(
+            video_file.relative_to(self.image_dir),
+            camera.id,
+            video_metadata,
+        )
+
+
+        try:
+            tg = TimelapseGenerator(self.config)
+            tg.generate(video_file, timelapse_files)
+        except TimelapseException:
+            video_entry.success = False
+            db.session.commit()
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'timelapse_video',
+                'Timelapse panorama video failed to generate',
+                expire=timedelta(hours=12),
+            )
+
+            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
+            return
+
+
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
+        ### Upload ###
+        self._miscUpload.s3_upload_panorama_video(video_entry, video_metadata)
+        self._miscUpload.syncapi_panoramavideo(video_entry, video_metadata)
+        self._miscUpload.upload_panorama_video(video_entry)
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
@@ -982,6 +1160,7 @@ class VideoWorker(Process):
     def expireData(self, task, timespec, img_folder, night, camera):
         task.setRunning()
 
+
         # Old image files need to be pruned
         cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
@@ -998,6 +1177,10 @@ class VideoWorker(Process):
             .join(IndiAllSkyDbRawImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+        old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
 
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
@@ -1019,6 +1202,10 @@ class VideoWorker(Process):
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
+        old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
+            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
 
 
         # images
@@ -1059,6 +1246,23 @@ class VideoWorker(Process):
         logger.warning('Found %d expired RAW images to delete', old_raw_images.count())
         for file_entry in old_raw_images:
             #logger.info('Removing old image: %s', file_entry.filename)
+
+            try:
+                file_entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(file_entry)
+
+
+        db.session.commit()
+
+
+        # panorama images
+        logger.warning('Found %d expired Panorama images to delete', old_panorama_images.count())
+        for file_entry in old_panorama_images:
+            #logger.info('Removing old panorama: %s', file_entry.filename)
 
             try:
                 file_entry.deleteAsset()
@@ -1139,6 +1343,22 @@ class VideoWorker(Process):
 
         db.session.commit()
 
+
+        # panorama video
+        logger.warning('Found %d expired panorama videos to delete', old_panorama_videos.count())
+        for file_entry in old_panorama_videos:
+            #logger.info('Removing old panorama video: %s', file_entry.filename)
+
+            try:
+                file_entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(file_entry)
+
+
+        db.session.commit()
 
 
         # Remove empty folders
