@@ -3522,7 +3522,10 @@ class ImageProcessingView(TemplateView):
                 .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
                 .first()
 
-            fits_id = fits_entry.id
+            if fits_entry:
+                fits_id = fits_entry.id
+            else:
+                fits_id = 0  # will not exist
 
 
         form_data = {
@@ -3617,15 +3620,25 @@ class JsonImageProcessingView(JsonView):
         fits_id                             = int(request.json['FITS_ID'])
 
 
-        fits_entry = IndiAllSkyDbFitsImageTable.query\
-            .join(IndiAllSkyDbFitsImageTable.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    IndiAllSkyDbFitsImageTable.id == fits_id,
-                )
-            )\
-            .one()
+        try:
+            fits_entry = IndiAllSkyDbFitsImageTable.query\
+                .join(IndiAllSkyDbFitsImageTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera_id,
+                        IndiAllSkyDbFitsImageTable.id == fits_id,
+                    )
+                )\
+                .one()
+        except NoResultFound:
+            json_data = {
+                'image_b64' : None,
+                'processing_elapsed_s' : 0.0,
+                'message' : 'No FITS images found',
+            }
+            return jsonify(json_data)
+
+
 
         filename_p = Path(fits_entry.getFilesystemPath())
 
