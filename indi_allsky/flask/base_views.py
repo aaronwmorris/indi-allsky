@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
+from pprint import pformat  # noqa: F401
 import ephem
 
 from .. import constants
@@ -336,7 +337,7 @@ class TemplateView(BaseView):
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
-            data['sttaus'] = '<span class="text-muted">SLEEPING</span>'
+            data['status'] = '<span class="text-muted">SLEEPING</span>'
             return data
 
 
@@ -600,7 +601,8 @@ class TemplateView(BaseView):
             status_lines.append('<div>{0:s}</div>'.format(line))
 
         status_tmpl = ''.join(status_lines)
-        #app.logger.info('Status Text: %s', status_html)
+        #app.logger.info('Status Text: %s', status_tmpl)
+        #app.logger.info('Status data: %s', pformat(data))
 
         try:
             status_text = status_tmpl.format(**data)
