@@ -600,7 +600,7 @@ class TemplateView(BaseView):
             status_lines.append('<div>{0:s}</div>'.format(line))
 
         status_tmpl = ''.join(status_lines)
-        #app.logger.info('Status Text: %s', status_html)
+        #app.logger.info('Status Text: %s', status_tmpl)
 
         try:
             status_text = status_tmpl.format(**data)
