@@ -337,7 +337,7 @@ class TemplateView(BaseView):
 
 
         if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
-            data['sttaus'] = '<span class="text-muted">SLEEPING</span>'
+            data['status'] = '<span class="text-muted">SLEEPING</span>'
             return data
 
 
