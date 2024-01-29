@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
+from pprint import pformat  # noqa: F401
 import ephem
 
 from .. import constants
@@ -601,6 +602,7 @@ class TemplateView(BaseView):
 
         status_tmpl = ''.join(status_lines)
         #app.logger.info('Status Text: %s', status_tmpl)
+        #app.logger.info('Status data: %s', pformat(data))
 
         try:
             status_text = status_tmpl.format(**data)
