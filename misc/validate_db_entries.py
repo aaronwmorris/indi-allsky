@@ -60,10 +60,7 @@ class ValidateDatabaseEntries(object):
 
         image_notfound_list = list()
         for i in image_entries:
-            try:
-                i.validateFile()
-                continue
-            except FileNotFoundError:
+            if not i.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', i.filename)
                 image_notfound_list.append(i)
 
@@ -108,10 +105,7 @@ class ValidateDatabaseEntries(object):
 
         badpixelmap_notfound_list = list()
         for b in badpixelmap_entries:
-            try:
-                b.validateFile()
-                continue
-            except FileNotFoundError:
+            if not b.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', b.filename)
                 badpixelmap_notfound_list.append(b)
 
@@ -126,10 +120,7 @@ class ValidateDatabaseEntries(object):
 
         darkframe_notfound_list = list()
         for d in darkframe_entries:
-            try:
-                d.validateFile()
-                continue
-            except FileNotFoundError:
+            if not d.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', d.filename)
                 darkframe_notfound_list.append(d)
 
@@ -145,10 +136,7 @@ class ValidateDatabaseEntries(object):
 
         video_notfound_list = list()
         for v in video_entries:
-            try:
-                v.validateFile()
-                continue
-            except FileNotFoundError:
+            if not v.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', v.filename)
                 video_notfound_list.append(v)
 
@@ -163,10 +151,7 @@ class ValidateDatabaseEntries(object):
 
         keogram_notfound_list = list()
         for k in keogram_entries:
-            try:
-                k.validateFile()
-                continue
-            except FileNotFoundError:
+            if not k.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', k.filename)
                 keogram_notfound_list.append(k)
 
@@ -182,10 +167,7 @@ class ValidateDatabaseEntries(object):
 
         startrail_notfound_list = list()
         for s in startrail_entries:
-            try:
-                s.validateFile()
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 keogram_notfound_list.append(s)
 
@@ -202,10 +184,7 @@ class ValidateDatabaseEntries(object):
 
         startrail_video_notfound_list = list()
         for s in startrail_video_entries:
-            try:
-                s.validateFile()
-                continue
-            except FileNotFoundError:
+            if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
                 startrail_video_notfound_list.append(s)
 
@@ -220,10 +199,7 @@ class ValidateDatabaseEntries(object):
 
         panorama_notfound_list = list()
         for p in panorama_entries:
-            try:
-                p.validateFile()
-                continue
-            except FileNotFoundError:
+            if not p.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', p.filename)
                 panorama_notfound_list.append(p)
 
@@ -239,11 +215,7 @@ class ValidateDatabaseEntries(object):
 
         panorama_video_notfound_list = list()
         for pv in panorama_video_entries:
-
-            try:
-                pv.validateFile()
-                continue
-            except FileNotFoundError:
+            if not pv.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', pv.filename)
                 panorama_video_notfound_list.append(pv)
 
@@ -258,10 +230,7 @@ class ValidateDatabaseEntries(object):
 
         thumbnail_notfound_list = list()
         for t in thumbnail_entries:
-            try:
-                t.validateFile()
-                continue
-            except FileNotFoundError:
+            if not t.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', t.filename)
                 thumbnail_notfound_list.append(t)
 
