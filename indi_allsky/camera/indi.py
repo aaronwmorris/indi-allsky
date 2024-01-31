@@ -1005,12 +1005,6 @@ class IndiClient(PyIndi.BaseClient):
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
-            'indi_pylibcamera',
-            'indi_pylibcamera.py',
-            './indi_pylibcamera.py',
-            '././indi_pylibcamera.py',
-            '/usr/bin/indi_pylibcamera',
-            '/usr/local/bin/indi_pylibcamera',
         ]:
             gain_ctl = self.get_control(self.ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
@@ -1074,6 +1068,12 @@ class IndiClient(PyIndi.BaseClient):
             return fake_gain_info
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.getCcdGain()
+        elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
+            # the exec name can have many variations
+            gain_ctl = self.get_control(self.ccd_device, 'CCD_GAIN', 'number')
+            gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
+            index = gain_index_dict['GAIN']
+
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -1111,12 +1111,6 @@ class IndiClient(PyIndi.BaseClient):
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
-            'indi_pylibcamera',
-            'indi_pylibcamera.py',
-            './indi_pylibcamera.py',
-            '././indi_pylibcamera.py',
-            '/usr/bin/indi_pylibcamera',
-            '/usr/local/bin/indi_pylibcamera',
         ]:
             gain_config = {
                 "PROPERTIES" : {
@@ -1183,6 +1177,15 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {}
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdGain(gain_value)
+        elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
+            # the exec name can have many variations
+            gain_config = {
+                "PROPERTIES" : {
+                    "CCD_GAIN" : {
+                        "GAIN" : gain_value,
+                    },
+                },
+            }
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -1220,12 +1223,6 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_playerone_ccd',
             'indi_sx_ccd',
-            'indi_pylibcamera',
-            'indi_pylibcamera.py',
-            './indi_pylibcamera.py',
-            '././indi_pylibcamera.py',
-            '/usr/bin/indi_pylibcamera',
-            '/usr/local/bin/indi_pylibcamera',
         ]:
             binning_config = {
                 "PROPERTIES" : {
@@ -1252,6 +1249,16 @@ class IndiClient(PyIndi.BaseClient):
             return
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdBinMode(bin_value)
+        elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
+            # the exec name can have many variations
+            binning_config = {
+                "PROPERTIES" : {
+                    "CCD_BINNING" : {
+                        "HOR_BIN" : bin_value[0],
+                        "VER_BIN" : bin_value[1],
+                    },
+                },
+            }
         else:
             raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
