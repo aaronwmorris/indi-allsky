@@ -15,6 +15,7 @@ from . import db
 
 __all__ = (
     'IndiAllSkyDbCameraTable',
+    'IndiAllSkyDbThumbnailTable',
     'IndiAllSkyDbImageTable',
     'IndiAllSkyDbBadPixelMapTable',
     'IndiAllSkyDbDarkFrameTable',
