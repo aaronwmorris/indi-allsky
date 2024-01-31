@@ -172,11 +172,30 @@ class IndiAllSkyDbFileBase(db.Model):
         self.deleteFile()
 
 
+class IndiAllSkyThumbnailTable(IndiAllSkyDbFileBase):
+    __tablename__ = 'thumbnail'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    remote_url = db.Column(db.String(length=255), nullable=True, index=True)
+    s3_key = db.Column(db.String(length=255), nullable=True, index=True)
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, index=True)
+    data = db.Column(db.JSON, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)
+    height = db.Column(db.Integer, nullable=True, index=True)
+
+    def __repr__(self):
+        return '<Thumbnail {0:s}>'.format(self.filename)
+
+
 class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'image'
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -229,6 +248,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
@@ -265,6 +285,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     bitdepth = db.Column(db.Integer, nullable=False, index=True)
     exposure = db.Column(db.Integer, nullable=False, index=True)
@@ -301,6 +322,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -336,6 +358,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -359,6 +382,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -382,6 +406,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -405,6 +430,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -430,6 +456,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -455,6 +482,7 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
@@ -481,6 +509,7 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
 
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_id = db.Column(db.Integer, nullable=True, index=True)
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
