@@ -33,6 +33,7 @@ from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbUserTable
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -603,6 +604,85 @@ class SyncApiPanoramaVideoView(SyncApiBaseView):
     add_function = 'addPanoramaVideo'
 
 
+class SyncApiThumbnailView(SyncApiBaseView):
+    decorators = []
+
+    model = IndiAllSkyDbThumbnailTable
+    filename_t = '{0:s}{1:s}'
+    add_function = 'addThumbnail_remote'
+
+
+    def processPost(self, camera, thumbnail_metadata, tmp_file_p, overwrite=False):
+        createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
+
+        uuid_1 = thumbnail_metadata['uuid'][0]  # get first letter of uuid
+
+        folder = self.image_dir.joinpath(
+            'thumbnails', createDate.strftime('%y%m%d'),
+            createDate.strftime('%d_%H'),
+            uuid_1,
+        )
+
+
+        thumbnail_file_p = folder.joinpath(self.filename_t.format(thumbnail_metadata['uuid'], tmp_file_p.suffix))  # suffix includes dot
+
+
+        if not thumbnail_file_p.exists():
+            try:
+                # delete old entry if it exists
+                old_thumbnail_entry = self.model.query\
+                    .filter(self.model.filename == str(thumbnail_file_p))\
+                    .one()
+
+                app.logger.warning('Removing orphaned thumbnail entry')
+                db.session.delete(old_thumbnail_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        else:
+            if not overwrite:
+                raise EntryExists()
+
+            app.logger.warning('Replacing image')
+            thumbnail_file_p.unlink()
+
+            try:
+                old_image_entry = self.model.query\
+                    .filter(self.model.filename == str(thumbnail_file_p))\
+                    .one()
+
+                app.logger.warning('Removing old image entry')
+                db.session.delete(old_image_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
+
+        addFunction_method = getattr(self._miscDb, self.add_function)
+        new_entry = addFunction_method(
+            thumbnail_file_p,
+            camera.id,
+            thumbnail_metadata,
+        )
+
+
+        tmp_file_size = tmp_file_p.stat().st_size
+        if tmp_file_size != 0:
+            # only copy file if it is not empty
+            # if the empty file option is selected, this can be expected
+            shutil.copy2(str(tmp_file_p), str(thumbnail_file_p))
+            thumbnail_file_p.chmod(0o644)
+
+
+        tmp_file_p.unlink()
+
+        app.logger.info('Uploaded thumbnail: %s', thumbnail_file_p)
+
+        return new_entry
+
+
 class EntryExists(Exception):
     pass
 
@@ -625,4 +705,5 @@ bp_syncapi_allsky.add_url_rule('/sync/v1/rawimage', view_func=SyncApiRawImageVie
 bp_syncapi_allsky.add_url_rule('/sync/v1/fitsimage', view_func=SyncApiFitsImageView.as_view('syncapi_v1_fitsimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/panoramaimage', view_func=SyncApiPanoramaImageView.as_view('syncapi_v1_panoramaimage_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/panoramavideo', view_func=SyncApiPanoramaVideoView.as_view('syncapi_v1_panorama_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/thumbnail', view_func=SyncApiThumbnailView.as_view('syncapi_v1_thumbnail_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 
