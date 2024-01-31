@@ -3166,9 +3166,9 @@ class IndiAllskyVideoViewer(FlaskForm):
                     keogram_id = 0
 
 
-                if keogram_entry.thumbnail_id:
+                if keogram_entry.thumbnail_uuid:
                     keogram_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
-                        .filter(IndiAllSkyDbThumbnailTable.id == keogram_entry.thumbnail_id)\
+                        .filter(IndiAllSkyDbThumbnailTable.uuid == keogram_entry.thumbnail_uuid)\
                         .first()
 
                     if keogram_thumbnail_entry:
@@ -3222,9 +3222,9 @@ class IndiAllskyVideoViewer(FlaskForm):
                     startrail_id = -1
 
 
-                if startrail_entry.thumbnail_id:
+                if startrail_entry.thumbnail_uuid:
                     startrail_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
-                        .filter(IndiAllSkyDbThumbnailTable.id == startrail_entry.thumbnail_id)\
+                        .filter(IndiAllSkyDbThumbnailTable.uuid == startrail_entry.thumbnail_uuid)\
                         .first()
 
                     if startrail_thumbnail_entry:

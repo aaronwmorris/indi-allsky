@@ -315,7 +315,7 @@ function populate_videos(video_list) {
                     }).appendTo(startrail_div);
 
 
-                    if (item['startrail_thumbnail']) {
+                    if (item['startrail_thumbnail'] != "None") {
                         var startrail_thumbnail = item['startrail_thumbnail']
                     } else {
                         var startrail_thumbnail = item['startrail']
@@ -357,7 +357,7 @@ function populate_videos(video_list) {
 
                 } else {
                     // No link
-                    if (item['startrail_thumbnail']) {
+                    if (item['startrail_thumbnail'] != "None") {
                         var startrail_thumbnail = item['startrail_thumbnail']
                     } else {
                         var startrail_thumbnail = item['startrail']
@@ -418,7 +418,7 @@ function populate_videos(video_list) {
 
 
         if (item['keogram'] != 'None') {
-            if (item['keogram_thumbnail']) {
+            if (item['keogram_thumbnail'] != "None") {
                 var keogram_thumbnail = item['keogram_thumbnail']
             } else {
                 var keogram_thumbnail = item['keogram']

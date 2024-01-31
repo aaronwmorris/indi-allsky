@@ -938,13 +938,14 @@ class miscDb(object):
 
 
     def addThumbnail(self, entry, new_width=200, numpy_data=None):
-        if entry.thumbnail_id:
-            return entry.thumbnail_id
+        if entry.thumbnail_uuid:
+            return entry.thumbnail_uuid
 
         now = datetime.now()
+        thumbnail_uuid = uuid.uuid4()
 
         thumbnail_dir_p = self.image_dir.joinpath('thumbnails', now.strftime('%y%m%d'), now.strftime('%H'))
-        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(str(uuid.uuid4())))
+        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(str(thumbnail_uuid)))
 
         if not thumbnail_dir_p.exists():
             thumbnail_dir_p.mkdir(mode=0o755, parents=True)
@@ -983,14 +984,15 @@ class miscDb(object):
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
+            uuid=str(thumbnail_uuid),
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
             width=new_width,
             height=new_height,
         )
 
         db.session.add(thumbnail_entry)
-        db.session.commit()
+        #db.session.commit()
 
-        entry.thumbnail_id = thumbnail_entry.id
+        entry.thumbnail_uuid = str(thumbnail_uuid)
         db.session.commit()
 
