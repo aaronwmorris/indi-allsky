@@ -51,6 +51,7 @@ from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -3416,6 +3417,22 @@ class AjaxSystemInfoView(BaseView):
                 panorama_video_notfound_list.append(p)
 
 
+        ### Thumbnails
+        thumbnail_entries = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbThumbnailTable.createDate.asc())
+
+        thumbnail_entries_count = thumbnail_entries.count()
+        message_list.append('<p>Thumbnails: {0:d}</p>'.format(thumbnail_entries_count))
+
+        app.logger.info('Searching %d thumbnails...', thumbnail_entries_count)
+        thumbnail_notfound_list = list()
+        for t in thumbnail_entries:
+            if not t.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', t.filename)
+                thumbnail_notfound_list.append(t)
+
+
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
         app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
@@ -3428,6 +3445,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
         app.logger.warning('Panorama timelapses not found: %d', len(panorama_video_notfound_list))
+        app.logger.warning('Thumbnails not found: %d', len(thumbnail_notfound_list))
 
 
         ### DELETE ###
@@ -3473,6 +3491,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing panorama timelapse entries</p>'.format(len(panorama_video_notfound_list)))
         [db.session.delete(p) for p in panorama_video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing thumbnail entries</p>'.format(len(thumbnail_notfound_list)))
+        [db.session.delete(t) for t in thumbnail_notfound_list]
 
 
         # finalize transaction

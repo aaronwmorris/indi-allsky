@@ -29,6 +29,7 @@ from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbThumbnailTable
 
 
 
@@ -247,6 +248,25 @@ class ValidateDatabaseEntries(object):
                 panorama_video_notfound_list.append(pv)
 
 
+        ### Thumbnails
+        thumbnail_entries = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbThumbnailTable.createDate.asc())
+
+
+        logger.info('Searching %d thumbnail images...', thumbnail_entries.count())
+
+        thumbnail_notfound_list = list()
+        for t in thumbnail_entries:
+            try:
+                t.validateFile()
+                continue
+            except FileNotFoundError:
+                #logger.warning('Entry not found on filesystem: %s', t.filename)
+                thumbnail_notfound_list.append(t)
+
+
+
         logger.warning('Images not found: %d', len(image_notfound_list))
         logger.warning('Raw Images not found: %d', len(raw_image_notfound_list))
         logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
@@ -258,6 +278,7 @@ class ValidateDatabaseEntries(object):
         logger.warning('Star trail videos not found: %d', len(startrail_video_notfound_list))
         logger.warning('Panorama images not found: %d', len(panorama_notfound_list))
         logger.warning('Panorama videos not found: %d', len(panorama_video_notfound_list))
+        logger.warning('Thumbnail images not found: %d', len(thumbnail_notfound_list))
 
 
         print()
@@ -322,6 +343,11 @@ class ValidateDatabaseEntries(object):
         if len(panorama_video_notfound_list):
             logger.warning('Removing %d missing panorama video entries', len(panorama_video_notfound_list))
             [db.session.delete(pv) for pv in panorama_video_notfound_list]
+
+
+        if len(thumbnail_notfound_list):
+            logger.warning('Removing %d missing thumbnail image entries', len(thumbnail_notfound_list))
+            [db.session.delete(t) for t in thumbnail_notfound_list]
 
 
         # finalize transaction
