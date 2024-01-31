@@ -937,15 +937,29 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, new_width=200, numpy_data=None):
+    def addThumbnail(self, entry, camera_id, metadata, new_width=200, numpy_data=None):
         if entry.thumbnail_uuid:
             return entry.thumbnail_uuid
 
-        now = datetime.now()
-        thumbnail_uuid = uuid.uuid4()
 
-        thumbnail_dir_p = self.image_dir.joinpath('thumbnails', now.strftime('%y%m%d'), now.strftime('%H'))
-        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(str(thumbnail_uuid)))
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        thumbnail_uuid_str = str(uuid.uuid4())
+
+        uuid_1 = thumbnail_uuid_str[0]  # get first letter of uuid
+
+        thumbnail_dir_p = self.image_dir.joinpath(
+            'thumbnails', createDate.strftime('%y%m%d'),
+            createDate.strftime('%d_%H'),
+            uuid_1,
+        )
+        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(thumbnail_uuid_str))
+
+        logger.info('Adding thumbnail to DB: %s', thumbnail_filename_p)
 
         if not thumbnail_dir_p.exists():
             thumbnail_dir_p.mkdir(mode=0o755, parents=True)
@@ -984,8 +998,9 @@ class miscDb(object):
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
-            uuid=str(thumbnail_uuid),
+            uuid=thumbnail_uuid_str,
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
+            createDate=createDate,
             width=new_width,
             height=new_height,
         )
@@ -993,6 +1008,6 @@ class miscDb(object):
         db.session.add(thumbnail_entry)
         #db.session.commit()
 
-        entry.thumbnail_uuid = str(thumbnail_uuid)
+        entry.thumbnail_uuid = thumbnail_uuid_str
         db.session.commit()
 
