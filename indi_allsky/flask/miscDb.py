@@ -5,6 +5,10 @@ import uuid
 import logging
 #from pprint import pformat
 
+import cv2
+import PIL
+from PIL import Image
+
 from cryptography.fernet import Fernet
 
 from flask import current_app as app  # prevent circular import
@@ -22,6 +26,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
 
@@ -29,12 +34,21 @@ from .models import IndiAllSkyDbStateTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from ..exceptions import BadImage
+
 logger = logging.getLogger('indi_allsky')
 
 
 class miscDb(object):
     def __init__(self, config):
         self.config = config
+
+
+        if self.config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
+
 
 
     def addCamera(self, metadata):
@@ -920,5 +934,56 @@ class miscDb(object):
 
 
         db.session.delete(state)
+        db.session.commit()
+
+
+    def addThumbnail(self, entry, new_width=200, numpy_data=None):
+        if entry.thumbnail_id:
+            return entry.thumbnail_id
+
+        now = datetime.now()
+
+        thumbnail_dir_p = self.image_dir.joinpath('thumbnails', now.strftime('%y%m%d'))
+        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(str(uuid.uuid4())))
+
+        if not thumbnail_dir_p.exists():
+            thumbnail_dir_p.mkdir(mode=0o755, parents=True)
+
+
+        if isinstance(numpy_data, type(None)):
+            # use file on filesystem
+            filename_p = Path(entry.filename)
+
+            if not filename_p.exists():
+                raise FileNotFoundError('File does not exist: {0}'.format(str(filename_p)))
+
+            try:
+                img = Image.open(str(filename_p))
+            except PIL.UnidentifiedImageError:
+                raise BadImage('Bad image')
+        else:
+            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+
+
+        width, height = img.size
+
+        scale = new_width / width
+        new_height = int(height * scale)
+
+        thumbnail_data = img.resize((new_width, new_height))
+
+        thumbnail_data.save(str(thumbnail_filename_p), quality=75)
+
+
+        thumbnail_entry = IndiAllSkyDbThumbnailTable(
+            filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
+            width=new_width,
+            height=new_height,
+        )
+
+        db.session.add(thumbnail_entry)
+        db.session.commit()
+
+        entry.thumbnail_id = thumbnail_entry.id
         db.session.commit()
 

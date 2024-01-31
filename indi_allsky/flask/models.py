@@ -172,7 +172,7 @@ class IndiAllSkyDbFileBase(db.Model):
         self.deleteFile()
 
 
-class IndiAllSkyThumbnailTable(IndiAllSkyDbFileBase):
+class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
     __tablename__ = 'thumbnail'
 
     id = db.Column(db.Integer, primary_key=True)
