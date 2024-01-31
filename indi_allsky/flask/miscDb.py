@@ -952,7 +952,7 @@ class miscDb(object):
 
         if isinstance(numpy_data, type(None)):
             # use file on filesystem
-            filename_p = Path(entry.filename)
+            filename_p = Path(entry.getFilesystemPath())
 
             if not filename_p.exists():
                 raise FileNotFoundError('File does not exist: {0}'.format(str(filename_p)))
@@ -975,6 +975,8 @@ class miscDb(object):
         else:
             # keep the same dimensions
             thumbnail_data = img
+            new_width = width
+            new_height = height
 
 
         thumbnail_data.save(str(thumbnail_filename_p), quality=75)

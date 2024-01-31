@@ -822,8 +822,6 @@ class VideoWorker(Process):
             keogram_metadata,
         )
 
-        self._miscDb.addThumbnail(keogram_entry, new_width=1000)
-
 
         if night:
             startrail_entry = self._miscDb.addStarTrail(
@@ -831,8 +829,6 @@ class VideoWorker(Process):
                 camera.id,
                 startrail_metadata,
             )
-
-            self._miscDb.addThumbnail(startrail_entry, new_width=300)
         else:
             startrail_entry = None
             startrail_video_entry = None
@@ -908,6 +904,8 @@ class VideoWorker(Process):
         db.session.commit()
 
 
+        self._miscDb.addThumbnail(keogram_entry, new_width=1000)
+
         if night:
             stg.finalize(startrail_file, camera)
 
@@ -919,6 +917,8 @@ class VideoWorker(Process):
             #startrail_entry['data']['height'] = st_height
             #startrail_entry['data']['width'] = st_width
             db.session.commit()
+
+            self._miscDb.addThumbnail(startrail_entry, new_width=300)
 
 
             st_frame_count = stg.timelapse_frame_count
