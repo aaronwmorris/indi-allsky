@@ -6,6 +6,8 @@ from cryptography.fernet import Fernet
 
 from sqlalchemy.sql import expression
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from flask import current_app as app
 
 from . import db
@@ -169,6 +171,21 @@ class IndiAllSkyDbFileBase(db.Model):
 
     def deleteAsset(self):
         # use this path to delete all parts of entry
+        if self.thumbnail_id:
+            # delete thumbnail
+
+            try:
+                thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+                    .filter(IndiAllSkyDbThumbnailTable.id == self.thumbnail_id)\
+                    .one()
+
+                thumbnail_entry.deleteAsset()
+
+                db.session.delete(thumbnail_entry)
+                db.session.commit()
+            except NoResultFound:
+                pass
+
         self.deleteFile()
 
 
@@ -188,6 +205,12 @@ class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<Thumbnail {0:s}>'.format(self.filename)
+
+
+    @property
+    def thumbnail_id(self):
+        ### virtual property
+        return None
 
 
 class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
