@@ -76,6 +76,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
 
+    thumbnails = db.relationship('IndiAllSkyDbThumbnailTable', back_populates='camera')
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
@@ -203,6 +204,8 @@ class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
     data = db.Column(db.JSON, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='thumbnails')
 
     def __repr__(self):
         return '<Thumbnail {0:s}>'.format(self.filename)

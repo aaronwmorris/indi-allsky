@@ -34,7 +34,7 @@ from .models import IndiAllSkyDbStateTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from ..exceptions import BadImage
+#from ..exceptions import BadImage
 
 logger = logging.getLogger('indi_allsky')
 
@@ -970,12 +970,14 @@ class miscDb(object):
             filename_p = Path(entry.getFilesystemPath())
 
             if not filename_p.exists():
-                raise FileNotFoundError('File does not exist: {0}'.format(str(filename_p)))
+                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                return
 
             try:
                 img = Image.open(str(filename_p))
             except PIL.UnidentifiedImageError:
-                raise BadImage('Bad image')
+                logger.error('Cannot create thumbnail:  Bad Image')
+                return
         else:
             img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
 
@@ -1003,6 +1005,7 @@ class miscDb(object):
             createDate=createDate,
             width=new_width,
             height=new_height,
+            camera_id=camera_id,
         )
 
         db.session.add(thumbnail_entry)
