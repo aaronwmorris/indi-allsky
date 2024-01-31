@@ -943,7 +943,7 @@ class miscDb(object):
 
         now = datetime.now()
 
-        thumbnail_dir_p = self.image_dir.joinpath('thumbnails', now.strftime('%y%m%d'))
+        thumbnail_dir_p = self.image_dir.joinpath('thumbnails', now.strftime('%y%m%d'), now.strftime('%H'))
         thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(str(uuid.uuid4())))
 
         if not thumbnail_dir_p.exists():
@@ -967,10 +967,15 @@ class miscDb(object):
 
         width, height = img.size
 
-        scale = new_width / width
-        new_height = int(height * scale)
+        if new_width < width:
+            scale = new_width / width
+            new_height = int(height * scale)
 
-        thumbnail_data = img.resize((new_width, new_height))
+            thumbnail_data = img.resize((new_width, new_height))
+        else:
+            # keep the same dimensions
+            thumbnail_data = img
+
 
         thumbnail_data.save(str(thumbnail_filename_p), quality=75)
 

@@ -822,12 +822,17 @@ class VideoWorker(Process):
             keogram_metadata,
         )
 
+        self._miscDb.addThumbnail(keogram_entry, new_width=1000)
+
+
         if night:
             startrail_entry = self._miscDb.addStarTrail(
                 startrail_file.relative_to(self.image_dir),
                 camera.id,
                 startrail_metadata,
             )
+
+            self._miscDb.addThumbnail(startrail_entry, new_width=300)
         else:
             startrail_entry = None
             startrail_video_entry = None
