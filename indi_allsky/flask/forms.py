@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 
 from . import db
 
@@ -3163,9 +3164,24 @@ class IndiAllskyVideoViewer(FlaskForm):
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
                     keogram_id = 0
+
+
+                if keogram_entry.thumbnail_id:
+                    keogram_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+                        .filter(IndiAllSkyDbThumbnailTable.id == keogram_entry.thumbnail_id)\
+                        .first()
+
+                    if keogram_thumbnail_entry:
+                        try:
+                            keogram_thumbnail_url = keogram_thumbnail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                        except ValueError:
+                            keogram_thumbnail_url = None
+                    else:
+                        keogram_thumbnail_url = None
             else:
                 keogram_url = None
                 keogram_id = 0
+                keogram_thumbnail_url = None
 
 
             ### Star trail
@@ -3204,9 +3220,24 @@ class IndiAllskyVideoViewer(FlaskForm):
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
                     startrail_id = -1
+
+
+                if startrail_entry.thumbnail_id:
+                    startrail_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+                        .filter(IndiAllSkyDbThumbnailTable.id == startrail_entry.thumbnail_id)\
+                        .first()
+
+                    if startrail_thumbnail_entry:
+                        try:
+                            startrail_thumbnail_url = startrail_thumbnail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                        except ValueError:
+                            startrail_thumbnail_url = None
+                    else:
+                        startrail_thumbnail_url = None
             else:
                 startrail_url = None
                 startrail_id = -1
+                startrail_thumbnail_url = None
 
 
             ### Star trail timelapses
@@ -3309,7 +3340,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             entry['keogram']    = str(keogram_url)
             entry['keogram_id'] = keogram_id
+            entry['keogram_thumbnail']  = str(keogram_thumbnail_url)
             entry['startrail']  = str(startrail_url)
+            entry['startrail_thumbnail']  = str(startrail_thumbnail_url)
             entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
