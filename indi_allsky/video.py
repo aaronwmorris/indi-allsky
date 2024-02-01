@@ -914,6 +914,7 @@ class VideoWorker(Process):
 
         keogram_thumbnail_entry = self._miscDb.addThumbnail(
             keogram_entry,
+            keogram_metadata,
             camera.id,
             keogram_thumbnail_metadata,
             new_width=1000,
@@ -943,6 +944,7 @@ class VideoWorker(Process):
 
             startrail_thumbnail_entry = self._miscDb.addThumbnail(
                 startrail_entry,
+                startrail_metadata,
                 camera.id,
                 startrail_thumbnail_metadata,
                 new_width=300,
@@ -982,6 +984,12 @@ class VideoWorker(Process):
 
 
         if keogram_entry:
+            # upload thumbnail first
+            if keogram_thumbnail_entry:
+                self._miscUpload.s3_upload_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
+                self._miscUpload.syncapi_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
+
+
             if keogram_file.exists():
                 self._miscUpload.s3_upload_keogram(keogram_entry, keogram_metadata)
                 self._miscUpload.syncapi_keogram(keogram_entry, keogram_metadata)
@@ -991,12 +999,13 @@ class VideoWorker(Process):
                 db.session.commit()
 
 
-            if keogram_thumbnail_entry:
-                self._miscUpload.s3_upload_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
-
-
         if startrail_entry and night:
+            # upload thumbnail first
+            if startrail_thumbnail_entry:
+                self._miscUpload.s3_upload_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
+                self._miscUpload.syncapi_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
+
+
             if startrail_file.exists():
                 self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
                 self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)
@@ -1004,11 +1013,6 @@ class VideoWorker(Process):
             else:
                 startrail_entry.success = False
                 db.session.commit()
-
-
-            if startrail_thumbnail_entry:
-                self._miscUpload.s3_upload_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
 
 
         if startrail_video_entry and night:

@@ -937,27 +937,27 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, camera_id, metadata, new_width=200, numpy_data=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=200, numpy_data=None):
         if entry.thumbnail_uuid:
             return
 
 
-        if isinstance(metadata['createDate'], (int, float)):
-            createDate = datetime.fromtimestamp(metadata['createDate'])
+        if isinstance(thumbnail_metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
         else:
-            createDate = metadata['createDate']
+            createDate = thumbnail_metadata['createDate']
 
 
-        if isinstance(metadata['dayDate'], str):
-            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        if isinstance(thumbnail_metadata['dayDate'], str):
+            dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
         else:
-            dayDate = metadata['dayDate']
+            dayDate = thumbnail_metadata['dayDate']
 
 
         thumbnail_uuid_str = str(uuid.uuid4())
 
         thumbnail_dir_p = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(metadata['camera_uuid']),
+            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
             'thumbnails',
             dayDate.strftime('%y%m%d'),
             createDate.strftime('%d_%H'),
@@ -1004,9 +1004,10 @@ class miscDb(object):
 
 
         # insert new metadata
-        metadata['uuid'] = thumbnail_uuid_str
-        metadata['width'] = new_width
-        metadata['height'] = new_height
+        entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
+        thumbnail_metadata['uuid'] = thumbnail_uuid_str
+        thumbnail_metadata['width'] = new_width
+        thumbnail_metadata['height'] = new_height
 
 
         thumbnail_data.save(str(thumbnail_filename_p), quality=75)
@@ -1028,7 +1029,7 @@ class miscDb(object):
         return thumbnail_entry
 
 
-    def addThumbnail_remote(self, filename, camera_id, metadata):
+    def addThumbnail_remote(self, filename, camera_id, thumbnail_metadata):
 
         ### expected metadata
         #{
@@ -1045,21 +1046,21 @@ class miscDb(object):
         filename_p = Path(filename)
 
 
-        if isinstance(metadata['createDate'], (int, float)):
-            createDate = datetime.fromtimestamp(metadata['createDate'])
+        if isinstance(thumbnail_metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
         else:
-            createDate = metadata['createDate']
+            createDate = thumbnail_metadata['createDate']
 
 
         logger.info('Adding thumbnail to DB: %s', filename_p)
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
-            uuid=metadata['uuid'],
+            uuid=thumbnail_metadata['uuid'],
             filename=str(filename_p),
             createDate=createDate,
-            width=metadata['width'],
-            height=metadata['height'],
+            width=thumbnail_metadata['width'],
+            height=thumbnail_metadata['height'],
             camera_id=camera_id,
         )
 
