@@ -3608,7 +3608,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             .one()
 
 
-        if action == 'delete_video_k_st':
+        if action == 'delete_video_k_st_p':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
@@ -3653,6 +3653,17 @@ class AjaxTimelapseGeneratorView(BaseView):
                 )\
                 .first()
 
+            panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaVideoTable.night == night,
+                    )
+                )\
+                .first()
+
 
             if video_entry:
                 video_entry.deleteAsset()
@@ -3669,6 +3680,10 @@ class AjaxTimelapseGeneratorView(BaseView):
             if startrail_video_entry:
                 startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
+
+            if panorama_video_entry:
+                panorama_video_entry.deleteAsset()
+                db.session.delete(panorama_video_entry)
 
 
             db.session.commit()
