@@ -245,6 +245,11 @@ class UploadSync(object):
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             elif x['upload_type'] == 's3':
+                # check for thumbnail upload for S3
+                if entry.thumbnail_uuid:
+                    self.addThumbnailS3(entry.thumbnail_uuid)
+
+
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
                     image_metadata = {
                         'type'            : constants.IMAGE,
@@ -416,28 +421,17 @@ class UploadSync(object):
                         panorama_video_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_panorama_video(entry, panorama_video_metadata)
-                elif x['table'].__name__ == 'IndiAllSkyDbThumbnailTable':
-                    thumbnail_metadata = {
-                        'type'       : constants.THUMBNAIL,
-                        'createDate' : entry.createDate.timestamp(),
-                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
-                        'uuid'       : entry.uuid,
-                        'night'      : entry.night,
-                        'width'      : entry.width,
-                        'height'     : entry.height,
-                        'camera_uuid': entry.camera.uuid,
-                    }
 
-                    if entry.data:
-                        thumbnail_metadata['data'] = dict(entry.data)
-                    else:
-                        thumbnail_metadata['data'] = dict()
-
-                    self._miscUpload.s3_upload_thumbnail(entry, thumbnail_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
+
             elif x['upload_type'] == 'syncapi':
+                # check for thumbnail upload for syncapi
+                if entry.thumbnail_uuid:
+                    self.addThumbnailSyncapi(entry.thumbnail_uuid)
+
+
                 if x['table'].__name__ == 'IndiAllSkyDbImageTable':
                     image_metadata = {
                         'type'            : constants.IMAGE,
@@ -579,29 +573,71 @@ class UploadSync(object):
                         panorama_video_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_panoramavideo(entry, panorama_video_metadata)
-                elif x['table'].__name__ == 'IndiAllSkyDbThumbnailTable':
-                    thumbnail_metadata = {
-                        'type'       : constants.THUMBNAIL,
-                        'createDate' : entry.createDate.timestamp(),
-                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
-                        'uuid'       : entry.uuid,
-                        'night'      : entry.night,
-                        'width'      : entry.width,
-                        'height'     : entry.height,
-                        'camera_uuid': entry.camera.uuid,
-                    }
-
-                    if entry.data:
-                        thumbnail_metadata['data'] = dict(entry.data)
-                    else:
-                        thumbnail_metadata['data'] = dict()
-
-                    self._miscUpload.syncapi_thumbnail(entry, thumbnail_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
             else:
                 logger.error('Unknown upload type: %s', x['upload_type'])
+
+
+    def addThumbnailS3(self, thumbnail_uuid):
+        thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.uuid == thumbnail_uuid)\
+            .filter(IndiAllSkyDbThumbnailTable.s3_key == sa_null())\
+            .first()
+
+
+        if not thumbnail_entry:
+            return
+
+
+        thumbnail_metadata = {
+            'type'       : constants.THUMBNAIL,
+            'createDate' : thumbnail_entry.createDate.timestamp(),
+            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
+            'uuid'       : thumbnail_entry.uuid,
+            'night'      : thumbnail_entry.night,
+            'width'      : thumbnail_entry.width,
+            'height'     : thumbnail_entry.height,
+            'camera_uuid': thumbnail_entry.camera.uuid,
+        }
+
+        if thumbnail_entry.data:
+            thumbnail_metadata['data'] = dict(thumbnail_entry.data)
+        else:
+            thumbnail_metadata['data'] = dict()
+
+        self._miscUpload.s3_upload_thumbnail(thumbnail_entry, thumbnail_metadata)
+
+
+    def addThumbnailSyncapi(self, thumbnail_uuid):
+        thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.uuid == thumbnail_uuid)\
+            .filter(IndiAllSkyDbThumbnailTable.sync_id == sa_null())\
+            .first()
+
+
+        if not thumbnail_entry:
+            return
+
+
+        thumbnail_metadata = {
+            'type'       : constants.THUMBNAIL,
+            'createDate' : thumbnail_entry.createDate.timestamp(),
+            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
+            'uuid'       : thumbnail_entry.uuid,
+            'night'      : thumbnail_entry.night,
+            'width'      : thumbnail_entry.width,
+            'height'     : thumbnail_entry.height,
+            'camera_uuid': thumbnail_entry.camera.uuid,
+        }
+
+        if thumbnail_entry.data:
+            thumbnail_metadata['data'] = dict(thumbnail_entry.data)
+        else:
+            thumbnail_metadata['data'] = dict()
+
+        self._miscUpload.syncapi_thumbnail(thumbnail_entry, thumbnail_metadata)
 
 
     def report(self):
@@ -684,7 +720,6 @@ class UploadSync(object):
         # s3
         s3_table_list = [
             IndiAllSkyDbVideoTable,
-            IndiAllSkyDbThumbnailTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
@@ -726,7 +761,6 @@ class UploadSync(object):
         # syncapi
         syncapi_table_list = [
             IndiAllSkyDbVideoTable,
-            IndiAllSkyDbThumbnailTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
