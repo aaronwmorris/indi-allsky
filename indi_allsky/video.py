@@ -912,7 +912,7 @@ class VideoWorker(Process):
             'camera_uuid': camera.uuid,
         }
 
-        self._miscDb.addThumbnail(
+        keogram_thumbnail_entry = self._miscDb.addThumbnail(
             keogram_entry,
             camera.id,
             keogram_thumbnail_metadata,
@@ -941,7 +941,7 @@ class VideoWorker(Process):
                 'camera_uuid': camera.uuid,
             }
 
-            self._miscDb.addThumbnail(
+            startrail_thumbnail_entry = self._miscDb.addThumbnail(
                 startrail_entry,
                 camera.id,
                 startrail_thumbnail_metadata,
@@ -991,6 +991,11 @@ class VideoWorker(Process):
                 db.session.commit()
 
 
+            if keogram_thumbnail_entry:
+                self._miscUpload.s3_upload_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
+                self._miscUpload.syncapi_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
+
+
         if startrail_entry and night:
             if startrail_file.exists():
                 self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
@@ -999,6 +1004,11 @@ class VideoWorker(Process):
             else:
                 startrail_entry.success = False
                 db.session.commit()
+
+
+            if startrail_thumbnail_entry:
+                self._miscUpload.s3_upload_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
+                self._miscUpload.syncapi_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
 
 
         if startrail_video_entry and night:

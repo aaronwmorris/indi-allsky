@@ -939,7 +939,7 @@ class miscDb(object):
 
     def addThumbnail(self, entry, camera_id, metadata, new_width=200, numpy_data=None):
         if entry.thumbnail_uuid:
-            return entry.thumbnail_uuid
+            return
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -1018,10 +1018,10 @@ class miscDb(object):
         )
 
         db.session.add(thumbnail_entry)
-        #db.session.commit()
-
         entry.thumbnail_uuid = thumbnail_uuid_str
         db.session.commit()
+
+        return thumbnail_entry
 
 
     def addThumbnail_remote(self, filename, camera_id, metadata):
