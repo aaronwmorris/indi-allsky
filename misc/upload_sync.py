@@ -37,6 +37,7 @@ from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbThumbnailTable
 
 
 from indi_allsky import constants
@@ -415,6 +416,24 @@ class UploadSync(object):
                         panorama_video_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_panorama_video(entry, panorama_video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbThumbnailTable':
+                    thumbnail_metadata = {
+                        'type'       : constants.THUMBNAIL,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'uuid'       : entry.uuid,
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        thumbnail_metadata['data'] = dict(entry.data)
+                    else:
+                        thumbnail_metadata['data'] = dict()
+
+                    self._miscUpload.s3_upload_thumbnail(entry, thumbnail_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -560,7 +579,24 @@ class UploadSync(object):
                         panorama_video_metadata['data'] = dict()
 
                     self._miscUpload.syncapi_panoramavideo(entry, panorama_video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbThumbnailTable':
+                    thumbnail_metadata = {
+                        'type'       : constants.THUMBNAIL,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'uuid'       : entry.uuid,
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
 
+                    if entry.data:
+                        thumbnail_metadata['data'] = dict(entry.data)
+                    else:
+                        thumbnail_metadata['data'] = dict()
+
+                    self._miscUpload.syncapi_thumbnail(entry, thumbnail_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -648,6 +684,7 @@ class UploadSync(object):
         # s3
         s3_table_list = [
             IndiAllSkyDbVideoTable,
+            IndiAllSkyDbThumbnailTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
@@ -689,6 +726,7 @@ class UploadSync(object):
         # syncapi
         syncapi_table_list = [
             IndiAllSkyDbVideoTable,
+            IndiAllSkyDbThumbnailTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
