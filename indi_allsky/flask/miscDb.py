@@ -971,7 +971,7 @@ class miscDb(object):
         thumbnail_dir_p = self.image_dir.joinpath(
             'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
             'thumbnails',
-            dayDate.strftime('%y%m%d'),
+            dayDate.strftime('%Y%m%d'),
             createDate.strftime('%d_%H'),
         )
         thumbnail_filename_p = thumbnail_dir_p.joinpath(
@@ -1018,7 +1018,7 @@ class miscDb(object):
         # insert new metadata
         entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
         thumbnail_metadata['uuid'] = thumbnail_uuid_str
-        thumbnail_metadata['dayDate'] = dayDate.strftime('%y%m%d')
+        thumbnail_metadata['dayDate'] = dayDate.strftime('%Y%m%d')
         thumbnail_metadata['width'] = new_width
         thumbnail_metadata['height'] = new_height
 

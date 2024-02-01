@@ -620,7 +620,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
         folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
             'thumbnails',
-            dayDate.strftime('%y%m%d'),
+            dayDate.strftime('%Y%m%d'),
             createDate.strftime('%d_%H'),
         )
 
