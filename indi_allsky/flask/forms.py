@@ -3178,6 +3178,8 @@ class IndiAllskyVideoViewer(FlaskForm):
                             keogram_thumbnail_url = None
                     else:
                         keogram_thumbnail_url = None
+                else:
+                    keogram_thumbnail_url = None
             else:
                 keogram_url = None
                 keogram_id = 0
@@ -3234,6 +3236,8 @@ class IndiAllskyVideoViewer(FlaskForm):
                             startrail_thumbnail_url = None
                     else:
                         startrail_thumbnail_url = None
+                else:
+                    startrail_thumbnail_url = None
             else:
                 startrail_url = None
                 startrail_id = -1

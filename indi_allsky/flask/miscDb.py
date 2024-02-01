@@ -956,7 +956,7 @@ class miscDb(object):
 
         thumbnail_uuid_str = str(uuid.uuid4())
 
-        #uuid_1 = thumbnail_uuid_str[0]  # get first letter of uuid
+        metadata['uuid'] = thumbnail_uuid_str  # insert uuid in metadata
 
         thumbnail_dir_p = self.image_dir.joinpath(
             'ccd_{0:s}'.format(metadata['camera_uuid']),
