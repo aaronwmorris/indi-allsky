@@ -661,10 +661,28 @@ class ImageWorker(Process):
                 camera_id,
                 image_metadata,
             )
+
+
+            image_thumbnail_metadata = {
+                'type'       : constants.THUMBNAIL,
+                'createDate' : exp_date.timestamp(),
+                'night'      : bool(self.night_v.value),
+                'camera_uuid': camera.uuid,
+            }
+
+            image_thumbnail_entry = self._miscDb.addThumbnail(
+                image_entry,
+                image_metadata,
+                camera.id,
+                image_thumbnail_metadata,
+                numpy_data=self.image_processor.image,
+            )
         else:
             # images not being saved
             image_entry = None
-            image_metadata = dict()
+            image_metadata = {}
+            image_thumbnail_entry = None
+            image_thumbnail_metadata = {}
 
 
         if latest_file:
@@ -765,6 +783,12 @@ class ImageWorker(Process):
                 upload_filename = new_filename
             else:
                 upload_filename = latest_file
+
+
+            # upload thumbnail first
+            if image_thumbnail_entry:
+                self._miscUpload.s3_upload_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
+                self._miscUpload.syncapi_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
 
 
             self._miscUpload.s3_upload_image(image_entry, image_metadata)

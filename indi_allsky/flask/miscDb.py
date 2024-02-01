@@ -959,10 +959,11 @@ class miscDb(object):
             createDate = thumbnail_metadata['createDate']
 
 
-        if isinstance(thumbnail_metadata['dayDate'], str):
-            dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
+        if thumbnail_metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - timedelta(hours=12)).date()
         else:
-            dayDate = thumbnail_metadata['dayDate']
+            dayDate = createDate.date()
 
 
         thumbnail_uuid_str = str(uuid.uuid4())
@@ -1017,6 +1018,7 @@ class miscDb(object):
         # insert new metadata
         entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
         thumbnail_metadata['uuid'] = thumbnail_uuid_str
+        thumbnail_metadata['dayDate'] = dayDate.strftime('%y%m%d')
         thumbnail_metadata['width'] = new_width
         thumbnail_metadata['height'] = new_height
 
