@@ -552,7 +552,7 @@ class miscUpload(object):
         self.syncapi_video(*args)
 
 
-    def syncapi_thumbnail2(self, *args):
+    def syncapi_thumbnail(self, *args):
         # this is for thumbnails of startrails and keograms mainly
         self.syncapi_video(*args)
 
