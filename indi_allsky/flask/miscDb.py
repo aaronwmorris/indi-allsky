@@ -1033,7 +1033,6 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'
-        #    'dayDate'
         #    'uuid'
         #    'night'
         #    'width'
@@ -1052,13 +1051,6 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
-        if metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
-        else:
-            dayDate = createDate.date()
-
-
         logger.info('Adding thumbnail to DB: %s', filename_p)
 
 
@@ -1066,7 +1058,6 @@ class miscDb(object):
             uuid=metadata['uuid'],
             filename=str(filename_p),
             createDate=createDate,
-            dayDate=dayDate,
             width=metadata['width'],
             height=metadata['height'],
             camera_id=camera_id,
