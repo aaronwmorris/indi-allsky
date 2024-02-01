@@ -1023,3 +1023,53 @@ class miscDb(object):
         entry.thumbnail_uuid = thumbnail_uuid_str
         db.session.commit()
 
+
+    def addThumbnail_remote(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'
+        #    'dayDate'
+        #    'uuid'
+        #    'night'
+        #    'width'
+        #    'height'
+        #}
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
+        logger.info('Adding thumbnail to DB: %s', filename_p)
+
+
+        thumbnail_entry = IndiAllSkyDbThumbnailTable(
+            uuid=metadata['uuid'],
+            filename=str(filename_p),
+            createDate=createDate,
+            dayDate=dayDate,
+            width=metadata['width'],
+            height=metadata['height'],
+            camera_id=camera_id,
+        )
+
+        db.session.add(thumbnail_entry)
+        db.session.commit()
+
+        return thumbnail_entry
+
