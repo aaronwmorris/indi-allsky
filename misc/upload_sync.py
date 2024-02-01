@@ -596,7 +596,7 @@ class UploadSync(object):
                     else:
                         thumbnail_metadata['data'] = dict()
 
-                    self._miscUpload.syncapi_thumbnail(entry, thumbnail_metadata)
+                    self._miscUpload.syncapi_thumbnail2(entry, thumbnail_metadata)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
