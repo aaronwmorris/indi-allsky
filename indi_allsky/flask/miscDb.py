@@ -251,6 +251,7 @@ class miscDb(object):
             exclude=metadata.get('exclude', False),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -314,6 +315,7 @@ class miscDb(object):
             adu=metadata.get('adu'),
             height=metadata['height'],
             width=metadata['width'],
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -376,6 +378,7 @@ class miscDb(object):
             adu=metadata.get('adu'),
             height=metadata['height'],
             width=metadata['width'],
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -428,6 +431,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(video)
@@ -479,6 +483,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(panorama_video)
@@ -531,6 +536,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(keogram)
@@ -584,6 +590,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(startrail)
@@ -635,6 +642,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(startrail_video)
@@ -692,6 +700,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(fits_image)
@@ -749,6 +758,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(raw_image)
@@ -806,6 +816,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(panorama_image)
