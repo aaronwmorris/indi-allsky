@@ -956,8 +956,6 @@ class miscDb(object):
 
         thumbnail_uuid_str = str(uuid.uuid4())
 
-        metadata['uuid'] = thumbnail_uuid_str  # insert uuid in metadata
-
         thumbnail_dir_p = self.image_dir.joinpath(
             'ccd_{0:s}'.format(metadata['camera_uuid']),
             'thumbnails',
@@ -1003,6 +1001,12 @@ class miscDb(object):
             thumbnail_data = img
             new_width = width
             new_height = height
+
+
+        # insert new metadata
+        metadata['uuid'] = thumbnail_uuid_str
+        metadata['width'] = new_width
+        metadata['height'] = new_height
 
 
         thumbnail_data.save(str(thumbnail_filename_p), quality=75)
