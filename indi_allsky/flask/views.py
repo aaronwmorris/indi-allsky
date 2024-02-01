@@ -884,7 +884,6 @@ class ConfigView(FormView):
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'CCD_TEMP_SCRIPT'                : self.indi_allsky_config.get('CCD_TEMP_SCRIPT', ''),
             'GPS_ENABLE'                     : self.indi_allsky_config.get('GPS_ENABLE', False),
-            'GPS_TIMESYNC'                   : self.indi_allsky_config.get('GPS_TIMESYNC', False),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
             'TARGET_ADU_DAY'                 : self.indi_allsky_config.get('TARGET_ADU_DAY', 75),
             'TARGET_ADU_DEV'                 : self.indi_allsky_config.get('TARGET_ADU_DEV', 10),
@@ -1324,7 +1323,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['GPS_ENABLE']                           = bool(request.json['GPS_ENABLE'])
-        self.indi_allsky_config['GPS_TIMESYNC']                         = bool(request.json['GPS_TIMESYNC'])
         self.indi_allsky_config['CCD_TEMP_SCRIPT']                      = str(request.json['CCD_TEMP_SCRIPT'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
         self.indi_allsky_config['TARGET_ADU_DAY']                       = int(request.json['TARGET_ADU_DAY'])

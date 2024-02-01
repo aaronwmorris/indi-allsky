@@ -84,7 +84,6 @@ class IndiAllSkyConfigBase(object):
         "TEMP_DISPLAY"     : "c",  # c = celcius, f = fahrenheit, k = kelvin",
         "CCD_TEMP_SCRIPT"  : "",
         "GPS_ENABLE"       : False,
-        "GPS_TIMESYNC"     : False,
         "TARGET_ADU"         : 75,
         "TARGET_ADU_DAY"     : 75,
         "TARGET_ADU_DEV"     : 10,

@@ -1877,22 +1877,6 @@
         </div>
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.GPS_TIMESYNC.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.GPS_TIMESYNC(class='form-check-input') }}
-                <div id="GPS_TIMESYNC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Sync system time from GPS.</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> NTP time sync will be disabled</div>
-        </div>
-    </div>
-
     <hr>
 
     <div class="form-group row">
@@ -3126,7 +3110,6 @@ const checkbox_field_names = [
     'AUTO_WB',
     'CCD_COOLING',
     'GPS_ENABLE',
-    'GPS_TIMESYNC',
     'DETECT_STARS',
     'DETECT_METEORS',
     'DETECT_DRAW',
