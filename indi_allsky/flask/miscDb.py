@@ -948,16 +948,25 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
         thumbnail_uuid_str = str(uuid.uuid4())
 
-        uuid_1 = thumbnail_uuid_str[0]  # get first letter of uuid
+        #uuid_1 = thumbnail_uuid_str[0]  # get first letter of uuid
 
         thumbnail_dir_p = self.image_dir.joinpath(
-            'thumbnails', createDate.strftime('%y%m%d'),
+            'ccd_{0:s}'.format(metadata['camera_uuid']),
+            'thumbnails',
+            dayDate.strftime('%y%m%d'),
             createDate.strftime('%d_%H'),
-            uuid_1,
         )
-        thumbnail_filename_p = thumbnail_dir_p.joinpath('{0:s}.jpg'.format(thumbnail_uuid_str))
+        thumbnail_filename_p = thumbnail_dir_p.joinpath(
+            '{0:s}.jpg'.format(thumbnail_uuid_str),
+        )
 
         logger.info('Adding thumbnail to DB: %s', thumbnail_filename_p)
 

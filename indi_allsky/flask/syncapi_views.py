@@ -614,13 +614,14 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
     def processPost(self, camera, thumbnail_metadata, tmp_file_p, overwrite=False):
         createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
+        dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
 
-        uuid_1 = thumbnail_metadata['uuid'][0]  # get first letter of uuid
 
         folder = self.image_dir.joinpath(
-            'thumbnails', createDate.strftime('%y%m%d'),
+            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+            'thumbnails',
+            dayDate.strftime('%y%m%d'),
             createDate.strftime('%d_%H'),
-            uuid_1,
         )
 
 

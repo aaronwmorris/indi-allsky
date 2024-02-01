@@ -907,6 +907,8 @@ class VideoWorker(Process):
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'night'      : night,
             'camera_uuid': camera.uuid,
         }
 
@@ -934,6 +936,8 @@ class VideoWorker(Process):
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'createDate' : now.timestamp(),
+                'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+                'night'      : night,
                 'camera_uuid': camera.uuid,
             }
 
