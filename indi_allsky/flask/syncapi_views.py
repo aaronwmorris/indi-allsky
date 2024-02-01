@@ -673,6 +673,11 @@ class SyncApiThumbnailView(SyncApiBaseView):
         if tmp_file_size != 0:
             # only copy file if it is not empty
             # if the empty file option is selected, this can be expected
+
+            thumbnail_dir_p = thumbnail_file_p.parent
+            if not thumbnail_dir_p.exists():
+                thumbnail_dir_p.mkdir(mode=0o755, parents=True)
+
             shutil.copy2(str(tmp_file_p), str(thumbnail_file_p))
             thumbnail_file_p.chmod(0o644)
 
