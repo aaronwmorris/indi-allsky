@@ -1444,26 +1444,28 @@ class ConfigView(FormView):
                 continue
 
             for addr in addr_info:
-                if addr.family == socket.AF_INET:
+                if addr.family == socket.AF_INET:  # 2
                     cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
-                    network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
+                    network_cidr = '{0:s}/{1:d}'.format(addr.address, cidr)
+                elif addr.family == socket.AF_INET6:  # 10
+                    network_cidr = '{0:s}/{1:d}'.format(addr.address, 64)  # assume /64 for ipv6
+                elif addr.family == socket.AF_PACKET:  # 17
+                    continue
+                else:
+                    #app.logger.error('Unknown address family: %d', addr.family)
+                    continue
 
-                elif addr.family == socket.AF_INET6:
-                    network_list.append('{0:s}/{1:d}'.format(addr.address, 64))  # assume /64 for ipv6
+
+                try:
+                    network = ipaddress.ip_network(network_cidr, strict=False)
+                    network_list.append('{0:s} [{1:s}]'.format(str(network), dev))
+                except ValueError:
+                    app.logger.error('Invalid network: %s', network_cidr)
+                    continue
 
 
-        admin_network_list = list()
-        for net in network_list:
-            try:
-                net = ipaddress.ip_network(net, strict=False)
-            except ValueError:
-                app.logger.error('Invalid network: %s', net)
-                continue
-
-            admin_network_list.append('{0:s}'.format(str(net)))
-
-        form_data['ADMIN_NETWORKS_FLASK'] = '\n'.join(admin_network_list)
-
+        admin_network_text = '\n'.join(network_list)
+        form_data['ADMIN_NETWORKS_FLASK'] = admin_network_text
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
