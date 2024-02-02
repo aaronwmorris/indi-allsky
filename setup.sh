@@ -155,11 +155,18 @@ if [[ -f "/etc/astroberry.version" ]]; then
     echo "Detected Astroberry server"
     echo
 
-    echo "Astroberry is no longer supported.  Please use Raspbian or Ubuntu."
-    echo
 
-    # comment this line out to continue
-    exit 1
+    if which whiptail; then
+        if ! whiptail --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nSelect 'yes' to continue anyway" 0 0 --defaultno; then
+            exit 1
+        fi
+    else
+        echo
+        echo "!!! WARNING !!!  Astroberry is no longer supported.  Please use Raspbian or Ubuntu."
+        echo
+        sleep 10
+    fi
+
 
     ASTROBERRY="true"
 
@@ -1852,7 +1859,7 @@ sleep 3
 
 
 if [ "$DETECTED_INDIVERSION" == "2.0.4" ]; then
-    whiptail --msgbox "There is a bug in INDI 2.0.4 that will\ncause the build for pyindi-client to fail\n\nhttps://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug" 0 0 --title "WARNING"
+    whiptail --msgbox "There is a bug in INDI 2.0.4 that will cause the build for pyindi-client to fail.\nThe following URL documents the needed fix.\n\nhttps://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug" 0 0 --title "WARNING"
 fi
 
 
