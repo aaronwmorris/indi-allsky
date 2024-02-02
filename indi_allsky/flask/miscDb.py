@@ -948,7 +948,7 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=200, numpy_data=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
         if entry.thumbnail_uuid:
             return
 
