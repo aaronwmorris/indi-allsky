@@ -157,7 +157,7 @@ if [[ -f "/etc/astroberry.version" ]]; then
 
 
     if which whiptail; then
-        if ! whiptail --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nSelect 'yes' to continue anyway" 0 0 --defaultno; then
+        if ! whiptail --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
             exit 1
         fi
     else
