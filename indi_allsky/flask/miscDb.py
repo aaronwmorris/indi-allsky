@@ -1042,6 +1042,13 @@ class miscDb(object):
         return thumbnail_entry
 
 
+    def addThumbnailImagesAuto(self, *args, **kwargs):
+        if not self.config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True):
+            return
+
+        return self.addThumbnail(*args, **kwargs)
+
+
     def addThumbnail_remote(self, filename, camera_id, thumbnail_metadata):
 
         ### expected metadata

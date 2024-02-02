@@ -670,7 +670,7 @@ class ImageWorker(Process):
                 'camera_uuid': camera.uuid,
             }
 
-            image_thumbnail_entry = self._miscDb.addThumbnail(
+            image_thumbnail_entry = self._miscDb.addThumbnailImagesAuto(
                 image_entry,
                 image_metadata,
                 camera.id,
