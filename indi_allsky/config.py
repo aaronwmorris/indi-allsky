@@ -290,6 +290,9 @@ class IndiAllSkyConfigBase(object):
             "EXTRA_OPTIONS"          : "",
             "EXTRA_OPTIONS_DAY"      : "",
         },
+        "PYCURL_CAMERA" : {
+            "URL"                    : '',
+        },
     })
 
 
