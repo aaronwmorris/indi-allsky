@@ -454,6 +454,10 @@ class miscUpload(object):
         self.s3_upload_asset(*args)
 
 
+    def s3_upload_thumbnail(self, *args):
+        self.s3_upload_asset(*args)
+
+
     def syncapi_image(self, asset_entry, asset_metadata):
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
@@ -545,6 +549,11 @@ class miscUpload(object):
 
 
     def syncapi_panoramavideo(self, *args):
+        self.syncapi_video(*args)
+
+
+    def syncapi_thumbnail(self, *args):
+        # this is for thumbnails of startrails and keograms mainly
         self.syncapi_video(*args)
 
 

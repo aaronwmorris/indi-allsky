@@ -50,6 +50,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 
 from . import db
 
@@ -2412,6 +2413,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
+    THUMBNAILS__IMAGES_AUTO          = BooleanField('Auto Generate Image Thumbnails')
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
@@ -3163,9 +3165,26 @@ class IndiAllskyVideoViewer(FlaskForm):
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
                     keogram_id = 0
+
+
+                if keogram_entry.thumbnail_uuid:
+                    keogram_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+                        .filter(IndiAllSkyDbThumbnailTable.uuid == keogram_entry.thumbnail_uuid)\
+                        .first()
+
+                    if keogram_thumbnail_entry:
+                        try:
+                            keogram_thumbnail_url = keogram_thumbnail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                        except ValueError:
+                            keogram_thumbnail_url = None
+                    else:
+                        keogram_thumbnail_url = None
+                else:
+                    keogram_thumbnail_url = None
             else:
                 keogram_url = None
                 keogram_id = 0
+                keogram_thumbnail_url = None
 
 
             ### Star trail
@@ -3204,9 +3223,26 @@ class IndiAllskyVideoViewer(FlaskForm):
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
                     startrail_id = -1
+
+
+                if startrail_entry.thumbnail_uuid:
+                    startrail_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+                        .filter(IndiAllSkyDbThumbnailTable.uuid == startrail_entry.thumbnail_uuid)\
+                        .first()
+
+                    if startrail_thumbnail_entry:
+                        try:
+                            startrail_thumbnail_url = startrail_thumbnail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                        except ValueError:
+                            startrail_thumbnail_url = None
+                    else:
+                        startrail_thumbnail_url = None
+                else:
+                    startrail_thumbnail_url = None
             else:
                 startrail_url = None
                 startrail_id = -1
+                startrail_thumbnail_url = None
 
 
             ### Star trail timelapses
@@ -3309,7 +3345,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             entry['keogram']    = str(keogram_url)
             entry['keogram_id'] = keogram_id
+            entry['keogram_thumbnail']  = str(keogram_thumbnail_url)
             entry['startrail']  = str(startrail_url)
+            entry['startrail_thumbnail']  = str(startrail_thumbnail_url)
             entry['startrail_id']  = startrail_id
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
@@ -3384,7 +3422,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         ('generate_video', 'Generate Timelapse Only'),
         ('generate_k_st', 'Generate Keogram/Star Trails'),
         ('generate_panorama_video', 'Generate Panorama Timelapse'),
-        ('delete_video_k_st', 'Delete Timelapse/Keogram/Star Trails'),
+        ('delete_video_k_st_p', 'Delete Timelapse/Keogram/Star Trails/Panorama'),
         ('delete_video', 'Delete Timelapse Only'),
         ('delete_k_st', 'Delete Keogram/Star Trails'),
         ('delete_panorama_video', 'Delete Panorama Timelapse'),

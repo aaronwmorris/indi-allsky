@@ -187,6 +187,9 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_ALIGN_POINTS" : 50,
         "IMAGE_ALIGN_SOURCEMINAREA" : 10,
         "IMAGE_STACK_SPLIT"   : False,
+        "THUMBNAILS" : {
+            "IMAGES_AUTO" : True,
+        },
         "IMAGE_EXPIRE_DAYS"     : 30,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
         "FFMPEG_FRAMERATE" : 25,

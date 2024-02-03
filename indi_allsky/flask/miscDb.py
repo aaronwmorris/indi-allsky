@@ -5,6 +5,10 @@ import uuid
 import logging
 #from pprint import pformat
 
+import cv2
+import PIL
+from PIL import Image
+
 from cryptography.fernet import Fernet
 
 from flask import current_app as app  # prevent circular import
@@ -22,6 +26,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbStateTable
 
@@ -29,12 +34,21 @@ from .models import IndiAllSkyDbStateTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
+#from ..exceptions import BadImage
+
 logger = logging.getLogger('indi_allsky')
 
 
 class miscDb(object):
     def __init__(self, config):
         self.config = config
+
+
+        if self.config.get('IMAGE_FOLDER'):
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
+
 
 
     def addCamera(self, metadata):
@@ -237,6 +251,7 @@ class miscDb(object):
             exclude=metadata.get('exclude', False),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -300,6 +315,7 @@ class miscDb(object):
             adu=metadata.get('adu'),
             height=metadata['height'],
             width=metadata['width'],
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -362,6 +378,7 @@ class miscDb(object):
             adu=metadata.get('adu'),
             height=metadata['height'],
             width=metadata['width'],
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
             data=metadata.get('data', {}),
         )
 
@@ -414,6 +431,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(video)
@@ -465,6 +483,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(panorama_video)
@@ -517,6 +536,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(keogram)
@@ -570,6 +590,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(startrail)
@@ -621,6 +642,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(startrail_video)
@@ -678,6 +700,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(fits_image)
@@ -735,6 +758,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(raw_image)
@@ -792,6 +816,7 @@ class miscDb(object):
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
         db.session.add(panorama_image)
@@ -921,4 +946,146 @@ class miscDb(object):
 
         db.session.delete(state)
         db.session.commit()
+
+
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
+        if entry.thumbnail_uuid:
+            return
+
+
+        if isinstance(thumbnail_metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
+        else:
+            createDate = thumbnail_metadata['createDate']
+
+
+        if thumbnail_metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (createDate - timedelta(hours=12)).date()
+        else:
+            dayDate = createDate.date()
+
+
+        thumbnail_uuid_str = str(uuid.uuid4())
+
+        thumbnail_dir_p = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+            'thumbnails',
+            dayDate.strftime('%Y%m%d'),
+            createDate.strftime('%d_%H'),
+        )
+        thumbnail_filename_p = thumbnail_dir_p.joinpath(
+            '{0:s}.jpg'.format(thumbnail_uuid_str),
+        )
+
+        logger.info('Adding thumbnail to DB: %s', thumbnail_filename_p)
+
+        if not thumbnail_dir_p.exists():
+            thumbnail_dir_p.mkdir(mode=0o755, parents=True)
+
+
+        if isinstance(numpy_data, type(None)):
+            # use file on filesystem
+            filename_p = Path(entry.getFilesystemPath())
+
+            if not filename_p.exists():
+                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                return
+
+            try:
+                img = Image.open(str(filename_p))
+            except PIL.UnidentifiedImageError:
+                logger.error('Cannot create thumbnail:  Bad Image')
+                return
+        else:
+            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+
+
+        width, height = img.size
+
+        if new_width < width:
+            scale = new_width / width
+            new_height = int(height * scale)
+
+            thumbnail_data = img.resize((new_width, new_height))
+        else:
+            # keep the same dimensions
+            thumbnail_data = img
+            new_width = width
+            new_height = height
+
+
+        # insert new metadata
+        entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
+        thumbnail_metadata['uuid'] = thumbnail_uuid_str
+        thumbnail_metadata['dayDate'] = dayDate.strftime('%Y%m%d')
+        thumbnail_metadata['width'] = new_width
+        thumbnail_metadata['height'] = new_height
+
+
+        thumbnail_data.save(str(thumbnail_filename_p), quality=75)
+
+
+        thumbnail_entry = IndiAllSkyDbThumbnailTable(
+            uuid=thumbnail_uuid_str,
+            filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
+            createDate=createDate,
+            width=new_width,
+            height=new_height,
+            camera_id=camera_id,
+        )
+
+        db.session.add(thumbnail_entry)
+        entry.thumbnail_uuid = thumbnail_uuid_str
+        db.session.commit()
+
+        return thumbnail_entry
+
+
+    def addThumbnailImagesAuto(self, *args, **kwargs):
+        if not self.config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True):
+            return
+
+        return self.addThumbnail(*args, **kwargs)
+
+
+    def addThumbnail_remote(self, filename, camera_id, thumbnail_metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'
+        #    'uuid'
+        #    'night'
+        #    'width'
+        #    'height'
+        #}
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        if isinstance(thumbnail_metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
+        else:
+            createDate = thumbnail_metadata['createDate']
+
+
+        logger.info('Adding thumbnail to DB: %s', filename_p)
+
+
+        thumbnail_entry = IndiAllSkyDbThumbnailTable(
+            uuid=thumbnail_metadata['uuid'],
+            filename=str(filename_p),
+            createDate=createDate,
+            width=thumbnail_metadata['width'],
+            height=thumbnail_metadata['height'],
+            camera_id=camera_id,
+        )
+
+        db.session.add(thumbnail_entry)
+        db.session.commit()
+
+        return thumbnail_entry
 

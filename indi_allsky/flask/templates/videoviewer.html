@@ -314,8 +314,15 @@ function populate_videos(video_list) {
                         'rel'    : "noopener noreferrer",
                     }).appendTo(startrail_div);
 
+
+                    if (item['startrail_thumbnail'] != "None") {
+                        var startrail_thumbnail = item['startrail_thumbnail']
+                    } else {
+                        var startrail_thumbnail = item['startrail']
+                    }
+
                     $('<img />', {
-                        'src'   : item['startrail'],
+                        'src'   : startrail_thumbnail,
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
                         'alt'   : "Startrail",
                     }).appendTo(st_tl_a);
@@ -350,8 +357,14 @@ function populate_videos(video_list) {
 
                 } else {
                     // No link
+                    if (item['startrail_thumbnail'] != "None") {
+                        var startrail_thumbnail = item['startrail_thumbnail']
+                    } else {
+                        var startrail_thumbnail = item['startrail']
+                    }
+
                     $('<img />', {
-                        'src'   : item['startrail'],
+                        'src'   : startrail_thumbnail,
                         'style' : "height:auto;max-width:100%;object-fit:scale-down;",
                         'alt'   : "Startrail",
                     }).appendTo(startrail_div);
@@ -405,8 +418,14 @@ function populate_videos(video_list) {
 
 
         if (item['keogram'] != 'None') {
+            if (item['keogram_thumbnail'] != "None") {
+                var keogram_thumbnail = item['keogram_thumbnail']
+            } else {
+                var keogram_thumbnail = item['keogram']
+            }
+
             $('<img />', {
-                'src'   : item['keogram'],
+                'src'   : keogram_thumbnail,
                 'style' : "height:auto;max-width:100%;object-fit:scale-down;",
                 'alt'   : "Keogram",
             }).appendTo(k_a);

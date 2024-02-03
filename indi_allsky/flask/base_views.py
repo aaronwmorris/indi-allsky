@@ -123,9 +123,10 @@ class BaseView(View):
                 if addr.family == socket.AF_INET:
                     cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
                     network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
-
                 elif addr.family == socket.AF_INET6:
                     network_list.append('{0:s}/{1:d}'.format(addr.address, 64))  # assume /64 for ipv6
+                else:
+                    continue
 
 
         for net in network_list:

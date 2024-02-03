@@ -51,6 +51,7 @@ from .models import IndiAllSkyDbRawImageTable
 from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
+from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -1127,6 +1128,7 @@ class ConfigView(FormView):
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
             'IMAGE_STACK_SPLIT'              : self.indi_allsky_config.get('IMAGE_STACK_SPLIT', False),
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
+            'THUMBNAILS__IMAGES_AUTO'        : self.indi_allsky_config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True),
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
             'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
             'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'),
@@ -1442,26 +1444,28 @@ class ConfigView(FormView):
                 continue
 
             for addr in addr_info:
-                if addr.family == socket.AF_INET:
+                if addr.family == socket.AF_INET:  # 2
                     cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
-                    network_list.append('{0:s}/{1:d}'.format(addr.address, cidr))
+                    network_cidr = '{0:s}/{1:d}'.format(addr.address, cidr)
+                elif addr.family == socket.AF_INET6:  # 10
+                    network_cidr = '{0:s}/{1:d}'.format(addr.address, 64)  # assume /64 for ipv6
+                elif addr.family == socket.AF_PACKET:  # 17
+                    continue
+                else:
+                    #app.logger.error('Unknown address family: %d', addr.family)
+                    continue
 
-                elif addr.family == socket.AF_INET6:
-                    network_list.append('{0:s}/{1:d}'.format(addr.address, 64))  # assume /64 for ipv6
+
+                try:
+                    network = ipaddress.ip_network(network_cidr, strict=False)
+                    network_list.append('{0:s} [{1:s}]'.format(str(network), dev))
+                except ValueError:
+                    app.logger.error('Invalid network: %s', network_cidr)
+                    continue
 
 
-        admin_network_list = list()
-        for net in network_list:
-            try:
-                net = ipaddress.ip_network(net, strict=False)
-            except ValueError:
-                app.logger.error('Invalid network: %s', net)
-                continue
-
-            admin_network_list.append('{0:s}'.format(str(net)))
-
-        form_data['ADMIN_NETWORKS_FLASK'] = '\n'.join(admin_network_list)
-
+        admin_network_text = '\n'.join(network_list)
+        form_data['ADMIN_NETWORKS_FLASK'] = admin_network_text
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
 
@@ -1549,6 +1553,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('PYCURL_CAMERA'):
             self.indi_allsky_config['PYCURL_CAMERA'] = {}
+
+        if not self.indi_allsky_config.get('THUMBNAILS'):
+            self.indi_allsky_config['THUMBNAILS'] = {}
 
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
@@ -1685,6 +1692,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         self.indi_allsky_config['IMAGE_STACK_SPLIT']                    = bool(request.json['IMAGE_STACK_SPLIT'])
         self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
+        self.indi_allsky_config['THUMBNAILS']['IMAGES_AUTO']            = bool(request.json['THUMBNAILS__IMAGES_AUTO'])
         self.indi_allsky_config['TIMELAPSE_EXPIRE_DAYS']                = int(request.json['TIMELAPSE_EXPIRE_DAYS'])
         self.indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
         self.indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
@@ -3416,6 +3424,22 @@ class AjaxSystemInfoView(BaseView):
                 panorama_video_notfound_list.append(p)
 
 
+        ### Thumbnails
+        thumbnail_entries = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbThumbnailTable.createDate.asc())
+
+        thumbnail_entries_count = thumbnail_entries.count()
+        message_list.append('<p>Thumbnails: {0:d}</p>'.format(thumbnail_entries_count))
+
+        app.logger.info('Searching %d thumbnails...', thumbnail_entries_count)
+        thumbnail_notfound_list = list()
+        for t in thumbnail_entries:
+            if not t.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', t.filename)
+                thumbnail_notfound_list.append(t)
+
+
 
         app.logger.warning('Images not found: %d', len(image_notfound_list))
         app.logger.warning('FITS Images not found: %d', len(fits_image_notfound_list))
@@ -3428,6 +3452,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
         app.logger.warning('Panorama timelapses not found: %d', len(panorama_video_notfound_list))
+        app.logger.warning('Thumbnails not found: %d', len(thumbnail_notfound_list))
 
 
         ### DELETE ###
@@ -3473,6 +3498,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing panorama timelapse entries</p>'.format(len(panorama_video_notfound_list)))
         [db.session.delete(p) for p in panorama_video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing thumbnail entries</p>'.format(len(thumbnail_notfound_list)))
+        [db.session.delete(t) for t in thumbnail_notfound_list]
 
 
         # finalize transaction
@@ -3586,7 +3615,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             .one()
 
 
-        if action == 'delete_video_k_st':
+        if action == 'delete_video_k_st_p':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
@@ -3631,6 +3660,17 @@ class AjaxTimelapseGeneratorView(BaseView):
                 )\
                 .first()
 
+            panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == day_date,
+                        IndiAllSkyDbPanoramaVideoTable.night == night,
+                    )
+                )\
+                .first()
+
 
             if video_entry:
                 video_entry.deleteAsset()
@@ -3647,6 +3687,10 @@ class AjaxTimelapseGeneratorView(BaseView):
             if startrail_video_entry:
                 startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
+
+            if panorama_video_entry:
+                panorama_video_entry.deleteAsset()
+                db.session.delete(panorama_video_entry)
 
 
             db.session.commit()
