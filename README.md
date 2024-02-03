@@ -6,6 +6,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation
 * Upload timelapse videos directly to YouTube
 * Cardinal direction labels
