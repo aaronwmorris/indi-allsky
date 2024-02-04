@@ -991,8 +991,6 @@ class IndiClient(PyIndi.BaseClient):
             gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
             index = gain_index_dict['Gain']
         elif indi_exec in [
-            'indi_svbony_ccd',
-            'indi_sv305_ccd',  # legacy name
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
@@ -1006,10 +1004,30 @@ class IndiClient(PyIndi.BaseClient):
             gain_ctl = self.get_control(self._ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
             index = gain_index_dict['GAIN']
+        elif indi_exec in [
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
+        ]:
+            # the GAIN property changed in INDI 2.0.4
+            try:
+                gain_ctl = self.get_control(self._ccd_device, 'CCD_CONTROLS', 'number', timeout=2.0)
+                gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
+                index = gain_index_dict['Gain']
+            except TimeOutException:
+                # use the old property
+                gain_ctl = self.get_control(self._ccd_device, 'CCD_GAIN', 'number', timeout=2.0)
+                gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
+                index = gain_index_dict['GAIN']
         elif indi_exec in ['indi_sx_ccd']:
             logger.warning('indi_sx_ccd does not support gain settings')
             return fake_gain_info
-        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indin_sony_ccd']:
+        elif indi_exec in [
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indin_sony_ccd',
+        ]:
             gain_ctl = self.get_control(self._ccd_device, 'CCD_ISO', 'switch')
 
             gain_max = int(gain_ctl[len(gain_ctl) - 1].getLabel())  # dont slice
@@ -1079,8 +1097,6 @@ class IndiClient(PyIndi.BaseClient):
                 },
             }
         elif indi_exec in [
-            'indi_svbony_ccd',
-            'indi_sv305_ccd',  # legacy name
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
@@ -1098,7 +1114,37 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
+        elif indi_exec in [
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
+        ]:
+            # the GAIN property changed in INDI 2.0.4
+            try:
+                self.get_control(self._ccd_device, 'CCD_CONTROLS', 'number', timeout=2.0)
+
+                gain_config = {
+                    "PROPERTIES" : {
+                        "CCD_CONTROLS" : {
+                            "Gain" : gain_value,
+                        },
+                    },
+                }
+            except TimeOutException:
+                # use the old property
+                gain_config = {
+                    "PROPERTIES" : {
+                        "CCD_GAIN" : {
+                            "GAIN" : gain_value,
+                        },
+                    },
+                }
+        elif indi_exec in [
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indi_sony_ccd',
+        ]:
             logger.info('Mapping gain to ISO for libgphoto device')
 
             try:
@@ -1178,7 +1224,13 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
+        elif indi_exec in [
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indi_sony_ccd',
+        ]:
             logger.warning('indi_gphoto_ccd does not support bin settings')
             return
         elif indi_exec in ['indi_webcam_ccd']:
