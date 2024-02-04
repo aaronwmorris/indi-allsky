@@ -934,7 +934,7 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref['smoke_rating'],
         }
 
-        self._miscDb.addFitsImage(
+        fits_entry = self._miscDb.addFitsImage(
             filename.relative_to(self.image_dir),
             i_ref['camera_id'],
             fits_metadata,
@@ -962,8 +962,7 @@ class ImageWorker(Process):
 
         tmpfile_p.unlink()
 
-
-        logger.info('Finished writing fit file')
+        self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
 
 
     def export_raw_image(self, i_ref, jpeg_exif=None):
@@ -1102,7 +1101,7 @@ class ImageWorker(Process):
             # raw exports may be outside the image path
             raw_filename = filename
 
-        self._miscDb.addRawImage(
+        raw_entry = self._miscDb.addRawImage(
             raw_filename,
             i_ref['camera_id'],
             raw_metadata,
@@ -1124,6 +1123,8 @@ class ImageWorker(Process):
 
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
+
+        self._miscUpload.s3_upload_raw(raw_entry, raw_metadata)
 
 
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
