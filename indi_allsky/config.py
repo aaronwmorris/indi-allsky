@@ -254,6 +254,8 @@ class IndiAllSkyConfigBase(object):
             "STORAGE_CLASS"          : "STANDARD",
             "TLS"                    : True,
             "CERT_BYPASS"            : False,
+            "UPLOAD_FITS"            : False,
+            "UPLOAD_RAW"             : False,
         },
         "MQTTPUBLISH" : {
             "ENABLE"                 : False,

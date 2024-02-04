@@ -2207,6 +2207,8 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__STORAGE_CLASS          = StringField('S3 Storage Class', validators=[S3UPLOAD__STORAGE_CLASS_validator])
     S3UPLOAD__TLS                    = BooleanField('Use TLS')
     S3UPLOAD__CERT_BYPASS            = BooleanField('Disable Certificate Validation')
+    S3UPLOAD__UPLOAD_FITS            = BooleanField('Upload FITS files')
+    S3UPLOAD__UPLOAD_RAW             = BooleanField('Upload RAW files')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])

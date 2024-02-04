@@ -2612,6 +2612,32 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__UPLOAD_FITS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__UPLOAD_FITS(class='form-check-input') }}
+                <div id="S3UPLOAD__UPLOAD_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__UPLOAD_RAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.S3UPLOAD__UPLOAD_RAW(class='form-check-input') }}
+                <div id="S3UPLOAD__UPLOAD_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -3160,6 +3186,8 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
     'S3UPLOAD__ENABLE',
+    'S3UPLOAD__UPLOAD_FITS',
+    'S3UPLOAD__UPLOAD_RAW',
     'S3UPLOAD__TLS',
     'S3UPLOAD__CERT_BYPASS',
     'MQTTPUBLISH__ENABLE',
