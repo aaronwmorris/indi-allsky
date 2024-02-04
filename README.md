@@ -103,6 +103,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 ### Logs
 * When indi-allsky is run from the command line, logs are sent to STDERR by default.
 * When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in `/var/log/indi-allsky/indi-allsky.log` and rotated daily.
+    * Web interface logs are located at `/var/log/indi-allsky/webapp-indi-allsky.log`
 
 
 ## Updating
