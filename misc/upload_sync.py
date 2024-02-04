@@ -33,6 +33,8 @@ from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
+from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
 
 
 from indi_allsky import constants
@@ -332,6 +334,42 @@ class UploadSync(object):
                         startrail_video_metadata['data'] = dict()
 
                     self._miscUpload.s3_upload_startrailvideo(entry, startrail_video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbFitsImageTable':
+                    fits_metadata = {
+                        'type'       : constants.FITS_IMAGE,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        fits_metadata['data'] = dict(entry.data)
+                    else:
+                        fits_metadata['data'] = dict()
+
+                    self._miscUpload.s3_upload_fits(entry, fits_metadata)
+
+                elif x['table'].__name__ == 'IndiAllSkyDbRawImageTable':
+                    raw_metadata = {
+                        'type'       : constants.RAW_IMAGE,
+                        'createDate' : entry.createDate.timestamp(),
+                        'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
+                        'night'      : entry.night,
+                        'width'      : entry.width,
+                        'height'     : entry.height,
+                        'camera_uuid': entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        fits_metadata['data'] = dict(entry.data)
+                    else:
+                        fits_metadata['data'] = dict()
+
+                    self._miscUpload.s3_upload_raw(entry, raw_metadata)
+
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -531,6 +569,24 @@ class UploadSync(object):
                 status_dict['s3'][table] = None
 
 
+        s3_upload_fits = self.config.get('S3UPLOAD', {}).get('UPLOAD_FITS')
+        if s3_upload_fits:
+            s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=True)
+            not_s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=False)
+            status_dict['s3'][IndiAllSkyDbFitsImageTable] = [s3_entries_fits, not_s3_entries_fits]
+        else:
+            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbFitsImageTable.__name__)
+            status_dict['s3'][IndiAllSkyDbFitsImageTable] = None
+
+
+        s3_upload_raw = self.config.get('S3UPLOAD', {}).get('UPLOAD_RAW')
+        if s3_upload_raw:
+            s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=True)
+            not_s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=False)
+            status_dict['s3'][IndiAllSkyDbRawImageTable] = [s3_entries_raw, not_s3_entries_raw]
+        else:
+            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbRawImageTable.__name__)
+            status_dict['s3'][IndiAllSkyDbRawImageTable] = None
 
 
         # syncapi
