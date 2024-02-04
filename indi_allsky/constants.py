@@ -46,6 +46,7 @@ CFA_STR_MAP = {
     'BGGR' : CFA_BGGR,
     'GBRG' : CFA_GBRG,
     None   : None,
+    ''     : None,  # sv305 edge case
 }
 
 CFA_MAP_STR = {
