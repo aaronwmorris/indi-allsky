@@ -519,24 +519,24 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self.temp_delta
+        self.getSensorTemperature()
+        next_temp_thold = self.sensortemp_v.value - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.getSensorTemperature()
+            self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if current_temp > next_temp_thold:
+            if self.sensortemp_v.value > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self.temp_delta
+            next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksAverage)
 
@@ -567,24 +567,24 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self.temp_delta
+        self.getSensorTemperature()
+        next_temp_thold = self.sensortemp_v.value - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.getSensorTemperature()
+            self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if current_temp > next_temp_thold:
+            if self.sensortemp_v.value > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self.temp_delta
+            next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksSigmaClip)
 
