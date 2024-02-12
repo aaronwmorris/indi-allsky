@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #set -x  # command tracing
 set -o errexit
 set -o nounset
@@ -21,6 +20,8 @@ DPC_STRENGTH="1"
 ###
 
 
+LIBCAMERA_PREFIX="/usr"
+
 
 echo
 echo "#########################################################"
@@ -31,6 +32,15 @@ echo
 echo
 echo
 
+
+if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]; then
+    LIBCAMERA_PREFIX="/usr/local"
+
+    echo "Detected a custom installation of libcamera in /usr/local"
+    echo
+    echo
+    sleep 3
+fi
 
 
 if [[ "$(id -u)" == "0" ]]; then
@@ -69,21 +79,40 @@ LIBCAMERA_CAMERAS="
 "
 
 for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
-    JSON_FILE="/usr/share/libcamera/ipa/raspberrypi/${LIBCAMERA_JSON}.json"
+    ### PI4 and older
+    JSON_FILE_VC4="${LIBCAMERA_PREFIX}/share/libcamera/ipa/rpi/vc4/${LIBCAMERA_JSON}.json"
 
-    if [ -f "$JSON_FILE" ]; then
-        echo "Enabling dpc in $JSON_FILE"
+    ### PI5
+    JSON_FILE_PISP="${LIBCAMERA_PREFIX}/share/libcamera/ipa/rpi/pisp/${LIBCAMERA_JSON}.json"
 
-        TMP_JSON=$(mktemp)
-        jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > "$TMP_JSON"
-        sudo cp -f "$TMP_JSON" "$JSON_FILE"
-        sudo chown root:root "$JSON_FILE"
-        sudo chmod 644 "$JSON_FILE"
-        [[ -f "$TMP_JSON" ]] && rm -f "$TMP_JSON"
+
+    if [ -f "$JSON_FILE_VC4" ]; then
+        echo "Disabling dpc in $JSON_FILE_VC4"
+
+        TMP_DPC_JSON_VC4=$(mktemp --suffix=.json)
+        jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE_VC4" > "$TMP_DPC_JSON_VC4"
+        sudo cp -f "$TMP_DPC_JSON_VC4" "$JSON_FILE_VC4"
+        sudo chown root:root "$JSON_FILE_VC4"
+        sudo chmod 644 "$JSON_FILE_VC4"
+        [[ -f "$TMP_DPC_JSON_VC4" ]] && rm -f "$TMP_DPC_JSON_VC4"
     else
-        echo "File not found: $JSON_FILE"
+        echo "File not found: $JSON_FILE_VC4"
     fi
+
+
+    if [ -f "$JSON_FILE_PISP" ]; then
+        echo "Disabling dpc in $JSON_FILE_PISP"
+
+        TMP_DPC_JSON_PISP=$(mktemp --suffix=.json)
+        jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE_PISP" > "$TMP_DPC_JSON_PISP"
+        sudo cp -f "$TMP_DPC_JSON_PISP" "$JSON_FILE_PISP"
+        sudo chown root:root "$JSON_FILE_PISP"
+        sudo chmod 644 "$JSON_FILE_PISP"
+        [[ -f "$TMP_DPC_JSON_PISP" ]] && rm -f "$TMP_DPC_JSON_PISP"
+    else
+        echo "File not found: $JSON_FILE_PISP"
+    fi
+
+
 done
-
-
 
