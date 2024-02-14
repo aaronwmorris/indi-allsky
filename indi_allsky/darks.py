@@ -499,6 +499,11 @@ class IndiAllSkyDarks(object):
             self._average()
 
 
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
+
+
     def _average(self):
         self._initialize()
         self._pre_run_tasks()
@@ -509,6 +514,11 @@ class IndiAllSkyDarks(object):
     def tempaverage(self):
         with app.app_context():
             self._tempaverage()
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
 
 
     def _tempaverage(self):
@@ -541,10 +551,14 @@ class IndiAllSkyDarks(object):
             self._run(IndiAllSkyDarksAverage)
 
 
-
     def sigmaclip(self):
         with app.app_context():
             self._sigmaclip()
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
 
 
     def _sigmaclip(self):
@@ -557,6 +571,11 @@ class IndiAllSkyDarks(object):
     def tempsigmaclip(self):
         with app.app_context():
             self._tempsigmaclip()
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
 
 
     def _tempsigmaclip(self):
@@ -805,11 +824,6 @@ class IndiAllSkyDarks(object):
                 logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
             remaining_configs -= 1
-
-        # shutdown
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
-
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
