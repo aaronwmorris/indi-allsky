@@ -499,6 +499,11 @@ class IndiAllSkyDarks(object):
             self._average()
 
 
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
+
+
     def _average(self):
         self._initialize()
         self._pre_run_tasks()
@@ -511,6 +516,11 @@ class IndiAllSkyDarks(object):
             self._tempaverage()
 
 
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
+
+
     def _tempaverage(self):
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
@@ -519,32 +529,36 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self.temp_delta
+        self.getSensorTemperature()
+        next_temp_thold = self.sensortemp_v.value - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.getSensorTemperature()
+            self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if current_temp > next_temp_thold:
+            if self.sensortemp_v.value > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self.temp_delta
+            next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksAverage)
-
 
 
     def sigmaclip(self):
         with app.app_context():
             self._sigmaclip()
+
+
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
 
 
     def _sigmaclip(self):
@@ -559,6 +573,11 @@ class IndiAllSkyDarks(object):
             self._tempsigmaclip()
 
 
+        # shutdown
+        self.indiclient.disableCcdCooler()
+        self.indiclient.disconnectServer()
+
+
     def _tempsigmaclip(self):
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
@@ -567,24 +586,24 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        current_temp = self.getSensorTemperature()
-        next_temp_thold = current_temp - self.temp_delta
+        self.getSensorTemperature()
+        next_temp_thold = self.sensortemp_v.value - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            current_temp = self.getSensorTemperature()
+            self.getSensorTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if current_temp > next_temp_thold:
+            if self.sensortemp_v.value > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
             logger.warning('Acheived next temperature threshold')
-            next_temp_thold = next_temp_thold - self.temp_delta
+            next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksSigmaClip)
 
@@ -805,11 +824,6 @@ class IndiAllSkyDarks(object):
                 logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
             remaining_configs -= 1
-
-        # shutdown
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
-
 
 
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):

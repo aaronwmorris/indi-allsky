@@ -48,7 +48,6 @@ MIGRATION_FOLDER="$DB_FOLDER/migrations"
 USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
 
 CAMERA_INTERFACE="${INDIALLSKY_CAMERA_INTERFACE:-}"
-DPC_STRENGTH="0"
 
 INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
 INSTALL_LIBCAMERA="${INDIALLSKY_INSTALL_LIBCAMERA:-false}"
@@ -77,15 +76,6 @@ PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyind
 
 ASTROBERRY="false"
 #### end config ####
-
-
-### libcamera Defective Pixel Correction (DPC) Strength
-# https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf
-#
-# 0 = Off
-# 1 = Normal correction (default)
-# 2 = Strong correction
-###
 
 
 function catch_error() {
@@ -165,7 +155,7 @@ if [[ -f "/etc/astroberry.version" ]]; then
     echo
 
 
-    if which whiptail; then
+    if which whiptail >/dev/null 2>&1; then
         if ! whiptail --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
             exit 1
         fi
@@ -280,7 +270,7 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
     PS3="Select a camera interface: "
     select camera_interface in indi libcamera indi_passive pycurl_camera; do
         if [ -n "$camera_interface" ]; then
-            CAMERA_INTERFACE=$camera_interface
+            CAMERA_INTERFACE="$camera_interface"
             break
         fi
     done
@@ -288,12 +278,14 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
 
     # more specific libcamera selection
     if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+        INSTALL_LIBCAMERA="true"
+
         echo
         PS3="Select a libcamera interface: "
         select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_ov5647 libcamera_imx219 libcamera_imx519 libcamera_imx708 libcamera_imx296_gs libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
             if [ -n "$libcamera_interface" ]; then
                 # overwrite variable
-                CAMERA_INTERFACE=$libcamera_interface
+                CAMERA_INTERFACE="$libcamera_interface"
                 break
             fi
         done
@@ -301,8 +293,15 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
 done
 
 
-if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
-    INSTALL_LIBCAMERA="true"
+if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]; then
+    INSTALL_LIBCAMERA="false"
+
+    echo
+    echo
+    echo "Detected a custom installation of libcamera in /usr/local"
+    echo
+    echo
+    sleep 3
 fi
 
 
@@ -1013,7 +1012,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
 
 
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
+    if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -1167,7 +1166,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
     VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
 
 
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
+    if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -1323,14 +1322,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
-    fi
-
-
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
-        echo
-        echo
-        echo "libcamera is not supported in this distribution"
-        exit 1
     fi
 
 
@@ -1509,14 +1500,6 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
     fi
 
 
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
-        echo
-        echo
-        echo "libcamera is not supported in this distribution"
-        exit 1
-    fi
-
-
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository -y ppa:mutlaqja/ppa
@@ -1692,7 +1675,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
 
 
 
-    if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
+    if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
         echo
         echo
         echo "libcamera is not supported in this distribution"
@@ -2611,88 +2594,6 @@ if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
         cp -f "${ALLSKY_DIRECTORY}/html/images/${F}" "${IMAGE_FOLDER}/${F}"
         chmod 664 "${IMAGE_FOLDER}/${F}"
     done
-fi
-
-
-if [ "$CCD_DRIVER" == "indi_rpicam" ]; then
-    echo "**** Enable Raspberry Pi camera interface ****"
-    sudo raspi-config nonint do_camera 0
-
-    echo "**** Ensure user is a member of the video group ****"
-    sudo usermod -a -G video "$USER"
-
-    echo "**** Disable star eater algorithm ****"
-    sudo vcdbg set imx477_dpc 0 || true
-
-    echo "**** Setup disable cronjob at /etc/cron.d/disable_star_eater ****"
-    echo "@reboot root /usr/bin/vcdbg set imx477_dpc 0 >/dev/null 2>&1" | sudo tee /etc/cron.d/disable_star_eater
-    sudo chown root:root /etc/cron.d/disable_star_eater
-    sudo chmod 644 /etc/cron.d/disable_star_eater
-
-    echo
-    echo
-    echo "If this is the first time you have setup your Raspberry PI camera, please reboot when"
-    echo "this script completes to enable the camera interface..."
-    echo
-    echo
-
-    sleep 5
-fi
-
-
-if [[ "$CAMERA_INTERFACE" =~ "^libcamera" ]]; then
-    echo "**** Enable Raspberry Pi camera interface ****"
-    sudo raspi-config nonint do_camera 0
-
-    echo "**** Ensure user is a member of the video group ****"
-    sudo usermod -a -G video "$USER"
-
-    echo "**** Disable star eater algorithm ****"
-    echo "options imx477 dpc_enable=0" | sudo tee /etc/modprobe.d/imx477_dpc.conf
-    sudo chown root:root /etc/modprobe.d/imx477_dpc.conf
-    sudo chmod 644 /etc/modprobe.d/imx477_dpc.conf
-
-
-    LIBCAMERA_CAMERAS="
-        imx290
-        imx378
-        imx477
-        imx477_noir
-        imx477_af
-        imx219
-        imx219_noir
-        imx519
-        imx708
-        imx708_noir
-        imx708_wide
-        imx708_wide_noir
-        arducam_64mp
-    "
-
-    for LIBCAMERA_JSON in $LIBCAMERA_CAMERAS; do
-        JSON_FILE="/usr/share/libcamera/ipa/raspberrypi/${LIBCAMERA_JSON}.json"
-
-        if [ -f "$JSON_FILE" ]; then
-            echo "Disabling dpc in $JSON_FILE"
-
-            TMP_JSON=$(mktemp)
-            jq --argjson rpidpc_strength "$DPC_STRENGTH" '."rpi.dpc".strength = $rpidpc_strength' "$JSON_FILE" > "$TMP_JSON"
-            sudo cp -f "$TMP_JSON" "$JSON_FILE"
-            sudo chown root:root "$JSON_FILE"
-            sudo chmod 644 "$JSON_FILE"
-            [[ -f "$TMP_JSON" ]] && rm -f "$TMP_JSON"
-        fi
-    done
-
-
-    echo
-    echo
-    echo "If this is the first time you have setup your Raspberry PI camera, please reboot when"
-    echo "this script completes to enable the camera interface..."
-    echo
-    echo
-
-    sleep 5
 fi
 
 
