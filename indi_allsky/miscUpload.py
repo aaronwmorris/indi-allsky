@@ -257,7 +257,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrailvideo(self, startrail_video_entry):
+    def upload_startrail_video(self, startrail_video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             logger.warning('Startrail video uploading disabled')
@@ -450,7 +450,7 @@ class miscUpload(object):
         self.s3_upload_asset(*args)
 
 
-    def s3_upload_startrailvideo(self, *args):
+    def s3_upload_startrail_video(self, *args):
         self.s3_upload_asset(*args)
 
 
@@ -544,11 +544,11 @@ class miscUpload(object):
         self.syncapi_video(*args)
 
 
-    def syncapi_startrailvideo(self, *args):
+    def syncapi_startrail_video(self, *args):
         self.syncapi_video(*args)
 
 
-    def syncapi_panoramavideo(self, *args):
+    def syncapi_panorama_video(self, *args):
         self.syncapi_video(*args)
 
 

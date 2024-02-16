@@ -583,7 +583,7 @@ class VideoWorker(Process):
 
         ### Upload ###
         self._miscUpload.s3_upload_panorama_video(video_entry, video_metadata)
-        self._miscUpload.syncapi_panoramavideo(video_entry, video_metadata)
+        self._miscUpload.syncapi_panorama_video(video_entry, video_metadata)
         self._miscUpload.upload_panorama_video(video_entry)
         self._miscUpload.youtube_upload_panorama_video(video_entry)
 
@@ -1017,9 +1017,9 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
-                self._miscUpload.s3_upload_startrailvideo(startrail_video_entry, startrail_video_metadata)
-                self._miscUpload.syncapi_startrailvideo(startrail_video_entry, startrail_video_metadata)
-                self._miscUpload.upload_startrailvideo(startrail_video_entry)
+                self._miscUpload.s3_upload_startrail_video(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.syncapi_startrail_video(startrail_video_entry, startrail_video_metadata)
+                self._miscUpload.upload_startrail_video(startrail_video_entry)
                 self._miscUpload.youtube_upload_startrail_video(startrail_video_entry)
             else:
                 # success flag set above
