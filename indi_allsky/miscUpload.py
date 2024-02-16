@@ -602,3 +602,55 @@ class miscUpload(object):
 
         self.upload_q.put({'task_id' : upload_task.id})
 
+
+    def _youtube_upload(self, video_entry):
+        if not self.config.get('YOUTUBE', {}).get('ENABLE'):
+            return
+
+
+        metadata = {
+            'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
+            'night'   : video_entry.night,
+        }
+
+
+        jobdata = {
+            'action'      : constants.TRANSFER_YOUTUBE,
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
+            'metadata'    : metadata,
+        }
+
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def youtube_upload_video(self, video_entry):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_VIDEO'):
+            return
+
+        self._youtube_upload(video_entry)
+
+
+    def youtube_upload_startrail_video(self, video_entry):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO'):
+            return
+
+        self._youtube_upload(video_entry)
+
+
+    def youtube_upload_panorama_video(self, video_entry):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO'):
+            return
+
+        self._youtube_upload(video_entry)
+

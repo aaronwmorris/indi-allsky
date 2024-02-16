@@ -5027,6 +5027,8 @@ class AjaxUploadYoutubeView(BaseView):
             table = IndiAllSkyDbVideoTable
         elif asset_type == constants.STARTRAIL_VIDEO:
             table = IndiAllSkyDbStarTrailsVideoTable
+        elif asset_type == constants.PANORAMA_VIDEO:
+            table = IndiAllSkyDbPanoramaVideoTable
         else:
             app.logger.error('Unknown video type: %d', video_id)
             return jsonify(), 400
