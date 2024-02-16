@@ -3239,6 +3239,53 @@
         <div class="col-sm-6">Comma separated list</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_STARTRAIL_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_PANORAMA_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
 </div><!-- end youtubetab -->
 <div class="tab-pane fade" id="nav-s3" role="tabpanel" aria-labelledby="nav-s3-tab">
 
@@ -4031,6 +4078,9 @@ const checkbox_field_names = [
     'SYNCAPI__UPLOAD_VIDEO',
     'YOUTUBE__ENABLE',
     'YOUTUBE__CREDS_STORED',
+    'YOUTUBE__UPLOAD_VIDEO',
+    'YOUTUBE__UPLOAD_STARTRAIL_VIDEO',
+    'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',

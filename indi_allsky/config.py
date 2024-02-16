@@ -339,6 +339,9 @@ class IndiAllSkyConfigBase(object):
             "DESCRIPTION_TEMPLATE"   : "",
             "CATEGORY"               : 22,
             "TAGS"                   : ["allsky", "timelapse", "astronomy"],
+            "UPLOAD_VIDEO"           : False,
+            "UPLOAD_STARTRAIL_VIDEO" : False,
+            "UPLOAD_PANORAMA_VIDEO"  : False,
         },
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "dng",

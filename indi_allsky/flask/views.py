@@ -1243,6 +1243,9 @@ class ConfigView(FormView):
             'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}'),
             'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
             'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
+            'YOUTUBE__UPLOAD_VIDEO'          : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_VIDEO', False),
+            'YOUTUBE__UPLOAD_STARTRAIL_VIDEO': self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
+            'YOUTUBE__UPLOAD_PANORAMA_VIDEO' : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
@@ -1807,6 +1810,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['YOUTUBE']['TITLE_TEMPLATE']            = str(request.json['YOUTUBE__TITLE_TEMPLATE'])
         self.indi_allsky_config['YOUTUBE']['DESCRIPTION_TEMPLATE']      = str(request.json['YOUTUBE__DESCRIPTION_TEMPLATE'])
         self.indi_allsky_config['YOUTUBE']['CATEGORY']                  = int(request.json['YOUTUBE__CATEGORY'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_VIDEO']              = bool(request.json['YOUTUBE__UPLOAD_VIDEO'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_STARTRAIL_VIDEO']    = bool(request.json['YOUTUBE__UPLOAD_STARTRAIL_VIDEO'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_PANORAMA_VIDEO']     = bool(request.json['YOUTUBE__UPLOAD_PANORAMA_VIDEO'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
