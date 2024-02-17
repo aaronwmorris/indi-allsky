@@ -74,8 +74,9 @@ class youtube_oauth2(GenericFileTransfer):
 
 
         template_data = {
-            'day_date' : datetime.strptime(metadata['dayDate'], '%Y%m%d').date(),
-            'timeofday' : timeofday,
+            'day_date'      : datetime.strptime(metadata['dayDate'], '%Y%m%d').date(),
+            'timeofday'     : timeofday,
+            'asset_label '  : metadata['asset_label'],
         }
 
 

@@ -603,15 +603,9 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def _youtube_upload(self, video_entry):
+    def _youtube_upload(self, video_entry, metadata):
         if not self.config.get('YOUTUBE', {}).get('ENABLE'):
             return
-
-
-        metadata = {
-            'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
-            'night'   : video_entry.night,
-        }
 
 
         jobdata = {
@@ -634,23 +628,29 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def youtube_upload_video(self, video_entry):
+    def youtube_upload_video(self, video_entry, metadata):
         if not self.config.get('YOUTUBE', {}).get('UPLOAD_VIDEO'):
             return
 
-        self._youtube_upload(video_entry)
+        metadata['asset_label'] = 'Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
 
 
-    def youtube_upload_startrail_video(self, video_entry):
+    def youtube_upload_startrail_video(self, video_entry, metadata):
         if not self.config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             return
 
-        self._youtube_upload(video_entry)
+        metadata['asset_label'] = 'Star Trails Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
 
 
-    def youtube_upload_panorama_video(self, video_entry):
+    def youtube_upload_panorama_video(self, video_entry, metadata):
         if not self.config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO'):
             return
 
-        self._youtube_upload(video_entry)
+        metadata['asset_label'] = 'Panorama Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
 

@@ -1915,8 +1915,9 @@ def YOUTUBE__TITLE_TEMPLATE_validator(form, field):
     now = datetime.now()
 
     template_data = {
-        'day_date'   : now.date(),
-        'timeofday'  : 'Night',
+        'day_date'      : now.date(),
+        'timeofday'     : 'Night',
+        'asset_label'   : '',
     }
 
     try:

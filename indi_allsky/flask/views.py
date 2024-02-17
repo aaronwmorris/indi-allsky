@@ -1240,7 +1240,7 @@ class ConfigView(FormView):
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
             'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
             'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
-            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}'),
+            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky {asset_label} - {day_date:%Y-%m-%d} - {timeofday}'),
             'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
             'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
             'YOUTUBE__UPLOAD_VIDEO'          : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_VIDEO', False),
@@ -5025,10 +5025,13 @@ class AjaxUploadYoutubeView(BaseView):
 
         if asset_type == constants.VIDEO:
             table = IndiAllSkyDbVideoTable
+            asset_label = 'Timelapse'
         elif asset_type == constants.STARTRAIL_VIDEO:
             table = IndiAllSkyDbStarTrailsVideoTable
+            asset_label = 'Star Trails Timelapse'
         elif asset_type == constants.PANORAMA_VIDEO:
             table = IndiAllSkyDbPanoramaVideoTable
+            asset_label = 'Panorama Timelapse'
         else:
             app.logger.error('Unknown video type: %d', video_id)
             return jsonify(), 400
@@ -5052,6 +5055,7 @@ class AjaxUploadYoutubeView(BaseView):
         metadata = {
             'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
             'night'   : video_entry.night,
+            'asset_label' : asset_label,
         }
 
 

@@ -335,7 +335,7 @@ class IndiAllSkyConfigBase(object):
             "ENABLE"                 : False,
             "SECRETS_FILE"           : "",
             "PRIVACY_STATUS"         : "private",
-            "TITLE_TEMPLATE"         : "Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}",
+            "TITLE_TEMPLATE"         : "Allsky {asset_label} - {day_date:%Y-%m-%d} - {timeofday}",
             "DESCRIPTION_TEMPLATE"   : "",
             "CATEGORY"               : 22,
             "TAGS"                   : ["allsky", "timelapse", "astronomy"],

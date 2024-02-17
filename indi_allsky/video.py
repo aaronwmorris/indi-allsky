@@ -408,7 +408,7 @@ class VideoWorker(Process):
         self._miscUpload.s3_upload_video(video_entry, video_metadata)
         self._miscUpload.syncapi_video(video_entry, video_metadata)
         self._miscUpload.upload_video(video_entry)
-        self._miscUpload.youtube_upload_video(video_entry)
+        self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
 
     def generatePanoramaVideo(self, task, timespec, img_folder, night, camera):
@@ -585,7 +585,7 @@ class VideoWorker(Process):
         self._miscUpload.s3_upload_panorama_video(video_entry, video_metadata)
         self._miscUpload.syncapi_panorama_video(video_entry, video_metadata)
         self._miscUpload.upload_panorama_video(video_entry)
-        self._miscUpload.youtube_upload_panorama_video(video_entry)
+        self._miscUpload.youtube_upload_panorama_video(video_entry, video_metadata)
 
 
     def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
@@ -1020,7 +1020,7 @@ class VideoWorker(Process):
                 self._miscUpload.s3_upload_startrail_video(startrail_video_entry, startrail_video_metadata)
                 self._miscUpload.syncapi_startrail_video(startrail_video_entry, startrail_video_metadata)
                 self._miscUpload.upload_startrail_video(startrail_video_entry)
-                self._miscUpload.youtube_upload_startrail_video(startrail_video_entry)
+                self._miscUpload.youtube_upload_startrail_video(startrail_video_entry, startrail_video_metadata)
             else:
                 # success flag set above
                 pass
