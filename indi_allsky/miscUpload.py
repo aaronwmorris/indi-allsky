@@ -257,7 +257,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_startrailvideo(self, startrail_video_entry):
+    def upload_startrail_video(self, startrail_video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             logger.warning('Startrail video uploading disabled')
@@ -450,7 +450,7 @@ class miscUpload(object):
         self.s3_upload_asset(*args)
 
 
-    def s3_upload_startrailvideo(self, *args):
+    def s3_upload_startrail_video(self, *args):
         self.s3_upload_asset(*args)
 
 
@@ -544,11 +544,11 @@ class miscUpload(object):
         self.syncapi_video(*args)
 
 
-    def syncapi_startrailvideo(self, *args):
+    def syncapi_startrail_video(self, *args):
         self.syncapi_video(*args)
 
 
-    def syncapi_panoramavideo(self, *args):
+    def syncapi_panorama_video(self, *args):
         self.syncapi_video(*args)
 
 
@@ -601,4 +601,56 @@ class miscUpload(object):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def _youtube_upload(self, video_entry, metadata):
+        if not self.config.get('YOUTUBE', {}).get('ENABLE'):
+            return
+
+
+        jobdata = {
+            'action'      : constants.TRANSFER_YOUTUBE,
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
+            'metadata'    : metadata,
+        }
+
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def youtube_upload_video(self, video_entry, metadata):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_VIDEO'):
+            return
+
+        metadata['asset_label'] = 'Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
+
+
+    def youtube_upload_startrail_video(self, video_entry, metadata):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO'):
+            return
+
+        metadata['asset_label'] = 'Star Trails Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
+
+
+    def youtube_upload_panorama_video(self, video_entry, metadata):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO'):
+            return
+
+        metadata['asset_label'] = 'Panorama Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
 

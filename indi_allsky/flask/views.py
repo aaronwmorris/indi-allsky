@@ -1240,9 +1240,12 @@ class ConfigView(FormView):
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
             'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
             'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
-            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky Timelapse - {day_date:%Y-%m-%d} - {timeofday}'),
+            'YOUTUBE__TITLE_TEMPLATE'        : self.indi_allsky_config.get('YOUTUBE', {}).get('TITLE_TEMPLATE', 'Allsky {asset_label} - {day_date:%Y-%m-%d} - {timeofday}'),
             'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
             'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
+            'YOUTUBE__UPLOAD_VIDEO'          : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_VIDEO', False),
+            'YOUTUBE__UPLOAD_STARTRAIL_VIDEO': self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
+            'YOUTUBE__UPLOAD_PANORAMA_VIDEO' : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
@@ -1807,6 +1810,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['YOUTUBE']['TITLE_TEMPLATE']            = str(request.json['YOUTUBE__TITLE_TEMPLATE'])
         self.indi_allsky_config['YOUTUBE']['DESCRIPTION_TEMPLATE']      = str(request.json['YOUTUBE__DESCRIPTION_TEMPLATE'])
         self.indi_allsky_config['YOUTUBE']['CATEGORY']                  = int(request.json['YOUTUBE__CATEGORY'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_VIDEO']              = bool(request.json['YOUTUBE__UPLOAD_VIDEO'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_STARTRAIL_VIDEO']    = bool(request.json['YOUTUBE__UPLOAD_STARTRAIL_VIDEO'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_PANORAMA_VIDEO']     = bool(request.json['YOUTUBE__UPLOAD_PANORAMA_VIDEO'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
         self.indi_allsky_config['FITSHEADERS'][0][1]                    = str(request.json['FITSHEADERS__0__VAL'])
         self.indi_allsky_config['FITSHEADERS'][1][0]                    = str(request.json['FITSHEADERS__1__KEY'])
@@ -5019,8 +5025,13 @@ class AjaxUploadYoutubeView(BaseView):
 
         if asset_type == constants.VIDEO:
             table = IndiAllSkyDbVideoTable
+            asset_label = 'Timelapse'
         elif asset_type == constants.STARTRAIL_VIDEO:
             table = IndiAllSkyDbStarTrailsVideoTable
+            asset_label = 'Star Trails Timelapse'
+        elif asset_type == constants.PANORAMA_VIDEO:
+            table = IndiAllSkyDbPanoramaVideoTable
+            asset_label = 'Panorama Timelapse'
         else:
             app.logger.error('Unknown video type: %d', video_id)
             return jsonify(), 400
@@ -5044,6 +5055,7 @@ class AjaxUploadYoutubeView(BaseView):
         metadata = {
             'dayDate' : video_entry.dayDate.strftime('%Y%m%d'),
             'night'   : video_entry.night,
+            'asset_label' : asset_label,
         }
 
 

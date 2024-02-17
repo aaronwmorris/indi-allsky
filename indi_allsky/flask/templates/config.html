@@ -2028,8 +2028,8 @@
             <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" class="text-decoration-none link-info" target="_blank">Keogram Wiki</a></div>
+            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
         </div>
     </div>
 
@@ -2078,7 +2078,10 @@
             {{ form_config.STARTRAILS_SUN_ALT_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_SUN_ALT_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Sun altitude threshold</div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Startrails" class="text-decoration-none link-info" target="_blank">Star Trails Wiki</a></div>
+            <div>Sun altitude threshold</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -2135,7 +2138,7 @@
             {{ form_config.STARTRAILS_MASK_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MASK_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Mask threshold ADU</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2146,7 +2149,7 @@
             {{ form_config.STARTRAILS_PIXEL_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_PIXEL_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Exclude image for this percentage of pixels above the Mask Threhold ADU</div>
+        <div class="col-sm-8">Exclude image for this percentage of pixels above the Mask Threshold ADU</div>
     </div>
 
     <div class="form-group row">
@@ -3199,7 +3202,7 @@
         </div>
         <div class="col-sm-6">
             <div>Available variables:</div>
-            <div><pre>day_date, timeofday</pre></div>
+            <div><pre>day_date, timeofday, asset_label</pre></div>
         </div>
     </div>
 
@@ -3237,6 +3240,53 @@
             <div id="YOUTUBE__TAGS_STR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Comma separated list</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_STARTRAIL_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_PANORAMA_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
     </div>
 
 </div><!-- end youtubetab -->
@@ -4031,6 +4081,9 @@ const checkbox_field_names = [
     'SYNCAPI__UPLOAD_VIDEO',
     'YOUTUBE__ENABLE',
     'YOUTUBE__CREDS_STORED',
+    'YOUTUBE__UPLOAD_VIDEO',
+    'YOUTUBE__UPLOAD_STARTRAIL_VIDEO',
+    'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',

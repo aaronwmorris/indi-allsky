@@ -1915,8 +1915,9 @@ def YOUTUBE__TITLE_TEMPLATE_validator(form, field):
     now = datetime.now()
 
     template_data = {
-        'day_date'   : now.date(),
-        'timeofday'  : 'Night',
+        'day_date'      : now.date(),
+        'timeofday'     : 'Night',
+        'asset_label'   : '',
     }
 
     try:
@@ -2364,7 +2365,7 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
     STARTRAILS_MOON_PHASE_THOLD      = FloatField('Custom Max Moon Phase', validators=[DataRequired(), STARTRAILS_MOON_PHASE_THOLD_validator])
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
-    STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
+    STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold ADU', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
     STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
     STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
@@ -2535,6 +2536,9 @@ class IndiAllskyConfigForm(FlaskForm):
     YOUTUBE__DESCRIPTION_TEMPLATE    = StringField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
     YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
     YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
+    YOUTUBE__UPLOAD_VIDEO            = BooleanField('Auto-Upload Timelapse')
+    YOUTUBE__UPLOAD_STARTRAIL_VIDEO  = BooleanField('Auto-Upload Star Trail Timelapse')
+    YOUTUBE__UPLOAD_PANORAMA_VIDEO   = BooleanField('Auto-Upload Panorama Timelapse')
     YOUTUBE__REDIRECT_URI            = StringField('Detected Redirect URI', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     YOUTUBE__CREDS_STORED            = BooleanField('Credentials authorized', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
