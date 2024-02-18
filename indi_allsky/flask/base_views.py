@@ -239,6 +239,11 @@ class TemplateView(BaseView):
             'CAMERA_SELECT' : session['camera_id'],
         }
 
+
+        context['camera_count'] = IndiAllSkyDbCameraTable.query\
+            .order_by(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .count()
+
         context['form_camera_select'] = IndiAllskyCameraSelectForm(data=camera_default)
 
         return context
