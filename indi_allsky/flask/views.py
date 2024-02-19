@@ -275,6 +275,61 @@ class JsonLatestImageView(JsonView):
         return str(url)
 
 
+class LatestImageRedirect(BaseView):
+
+    def dispatch_request(self):
+        camera_id = request.args.get('camera_id')
+
+        if camera_id:
+            camera_id = int(camera_id)
+        else:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+
+        local = True
+        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+            local = False
+
+
+        image_entry = self.getLatestImage(camera_id)
+
+
+        image_url = image_entry.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return redirect(image_url, code=302)
+
+
+    def getLatestImage(self, camera_id):
+        latest_image_entry = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        return latest_image_entry
+
+
+class LatestThumbnailRedirect(LatestImageRedirect):
+
+    def getLatestImage(self, camera_id):
+        latest_image_entry = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        latest_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
+            .filter(IndiAllSkyDbThumbnailTable.uuid == latest_image_entry.thumbnail_uuid)\
+            .first()
+
+
+        return latest_thumbnail_entry
+
+
 class PanoramaView(IndexView):
     title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
@@ -5554,6 +5609,8 @@ bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.
 bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
 # hidden
+bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
+bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))

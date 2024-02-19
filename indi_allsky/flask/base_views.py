@@ -81,6 +81,16 @@ class BaseView(View):
         return prefix
 
 
+    def getLatestCamera(self):
+        latest_camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
+            .limit(1)\
+            .one()
+
+        return latest_camera
+
+
     def getCameraById(self, camera_id):
         if camera_id == -1:
             # see if a camera has been defined since the last run
@@ -194,16 +204,6 @@ class TemplateView(BaseView):
             self.camera = FakeCamera()
 
         session['camera_id'] = self.camera.id
-
-
-    def getLatestCamera(self):
-        latest_camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
-            .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
-            .limit(1)\
-            .one()
-
-        return latest_camera
 
 
     def render_template(self, context):
