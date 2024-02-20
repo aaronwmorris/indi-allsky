@@ -315,17 +315,17 @@ class LatestImageRedirect(BaseView):
 class LatestThumbnailRedirect(LatestImageRedirect):
 
     def getLatestImage(self, camera_id):
-        latest_image_entry = IndiAllSkyDbImageTable.query\
+        latest_image_thumbnail_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+            IndiAllSkyDbThumbnailTable,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
-
-        latest_thumbnail_entry = IndiAllSkyDbThumbnailTable.query\
-            .filter(IndiAllSkyDbThumbnailTable.uuid == latest_image_entry.thumbnail_uuid)\
-            .first()
-
+        _, latest_thumbnail_entry = latest_image_thumbnail_entry
 
         return latest_thumbnail_entry
 
