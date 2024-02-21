@@ -481,8 +481,13 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
-            libcamera-apps
+        if dpkg -s rpicam-apps >/dev/null 2>&1; then
+            sudo apt-get -y install \
+                rpicam-apps
+        else
+            sudo apt-get -y install \
+                rpicam-apps-lite
+        fi
     fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
@@ -651,8 +656,13 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
-            libcamera-apps
+        if dpkg -s rpicam-apps >/dev/null 2>&1; then
+            sudo apt-get -y install \
+                rpicam-apps
+        else
+            sudo apt-get -y install \
+                rpicam-apps-lite
+        fi
     fi
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
