@@ -1882,12 +1882,14 @@ fi
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 pip3 install --upgrade pip setuptools wheel
-pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 if [ "${OPTIONAL_PYTHON_MODULES}" == "true" ]; then
-    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
+    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}" -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
+else
+    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 fi
+
 
 # some modules do not have their prerequisites set
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
