@@ -138,34 +138,34 @@ source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 if [ "$INDI_VERSION" == "2.0.6" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_4"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.0.5" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_4"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.0.4" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_4"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.0.3" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.2" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.0" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_2_0_0"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "1.9.9" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_1_9_9"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_1_9_8"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_8"
 elif [ "$INDI_VERSION" == "1.9.7" ]; then
     pip3 uninstall -y pyindi-client
-    pip3 install --use-pep517 --upgrade "$PYINDI_1_9_8"
+    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_8"
 else
     # assuming skip
     echo "Skipping pyindi-client install"
