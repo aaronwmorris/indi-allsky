@@ -2501,7 +2501,7 @@ class ImageProcessor(object):
 
         fish2pano_start = time.time()
 
-        img_pano = fish2pano.fish2pano(self.image, radius, (center_x, center_y), scale)
+        img_pano = fish2pano.fish2pano(self.image, radius, [center_x, center_y], scale)
 
 
         pano_height, pano_width = img_pano.shape[:2]
