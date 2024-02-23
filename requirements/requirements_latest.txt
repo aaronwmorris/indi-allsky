@@ -40,7 +40,7 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 41.0.7
+cryptography >= 42.0.4
 dbus-python
 paho-mqtt
 setuptools-rust

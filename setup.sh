@@ -482,7 +482,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
         sudo apt-get -y install \
-            libcamera-apps
+            rpicam-apps
     fi
 
 elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
@@ -652,7 +652,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
         sudo apt-get -y install \
-            libcamera-apps
+            rpicam-apps
     fi
 
 elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
@@ -1882,12 +1882,14 @@ fi
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 pip3 install --upgrade pip setuptools wheel
-pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
 if [ "${OPTIONAL_PYTHON_MODULES}" == "true" ]; then
-    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
+    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}" -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
+else
+    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 fi
+
 
 # some modules do not have their prerequisites set
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"

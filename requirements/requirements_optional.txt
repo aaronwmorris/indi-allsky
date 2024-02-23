@@ -4,6 +4,7 @@ PyMySQL
 boto3
 apache-libcloud
 google-cloud-storage
-oci
 google-api-python-client
 google_auth_oauthlib
+### OCI has old cryptography and pyopenssl requirements
+#oci
