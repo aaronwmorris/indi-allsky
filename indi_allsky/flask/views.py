@@ -77,6 +77,8 @@ from sqlalchemy.sql.expression import null as sa_null
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
+from .forms import IndiAllskyGalleryViewer
+from .forms import IndiAllskyGalleryViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
@@ -2131,6 +2133,166 @@ class AjaxImageViewerView(BaseView):
             )
         else:
             form_viewer = IndiAllskyImageViewer(
+                data=request.json,
+                camera_id=session['camera_id'],
+                detections_count=0,
+                s3_prefix=self.s3_prefix,
+                local=local,
+            )
+
+
+        json_data = {}
+
+
+        if form_hour:
+            form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+            hour = form_datetime.strftime('%H')
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_day:
+            form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+            day = form_datetime.strftime('%d')
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_month:
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        else:
+            # this happens when filtering images on detections
+            json_data['YEAR_SELECT'] = form_viewer.getYears()
+
+            if not json_data['YEAR_SELECT']:
+                # No images returned
+                json_data['YEAR_SELECT'] = (('', None),)
+                json_data['MONTH_SELECT'] = (('', None),)
+                json_data['DAY_SELECT'] = (('', None),)
+                json_data['HOUR_SELECT'] = (('', None),)
+                json_data['IMG_SELECT'] = (('', None),)
+
+                return json_data
+
+
+            year = json_data['YEAR_SELECT'][0][0]
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+
+        return jsonify(json_data)
+
+
+class GalleryViewerView(FormView):
+    def get_context(self):
+        context = super(GalleryViewerView, self).get_context()
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+            'DAY_SELECT'   : None,
+            'HOUR_SELECT'  : None,
+            'FILTER_DETECTIONS' : None,
+        }
+
+
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        context['form_viewer'] = IndiAllskyGalleryViewerPreload(
+            data=form_data,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            local=local,
+        )
+
+        return context
+
+
+class AjaxGalleryViewerView(BaseView):
+    methods = ['POST']
+
+    def __init__(self, **kwargs):
+        super(AjaxGalleryViewerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        form_year  = request.json.get('YEAR_SELECT')
+        form_month = request.json.get('MONTH_SELECT')
+        form_day   = request.json.get('DAY_SELECT')
+        form_hour  = request.json.get('HOUR_SELECT')
+        form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
+
+
+        local = True  # default to local assets
+        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
+            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        if form_filter_detections:
+            # filter images that have a detection
+            form_viewer = IndiAllskyGalleryViewer(
+                data=request.json,
+                camera_id=session['camera_id'],
+                detections_count=1,
+                s3_prefix=self.s3_prefix,
+                local=local,
+            )
+        else:
+            form_viewer = IndiAllskyGalleryViewer(
                 data=request.json,
                 camera_id=session['camera_id'],
                 detections_count=0,
@@ -5560,7 +5722,8 @@ bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imagev
 bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
 
-bp_allsky.add_url_rule('/gallery', view_func=ImageViewerView.as_view('gallery_view', template_name='gallery.html'))
+bp_allsky.add_url_rule('/gallery', view_func=GalleryViewerView.as_view('gallery_view', template_name='gallery.html'))
+bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view('ajax_gallery_view'))
 
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))

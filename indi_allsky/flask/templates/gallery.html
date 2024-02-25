@@ -5,6 +5,14 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+figure {
+  display: inline-block;
+  margin: 0;
+  float: left;
+}
+figure img {width: 100%;}
+.spacer {height: 5em;}
+
 .loader {
   display: block;
   border: 3px solid #f3f3f3;
@@ -21,71 +29,13 @@
 }
 </style>
 
-<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe.umd.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe-lightbox.umd.min.js') }}"></script>
+
+<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
 <script type="text/javascript">
-var img;
-var fullscreen = false;  //initial state
-var newest_image_default = true;  // load last image by default
-var image_data = [];
-var gallery_data = [];
-
-
-function setResizeHandler(callback, timeout) {
-    var timer_id = undefined;
-    $(window).on("resize", function() {
-        if(timer_id != undefined) {
-            clearTimeout(timer_id);
-            timer_id = undefined;
-        }
-        timer_id = setTimeout(function() {
-            timer_id = undefined;
-            callback();
-        }, timeout);
-    });
-}
-
-function resize_callback() {
-    //refresh();
-}
-setResizeHandler(resize_callback, 500);
-
-
-function goFullscreen(elem) {
-    if(fullscreen) {
-        closeFullscreen();
-    } else {
-        openFullscreen(elem);
-    }
-}
-
-function openFullscreen(elem) {
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-        elem.msRequestFullscreen();
-    }
-
-    fullscreen = true;
-}
-
-function closeFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-        document.msExitFullscreen();
-    }
-
-    fullscreen = false;
-}
-
+var lightbox = null;
 </script>
-
 
 {% endblock %}
 
@@ -130,9 +80,11 @@ function closeFullscreen() {
 
     <div class="form-group row">
         <div class="col-sm-9"></div>
+
         <div class="col-sm-1">
             {{ form_viewer.FILTER_DETECTIONS.label }}
         </div>
+
         <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
@@ -151,15 +103,16 @@ function closeFullscreen() {
 
 <hr>
 
-<div class="row">
-    <div class="col-12 text-center" style="font-size:10px">
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div id="allsky-gallery" class="pswp-gallery"></div>
     </div>
+  </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-    </div>
-</div>
+<div class="spacer"></div>
+
 
 <script>
 const successMessage = $('#success-message');
@@ -199,15 +152,53 @@ fields['form_global'] = {
 };
 
 
+function populate_gallery(gallery_data) {
+    if (lightbox) {
+        lightbox.destroy();
+        lightbox = null;
+    }
+
+
+    $('#allsky-gallery').empty();
+
+    gallery_data.forEach(item => {
+        var a_div = $('<a />', {
+            'href'        : item['url'],
+            'data-pswp-width'  : item['width'],
+            'data-pswp-height' : item['height'],
+            'target'      : "_blank",
+            'rel'         : "noopener noreferrer",
+            'class'       : "text-decoration-none",
+        });
+        a_div.appendTo($('#allsky-gallery'));
+
+        var img_div = $('<img />', {
+            'src' : item['thumbnail_url'],
+            'alt' : "thumbnail",
+        });
+        img_div.appendTo(a_div);
+
+    });
+
+
+    lightbox = new PhotoSwipeLightbox({
+        gallery: '#allsky-gallery',
+        children: 'a',
+        // dynamic import is not supported in UMD version
+        pswpModule: PhotoSwipe
+    });
+
+    lightbox.init();
+}
+
+
 function hour_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            image_data = data['IMAGE_DATA']
-
             gallery_data = [];
             data['IMAGE_DATA'].forEach(item => {
                 gallery_data.push({
@@ -218,6 +209,9 @@ function hour_change(json_data) {
                 });
             });
 
+            populate_gallery(data['IMAGE_DATA']);
+
+            $("#loader_filter").css({'display' : 'none'});
             $("#loader_filter").css({'display' : 'none'});
         },
         error: function(data){
@@ -255,12 +249,10 @@ $("#HOUR_SELECT").on("change", function() {
 function day_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            image_data = data['IMAGE_DATA']
-
             $("#HOUR_SELECT").empty()
             data['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -275,6 +267,8 @@ function day_change(json_data) {
                     'alt' : item['date'],
                 });
             });
+
+            populate_gallery(data['IMAGE_DATA']);
 
             $("#loader_filter").css({'display' : 'none'});
         },
@@ -312,12 +306,10 @@ $("#DAY_SELECT").on("change", function() {
 function month_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            image_data = data['IMAGE_DATA']
-
             $("#DAY_SELECT").empty()
             data['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -337,6 +329,8 @@ function month_change(json_data) {
                     'alt' : item['date'],
                 });
             });
+
+            populate_gallery(data['IMAGE_DATA']);
 
             $("#loader_filter").css({'display' : 'none'});
         },
@@ -373,12 +367,10 @@ $("#MONTH_SELECT").on("change", function() {
 function year_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            image_data = data['IMAGE_DATA']
-
             $("#MONTH_SELECT").empty()
             data['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -394,15 +386,7 @@ function year_change(json_data) {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            gallery_data = [];
-            data['IMAGE_DATA'].forEach(item => {
-                gallery_data.push({
-                    'src' : item['url'],
-                    'width' : item['width'],
-                    'height' : item['height'],
-                    'alt' : item['date'],
-                });
-            });
+            populate_gallery(data['IMAGE_DATA']);
 
             $("#loader_filter").css({'display' : 'none'});
         },
@@ -450,12 +434,10 @@ $("#FILTER_DETECTIONS").on("change", function() {
 
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            image_data = data['IMAGE_DATA']
-
             $("#YEAR_SELECT").empty()
             data['YEAR_SELECT'].forEach(item => {
                 $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -476,22 +458,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            gallery_data = [];
-            data['IMAGE_DATA'].forEach(item => {
-                gallery_data.push({
-                    'src' : item['url'],
-                    'width' : item['width'],
-                    'height' : item['height'],
-                    'alt' : item['date'],
-                });
-            });
-
-            var lightbox = new PhotoSwipeLightbox({
-                'dataSource' : gallery_data,
-                'showHideAnimationType' : 'none',
-                'pswpModule' : PhotoSwipe,
-            });
-            lightbox.init();
+            populate_gallery(data['IMAGE_DATA']);
 
             $("#loader_filter").css({'display' : 'none'});
         },
@@ -517,10 +484,6 @@ function init() {
 
 
 $( document ).ready(function() {
-    $('#canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
 
