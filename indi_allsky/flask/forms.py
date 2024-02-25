@@ -2954,6 +2954,303 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
+class IndiAllskyGalleryViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+    DAY_SELECT           = SelectField('Day', choices=[], validators=[])
+    HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
+    FILTER_DETECTIONS    = BooleanField('Detections')
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyGalleryViewer, self).__init__(*args, **kwargs)
+
+        self.detections_count = kwargs.get('detections_count', 0)
+        self.s3_prefix = kwargs.get('s3_prefix', '')
+        self.camera_id = kwargs.get('camera_id')
+        self.local = kwargs.get('local')
+
+
+    def getYears(self):
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+
+        years_query = db.session.query(
+            createDate_year,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        years_query = years_query\
+            .distinct()\
+            .order_by(createDate_year.desc())
+
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.createDate_year, str(y.createDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+
+        months_query = db.session.query(
+            createDate_year,
+            createDate_month,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                )
+        )\
+
+
+        if not self.local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        months_query = months_query\
+            .distinct()\
+            .order_by(createDate_month.desc())
+
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+    def getDays(self, year, month):
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+
+        days_query = db.session.query(
+            createDate_year,
+            createDate_month,
+            createDate_day,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            days_query = days_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        days_query = days_query\
+            .distinct()\
+            .order_by(createDate_day.desc())
+
+
+        day_choices = []
+        for d in days_query:
+            entry = (d.createDate_day, str(d.createDate_day))
+            day_choices.append(entry)
+
+
+        return day_choices
+
+
+    def getHours(self, year, month, day):
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        hours_query = db.session.query(
+            createDate_year,
+            createDate_month,
+            createDate_day,
+            createDate_hour,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                    createDate_day == day,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            hours_query = hours_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        hours_query = hours_query\
+            .distinct()\
+            .order_by(createDate_hour.desc())
+
+
+        hour_choices = []
+        for h in hours_query:
+            entry = (h.createDate_hour, str(h.createDate_hour))
+            hour_choices.append(entry)
+
+
+        return hour_choices
+
+
+    def getImages(self, year, month, day, hour):
+        createDate_year = extract('year', IndiAllSkyDbImageTable.createDate).label('createDate_year')
+        createDate_month = extract('month', IndiAllSkyDbImageTable.createDate).label('createDate_month')
+        createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
+        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+
+        images_query = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                    createDate_year == year,
+                    createDate_month == month,
+                    createDate_day == day,
+                    createDate_hour == hour,
+                )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            images_query = images_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbImageTable.remote_url != sa_null(),
+                        IndiAllSkyDbImageTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        images_query = images_query\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+
+
+        images_data = list()
+        for img in images_query:
+            try:
+                url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+
+            image_dict = dict()
+            image_dict['id'] = img.id
+            image_dict['url'] = str(url)
+            image_dict['width'] = img.width
+            image_dict['height'] = img.height
+
+
+            images_data.append(image_dict)
+
+
+        return images_data
+
+
+class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyGalleryViewerPreload, self).__init__(*args, **kwargs)
+
+        last_image = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.detections >= self.detections_count,
+                )
+            )\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        if not last_image:
+            app.logger.warning('No images found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+            self.DAY_SELECT.choices = (('', 'None'),)
+            self.HOUR_SELECT.choices = (('', 'None'),)
+
+            return
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+        self.DAY_SELECT.choices = (('', 'Loading'),)
+        self.HOUR_SELECT.choices = (('', 'Loading'),)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
 
 class IndiAllskyVideoViewer(FlaskForm):
     TIMEOFDAY_SELECT_choices = (

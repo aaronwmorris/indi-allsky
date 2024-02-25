@@ -24,66 +24,11 @@
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe.umd.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe-lightbox.umd.min.js') }}"></script>
+
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
-var newest_image_default = true;  // load last image by default
 var image_data = [];
-var gallery_data = [];
-
-
-function setResizeHandler(callback, timeout) {
-    var timer_id = undefined;
-    $(window).on("resize", function() {
-        if(timer_id != undefined) {
-            clearTimeout(timer_id);
-            timer_id = undefined;
-        }
-        timer_id = setTimeout(function() {
-            timer_id = undefined;
-            callback();
-        }, timeout);
-    });
-}
-
-function resize_callback() {
-    //refresh();
-}
-setResizeHandler(resize_callback, 500);
-
-
-function goFullscreen(elem) {
-    if(fullscreen) {
-        closeFullscreen();
-    } else {
-        openFullscreen(elem);
-    }
-}
-
-function openFullscreen(elem) {
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-        elem.msRequestFullscreen();
-    }
-
-    fullscreen = true;
-}
-
-function closeFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-        document.msExitFullscreen();
-    }
-
-    fullscreen = false;
-}
-
 </script>
 
 
@@ -130,9 +75,11 @@ function closeFullscreen() {
 
     <div class="form-group row">
         <div class="col-sm-9"></div>
+
         <div class="col-sm-1">
             {{ form_viewer.FILTER_DETECTIONS.label }}
         </div>
+
         <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
@@ -152,13 +99,6 @@ function closeFullscreen() {
 <hr>
 
 <div class="row">
-    <div class="col-12 text-center" style="font-size:10px">
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-    </div>
 </div>
 
 <script>
@@ -202,7 +142,7 @@ fields['form_global'] = {
 function hour_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
@@ -255,7 +195,7 @@ $("#HOUR_SELECT").on("change", function() {
 function day_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
@@ -312,7 +252,7 @@ $("#DAY_SELECT").on("change", function() {
 function month_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
@@ -373,7 +313,7 @@ $("#MONTH_SELECT").on("change", function() {
 function year_change(json_data) {
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
@@ -450,7 +390,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
 
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
@@ -517,10 +457,6 @@ function init() {
 
 
 $( document ).ready(function() {
-    $('#canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
 
