@@ -71,6 +71,9 @@ logger = logging.getLogger('indi_allsky')
 
 class VideoWorker(Process):
 
+    thumbnail_keogram_width = 1000
+    thumbnail_startrail_width = 300
+
 
     def __init__(
         self,
@@ -918,7 +921,7 @@ class VideoWorker(Process):
             keogram_metadata,
             camera.id,
             keogram_thumbnail_metadata,
-            new_width=1000,
+            new_width=self.thumbnail_keogram_width,
         )
 
 
@@ -947,7 +950,7 @@ class VideoWorker(Process):
                 startrail_metadata,
                 camera.id,
                 startrail_thumbnail_metadata,
-                new_width=300,
+                new_width=self.thumbnail_startrail_width,
             )
 
 

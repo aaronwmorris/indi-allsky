@@ -162,7 +162,7 @@ function populate_gallery(gallery_data) {
     $('#allsky-gallery').empty();
 
     gallery_data.forEach(item => {
-        var a_div = $('<a />', {
+        var a_tag = $('<a />', {
             'href'        : item['url'],
             'data-pswp-width'  : item['width'],
             'data-pswp-height' : item['height'],
@@ -170,13 +170,14 @@ function populate_gallery(gallery_data) {
             'rel'         : "noopener noreferrer",
             'class'       : "text-decoration-none",
         });
-        a_div.appendTo($('#allsky-gallery'));
+        a_tag.appendTo($('#allsky-gallery'));
 
-        var img_div = $('<img />', {
-            'src' : item['thumbnail_url'],
-            'alt' : "thumbnail",
+        var img_tag = $('<img />', {
+            'src'       : item['thumbnail_url'],
+            'loading'   : 'lazy',
+            'alt'       : item['date'],
         });
-        img_div.appendTo(a_div);
+        img_tag.appendTo(a_tag);
 
     });
 
@@ -184,6 +185,8 @@ function populate_gallery(gallery_data) {
     lightbox = new PhotoSwipeLightbox({
         gallery: '#allsky-gallery',
         children: 'a',
+        preloadFirstSlide: false,
+        preloaderDelay: 0,
         // dynamic import is not supported in UMD version
         pswpModule: PhotoSwipe
     });
