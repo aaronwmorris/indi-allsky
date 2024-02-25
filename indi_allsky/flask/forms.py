@@ -2814,7 +2814,9 @@ class IndiAllskyImageViewer(FlaskForm):
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
-        images_query = IndiAllSkyDbImageTable.query\
+        images_query = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
@@ -2825,7 +2827,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     createDate_day == day,
                     createDate_hour == hour,
                 )
-            )
+        )
 
 
         if not self.local:
@@ -2868,7 +2870,9 @@ class IndiAllskyImageViewer(FlaskForm):
 
             # look for fits
             try:
-                fits_image = IndiAllSkyDbFitsImageTable.query\
+                fits_image = db.session.query(
+                    IndiAllSkyDbFitsImageTable,
+                )\
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
                     .one()
 
@@ -2881,7 +2885,9 @@ class IndiAllskyImageViewer(FlaskForm):
 
             # look for raw exports
             try:
-                raw_image = IndiAllSkyDbRawImageTable.query\
+                raw_image = db.session.query(
+                    IndiAllSkyDbRawImageTable,
+                )\
                     .filter(IndiAllSkyDbRawImageTable.createDate == img.createDate)\
                     .one()
 
@@ -2898,7 +2904,9 @@ class IndiAllskyImageViewer(FlaskForm):
 
             # look for panorama
             try:
-                panorama_image = IndiAllSkyDbPanoramaImageTable.query\
+                panorama_image = db.session.query(
+                    IndiAllSkyDbPanoramaImageTable,
+                )\
                     .filter(IndiAllSkyDbPanoramaImageTable.createDate == img.createDate)\
                     .one()
 
@@ -2919,14 +2927,16 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyImageViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = IndiAllSkyDbImageTable.query\
+        last_image = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
-            )\
+        )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
@@ -3161,7 +3171,10 @@ class IndiAllskyGalleryViewer(FlaskForm):
         createDate_day = extract('day', IndiAllSkyDbImageTable.createDate).label('createDate_day')
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
-        images_query = IndiAllSkyDbImageTable.query\
+        images_query = db.session.query(
+            IndiAllSkyDbImageTable,
+            IndiAllSkyDbThumbnailTable,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
             .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
@@ -3173,7 +3186,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     createDate_day == day,
                     createDate_hour == hour,
                 )
-            )
+        )
 
 
         if not self.local:
@@ -3192,19 +3205,22 @@ class IndiAllskyGalleryViewer(FlaskForm):
 
 
         images_data = list()
-        for img in images_query:
+        for img, thumb in images_query:
             try:
-                url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                image_url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                thumbnail_url = thumb.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
 
             image_dict = dict()
-            image_dict['id'] = img.id
-            image_dict['url'] = str(url)
+            image_dict['url'] = str(image_url)
             image_dict['width'] = img.width
             image_dict['height'] = img.height
+            image_dict['thumbnail_url'] = str(thumbnail_url)
+            image_dict['thumbnail_width'] = thumb.width
+            image_dict['thumbnail_height'] = thumb.height
 
 
             images_data.append(image_dict)
@@ -3217,7 +3233,9 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyGalleryViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = IndiAllSkyDbImageTable.query\
+        last_image = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
             .join(IndiAllSkyDbImageTable.camera)\
             .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
@@ -3225,7 +3243,7 @@ class IndiAllskyGalleryViewerPreload(IndiAllskyGalleryViewer):
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
-            )\
+        )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .first()
 
