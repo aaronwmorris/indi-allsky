@@ -28,7 +28,7 @@
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16" alt="Loop"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Loop"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.sqm_view') }}" class="nav-link px-sm-0 px-2">
@@ -36,15 +36,37 @@
                     </li>
                     <li>
                         <a href="{{ url_for('indi_allsky.chart_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16" alt="Charts"><span class="ms-1 d-none d-sm-inline">Charts</span> </a>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16" alt="Charts"><span class="ms-1 d-none d-sm-inline">Charts</span></a>
                     </li>
-                    <li>
-                        <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Images</span> </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="nav-link px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16" alt="Timelapse Viewer"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
+
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fs-5 bi-bootstrap"></i>
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16" alt="Media">
+                            <span class="ms-1 d-none d-sm-inline">Media</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
+                            <li>
+                                <a href="{{ url_for('indi_allsky.gallery_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/grid-3x2-gap-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Gallery</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Images</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/film.svg') }}" width="16" height="16" alt="Timelapse Viewer"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('indi_allsky.panorama_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/aspect-ratio.svg') }}" width="16" height="16" alt="Panorama"><span class="ms-1 d-none d-sm-inline">Panorama</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('indi_allsky.panorama_loop_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Panorama Loop"><span class="ms-1 d-none d-sm-inline">Panorama Loop</span></a>
+                            </li>
+                        </ul>
                     </li>
 
                     <li class="dropdown">
@@ -54,14 +76,6 @@
                             <span class="ms-1 d-none d-sm-inline">Tools</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.panorama_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/aspect-ratio.svg') }}" width="16" height="16" alt="Panorama"><span class="ms-1 d-none d-sm-inline">Panorama</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.panorama_loop_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/play-fill.svg') }}" width="16" height="16" alt="Panorama Loop"><span class="ms-1 d-none d-sm-inline">Panorama Loop</span></a>
-                            </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.astropanel_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/newspaper.svg') }}" width="16" height="16" alt="Astropanel"><span class="ms-1 d-none d-sm-inline">Astropanel</span></a>
