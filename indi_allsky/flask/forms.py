@@ -4300,6 +4300,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('arecont_f2.0_1.55mm', 'Arecont 1.55mm f/2.0 - 180°'),
         ('stardot_f1.5_1.55mm', 'Stardot 1.55mm f/1.5 - 180°'),
         ('m12_f2.0_1.7mm', 'Camera Module M12 1.7mm f2.0 - 180°'),
+        ('meike_f2.8_3.5mm', 'Meike 3.5mm F2.8 Fisheye - 220°'),
     )
 
     SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
