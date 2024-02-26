@@ -64,4 +64,4 @@ prettytable
 lxml
 shapely
 requests-toolbelt
-fish2pano
+fish2pano >= 0.4.1
