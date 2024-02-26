@@ -103,6 +103,12 @@ var lightbox = null;
 
 <hr>
 
+<div class="row">
+    <div class="text-center" style="font-size:10px">
+        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
+    </div>
+</div>
+
 <div class="container">
   <div class="row">
     <div class="col-sm-12">
@@ -486,11 +492,91 @@ function init() {
 }
 
 
+function nextHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_image_default = false;  // load oldest image when changing hours
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == 0) {
+            console.log('At latest hour');
+        } else if (element.value == hour_select_val) {
+            console.log('Next hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_image_default = true;  // load newest image when changing hours
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == $("#HOUR_SELECT")[0].options.length - 1) {
+            console.log('At oldest hour');
+        } else if (element.value == hour_select_val) {
+            console.log('Previous hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
 $( document ).ready(function() {
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
 
     init();
+
+
+    $(document).keydown(function(e) {
+        var key_press = {
+            "up"    : 38,
+            "down"  : 40,
+
+            "w"     : 87,  // up
+            "s"     : 83,  // down
+
+            "j"     : 74,  // down
+            "k"     : 75,  // up
+        };
+
+        switch (e.which) {
+            // arrow keys
+            case key_press.up:
+                nextHour();
+                break;
+            case key_press.down:
+                previousHour();
+                break;
+
+            // wasd
+            case key_press.w:
+                nextHour();
+                break;
+            case key_press.s:
+                previousHour();
+                break;
+
+            // vim bindings
+            case key_press.j:
+                previousHour();
+                break;
+            case key_press.k:
+                nextHour();
+                break;
+
+            default:
+                return;
+        }
+
+        e.preventDefault();
+    });
+
 });
 
 </script>
