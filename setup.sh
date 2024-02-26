@@ -2700,6 +2700,10 @@ fi
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 
 
+# ensure indiserver is running
+systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+
+
 echo
 echo
 echo
@@ -2708,7 +2712,6 @@ echo "*** Configurations are now stored in the database and *NOT* /etc/indi-alls
 echo
 echo "Services can be started at the command line or can be started from the web interface"
 echo
-echo "    systemctl --user start indiserver"
 echo "    systemctl --user start indi-allsky"
 echo
 echo
