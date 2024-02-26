@@ -40,7 +40,7 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.4
+cryptography >= 42.0.5
 dbus-python
 paho-mqtt
 setuptools-rust
@@ -51,4 +51,4 @@ prettytable
 lxml
 shapely
 requests-toolbelt
-fish2pano
+fish2pano >= 0.4.1
