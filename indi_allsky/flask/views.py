@@ -978,7 +978,7 @@ class JsonChartView(JsonView):
             return chart_data
 
 
-        latest_image_p = Path(latest_image.filename)
+        latest_image_p = latest_image.getFilesystemPath()
         if not latest_image_p.exists():
             app.logger.error('Image does not exist: %s', latest_image_p)
             return chart_data
