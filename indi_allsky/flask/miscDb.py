@@ -146,6 +146,8 @@ class miscDb(object):
             'remote_url',
             'hidden',
             'file_size',
+            'web_nonlocal_images',
+            'web_local_images_admin',
         ]
 
         # populate camera info
