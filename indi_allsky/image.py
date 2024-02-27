@@ -139,6 +139,10 @@ class ImageWorker(Process):
             'hst_alt'       : 0.0,
             'hst_next_h'    : 0.0,
             'hst_next_alt'  : 0.0,
+            'tiangong_up'       : 'No data',
+            'tiangong_alt'      : 0.0,
+            'tiangong_next_h'   : 0.0,
+            'tiangong_next_alt' : 0.0,
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'

@@ -80,6 +80,10 @@ class ImageProcessor(object):
             'title' : 'HST',
             'group' : constants.SATELLITE_VISUAL,
         },
+        'tiangong' : {
+            'title' : 'CSS (TIANHE)',
+            'group' : constants.SATELLITE_VISUAL,
+        },
     }
 
 
@@ -1695,6 +1699,27 @@ class ImageProcessor(object):
                 self.astrometric_data['hst_next_alt'] = 0.0
 
 
+        tiangong = satellite_data.get('tiangong')
+        if tiangong:
+            tiangong.compute(obs)
+
+            tiangong_alt = math.degrees(tiangong.alt)
+            self.astrometric_data['tiangong_alt'] = tiangong_alt
+
+            if tiangong_alt >= 0:
+                self.astrometric_data['tiangong_up'] = '{0:0.0f}°'.format(tiangong_alt)
+            else:
+                self.astrometric_data['tiangong_up'] = 'No'
+
+            try:
+                tiangong_next_pass = obs.next_pass(tiangong)
+                self.astrometric_data['tiangong_next_h'] = (tiangong_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+                self.astrometric_data['tiangong_next_alt'] = math.degrees(tiangong_next_pass[3])
+            except ValueError as e:
+                logger.error('TIANGONG next pass error: %s', str(e))
+                self.astrometric_data['tiangong_next_h'] = 0.0
+                self.astrometric_data['tiangong_next_alt'] = 0.0
+
 
     def populateSatelliteData(self):
         satellite_data = dict()
@@ -1911,6 +1936,10 @@ class ImageProcessor(object):
             'hst_up'       : self.astrometric_data['hst_up'],
             'hst_next_h'   : self.astrometric_data['hst_next_h'],
             'hst_next_alt' : self.astrometric_data['hst_next_alt'],
+            'tiangong_alt'      : self.astrometric_data['tiangong_alt'],
+            'tiangong_up'       : self.astrometric_data['tiangong_up'],
+            'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
+            'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,
@@ -2172,6 +2201,10 @@ class ImageProcessor(object):
             'hst_up'       : self.astrometric_data['hst_up'],
             'hst_next_h'   : self.astrometric_data['hst_next_h'],
             'hst_next_alt' : self.astrometric_data['hst_next_alt'],
+            'tiangong_alt'      : self.astrometric_data['tiangong_alt'],
+            'tiangong_up'       : self.astrometric_data['tiangong_up'],
+            'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
+            'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
             'latitude'     : self.latitude_v.value,
             'longitude'    : self.longitude_v.value,
             'elevation'    : self.elevation_v.value,
