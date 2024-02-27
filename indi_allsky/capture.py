@@ -618,6 +618,25 @@ class CaptureWorker(Process):
             cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
 
 
+        # populate S3 data
+        s3_data = {
+            'host'      : self.config['S3UPLOAD'].get('HOST', ''),
+            'bucket'    : self.config['S3UPLOAD'].get('BUCKET', ''),
+            'region'    : self.config['S3UPLOAD'].get('REGION', ''),
+            'namespace' : self.config['S3UPLOAD'].get('NAMESPACE', ''),
+        }
+
+
+        try:
+            s3_prefix = self.config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
+        except KeyError as e:
+            app.logger.error('Failure to generate S3 prefix: %s', str(e))
+            s3_prefix = ''
+        except ValueError as e:
+            app.logger.error('Failure to generate S3 prefix: %s', str(e))
+            s3_prefix = ''
+
+
         # need to get camera info before adding to DB
         camera_metadata = {
             'type'        : constants.CAMERA,
@@ -649,7 +668,12 @@ class CaptureWorker(Process):
             'alt'             : self.config['LENS_ALTITUDE'],
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
+
+            's3_prefix'             : s3_prefix,
+            'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),
+            'web_local_images_admin': self.config.get('WEB_LOCAL_IMAGES_ADMIN', False),
         }
+
 
         camera = self._miscDb.addCamera(camera_metadata)
         self.camera_id = camera.id

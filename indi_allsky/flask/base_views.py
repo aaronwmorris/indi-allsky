@@ -59,7 +59,9 @@ class BaseView(View):
 
         self.setupSession()
 
-        self.s3_prefix = self.getS3Prefix()
+        self.s3_prefix = self.camera.s3_prefix
+        self.web_nonlocal_images = self.camera.web_nonlocal_images
+        self.web_local_images_admin = self.camera.web_local_images_admin
 
 
     def setupSession(self):
@@ -73,29 +75,6 @@ class BaseView(View):
             self.camera = FakeCamera()
 
         session['camera_id'] = self.camera.id
-
-
-    def getS3Prefix(self):
-        s3_data = {
-            'host'      : self.indi_allsky_config['S3UPLOAD']['HOST'],
-            'bucket'    : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
-            'region'    : self.indi_allsky_config['S3UPLOAD']['REGION'],
-            'namespace' : self.indi_allsky_config['S3UPLOAD'].get('NAMESPACE', ''),
-        }
-
-        try:
-            prefix = self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
-        except KeyError as e:
-            app.logger.error('Failure to generate S3 prefix: %s', str(e))
-            return ''
-        except ValueError as e:
-            app.logger.error('Failure to generate S3 prefix: %s', str(e))
-            return ''
-
-
-        #app.logger.info('S3 Prefix: %s', prefix)
-
-        return prefix
 
 
     def getLatestCamera(self):
