@@ -2198,8 +2198,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
     IMAGE_LABEL_SYSTEM_choices = (
         ('', 'Off'),
-        ('opencv', 'OpenCV'),
         ('pillow', 'Pillow'),
+        ('opencv', 'OpenCV'),
     )
 
     TEXT_PROPERTIES__FONT_FACE_choices = (
