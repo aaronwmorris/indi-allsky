@@ -55,7 +55,24 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
+        self.camera = None  # set in setupSession()
+
+        self.setupSession()
+
         self.s3_prefix = self.getS3Prefix()
+
+
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
+
+        try:
+            self.camera = self.getLatestCamera()
+        except NoResultFound:
+            self.camera = FakeCamera()
+
+        session['camera_id'] = self.camera.id
 
 
     def getS3Prefix(self):
@@ -179,10 +196,6 @@ class TemplateView(BaseView):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
 
-        self.camera = None  # set in setupSession()
-
-        self.setupSession()
-
         self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
@@ -191,19 +204,6 @@ class TemplateView(BaseView):
 
         # night set in get_astrometric_info()
         self.night = True
-
-
-    def setupSession(self):
-        if session.get('camera_id'):
-            self.camera = self.getCameraById(session['camera_id'])
-            return
-
-        try:
-            self.camera = self.getLatestCamera()
-        except NoResultFound:
-            self.camera = FakeCamera()
-
-        session['camera_id'] = self.camera.id
 
 
     def render_template(self, context):
