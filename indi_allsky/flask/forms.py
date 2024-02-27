@@ -833,6 +833,30 @@ def STARTRAILS_MOON_PHASE_THOLD_validator(form, field):
         raise ValidationError('Moon phase must be less than 101')
 
 
+def IMAGE_QUEUE_MAX_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 2:
+        raise ValidationError('Queue max size must be 2 or greater')
+
+
+def IMAGE_QUEUE_MIN_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Queue min size must be 1 or greater')
+
+
+def IMAGE_QUEUE_BACKOFF_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Backoff multiplier must be greater than 0')
+
+
 def IMAGE_FILE_TYPE_validator(form, field):
     if field.data not in ('jpg', 'png', 'tif', 'webp'):
         raise ValidationError('Please select a valid file type')
@@ -2393,6 +2417,9 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y1                = IntegerField('Image Crop ROI y1', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_X2                = IntegerField('Image Crop ROI x2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_QUEUE_MAX                  = IntegerField('Image Queue Maximum', validators=[IMAGE_QUEUE_MAX_validator])
+    IMAGE_QUEUE_MIN                  = IntegerField('Image Queue Minimum', validators=[IMAGE_QUEUE_MIN_validator])
+    IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
     FISH2PANO__ENABLE                = BooleanField('Enable Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
     FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator])

@@ -331,6 +331,10 @@ class ImageWorker(Process):
         processing_start = time.time()
 
 
+        ### simulate performance degradation
+        #time.sleep(30)
+
+
         self.image_processor.get_astrometric_data()
 
 

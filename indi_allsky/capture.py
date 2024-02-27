@@ -121,6 +121,11 @@ class CaptureWorker(Process):
 
         self.update_time_offset = None  # when time needs to be updated, this will be the offset
 
+        self.image_queue_max = self.config.get('IMAGE_QUEUE_MAX', 3)
+        self.image_queue_min = self.config.get('IMAGE_QUEUE_MIN', 1)
+        self.image_queue_backoff = self.config.get('IMAGE_QUEUE_BACKOFF', 0.5)
+        self.add_period_delay = 0.0
+
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         #self.periodic_tasks_time = time.time()  # testing
 
@@ -397,14 +402,39 @@ class CaptureWorker(Process):
                         camera_ready = False
                         waiting_for_frame = True
 
+
+                        # if the image queue grows too large, introduce delays to new exposures
+                        image_queue_size = self.image_q.qsize()
+                        logger.info('Image queue depth: %d', image_queue_size)
+
+                        if image_queue_size <= self.image_queue_min:
+                            if self.add_period_delay > 0:
+                                logger.warning('IMAGE QUEUE UNDER MINIMUM: %d *** REMOVING DELAY BETWEEN EXPOSURES ***', image_queue_size)
+                                self.add_period_delay = 0.0
+                        elif image_queue_size >= self.image_queue_max:
+                            if self.night:
+                                self.add_period_delay = (image_queue_size / self.image_queue_max) * self.config['EXPOSURE_PERIOD'] * self.image_queue_backoff
+                            else:
+                                self.add_period_delay = (image_queue_size / self.image_queue_max) * self.config['EXPOSURE_PERIOD_DAY'] * self.image_queue_backoff
+
+                            logger.warning('IMAGE QUEUE MAXIMUM EXCEEDED: %d *** ADDING ADDITIONAL %0.3fs DELAY BETWEEN EXPOSURES ***', image_queue_size, self.add_period_delay)
+
+                            self._miscDb.addNotification(
+                                NotificationCategory.WORKER,
+                                'image_queue_depth',
+                                'Image queue exceeded maximum threshold depth.  System processing might be degraded.',
+                                expire=timedelta(hours=1),
+                            )
+
+
                         if self.focus_mode:
                             # Start frame immediately in focus mode
                             logger.warning('*** FOCUS MODE ENABLED ***')
-                            next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0)
+                            next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
                         elif self.night:
-                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD']
+                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD'] + self.add_period_delay
                         else:
-                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY']
+                            next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD_DAY'] + self.add_period_delay
 
                         logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
