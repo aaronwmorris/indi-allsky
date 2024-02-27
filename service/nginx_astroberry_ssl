@@ -58,6 +58,9 @@ server {
 server {
     listen %HTTPS_PORT%;
 
+    # not supported on debian 10
+    #http2 on;
+
     root %DOCROOT_FOLDER%;
 
     ssl_certificate           /etc/ssl/astroberry.crt;
