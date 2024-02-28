@@ -286,6 +286,7 @@ class UploadSync(object):
                         'width'           : entry.width,
                         'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
+                        'remote_url'      : entry.remote_url,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
@@ -303,6 +304,7 @@ class UploadSync(object):
                         'night'         : entry.night,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -320,6 +322,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -337,6 +340,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -354,6 +358,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -371,6 +376,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -388,6 +394,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -405,6 +412,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -422,6 +430,7 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -468,6 +477,8 @@ class UploadSync(object):
                         'width'           : entry.width,
                         'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
+                        's3_key'          : entry.s3_key,
+                        'remote_url'      : entry.remote_url,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
@@ -489,6 +500,8 @@ class UploadSync(object):
                         'exclude'       : entry.exclude,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        's3_key'        : entry.s3_key,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -506,6 +519,8 @@ class UploadSync(object):
                         'night'         : entry.night,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        's3_key'        : entry.s3_key,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -523,6 +538,8 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -540,6 +557,8 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -557,6 +576,8 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -574,6 +595,8 @@ class UploadSync(object):
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -609,6 +632,8 @@ class UploadSync(object):
             'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
+            's3_key'     : thumbnail_entry.s3_key,
+            'remote_url' : thumbnail_entry.remote_url,
             'camera_uuid': thumbnail_entry.camera.uuid,
         }
 
@@ -639,6 +664,8 @@ class UploadSync(object):
             'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
+            's3_key'     : thumbnail_entry.s3_key,
+            'remote_url' : thumbnail_entry.remote_url,
             'camera_uuid': thumbnail_entry.camera.uuid,
         }
 
@@ -680,95 +707,13 @@ class UploadSync(object):
 
     def _get_entry_status(self):
         status_dict = {
-            'upload'  : dict(),
-            's3'      : dict(),
             'syncapi' : dict(),
+            's3'      : dict(),
+            'upload'  : dict(),
         }
 
-        # upload
-        upload_table_list = [
-            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
-            [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
-            [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
-            [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
-            [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
-        ]
 
-        for table in upload_table_list:
-            upload = self.config.get('FILETRANSFER', {}).get(table[1])
-            if upload:
-                uploaded = self._get_uploaded(table[0], 1, state=True)
-                not_uploaded = self._get_uploaded(table[0], 1, state=False)
-                status_dict['upload'][table[0]] = [uploaded, not_uploaded]
-            else:
-                logger.info('%s uploading disabled', table[0].__name__)
-                status_dict['upload'][table[0]] = None
-
-
-        if self.upload_images:
-            # Images
-            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
-            if upload_image:
-                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True, upload_days=self.image_days)
-                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False, upload_days=self.image_days)
-                status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
-            else:
-                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
-                status_dict['upload'][IndiAllSkyDbImageTable] = None
-
-            # Panoramas
-            upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
-            if upload_panorama:
-                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True, upload_days=self.image_days)
-                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False, upload_days=self.image_days)
-                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
-            else:
-                logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
-                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
-
-
-        # s3
-        s3_table_list = [
-            IndiAllSkyDbVideoTable,
-            IndiAllSkyDbKeogramTable,
-            IndiAllSkyDbStarTrailsTable,
-            IndiAllSkyDbStarTrailsVideoTable,
-            IndiAllSkyDbPanoramaVideoTable,
-            IndiAllSkyDbImageTable,
-            IndiAllSkyDbPanoramaImageTable,
-        ]
-        for table in s3_table_list:
-            # s3
-            if self.config.get('S3UPLOAD', {}).get('ENABLE'):
-                s3_entries = self._get_s3(table, state=True)
-                not_s3_entries = self._get_s3(table, state=False)
-                status_dict['s3'][table] = [s3_entries, not_s3_entries]
-            else:
-                logger.info('S3 uploading disabled (%s)', table.__name__)
-                status_dict['s3'][table] = None
-
-
-        s3_upload_fits = self.config.get('S3UPLOAD', {}).get('UPLOAD_FITS')
-        if s3_upload_fits:
-            s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=True)
-            not_s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=False)
-            status_dict['s3'][IndiAllSkyDbFitsImageTable] = [s3_entries_fits, not_s3_entries_fits]
-        else:
-            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbFitsImageTable.__name__)
-            status_dict['s3'][IndiAllSkyDbFitsImageTable] = None
-
-
-        s3_upload_raw = self.config.get('S3UPLOAD', {}).get('UPLOAD_RAW')
-        if s3_upload_raw:
-            s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=True)
-            not_s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=False)
-            status_dict['s3'][IndiAllSkyDbRawImageTable] = [s3_entries_raw, not_s3_entries_raw]
-        else:
-            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbRawImageTable.__name__)
-            status_dict['s3'][IndiAllSkyDbRawImageTable] = None
-
-
-        # syncapi
+        # syncapi (before S3)
         syncapi_table_list = [
             IndiAllSkyDbVideoTable,
             IndiAllSkyDbKeogramTable,
@@ -813,6 +758,92 @@ class UploadSync(object):
 
             logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
             status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
+
+
+
+        # s3
+        s3_table_list = [
+            IndiAllSkyDbVideoTable,
+            IndiAllSkyDbKeogramTable,
+            IndiAllSkyDbStarTrailsTable,
+            IndiAllSkyDbStarTrailsVideoTable,
+            IndiAllSkyDbPanoramaVideoTable,
+            IndiAllSkyDbImageTable,
+            IndiAllSkyDbPanoramaImageTable,
+        ]
+        for table in s3_table_list:
+            # s3
+            if self.config.get('S3UPLOAD', {}).get('ENABLE'):
+                s3_entries = self._get_s3(table, state=True)
+                not_s3_entries = self._get_s3(table, state=False)
+                status_dict['s3'][table] = [s3_entries, not_s3_entries]
+            else:
+                logger.info('S3 uploading disabled (%s)', table.__name__)
+                status_dict['s3'][table] = None
+
+
+        s3_upload_fits = self.config.get('S3UPLOAD', {}).get('UPLOAD_FITS')
+        if s3_upload_fits:
+            s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=True)
+            not_s3_entries_fits = self._get_s3(IndiAllSkyDbFitsImageTable, state=False)
+            status_dict['s3'][IndiAllSkyDbFitsImageTable] = [s3_entries_fits, not_s3_entries_fits]
+        else:
+            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbFitsImageTable.__name__)
+            status_dict['s3'][IndiAllSkyDbFitsImageTable] = None
+
+
+        s3_upload_raw = self.config.get('S3UPLOAD', {}).get('UPLOAD_RAW')
+        if s3_upload_raw:
+            s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=True)
+            not_s3_entries_raw = self._get_s3(IndiAllSkyDbRawImageTable, state=False)
+            status_dict['s3'][IndiAllSkyDbRawImageTable] = [s3_entries_raw, not_s3_entries_raw]
+        else:
+            logger.info('S3 uploading disabled (%s)', IndiAllSkyDbRawImageTable.__name__)
+            status_dict['s3'][IndiAllSkyDbRawImageTable] = None
+
+
+
+        # upload
+        upload_table_list = [
+            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
+            [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
+            [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
+        ]
+
+        for table in upload_table_list:
+            upload = self.config.get('FILETRANSFER', {}).get(table[1])
+            if upload:
+                uploaded = self._get_uploaded(table[0], 1, state=True)
+                not_uploaded = self._get_uploaded(table[0], 1, state=False)
+                status_dict['upload'][table[0]] = [uploaded, not_uploaded]
+            else:
+                logger.info('%s uploading disabled', table[0].__name__)
+                status_dict['upload'][table[0]] = None
+
+
+        if self.upload_images:
+            # Images
+            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
+            if upload_image:
+                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True, upload_days=self.image_days)
+                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False, upload_days=self.image_days)
+                status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
+            else:
+                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbImageTable] = None
+
+            # Panoramas
+            upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
+            if upload_panorama:
+                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True, upload_days=self.image_days)
+                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False, upload_days=self.image_days)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
+            else:
+                logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
+
 
 
         return status_dict
