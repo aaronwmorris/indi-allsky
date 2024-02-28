@@ -463,9 +463,11 @@ class miscUpload(object):
             return
 
 
-        if self.config.get('SYNCAPI', {}).get('POST_S3'):
-            # file is uploaded after s3 upload
-            return
+        # if s3 upload was previously completed, proceed with syncapi
+        if not asset_entry.s3_key:
+            if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                # file is uploaded after s3 upload
+                return
 
 
         if not asset_entry:
@@ -509,9 +511,11 @@ class miscUpload(object):
         if not self.config.get('SYNCAPI', {}).get('ENABLE'):
             return
 
-        if self.config.get('SYNCAPI', {}).get('POST_S3'):
-            # file is uploaded after s3 upload
-            return
+        # if s3 upload was previously completed, proceed with syncapi
+        if not asset_entry.s3_key:
+            if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                # file is uploaded after s3 upload
+                return
 
         if not asset_entry:
             #logger.warning('S3 uploading disabled')
@@ -562,9 +566,11 @@ class miscUpload(object):
             return
 
 
-        if self.config.get('SYNCAPI', {}).get('POST_S3'):
-            # file is uploaded after s3 upload
-            return
+        # if s3 upload was previously completed, proceed with syncapi
+        if not asset_entry.s3_key:
+            if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                # file is uploaded after s3 upload
+                return
 
 
         if not asset_entry:
