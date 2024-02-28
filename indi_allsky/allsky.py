@@ -521,7 +521,8 @@ class IndiAllSky(object):
             active_worker_list.append(upload_worker_dict)
 
             # need to put the stops in the queue before waiting on workers to join
-            self.upload_q.put({'stop' : True})
+            #self.upload_q.put({'stop' : True})
+            upload_worker_dict['worker'].stop()
 
 
         for upload_worker_dict in active_worker_list:
