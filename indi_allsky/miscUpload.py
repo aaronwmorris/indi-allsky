@@ -466,6 +466,7 @@ class miscUpload(object):
         # if s3 upload was previously completed, proceed with syncapi
         if not asset_entry.s3_key:
             if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                logger.warning('Delaying syncapi until after S3')
                 # file is uploaded after s3 upload
                 return
 
@@ -514,6 +515,7 @@ class miscUpload(object):
         # if s3 upload was previously completed, proceed with syncapi
         if not asset_entry.s3_key:
             if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                logger.warning('Delaying syncapi until after S3')
                 # file is uploaded after s3 upload
                 return
 
@@ -569,6 +571,7 @@ class miscUpload(object):
         # if s3 upload was previously completed, proceed with syncapi
         if not asset_entry.s3_key:
             if self.config.get('SYNCAPI', {}).get('POST_S3'):
+                logger.warning('Delaying syncapi until after S3')
                 # file is uploaded after s3 upload
                 return
 
