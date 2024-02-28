@@ -463,6 +463,11 @@ class miscUpload(object):
             return
 
 
+        if not asset_entry:
+            # image was not saved
+            return
+
+
         # if s3 upload was previously completed, proceed with syncapi
         if not asset_entry.s3_key:
             if self.config.get('SYNCAPI', {}).get('POST_S3'):
