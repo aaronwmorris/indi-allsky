@@ -795,12 +795,12 @@ class ImageWorker(Process):
 
             ### upload thumbnail first
             if image_thumbnail_entry:
+                self._miscUpload.syncapi_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)  # syncapi before s3
                 self._miscUpload.s3_upload_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
 
 
+            self._miscUpload.syncapi_image(image_entry, image_metadata)  # syncapi before s3
             self._miscUpload.s3_upload_image(image_entry, image_metadata)
-            self._miscUpload.syncapi_image(image_entry, image_metadata)
             self._miscUpload.mqtt_publish_image(upload_filename, mq_topic_latest, mqtt_data)
             self._miscUpload.upload_image(image_entry)
 
@@ -1492,8 +1492,8 @@ class ImageWorker(Process):
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
+        self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)  # syncapi before s3
         self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
-        self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)
         self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
         self._miscUpload.upload_panorama(panorama_entry)
 
