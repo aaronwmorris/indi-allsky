@@ -627,12 +627,10 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
             'uuid'       : thumbnail_entry.uuid,
             'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
-            's3_key'     : thumbnail_entry.s3_key,
             'remote_url' : thumbnail_entry.remote_url,
             'camera_uuid': thumbnail_entry.camera.uuid,
         }
@@ -659,7 +657,6 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
             'uuid'       : thumbnail_entry.uuid,
             'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
