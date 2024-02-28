@@ -66,6 +66,7 @@ class UploadSync(object):
 
         self.batch_size  = self.threads * 7
 
+        self._image_days = 90
         self._upload_images = False
         self._syncapi_images = True
 
@@ -98,6 +99,15 @@ class UploadSync(object):
         self._shutdown = False
         self._terminate = False
         signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
+    @property
+    def image_days(self):
+        return self._image_days
+
+    @image_days.setter
+    def image_days(self, new_image_days):
+        self._image_days = int(new_image_days)
 
 
     @property
@@ -699,8 +709,8 @@ class UploadSync(object):
             # Images
             upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
             if upload_image:
-                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
-                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
+                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True, upload_days=self.image_days)
+                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False, upload_days=self.image_days)
                 status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
             else:
                 logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
@@ -709,8 +719,8 @@ class UploadSync(object):
             # Panoramas
             upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
             if upload_panorama:
-                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True)
-                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False)
+                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True, upload_days=self.image_days)
+                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False, upload_days=self.image_days)
                 status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
             else:
                 logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
@@ -780,8 +790,8 @@ class UploadSync(object):
             # Images
             syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
             if syncapi_image:
-                i_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
-                i_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
+                i_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True, upload_days=self.image_days)
+                i_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False, upload_days=self.image_days)
                 status_dict['syncapi'][IndiAllSkyDbImageTable] = [i_syncapi_entries, i_not_syncapi_entries]
             else:
                 logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
@@ -790,8 +800,8 @@ class UploadSync(object):
             # Panorama
             syncapi_panorama = int(self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'))
             if syncapi_image:
-                p_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=True)
-                p_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=False)
+                p_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=True, upload_days=self.image_days)
+                p_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=False, upload_days=self.image_days)
                 status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = [p_syncapi_entries, p_not_syncapi_entries]
             else:
                 logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
@@ -808,9 +818,11 @@ class UploadSync(object):
         return status_dict
 
 
-    def _get_uploaded(self, table, mod, state=True):
+    def _get_uploaded(self, table, mod, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             uploaded = table.query\
@@ -819,6 +831,7 @@ class UploadSync(object):
                 .filter(table.uploaded == sa_true())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             uploaded = table.query\
@@ -827,14 +840,17 @@ class UploadSync(object):
                 .filter(table.uploaded == sa_false())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return uploaded
 
 
-    def _get_s3(self, table, state=True):
+    def _get_s3(self, table, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             s3 = table.query\
@@ -842,6 +858,7 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key != sa_null())\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             s3 = table.query\
@@ -849,14 +866,17 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key == sa_null())\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return s3
 
 
-    def _get_syncapi(self, table, mod, state=True):
+    def _get_syncapi(self, table, mod, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             syncapi = table.query\
@@ -865,6 +885,7 @@ class UploadSync(object):
                 .filter(table.sync_id != sa_null())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             syncapi = table.query\
@@ -873,6 +894,7 @@ class UploadSync(object):
                 .filter(table.sync_id == sa_null())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return syncapi
@@ -965,7 +987,13 @@ if __name__ == "__main__":
         type=int,
         default=1
     )
-
+    argparser.add_argument(
+        '--days',
+        '-d',
+        help='Number of days to upload/sync (images only)',
+        type=int,
+        default=90
+    )
     argparser.add_argument(
         '--no-upload-images',
         help='disable image uploading (default)',
@@ -998,6 +1026,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     us = UploadSync(args.threads)
+    us.image_days = args.days
     us.upload_images = args.upload_images
     us.syncapi_images = args.syncapi_images
 
