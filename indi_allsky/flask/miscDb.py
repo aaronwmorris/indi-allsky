@@ -1035,6 +1035,9 @@ class miscDb(object):
             width=new_width,
             height=new_height,
             camera_id=camera_id,
+            data=thumbnail_metadata.get('data', {}),
+            s3_key=thumbnail_metadata.get('s3_key'),
+            remote_url=thumbnail_metadata.get('remote_url'),
         )
 
         db.session.add(thumbnail_entry)
@@ -1084,6 +1087,9 @@ class miscDb(object):
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
+            data=thumbnail_metadata.get('data', {}),
+            s3_key=thumbnail_metadata.get('s3_key'),
+            remote_url=thumbnail_metadata.get('remote_url'),
         )
 
         db.session.add(thumbnail_entry)
