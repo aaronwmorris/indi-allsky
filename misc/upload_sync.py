@@ -627,7 +627,7 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.createDate.strfrtime('%Y%m%d'),  # this is not correct, but does not really matter
+            'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
@@ -657,7 +657,7 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.createDate.strfrtime('%Y%m%d'),  # this is not correct, but does not really matter
+            'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
