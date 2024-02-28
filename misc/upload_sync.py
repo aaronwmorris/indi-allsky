@@ -64,7 +64,7 @@ class UploadSync(object):
     def __init__(self, threads):
         self.threads = int(threads)
 
-        self.batch_size  = self.threads * 7
+        self.batch_size  = self.threads * 11
 
         self._image_days = 30
         self._upload_images = False
