@@ -66,7 +66,7 @@ class UploadSync(object):
 
         self.batch_size  = self.threads * 7
 
-        self._image_days = 90
+        self._image_days = 30
         self._upload_images = False
         self._syncapi_images = True
 
@@ -992,7 +992,7 @@ if __name__ == "__main__":
         '-d',
         help='Number of days to upload/sync (images only)',
         type=int,
-        default=90
+        default=30
     )
     argparser.add_argument(
         '--no-upload-images',
