@@ -68,6 +68,7 @@ class UploadSync(object):
 
         self._image_days = 30
         self._upload_images = False
+        self._syncapi = True
         self._syncapi_images = True
 
         with app.app_context():
@@ -117,6 +118,15 @@ class UploadSync(object):
     @upload_images.setter
     def upload_images(self, new_upload_images):
         self._upload_images = bool(new_upload_images)
+
+
+    @property
+    def syncapi(self):
+        return self._syncapi
+
+    @syncapi.setter
+    def syncapi(self, new_syncapi):
+        self._syncapi = bool(new_syncapi)
 
 
     @property
@@ -171,6 +181,11 @@ class UploadSync(object):
                         if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbPanoramaImageTable':
                             if not self.syncapi_images:
                                 continue
+
+                        if upload_type == 'syncapi':  # needs to be last
+                            if not self.syncapi:
+                                continue
+
 
                         upload_list.append({
                             'upload_type' : upload_type,
@@ -1038,6 +1053,20 @@ if __name__ == "__main__":
     argparser.set_defaults(upload_images=False)
 
     argparser.add_argument(
+        '--no-syncapi',
+        help='disable syncapi (all types)',
+        dest='syncapi',
+        action='store_false',
+    )
+    argparser.add_argument(
+        '--syncapi',
+        help='enable syncapi (all types) (default)',
+        dest='syncapi',
+        action='store_true',
+    )
+    argparser.set_defaults(syncapi_images=True)
+
+    argparser.add_argument(
         '--no-syncapi-images',
         help='disable syncapi for images',
         dest='syncapi_images',
@@ -1057,6 +1086,7 @@ if __name__ == "__main__":
     us = UploadSync(args.threads)
     us.image_days = args.days
     us.upload_images = args.upload_images
+    us.syncapi = args.syncapi
     us.syncapi_images = args.syncapi_images
 
     action_func = getattr(us, args.action)
