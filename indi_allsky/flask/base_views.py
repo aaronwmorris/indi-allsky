@@ -686,5 +686,8 @@ class FakeCamera(object):
     lensName = ''
     name = ''
     friendlyName = ''
+    s3_prefix = ''
+    web_nonlocal_images = False
+    web_local_images_admin = False
     data = {}
 

@@ -155,7 +155,7 @@ class JsonLatestImageView(JsonView):
         no_image_message = 'No Image for 15 minutes'
 
 
-        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+        if self.web_nonlocal_images:
             no_image_message += '<br>(Non-local images enabled)'
 
 
@@ -193,7 +193,7 @@ class JsonLatestImageView(JsonView):
             elif self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
                 data['latest_image']['message'] = 'Daytime timelapse disabled'
 
-                if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+                if self.web_nonlocal_images:
                     if not self.verify_admin_network():
                         # only show locally hosted assets if coming from admin networks
                         return data
@@ -242,8 +242,8 @@ class JsonLatestImageView(JsonView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -290,7 +290,7 @@ class LatestImageRedirect(BaseView):
 
 
         local = True
-        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
+        if self.web_nonlocal_images:
             local = False
 
 
@@ -654,8 +654,8 @@ class JsonImageLoopView(JsonView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES'):
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2084,8 +2084,8 @@ class ImageViewerView(FormView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2121,8 +2121,8 @@ class AjaxImageViewerView(BaseView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2248,8 +2248,8 @@ class GalleryViewerView(FormView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2281,8 +2281,8 @@ class AjaxGalleryViewerView(BaseView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2407,8 +2407,8 @@ class VideoViewerView(FormView):
 
 
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
@@ -2433,8 +2433,8 @@ class AjaxVideoViewerView(BaseView):
 
     def dispatch_request(self):
         local = True  # default to local assets
-        if self.indi_allsky_config['WEB_NONLOCAL_IMAGES']:
-            if self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN') and self.verify_admin_network():
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
                 pass
             else:
                 local = False
