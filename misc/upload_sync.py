@@ -232,7 +232,7 @@ class UploadSync(object):
 
 
             if not entry.validateFile():
-                logger.error('%s file missing: %s', x['table'].__name__, entry.filename)
+                logger.error('%s file missing: %s', x['table'].__name__, entry.getFilesystemPath())
                 continue
 
 
