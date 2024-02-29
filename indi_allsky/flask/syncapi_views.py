@@ -170,7 +170,7 @@ class SyncApiBaseView(BaseView):
 
     def processPost(self, camera, metadata, tmp_file_p, overwrite=False):
         # offset createDate to account for difference between local and remote sites
-        metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
+        metadata['createDate'] += (metadata['utc_offset'] - datetime.now().astimezone().utcoffset().total_seconds())
 
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
@@ -288,6 +288,8 @@ class SyncApiBaseView(BaseView):
         metadata_file.seek(0)  # rewind file
         metadata_json = json.load(metadata_file)
 
+        # Not updating createDate here incase we need it for authentication
+
         #app.logger.info('Json: %s', metadata_json)
 
         return metadata_json
@@ -377,6 +379,13 @@ class SyncApiBaseView(BaseView):
             .filter(IndiAllSkyDbCameraTable.uuid == metadata['camera_uuid'])\
             .one()
 
+
+        if camera.utc_offset != metadata['utc_offset']:
+            # update utc offset
+            camera.utc_offset = int(metadata['utc_offset'])
+            db.session.commit()
+
+
         return camera
 
 
@@ -455,7 +464,7 @@ class SyncApiImageView(SyncApiBaseView):
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
         # offset createDate to account for difference between local and remote sites
-        image_metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
+        image_metadata['createDate'] += (image_metadata['utc_offset'] - datetime.now().astimezone().utcoffset().total_seconds())
 
         camera_createDate = datetime.fromtimestamp(image_metadata['createDate'])
         folder = self.getImageFolder(camera_createDate, image_metadata['night'], camera)
@@ -620,7 +629,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
     def processPost(self, camera, thumbnail_metadata, tmp_file_p, overwrite=False):
         # offset createDate to account for difference between local and remote sites
-        thumbnail_metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
+        thumbnail_metadata['createDate'] += (thumbnail_metadata['utc_offset'] - datetime.now().astimezone().utcoffset().total_seconds())
 
         camera_createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
         dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()  # we do not really care about this
