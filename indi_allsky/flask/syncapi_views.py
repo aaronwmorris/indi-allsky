@@ -173,7 +173,7 @@ class SyncApiBaseView(BaseView):
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
         if not date_folder.exists():
-            date_folder.mkdir(mode=0o755)
+            date_folder.mkdir(mode=0o755, parents=True)
 
 
         if metadata['night']:
