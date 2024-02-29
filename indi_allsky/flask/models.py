@@ -62,6 +62,9 @@ class IndiAllSkyDbCameraTable(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     elevation = db.Column(db.Integer, nullable=True)
 
+    tz = db.Column(db.String(length=64), nullable=True)
+    utc_offset = db.Column(db.Integer, server_default='0', nullable=False)
+
     alt = db.Column(db.Float, nullable=True)
     az = db.Column(db.Float, nullable=True)
     nightSunAlt = db.Column(db.Float, nullable=True)
@@ -78,7 +81,6 @@ class IndiAllSkyDbCameraTable(db.Model):
 
     data = db.Column(db.JSON, index=True)
 
-    tz = db.Column(db.String(length=64), nullable=True)
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
 

@@ -279,6 +279,7 @@ class UploadSync(object):
                     image_metadata = {
                         'type'            : constants.IMAGE,
                         'createDate'      : entry.createDate.timestamp(),
+                        'utc_offset'      : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'exposure'        : entry.exposure,
                         'exp_elapsed'     : entry.exp_elapsed,
                         'gain'            : entry.gain,
@@ -315,6 +316,7 @@ class UploadSync(object):
                     video_metadata = {
                         'type'          : constants.VIDEO,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'night'         : entry.night,
                         'width'         : entry.width,
@@ -333,6 +335,7 @@ class UploadSync(object):
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -351,6 +354,7 @@ class UploadSync(object):
                     startrail_metadata = {
                         'type'       : constants.STARTRAIL,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -369,6 +373,7 @@ class UploadSync(object):
                     startrail_video_metadata = {
                         'type'       : constants.STARTRAIL_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -387,6 +392,7 @@ class UploadSync(object):
                     fits_metadata = {
                         'type'       : constants.FITS_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -405,6 +411,7 @@ class UploadSync(object):
                     raw_metadata = {
                         'type'       : constants.RAW_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -423,6 +430,7 @@ class UploadSync(object):
                     panorama_metadata = {
                         'type'       : constants.PANORAMA_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -441,6 +449,7 @@ class UploadSync(object):
                     panorama_video_metadata = {
                         'type'       : constants.PANORAMA_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -470,6 +479,7 @@ class UploadSync(object):
                     image_metadata = {
                         'type'            : constants.IMAGE,
                         'createDate'      : entry.createDate.timestamp(),
+                        'utc_offset'      : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'exposure'        : entry.exposure,
                         'exp_elapsed'     : entry.exp_elapsed,
                         'gain'            : entry.gain,
@@ -507,6 +517,7 @@ class UploadSync(object):
                     panorama_metadata = {
                         'type'          : constants.PANORAMA_IMAGE,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'exposure'      : entry.exposure,
                         'gain'          : entry.gain,
@@ -530,6 +541,7 @@ class UploadSync(object):
                     video_metadata = {
                         'type'          : constants.VIDEO,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'night'         : entry.night,
                         'width'         : entry.width,
@@ -549,6 +561,7 @@ class UploadSync(object):
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -568,6 +581,7 @@ class UploadSync(object):
                     startrail_metadata = {
                         'type'       : constants.STARTRAIL,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -587,6 +601,7 @@ class UploadSync(object):
                     startrail_video_metadata = {
                         'type'       : constants.STARTRAIL_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -606,6 +621,7 @@ class UploadSync(object):
                     panorama_video_metadata = {
                         'type'       : constants.PANORAMA_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
@@ -642,6 +658,7 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
+            'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
             'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,
@@ -672,6 +689,7 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
+            'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
             'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,

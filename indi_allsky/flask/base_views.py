@@ -62,6 +62,7 @@ class BaseView(View):
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
         self.web_local_images_admin = self.camera.web_local_images_admin
+        self.camera_utc_offset = self.camera.utc_offset
 
 
     def setupSession(self):

@@ -365,6 +365,7 @@ class VideoWorker(Process):
         video_metadata = {
             'type'          : constants.VIDEO,
             'createDate'    : now.timestamp(),
+            'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'camera_uuid'   : camera.uuid,
@@ -541,6 +542,7 @@ class VideoWorker(Process):
         video_metadata = {
             'type'          : constants.PANORAMA_VIDEO,
             'createDate'    : now.timestamp(),
+            'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'camera_uuid'   : camera.uuid,
@@ -765,6 +767,7 @@ class VideoWorker(Process):
         keogram_metadata = {
             'type'       : constants.KEOGRAM,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -785,6 +788,7 @@ class VideoWorker(Process):
         startrail_metadata = {
             'type'       : constants.STARTRAIL,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -805,6 +809,7 @@ class VideoWorker(Process):
         startrail_video_metadata = {
             'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -912,6 +917,7 @@ class VideoWorker(Process):
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
             'camera_uuid': camera.uuid,
         }
@@ -941,6 +947,7 @@ class VideoWorker(Process):
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'createDate' : now.timestamp(),
+                'utc_offset' : now.astimezone().utcoffset().total_seconds(),
                 'night'      : night,
                 'camera_uuid': camera.uuid,
             }

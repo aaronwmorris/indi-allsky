@@ -637,6 +637,8 @@ class CaptureWorker(Process):
             s3_prefix = ''
 
 
+        now = datetime.now()
+
         # need to get camera info before adding to DB
         camera_metadata = {
             'type'        : constants.CAMERA,
@@ -659,7 +661,9 @@ class CaptureWorker(Process):
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
             'elevation'   : self.elevation_v.value,
-            'tz'          : str(datetime.now().astimezone().tzinfo),
+
+            'tz'          : str(now.astimezone().tzinfo),
+            'utc_offset'  : now.astimezone().utcoffset().total_seconds(),
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
