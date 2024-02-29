@@ -175,10 +175,10 @@ class JsonLatestImageView(JsonView):
 
             if latest_image_p.exists():
                 # use latest image if it exists
-                max_age = datetime.now() - timedelta(seconds=history_seconds)
+                max_age = self.camera_now - timedelta(seconds=history_seconds)
                 if latest_image_p.stat().st_mtime > max_age.timestamp():
 
-                    data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+                    data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(datetime.timestamp(self.camera_now)))
                     data['latest_image']['message'] = ''
                     return data
                 else:
@@ -206,7 +206,7 @@ class JsonLatestImageView(JsonView):
 
                 if latest_image_p.exists():
                     # use latest image if it exists
-                    max_age = datetime.now() - timedelta(seconds=history_seconds)
+                    max_age = self.camera_now - timedelta(seconds=history_seconds)
                     if latest_image_p.stat().st_mtime > max_age.timestamp():
 
                         data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
@@ -229,14 +229,14 @@ class JsonLatestImageView(JsonView):
 
 
     def getLatestImage(self, camera_id, history_seconds):
-        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+        camera_now_minus_seconds = self.camera_now - timedelta(seconds=history_seconds)
 
         latest_image_q = self.model.query\
             .join(self.model.camera)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.createDate > now_minus_seconds,
+                    self.model.createDate > camera_now_minus_seconds,
                 )
             )
 
@@ -463,7 +463,7 @@ class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
 
-        now_minus_3h = datetime.now() - timedelta(hours=3)
+        camera_now_minus_3h = self.camera_now - timedelta(hours=3)
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -488,7 +488,7 @@ class ImageLagView(TemplateView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == session['camera_id'],
-                    IndiAllSkyDbImageTable.createDate > now_minus_3h,
+                    IndiAllSkyDbImageTable.createDate > camera_now_minus_3h,
                 )
             )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
@@ -505,7 +505,7 @@ class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
 
-        now_minus_7d = datetime.now() - timedelta(days=7)
+        camera_now_minus_7d = self.camera_now - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
 
@@ -527,7 +527,7 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
                             createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             createDate_hour <= 4,
@@ -558,7 +558,7 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
                             createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             createDate_hour <= 4,
@@ -622,7 +622,7 @@ class JsonImageLoopView(JsonView):
         timestamp = int(request.args.get('timestamp', 0))
 
         if not timestamp:
-            timestamp = int(time.time())
+            timestamp = int(datetime.timestamp(self.camera_now))
 
         ts_dt = datetime.fromtimestamp(timestamp)
 
@@ -846,7 +846,7 @@ class JsonChartView(JsonView):
         timestamp = int(request.args.get('timestamp', 0))
 
         if not timestamp:
-            timestamp = int(time.time())
+            timestamp = int(datetime.timestamp(self.camera_now))
 
         ts_dt = datetime.fromtimestamp(timestamp)
 
@@ -960,7 +960,7 @@ class JsonChartView(JsonView):
 
 
         # build last image histogram
-        now_minus_seconds = datetime.now() - timedelta(seconds=history_seconds)
+        now_minus_seconds = self.camera_now - timedelta(seconds=history_seconds)
 
         latest_image = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
@@ -2617,7 +2617,7 @@ class SystemInfoView(TemplateView):
             context['pyindi_version'] = 'Not installed'
 
 
-        context['now'] = datetime.now()
+        context['now'] = self.camera_now
         context['form_settime'] = IndiAllskySetDateTimeForm()
         context['timedate1_dict'] = self.getSystemdTimeDate()
 
@@ -2924,12 +2924,12 @@ class TaskQueueView(TemplateView):
             TaskQueueQueue.UPLOAD,
         )
 
-        now_minus_3d = datetime.now() - timedelta(days=3)
+        camera_now_minus_3d = self.camera_now - timedelta(days=3)
 
         tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(
                 and_(
-                    IndiAllSkyDbTaskQueueTable.createDate > now_minus_3d,
+                    IndiAllSkyDbTaskQueueTable.createDate > camera_now_minus_3d,
                     IndiAllSkyDbTaskQueueTable.state.in_(state_list),
                     ~IndiAllSkyDbTaskQueueTable.queue.in_(exclude_queues),
                 )
@@ -3764,12 +3764,12 @@ class TimelapseGeneratorView(TemplateView):
             TaskQueueQueue.VIDEO,
         )
 
-        now_minus_12h = datetime.now() - timedelta(hours=12)
+        camera_now_minus_12h = self.camera_now - timedelta(hours=12)
 
         tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(
                 and_(
-                    IndiAllSkyDbTaskQueueTable.createDate > now_minus_12h,
+                    IndiAllSkyDbTaskQueueTable.createDate > camera_now_minus_12h,
                     IndiAllSkyDbTaskQueueTable.state.in_(state_list),
                     IndiAllSkyDbTaskQueueTable.queue.in_(queue_list),
                 )
@@ -4904,7 +4904,7 @@ class AjaxNotificationView(BaseView):
 
     def get(self):
         # return a single result, newest first
-        now = datetime.now()
+        now = self.camera_now
 
         # this MUST ALWAYS return the newest result
         notice = IndiAllSkyDbNotificationTable.query\

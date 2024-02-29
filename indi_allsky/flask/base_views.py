@@ -62,7 +62,9 @@ class BaseView(View):
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
         self.web_local_images_admin = self.camera.web_local_images_admin
-        self.camera_utc_offset = self.camera.utc_offset
+
+        self.camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        self.camera_now = datetime.now() + timedelta(seconds=self.camera_time_offset)
 
 
     def setupSession(self):
