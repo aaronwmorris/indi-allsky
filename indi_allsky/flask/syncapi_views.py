@@ -169,6 +169,9 @@ class SyncApiBaseView(BaseView):
 
 
     def processPost(self, camera, metadata, tmp_file_p, overwrite=False):
+        # offset createDate to account for difference between local and remote sites
+        metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
+
         d_dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
 
         date_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), d_dayDate.strftime('%Y%m%d'))
@@ -451,10 +454,13 @@ class SyncApiImageView(SyncApiBaseView):
 
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
-        createDate = datetime.fromtimestamp(image_metadata['createDate'])
-        folder = self.getImageFolder(createDate, image_metadata['night'], camera)
+        # offset createDate to account for difference between local and remote sites
+        image_metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
 
-        date_str = createDate.strftime('%Y%m%d_%H%M%S')
+        camera_createDate = datetime.fromtimestamp(image_metadata['createDate'])
+        folder = self.getImageFolder(camera_createDate, image_metadata['night'], camera)
+
+        date_str = camera_createDate.strftime('%Y%m%d_%H%M%S')
         image_file_p = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
 
 
@@ -613,15 +619,18 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
 
     def processPost(self, camera, thumbnail_metadata, tmp_file_p, overwrite=False):
-        createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
-        dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
+        # offset createDate to account for difference between local and remote sites
+        thumbnail_metadata['createDate'] += (camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds())
+
+        camera_createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
+        dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()  # we do not really care about this
 
 
         folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
             'thumbnails',
             dayDate.strftime('%Y%m%d'),
-            createDate.strftime('%d_%H'),
+            camera_createDate.strftime('%d_%H'),
         )
 
 
