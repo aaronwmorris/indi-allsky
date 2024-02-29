@@ -78,6 +78,7 @@ class IndiAllSkyDbCameraTable(db.Model):
 
     data = db.Column(db.JSON, index=True)
 
+    tz = db.Column(db.String(length=64), nullable=True)
     local = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
 

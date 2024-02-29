@@ -659,6 +659,7 @@ class CaptureWorker(Process):
             'latitude'    : self.latitude_v.value,
             'longitude'   : self.longitude_v.value,
             'elevation'   : self.elevation_v.value,
+            'tz'          : str(datetime.now().astimezone().tzinfo),
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
