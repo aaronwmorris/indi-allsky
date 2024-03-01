@@ -895,12 +895,14 @@ class IndiAllSky(object):
         file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list_images)
         file_list_images_nok_nost = filter(lambda p: 'startrail' not in p.name, file_list_images_nok)
         file_list_images_nok_nost_noraw = filter(lambda p: 'raw' not in p.name, file_list_images_nok_nost)
+        file_list_images_nok_nost_noraw_nopan = filter(lambda p: 'panorama' not in p.name, file_list_images_nok_nost_noraw)
+        file_list_images_nok_nost_noraw_nopan_nothumb = filter(lambda p: 'thumbnail' not in p.name, file_list_images_nok_nost_noraw_nopan)
 
         #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
         re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
 
         image_entries = list()
-        for f in file_list_images_nok_nost_noraw:
+        for f in file_list_images_nok_nost_noraw_nopan_nothumb:
             #logger.info('Image: %s', f)
 
             m = re.search(re_image, str(f))
