@@ -40,6 +40,8 @@ from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbStarTrailsVideoTable
+from .flask.models import IndiAllSkyDbPanoramaImageTable
+from .flask.models import IndiAllSkyDbPanoramaVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import or_
@@ -890,6 +892,57 @@ class IndiAllSky(object):
             db.session.rollback()
 
 
+        ### Panorama Videos
+        file_list_panorama_video_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
+        file_list_panorama_video = filter(lambda p: 'panorama' in p.name, file_list_panorama_video_tl)
+
+        #/var/www/html/allsky/images/20210915/allsky-panorama_timelapse_ccd1_20210915_night.mp4
+        re_panorama_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+panorama_timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
+
+        panorama_video_entries = list()
+        for f in file_list_panorama_video:
+            #logger.info('Panorama timelapse: %s', f)
+
+            m = re.search(re_panorama_video, str(f))
+            if not m:
+                logger.error('Regex did not match file: %s', f)
+                continue
+
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+
+            panorama_video_dict = {
+                'filename'   : str(f.relative_to(self.image_dir)),
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'night'      : night,
+                'uploaded'   : False,
+                'camera_id'  : camera_id,
+            }
+
+            panorama_video_entries.append(panorama_video_dict)
+
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbPanoramaVideoTable, panorama_video_entries)
+            db.session.commit()
+
+            logger.warning('*** Panorama timelapses inserted: %d ***', len(panorama_video_entries))
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
+
+
         ### Images
         # Exclude keograms and star trails
         file_list_images_nok = filter(lambda p: 'keogram' not in p.name, file_list_images)
@@ -951,6 +1004,63 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Images inserted: %d ***', len(image_entries))
+        except IntegrityError as e:
+            logger.warning('Integrity error: %s', str(e))
+            db.session.rollback()
+
+
+        ### Panorama images
+        file_list_panorama_images = filter(lambda p: 'panoram' in p.name, file_list_images)
+
+        #/var/www/html/allsky/images/20210825/night/26_02/panorama_ccd1_20210826_020202.jpg
+        re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/panorama_ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
+
+        panorama_image_entries = list()
+        for f in file_list_panorama_images:
+            #logger.info('Image: %s', f)
+
+            m = re.search(re_image, str(f))
+            if not m:
+                logger.error('Regex did not match file: %s', f)
+                continue
+
+            #logger.info('dayDate string: %s', m.group('dayDate_str'))
+            #logger.info('Time of day string: %s', m.group('timeofday_str'))
+            #logger.info('createDate string: %s', m.group('createDate_str'))
+
+            d_dayDate = datetime.strptime(m.group('dayDate_str'), '%Y%m%d').date()
+            #logger.info('dayDate: %s', str(d_dayDate))
+
+            if m.group('timeofday_str') == 'night':
+                night = True
+            else:
+                night = False
+
+            #d_createDate = datetime.strptime(m.group('createDate_str'), '%Y%m%d_%H%M%S')
+            d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
+            #logger.info('createDate: %s', str(d_createDate))
+
+
+            panorama_image_dict = {
+                'filename'   : str(f.relative_to(self.image_dir)),
+                'camera_id'  : camera_id,
+                'createDate' : d_createDate,
+                'dayDate'    : d_dayDate,
+                'exposure'   : 0.0,
+                'gain'       : -1,
+                'binmode'    : 1,
+                'night'      : night,
+                'uploaded'   : False,
+            }
+
+
+            panorama_image_entries.append(panorama_image_dict)
+
+        try:
+            db.session.bulk_insert_mappings(IndiAllSkyDbPanoramaImageTable, panorama_image_entries)
+            db.session.commit()
+
+            logger.warning('*** Panorama images inserted: %d ***', len(panorama_image_entries))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
