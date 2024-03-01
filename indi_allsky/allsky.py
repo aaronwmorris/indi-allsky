@@ -712,7 +712,7 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             video_dict = {
-                'filename'   : str(f),
+                'filename'   : str(f.relative_to(self.image_dir)),
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -768,7 +768,7 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             keogram_dict = {
-                'filename'   : str(f),
+                'filename'   : str(f.relative_to(self.image_dir)),
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -818,7 +818,7 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             startrail_dict = {
-                'filename'   : str(f),
+                'filename'   : str(f.relative_to(self.image_dir)),
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -869,7 +869,7 @@ class IndiAllSky(object):
             d_createDate = datetime.fromtimestamp(f.stat().st_mtime)
 
             startrail_video_dict = {
-                'filename'   : str(f),
+                'filename'   : str(f.relative_to(self.image_dir)),
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -928,7 +928,7 @@ class IndiAllSky(object):
 
 
             image_dict = {
-                'filename'   : str(f),
+                'filename'   : str(f.relative_to(self.image_dir)),
                 'camera_id'  : camera_id,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
