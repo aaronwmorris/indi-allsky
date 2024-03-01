@@ -72,12 +72,9 @@ class StarTrailGenerator(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
-        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')
+        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')    # context manager automatically deletes files when finished
         self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
 
-
-    def __del__(self):
-        self.cleanup()
 
 
     @property

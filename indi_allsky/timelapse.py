@@ -17,12 +17,11 @@ class TimelapseGenerator(object):
     def __init__(self, config):
         self.config = config
 
-        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')
+        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
         self.seqfolder_p = Path(self.seqfolder.name)
 
-
-    def __del__(self):
-        self.cleanup()
+        #seqfolder = tempfile.mkdtemp(suffix='_timelapse')  # testing
+        #self.seqfolder_p = Path(seqfolder)
 
 
     def generate(self, video_file, file_list):
