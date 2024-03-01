@@ -68,6 +68,7 @@ class TimelapseGenerator(object):
         # finally add filename
         cmd.append('{0:s}'.format(str(video_file_p)))
 
+        logger.info('FFmpeg command: %s', ' '.join(cmd))
 
         try:
             ffmpeg_subproc = subprocess.run(
