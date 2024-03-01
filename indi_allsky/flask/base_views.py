@@ -340,9 +340,19 @@ class TemplateView(BaseView):
             'location' : str(self.camera.location),
             'owner' : str(self.camera.owner),
             'lens_name' : str(self.camera.lensName),
-            'alt' : float(self.camera.alt),
-            'az' : float(self.camera.az),
         }
+
+
+        if isinstance(self.camera.alt, type(None)):
+            data['alt'] = 0
+        else:
+            data['alt'] = float(self.camera.alt)
+
+        if isinstance(self.camera.az, type(None)):
+            data['az'] = 0
+        else:
+            data['az'] = float(self.camera.az)
+
 
         return data
 
