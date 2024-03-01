@@ -1148,6 +1148,8 @@ class VideoWorker(Process):
 
 
     def systemHealthCheck(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
         # check filesystems
         logger.info('Performing system health check')
 
@@ -1186,6 +1188,8 @@ class VideoWorker(Process):
                 'Swap memory is >90% full',
                 expire=timedelta(minutes=715),  # should run every ~12 hours
             )
+
+        task.setSuccess('Health check complete')
 
 
     def updateAuroraData(self, task, timespec, img_folder, night, camera):
