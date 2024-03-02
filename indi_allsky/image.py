@@ -638,6 +638,7 @@ class ImageWorker(Process):
             image_metadata = {
                 'type'            : constants.IMAGE,
                 'createDate'      : exp_date.timestamp(),
+                'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : self.gain_v.value,
@@ -674,6 +675,7 @@ class ImageWorker(Process):
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'createDate' : exp_date.timestamp(),
+                'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),
                 'camera_uuid': camera.uuid,
             }
@@ -795,12 +797,12 @@ class ImageWorker(Process):
 
             ### upload thumbnail first
             if image_thumbnail_entry:
+                self._miscUpload.syncapi_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)  # syncapi before s3
                 self._miscUpload.s3_upload_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(image_thumbnail_entry, image_thumbnail_metadata)
 
 
+            self._miscUpload.syncapi_image(image_entry, image_metadata)  # syncapi before s3
             self._miscUpload.s3_upload_image(image_entry, image_metadata)
-            self._miscUpload.syncapi_image(image_entry, image_metadata)
             self._miscUpload.mqtt_publish_image(upload_filename, mq_topic_latest, mqtt_data)
             self._miscUpload.upload_image(image_entry)
 
@@ -851,6 +853,8 @@ class ImageWorker(Process):
             'sqm'                 : i_ref['sqm_value'],
             'stars'               : len(i_ref['stars']),
             'time'                : i_ref['exp_date'].strftime('%s'),
+            'tz'                  : str(i_ref['exp_date'].astimezone().tzinfo),
+            'utc_offset'          : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'sqm_data'            : self.getSqmData(i_ref['camera_id']),
             'stars_data'          : self.getStarsData(i_ref['camera_id']),
             'latitude'            : self.latitude_v.value,
@@ -980,6 +984,7 @@ class ImageWorker(Process):
         fits_metadata = {
             'type'       : constants.FITS_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
@@ -1149,6 +1154,7 @@ class ImageWorker(Process):
         raw_metadata = {
             'type'       : constants.RAW_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
@@ -1449,6 +1455,7 @@ class ImageWorker(Process):
         panorama_metadata = {
             'type'       : constants.PANORAMA_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
@@ -1492,8 +1499,8 @@ class ImageWorker(Process):
         # set mtime to original exposure time
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
+        self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)  # syncapi before s3
         self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
-        self._miscUpload.syncapi_panorama(panorama_entry, panorama_metadata)
         self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
         self._miscUpload.upload_panorama(panorama_entry)
 

@@ -3,6 +3,23 @@
 {% block title %}indi-allsky: Generate Timelapse{% endblock %}
 
 {% block head %}
+<meta charset="UTF-8">
+<style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -56,7 +73,11 @@
         <button class="btn btn-primary">Execute</button>
       </div>
       <div class="col-sm-1">
-        <input class="form-check-input" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y"> Confirm
+        <input class="form-check-input" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
+        <label>Confirm</label>
+      </div>
+      <div class="col-sm-1">
+        <div class="loader" id="loader_generate"></div>
       </div>
     </div>
 </form>
@@ -126,6 +147,7 @@ $('#form_timelapsegen').on('submit', function() {
         return;
     };
 
+
     $("#CONFIRM1").prop('checked', false);
 
 
@@ -140,6 +162,9 @@ $('#form_timelapsegen').on('submit', function() {
     Object.keys(form_timelapsegen_fields).forEach((key) => {
         form_timelapsegen_fields[key].error.css({'display' : 'none'});
     });
+
+
+    $("#loader_generate").css({'display' : 'block'});
 
 
     // Populate fields object
@@ -166,6 +191,8 @@ $('#form_timelapsegen').on('submit', function() {
             setTimeout(function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
             }, 15000);
+
+            $("#loader_generate").css({'display' : 'none'});
         },
         error: function(data){
             var errors = JSON.parse(data.responseText);

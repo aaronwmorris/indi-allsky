@@ -55,30 +55,29 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
-        self.s3_prefix = self.getS3Prefix()
+        self.camera = None  # set in setupSession()
+
+        self.setupSession()
+
+        self.s3_prefix = self.camera.s3_prefix
+        self.web_nonlocal_images = self.camera.web_nonlocal_images
+        self.web_local_images_admin = self.camera.web_local_images_admin
+
+        camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)
 
 
-    def getS3Prefix(self):
-        s3_data = {
-            'host'      : self.indi_allsky_config['S3UPLOAD']['HOST'],
-            'bucket'    : self.indi_allsky_config['S3UPLOAD']['BUCKET'],
-            'region'    : self.indi_allsky_config['S3UPLOAD']['REGION'],
-            'namespace' : self.indi_allsky_config['S3UPLOAD'].get('NAMESPACE', ''),
-        }
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
 
         try:
-            prefix = self.indi_allsky_config['S3UPLOAD']['URL_TEMPLATE'].format(**s3_data)
-        except KeyError as e:
-            app.logger.error('Failure to generate S3 prefix: %s', str(e))
-            return ''
-        except ValueError as e:
-            app.logger.error('Failure to generate S3 prefix: %s', str(e))
-            return ''
+            self.camera = self.getLatestCamera()
+        except NoResultFound:
+            self.camera = FakeCamera()
 
-
-        #app.logger.info('S3 Prefix: %s', prefix)
-
-        return prefix
+        session['camera_id'] = self.camera.id
 
 
     def getLatestCamera(self):
@@ -179,10 +178,6 @@ class TemplateView(BaseView):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
 
-        self.camera = None  # set in setupSession()
-
-        self.setupSession()
-
         self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
@@ -191,19 +186,6 @@ class TemplateView(BaseView):
 
         # night set in get_astrometric_info()
         self.night = True
-
-
-    def setupSession(self):
-        if session.get('camera_id'):
-            self.camera = self.getCameraById(session['camera_id'])
-            return
-
-        try:
-            self.camera = self.getLatestCamera()
-        except NoResultFound:
-            self.camera = FakeCamera()
-
-        session['camera_id'] = self.camera.id
 
 
     def render_template(self, context):
@@ -358,9 +340,19 @@ class TemplateView(BaseView):
             'location' : str(self.camera.location),
             'owner' : str(self.camera.owner),
             'lens_name' : str(self.camera.lensName),
-            'alt' : float(self.camera.alt),
-            'az' : float(self.camera.az),
         }
+
+
+        if isinstance(self.camera.alt, type(None)):
+            data['alt'] = 0
+        else:
+            data['alt'] = float(self.camera.alt)
+
+        if isinstance(self.camera.az, type(None)):
+            data['az'] = 0
+        else:
+            data['az'] = float(self.camera.az)
+
 
         return data
 
@@ -707,5 +699,8 @@ class FakeCamera(object):
     lensName = ''
     name = ''
     friendlyName = ''
+    s3_prefix = ''
+    web_nonlocal_images = False
+    web_local_images_admin = False
     data = {}
 

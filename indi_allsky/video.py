@@ -365,6 +365,7 @@ class VideoWorker(Process):
         video_metadata = {
             'type'          : constants.VIDEO,
             'createDate'    : now.timestamp(),
+            'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'camera_uuid'   : camera.uuid,
@@ -408,8 +409,8 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
+        self._miscUpload.syncapi_video(video_entry, video_metadata)  # syncapi before s3
         self._miscUpload.s3_upload_video(video_entry, video_metadata)
-        self._miscUpload.syncapi_video(video_entry, video_metadata)
         self._miscUpload.upload_video(video_entry)
         self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
@@ -541,6 +542,7 @@ class VideoWorker(Process):
         video_metadata = {
             'type'          : constants.PANORAMA_VIDEO,
             'createDate'    : now.timestamp(),
+            'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'camera_uuid'   : camera.uuid,
@@ -585,8 +587,8 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
+        self._miscUpload.syncapi_panorama_video(video_entry, video_metadata)  # syncapi before S3
         self._miscUpload.s3_upload_panorama_video(video_entry, video_metadata)
-        self._miscUpload.syncapi_panorama_video(video_entry, video_metadata)
         self._miscUpload.upload_panorama_video(video_entry)
         self._miscUpload.youtube_upload_panorama_video(video_entry, video_metadata)
 
@@ -765,6 +767,7 @@ class VideoWorker(Process):
         keogram_metadata = {
             'type'       : constants.KEOGRAM,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -785,6 +788,7 @@ class VideoWorker(Process):
         startrail_metadata = {
             'type'       : constants.STARTRAIL,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -805,6 +809,7 @@ class VideoWorker(Process):
         startrail_video_metadata = {
             'type'       : constants.STARTRAIL_VIDEO,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
@@ -912,6 +917,7 @@ class VideoWorker(Process):
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : now.timestamp(),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
             'camera_uuid': camera.uuid,
         }
@@ -941,6 +947,7 @@ class VideoWorker(Process):
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'createDate' : now.timestamp(),
+                'utc_offset' : now.astimezone().utcoffset().total_seconds(),
                 'night'      : night,
                 'camera_uuid': camera.uuid,
             }
@@ -989,8 +996,8 @@ class VideoWorker(Process):
         if keogram_entry:
             # upload thumbnail first
             if keogram_thumbnail_entry:
+                self._miscUpload.syncapi_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)  # syncapi before S3
                 self._miscUpload.s3_upload_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(keogram_thumbnail_entry, keogram_thumbnail_metadata)
 
 
             if keogram_file.exists():
@@ -1005,13 +1012,13 @@ class VideoWorker(Process):
         if startrail_entry and night:
             # upload thumbnail first
             if startrail_thumbnail_entry:
+                self._miscUpload.syncapi_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)  # syncapi before S3
                 self._miscUpload.s3_upload_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
-                self._miscUpload.syncapi_thumbnail(startrail_thumbnail_entry, startrail_thumbnail_metadata)
 
 
             if startrail_file.exists():
+                self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)  # syncapi before S3
                 self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
-                self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)
                 self._miscUpload.upload_startrail(startrail_entry)
             else:
                 startrail_entry.success = False
@@ -1020,8 +1027,8 @@ class VideoWorker(Process):
 
         if startrail_video_entry and night:
             if startrail_video_file.exists():
+                self._miscUpload.syncapi_startrail_video(startrail_video_entry, startrail_video_metadata)  # syncapi before S3
                 self._miscUpload.s3_upload_startrail_video(startrail_video_entry, startrail_video_metadata)
-                self._miscUpload.syncapi_startrail_video(startrail_video_entry, startrail_video_metadata)
                 self._miscUpload.upload_startrail_video(startrail_video_entry)
                 self._miscUpload.youtube_upload_startrail_video(startrail_video_entry, startrail_video_metadata)
             else:
@@ -1141,6 +1148,8 @@ class VideoWorker(Process):
 
 
     def systemHealthCheck(self, task, timespec, img_folder, night, camera):
+        task.setRunning()
+
         # check filesystems
         logger.info('Performing system health check')
 
@@ -1179,6 +1188,8 @@ class VideoWorker(Process):
                 'Swap memory is >90% full',
                 expire=timedelta(minutes=715),  # should run every ~12 hours
             )
+
+        task.setSuccess('Health check complete')
 
 
     def updateAuroraData(self, task, timespec, img_folder, night, camera):

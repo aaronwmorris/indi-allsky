@@ -192,7 +192,9 @@ function populate_gallery(gallery_data) {
         gallery: '#allsky-gallery',
         children: 'a',
         preloadFirstSlide: false,
+        preload: [1, 1],
         preloaderDelay: 0,
+        loop: false,
         // dynamic import is not supported in UMD version
         pswpModule: PhotoSwipe
     });

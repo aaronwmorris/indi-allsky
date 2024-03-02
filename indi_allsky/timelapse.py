@@ -17,12 +17,11 @@ class TimelapseGenerator(object):
     def __init__(self, config):
         self.config = config
 
-        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')
+        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
         self.seqfolder_p = Path(self.seqfolder.name)
 
-
-    def __del__(self):
-        self.cleanup()
+        #seqfolder = tempfile.mkdtemp(suffix='_timelapse')  # testing
+        #self.seqfolder_p = Path(seqfolder)
 
 
     def generate(self, video_file, file_list):
@@ -68,6 +67,7 @@ class TimelapseGenerator(object):
         # finally add filename
         cmd.append('{0:s}'.format(str(video_file_p)))
 
+        logger.info('FFmpeg command: %s', ' '.join(cmd))
 
         try:
             ffmpeg_subproc = subprocess.run(

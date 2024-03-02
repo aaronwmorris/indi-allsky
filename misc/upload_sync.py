@@ -64,9 +64,11 @@ class UploadSync(object):
     def __init__(self, threads):
         self.threads = int(threads)
 
-        self.batch_size  = self.threads * 7
+        self.batch_size  = self.threads * 11
 
+        self._image_days = 30
         self._upload_images = False
+        self._syncapi = True
         self._syncapi_images = True
 
         with app.app_context():
@@ -101,12 +103,30 @@ class UploadSync(object):
 
 
     @property
+    def image_days(self):
+        return self._image_days
+
+    @image_days.setter
+    def image_days(self, new_image_days):
+        self._image_days = int(new_image_days)
+
+
+    @property
     def upload_images(self):
         return self._upload_images
 
     @upload_images.setter
     def upload_images(self, new_upload_images):
         self._upload_images = bool(new_upload_images)
+
+
+    @property
+    def syncapi(self):
+        return self._syncapi
+
+    @syncapi.setter
+    def syncapi(self, new_syncapi):
+        self._syncapi = bool(new_syncapi)
 
 
     @property
@@ -161,6 +181,11 @@ class UploadSync(object):
                         if upload_type == 'syncapi' and table.__name__ == 'IndiAllSkyDbPanoramaImageTable':
                             if not self.syncapi_images:
                                 continue
+
+                        if upload_type == 'syncapi':  # needs to be last
+                            if not self.syncapi:
+                                continue
+
 
                         upload_list.append({
                             'upload_type' : upload_type,
@@ -222,7 +247,7 @@ class UploadSync(object):
 
 
             if not entry.validateFile():
-                logger.error('%s file missing: %s', x['table'].__name__, entry.filename)
+                logger.error('%s file missing: %s', x['table'].__name__, entry.getFilesystemPath())
                 continue
 
 
@@ -254,6 +279,7 @@ class UploadSync(object):
                     image_metadata = {
                         'type'            : constants.IMAGE,
                         'createDate'      : entry.createDate.timestamp(),
+                        'utc_offset'      : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'exposure'        : entry.exposure,
                         'exp_elapsed'     : entry.exp_elapsed,
                         'gain'            : entry.gain,
@@ -276,6 +302,7 @@ class UploadSync(object):
                         'width'           : entry.width,
                         'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
+                        'remote_url'      : entry.remote_url,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
@@ -289,10 +316,12 @@ class UploadSync(object):
                     video_metadata = {
                         'type'          : constants.VIDEO,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'night'         : entry.night,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -306,10 +335,12 @@ class UploadSync(object):
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -323,10 +354,12 @@ class UploadSync(object):
                     startrail_metadata = {
                         'type'       : constants.STARTRAIL,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -340,10 +373,12 @@ class UploadSync(object):
                     startrail_video_metadata = {
                         'type'       : constants.STARTRAIL_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -357,10 +392,12 @@ class UploadSync(object):
                     fits_metadata = {
                         'type'       : constants.FITS_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -374,10 +411,12 @@ class UploadSync(object):
                     raw_metadata = {
                         'type'       : constants.RAW_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -391,10 +430,12 @@ class UploadSync(object):
                     panorama_metadata = {
                         'type'       : constants.PANORAMA_IMAGE,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -408,10 +449,12 @@ class UploadSync(object):
                     panorama_video_metadata = {
                         'type'       : constants.PANORAMA_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -436,6 +479,7 @@ class UploadSync(object):
                     image_metadata = {
                         'type'            : constants.IMAGE,
                         'createDate'      : entry.createDate.timestamp(),
+                        'utc_offset'      : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'exposure'        : entry.exposure,
                         'exp_elapsed'     : entry.exp_elapsed,
                         'gain'            : entry.gain,
@@ -458,6 +502,8 @@ class UploadSync(object):
                         'width'           : entry.width,
                         'height'          : entry.height,
                         'process_elapsed' : entry.process_elapsed,
+                        's3_key'          : entry.s3_key,
+                        'remote_url'      : entry.remote_url,
                         'camera_uuid'     : entry.camera.uuid,
                     }
 
@@ -471,6 +517,7 @@ class UploadSync(object):
                     panorama_metadata = {
                         'type'          : constants.PANORAMA_IMAGE,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'exposure'      : entry.exposure,
                         'gain'          : entry.gain,
@@ -479,6 +526,8 @@ class UploadSync(object):
                         'exclude'       : entry.exclude,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        's3_key'        : entry.s3_key,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -492,10 +541,13 @@ class UploadSync(object):
                     video_metadata = {
                         'type'          : constants.VIDEO,
                         'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'night'         : entry.night,
                         'width'         : entry.width,
                         'height'        : entry.height,
+                        's3_key'        : entry.s3_key,
+                        'remote_url'    : entry.remote_url,
                         'camera_uuid'   : entry.camera.uuid,
                     }
 
@@ -509,10 +561,13 @@ class UploadSync(object):
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -526,10 +581,13 @@ class UploadSync(object):
                     startrail_metadata = {
                         'type'       : constants.STARTRAIL,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -543,10 +601,13 @@ class UploadSync(object):
                     startrail_video_metadata = {
                         'type'       : constants.STARTRAIL_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -560,10 +621,13 @@ class UploadSync(object):
                     panorama_video_metadata = {
                         'type'       : constants.PANORAMA_VIDEO,
                         'createDate' : entry.createDate.timestamp(),
+                        'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
                         'width'      : entry.width,
                         'height'     : entry.height,
+                        's3_key'     : entry.s3_key,
+                        'remote_url' : entry.remote_url,
                         'camera_uuid': entry.camera.uuid,
                     }
 
@@ -594,11 +658,12 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
+            'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
-            'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
+            'remote_url' : thumbnail_entry.remote_url,
             'camera_uuid': thumbnail_entry.camera.uuid,
         }
 
@@ -624,11 +689,13 @@ class UploadSync(object):
         thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'createDate' : thumbnail_entry.createDate.timestamp(),
-            'dayDate'    : thumbnail_entry.dayDate.strftime('%Y%m%d'),
+            'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
-            'night'      : thumbnail_entry.night,
             'width'      : thumbnail_entry.width,
             'height'     : thumbnail_entry.height,
+            's3_key'     : thumbnail_entry.s3_key,
+            'remote_url' : thumbnail_entry.remote_url,
             'camera_uuid': thumbnail_entry.camera.uuid,
         }
 
@@ -670,51 +737,58 @@ class UploadSync(object):
 
     def _get_entry_status(self):
         status_dict = {
-            'upload'  : dict(),
-            's3'      : dict(),
             'syncapi' : dict(),
+            's3'      : dict(),
+            'upload'  : dict(),
         }
 
-        # upload
-        upload_table_list = [
-            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
-            [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
-            [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
-            [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
-            [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
+
+        # syncapi (before S3)
+        syncapi_table_list = [
+            IndiAllSkyDbVideoTable,
+            IndiAllSkyDbKeogramTable,
+            IndiAllSkyDbStarTrailsTable,
+            IndiAllSkyDbStarTrailsVideoTable,
+            IndiAllSkyDbPanoramaVideoTable,
         ]
-
-        for table in upload_table_list:
-            upload = self.config.get('FILETRANSFER', {}).get(table[1])
-            if upload:
-                uploaded = self._get_uploaded(table[0], 1, state=True)
-                not_uploaded = self._get_uploaded(table[0], 1, state=False)
-                status_dict['upload'][table[0]] = [uploaded, not_uploaded]
+        for table in syncapi_table_list:
+            if self.config.get('SYNCAPI', {}).get('ENABLE'):
+                syncapi_entries = self._get_syncapi(table, 1, state=True)
+                not_syncapi_entries = self._get_syncapi(table, 1, state=False)
+                status_dict['syncapi'][table] = [syncapi_entries, not_syncapi_entries]
             else:
-                logger.info('%s uploading disabled', table[0].__name__)
-                status_dict['upload'][table[0]] = None
+                logger.info('syncapi disabled (%s)', table.__name__)
+                status_dict['syncapi'][table] = None
 
 
-        if self.upload_images:
+        if self.config.get('SYNCAPI', {}).get('ENABLE'):
             # Images
-            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
-            if upload_image:
-                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True)
-                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False)
-                status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
+            syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
+            if syncapi_image:
+                i_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True, upload_days=self.image_days)
+                i_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False, upload_days=self.image_days)
+                status_dict['syncapi'][IndiAllSkyDbImageTable] = [i_syncapi_entries, i_not_syncapi_entries]
             else:
-                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
-                status_dict['upload'][IndiAllSkyDbImageTable] = None
+                logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+                status_dict['syncapi'][IndiAllSkyDbImageTable] = None
 
-            # Panoramas
-            upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
-            if upload_panorama:
-                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True)
-                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False)
-                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
+            # Panorama
+            syncapi_panorama = int(self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'))
+            if syncapi_image:
+                p_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=True, upload_days=self.image_days)
+                p_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=False, upload_days=self.image_days)
+                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = [p_syncapi_entries, p_not_syncapi_entries]
             else:
-                logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
-                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
+                logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
+                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
+
+        else:
+            logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
+            status_dict['syncapi'][IndiAllSkyDbImageTable] = None
+
+            logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
+            status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
+
 
 
         # s3
@@ -758,59 +832,58 @@ class UploadSync(object):
             status_dict['s3'][IndiAllSkyDbRawImageTable] = None
 
 
-        # syncapi
-        syncapi_table_list = [
-            IndiAllSkyDbVideoTable,
-            IndiAllSkyDbKeogramTable,
-            IndiAllSkyDbStarTrailsTable,
-            IndiAllSkyDbStarTrailsVideoTable,
-            IndiAllSkyDbPanoramaVideoTable,
+
+        # upload
+        upload_table_list = [
+            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
+            [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
+            [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
         ]
-        for table in syncapi_table_list:
-            if self.config.get('SYNCAPI', {}).get('ENABLE'):
-                syncapi_entries = self._get_syncapi(table, 1, state=True)
-                not_syncapi_entries = self._get_syncapi(table, 1, state=False)
-                status_dict['syncapi'][table] = [syncapi_entries, not_syncapi_entries]
+
+        for table in upload_table_list:
+            upload = self.config.get('FILETRANSFER', {}).get(table[1])
+            if upload:
+                uploaded = self._get_uploaded(table[0], 1, state=True)
+                not_uploaded = self._get_uploaded(table[0], 1, state=False)
+                status_dict['upload'][table[0]] = [uploaded, not_uploaded]
             else:
-                logger.info('syncapi disabled (%s)', table.__name__)
-                status_dict['syncapi'][table] = None
+                logger.info('%s uploading disabled', table[0].__name__)
+                status_dict['upload'][table[0]] = None
 
 
-        if self.config.get('SYNCAPI', {}).get('ENABLE'):
+        if self.upload_images:
             # Images
-            syncapi_image = int(self.config.get('SYNCAPI', {}).get('UPLOAD_IMAGE'))
-            if syncapi_image:
-                i_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=True)
-                i_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbImageTable, syncapi_image, state=False)
-                status_dict['syncapi'][IndiAllSkyDbImageTable] = [i_syncapi_entries, i_not_syncapi_entries]
+            upload_image = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'))
+            if upload_image:
+                i_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=True, upload_days=self.image_days)
+                i_not_uploaded = self._get_uploaded(IndiAllSkyDbImageTable, upload_image, state=False, upload_days=self.image_days)
+                status_dict['upload'][IndiAllSkyDbImageTable] = [i_uploaded, i_not_uploaded]
             else:
-                logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
-                status_dict['syncapi'][IndiAllSkyDbImageTable] = None
+                logger.info('%s uploading disabled', IndiAllSkyDbImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbImageTable] = None
 
-            # Panorama
-            syncapi_panorama = int(self.config.get('SYNCAPI', {}).get('UPLOAD_PANORAMA'))
-            if syncapi_image:
-                p_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=True)
-                p_not_syncapi_entries = self._get_syncapi(IndiAllSkyDbPanoramaImageTable, syncapi_panorama, state=False)
-                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = [p_syncapi_entries, p_not_syncapi_entries]
+            # Panoramas
+            upload_panorama = int(self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA'))
+            if upload_panorama:
+                p_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=True, upload_days=self.image_days)
+                p_not_uploaded = self._get_uploaded(IndiAllSkyDbPanoramaImageTable, upload_panorama, state=False, upload_days=self.image_days)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = [p_uploaded, p_not_uploaded]
             else:
-                logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
-                status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
+                logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
+                status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
 
-        else:
-            logger.info('syncapi disabled (%s)', IndiAllSkyDbImageTable.__name__)
-            status_dict['syncapi'][IndiAllSkyDbImageTable] = None
-
-            logger.info('syncapi disabled (%s)', IndiAllSkyDbPanoramaImageTable.__name__)
-            status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
 
 
         return status_dict
 
 
-    def _get_uploaded(self, table, mod, state=True):
+    def _get_uploaded(self, table, mod, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             uploaded = table.query\
@@ -819,6 +892,7 @@ class UploadSync(object):
                 .filter(table.uploaded == sa_true())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             uploaded = table.query\
@@ -827,14 +901,17 @@ class UploadSync(object):
                 .filter(table.uploaded == sa_false())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return uploaded
 
 
-    def _get_s3(self, table, state=True):
+    def _get_s3(self, table, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             s3 = table.query\
@@ -842,6 +919,7 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key != sa_null())\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             s3 = table.query\
@@ -849,14 +927,17 @@ class UploadSync(object):
                 .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
                 .filter(table.s3_key == sa_null())\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return s3
 
 
-    def _get_syncapi(self, table, mod, state=True):
+    def _get_syncapi(self, table, mod, state=True, upload_days=99999):
         now = datetime.now()
         now_minus_10m = now - timedelta(minutes=10)
+
+        now_minus_upload_days = now - timedelta(days=upload_days)
 
         if state:
             syncapi = table.query\
@@ -865,6 +946,7 @@ class UploadSync(object):
                 .filter(table.sync_id != sa_null())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
         else:
             syncapi = table.query\
@@ -873,6 +955,7 @@ class UploadSync(object):
                 .filter(table.sync_id == sa_null())\
                 .filter(table.id % mod == 0)\
                 .filter(table.createDate <= now_minus_10m)\
+                .filter(table.createDate >= now_minus_upload_days)\
                 .order_by(table.createDate.desc())
 
         return syncapi
@@ -925,7 +1008,8 @@ class UploadSync(object):
             active_worker_list.append(upload_worker_dict)
 
             # need to put the stops in the queue before waiting on workers to join
-            self.upload_q.put({'stop' : True})
+            #self.upload_q.put({'stop' : True})
+            upload_worker_dict['worker'].stop()
 
 
         for upload_worker_dict in active_worker_list:
@@ -965,7 +1049,13 @@ if __name__ == "__main__":
         type=int,
         default=1
     )
-
+    argparser.add_argument(
+        '--days',
+        '-d',
+        help='Number of days to upload/sync (images only)',
+        type=int,
+        default=30
+    )
     argparser.add_argument(
         '--no-upload-images',
         help='disable image uploading (default)',
@@ -979,6 +1069,20 @@ if __name__ == "__main__":
         action='store_true',
     )
     argparser.set_defaults(upload_images=False)
+
+    argparser.add_argument(
+        '--no-syncapi',
+        help='disable syncapi (all types)',
+        dest='syncapi',
+        action='store_false',
+    )
+    argparser.add_argument(
+        '--syncapi',
+        help='enable syncapi (all types) (default)',
+        dest='syncapi',
+        action='store_true',
+    )
+    argparser.set_defaults(syncapi_images=True)
 
     argparser.add_argument(
         '--no-syncapi-images',
@@ -998,7 +1102,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     us = UploadSync(args.threads)
+    us.image_days = args.days
     us.upload_images = args.upload_images
+    us.syncapi = args.syncapi
     us.syncapi_images = args.syncapi_images
 
     action_func = getattr(us, args.action)

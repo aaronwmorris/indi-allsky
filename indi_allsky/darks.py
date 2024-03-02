@@ -829,7 +829,7 @@ class IndiAllSkyDarks(object):
     def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
         exposure_f = float(exposure)
 
-        tmp_fit_dir = tempfile.TemporaryDirectory()
+        tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
         tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
         logger.info('Temp folder: %s', tmp_fit_dir_p)

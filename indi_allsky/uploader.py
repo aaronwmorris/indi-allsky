@@ -8,6 +8,7 @@ import logging
 #from multiprocessing import Process
 from threading import Thread
 import queue
+import threading
 
 from . import constants
 
@@ -50,7 +51,8 @@ class FileUploader(Thread):
         self.upload_q = upload_q
 
 
-        self._shutdown = False
+        self._stopper = threading.Event()
+        #self._shutdown = False
 
 
         if self.config.get('IMAGE_FOLDER'):
@@ -85,6 +87,13 @@ class FileUploader(Thread):
     #    raise TimeOutException()
 
 
+    def stop(self):
+        self._stopper.set()
+
+
+    def stopped(self):
+        return self._stopper.isSet()
+
 
     def run(self):
         # setup signal handling after detaching from the main process
@@ -107,19 +116,22 @@ class FileUploader(Thread):
         #raise Exception('Test exception handling in worker')
 
         while True:
+            if self.stopped():
+                logger.warning('Goodbye')
+                return
+
             try:
-                u_dict = self.upload_q.get(timeout=31)  # prime number
+                u_dict = self.upload_q.get(timeout=11)  # prime number
             except queue.Empty:
                 continue
 
+            #if u_dict.get('stop'):
+            #    logger.warning('Goodbye')
+            #    return
 
-            if u_dict.get('stop'):
-                logger.warning('Goodbye')
-                return
-
-            if self._shutdown:
-                logger.warning('Goodbye')
-                return
+            #if self._shutdown:
+            #    logger.warning('Goodbye')
+            #    return
 
 
             # new context for every task, reduces the effects of caching

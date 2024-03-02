@@ -33,3 +33,5 @@ passlib[argon2] >= 1.7.4
 prettytable
 astroalign
 requests[security]
+lxml
+shapely
