@@ -702,5 +702,6 @@ class FakeCamera(object):
     s3_prefix = ''
     web_nonlocal_images = False
     web_local_images_admin = False
+    utc_offset = 0
     data = {}
 
