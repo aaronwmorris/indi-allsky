@@ -3,6 +3,7 @@
 import sys
 import time
 from pathlib import Path
+import signal
 import logging
 
 #from sqlalchemy.sql.expression import true as sa_true
@@ -49,8 +50,14 @@ class CreateThumbnails(object):
 
         self.config = self._config_obj.config
 
-
         self._miscDb = miscDb(self.config)
+
+        self._shutdown = False
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+        self._shutdown = True
 
 
     def main(self):
@@ -79,6 +86,9 @@ class CreateThumbnails(object):
         time.sleep(10.0)
 
 
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
         for keogram_entry in keograms_nothumbnail:
             logger.info('Creating keogram thumbnail for %d', keogram_entry.id)
 
@@ -97,6 +107,9 @@ class CreateThumbnails(object):
                 new_width=self.thumbnail_keogram_width,
             )
 
+
+            if self._shutdown:
+                sys.exit(1)
 
         for startrail_entry in startrails_nothumbnail:
             logger.info('Creating startrail thumbnail for %d', startrail_entry.id)
@@ -117,6 +130,9 @@ class CreateThumbnails(object):
             )
 
 
+            if self._shutdown:
+                sys.exit(1)
+
         for image_entry in images_nothumbnail:
             logger.info('Creating image thumbnail for %d', image_entry.id)
 
@@ -133,6 +149,10 @@ class CreateThumbnails(object):
                 image_entry.camera_id,
                 image_thumbnail_metadata,
             )
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
 
