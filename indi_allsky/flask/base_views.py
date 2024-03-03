@@ -59,6 +59,8 @@ class BaseView(View):
 
         self.setupSession()
 
+        self.daytime_timelapse = self.camera.daytime_timelapse
+
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
         self.web_local_images_admin = self.camera.web_local_images_admin
@@ -66,7 +68,7 @@ class BaseView(View):
         if self.camera.data:
             self.camera_data = dict(self.camera.data)
         else:
-            self.camera_data = {}
+            self.camera_data = dict()
 
         camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
         self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)

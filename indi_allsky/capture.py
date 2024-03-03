@@ -674,6 +674,8 @@ class CaptureWorker(Process):
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
 
+            'daytime_timelapse'     : self.config.get('DAYTIME_TIMELAPSE', True),
+
             's3_prefix'             : s3_prefix,
             'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),
             'web_local_images_admin': self.config.get('WEB_LOCAL_IMAGES_ADMIN', False),
@@ -681,17 +683,6 @@ class CaptureWorker(Process):
 
 
         camera = self._miscDb.addCamera(camera_metadata)
-
-        if camera.data:
-            camera_data = dict(camera.data)
-        else:
-            camera_data = dict()
-
-
-        camera_data['DAYTIME_TIMELAPSE'] = self.config.get('DAYTIME_TIMELAPSE', True)
-        camera.data = camera_data
-        db.session.commit()
-
 
         self.camera_id = camera.id
         self.indiclient.camera_id = camera.id
