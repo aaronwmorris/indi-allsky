@@ -59,6 +59,9 @@ class BaseView(View):
 
         self.setupSession()
 
+        self.local_indi_allsky = self.camera.local
+        self.getSunSetDate()
+
         self.daytime_capture = self.camera.daytime_capture
         self.daytime_timelapse = self.camera.daytime_timelapse
 
@@ -181,12 +184,35 @@ class BaseView(View):
         return False
 
 
+    def getSunSetDate(self):
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.camera.longitude)
+        obs.lat = math.radians(self.camera.latitude)
+        obs.elevation = self.camera.elevation
+
+        sun = ephem.Sun()
+
+        obs.date = utcnow
+
+        obs.horizon = math.radians(self.camera.nightSunAlt)
+        sun.compute(obs)
+
+        try:
+            self.sun_set_date = obs.next_setting(sun, use_center=True).datetime()
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            self.sun_set_date = None
+        except ephem.NeverUpError:
+            # southern hemisphere
+            self.sun_set_date = None
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
-
-        self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
@@ -695,7 +721,7 @@ class FakeCamera(object):
     latitude = 0.0
     longitude = 0.0
     elevation = 0
-    nightSunAlt = 0.0
+    nightSunAlt = -6.0
     alt = 0.0
     az = 0.0
     owner = ''
