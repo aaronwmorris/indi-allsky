@@ -731,6 +731,8 @@ class FakeCamera(object):
     name = ''
     friendlyName = ''
     s3_prefix = ''
+    daytime_capture = True
+    daytime_timelapse = True
     web_nonlocal_images = False
     web_local_images_admin = False
     utc_offset = 0
