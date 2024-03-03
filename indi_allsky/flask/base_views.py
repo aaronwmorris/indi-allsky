@@ -201,6 +201,7 @@ class BaseView(View):
 
         try:
             self.sun_set_date = obs.next_setting(sun, use_center=True).datetime()
+            #app.logger.info('Sun set date: %s', self.sun_set_date)
         except ephem.AlwaysUpError:
             # northern hemisphere
             self.sun_set_date = None
