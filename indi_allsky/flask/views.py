@@ -188,10 +188,32 @@ class JsonLatestImageView(JsonView):
 
 
         if not night:
-            if not self.indi_allsky_config['DAYTIME_CAPTURE']:
-                data['latest_image']['message'] = 'Daytime capture disabled'
-            elif self.indi_allsky_config['DAYTIME_CAPTURE'] and not self.indi_allsky_config['DAYTIME_TIMELAPSE']:
-                data['latest_image']['message'] = 'Daytime timelapse disabled'
+            if not self.local_indi_allsky and not self.daytime_timelapse:
+                # remote cameras will not receive daytime images when timelapse is disabled
+                if self.sun_set_date:
+                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+                    delta_sun_set = self.sun_set_date - utcnow
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                else:
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Sun never sets.'
+
+                return data
+            elif not self.daytime_capture:
+                if self.sun_set_date:
+                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+                    delta_sun_set = self.sun_set_date - utcnow
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                else:
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Sun never sets.'
+
+            elif self.daytime_capture and not self.daytime_timelapse:
+                if self.sun_set_date:
+                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+                    delta_sun_set = self.sun_set_date - utcnow
+                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                else:
+                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br>Sun never sets.'
+
 
                 if self.web_nonlocal_images:
                     if not self.verify_admin_network():

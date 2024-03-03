@@ -59,9 +59,20 @@ class BaseView(View):
 
         self.setupSession()
 
+        self.local_indi_allsky = self.camera.local
+        self.getSunSetDate()
+
+        self.daytime_capture = self.camera.daytime_capture
+        self.daytime_timelapse = self.camera.daytime_timelapse
+
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
         self.web_local_images_admin = self.camera.web_local_images_admin
+
+        if self.camera.data:
+            self.camera_data = dict(self.camera.data)
+        else:
+            self.camera_data = dict()
 
         camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
         self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)
@@ -173,12 +184,36 @@ class BaseView(View):
         return False
 
 
+    def getSunSetDate(self):
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.camera.longitude)
+        obs.lat = math.radians(self.camera.latitude)
+        obs.elevation = self.camera.elevation
+
+        sun = ephem.Sun()
+
+        obs.date = utcnow
+
+        obs.horizon = math.radians(self.camera.nightSunAlt)
+        sun.compute(obs)
+
+        try:
+            self.sun_set_date = obs.next_setting(sun, use_center=True).datetime()
+            #app.logger.info('Sun set date: %s', self.sun_set_date)
+        except ephem.AlwaysUpError:
+            # northern hemisphere
+            self.sun_set_date = None
+        except ephem.NeverUpError:
+            # southern hemisphere
+            self.sun_set_date = None
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
-
-        self.local_indi_allsky = self.camera.local
 
         self.check_config(self._indi_allsky_config_obj.config_id)
 
@@ -324,7 +359,7 @@ class TemplateView(BaseView):
             )
 
 
-        if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
+        if not night and not self.daytime_capture:
             data['status'] = '<span class="text-muted">SLEEPING</span>'
             return data
 
@@ -427,7 +462,7 @@ class TemplateView(BaseView):
 
 
         # day/night
-        if sun_alt > self.indi_allsky_config['NIGHT_SUN_ALT_DEG']:
+        if sun_alt > self.camera.nightSunAlt:
             data['mode'] = 'Day'
             self.night = False
         else:
@@ -486,9 +521,7 @@ class TemplateView(BaseView):
 
 
     def get_aurora_info(self):
-        camera_data = self.camera.data
-
-        if not camera_data:
+        if not self.camera_data:
             data = {
                 'kpindex' : 0.0,
                 'kpindex_status' : 'No data',
@@ -500,15 +533,15 @@ class TemplateView(BaseView):
             return data
 
 
-        kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
-        kpindex_coef = float(camera_data.get('KPINDEX_COEF'))
-        ovation_max = int(camera_data.get('OVATION_MAX'))
+        kpindex_current = float(self.camera_data.get('KPINDEX_CURRENT', 0))
+        kpindex_coef = float(self.camera_data.get('KPINDEX_COEF', 0))
+        ovation_max = int(self.camera_data.get('OVATION_MAX', 0))
 
 
         now = datetime.now()
         now_minus_6h = now - timedelta(hours=6)
 
-        data_timestamp = int(camera_data.get('AURORA_DATA_TS', 0))
+        data_timestamp = int(self.camera_data.get('AURORA_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
                 data = {
@@ -563,28 +596,26 @@ class TemplateView(BaseView):
 
 
     def get_smoke_info(self):
-        camera_data = self.camera.data
-
         data = {
             'smoke_rating' : '',
             'smoke_rating_status' : '',
         }
 
 
-        if not camera_data:
+        if not self.camera_data:
             data['smoke_rating'] = 'No data'
             return data
 
 
         #app.logger.info('Smoke data: %s', camera_data)
 
-        data['smoke_rating'] = constants.SMOKE_RATING_MAP_STR[camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
+        data['smoke_rating'] = constants.SMOKE_RATING_MAP_STR[self.camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
 
 
         now = datetime.now()
         now_minus_24h = now - timedelta(hours=24)
 
-        data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
+        data_timestamp = int(self.camera_data.get('SMOKE_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_24h.timestamp():
                 data['smoke_rating_status'] = '[old]'
@@ -691,7 +722,7 @@ class FakeCamera(object):
     latitude = 0.0
     longitude = 0.0
     elevation = 0
-    nightSunAlt = 0.0
+    nightSunAlt = -6.0
     alt = 0.0
     az = 0.0
     owner = ''

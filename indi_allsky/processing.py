@@ -535,8 +535,8 @@ class ImageProcessor(object):
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            image_data['kpindex'] = float(camera_data.get('KPINDEX_CURRENT'))
-            image_data['ovation_max'] = int(camera_data.get('OVATION_MAX'))
+            image_data['kpindex'] = float(camera_data.get('KPINDEX_CURRENT', 0))
+            image_data['ovation_max'] = int(camera_data.get('OVATION_MAX', 0))
 
             try:
                 image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
