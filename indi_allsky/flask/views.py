@@ -192,9 +192,9 @@ class JsonLatestImageView(JsonView):
                 # remote cameras will not receive daytime images when timelapse is disabled
                 data['latest_image']['message'] = 'Daytime capture disabled'
                 return data
-            elif not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
+            elif not self.daytime_capture:
                 data['latest_image']['message'] = 'Daytime capture disabled'
-            elif self.indi_allsky_config.get('DAYTIME_CAPTURE', True) and not self.daytime_timelapse:
+            elif self.daytime_capture and not self.daytime_timelapse:
                 data['latest_image']['message'] = 'Daytime timelapse disabled'
 
                 if self.web_nonlocal_images:

@@ -59,6 +59,7 @@ class BaseView(View):
 
         self.setupSession()
 
+        self.daytime_capture = self.camera.daytime_capture
         self.daytime_timelapse = self.camera.daytime_timelapse
 
         self.s3_prefix = self.camera.s3_prefix
@@ -331,7 +332,7 @@ class TemplateView(BaseView):
             )
 
 
-        if not night and not self.indi_allsky_config.get('DAYTIME_CAPTURE', True):
+        if not night and not self.daytime_capture:
             data['status'] = '<span class="text-muted">SLEEPING</span>'
             return data
 

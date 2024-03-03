@@ -674,6 +674,7 @@ class CaptureWorker(Process):
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
 
+            'daytime_capture'       : self.config.get('DAYTIME_CAPTURE', True),
             'daytime_timelapse'     : self.config.get('DAYTIME_TIMELAPSE', True),
 
             's3_prefix'             : s3_prefix,
