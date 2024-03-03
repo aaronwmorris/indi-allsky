@@ -681,8 +681,19 @@ class CaptureWorker(Process):
 
 
         camera = self._miscDb.addCamera(camera_metadata)
-        self.camera_id = camera.id
 
+        if camera.data:
+            camera_data = dict(camera.data)
+        else:
+            camera_data = dict()
+
+
+        camera_data['DAYTIME_TIMELAPSE'] = self.config.get('DAYTIME_TIMELAPSE', True)
+        camera.data = camera_data
+        db.session.commit()
+
+
+        self.camera_id = camera.id
         self.indiclient.camera_id = camera.id
 
         self._miscDb.setState('DB_CAMERA_ID', camera.id)

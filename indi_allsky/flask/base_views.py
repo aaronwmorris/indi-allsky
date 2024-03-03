@@ -63,6 +63,11 @@ class BaseView(View):
         self.web_nonlocal_images = self.camera.web_nonlocal_images
         self.web_local_images_admin = self.camera.web_local_images_admin
 
+        if self.camera.data:
+            self.camera_data = dict(self.camera.data)
+        else:
+            self.camera_data = {}
+
         camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
         self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)
 
@@ -486,9 +491,7 @@ class TemplateView(BaseView):
 
 
     def get_aurora_info(self):
-        camera_data = self.camera.data
-
-        if not camera_data:
+        if not self.camera_data:
             data = {
                 'kpindex' : 0.0,
                 'kpindex_status' : 'No data',
@@ -500,15 +503,15 @@ class TemplateView(BaseView):
             return data
 
 
-        kpindex_current = float(camera_data.get('KPINDEX_CURRENT'))
-        kpindex_coef = float(camera_data.get('KPINDEX_COEF'))
-        ovation_max = int(camera_data.get('OVATION_MAX'))
+        kpindex_current = float(self.camera_data.get('KPINDEX_CURRENT', 0))
+        kpindex_coef = float(self.camera_data.get('KPINDEX_COEF', 0))
+        ovation_max = int(self.camera_data.get('OVATION_MAX', 0))
 
 
         now = datetime.now()
         now_minus_6h = now - timedelta(hours=6)
 
-        data_timestamp = int(camera_data.get('AURORA_DATA_TS', 0))
+        data_timestamp = int(self.camera_data.get('AURORA_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
                 data = {
@@ -563,28 +566,26 @@ class TemplateView(BaseView):
 
 
     def get_smoke_info(self):
-        camera_data = self.camera.data
-
         data = {
             'smoke_rating' : '',
             'smoke_rating_status' : '',
         }
 
 
-        if not camera_data:
+        if not self.camera_data:
             data['smoke_rating'] = 'No data'
             return data
 
 
         #app.logger.info('Smoke data: %s', camera_data)
 
-        data['smoke_rating'] = constants.SMOKE_RATING_MAP_STR[camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
+        data['smoke_rating'] = constants.SMOKE_RATING_MAP_STR[self.camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA)]
 
 
         now = datetime.now()
         now_minus_24h = now - timedelta(hours=24)
 
-        data_timestamp = int(camera_data.get('SMOKE_DATA_TS', 0))
+        data_timestamp = int(self.camera_data.get('SMOKE_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_24h.timestamp():
                 data['smoke_rating_status'] = '[old]'
