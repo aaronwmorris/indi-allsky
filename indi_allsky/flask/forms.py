@@ -4285,56 +4285,71 @@ class IndiAllskyImageProcessingForm(FlaskForm):
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
-    SENSOR_SELECT_choices = (
-        ('imx477', 'IMX477 - HQ Camera'),
-        ('imx378', 'IMX378'),
-        ('imx178', 'IMX178'),
-        ('imx678', 'IMX678'),
-        ('asi120', 'ASI120'),
-        ('sc2210', 'SC2210 - ASI220'),
-        ('imx224', 'IMX224'),
-        ('imx708', 'IMX708 - Camera Module 3'),
-        ('imx462', 'IMX462'),
-        ('imx290', 'IMX290'),
-        ('imx519', 'IMX519'),
-        ('imx219', 'IMX219 - Camera Module 2'),
-        ('ov5647', 'OV5647 - Camera Module 1'),
-        ('imx296gs', 'IMX296 - Global Shutter'),
-        ('imx385', 'IMX385'),
-        ('qhy5lii', 'QHY5LII'),
-        ('imx662', 'IMX662'),
-        ('imx715', 'IMX715'),
-        ('imx174', 'IMX174'),
-        ('imx230', 'IMX230'),
-        ('ar0234', 'AR0234 - Global Shutter'),
-        ('imx429', 'IMX429 - POA Apollo-M MINI'),
-        ('imx432', 'IMX432'),
-        ('imx482', 'IMX482'),
-        ('imx485', 'IMX485'),
-        ('imx585', 'IMX585'),
-        ('imx664', 'IMX664 - POA Neptune 664C'),
-        ('imx464', 'IMX464 - POA Neptune-C II'),
-        ('imx287', 'IMX287'),
-        ('imx307', 'IMX307 - SV105C'),
-        ('imx415', 'IMX415 - SV205C'),
-        ('imx249', 'IMX249 - POA Xena-M'),
-        ('imx183', 'IMX183'),
-        ('imx533', 'IMX533'),
-        ('imx294', 'IMX294'),
-        ('imx571', 'IMX571 - ASI2600'),
-        ('imx455', 'IMX455 - ASI6200'),
-    )
+    SENSOR_SELECT_choices = {
+        'Small' : (
+            ('imx219', 'IMX219 - 1/4" - Camera Module 2'),
+            ('imx415', 'IMX415 - 1/2.8" - SV205C'),
+            ('ov5647', 'OV5647 - 1/4" - Camera Module 1'),
+        ),
+        'Medium - 6mm Class' : (
+            ('asi120', 'ASI120 - 1/3" - AR0130CS'),
+            ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
+            ('imx224', 'IMX224 - 1/3"'),
+            ('imx287', 'IMX287 - 1/2.9"'),
+            ('imx290', 'IMX290 - 1/2.8"'),
+            ('imx296gs', 'IMX296 - 1/2.9" - Global Shutter'),
+            ('imx307', 'IMX307 - 1/2.8" - SV105C'),
+            ('imx462', 'IMX462 - 1/2.8"'),
+            ('imx662', 'IMX662 - 1/2.8"'),
+            ('imx715', 'IMX715 - 1/2.8"'),
+            ('qhy5lii', 'QHY5LII - 1/3" - MT9M034'),
+        ),
+        'Medium - 7mm Class' : (
+            ('imx378', 'IMX378 - 1/2.3"'),
+            ('imx519', 'IMX519 - 1/2.53"'),
+            ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
+            ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
+        ),
+        'Medium - 8mm Class' : (
+            ('imx385', 'IMX385 - 1/1.9"'),
+            ('imx678', 'IMX678 - 1/1.8"'),
+            ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
+        ),
+        'Medium - 9mm Class' : (
+            ('imx178', 'IMX178 - 1/1.8"'),
+            ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
+            ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
+        ),
+        'Large' : (
+            ('imx174', 'IMX174 - 1/1.2"'),
+            ('imx183', 'IMX183 - 1"'),
+            ('imx230', 'IMX230 - 1/2.4"'),
+            ('imx249', 'IMX249 - 1/1.2" - POA Xena-M'),
+            ('imx429', 'IMX429 - 2/3" - POA Apollo-M MINI'),
+            ('imx432', 'IMX432 - 1.1"'),
+            ('imx482', 'IMX482 - 1/1.2"'),
+            ('imx485', 'IMX485 - 1/1.2"'),
+            ('imx533', 'IMX533 - 1"'),
+            ('imx585', 'IMX585 - 1/1.2"'),
+        ),
+        'Extra Large' : (
+            ('imx294', 'IMX294 - 4/3"'),
+            ('imx455', 'IMX455 - Full Frame - ASI6200'),
+            ('imx571', 'IMX571 - APS-C - ASI2600'),
+        ),
+    }
 
     LENS_SELECT_choices = (
-        ('zwo_f2.0_2.1mm', 'ZWO 2.1mm f/2.0 - 150°'),
-        ('zwo_f1.2_2.5mm', 'ZWO 2.5mm f/1.2 - 170°'),
-        ('arecont_f2.0_1.55mm', 'Arecont 1.55mm f/2.0 - 180°'),
-        ('stardot_f1.5_1.55mm', 'Stardot 1.55mm f/1.5 - 180°'),
-        ('m12_f2.0_1.7mm', 'Camera Module M12 1.7mm f2.0 - 180°'),
-        ('meike_f2.8_3.5mm', 'Meike 3.5mm F2.8 Fisheye - 220°'),
+        ('zwo_f2.0_2.1mm', 'ZWO 2.1mm f/2.0 - 150° - ∅6.7mm'),
+        ('zwo_f1.2_2.5mm', 'ZWO 2.5mm f/1.2 - 170° - ∅6.7mm'),
+        ('arecont_f2.0_1.55mm', 'Arecont 1.55mm f/2.0 - 180° - ∅4.8mm'),
+        ('stardot_f1.5_1.55mm', 'Stardot 1.55mm f/1.5 - 180° - ∅4.8mm'),
+        ('m12_f2.0_1.7mm', 'Camera Module M12 1.7mm f2.0 - 180° - ∅5.6mm'),
+        ('m12_f2.0_1.8mm', 'Camera Module M12 1.8mm f2.0 - 180° - ∅6.9mm'),
+        ('meike_f2.8_3.5mm', 'Meike 3.5mm F2.8 Fisheye - 220° - ∅12.5mm'),
     )
 
-    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
+    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices, default='imx477')
     LENS_SELECT       = SelectField('Lens', choices=LENS_SELECT_choices)
     OFFSET_X          = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
     OFFSET_Y          = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
