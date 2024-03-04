@@ -4287,36 +4287,38 @@ class IndiAllskyImageProcessingForm(FlaskForm):
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (
-            ('asi120', 'ASI120 - 1/3" - AR0130CS'),
             ('imx219', 'IMX219 - 1/4" - Camera Module 2'),
-            ('imx224', 'IMX224 - 1/3"'),
-            ('imx287', 'IMX287 - 1/2.9"'),
-            ('imx296gs', 'IMX296 - 1/2.9" - Global Shutter'),
-            ('qhy5lii', 'QHY5LII - 1/3" - MT9M034'),
+            ('imx415', 'IMX415 - 1/2.8" - SV205C'),
             ('ov5647', 'OV5647 - 1/4" - Camera Module 1'),
         ),
-        'Medium' : (
+        'Medium - 6mm Class' : (
+            ('asi120', 'ASI120 - 1/3" - AR0130CS'),
             ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
+            ('imx224', 'IMX224 - 1/3"'),
+            ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
+            ('imx296gs', 'IMX296 - 1/2.9" - Global Shutter'),
             ('imx307', 'IMX307 - 1/2.8" - SV105C'),
-            ('imx385', 'IMX385 - 1/1.9"'),
             ('imx462', 'IMX462 - 1/2.8"'),
             ('imx662', 'IMX662 - 1/2.8"'),
+            ('imx715', 'IMX715 - 1/2.8"'),
+            ('qhy5lii', 'QHY5LII - 1/3" - MT9M034'),
+        ),
+        'Medium - 7mm Class' : (
+            ('imx378', 'IMX378 - 1/2.3"'),
+            ('imx519', 'IMX519 - 1/2.53"'),
+            ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
+            ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
+        ),
+        'Medium - 8mm Class' : (
+            ('imx385', 'IMX385 - 1/1.9"'),
+            ('imx678', 'IMX678 - 1/1.8"'),
             ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
-        'Medium - 2K Class' : (
-            ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
-            ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
-        ),
-        'Medium - 4K Class' : (
+        'Medium - 9mm Class' : (
             ('imx178', 'IMX178 - 1/1.8"'),
-            ('imx378', 'IMX378 - 1/2.3"'),
-            ('imx415', 'IMX415 - 1/2.8" - SV205C'),
-            ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
-            ('imx519', 'IMX519 - 1/2.53"'),
-            ('imx678', 'IMX678 - 1/1.8"'),
-            ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
-            ('imx715', 'IMX715 - 1/2.8"'),
+            ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
+            ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
         ),
         'Large' : (
             ('imx174', 'IMX174 - 1/1.2"'),
