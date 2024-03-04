@@ -4285,45 +4285,55 @@ class IndiAllskyImageProcessingForm(FlaskForm):
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
-    SENSOR_SELECT_choices = (
-        ('imx477', 'IMX477 - HQ Camera'),
-        ('imx378', 'IMX378'),
-        ('imx178', 'IMX178'),
-        ('imx678', 'IMX678'),
-        ('asi120', 'ASI120'),
-        ('sc2210', 'SC2210 - ASI220'),
-        ('imx224', 'IMX224'),
-        ('imx708', 'IMX708 - Camera Module 3'),
-        ('imx462', 'IMX462'),
-        ('imx290', 'IMX290'),
-        ('imx519', 'IMX519'),
-        ('imx219', 'IMX219 - Camera Module 2'),
-        ('ov5647', 'OV5647 - Camera Module 1'),
-        ('imx296gs', 'IMX296 - Global Shutter'),
-        ('imx385', 'IMX385'),
-        ('qhy5lii', 'QHY5LII'),
-        ('imx662', 'IMX662'),
-        ('imx715', 'IMX715'),
-        ('imx174', 'IMX174'),
-        ('imx230', 'IMX230'),
-        ('ar0234', 'AR0234 - Global Shutter'),
-        ('imx429', 'IMX429 - POA Apollo-M MINI'),
-        ('imx432', 'IMX432'),
-        ('imx482', 'IMX482'),
-        ('imx485', 'IMX485'),
-        ('imx585', 'IMX585'),
-        ('imx664', 'IMX664 - POA Neptune 664C'),
-        ('imx464', 'IMX464 - POA Neptune-C II'),
-        ('imx287', 'IMX287'),
-        ('imx307', 'IMX307 - SV105C'),
-        ('imx415', 'IMX415 - SV205C'),
-        ('imx249', 'IMX249 - POA Xena-M'),
-        ('imx183', 'IMX183'),
-        ('imx533', 'IMX533'),
-        ('imx294', 'IMX294'),
-        ('imx571', 'IMX571 - ASI2600'),
-        ('imx455', 'IMX455 - ASI6200'),
-    )
+    SENSOR_SELECT_choices = {
+        'Small' : (
+            ('asi120', 'ASI120 - AR0130CS'),
+            ('imx224', 'IMX224'),
+            ('imx287', 'IMX287'),
+            ('imx296gs', 'IMX296 - Global Shutter'),
+            ('imx432', 'IMX432'),
+            ('qhy5lii', 'QHY5LII'),
+        ),
+        'Full HD' : (
+            ('ar0234', 'AR0234 - Global Shutter'),
+            ('imx174', 'IMX174'),
+            ('imx249', 'IMX249 - POA Xena-M'),
+            ('imx290', 'IMX290'),
+            ('imx307', 'IMX307 - SV105C'),
+            ('imx385', 'IMX385'),
+            ('imx429', 'IMX429 - POA Apollo-M MINI'),
+            ('imx462', 'IMX462'),
+            ('imx482', 'IMX482'),
+            ('imx662', 'IMX662'),
+            ('sc2210', 'SC2210 - ASI220'),
+        ),
+        'HD - 2K Class' : (
+            ('imx664', 'IMX664 - POA Neptune 664C'),
+            ('imx464', 'IMX464 - POA Neptune-C II'),
+            ('ov5647', 'OV5647 - Camera Module 1'),
+        ),
+        'HD - 4K Class' : (
+            ('imx178', 'IMX178'),
+            ('imx219', 'IMX219 - Camera Module 2'),
+            ('imx230', 'IMX230'),
+            ('imx378', 'IMX378'),
+            ('imx415', 'IMX415 - SV205C'),
+            ('imx477', 'IMX477 - HQ Camera'),
+            ('imx485', 'IMX485'),
+            ('imx585', 'IMX585'),
+            ('imx519', 'IMX519'),
+            ('imx678', 'IMX678'),
+            ('imx708', 'IMX708 - Camera Module 3'),
+            ('imx715', 'IMX715'),
+        ),
+        'Large' : (
+            ('imx183', 'IMX183'),
+            ('imx294', 'IMX294'),
+            ('imx455', 'IMX455 - ASI6200'),
+            ('imx533', 'IMX533'),
+            ('imx571', 'IMX571 - ASI2600'),
+        ),
+    }
 
     LENS_SELECT_choices = (
         ('zwo_f2.0_2.1mm', 'ZWO 2.1mm f/2.0 - 150° - ∅6.7'),
@@ -4335,7 +4345,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('meike_f2.8_3.5mm', 'Meike 3.5mm F2.8 Fisheye - 220° - ∅12.5mm'),
     )
 
-    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
+    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices, default='imx477')
     LENS_SELECT       = SelectField('Lens', choices=LENS_SELECT_choices)
     OFFSET_X          = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
     OFFSET_Y          = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
