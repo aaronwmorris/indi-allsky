@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <style>
 canvas {
-    width:90%;
+    width:75%;
 }
 </style>
 <script>
@@ -208,6 +208,16 @@ var sd = {
         'h' : 1200,
         'p' : 3,
     },
+    'icx825al' : {
+        'w' : 1392,
+        'h' : 1040,
+        'p' : 6.45,
+    },
+    'icx205al' : {
+        'w' : 1392,
+        'h' : 1040,
+        'p' : 4.65,
+    },
 };
 </script>
 {% endblock %}
@@ -254,7 +264,9 @@ var sd = {
 </div>
 <div class="row">
     <div class="text-center">
+      <div class="col-sm-12">
         <canvas id="image-circle-canvas"></canvas>
+      </div>
     </div>
 </div>
 
@@ -298,6 +310,8 @@ function show_simulation() {
     var ratio  = Math.min ( hRatio, vRatio );
     //console.log('Ratio: ' + ratio);
 
+    canvas.width = r.w * ratio;
+    canvas.height = r.h * ratio;
 
     ctx.beginPath();
     ctx.fillStyle="#000000";
