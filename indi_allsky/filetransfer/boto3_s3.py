@@ -132,7 +132,11 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.NewConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.ReadTimeoutError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.EndpointConnectionError as e:
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
