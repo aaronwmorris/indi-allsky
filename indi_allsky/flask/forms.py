@@ -4313,6 +4313,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Medium - 8mm Class' : (
             ('imx385', 'IMX385 - 1/1.9"'),
             ('imx678', 'IMX678 - 1/1.8"'),
+            ('icx205al', 'ICX205AL - 1/2" - SX Superstar'),
             ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
         'Medium - 9mm Class' : (
@@ -4331,6 +4332,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx485', 'IMX485 - 1/1.2"'),
             ('imx533', 'IMX533 - 1"'),
             ('imx585', 'IMX585 - 1/1.2"'),
+            ('icx825al', 'ICX825AL - 2/3" - ULTRASTAR PRO'),
         ),
         'Extra Large' : (
             ('imx294', 'IMX294 - 4/3"'),
