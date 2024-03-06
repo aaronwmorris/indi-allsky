@@ -37,8 +37,18 @@ function catch_sigint() {
 trap catch_sigint SIGINT
 
 
-DISTRO_NAME=$(lsb_release -s -i)
-DISTRO_RELEASE=$(lsb_release -s -r)
+if [ ! -f "/etc/os-release" ]; then
+    echo
+    echo "Unable to determine OS from /etc/os-release"
+    echo
+    exit 1
+fi
+
+source /etc/os-release
+
+
+DISTRO_ID="${ID:-unknown}"
+DISTRO_VERSION_ID="${VERSION_ID:-unknown}"
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
 CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
@@ -72,8 +82,8 @@ echo "#################################"
 sleep 3
 
 echo
-echo "Distribution: $DISTRO_NAME"
-echo "Release: $DISTRO_RELEASE"
+echo "Distribution: $DISTRO_ID"
+echo "Release: $DISTRO_VERSION_ID"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
 echo
