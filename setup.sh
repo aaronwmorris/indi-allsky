@@ -118,8 +118,18 @@ IMAGE_FOLDER_FILES="
 "
 
 
-DISTRO_NAME=$(lsb_release -s -i)
-DISTRO_RELEASE=$(lsb_release -s -r)
+if [ ! -f "/etc/os-release" ]; then
+    echo
+    echo "Unable to determine OS from /etc/os-release"
+    echo
+    exit 1
+fi
+
+source /etc/os-release
+
+
+DISTRO_ID="${ID:-unknown}"
+DISTRO_VERSION_ID="${VERSION_ID:-unknown}"
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
 CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
@@ -197,8 +207,8 @@ fi
 
 echo
 echo
-echo "Distribution: $DISTRO_NAME"
-echo "Release: $DISTRO_RELEASE"
+echo "Distribution: $DISTRO_ID"
+echo "Release: $DISTRO_VERSION_ID"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
 echo
@@ -315,10 +325,7 @@ sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -485,10 +492,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
             rpicam-apps
     fi
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -655,10 +659,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
             rpicam-apps
     fi
 
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -825,10 +826,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
             libcamera-apps
     fi
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -997,10 +995,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
             libcamera-apps || true
     fi
 
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -1151,10 +1146,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
             libcamera-apps
     fi
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -1287,10 +1279,7 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
             indi-gpsnmea
     fi
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -1466,10 +1455,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     fi
 
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -1640,10 +1626,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
             indi-gpsnmea
     fi
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "18.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -1807,7 +1790,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "18.04" ]]; then
     fi
 
 else
-    echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
 fi
 
@@ -2461,7 +2444,7 @@ else
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
 
 
-    if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" ]]; then
         sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
@@ -2549,7 +2532,7 @@ else
         sudo systemctl enable apache2
         sudo systemctl restart apache2
 
-    elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+    elif [[ "$DISTRO_ID" == "centos" ]]; then
         sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
         sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
         sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf

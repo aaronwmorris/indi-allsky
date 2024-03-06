@@ -9,8 +9,18 @@ PATH=/bin:/usr/bin
 export PATH
 
 
-DISTRO_NAME=$(lsb_release -s -i)
-DISTRO_RELEASE=$(lsb_release -s -r)
+if [ ! -f "/etc/os-release" ]; then
+    echo
+    echo "Unable to determine OS from /etc/os-release"
+    echo
+    exit 1
+fi
+
+source /etc/os-release
+
+
+DISTRO_ID="${ID:-unknown}"
+DISTRO_VERSION_ID="${VERSION_ID:-unknown}"
 CPU_ARCH=$(uname -m)
 
 
@@ -37,8 +47,8 @@ echo
 echo "This script sets up an i2c RTC module"
 echo
 echo
-echo "Distribution: $DISTRO_NAME"
-echo "Release: $DISTRO_RELEASE"
+echo "Distribution: $DISTRO_ID"
+echo "Release: $DISTRO_VERSION_ID"
 echo "Arch: $CPU_ARCH"
 echo
 echo "Default i2c bus:     i2c-${I2C_BUS}"
@@ -57,48 +67,48 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
+if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
+elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "10" ]]; then
+elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "10" ]]; then
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         i2c-tools
 
 else
-    echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
 fi
 
