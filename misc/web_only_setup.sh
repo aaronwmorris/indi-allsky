@@ -75,8 +75,18 @@ IMAGE_FOLDER_FILES="
 "
 
 
-DISTRO_NAME=$(lsb_release -s -i)
-DISTRO_RELEASE=$(lsb_release -s -r)
+if [ ! -f "/etc/os-release" ]; then
+    echo
+    echo "Unable to determine OS from /etc/os-release"
+    echo
+    exit 1
+fi
+
+source /etc/os-release
+
+
+DISTRO_ID="${ID:-unknown}"
+DISTRO_VERSION_ID="${VERSION_ID:-unknown}"
 CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
 CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
@@ -102,23 +112,19 @@ fi
 
 echo
 echo
-echo "Distribution: $DISTRO_NAME"
-echo "Release: $DISTRO_RELEASE"
+echo "Distribution: $DISTRO_ID"
+echo "Release: $DISTRO_VERSION_ID"
 echo "Arch: $CPU_ARCH"
 echo "Bits: $CPU_BITS"
 echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
-echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
-echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
-echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
 echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo "DB_FILE: $DB_FILE"
-echo "INSTALL_INDI: $INSTALL_INDI"
 echo "HTTP_PORT: $HTTP_PORT"
 echo "HTTPS_PORT: $HTTPS_PORT"
 echo
@@ -166,10 +172,7 @@ sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -250,95 +253,7 @@ if [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "12" ]]; then
     fi
 
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "12" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
-    RSYSLOG_USER=root
-    RSYSLOG_GROUP=adm
-
-    MYSQL_ETC="/etc/mysql"
-
-    PYTHON_BIN=python3
-
-    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
-
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        build-essential \
-        python3 \
-        python3-dev \
-        python3-venv \
-        python3-pip \
-        virtualenv \
-        cmake \
-        gfortran \
-        whiptail \
-        rsyslog \
-        cron \
-        git \
-        cpio \
-        tzdata \
-        ca-certificates \
-        avahi-daemon \
-        apache2 \
-        swig \
-        libatlas-base-dev \
-        libilmbase-dev \
-        libopenexr-dev \
-        libgtk-3-0 \
-        libssl-dev \
-        libxml2-dev \
-        libxslt-dev \
-        libgnutls28-dev \
-        libcurl4-gnutls-dev \
-        libcfitsio-dev \
-        libnova-dev \
-        libdbus-1-dev \
-        libglib2.0-dev \
-        libffi-dev \
-        libopencv-dev \
-        libopenblas-dev \
-        libraw-dev \
-        libgeos-dev \
-        libtiff5-dev \
-        libjpeg62-turbo-dev \
-        libopenjp2-7-dev \
-        libpng-dev \
-        zlib1g-dev \
-        libfreetype6-dev \
-        liblcms2-dev \
-        libwebp-dev \
-        libcap-dev \
-        tcl8.6-dev \
-        tk8.6-dev \
-        python3-tk \
-        libharfbuzz-dev \
-        libfribidi-dev \
-        libxcb1-dev \
-        default-libmysqlclient-dev \
-        pkg-config \
-        rustc \
-        cargo \
-        ffmpeg \
-        gifsicle \
-        jq \
-        sqlite3 \
-        policykit-1 \
-        dbus-user-session
-
-
-    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
-            mariadb-server
-    fi
-
-
-elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -420,10 +335,7 @@ elif [[ "$DISTRO_NAME" == "Raspbian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
@@ -505,10 +417,89 @@ elif [[ "$DISTRO_NAME" == "Debian" && "$DISTRO_RELEASE" == "11" ]]; then
     fi
 
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
+elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
 
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3
+
+    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        apache2 \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff5-dev \
+        libjpeg62-turbo-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype6-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkg-config \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        policykit-1 \
+        dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -593,10 +584,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "22.04" ]]; then
     fi
 
 
-elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
-    DEBIAN_DISTRO=1
-    REDHAT_DISTRO=0
-
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -682,7 +670,7 @@ elif [[ "$DISTRO_NAME" == "Ubuntu" && "$DISTRO_RELEASE" == "20.04" ]]; then
 
 
 else
-    echo "Unknown distribution $DISTRO_NAME $DISTRO_RELEASE ($CPU_ARCH)"
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
 fi
 
@@ -1055,7 +1043,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
 
 
-    if [[ "$DEBIAN_DISTRO" -eq 1 ]]; then
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" ]]; then
         sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
@@ -1143,7 +1131,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
         sudo systemctl enable apache2
         sudo systemctl restart apache2
 
-    elif [[ "$REDHAT_DISTRO" -eq 1 ]]; then
+    elif [[ "$DISTRO_ID" == "centos" ]]; then
         sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
         sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
         sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
