@@ -2605,9 +2605,9 @@ if [[ "$CAMERA_INTERFACE" == "libcamera_imx477" || "$CAMERA_INTERFACE" == "libca
 fi
 
 
-echo "**** Ensure user is a member of the dialout group ****"
+echo "**** Ensure user is a member of the dialout, video groups ****"
 # for GPS and serial port access
-sudo usermod -a -G dialout "$USER"
+sudo usermod -a -G dialout,video "$USER"
 
 
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
