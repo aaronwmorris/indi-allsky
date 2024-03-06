@@ -191,28 +191,28 @@ class JsonLatestImageView(JsonView):
             if not self.local_indi_allsky and not self.daytime_timelapse:
                 # remote cameras will not receive daytime images when timelapse is disabled
                 if self.sun_set_date:
-                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
-                    delta_sun_set = self.sun_set_date - utcnow
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                    utcnow = datetime.now(tz=timezone.utc)
+                    delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Sun never sets.'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
 
                 return data
             elif not self.daytime_capture:
                 if self.sun_set_date:
-                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
-                    delta_sun_set = self.sun_set_date - utcnow
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                    utcnow = datetime.now(tz=timezone.utc)
+                    delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br>Sun never sets.'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
 
             elif self.daytime_capture and not self.daytime_timelapse:
                 if self.sun_set_date:
-                    utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
-                    delta_sun_set = self.sun_set_date - utcnow
-                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br>Night starts in {0:0.1f} hours.'.format(delta_sun_set.total_seconds() / 3600)
+                    utcnow = datetime.now(tz=timezone.utc)
+                    delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
+                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br>Sun never sets.'
+                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br><div class="text-warning">Sun never sets.</div>'
 
 
                 if self.web_nonlocal_images:
