@@ -504,6 +504,19 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: -180, Max: 180 - Image rotation for panorama</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_image_processing.FISH2PANO__SCALE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -695,6 +708,7 @@ const field_names = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
+    'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
 ];
 

@@ -2460,12 +2460,35 @@ class ImageProcessor(object):
     def fish2pano_purepython(self):
         ### Courtesy of Russell Valentine <russell.valentine@gmail.com>
         ### https://github.com/bluthen/fish2pano
-        image_height, image_width = self.image.shape[:2]
+
+        angle = self.config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0)
+        if angle:
+            height, width = self.image.shape[:2]
+            center_x = int(width / 2)
+            center_y = int(height / 2)
+
+            rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
+
+            abs_cos = abs(rot[0, 0])
+            abs_sin = abs(rot[0, 1])
+
+            bound_w = int(height * abs_sin + width * abs_cos)
+            bound_h = int(height * abs_cos + width * abs_sin)
+
+            rot[0, 2] += bound_w / 2 - center_x
+            rot[1, 2] += bound_h / 2 - center_y
+
+            rotated_image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
+        else:
+            rotated_image = self.image
+
+
+        rot_height, rot_width = rotated_image.shape[:2]
 
         x_offset = self.config.get('FISH2PANO', {}).get('OFFSET_X', 0)
         y_offset = self.config.get('FISH2PANO', {}).get('OFFSET_Y', 0)
-        center_x = int(image_width / 2) + x_offset
-        center_y = int(image_height / 2) - y_offset  # note minus for y
+        center_x = int(rot_width / 2) + x_offset
+        center_y = int(rot_height / 2) - y_offset  # note minus for y
 
         radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / 2
         scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
@@ -2490,8 +2513,8 @@ class ImageProcessor(object):
                 ix_ = int(x_ + 0.5)
                 iy_ = int(y_ + 0.5)
 
-                if x_ > 0 and ix_ < image_width and y_ > 0 and iy_ < image_height:
-                    img_pano[y][x] = self.image[iy_][ix_]
+                if x_ > 0 and ix_ < rot_width and y_ > 0 and iy_ < rot_height:
+                    img_pano[y][x] = rotated_image[iy_][ix_]
                 else:
                     img_pano[y][x] = [0, 0, 0]
 
@@ -2521,12 +2544,34 @@ class ImageProcessor(object):
     def fish2pano_module(self):
         import fish2pano
 
-        image_height, image_width = self.image.shape[:2]
+        angle = self.config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0)
+        if angle:
+            height, width = self.image.shape[:2]
+            center_x = int(width / 2)
+            center_y = int(height / 2)
+
+            rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
+
+            abs_cos = abs(rot[0, 0])
+            abs_sin = abs(rot[0, 1])
+
+            bound_w = int(height * abs_sin + width * abs_cos)
+            bound_h = int(height * abs_cos + width * abs_sin)
+
+            rot[0, 2] += bound_w / 2 - center_x
+            rot[1, 2] += bound_h / 2 - center_y
+
+            rotated_image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
+        else:
+            rotated_image = self.image
+
+
+        rot_height, rot_width = rotated_image.shape[:2]
 
         x_offset = self.config.get('FISH2PANO', {}).get('OFFSET_X', 0)
         y_offset = self.config.get('FISH2PANO', {}).get('OFFSET_Y', 0)
-        center_x = int(image_width / 2) + x_offset
-        center_y = int(image_height / 2) - y_offset  # note minus for y
+        center_x = int(rot_width / 2) + x_offset
+        center_y = int(rot_height / 2) - y_offset  # note minus for y
 
         radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / 2
         scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
@@ -2534,7 +2579,7 @@ class ImageProcessor(object):
 
         fish2pano_start = time.time()
 
-        img_pano = fish2pano.fish2pano(self.image, radius, [center_x, center_y], scale)
+        img_pano = fish2pano.fish2pano(rotated_image, radius, [center_x, center_y], scale)
 
 
         pano_height, pano_width = img_pano.shape[:2]
