@@ -172,6 +172,7 @@ class IndiAllSkyConfigBase(object):
             "DIAMETER" : 3000,
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
+            "ROTATE_ANGLE" : 0,
             "SCALE"    : 0.5,
             "MODULUS"  : 2,
         },

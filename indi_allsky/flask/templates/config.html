@@ -2072,7 +2072,7 @@
         </div>
         <div class="col-sm-8">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" class="text-decoration-none link-info" target="_blank">Keogram Wiki</a></div>
-            <div>Min: -180, Max: 180 - Image rotate for Keogram data</div>
+            <div>Min: -180, Max: 180 - Image rotation for Keogram data</div>
         </div>
     </div>
 
@@ -2271,6 +2271,19 @@
         </div>
         <div class="col-sm-8">
             <div>Y Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__ROTATE_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__ROTATE_ANGLE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: -180, Max: 180 - Image rotation for panorama</div>
         </div>
     </div>
 
@@ -3936,6 +3949,7 @@ const field_names = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
+    'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
     'FISH2PANO__MODULUS',
     'IMAGE_EXPORT_RAW',
