@@ -44,7 +44,7 @@ certifi >= 2023.7.22
 # 40.0.1 vulnerable https://security.snyk.io/package/pip/cryptography
 cryptography == 40.0.1
 dbus-python
-paho-mqtt
+paho-mqtt >= 2.0.0
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
 bcrypt
