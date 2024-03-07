@@ -125,7 +125,11 @@ lsusb
 echo
 
 echo "USB Permissions"
-find /dev/bus/usb -ls
+find /dev/bus/usb -ls || true
+echo
+
+echo "video device Permissions"
+ls -l /dev/video* || true
 echo
 
 echo "Module info"
