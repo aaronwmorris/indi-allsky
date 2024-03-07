@@ -783,11 +783,6 @@ class CaptureWorker(Process):
 
 
         # set default exposure
-        #
-        # Note:  I have tried setting a default exposure of 1.0s which works fine for night time, but
-        #        during the day weird things can happen when the image sensor is completely oversaturated.
-        #        Instead of an all white image, you can get intermediate pixel values which confuses the
-        #        exposure detection algorithm
         if self.config.get('CCD_EXPOSURE_DEF'):
             ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
         else:
@@ -807,7 +802,7 @@ class CaptureWorker(Process):
                 logger.warning('Reusing last stable exposure: %0.6f', ccd_exposure_default)
             else:
                 #ccd_exposure_default = self.exposure_min_v.value
-                ccd_exposure_default = 0.001  # this should give better results for many cameras
+                ccd_exposure_default = 0.01  # this should give better results for many cameras
 
 
         # sanity check
