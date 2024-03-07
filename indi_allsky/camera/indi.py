@@ -1064,8 +1064,14 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning('indi_webcam_ccd does not support gain settings')
             return fake_gain_info
         elif indi_exec in ['indi_v4l2_ccd']:
-            logger.warning('indi_v4l2_ccd does not support gain settings')
-            return fake_gain_info
+            try:
+                gain_ctl = self.get_control(self.ccd_device, 'Image Adjustments', 'number', timeout=2.0)
+            except TimeOutException:
+                logger.warning('Timeout: indi_v4l2_ccd does not support gain settings')
+                return fake_gain_info
+
+            gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
+            index = gain_index_dict['Gain']
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.getCcdGain()
         elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
@@ -1173,8 +1179,19 @@ class IndiClient(PyIndi.BaseClient):
             logger.warning('indi_webcam_ccd does not support gain settings')
             gain_config = {}
         elif indi_exec in ['indi_v4l2_ccd']:
-            logger.warning('indi_v4l2_ccd does not support gain settings')
-            gain_config = {}
+            try:
+                self.get_control(self.ccd_device, 'Image Adjustments', 'number', timeout=2.0)
+
+                gain_config = {
+                    "PROPERTIES" : {
+                        "Image Adjustments" : {
+                            "Gain" : gain_value,
+                        },
+                    },
+                }
+            except TimeOutException:
+                logger.warning('Timeout: indi_v4l2_ccd does not support gain settings')
+                gain_config = {}
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdGain(gain_value)
         elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
@@ -1223,6 +1240,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_playerone_ccd',
             'indi_sx_ccd',
+            'indi_v4l2_ccd',
         ]:
             binning_config = {
                 "PROPERTIES" : {
@@ -1243,9 +1261,6 @@ class IndiClient(PyIndi.BaseClient):
             return
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
-            return
-        elif indi_exec in ['indi_v4l2_ccd']:
-            logger.warning('indi_v4l2_ccd does not support bin settings')
             return
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdBinMode(bin_value)
