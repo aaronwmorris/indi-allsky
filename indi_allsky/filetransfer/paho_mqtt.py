@@ -83,10 +83,9 @@ class paho_mqtt(GenericFileTransfer):
 
         # publish image
         with io.open(local_file_p, 'rb') as f_localfile:
-            image_data = f_localfile.read()
             message_list.append({
                 'topic'    : '/'.join((base_topic, image_topic)),
-                'payload'  : bytearray(image_data),
+                'payload'  : f_localfile.read(),  # this requires paho-mqtt >= v2.0.0
                 'qos'      : qos,
                 'retain'   : True,
             })

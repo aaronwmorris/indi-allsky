@@ -55,7 +55,7 @@ certifi
 # https://www.piwheels.org/project/cryptography/
 cryptography >= 42.0.5
 dbus-python
-paho-mqtt
+paho-mqtt >= 2.0.0
 setuptools-rust
 # https://www.piwheels.org/project/bcrypt/
 bcrypt
