@@ -1933,7 +1933,10 @@
             {{ form_config.SQM_FOV_DIV(class='form-control bg-secondary') }}
             <div id="SQM_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Central region to use for SQM calculations (not used if ROI defined)</div>
+        <div class="col-sm-8">
+            <div>Central region to use for SQM calculations (not used if ROI defined)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span>SQM FoV/RoI used for stretching calculations</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -2488,7 +2491,9 @@
             {{ form_config.LENS_AZIMUTH(class='form-control bg-secondary') }}
             <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span>This affects Cardinal directions</div>
+        </div>
     </div>
 
     <hr>
