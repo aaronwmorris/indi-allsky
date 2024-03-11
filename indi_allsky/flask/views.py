@@ -5338,10 +5338,14 @@ class CameraSimulatorView(TemplateView):
 
         lens = str(request.args.get('lens', 'stardot_f1.5_1.55mm'))
         sensor = str(request.args.get('sensor', 'imx477'))
+        offset_x = int(request.args.get('offset_x', 0))
+        offset_y = int(request.args.get('offset_y', 0))
 
         form_data = {
             'LENS_SELECT'   : lens,
             'SENSOR_SELECT' : sensor,
+            'OFFSET_X'      : offset_x,
+            'OFFSET_Y'      : offset_y,
         }
 
         context['form_camera_simulator'] = IndiAllskyCameraSimulatorForm(data=form_data)
