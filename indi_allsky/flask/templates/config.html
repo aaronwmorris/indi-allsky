@@ -41,7 +41,7 @@
             {{ form_config.CAMERA_INTERFACE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
-            {{ form_config.CAMERA_INTERFACE(class='form-control bg-secondary') }}
+            {{ form_config.CAMERA_INTERFACE(class='form-select bg-secondary') }}
             <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">
@@ -284,7 +284,7 @@
             {{ form_config.CCD_BIT_DEPTH.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CCD_BIT_DEPTH(class='form-control bg-secondary') }}
+            {{ form_config.CCD_BIT_DEPTH(class='form-select bg-secondary') }}
             <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -356,7 +356,7 @@
             {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.TEMP_DISPLAY(class='form-control bg-secondary') }}
+            {{ form_config.TEMP_DISPLAY(class='form-select bg-secondary') }}
             <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Temperature system for display</div>
@@ -382,7 +382,7 @@
             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
             <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -412,7 +412,7 @@
             {{ form_config.LIBCAMERA__AWB.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB(class='form-control bg-secondary') }}
+            {{ form_config.LIBCAMERA__AWB(class='form-select bg-secondary') }}
             <div id="LIBCAMERA__AWB-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -438,7 +438,7 @@
             {{ form_config.LIBCAMERA__AWB_DAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_DAY(class='form-control bg-secondary') }}
+            {{ form_config.LIBCAMERA__AWB_DAY(class='form-select bg-secondary') }}
             <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -742,7 +742,7 @@
             {{ form_config.CFA_PATTERN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CFA_PATTERN(class='form-control bg-secondary') }}
+            {{ form_config.CFA_PATTERN(class='form-select bg-secondary') }}
             <div id="CFA_PATTERN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
@@ -753,7 +753,7 @@
             {{ form_config.SCNR_ALGORITHM.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
-            {{ form_config.SCNR_ALGORITHM(class='form-control bg-secondary') }}
+            {{ form_config.SCNR_ALGORITHM(class='form-select bg-secondary') }}
             <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">
@@ -875,7 +875,7 @@
             {{ form_config.ADU_FOV_DIV.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.ADU_FOV_DIV(class='form-control bg-secondary') }}
+            {{ form_config.ADU_FOV_DIV(class='form-select bg-secondary') }}
             <div id="ADU_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Central region to use for ADU calculations (not used if ROI defined)</div>
@@ -921,7 +921,7 @@
             {{ form_config.IMAGE_FILE_TYPE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_FILE_TYPE(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
             <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">File type for timelapse images.  Restart gunicorn if you change this setting.<br><span class="badge rounded-pill bg-warning text-dark">Warning</span><b>Some browsers do *NOT* support TIFF files.</b></div>
@@ -980,7 +980,7 @@
             {{ form_config.IMAGE_ROTATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
-            {{ form_config.IMAGE_ROTATE(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_ROTATE(class='form-select bg-secondary') }}
             <div id="IMAGE_ROTATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">
@@ -1128,7 +1128,7 @@
             {{ form_config.FFMPEG_VFSCALE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FFMPEG_VFSCALE(class='form-control bg-secondary') }}
+            {{ form_config.FFMPEG_VFSCALE(class='form-select bg-secondary') }}
             <div id="FFMPEG_VFSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">ffmpeg scaling</div>
@@ -1139,7 +1139,7 @@
             {{ form_config.FFMPEG_CODEC.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FFMPEG_CODEC(class='form-control bg-secondary') }}
+            {{ form_config.FFMPEG_CODEC(class='form-select bg-secondary') }}
             <div id="FFMPEG_CODEC-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">ffmpeg output codec</div>
@@ -1152,7 +1152,7 @@
             {{ form_config.IMAGE_LABEL_SYSTEM.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_LABEL_SYSTEM(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_LABEL_SYSTEM(class='form-select bg-secondary') }}
             <div id="IMAGE_LABEL_SYSTEM-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Image Label System</div>
@@ -1195,7 +1195,7 @@
             {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE(class='form-control bg-secondary') }}
+            {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE(class='form-select bg-secondary') }}
             <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Pillow supports TrueType and OpenType fonts</div>
@@ -1230,7 +1230,7 @@
             {{ form_config.TEXT_PROPERTIES__FONT_FACE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-control bg-secondary') }}
+            {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='form-select bg-secondary') }}
             <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">Font face for image metadata</div>
@@ -1535,11 +1535,11 @@
         <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__MODE.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
-            {{ form_config.ORB_PROPERTIES__MODE(class='form-control bg-secondary') }}
+        <div class="col-sm-3">
+            {{ form_config.ORB_PROPERTIES__MODE(class='form-select bg-secondary') }}
             <div id="ORB_PROPERTIES__MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">
+        <div class="col-sm-7">
             <div>Orb display mode</div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Orbs" class="text-decoration-none link-info" target="_blank">Orb Wiki</a></div>
         </div>
@@ -1585,7 +1585,7 @@
             {{ form_config.IMAGE_EXPORT_RAW.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_EXPORT_RAW(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_EXPORT_RAW(class='form-select bg-secondary') }}
             <div id="IMAGE_EXPORT_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Enable saving raw (non-stacked) images</div>
@@ -1930,7 +1930,7 @@
             {{ form_config.SQM_FOV_DIV.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.SQM_FOV_DIV(class='form-control bg-secondary') }}
+            {{ form_config.SQM_FOV_DIV(class='form-select bg-secondary') }}
             <div id="SQM_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -1979,7 +1979,7 @@
             {{ form_config.IMAGE_STACK_COUNT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_COUNT(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_STACK_COUNT(class='form-select bg-secondary') }}
             <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -1992,7 +1992,7 @@
             {{ form_config.IMAGE_STACK_METHOD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STACK_METHOD(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_STACK_METHOD(class='form-select bg-secondary') }}
             <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -2654,7 +2654,7 @@
             {{ form_config.FILETRANSFER__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.FILETRANSFER__CLASSNAME(class='form-control bg-secondary') }}
+            {{ form_config.FILETRANSFER__CLASSNAME(class='form-select bg-secondary') }}
             <div id="FILETRANSFER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
@@ -3078,7 +3078,7 @@
             {{ form_config.MQTTPUBLISH__TRANSPORT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.MQTTPUBLISH__TRANSPORT(class='form-control bg-secondary') }}
+            {{ form_config.MQTTPUBLISH__TRANSPORT(class='form-select bg-secondary') }}
             <div id="MQTTPUBLISH__TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">MQTT Transport</div>
@@ -3250,7 +3250,7 @@
             {{ form_config.YOUTUBE__PRIVACY_STATUS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.YOUTUBE__PRIVACY_STATUS(class='form-control bg-secondary') }}
+            {{ form_config.YOUTUBE__PRIVACY_STATUS(class='form-select bg-secondary') }}
             <div id="YOUTUBE__PRIVACY_STATUS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6"></div>
@@ -3410,7 +3410,7 @@
             {{ form_config.S3UPLOAD__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.S3UPLOAD__CLASSNAME(class='form-control bg-secondary') }}
+            {{ form_config.S3UPLOAD__CLASSNAME(class='form-select bg-secondary') }}
             <div id="S3UPLOAD__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
