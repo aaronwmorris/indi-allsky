@@ -402,6 +402,12 @@ function show_simulation() {
             })
         )
     );
+
+
+    if (window.history.replaceState) {
+       //prevents browser from storing history with each change:
+       window.history.replaceState({}, null, "{{ url_for('indi_allsky.camera_simulator_view') }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val());
+    }
 }
 
 
