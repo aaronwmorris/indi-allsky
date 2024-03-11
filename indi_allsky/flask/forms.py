@@ -4305,17 +4305,17 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('ov5647', 'OV5647 - 1/4" - Camera Module 1'),
         ),
         'Medium - 6mm Class' : (
-            ('asi120', 'ASI120 - 1/3" - AR0130CS'),
+            ('ar0130', 'ASI120 - 1/3" - AR0130CS'),
             ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
             ('imx224', 'IMX224 - 1/3"'),
             ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
-            ('imx296gs', 'IMX296 - 1/2.9" - Global Shutter'),
+            ('imx296', 'IMX296 - 1/2.9" - Global Shutter'),
             ('imx307', 'IMX307 - 1/2.8" - SV105C'),
             ('imx462', 'IMX462 - 1/2.8"'),
             ('imx662', 'IMX662 - 1/2.8"'),
             ('imx715', 'IMX715 - 1/2.8"'),
-            ('qhy5lii', 'QHY5LII - 1/3" - MT9M034'),
+            ('mt9m034', 'QHY5LII - 1/3" - MT9M034'),
         ),
         'Medium - 7mm Class' : (
             ('imx378', 'IMX378 - 1/2.3"'),
@@ -4326,7 +4326,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Medium - 8mm Class' : (
             ('imx385', 'IMX385 - 1/1.9"'),
             ('imx678', 'IMX678 - 1/1.8"'),
-            ('icx205al', 'ICX205AL - 1/2" - SX Superstar'),
+            ('icx205', 'ICX205AL - 1/2" - SX Superstar'),
             ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
         'Medium - 9mm Class' : (
@@ -4345,7 +4345,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx485', 'IMX485 - 1/1.2"'),
             ('imx533', 'IMX533 - 1"'),
             ('imx585', 'IMX585 - 1/1.2"'),
-            ('icx825al', 'ICX825AL - 2/3" - ULTRASTAR PRO'),
+            ('icx825', 'ICX825AL - 2/3" - SX ULTRASTAR PRO'),
         ),
         'Extra Large' : (
             ('imx294', 'IMX294 - 4/3"'),
@@ -4364,7 +4364,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('meike_f2.8_3.5mm', 'Meike 3.5mm F2.8 Fisheye - 220° - ∅12.5mm'),
     )
 
-    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices, default='imx477')
+    SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)
     LENS_SELECT       = SelectField('Lens', choices=LENS_SELECT_choices)
     OFFSET_X          = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
     OFFSET_Y          = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})

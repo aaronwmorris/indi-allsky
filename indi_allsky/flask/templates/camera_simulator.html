@@ -63,12 +63,12 @@ var sd = {
         'h' : 2464,
         'p' : 1.12,
     },
-    'imx296gs' : {
+    'imx296' : {
         'w' : 1456,
         'h' : 1088,
         'p' : 3.45,
     },
-    'asi120' : {
+    'ar0130' : {
         'w' : 1280,
         'h' : 960,
         'p' : 3.75,
@@ -113,7 +113,7 @@ var sd = {
         'h' : 2192,
         'p' : 1.45,
     },
-    'qhy5lii' : {
+    'mt9m034' : {
         'w' : 1280,
         'h' : 960,
         'p' : 3.75,
@@ -208,12 +208,12 @@ var sd = {
         'h' : 1200,
         'p' : 3,
     },
-    'icx825al' : {
+    'icx825' : {
         'w' : 1392,
         'h' : 1040,
         'p' : 6.45,
     },
-    'icx205al' : {
+    'icx205' : {
         'w' : 1392,
         'h' : 1040,
         'p' : 4.65,
@@ -270,6 +270,10 @@ var sd = {
     </div>
 </div>
 
+<div class="row">
+    <div class="text-center">
+        <span id="permalink"></span>
+    </div>
 <script>
 
 function pixels2mm(pixels, pixel_um) {
@@ -383,6 +387,21 @@ function show_simulation() {
     ctx.strokeText(offset_text, x_text, y_text + 160, maxWidth);
     ctx.fillText(img_c_text, x_text, y_text + 130, maxWidth);
     ctx.fillText(offset_text, x_text, y_text + 160, maxWidth);
+
+
+    // Add Loop here link
+    $('#permalink').html(
+        $('<a />', {
+            'href' : "{{ url_for('indi_allsky.camera_simulator_view') }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val(),
+            'target' : '_blank',
+            'rel'    : 'noopener noreferrer',
+        }).html(
+            $('<span />', {
+                'text'  : 'Permalink',
+                'class' : "badge pill bg-primary",
+            })
+        )
+    );
 }
 
 
