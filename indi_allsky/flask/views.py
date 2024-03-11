@@ -5336,7 +5336,19 @@ class CameraSimulatorView(TemplateView):
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
 
-        context['form_camera_simulator'] = IndiAllskyCameraSimulatorForm()
+        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
+        sensor = str(request.args.get('sensor', 'imx477'))
+        offset_x = int(request.args.get('offset_x', 0))
+        offset_y = int(request.args.get('offset_y', 0))
+
+        form_data = {
+            'LENS_SELECT'   : lens,
+            'SENSOR_SELECT' : sensor,
+            'OFFSET_X'      : offset_x,
+            'OFFSET_Y'      : offset_y,
+        }
+
+        context['form_camera_simulator'] = IndiAllskyCameraSimulatorForm(data=form_data)
 
         return context
 
