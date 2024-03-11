@@ -101,6 +101,7 @@ function closeFullscreen() {
             {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
+            <?-- form-control until there is a better layout -->
             {{ form_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
             <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -109,7 +110,7 @@ function closeFullscreen() {
             {{ form_viewer.MONTH_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            {{ form_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
             <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
@@ -117,7 +118,7 @@ function closeFullscreen() {
             {{ form_viewer.DAY_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
-            {{ form_viewer.DAY_SELECT(class='form-control bg-secondary') }}
+            {{ form_viewer.DAY_SELECT(class='form-select bg-secondary') }}
             <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
@@ -125,7 +126,7 @@ function closeFullscreen() {
             {{ form_viewer.HOUR_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
-            {{ form_viewer.HOUR_SELECT(class='form-control bg-secondary') }}
+            {{ form_viewer.HOUR_SELECT(class='form-select bg-secondary') }}
             <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
@@ -133,7 +134,7 @@ function closeFullscreen() {
             {{ form_viewer.IMG_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_viewer.IMG_SELECT(class='form-control bg-secondary') }}
+            {{ form_viewer.IMG_SELECT(class='form-select bg-secondary') }}
             <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
     </div>
