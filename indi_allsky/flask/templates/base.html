@@ -24,20 +24,19 @@
                 </div>
 
                 <div class="d-none d-sm-inline" style="width:100%">
-                    <hr>
                 </div>
 
                 <div class="flex-shrink-1 d-sm-inline">
-                    <div class="text-warning d-none d-sm-inline" style="font-size:10px">Cameras Available: {{ camera_count }}</div>
                     <div>
                         <form id="form_camera_select" onSubmit="return false;">
                             <div class="form-group row">
                                 <div class="col-sm-12">
-                                    {{ form_camera_select.CAMERA_SELECT(class='form-select bg-secondary', style='font-size: 12px;') }}
+                                    {{ form_camera_select.CAMERA_SELECT(class='text-warning fw-bold form-select bg-secondary', style='font-size: 12px;') }}
                                 </div>
                             </div>
                         </form>
                     </div>
+                    <div class="text-secondary d-none d-sm-inline" style="font-size:10px">Cameras Available: {{ camera_count }}</div>
                 </div>
 
                 <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
