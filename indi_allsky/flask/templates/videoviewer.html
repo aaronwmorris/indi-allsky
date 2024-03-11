@@ -35,8 +35,8 @@ var youtube__enable = {{ youtube__enable }};
         <div class="col-sm-1">
             {{ form_video_viewer.YEAR_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_video_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+        <div class="col-sm-2">
+            {{ form_video_viewer.YEAR_SELECT(class='form-select bg-secondary') }}
             <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
@@ -44,7 +44,7 @@ var youtube__enable = {{ youtube__enable }};
             {{ form_video_viewer.MONTH_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_video_viewer.MONTH_SELECT(class='form-control bg-secondary') }}
+            {{ form_video_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
             <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
@@ -52,7 +52,7 @@ var youtube__enable = {{ youtube__enable }};
             {{ form_video_viewer.TIMEOFDAY_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-control bg-secondary') }}
+            {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-select bg-secondary') }}
             <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
@@ -62,7 +62,7 @@ var youtube__enable = {{ youtube__enable }};
             </a>
             {% endif %}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             <div class="loader" id="loader_filter"></div>
         </div>
     </div>
