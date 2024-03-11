@@ -5336,7 +5336,7 @@ class CameraSimulatorView(TemplateView):
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
 
-        lens = str(request.args.get('lens', 'stardot_f1.5_1.55mm'))
+        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
         sensor = str(request.args.get('sensor', 'imx477'))
         offset_x = int(request.args.get('offset_x', 0))
         offset_y = int(request.args.get('offset_y', 0))
