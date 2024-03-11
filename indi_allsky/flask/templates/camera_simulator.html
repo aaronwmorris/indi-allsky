@@ -354,7 +354,7 @@ function show_simulation() {
     var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
     var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
     var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
-    var offset_text = offset_x.toFixed(1) + " x " + offset_y.toFixed(1) + "mm offset";
+    var offset_text = offset_x.toFixed(2) + " x " + offset_y.toFixed(2) + "mm offset";
 
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'lightgrey';
