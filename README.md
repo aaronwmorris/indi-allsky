@@ -89,7 +89,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| **Raspberry Pi OS 12 (bookworm)**  | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera<br>**libcamera and rpicam-apps currently must be rebuilt from source, recommend using bullseye** |
+| **Raspberry Pi OS 12 (bookworm)**  | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspberry Pi OS 12             | armhf (32-bit) | (DO NOT USE) WARNING: Currently has package dependency problems, please use 64-bit |
 | Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
@@ -119,7 +119,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | Requires bookworm<br>INDI: No issues reported<br>libcamera and rpicam-apps need to be rebuilt from source for bookworm |
+| Raspberry Pi 5                | Requires bookworm |
 | Raspberry Pi 4                | Recommend 64-bit bullseye |
 | Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
 | Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
