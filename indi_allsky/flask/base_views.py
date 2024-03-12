@@ -92,8 +92,10 @@ class BaseView(View):
 
 
     def getLatestCamera(self):
+        # prefer cameras with daytime timelapse enabled
         latest_camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .order_by(IndiAllSkyDbCameraTable.daytime_timelapse.desc())\
             .order_by(IndiAllSkyDbCameraTable.connectDate.desc())\
             .limit(1)\
             .one()

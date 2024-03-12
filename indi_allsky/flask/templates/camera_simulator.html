@@ -9,6 +9,7 @@ canvas {
     width:75%;
 }
 </style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script>
 // lens image circle diameter (mm)
 var icd = {
@@ -354,7 +355,7 @@ function show_simulation() {
     var size_text = r.w.toFixed(2) + " x " + r.h.toFixed(2) + "mm";
     var diag_text = Math.sqrt((r.w ** 2) + (r.h ** 2)).toFixed(2) + "mm diag";
     var img_c_text = (icd[lens] / sd[sensor]['p'] * 1000).toFixed(0) + "px circle";
-    var offset_text = offset_x.toFixed(1) + " x " + offset_y.toFixed(1) + "mm offset";
+    var offset_text = offset_x.toFixed(2) + " x " + offset_y.toFixed(2) + "mm offset";
 
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'lightgrey';
@@ -391,22 +392,16 @@ function show_simulation() {
 
     // Add Loop here link
     $('#permalink').html(
-        $('<a />', {
-            'href' : "{{ url_for('indi_allsky.camera_simulator_view') }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val(),
-            'target' : '_blank',
-            'rel'    : 'noopener noreferrer',
-        }).html(
-            $('<span />', {
-                'text'  : 'Permalink',
-                'class' : "badge pill bg-primary",
-            })
-        )
+        $('<button />', {
+            'class' : "badge pill bg-primary copy-clipboard",
+            'data-clipboard-text' : "{{ url_for('indi_allsky.camera_simulator_view', _external=True) }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val(),
+        }).text('Copy Permalink to Clipboard')
     );
 
 
     if (window.history.replaceState) {
        //prevents browser from storing history with each change:
-       window.history.replaceState({}, null, "{{ url_for('indi_allsky.camera_simulator_view') }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val());
+       window.history.replaceState({}, null, "{{ url_for('indi_allsky.camera_simulator_view') }}");
     }
 }
 
@@ -453,6 +448,7 @@ setResizeHandler(resize_callback, 500);
 
 function init() {
     show_simulation();
+    new ClipboardJS('.copy-clipboard');
 }
 
 
