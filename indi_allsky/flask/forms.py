@@ -4306,7 +4306,6 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ),
         'Medium - 6mm Class' : (
             ('ar0130', 'ASI120 - 1/3" - AR0130CS'),
-            ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
             ('imx224', 'IMX224 - 1/3"'),
             ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
@@ -4318,21 +4317,22 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('mt9m034', 'QHY5LII - 1/3" - MT9M034'),
         ),
         'Medium - 7mm Class' : (
-            ('imx378', 'IMX378 - 1/2.3"'),
+            ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
             ('imx519', 'IMX519 - 1/2.53"'),
             ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
-            ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
         ),
         'Medium - 8mm Class' : (
+            ('imx378', 'IMX378 - 1/2.3"'),
             ('imx385', 'IMX385 - 1/1.9"'),
-            ('imx678', 'IMX678 - 1/1.8"'),
+            ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
             ('icx205', 'ICX205AL - 1/2" - SX Superstar'),
-            ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
         'Medium - 9mm Class' : (
             ('imx178', 'IMX178 - 1/1.8"'),
             ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
             ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
+            ('imx678', 'IMX678 - 1/1.8"'),
+            ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
         'Large' : (
             ('imx174', 'IMX174 - 1/1.2"'),
