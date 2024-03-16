@@ -11,6 +11,7 @@ export PATH
 
 #### config ####
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+ALLSKY_SERVICE_NAME="indi-allsky"
 
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
@@ -101,7 +102,17 @@ echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
 
 
-if systemctl --user -q is-active indi-allsky >/dev/null 2>&1; then
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo "Please do not run $(basename "$0") with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
+    echo
+    echo
+    exit 1
+fi
+
+
+if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
+    # this would not normally happen on a web only install
     echo
     echo
     echo "WARNING: indi-allsky is running.  It is recommended to stop the service before running this script."
@@ -133,14 +144,6 @@ echo
 if [[ "$(id -u)" == "0" ]]; then
     echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
-    echo
-    echo
-    exit 1
-fi
-
-if [[ -n "$VIRTUAL_ENV" ]]; then
-    echo "Please do not run $(basename "$0") with a virtualenv active"
-    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1

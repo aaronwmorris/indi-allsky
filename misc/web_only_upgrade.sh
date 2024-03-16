@@ -86,13 +86,15 @@ if [[ "$(id -u)" == "0" ]]; then
     exit 1
 fi
 
-if [[ -n "$VIRTUAL_ENV" ]]; then
+
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "Please do not run $(basename "$0") with a virtualenv active"
     echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1
 fi
+
 
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
