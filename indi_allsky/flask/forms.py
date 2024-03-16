@@ -4318,6 +4318,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ),
         'Medium - 7mm Class' : (
             ('ar0234', 'AR0234 - 1/2.6" - Global Shutter'),
+            ('imx230', 'IMX230 - 1/2.4"'),
             ('imx519', 'IMX519 - 1/2.53"'),
             ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
         ),
@@ -4337,7 +4338,6 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Large' : (
             ('imx174', 'IMX174 - 1/1.2"'),
             ('imx183', 'IMX183 - 1"'),
-            ('imx230', 'IMX230 - 1/2.4"'),
             ('imx249', 'IMX249 - 1/1.2" - POA Xena-M'),
             ('imx429', 'IMX429 - 2/3" - POA Apollo-M MINI'),
             ('imx432', 'IMX432 - 1.1"'),
