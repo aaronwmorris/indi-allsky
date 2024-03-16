@@ -144,6 +144,16 @@ echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
 
 
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo
+    echo "Please do not run $(basename "$0") with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
+    echo
+    echo
+    exit 1
+fi
+
+
 if [ -f "/usr/local/bin/indiserver" ]; then
     # Do not install INDI
     INSTALL_INDI="false"
@@ -196,10 +206,12 @@ if [[ -f "/etc/astroberry.version" ]]; then
 fi
 
 
-if systemctl --user -q is-active indi-allsky >/dev/null 2>&1; then
+if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
     echo
     echo
     echo "ERROR: indi-allsky is running.  Please stop the service before running this script."
+    echo
+    echo "    systemctl --user stop ${ALLSKY_SERVICE_NAME}"
     echo
     exit 1
 fi
@@ -232,14 +244,6 @@ echo
 if [[ "$(id -u)" == "0" ]]; then
     echo "Please do not run $(basename "$0") as root"
     echo "Re-run this script as the user which will execute the indi-allsky software"
-    echo
-    echo
-    exit 1
-fi
-
-if [[ -n "$VIRTUAL_ENV" ]]; then
-    echo "Please do not run $(basename "$0") with a virtualenv active"
-    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
     exit 1
