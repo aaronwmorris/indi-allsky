@@ -199,9 +199,9 @@ fi
 if systemctl --user -q is-active indi-allsky >/dev/null 2>&1; then
     echo
     echo
-    echo "WARNING: indi-allsky is running.  It is recommended to stop the service before running this script."
+    echo "ERROR: indi-allsky is running.  Please stop the service before running this script."
     echo
-    sleep 5
+    exit 1
 fi
 
 
@@ -2251,6 +2251,9 @@ if [[ -f "${DB_FILE}" ]]; then
     sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
 
     chmod 640 "$DB_BACKUP"
+
+    echo "**** Vacuum DB ****"
+    sqlite3 "${DB_FILE}" "VACUUM;"
 fi
 
 
