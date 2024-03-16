@@ -502,7 +502,7 @@ class CaptureWorker(Process):
         try:
             self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
-            logger.error('Camera error: %s', str(e))
+            logger.error('Camera error: !!! %s !!!', str(e).upper())
 
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
@@ -511,7 +511,8 @@ class CaptureWorker(Process):
                 expire=timedelta(hours=2),
             )
 
-            return
+            time.sleep(60)
+            raise
 
 
         self.indiclient.findTelescope(telescope_name='Telescope Simulator')
