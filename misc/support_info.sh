@@ -92,6 +92,8 @@ echo "Memory: $MEM_TOTAL kB"
 echo
 echo "System: $SYSTEM_MODEL"
 echo
+uname -a
+echo
 echo "Uptime"
 uptime
 echo
