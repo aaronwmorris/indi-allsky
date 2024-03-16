@@ -200,6 +200,7 @@ class CaptureWorker(Process):
 
         camera_ready_time = time.time()
         camera_ready = False
+        exposure_aborted = False
         last_camera_ready = False
         exposure_state = 'unset'
         check_exposure_state = time.time() + 300  # check in 5 minutes
@@ -284,7 +285,7 @@ class CaptureWorker(Process):
                     continue
 
 
-                # check exposure state every 3 minutes
+                # check exposure state every 5 minutes
                 if check_exposure_state < loop_start_time:
                     check_exposure_state = time.time() + 300  # next check in 5 minutes
 
@@ -298,6 +299,7 @@ class CaptureWorker(Process):
                         )
 
                         self.indiclient.abortCcdExposure()
+                        exposure_aborted = True
 
 
                 # Loop to run for 11 seconds (prime number)
@@ -311,7 +313,17 @@ class CaptureWorker(Process):
                         break
 
                     last_camera_ready = camera_ready
-                    camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
+
+
+                    if not exposure_aborted:
+                        camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
+                    else:
+                        # Aborted exposure, bypass next checks
+                        exposure_aborted = False  # reset
+                        camera_ready = True
+                        exposure_state = 'Aborted'
+                        waiting_for_frame = False
+
 
                     if not camera_ready:
                         continue
