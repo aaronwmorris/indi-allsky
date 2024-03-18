@@ -4355,15 +4355,14 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
     }
 
     LENS_SELECT_choices = (
-        # IDs are first set of chars from uuid
-        ('bb2677ab', 'ZWO 2.1mm f/2.0 - 150° - 1/3" ∅6.7mm'),
-        ('200331b0', 'ZWO 2.5mm f/1.2 - 170° - 1/2" ∅6.7mm'),
-        ('790f0d27', 'Arecont 1.55mm f/2.0 - 180° - 1/2" ∅4.8mm'),
-        ('8abf203f', 'Stardot 1.55mm f/1.5 - 180° - 1/2" ∅4.8mm'),
-        ('4e9523e6', 'M12 1.44mm f2.0 - 180° - 1/2.5" ∅3.5mm'),
-        ('92d9dba6', 'M12 1.7mm f2.0 - 180° - 1/2.5" ∅5.6mm'),
-        ('c2f850cf', 'M12 1.8mm f2.0 - 180° - 1/2.5" ∅6.9mm'),
-        ('1a4515cf', 'Meike 3.5mm F2.8 Fisheye - 220° - 4/3" ∅12.5mm'),
+        ('zwo_f2.0_2.1mm_1-3', 'ZWO 2.1mm f/2.0 - 150° - 1/3" ∅6.7mm'),
+        ('zwo_f1.2_2.5mm_1-2', 'ZWO 2.5mm f/1.2 - 170° - 1/2" ∅6.7mm'),
+        ('arecont_f2.0_1.55mm_1-2', 'Arecont 1.55mm f/2.0 - 180° - 1/2" ∅4.8mm'),
+        ('stardot_f1.5_1.55mm_1-2', 'Stardot 1.55mm f/1.5 - 180° - 1/2" ∅4.8mm'),
+        ('m12_f2.0_1.44mm_1-2.5', 'M12 1.44mm f2.0 - 180° - 1/2.5" ∅3.5mm'),
+        ('m12_f2.0_1.7mm_1-2.5', 'M12 1.7mm f2.0 - 180° - 1/2.5" ∅5.6mm'),
+        ('m12_f2.0_1.8mm_1-2.5', 'M12 1.8mm f2.0 - 180° - 1/2.5" ∅6.9mm'),
+        ('meike_f2.8_3.5mm_4-3', 'Meike 3.5mm F2.8 Fisheye - 220° - 4/3" ∅12.5mm'),
     )
 
     SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)

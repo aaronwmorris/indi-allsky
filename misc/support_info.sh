@@ -164,6 +164,11 @@ dpkg -l | grep libindi || true
 echo
 
 
+echo "indi connections"
+ss -ant | grep 7624 || true
+echo
+
+
 if which indi_getprop >/dev/null 2>&1; then
     echo "Detected indi properties"
     indi_getprop -v 2>&1 || true
