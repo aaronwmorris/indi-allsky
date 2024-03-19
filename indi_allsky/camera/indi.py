@@ -126,6 +126,8 @@ class IndiClient(PyIndi.BaseClient):
 
         self.exposureStartTime = None
 
+        self._disconnected = False
+
         logger.info('creating an instance of IndiClient')
 
         pyindi_version = '.'.join((
@@ -134,6 +136,15 @@ class IndiClient(PyIndi.BaseClient):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
         logger.info('PyIndi version: %s', pyindi_version)
+
+
+    @property
+    def disconnected(self):
+        return self._disconnected
+
+    @disconnected.setter
+    def disconnected(self, new_disconnected):
+        self._disconnected = bool(new_disconnected)
 
 
     @property
@@ -346,8 +357,12 @@ class IndiClient(PyIndi.BaseClient):
     def serverConnected(self):
         logger.info("Server connected (%s:%d)", self.getHost(), self.getPort())
 
+        self.disconnected = False
+
     def serverDisconnected(self, code):
         logger.info("Server disconnected (exit code = %d, %s, %d", code, str(self.getHost()), self.getPort())
+
+        self.disconnected = True
 
 
     def parkTelescope(self):
