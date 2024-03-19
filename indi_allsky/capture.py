@@ -215,6 +215,11 @@ class CaptureWorker(Process):
             logger.info('Exposure state: %s', exposure_state)
 
 
+            if self.indiclient.disconnected:
+                logger.error('indiclient indicates indiserver disconnected, restarting capture process')
+                return
+
+
             try:
                 c_dict = self.capture_q.get(False)
 
