@@ -60,7 +60,7 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -72,7 +72,7 @@ if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -84,7 +84,7 @@ elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 

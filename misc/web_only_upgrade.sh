@@ -110,7 +110,7 @@ START_TIME=$(date +%s)
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
@@ -125,7 +125,7 @@ if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest.txt
     fi
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     PYTHON_BIN=python3
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
@@ -140,7 +140,7 @@ elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest.txt
     fi
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt

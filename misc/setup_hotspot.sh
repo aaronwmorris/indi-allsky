@@ -89,21 +89,21 @@ sudo true
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
         network-manager \
         tzdata
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
         network-manager \
         tzdata
 
-elif [[ "$DISTRO_ID" == "Raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
+elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
 
     sudo apt-get update
     sudo apt-get -y install \
