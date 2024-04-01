@@ -5353,6 +5353,47 @@ class CameraSimulatorView(TemplateView):
         return context
 
 
+class VideoFileView(TemplateView):
+    model = IndiAllSkyDbImageTable
+
+
+    def get_context(self):
+        context = super(VideoFileView, self).get_context()
+
+        video_id = int(request.args.get('id', 0))
+        camera_id = int(request.args.get('camera', 0))
+
+
+        video_q = self.model.query\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(self.model.id == video_id)\
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                video_q = video_q\
+                    .filter(
+                        or_(
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
+                        )
+                    )
+
+        video = video_q.one()
+
+        context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
