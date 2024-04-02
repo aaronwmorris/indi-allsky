@@ -176,7 +176,7 @@ function populate_videos(video_list) {
 
             // Link to keogram image
             var kl_a = $('<a />', {
-                'href'   : item['keogram'],
+                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?camera={{ camera_id }}&id=" + item['keogram_id'],
                 'target' : "_blank",
                 'rel'    : "noopener noreferrer",
                 'class'  : "text-decoration-none link-warning",
@@ -192,7 +192,7 @@ function populate_videos(video_list) {
             // Link to star trail image
             if (item['startrail'] != 'None') {
                 var st_a = $('<a />', {
-                    'href'   : item['startrail'],
+                    'href'   : "{{ url_for('indi_allsky.startrail_image_view')}}?camera={{ camera_id }}&id=" + item['startrail_id'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -257,7 +257,7 @@ function populate_videos(video_list) {
 
             // Link to keogram image
             var kl_a = $('<a />', {
-                'href'   : item['keogram'],
+                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?camera={{ camera_id }}&id=" + item['keogram_id'],
                 'target' : "_blank",
                 'rel'    : "noopener noreferrer",
                 'class'  : "text-decoration-none link-warning",
