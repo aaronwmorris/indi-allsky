@@ -354,7 +354,7 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         return latest_thumbnail_entry
 
 
-class PanoramaView(IndexView):
+class LatestPanoramaView(IndexView):
     title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
@@ -364,7 +364,7 @@ class JsonLatestPanoramaView(JsonLatestImageView):
     latest_image_t = 'images/panorama.{0}'
 
 
-class RawImageView(IndexView):
+class LatestRawImageView(IndexView):
     title = 'RAW Image'
     latest_image_view = 'indi_allsky.js_latest_rawimage_view'
 
@@ -5418,6 +5418,28 @@ class TimelapseImageView(TemplateView):
         return context
 
 
+class PanoramaImageView(TimelapseImageView):
+    model = IndiAllSkyDbPanoramaImageTable
+    title = 'Panorama Image'
+    file_view = 'indi_allsky.panorama_image_view'
+
+
+class KeogramImageView(TimelapseImageView):
+    model = IndiAllSkyDbKeogramTable
+    title = 'Keogram'
+    file_view = 'indi_allsky.keogram_image_view'
+
+
+class StartrailImageView(TimelapseImageView):
+    model = IndiAllSkyDbStarTrailsTable
+    title = 'Startrail Image'
+    file_view = 'indi_allsky.startrail_image_view'
+
+
+class RawImageView(TimelapseImageView):
+    model = IndiAllSkyDbRawImageTable
+    title = 'RAW Image'
+    file_view = 'indi_allsky.raw_image_view'
 
 
 class TimelapseVideoView(TemplateView):
@@ -5885,10 +5907,10 @@ def images_folder(path):
 
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
-bp_allsky.add_url_rule('/panorama', view_func=PanoramaView.as_view('panorama_view', template_name='index.html'))
-bp_allsky.add_url_rule('/js/panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
-bp_allsky.add_url_rule('/raw', view_func=RawImageView.as_view('rawimage_view', template_name='index.html'))
-bp_allsky.add_url_rule('/js/rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
+bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaView.as_view('latest_panorama_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
+bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
@@ -5913,6 +5935,10 @@ bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videov
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
 bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('timelapse_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_panorama', view_func=PanoramaImageView.as_view('panorama_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_startrail', view_func=StartrailImageView.as_view('startrail_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_keogram', view_func=KeogramImageView.as_view('keogram_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_raw', view_func=RawImageView.as_view('raw_image_view', template_name='view_image.html'))
 
 bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
