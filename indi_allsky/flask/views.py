@@ -2098,6 +2098,8 @@ class ImageViewerView(FormView):
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
 
+        context['camera_id'] = session['camera_id']
+
         form_data = {
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
@@ -5355,6 +5357,69 @@ class CameraSimulatorView(TemplateView):
         return context
 
 
+class TimelapseImageView(TemplateView):
+    model = IndiAllSkyDbImageTable
+    title = 'Timelapse Image'
+    file_view = 'indi_allsky.timelapse_image_view'
+
+
+    def get_context(self):
+        context = super(TimelapseImageView, self).get_context()
+
+        context['title'] = self.title
+        context['file_view'] = self.file_view
+
+        camera_id = int(request.args.get('camera', 0))
+        image_id = int(request.args.get('id', 0))
+
+        context['camera_id'] = camera_id
+        context['image_id'] = image_id
+
+
+        #createDate = datetime.fromtimestamp(timestamp)
+        #app.logger.info('Timestamp date: %s', createDate)
+
+
+        image_q = self.model.query\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(self.model.id == image_id)
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                image_q = image_q\
+                    .filter(
+                        or_(
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
+                        )
+                    )
+
+        #app.logger.info('SQL: %s', str(image_q))
+
+        image = image_q.one()
+
+        if image.night:
+            context['timeofday'] = 'Night'
+        else:
+            context['timeofday'] = 'Day'
+
+        context['createDate_full'] = image.createDate.strftime('%B %d, %Y - %H:%M:%S')
+        context['image_url'] = image.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return context
+
+
+
+
 class TimelapseVideoView(TemplateView):
     model = IndiAllSkyDbVideoTable
     title = 'Timelapse Video'
@@ -5846,6 +5911,8 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+
+bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('timelapse_image_view', template_name='view_image.html'))
 
 bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
