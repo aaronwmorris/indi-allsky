@@ -2422,6 +2422,8 @@ class VideoViewerView(FormView):
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
 
+        context['camera_id'] = session['camera_id']
+
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
         form_data = {
@@ -5353,15 +5355,18 @@ class CameraSimulatorView(TemplateView):
         return context
 
 
-class VideoFileView(TemplateView):
-    model = IndiAllSkyDbImageTable
+class TimelapseFileView(TemplateView):
+    model = IndiAllSkyDbVideoTable
 
 
     def get_context(self):
-        context = super(VideoFileView, self).get_context()
+        context = super(TimelapseFileView, self).get_context()
 
         video_id = int(request.args.get('id', 0))
         camera_id = int(request.args.get('camera', 0))
+
+        context['video_id'] = video_id
+        context['camera_id'] = camera_id
 
 
         video_q = self.model.query\
@@ -5388,6 +5393,12 @@ class VideoFileView(TemplateView):
 
         video = video_q.one()
 
+        if video.night:
+            context['timeofday'] = 'Night'
+        else:
+            context['timeofday'] = 'Day'
+
+        context['dayDate'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
 
 
@@ -5812,6 +5823,8 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+
+bp_allsky.add_url_rule('/timelapse', view_func=TimelapseFileView.as_view('timelapse_file_view', template_name='timelapse_file.html'))
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))

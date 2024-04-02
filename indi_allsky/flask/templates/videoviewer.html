@@ -382,7 +382,7 @@ function populate_videos(video_list) {
 
 
         var k_a = $('<a />', {
-            'href'   : item['url'],
+            'href'   : "{{ url_for('indi_allsky.timelapse_file_view')}}?id=" + item['id'] + "&camera={{ camera_id }}",
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);
