@@ -5367,17 +5367,23 @@ class TimelapseVideoView(TemplateView):
         context['title'] = self.title
         context['file_view'] = self.file_view
 
-        video_id = int(request.args.get('id', 0))
         camera_id = int(request.args.get('camera', 0))
+        night = int(request.args.get('night', 1))
+        dayDate_str = str(request.args.get('date', ''))
 
-        context['video_id'] = video_id
         context['camera_id'] = camera_id
+        context['night'] = night
+        context['dayDate'] = dayDate_str
+
+
+        dayDate = datetime.strptime(dayDate_str, '%Y%m%d').date()
 
 
         video_q = self.model.query\
             .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(self.model.id == video_id)\
+            .filter(self.model.dayDate == dayDate)\
+            .filter(self.model.night == bool(night))
 
 
         local = True  # default to local assets
@@ -5403,7 +5409,7 @@ class TimelapseVideoView(TemplateView):
         else:
             context['timeofday'] = 'Day'
 
-        context['dayDate'] = video.dayDate.strftime('%B %d, %Y')
+        context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
 
 

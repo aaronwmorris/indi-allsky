@@ -169,7 +169,7 @@ function populate_videos(video_list) {
 
         if (item['night']) {
             $('<div />', {
-                'text'  : item['dayDate'] + " (Night)",
+                'text'  : item['dayDate_long'] + " (Night)",
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
@@ -210,7 +210,7 @@ function populate_videos(video_list) {
             // Link to panorama timelapse
             if (item['panorama_timelapse'] != 'None') {
                 var p_a = $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?id=" + item['panorama_timelapse_id'] + "&camera={{ camera_id }}",
+                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -250,7 +250,7 @@ function populate_videos(video_list) {
 
         } else {
             $('<div />', {
-                'text'  : item['dayDate'] + " (Day)",
+                'text'  : item['dayDate_long'] + " (Day)",
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
@@ -273,7 +273,7 @@ function populate_videos(video_list) {
             // Link to panorama timelapse
             if (item['panorama_timelapse'] != 'None') {
                 var p_a = $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?id=" + item['panorama_timelapse_id'] + "&camera={{ camera_id }}",
+                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -309,7 +309,7 @@ function populate_videos(video_list) {
                 if (item['startrail_timelapse'] != 'None') {
                     // Link to Star trail timelapse
                     var st_tl_a = $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.startrail_video_view')}}?id=" + item['startrail_timelapse_id'] + "&camera={{ camera_id }}",
+                        'href'   : "{{ url_for('indi_allsky.startrail_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                         'target' : "_blank",
                         'rel'    : "noopener noreferrer",
                     }).appendTo(startrail_div);
@@ -382,7 +382,7 @@ function populate_videos(video_list) {
 
 
         var k_a = $('<a />', {
-            'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?id=" + item['id'] + "&camera={{ camera_id }}",
+            'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);

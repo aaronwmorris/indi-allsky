@@ -3473,7 +3473,8 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry = {
                 'id'                : v.id,
                 'url'               : str(url),
-                'dayDate'           : v.dayDate.strftime('%B %d, %Y'),
+                'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
+                'dayDate'           : v.dayDate.strftime('%Y%m%d'),
                 'night'             : v.night,
                 'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
@@ -3487,7 +3488,7 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         # cannot query the DB from inside the DB query
         for entry in videos_data:
-            dayDate = datetime.strptime(entry['dayDate'], '%B %d, %Y').date()
+            dayDate = datetime.strptime(entry['dayDate'], '%Y%m%d').date()
 
             # Querying the oldest due to a bug where regeneated files are added with the wrong dayDate
             # fix is inbound
