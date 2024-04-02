@@ -84,6 +84,7 @@ sleep 10
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.0.7"
     "2.0.6"
     "2.0.5"
     "2.0.4"
@@ -136,7 +137,10 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "2.0.6" ]; then
+if [ "$INDI_VERSION" == "2.0.7" ]; then
+    pip3 uninstall -y pyindi-client
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.6" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.0.5" ]; then
