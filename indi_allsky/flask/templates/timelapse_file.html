@@ -36,6 +36,8 @@ var file_view = "{{ file_view }}";
 
 <script>
 function init() {
+    new ClipboardJS('.copy-clipboard');
+
     $('#permalink').html(
         $('<button />', {
             'class' : "badge pill bg-primary copy-clipboard",
