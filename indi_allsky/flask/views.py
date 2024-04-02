@@ -5355,14 +5355,14 @@ class CameraSimulatorView(TemplateView):
         return context
 
 
-class TimelapseFileView(TemplateView):
+class TimelapseVideoView(TemplateView):
     model = IndiAllSkyDbVideoTable
-    title = 'Timelapse'
-    file_view = 'indi_allsky.timelapse_file_view'
+    title = 'Timelapse Video'
+    file_view = 'indi_allsky.timelapse_video_view'
 
 
     def get_context(self):
-        context = super(TimelapseFileView, self).get_context()
+        context = super(TimelapseVideoView, self).get_context()
 
         context['title'] = self.title
         context['file_view'] = self.file_view
@@ -5408,6 +5408,18 @@ class TimelapseFileView(TemplateView):
 
 
         return context
+
+
+class StartrailVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbStarTrailsVideoTable
+    title = 'Startrail Video'
+    file_view = 'indi_allsky.startrail_video_view'
+
+
+class PanoramaVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbPanoramaVideoTable
+    title = 'Panorama Video'
+    file_view = 'indi_allsky.panorama_video_view'
 
 
 class AstroPanelView(TemplateView):
@@ -5829,7 +5841,9 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
-bp_allsky.add_url_rule('/timelapse', view_func=TimelapseFileView.as_view('timelapse_file_view', template_name='timelapse_file.html'))
+bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='timelapse_file.html'))
+bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='timelapse_file.html'))
+bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='timelapse_file.html'))
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
