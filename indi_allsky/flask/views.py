@@ -5357,10 +5357,15 @@ class CameraSimulatorView(TemplateView):
 
 class TimelapseFileView(TemplateView):
     model = IndiAllSkyDbVideoTable
+    title = 'Timelapse'
+    file_view = 'indi_allsky.timelapse_file_view'
 
 
     def get_context(self):
         context = super(TimelapseFileView, self).get_context()
+
+        context['title'] = self.title
+        context['file_view'] = self.file_view
 
         video_id = int(request.args.get('id', 0))
         camera_id = int(request.args.get('camera', 0))
