@@ -5841,9 +5841,9 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
-bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='timelapse_file.html'))
-bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='timelapse_file.html'))
-bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='timelapse_file.html'))
+bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='watch_video.html'))
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
