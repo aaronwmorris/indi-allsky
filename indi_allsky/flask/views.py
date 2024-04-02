@@ -5813,8 +5813,8 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
-bp_allsky.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
-bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
+bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))

@@ -57,7 +57,7 @@ var youtube__enable = {{ youtube__enable }};
         </div>
         <div class="col-sm-1">
             {% if current_user.is_authenticated or login_disabled %}
-            <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">
+            <a href="{{ url_for('indi_allsky.generate_view') }}" class="text-decoration-none link-info">
                 <span class="badge pill bg-success">Generate</span>
             </a>
             {% endif %}
