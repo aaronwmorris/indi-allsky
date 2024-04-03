@@ -5406,6 +5406,11 @@ class TimelapseImageView(TemplateView):
 
         image = image_q.one()
 
+
+        # Set session camera
+        session['camera_id'] = image.camera_id
+
+
         if image.night:
             context['timeofday'] = 'Night'
         else:
@@ -5490,6 +5495,11 @@ class TimelapseVideoView(TemplateView):
                     )
 
         video = video_q.one()
+
+
+        # Set session camera
+        session['camera_id'] = video.camera_id
+
 
         if video.night:
             context['timeofday'] = 'Night'
