@@ -5404,7 +5404,14 @@ class TimelapseImageView(TemplateView):
 
         #app.logger.info('SQL: %s', str(image_q))
 
-        image = image_q.one()
+        try:
+            image = image_q.one()
+        except NoResultFound:
+            app.logger.error('Image not found')
+            context['timeofday'] = ''
+            context['createDate_full'] = 'Image not found'
+            context['image_url'] = ''
+            return context
 
 
         # Set session camera
@@ -5468,7 +5475,14 @@ class TimelapseVideoView(TemplateView):
         context['dayDate'] = dayDate_str
 
 
-        dayDate = datetime.strptime(dayDate_str, '%Y%m%d').date()
+        try:
+            dayDate = datetime.strptime(dayDate_str, '%Y%m%d').date()
+        except ValueError:
+            app.logger.error('Invalid date format')
+            context['timeofday'] = 'Invalid date format'
+            context['dayDate_full'] = 'Video not found'
+            context['video_url'] = ''
+            return context
 
 
         video_q = self.model.query\
@@ -5494,7 +5508,14 @@ class TimelapseVideoView(TemplateView):
                         )
                     )
 
-        video = video_q.one()
+        try:
+            video = video_q.one()
+        except NoResultFound:
+            app.logger.error('Video not found')
+            context['timeofday'] = ''
+            context['dayDate_full'] = 'Video not found'
+            context['video_url'] = ''
+            return context
 
 
         # Set session camera
